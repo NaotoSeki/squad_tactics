@@ -14,7 +14,7 @@ class Game {
         let isDrag=false, lx, ly;
         cvs.addEventListener('mousedown', e=>{
             if(this.state!=='PLAY' || this.isAuto) return;
-            if(e.button===2) { this.showContext(e.clientX, e.clientY); return; } // 右クリック
+            if(e.button===2) { this.showContext(e.clientX, e.clientY); return; }
             isDrag=true; lx=e.clientX; ly=e.clientY; this.handleClick(Renderer.pxToHex(e.clientX, e.clientY));
         });
         window.addEventListener('mousemove', e=>{
@@ -27,10 +27,7 @@ class Game {
         });
         window.addEventListener('mouseup', ()=>isDrag=false);
         window.addEventListener('contextmenu', e=>e.preventDefault());
-        // メニュー外クリックで閉じる
-        window.addEventListener('click', (e)=>{
-            if(!e.target.closest('#context-menu')) document.getElementById('context-menu').style.display='none';
-        });
+        window.addEventListener('click', ()=>document.getElementById('context-menu').style.display='none');
     }
 
     initSetup() {
@@ -65,43 +62,18 @@ class Game {
         if(this.units.length>0) Renderer.centerOn(this.units[0].q, this.units[0].r);
     }
 
-    // Map生成: 円形島 & 川
     generateMap() {
-        this.map=[]; 
-        const cx = Math.floor(MAP_W/2);
-        const cy = Math.floor(MAP_H/2);
-        const maxRadius = Math.min(MAP_W, MAP_H) / 2 - 2; 
-
+        this.map=[]; const cx=MAP_W/2, cy=MAP_H/2;
         for(let q=0; q<MAP_W; q++) {
             this.map[q]=[];
             for(let r=0; r<MAP_H; r++) {
-                const dist = (Math.abs(q-cx) + Math.abs(q+r-cx-cy) + Math.abs(r-cy)) / 2;
-                if(dist > maxRadius) {
-                    this.map[q][r] = TERRAIN.VOID;
-                } else if(dist > maxRadius - 1.5) {
-                    this.map[q][r] = TERRAIN.WATER;
-                } else {
-                    const noise = Math.sin(q*0.5) + Math.cos(r*0.5) + Math.random()*0.3;
-                    let t = TERRAIN.GRASS;
-                    if(noise > 1.2) t = TERRAIN.FOREST;
-                    else if(noise < -0.8) t = TERRAIN.DIRT;
-                    if(t !== TERRAIN.WATER && Math.random()<0.06) t = TERRAIN.TOWN;
-                    this.map[q][r] = t;
-                }
-            }
-        }
-
-        // 川の生成
-        let riverQ = cx, riverR = cy;
-        const steps = 30;
-        for(let i=0; i<steps; i++) {
-            if(this.isValidHex(riverQ, riverR)) {
-                if(this.map[riverQ][riverR].id === 5 || this.map[riverQ][riverR].id === -1) break;
-                this.map[riverQ][riverR] = TERRAIN.WATER;
-                const dirs=[[1,0],[1,-1],[0,-1],[-1,0],[-1,1],[0,1]];
-                const d = dirs[Math.floor(Math.random()*6)];
-                riverQ += d[0];
-                riverR += d[1];
+                const dx=q-cx, dy=r-cy; const dist=Math.sqrt(dx*dx + dy*dy);
+                const noise=Math.sin(q*0.4)+Math.cos(r*0.4)+Math.random()*0.4;
+                let t=TERRAIN.VOID;
+                if(dist<7+noise) { t=TERRAIN.GRASS; if(noise>1) t=TERRAIN.FOREST; else if(noise<-0.8) t=TERRAIN.DIRT; if(dist>6+noise) t=TERRAIN.DIRT; }
+                else t=TERRAIN.WATER;
+                if(t!==TERRAIN.WATER && Math.random()<0.04) t=TERRAIN.TOWN;
+                this.map[q][r]=t;
             }
         }
     }
@@ -125,19 +97,14 @@ class Game {
 
     spawnAtSafeGround(team, key, existingUnit=null) {
         let q, r, tries=0;
-        const cx = Math.floor(MAP_W/2);
-        const cy = Math.floor(MAP_H/2);
-
         do { 
-            q = Math.floor(Math.random()*MAP_W);
-            r = Math.floor(Math.random()*MAP_H);
-            tries++; 
-            if(team==='player' && r < cy) continue;
-            if(team==='enemy' && r > cy) continue;
+            q=Math.floor(Math.random()*MAP_W); r=Math.floor(Math.random()*MAP_H); tries++; 
+            if(team==='player' && r < MAP_H/2) continue;
+            if(team==='enemy' && r > MAP_H/2) continue;
         } 
-        while((!this.isValidHex(q,r) || this.map[q][r].id === 5 || this.map[q][r].id === -1 || this.map[q][r].cost>=99 || this.getUnit(q,r)) && tries<1000);
+        while((!this.isValidHex(q,r) || this.map[q][r].cost>=99 || this.getUnit(q,r)) && tries<500);
 
-        if(tries<1000) {
+        if(tries<500) {
             if(existingUnit) { existingUnit.q=q; existingUnit.r=r; return existingUnit; }
             else return this.spawnUnit(team, key, q, r);
         } return null;
@@ -223,8 +190,7 @@ class Game {
     async actionAttack(atk, def) {
         if(atk.ap<2) { this.log("AP不足!"); return; }
         const wpn=WPNS[atk.curWpn];
-        const dist = this.hexDist(atk, def);
-        if(dist > wpn.rng) { this.log("射程外です"); return; }
+        if(this.hexDist(atk, def) > wpn.rng) { this.log("射程外です"); return; }
         
         atk.ap-=2; this.state='ANIM';
         
@@ -268,8 +234,6 @@ class Game {
                     } else {
                         if(def.hp <= 0) return;
                         let hit = wpn.acc - this.map[def.q][def.r].cover + accMod;
-                        hit -= (dist * 2); // 距離減衰
-
                         if(def.stance==='prone') hit-=25;
                         if(def.skills && def.skills.includes("Ambush")) hit-= (getSkillCount(def, "Ambush") * 15);
 
@@ -400,7 +364,7 @@ class Game {
     }
     
     checkLose() { if(this.units.filter(u=>u.team==='player'&&u.hp>0).length===0) document.getElementById('gameover-screen').style.display='flex'; }
-    
+
     createConfetti() { for(let i=0; i<100; i++) this.confetti.push({x:Math.random()*Renderer.canvas.width, y:-Math.random()*500, c:`hsl(${Math.random()*360},80%,50%)`, s:Math.random()*3+2, v:Math.random()*3+3}); }
     updateConfetti() { this.confetti.forEach(p=>{ p.y+=p.v; p.x+=Math.sin(p.y*0.05); if(p.y>Renderer.canvas.height) p.y=-10; Renderer.ctx.fillStyle=p.c; Renderer.ctx.fillRect(p.x,p.y,p.s,p.s); }); }
     getUnit(q,r){return this.units.find(u=>u.q===q&&u.r===r&&u.hp>0);}
@@ -422,28 +386,13 @@ class Game {
         while(c){ if(c.q===u.q&&c.r===u.r) break; p.push(c); c=cameFrom[`${c.q},${c.r}`]; } return p.reverse();
     }
     log(m){ const c=document.getElementById('log-container'); const d=document.createElement('div'); d.className='log-entry'; d.innerText=`> ${m}`; c.appendChild(d); c.scrollTop=c.scrollHeight; }
-
-    // ★改修: 右クリックメニュー表示（ポインタ有効化 & 位置調整）
     showContext(mx,my) {
         const p=Renderer.pxToHex(mx,my), m=document.getElementById('context-menu'), u=this.getUnit(p.q,p.r), t=this.isValidHex(p.q,p.r)?this.map[p.q][p.r]:null;
-        
-        let html = "";
-        if(u) html += `<div style="color:#0af;font-weight:bold">${u.def.name}</div>HP: ${u.hp}/${u.maxHp}<br>AP: ${u.ap}<br>Wpn: ${WPNS[u.curWpn].name}`;
-        else if(t && t.id!==-1) html += `<div style="color:#0af;font-weight:bold">${t.name}</div>コスト: ${t.cost}<br>防御: ${t.cover}%`;
-        
-        // ★重要: pointer-eventsを有効化してボタンを押せるようにする
-        m.style.pointerEvents = 'auto'; 
-
-        // ターンエンドボタン追加
-        html += `<button onclick="game.endTurn();document.getElementById('context-menu').style.display='none';" style="margin-top:10px; border-color:#d44; background:#311;">TURN END</button>`;
-
-        m.innerHTML = html;
-        m.style.display='block'; 
-        // ★位置調整: カーソルの少し右下にずらす
-        m.style.left=(mx+5)+'px'; 
-        m.style.top=(my+5)+'px';
+        if(u) m.innerHTML=`<div style="color:#0af;font-weight:bold">${u.def.name}</div>HP: ${u.hp}/${u.maxHp}<br>AP: ${u.ap}<br>Wpn: ${WPNS[u.curWpn].name}`;
+        else if(t && t.id!==-1) m.innerHTML=`<div style="color:#0af;font-weight:bold">${t.name}</div>コスト: ${t.cost}<br>防御: ${t.cover}%`;
+        else return;
+        m.style.display='block'; m.style.left=mx+'px'; m.style.top=my+'px';
     }
-
     getStatus(u) { if(u.hp<=0)return "DEAD"; const r=u.hp/u.maxHp; if(r>0.8)return "NORMAL"; if(r>0.5)return u.def.isTank?"TRACK DMG":"LIGHT W."; if(r>0.2)return u.def.isTank?"GUN DMG":"HEAVY W."; return "CRITICAL"; }
     updateSidebar() {
         const ui=document.getElementById('unit-info'), u=this.selectedUnit;
