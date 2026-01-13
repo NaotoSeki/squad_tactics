@@ -1,5 +1,6 @@
 /** LOGIC */
 class Game {
+    // ... (constructor, initDOM等は変更なし)
     constructor() {
         this.units=[]; this.map=[]; this.setupSlots=[]; this.state='SETUP'; this.path=[]; this.animQueue=[]; this.debris=[]; this.confetti=[]; this.isAuto=false;
         this.isProcessingTurn = false; 
@@ -14,7 +15,7 @@ class Game {
         let isDrag=false, lx, ly;
         cvs.addEventListener('mousedown', e=>{
             if(this.state!=='PLAY' || this.isAuto) return;
-            if(e.button===2) { this.showContext(e.clientX, e.clientY); return; }
+            if(e.button===2) { this.showContext(e.clientX, e.clientY); return; } // 右クリック
             isDrag=true; lx=e.clientX; ly=e.clientY; this.handleClick(Renderer.pxToHex(e.clientX, e.clientY));
         });
         window.addEventListener('mousemove', e=>{
@@ -30,6 +31,7 @@ class Game {
         window.addEventListener('click', ()=>document.getElementById('context-menu').style.display='none');
     }
 
+    // ... (initSetup, startCampaignは変更なし)
     initSetup() {
         const box=document.getElementById('setup-cards');
         ['infantry','heavy','sniper','tank'].forEach(k=>{
@@ -62,22 +64,52 @@ class Game {
         if(this.units.length>0) Renderer.centerOn(this.units[0].q, this.units[0].r);
     }
 
+    // ★Map生成ロジック：円形島＆川
     generateMap() {
-        this.map=[]; const cx=MAP_W/2, cy=MAP_H/2;
+        this.map=[]; 
+        const cx = Math.floor(MAP_W/2);
+        const cy = Math.floor(MAP_H/2);
+        // マップ端から少し内側を島の限界とする
+        const maxRadius = Math.min(MAP_W, MAP_H) / 2 - 2; 
+
         for(let q=0; q<MAP_W; q++) {
             this.map[q]=[];
             for(let r=0; r<MAP_H; r++) {
-                const dx=q-cx, dy=r-cy; const dist=Math.sqrt(dx*dx + dy*dy);
-                const noise=Math.sin(q*0.4)+Math.cos(r*0.4)+Math.random()*0.4;
-                let t=TERRAIN.VOID;
-                if(dist<7+noise) { t=TERRAIN.GRASS; if(noise>1) t=TERRAIN.FOREST; else if(noise<-0.8) t=TERRAIN.DIRT; if(dist>6+noise) t=TERRAIN.DIRT; }
-                else t=TERRAIN.WATER;
-                if(t!==TERRAIN.WATER && Math.random()<0.04) t=TERRAIN.TOWN;
-                this.map[q][r]=t;
+                // Hex距離計算
+                const dist = (Math.abs(q-cx) + Math.abs(q+r-cx-cy) + Math.abs(r-cy)) / 2;
+                
+                // 円の外側は海(WATER: id=5)
+                if(dist > maxRadius) {
+                    this.map[q][r] = TERRAIN.WATER;
+                } else {
+                    // 内側はノイズで地形生成
+                    const noise = Math.sin(q*0.5) + Math.cos(r*0.5) + Math.random()*0.3;
+                    let t = TERRAIN.GRASS;
+                    if(noise > 1.2) t = TERRAIN.FOREST;
+                    else if(noise < -0.8) t = TERRAIN.DIRT;
+                    
+                    if(t !== TERRAIN.WATER && Math.random()<0.06) t = TERRAIN.TOWN;
+                    this.map[q][r] = t;
+                }
+            }
+        }
+
+        // 川の生成（中央付近からランダムウォーク）
+        let riverQ = cx, riverR = cy;
+        // ランダムな方向に一本流す
+        const steps = 30;
+        for(let i=0; i<steps; i++) {
+            if(this.isValidHex(riverQ, riverR)) {
+                this.map[riverQ][riverR] = TERRAIN.WATER;
+                const dirs=[[1,0],[1,-1],[0,-1],[-1,0],[-1,1],[0,1]];
+                const d = dirs[Math.floor(Math.random()*6)];
+                riverQ += d[0];
+                riverR += d[1];
             }
         }
     }
 
+    // ... (spawnEnemies, spawnAtSafeGroundで水没チェック追加)
     spawnEnemies() {
         const count = 4 + Math.floor(this.sector * 0.7);
         const tankChance = Math.min(0.8, 0.1 + (this.sector * 0.1));
@@ -97,19 +129,30 @@ class Game {
 
     spawnAtSafeGround(team, key, existingUnit=null) {
         let q, r, tries=0;
-        do { 
-            q=Math.floor(Math.random()*MAP_W); r=Math.floor(Math.random()*MAP_H); tries++; 
-            if(team==='player' && r < MAP_H/2) continue;
-            if(team==='enemy' && r > MAP_H/2) continue;
-        } 
-        while((!this.isValidHex(q,r) || this.map[q][r].cost>=99 || this.getUnit(q,r)) && tries<500);
+        const cx = Math.floor(MAP_W/2);
+        const cy = Math.floor(MAP_H/2);
 
-        if(tries<500) {
+        do { 
+            // 円形マップ内のランダム座標
+            q = Math.floor(Math.random()*MAP_W);
+            r = Math.floor(Math.random()*MAP_H);
+            tries++; 
+            
+            // プレイヤーは下半分、敵は上半分（大まかに）
+            if(team==='player' && r < cy) continue;
+            if(team==='enemy' && r > cy) continue;
+        } 
+        // ★修正: 水域(id:5)とVOID(id:-1)には置かないチェックを追加
+        while((!this.isValidHex(q,r) || this.map[q][r].id === 5 || this.map[q][r].id === -1 || this.map[q][r].cost>=99 || this.getUnit(q,r)) && tries<1000);
+
+        if(tries<1000) {
             if(existingUnit) { existingUnit.q=q; existingUnit.r=r; return existingUnit; }
             else return this.spawnUnit(team, key, q, r);
         } return null;
     }
 
+    // ... (spawnUnit, toggleAuto, runAuto, handleClick, actionMove, checkReactionFire, swapWeapon, actionAttack)
+    // 変更なし箇所は省略せずにそのまま保持してください（または前回のlogic.jsを使用）
     spawnUnit(team, k, q, r) {
         const def=UNITS[k];
         const apMod = def.ap;
@@ -281,7 +324,8 @@ class Game {
             this.state='PLAY'; this.updateSidebar(); this.checkPhaseEnd();
         }, isRocket ? 1200 : 500);
     }
-
+    
+    // ... (checkPhaseEnd, setStance, endTurn, healSurvivors, promoteSurvivors)
     checkPhaseEnd() { if(this.units.filter(u=>u.team==='player'&&u.hp>0&&u.ap>0).length===0 && this.state==='PLAY') this.endTurn(); }
     setStance(s) { if(this.selectedUnit && this.selectedUnit.ap>=1 && !this.selectedUnit.def.isTank) { this.selectedUnit.ap--; this.selectedUnit.stance=s; this.updateSidebar(); this.checkPhaseEnd(); } }
 
@@ -364,7 +408,8 @@ class Game {
     }
     
     checkLose() { if(this.units.filter(u=>u.team==='player'&&u.hp>0).length===0) document.getElementById('gameover-screen').style.display='flex'; }
-
+    
+    // ... (createConfetti, updateConfetti, getUnit, isValidHex, hexDist, getNeighbors, findPath, log, getStatus, updateSidebar, draw は変更なし)
     createConfetti() { for(let i=0; i<100; i++) this.confetti.push({x:Math.random()*Renderer.canvas.width, y:-Math.random()*500, c:`hsl(${Math.random()*360},80%,50%)`, s:Math.random()*3+2, v:Math.random()*3+3}); }
     updateConfetti() { this.confetti.forEach(p=>{ p.y+=p.v; p.x+=Math.sin(p.y*0.05); if(p.y>Renderer.canvas.height) p.y=-10; Renderer.ctx.fillStyle=p.c; Renderer.ctx.fillRect(p.x,p.y,p.s,p.s); }); }
     getUnit(q,r){return this.units.find(u=>u.q===q&&u.r===r&&u.hp>0);}
@@ -386,13 +431,22 @@ class Game {
         while(c){ if(c.q===u.q&&c.r===u.r) break; p.push(c); c=cameFrom[`${c.q},${c.r}`]; } return p.reverse();
     }
     log(m){ const c=document.getElementById('log-container'); const d=document.createElement('div'); d.className='log-entry'; d.innerText=`> ${m}`; c.appendChild(d); c.scrollTop=c.scrollHeight; }
+    
+    // ★改修: 右クリックメニューに「ターン終了」を追加
     showContext(mx,my) {
         const p=Renderer.pxToHex(mx,my), m=document.getElementById('context-menu'), u=this.getUnit(p.q,p.r), t=this.isValidHex(p.q,p.r)?this.map[p.q][p.r]:null;
-        if(u) m.innerHTML=`<div style="color:#0af;font-weight:bold">${u.def.name}</div>HP: ${u.hp}/${u.maxHp}<br>AP: ${u.ap}<br>Wpn: ${WPNS[u.curWpn].name}`;
-        else if(t && t.id!==-1) m.innerHTML=`<div style="color:#0af;font-weight:bold">${t.name}</div>コスト: ${t.cost}<br>防御: ${t.cover}%`;
-        else return;
+        
+        let html = "";
+        if(u) html += `<div style="color:#0af;font-weight:bold">${u.def.name}</div>HP: ${u.hp}/${u.maxHp}<br>AP: ${u.ap}<br>Wpn: ${WPNS[u.curWpn].name}`;
+        else if(t && t.id!==-1) html += `<div style="color:#0af;font-weight:bold">${t.name}</div>コスト: ${t.cost}<br>防御: ${t.cover}%`;
+        
+        // メニュー下部にターンエンドボタンを追加
+        html += `<button onclick="game.endTurn();document.getElementById('context-menu').style.display='none';" style="margin-top:10px; border-color:#d44; background:#311;">TURN END</button>`;
+
+        m.innerHTML = html;
         m.style.display='block'; m.style.left=mx+'px'; m.style.top=my+'px';
     }
+
     getStatus(u) { if(u.hp<=0)return "DEAD"; const r=u.hp/u.maxHp; if(r>0.8)return "NORMAL"; if(r>0.5)return u.def.isTank?"TRACK DMG":"LIGHT W."; if(r>0.2)return u.def.isTank?"GUN DMG":"HEAVY W."; return "CRITICAL"; }
     updateSidebar() {
         const ui=document.getElementById('unit-info'), u=this.selectedUnit;
