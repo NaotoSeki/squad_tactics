@@ -27,6 +27,7 @@ class Game {
         });
         window.addEventListener('mouseup', ()=>isDrag=false);
         window.addEventListener('contextmenu', e=>e.preventDefault());
+        // メニュー外クリックで閉じる
         window.addEventListener('click', (e)=>{
             if(!e.target.closest('#context-menu')) document.getElementById('context-menu').style.display='none';
         });
@@ -267,7 +268,7 @@ class Game {
                     } else {
                         if(def.hp <= 0) return;
                         let hit = wpn.acc - this.map[def.q][def.r].cover + accMod;
-                        hit -= (dist * 2);
+                        hit -= (dist * 2); // 距離減衰
 
                         if(def.stance==='prone') hit-=25;
                         if(def.skills && def.skills.includes("Ambush")) hit-= (getSkillCount(def, "Ambush") * 15);
@@ -431,7 +432,7 @@ class Game {
         
         m.style.pointerEvents = 'auto'; // ボタン有効化
         
-        // ターンエンドボタン
+        // ターンエンドボタン追加
         html += `<button onclick="game.endTurn();document.getElementById('context-menu').style.display='none';" style="margin-top:10px; border-color:#d44; background:#311;">TURN END</button>`;
 
         m.innerHTML = html;
