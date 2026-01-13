@@ -1,5 +1,5 @@
 /** DATA */
-const HEX_SIZE = 34; const MAP_W = 24; const MAP_H = 20;
+const HEX_SIZE = 34; const MAP_W = 24; const MAP_H = 24;
 const RANKS = ["Pvt", "Cpl", "Sgt", "Lt", "Cpt", "Maj"];
 const SKILLS = {
     "Precision": { name: "精密", desc: "命中+15%" },
