@@ -14,7 +14,7 @@ class Game {
         let isDrag=false, lx, ly;
         cvs.addEventListener('mousedown', e=>{
             if(this.state!=='PLAY' || this.isAuto) return;
-            if(e.button===2) { this.showContext(e.clientX, e.clientY); return; } // 右クリック
+            if(e.button===2) { this.showContext(e.clientX, e.clientY); return; }
             isDrag=true; lx=e.clientX; ly=e.clientY; this.handleClick(Renderer.pxToHex(e.clientX, e.clientY));
         });
         window.addEventListener('mousemove', e=>{
@@ -27,7 +27,6 @@ class Game {
         });
         window.addEventListener('mouseup', ()=>isDrag=false);
         window.addEventListener('contextmenu', e=>e.preventDefault());
-        // メニュー外クリックで閉じる
         window.addEventListener('click', (e)=>{
             if(!e.target.closest('#context-menu')) document.getElementById('context-menu').style.display='none';
         });
@@ -65,7 +64,6 @@ class Game {
         if(this.units.length>0) Renderer.centerOn(this.units[0].q, this.units[0].r);
     }
 
-    // Map生成: 円形島 & 川
     generateMap() {
         this.map=[]; 
         const cx = Math.floor(MAP_W/2);
@@ -91,7 +89,6 @@ class Game {
             }
         }
 
-        // 川の生成
         let riverQ = cx, riverR = cy;
         const steps = 30;
         for(let i=0; i<steps; i++) {
@@ -268,7 +265,7 @@ class Game {
                     } else {
                         if(def.hp <= 0) return;
                         let hit = wpn.acc - this.map[def.q][def.r].cover + accMod;
-                        hit -= (dist * 2); // 距離減衰
+                        hit -= (dist * 2);
 
                         if(def.stance==='prone') hit-=25;
                         if(def.skills && def.skills.includes("Ambush")) hit-= (getSkillCount(def, "Ambush") * 15);
@@ -430,9 +427,7 @@ class Game {
         if(u) html += `<div style="color:#0af;font-weight:bold">${u.def.name}</div>HP: ${u.hp}/${u.maxHp}<br>AP: ${u.ap}<br>Wpn: ${WPNS[u.curWpn].name}`;
         else if(t && t.id!==-1) html += `<div style="color:#0af;font-weight:bold">${t.name}</div>コスト: ${t.cost}<br>防御: ${t.cover}%`;
         
-        m.style.pointerEvents = 'auto'; // ボタン有効化
-        
-        // ターンエンドボタン追加
+        m.style.pointerEvents = 'auto'; 
         html += `<button onclick="game.endTurn();document.getElementById('context-menu').style.display='none';" style="margin-top:10px; border-color:#d44; background:#311;">TURN END</button>`;
 
         m.innerHTML = html;
@@ -466,6 +461,7 @@ class Game {
             if(u.def.isTank) document.querySelectorAll('.btn-stance').forEach(b=>b.classList.add('disabled'));
         } else ui.innerHTML=`<div style="text-align:center; color:#555; margin-top:80px;">// NO SIGNAL //</div>`;
     }
+    
     draw() {
         const ctx=Renderer.ctx; 
         if(Renderer.shake > 0) { ctx.save(); ctx.translate((Math.random()-0.5)*Renderer.shake, (Math.random()-0.5)*Renderer.shake); }
@@ -479,16 +475,23 @@ class Game {
                 if (count > 0) neighborCounts.set(`${u.q},${u.r}`, count);
             });
 
+            // 1. Draw Terrain
             for(let q=0; q<MAP_W; q++) for(let r=0; r<MAP_H; r++) { 
                 if(this.map[q][r].id!==-1) {
                     const count = neighborCounts.get(`${q},${r}`) || 0;
                     Renderer.drawHex(q, r, this.map[q][r], count); 
-                    VFX.debris.filter(d=>d.q===q&&d.r===r).forEach(d=>Renderer.drawStaticDebris(d.q,d.r,d.type));
                 }
             }
+            
+            // 2. Draw Debris (Separate Optimized Loop)
+            VFX.debris.forEach(d => {
+                 if (this.map[d.q] && this.map[d.q][d.r] && this.map[d.q][d.r].id !== -1) {
+                     Renderer.drawStaticDebris(d.q, d.r, d.type);
+                 }
+            });
         }
         
-        // ★修正: APが2以上（攻撃可能）なときだけ射程を表示
+        // Range & Path
         if(this.selectedUnit && this.state==='PLAY' && this.selectedUnit.ap >= 2) Renderer.drawRange(this.selectedUnit);
         
         if(this.path.length>0) { ctx.strokeStyle="rgba(255,255,255,0.4)"; ctx.lineWidth=2; ctx.setLineDash([5,5]); ctx.beginPath(); 
