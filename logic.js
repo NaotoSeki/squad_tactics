@@ -62,12 +62,13 @@ class Game {
         if(this.units.length>0) Renderer.centerOn(this.units[0].q, this.units[0].r);
     }
 
-    // ★Map生成ロジック：円形島＆川生成
+    // ★Map生成ロジック：ダイヤモンドの角をカットして円形にする
     generateMap() {
         this.map=[]; 
         const cx = Math.floor(MAP_W/2);
         const cy = Math.floor(MAP_H/2);
-        const maxRadius = Math.min(MAP_W, MAP_H) / 2 - 2; 
+        // マップ端から少し内側を島の限界とする
+        const maxRadius = 11; // 24x24なら半径11くらいが丁度いい
 
         for(let q=0; q<MAP_W; q++) {
             this.map[q]=[];
@@ -75,8 +76,11 @@ class Game {
                 // 中心からの距離計算
                 const dist = (Math.abs(q-cx) + Math.abs(q+r-cx-cy) + Math.abs(r-cy)) / 2;
                 
-                // 円の外は海
+                // 円の外は虚空（描画しない）
                 if(dist > maxRadius) {
+                    this.map[q][r] = TERRAIN.VOID;
+                } else if(dist > maxRadius - 2) {
+                    // 島の周囲は海
                     this.map[q][r] = TERRAIN.WATER;
                 } else {
                     // 内側はノイズで地形生成
@@ -96,6 +100,9 @@ class Game {
         const steps = 30;
         for(let i=0; i<steps; i++) {
             if(this.isValidHex(riverQ, riverR)) {
+                // 既に海か虚空なら停止
+                if(this.map[riverQ][riverR].id === 5 || this.map[riverQ][riverR].id === -1) break;
+                
                 this.map[riverQ][riverR] = TERRAIN.WATER;
                 const dirs=[[1,0],[1,-1],[0,-1],[-1,0],[-1,1],[0,1]];
                 const d = dirs[Math.floor(Math.random()*6)];
