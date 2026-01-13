@@ -1,5 +1,8 @@
 /** DATA */
-const HEX_SIZE = 34; const MAP_W = 24; const MAP_H = 24;
+const HEX_SIZE = 34; 
+const MAP_W = 24; 
+const MAP_H = 24; // ★変更: 円形マップ用に正方形化
+
 const RANKS = ["Pvt", "Cpl", "Sgt", "Lt", "Cpt", "Maj"];
 const SKILLS = {
     "Precision": { name: "精密", desc: "命中+15%" },
@@ -21,15 +24,21 @@ const WPNS = {
     kwk: { name:"75mm AP", rng:7, acc:70, dmg:150, burst:1, type:'shell_fast' },
     he: { name:"75mm HE", rng:7, acc:60, dmg:100, burst:1, type:'shell', area:true },
     rocket380: { name:"380mm Rkt", rng:7, acc:60, dmg:400, burst:1, type:'rocket', area:true },
-    coax: { name:"Coax MG", rng:2, acc:60, dmg:15, burst:5, type:'bullet' }
+    coax: { name:"Coax MG", rng:2, acc:60, dmg:15, burst:5, type:'bullet' },
+    // ★New: Tiger I 主砲 (データのみ準備)
+    kwk88: { name:"88mm KwK36", rng:8, acc:90, dmg:250, burst:1, type:'shell_fast' }
 };
+
 const UNITS = {
     infantry: { name:"Rifle Squad", hp:100, ap:4, wpn:"m1", alt:"nade", icon:"⚡", desc:"汎用歩兵分隊" },
     heavy:    { name:"MG Team", hp:120, ap:3, wpn:"mg42", alt:"luger", icon:"⛨", desc:"制圧射撃用重火器" },
     sniper:   { name:"Sniper", hp:60, ap:4, wpn:"k98", alt:"luger", icon:"◎", desc:"長距離狙撃手" },
     tank:     { name:"Panzer IV", hp:550, ap:5, wpn:"kwk", alt:"he", icon:"♜", desc:"中戦車 (姿勢固定)", isTank:true },
-    mortar:   { name:"Assault Mortar", hp:400, ap:3, wpn:"rocket380", alt:"mg42", icon:"☢", desc:"突撃臼砲 (広範囲)", isTank:true }
+    mortar:   { name:"Assault Mortar", hp:400, ap:3, wpn:"rocket380", alt:"mg42", icon:"☢", desc:"突撃臼砲 (広範囲)", isTank:true },
+    // ★New: Boss Unit (データのみ準備)
+    tiger:    { name:"Tiger I", hp:1200, ap:4, wpn:"kwk88", alt:"mg42", icon:"☠️", desc:"重戦車 (BOSS)", isTank:true, isBoss:true }
 };
+
 const TERRAIN = {
     VOID: {id:-1, name:"", cost:99, cover:0, color:"#111"},
     DIRT: {id:0, name:"荒地", cost:1, cover:5, color:"#5a5245"},
