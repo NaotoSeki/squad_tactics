@@ -114,12 +114,12 @@ const Renderer = {
         const ctx=this.ctx;
         ctx.beginPath(); for(let i=0;i<6;i++) ctx.lineTo(p.x+HEX_SIZE*Math.cos(Math.PI/3*i), p.y+HEX_SIZE*Math.sin(Math.PI/3*i)); ctx.closePath();
         
-        // ★水域の描画（波キラキラ演出付き）
+        // ★水面の演出強化
         if (t.id === 5) {
             ctx.fillStyle = "#303840"; ctx.fill();
             if (Math.random() < 0.01) { 
                 ctx.fillStyle = "rgba(255,255,255,0.1)"; 
-                ctx.fillRect(p.x - 5, p.y - 2, 10, 4); 
+                ctx.fillRect(p.x - 5, p.y - 2, 10, 4); // キラキラ
             }
         } else {
             ctx.fillStyle=t.color; ctx.fill();
@@ -138,7 +138,7 @@ const Renderer = {
         else if(t.id===4) ctx.fillRect(p.x-8, p.y-8, 16, 16); // TOWN
     },
 
-    // ★射程範囲（白枠＆距離減衰カラー）
+    // ★改修: 射程範囲を「縁取り」＆「距離による色変化」で描画
     drawRange(u) {
         if(!u) return;
         const wpn=WPNS[u.curWpn];
@@ -150,15 +150,17 @@ const Renderer = {
         for(let q=q_min; q<=q_max; q++) {
             for(let r=u.r-wpn.rng; r<=u.r+wpn.rng; r++) {
                 const dist = (Math.abs(q-u.q)+Math.abs(q+r-u.q-u.r)+Math.abs(r-u.r))/2;
-                if(dist <= wpn.rng && dist > 0) { 
+                if(dist <= wpn.rng && dist > 0) { // 自分自身は除外
+                    // 色計算: 近い＝白, 遠い＝赤
                     const ratio = dist / wpn.rng; 
                     const g = Math.floor(255 * (1 - ratio * 0.8)); 
                     const b = Math.floor(255 * (1 - ratio * 0.8)); 
                     
                     const p=this.hexToPx(q,r);
-                    ctx.strokeStyle = `rgba(255, ${g}, ${b}, 0.6)`; 
+                    ctx.strokeStyle = `rgba(255, ${g}, ${b}, 0.6)`;
                     
                     ctx.beginPath(); 
+                    // 枠を少し内側に描画
                     for(let i=0;i<6;i++) ctx.lineTo(p.x+HEX_SIZE*0.85*Math.cos(Math.PI/3*i), p.y+HEX_SIZE*0.85*Math.sin(Math.PI/3*i)); 
                     ctx.closePath();
                     ctx.stroke();
