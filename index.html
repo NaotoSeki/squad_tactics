@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>SQUAD TACTICS v2.0.1 - HEROES OF THE SECTOR</title>
+    <title>SQUAD TACTICS v2.1 - HEROES OF THE SECTOR</title>
     <style>
         :root { --bg: #0b0e0a; --panel: #1a1a1a; --text: #bbb; --accent: #d84; --border: #444; }
         body {
@@ -216,6 +216,7 @@ const SKILLS = {
     "AmmoBox":   { name: "弾薬", desc: "連射数UP" },
     "HighPower": { name: "強装", desc: "ダメージ+20%" },
     "Mechanic":  { name: "修理", desc: "毎ターン回復" },
+    "Armor":     { name: "装甲", desc: "被ダメ-10" },
     "Hero":      { name: "英雄", desc: "AP+1 (5戦生存)" }
 };
 
@@ -398,7 +399,7 @@ const Renderer = {
 class Game {
     constructor() {
         this.units=[]; this.map=[]; this.setupSlots=[]; this.state='SETUP'; this.path=[]; this.animQueue=[]; this.debris=[]; this.confetti=[]; this.isAuto=false;
-        this.isProcessingTurn = false; // ★ FIX: 重複実行防止用フラグ
+        this.isProcessingTurn = false; 
         this.sector = 1; this.initDOM(); this.initSetup();
         const loop=()=>{ Renderer.frame++; VFX.update(); this.updateConfetti(); this.draw(); if(this.isAuto) this.runAuto(); requestAnimationFrame(loop); }; 
         requestAnimationFrame(loop);
@@ -508,7 +509,7 @@ class Game {
 
     spawnUnit(team, k, q, r) {
         const def=UNITS[k];
-        const apMod = (def.ap + (k==='tank'?0:0));
+        const apMod = def.ap;
         this.units.push({
             id:Math.random(), team, q, r, def, 
             hp:def.hp, maxHp:def.hp, ap:apMod, maxAp:apMod, 
@@ -522,7 +523,6 @@ class Game {
         document.getElementById('auto-toggle').classList.toggle('active');
         this.log(`AUTO PILOT: ${this.isAuto ? "ON" : "OFF"}`);
         this.selectedUnit = null; this.path = [];
-        // ★ FIX: オートパイロット切り替え時に即座にチェック
         if(this.isAuto) this.runAuto();
     }
 
@@ -591,19 +591,18 @@ class Game {
         
         atk.ap-=2; this.state='ANIM';
         
-        let bonus = this.getNeighbors(atk.q, atk.r).filter(n => this.getUnit(n.q, n.r)?.team === atk.team).length * 10;
-        if(atk.skills.includes("Radio")) bonus += 15;
-        
-        let accMod = (atk.rank || 0) * 8; 
-        if(atk.skills.includes("Precision")) accMod += 15;
+        const getSkillCount = (unit, key) => unit.skills.filter(s => s === key).length;
 
-        let dmgMod = 1.0;
-        if(atk.skills.includes("HighPower")) dmgMod = 1.2;
+        let bonus = this.getNeighbors(atk.q, atk.r).filter(n => this.getUnit(n.q, n.r)?.team === atk.team).length * 10;
+        if(atk.skills.includes("Radio")) bonus += (15 * getSkillCount(atk, "Radio"));
+        
+        let accMod = (atk.rank || 0) * 8 + (getSkillCount(atk, "Precision") * 15); 
+        let dmgMod = 1.0 + (getSkillCount(atk, "HighPower") * 0.2);
 
         this.log(`${atk.def.name} 攻撃(支援+${bonus}%)`);
         
-        let burst=wpn.burst||1;
-        if(atk.skills.includes("AmmoBox")) burst += (wpn.name==='MG42'?3:1);
+        let burst = wpn.burst || 1;
+        burst += (getSkillCount(atk, "AmmoBox") * (wpn.name === 'MG42' ? 3 : 1));
 
         const pType = wpn.type; const isShell = pType.includes('shell');
         const isRocket = pType === 'rocket'; 
@@ -633,11 +632,19 @@ class Game {
                         if(def.hp <= 0) return;
                         let hit = wpn.acc - this.map[def.q][def.r].cover + accMod;
                         if(def.stance==='prone') hit-=25;
-                        if(def.skills && def.skills.includes("Ambush")) hit-=15;
+                        if(def.skills && def.skills.includes("Ambush")) hit-= (getSkillCount(def, "Ambush") * 15);
 
                         if(Math.random()*100 < hit) {
                             let dmg = Math.floor(wpn.dmg * (1+bonus/100) * (0.8+Math.random()*0.4) * dmgMod);
                             if(def.stance==='prone') dmg=Math.floor(dmg*0.6);
+
+                            const armorLevel = getSkillCount(def, "Armor");
+                            if(armorLevel > 0) {
+                                const reduction = armorLevel * 10;
+                                dmg = Math.max(1, dmg - reduction);
+                                if(i === 0) this.log(`>> 装甲が衝撃を吸収 (-${reduction})`);
+                            }
+
                             def.hp-=dmg; 
                             VFX.addExplosion(ex, ey, "#f55", 5); Sfx.play(isShell?'boom':'shot');
                             if(wpn.area || Math.random() < 0.2) {
@@ -676,14 +683,14 @@ class Game {
     setStance(s) { if(this.selectedUnit && this.selectedUnit.ap>=1 && !this.selectedUnit.def.isTank) { this.selectedUnit.ap--; this.selectedUnit.stance=s; this.updateSidebar(); this.checkPhaseEnd(); } }
 
     endTurn() {
-        if(this.isProcessingTurn) return; // ★ FIX: 既に処理中なら何もしない（連打ガード）
-        this.isProcessingTurn = true;     // ★ FIX: ロック開始
+        if(this.isProcessingTurn) return;
+        this.isProcessingTurn = true; 
 
         this.selectedUnit=null; this.state='ANIM'; document.getElementById('eyecatch').style.opacity=1;
         
-        // Mechanic Heal
         this.units.filter(u=>u.team==='player'&&u.hp>0&&u.skills.includes("Mechanic")).forEach(u=>{
-            if(u.hp < u.maxHp) { u.hp = Math.min(u.maxHp, u.hp+20); this.log(`${u.def.name} 自己修復`); }
+            const count = u.skills.filter(s => s === "Mechanic").length;
+            if(u.hp < u.maxHp) { u.hp = Math.min(u.maxHp, u.hp + (count * 20)); this.log(`${u.def.name} 自己修復`); }
         });
 
         setTimeout(async () => {
@@ -701,7 +708,7 @@ class Game {
                 }
             }
             this.units.forEach(u=>{if(u.team==='player') u.ap=u.maxAp;}); this.log("-- PLAYER PHASE --"); this.state='PLAY';
-            this.isProcessingTurn = false; // ★ FIX: ロック解除
+            this.isProcessingTurn = false;
         }, 1200);
     }
 
@@ -712,7 +719,7 @@ class Game {
         this.log("生存部隊 治療完了 (MAX 80%)");
     }
     promoteSurvivors() {
-        const skKeys = Object.keys(SKILLS);
+        const skKeys = Object.keys(SKILLS).filter(k => k !== "Hero");
         this.units.filter(u=>u.team==='player'&&u.hp>0).forEach(u=>{ 
             u.sectorsSurvived++;
             if(u.sectorsSurvived === 5) {
@@ -722,13 +729,11 @@ class Game {
             }
             
             u.rank=Math.min(5, (u.rank||0)+1); u.maxHp+=30; u.hp+=30; 
-            // Gain Perk
-            if(u.skills.length < 3 && Math.random() < 0.6) {
+            
+            if(u.skills.length < 8 && Math.random() < 0.7) {
                 const newSkill = skKeys[Math.floor(Math.random()*skKeys.length)];
-                if(!u.skills.includes(newSkill) && newSkill !== "Hero") {
-                    u.skills.push(newSkill);
-                    this.log(`${u.def.name} 新戦技習得: ${SKILLS[newSkill].name}`);
-                }
+                u.skills.push(newSkill);
+                this.log(`${u.def.name} 強化: ${SKILLS[newSkill].name}習得`);
             }
             this.log(`${u.def.name} 昇進 -> ${RANKS[u.rank]}`); 
         });
@@ -790,9 +795,11 @@ class Game {
         const ui=document.getElementById('unit-info'), u=this.selectedUnit;
         if(u) {
             const wpn = WPNS[u.curWpn], st=this.getStatus(u), rank=RANKS[u.rank||0];
-            const skillBadges = u.skills.map(s => {
+            const skillCounts = u.skills.reduce((acc, s) => { acc[s] = (acc[s] || 0) + 1; return acc; }, {});
+            const skillBadges = Object.keys(skillCounts).map(s => {
+                const count = skillCounts[s];
                 const cls = s==="Hero" ? "skill-badge hero-badge" : "skill-badge";
-                return `<span class="${cls}">${SKILLS[s].name}</span>`;
+                return `<span class="${cls}">${SKILLS[s].name}${count > 1 ? ' x'+count : ''}</span>`;
             }).join('');
             
             const btnState = (this.state !== 'PLAY') ? 'disabled' : '';
@@ -832,7 +839,6 @@ class Game {
             }
         }
         
-        // Range & Path
         if(this.selectedUnit && this.state==='PLAY') Renderer.drawRange(this.selectedUnit);
         
         if(this.path.length>0) { ctx.strokeStyle="rgba(255,255,255,0.4)"; ctx.lineWidth=2; ctx.setLineDash([5,5]); ctx.beginPath(); 
