@@ -99,10 +99,14 @@ const VFX = {
 
 /** RENDERER */
 const Renderer = {
-    // ... (init, resize, hexToPx等は変更なし)
-    // 既存の関数はそのまま維持し、drawRangeとdrawHexだけ更新・確認してください
-
-    // ... (前略)
+    ctx: null, canvas: null, cam: {x:0, y:0}, frame:0,
+    init(c) { this.canvas=c; this.ctx=c.getContext('2d'); this.resize(); window.addEventListener('resize',()=>this.resize()); },
+    resize() { this.canvas.width=this.canvas.parentElement.clientWidth; this.canvas.height=this.canvas.parentElement.clientHeight; },
+    centerOn(q, r) { const p=this.hexToPxRaw(q, r); this.cam.x=(this.canvas.width/2)-p.x; this.cam.y=(this.canvas.height/2)-p.y; },
+    hexToPx(q,r) { const p=this.hexToPxRaw(q,r); return {x:p.x+this.cam.x, y:p.y+this.cam.y}; },
+    hexToPxRaw(q,r) { return {x:HEX_SIZE*3/2*q, y:HEX_SIZE*Math.sqrt(3)*(r+q/2)}; },
+    pxToHex(mx,my) { const x=mx-this.cam.x, y=my-this.cam.y; const q=(2/3*x)/HEX_SIZE, r=(-1/3*x+Math.sqrt(3)/3*y)/HEX_SIZE; return this.roundHex(q,r); },
+    roundHex(q,r) { let rq=Math.round(q), rr=Math.round(r), rs=Math.round(-q-r); const dq=Math.abs(rq-q), dr=Math.abs(rr-r), ds=Math.abs(rs-(-q-r)); if(dq>dr&&dq>ds) rq=-rr-rs; else if(dr>ds) rr=-rq-rs; return {q:rq, r:rr}; },
     
     drawHex(q,r,t,hlCount) {
         const p=this.hexToPx(q,r);
@@ -110,12 +114,12 @@ const Renderer = {
         const ctx=this.ctx;
         ctx.beginPath(); for(let i=0;i<6;i++) ctx.lineTo(p.x+HEX_SIZE*Math.cos(Math.PI/3*i), p.y+HEX_SIZE*Math.sin(Math.PI/3*i)); ctx.closePath();
         
-        // ★水域の描画を少しリッチに（波のような演出）
+        // ★水域の描画（波キラキラ演出付き）
         if (t.id === 5) {
             ctx.fillStyle = "#303840"; ctx.fill();
             if (Math.random() < 0.01) { 
                 ctx.fillStyle = "rgba(255,255,255,0.1)"; 
-                ctx.fillRect(p.x - 5, p.y - 2, 10, 4); // 波キラキラ
+                ctx.fillRect(p.x - 5, p.y - 2, 10, 4); 
             }
         } else {
             ctx.fillStyle=t.color; ctx.fill();
@@ -134,7 +138,7 @@ const Renderer = {
         else if(t.id===4) ctx.fillRect(p.x-8, p.y-8, 16, 16); // TOWN
     },
 
-    // ★改修: 射程範囲を「枠線」＆「命中率に応じた色」で表示
+    // ★射程範囲（白枠＆距離減衰カラー）
     drawRange(u) {
         if(!u) return;
         const wpn=WPNS[u.curWpn];
@@ -145,20 +149,16 @@ const Renderer = {
 
         for(let q=q_min; q<=q_max; q++) {
             for(let r=u.r-wpn.rng; r<=u.r+wpn.rng; r++) {
-                // 距離判定
                 const dist = (Math.abs(q-u.q)+Math.abs(q+r-u.q-u.r)+Math.abs(r-u.r))/2;
-                if(dist <= wpn.rng && dist > 0) { // 自分自身は除外
-                    // 簡易的な距離による命中率低下の表現
-                    // 距離が近い＝白(RGB 255,255,255), 遠い＝赤(RGB 255,50,50)
+                if(dist <= wpn.rng && dist > 0) { 
                     const ratio = dist / wpn.rng; 
-                    const g = Math.floor(255 * (1 - ratio * 0.8)); // 遠いと緑成分が減る
-                    const b = Math.floor(255 * (1 - ratio * 0.8)); // 遠いと青成分が減る
+                    const g = Math.floor(255 * (1 - ratio * 0.8)); 
+                    const b = Math.floor(255 * (1 - ratio * 0.8)); 
                     
                     const p=this.hexToPx(q,r);
-                    ctx.strokeStyle = `rgba(255, ${g}, ${b}, 0.6)`; // 半透明の枠線
+                    ctx.strokeStyle = `rgba(255, ${g}, ${b}, 0.6)`; 
                     
                     ctx.beginPath(); 
-                    // 枠線を少し内側に描く（0.85倍）
                     for(let i=0;i<6;i++) ctx.lineTo(p.x+HEX_SIZE*0.85*Math.cos(Math.PI/3*i), p.y+HEX_SIZE*0.85*Math.sin(Math.PI/3*i)); 
                     ctx.closePath();
                     ctx.stroke();
@@ -167,8 +167,6 @@ const Renderer = {
         }
     },
 
-    // ... (drawStaticDebris, drawUnit は変更なし)
-    // 既存のコードをそのまま使ってください
     drawStaticDebris(q, r, type) {
         const p=this.hexToPx(q, r); const ctx=this.ctx;
         if(type==='crater') { ctx.fillStyle="rgba(0,0,0,0.4)"; ctx.beginPath(); ctx.arc(p.x, p.y, 12, 0, Math.PI*2); ctx.fill(); }
