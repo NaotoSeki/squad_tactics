@@ -176,6 +176,7 @@ const Renderer = {
     },
     drawUnit(u, sel) {
         const p=this.hexToPx(u.q, u.r); const ctx=this.ctx; ctx.save(); ctx.translate(p.x, p.y);
+        
         if(sel) { ctx.beginPath(); ctx.arc(0,0,22,0,Math.PI*2); ctx.strokeStyle="#0f0"; ctx.lineWidth=2; ctx.stroke(); }
         if(u.ap > 0 && u.team === 'player') {
             const ang = this.frame * 0.05; const yOff = -38 + Math.sin(this.frame*0.1)*3;
