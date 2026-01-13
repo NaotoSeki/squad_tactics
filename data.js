@@ -1,7 +1,7 @@
 /** DATA */
 const HEX_SIZE = 34; 
 const MAP_W = 24; 
-const MAP_H = 24; // ★変更: 円形マップ用に正方形化
+const MAP_H = 24; // ★正方形化して円形に切り抜きやすくする
 
 const RANKS = ["Pvt", "Cpl", "Sgt", "Lt", "Cpt", "Maj"];
 const SKILLS = {
@@ -25,7 +25,7 @@ const WPNS = {
     he: { name:"75mm HE", rng:7, acc:60, dmg:100, burst:1, type:'shell', area:true },
     rocket380: { name:"380mm Rkt", rng:7, acc:60, dmg:400, burst:1, type:'rocket', area:true },
     coax: { name:"Coax MG", rng:2, acc:60, dmg:15, burst:5, type:'bullet' },
-    // ★New: Tiger I 主砲 (データのみ準備)
+    // ★Tiger I 用武装
     kwk88: { name:"88mm KwK36", rng:8, acc:90, dmg:250, burst:1, type:'shell_fast' }
 };
 
@@ -35,7 +35,7 @@ const UNITS = {
     sniper:   { name:"Sniper", hp:60, ap:4, wpn:"k98", alt:"luger", icon:"◎", desc:"長距離狙撃手" },
     tank:     { name:"Panzer IV", hp:550, ap:5, wpn:"kwk", alt:"he", icon:"♜", desc:"中戦車 (姿勢固定)", isTank:true },
     mortar:   { name:"Assault Mortar", hp:400, ap:3, wpn:"rocket380", alt:"mg42", icon:"☢", desc:"突撃臼砲 (広範囲)", isTank:true },
-    // ★New: Boss Unit (データのみ準備)
+    // ★Tiger I データ
     tiger:    { name:"Tiger I", hp:1200, ap:4, wpn:"kwk88", alt:"mg42", icon:"☠️", desc:"重戦車 (BOSS)", isTank:true, isBoss:true }
 };
 
