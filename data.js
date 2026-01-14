@@ -21,7 +21,7 @@ const WPNS = {
     kwk: { name:"75mm AP", rng:7, acc:70, dmg:150, burst:1, type:'shell_fast' },
     he: { name:"75mm HE", rng:7, acc:60, dmg:100, burst:1, type:'shell', area:true },
     rocket380: { name:"380mm Rkt", rng:7, acc:60, dmg:400, burst:1, type:'rocket', area:true },
-    coax: { name:"Coax MG", rng:2, acc:60, dmg:15, burst:5, type:'bullet' }
+    coax: { name:"Coax MG", rng:1, acc:60, dmg:15, burst:5, type:'bullet' }
 };
 const UNITS = {
     infantry: { name:"Rifle Squad", hp:100, ap:4, wpn:"m1", alt:"nade", icon:"⚡", desc:"汎用歩兵分隊" },
