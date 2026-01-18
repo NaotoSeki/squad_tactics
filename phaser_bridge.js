@@ -4,7 +4,7 @@
 
 let phaserScene = null; // 外部アクセス用
 
-// ★復活＆修正: カード用アイコン生成関数 (Canvas API使用)
+// カード画像生成（前回修正済み）
 window.createCardIcon = function(type) {
     const c = document.createElement('canvas'); c.width=100; c.height=60; const ctx = c.getContext('2d');
     ctx.translate(50, 30); ctx.scale(2,2);
@@ -13,7 +13,7 @@ window.createCardIcon = function(type) {
     else if(type==='sniper') { ctx.fillStyle="#222"; ctx.fillRect(-18,0,36,3); ctx.fillRect(-5,-4,10,4); }
     else if(type==='tank') { ctx.fillStyle="#444"; ctx.fillRect(-12,-6,24,12); ctx.fillStyle="#222"; ctx.fillRect(0,-2,16,4); }
     else if(type==='mortar') { ctx.fillStyle="#333"; ctx.fillRect(-14,-8,28,16); ctx.fillStyle="#111"; ctx.beginPath(); ctx.arc(0,-2, 6, 0, Math.PI*2); ctx.fill(); ctx.fillStyle="#522"; ctx.fillRect(-12,-6,4,12); }
-    else if(type==='tiger') { ctx.fillStyle="#554"; ctx.fillRect(-14,-8,28,16); ctx.fillStyle="#111"; ctx.fillRect(2,-2,20,4); } // Tiger追加
+    else if(type==='tiger') { ctx.fillStyle="#554"; ctx.fillRect(-14,-8,28,16); ctx.fillStyle="#111"; ctx.fillRect(2,-2,20,4); }
     else if(type==='heal') { ctx.fillStyle="#eee"; ctx.fillRect(-10,-8,20,16); ctx.fillStyle="#d00"; ctx.fillRect(-3,-6,6,12); ctx.fillRect(-8,-1,16,2); }
     return c.toDataURL();
 };
@@ -21,7 +21,6 @@ window.createCardIcon = function(type) {
 const Renderer = {
     game: null,
     
-    // logic.js が呼ぶ初期化関数
     init(canvasElement) {
         const config = {
             type: Phaser.AUTO,
@@ -34,7 +33,6 @@ const Renderer = {
             physics: { default: 'arcade', arcade: { debug: false } }
         };
         this.game = new Phaser.Game(config);
-        
         window.addEventListener('resize', () => this.resize());
     },
 
@@ -46,13 +44,9 @@ const Renderer = {
         }
     },
 
-    centerOn(q, r) {
-        if(phaserScene) phaserScene.centerCamera(q, r);
-    },
+    centerOn(q, r) { if(phaserScene) phaserScene.centerCamera(q, r); },
 
-    hexToPx(q, r) {
-        return { x: HEX_SIZE * 3/2 * q, y: HEX_SIZE * Math.sqrt(3) * (r + q/2) };
-    },
+    hexToPx(q, r) { return { x: HEX_SIZE * 3/2 * q, y: HEX_SIZE * Math.sqrt(3) * (r + q/2) }; },
     
     pxToHex(mx, my) {
         if(!phaserScene) return {q:0, r:0};
@@ -81,28 +75,36 @@ class MainScene extends Phaser.Scene {
         super({ key: 'MainScene' });
         this.hexGroup = null;
         this.unitGroup = null;
+        this.vfxGraphics = null; // VFX描画用
         this.overlayGraphics = null;
         this.mapGenerated = false;
         this.hexSprites = new Map();
     }
 
     preload() {
-        // --- 動的テクスチャ生成 ---
         const g = this.make.graphics({x:0, y:0, add:false});
         
-        // 1. Hexagon Texture
-        g.lineStyle(2, 0xffffff, 1);
+        // --- 1. Hexagon Texture (修正版) ---
+        // 原点を中心にずらしてから描画することで見切れを防ぐ
+        g.lineStyle(2, 0x888888, 1);
         g.fillStyle(0xffffff, 1);
         g.beginPath();
+        // 平面的なヘックス（Flat-topped）を描画
         for(let i=0; i<6; i++) {
-            g.lineTo(HEX_SIZE * Math.cos(Math.PI/3*i), HEX_SIZE * Math.sin(Math.PI/3*i));
+            // 中心 (HEX_SIZE, HEX_SIZE) を基準に描画
+            const angle_deg = 60 * i;
+            const angle_rad = Math.PI / 180 * angle_deg;
+            g.lineTo(
+                HEX_SIZE + HEX_SIZE * Math.cos(angle_rad), 
+                HEX_SIZE + HEX_SIZE * Math.sin(angle_rad)
+            );
         }
         g.closePath();
         g.fillPath();
         g.strokePath();
         g.generateTexture('hex_base', HEX_SIZE*2, HEX_SIZE*2);
 
-        // 2. Unit Textures (簡易)
+        // --- 2. Unit Textures ---
         g.clear();
         g.fillStyle(0x00ff00, 1); g.fillCircle(16, 16, 10);
         g.generateTexture('unit_player', 32, 32);
@@ -111,7 +113,7 @@ class MainScene extends Phaser.Scene {
         g.fillStyle(0xff0000, 1); g.fillRect(4, 4, 24, 24);
         g.generateTexture('unit_enemy', 32, 32);
 
-        // 3. Selection Cursor
+        // --- 3. Cursor ---
         g.clear();
         g.lineStyle(3, 0x00ff00, 1); g.strokeCircle(32, 32, 28);
         g.generateTexture('cursor', 64, 64);
@@ -123,8 +125,13 @@ class MainScene extends Phaser.Scene {
         
         this.hexGroup = this.add.group();
         this.unitGroup = this.add.group();
-        this.vfxGroup = this.add.group();
+        
+        // VFX用のGraphics（最前面）
+        this.vfxGraphics = this.add.graphics();
+        this.vfxGraphics.setDepth(100);
+
         this.overlayGraphics = this.add.graphics();
+        this.overlayGraphics.setDepth(50);
 
         this.input.on('pointerdown', (pointer) => {
             if(pointer.button === 0) {
@@ -149,15 +156,19 @@ class MainScene extends Phaser.Scene {
     update(time, delta) {
         if (!window.gameLogic) return;
 
-        // 1. マップ生成同期
+        // VFX更新＆描画
+        VFX.update();
+        this.vfxGraphics.clear();
+        VFX.draw(this.vfxGraphics);
+
+        // マップ生成
         if (window.gameLogic.map.length > 0 && !this.mapGenerated) {
             this.createMap();
             this.mapGenerated = true;
         }
 
-        // 2. ユニット同期（簡易実装：毎回クリアして再描画）
+        // ユニット同期
         this.unitGroup.clear(true, true);
-        
         window.gameLogic.units.forEach(u => {
             if(u.hp <= 0) return;
             const pos = Renderer.hexToPx(u.q, u.r);
@@ -180,21 +191,17 @@ class MainScene extends Phaser.Scene {
             if(window.gameLogic.selectedUnit === u) {
                 const cursor = this.add.image(0, 0, 'cursor');
                 this.tweens.add({
-                    targets: cursor,
-                    scale: { from: 1, to: 1.1 },
-                    alpha: { from: 1, to: 0.5 },
+                    targets: cursor, scale: { from: 1, to: 1.1 }, alpha: { from: 1, to: 0.5 },
                     yoyo: true, repeat: -1, duration: 800
                 });
                 container.add(cursor);
             }
-
             this.unitGroup.add(container);
         });
 
-        // 3. オーバーレイ描画
+        // オーバーレイ（射程など）
         this.overlayGraphics.clear();
         const selected = window.gameLogic.selectedUnit;
-        
         if(selected && selected.ap >= 2) {
             const wpn = WPNS[selected.curWpn];
             const q = selected.q, r = selected.r;
@@ -235,12 +242,10 @@ class MainScene extends Phaser.Scene {
                 else if(t.id === 5) tint = 0x303840; 
                 
                 hex.setTint(tint);
-                
                 if(t.id === 2) {
                     const tree = this.add.circle(pos.x, pos.y, HEX_SIZE*0.6, 0x112211, 0.5);
                     this.hexGroup.add(tree);
                 }
-                
                 this.hexGroup.add(hex);
                 this.hexSprites.set(`${q},${r}`, hex);
             }
@@ -253,10 +258,77 @@ class MainScene extends Phaser.Scene {
     }
 }
 
-const Sfx = { play(id) { /* console.log("Sound:", id); */ } };
+const Sfx = { play(id) { /* sound placeholder */ } };
+
+// ★VFXの復活（Phaser Graphics版）
 const VFX = {
-    debris: [],
-    add(p) {}, addProj(p) {}, addExplosion(x,y,c){}, 
-    addUnitDebris(x,y){}, addStaticDebris(q,r,t){},
-    update() {}, draw(ctx) {}
+    particles: [], projectiles: [], debris: [],
+    
+    // logic.jsから呼ばれる追加関数
+    add(p) { this.particles.push(p); },
+    addProj(p) { this.projectiles.push(p); },
+    addExplosion(x, y, color="#fa0", count=20) {
+        for(let i=0; i<count; i++) {
+            const a = Math.random() * Math.PI * 2; const speed = Math.random() * 5 + 1;
+            this.add({x, y, vx:Math.cos(a)*speed, vy:Math.sin(a)*speed, life:30+Math.random()*20, maxLife:50, color, size:1+Math.random()*2, type:'spark'});
+        }
+    },
+    addUnitDebris(x, y) {
+        for(let i=0; i<15; i++) {
+            this.add({x, y, vx:(Math.random()-0.5)*8, vy:-Math.random()*8, life:100, maxLife:100, color:Math.random()>0.5?"#888":"#a33", size:Math.random()*3+1, type:'debris'});
+        }
+    },
+    addStaticDebris(q, r, type) {}, // 静的デブリは今回は省略（Mapに描画するならSprite化推奨）
+
+    // 更新処理 (logic.jsの物理計算をそのまま再現)
+    update() {
+        this.particles.forEach(p=>{ 
+            p.x+=p.vx; p.y+=p.vy; if(p.type==='debris' || p.type==='spark') p.vy+=0.2; p.life--; 
+            if(p.type==='debris' && p.vy>0 && Math.random()<0.1) { p.vy *= -0.5; p.vx *= 0.8; }
+        });
+        
+        this.projectiles.forEach(p=>{
+            if(p.type.includes('shell') || p.type === 'rocket') {
+                p.progress+=p.speed; if(p.progress>=1) { p.dead=true; p.onHit(); return; }
+                const lx = p.sx + (p.ex-p.sx)*p.progress;
+                const ly = p.sy + (p.ey-p.sy)*p.progress;
+                const arc = Math.sin(p.progress*Math.PI) * p.arcHeight;
+                p.x=lx; p.y=ly-arc;
+            } else { 
+                p.x+=p.vx; p.y+=p.vy; p.life--; 
+                if(p.life<=0){ p.dead=true; p.onHit(); } 
+            }
+        });
+        
+        this.particles=this.particles.filter(p=>p.life>0); 
+        this.projectiles=this.projectiles.filter(p=>!p.dead);
+    },
+
+    // 描画処理 (Phaser Graphicsを使用)
+    draw(g) {
+        // Projectiles
+        this.projectiles.forEach(p=>{
+            g.fillStyle(0xffff00, 1); // 黄色
+            if(p.type.includes('shell')) g.fillCircle(p.x, p.y, 3);
+            else if(p.type === 'rocket') { g.fillStyle(0xff8800, 1); g.fillCircle(p.x, p.y, 5); }
+            else { 
+                // 弾丸の軌跡線
+                g.lineStyle(2, 0xffff00, 1);
+                g.beginPath(); g.moveTo(p.x-p.vx, p.y-p.vy); g.lineTo(p.x, p.y); g.strokePath();
+            }
+        });
+
+        // Particles
+        this.particles.forEach(p=>{
+            // 文字列の色指定("#fa0")をPhaserの0x数値に変換するのは面倒なので、簡易的にSwitch
+            let color = 0xffffff;
+            if(p.color === "#fa0" || p.color === "#f55") color = 0xffaa00; // オレンジ・赤系
+            else if(p.color === "#888") color = 0x888888; // グレー
+            else if(p.color === "#a33") color = 0xaa3333; // 血飛沫
+
+            const alpha = p.life / p.maxLife;
+            g.fillStyle(color, alpha);
+            g.fillCircle(p.x, p.y, p.size);
+        });
+    }
 };
