@@ -1,9 +1,9 @@
-/** * PHASER BRIDGE (HTML Compatibility Fix, High-Res, Physics) */
+/** * PHASER BRIDGE (UI Resize Fix, HTML Compatibility, High-Res, Physics) */
 let phaserGame = null;
 const HIGH_RES_SCALE = 4; 
 
 // ---------------------------------------------------------
-//  ★描画ロジックの共通化 (Canvasを生成するだけの関数)
+//  共通描画関数 (Canvasを生成)
 // ---------------------------------------------------------
 function drawCardToCanvas(type) {
     const w = 100 * HIGH_RES_SCALE; 
@@ -12,12 +12,10 @@ function drawCardToCanvas(type) {
     c.width = w; c.height = h; 
     const x = c.getContext('2d');
     
-    // 高解像度スケーリング
     x.scale(HIGH_RES_SCALE, HIGH_RES_SCALE); 
     x.translate(50, 30); 
     x.scale(2, 2);
     
-    // 描画
     if(type==='infantry'){x.fillStyle="#444";x.fillRect(-15,0,30,4);x.fillStyle="#642";x.fillRect(-15,0,10,4);}
     else if(type==='tank'){x.fillStyle="#444";x.fillRect(-12,-6,24,12);x.fillStyle="#222";x.fillRect(0,-2,16,4);}
     else if(type==='heal'){x.fillStyle="#eee";x.fillRect(-10,-8,20,16);x.fillStyle="#d00";x.fillRect(-3,-6,6,12);x.fillRect(-8,-1,16,2);}
@@ -32,26 +30,25 @@ function drawCardToCanvas(type) {
 }
 
 // ---------------------------------------------------------
-//  ★修正: HTML側(Deployment Phase)用の関数
-//  以前と同じく「Data URL文字列」を返すように戻します。
+//  HTML UI用
 // ---------------------------------------------------------
 window.createCardIcon = function(type) {
     const canvas = drawCardToCanvas(type);
-    return canvas.toDataURL(); // <img src="..."> に対応
+    canvas.style.width = "100px";
+    canvas.style.height = "60px";
+    canvas.style.imageRendering = "pixelated"; 
+    return canvas; 
 };
 
 // ---------------------------------------------------------
-//  Phaser側用の関数 (Canvasを直接使う)
+//  Phaser内部用
 // ---------------------------------------------------------
 function getCardTextureKey(scene, type) {
-    // リアル画像があればそれを使う
     if (type === 'aerial' && scene.textures.exists('card_img_bomb')) {
         return 'card_img_bomb'; 
     }
-    
     const key = `card_icon_${type}`;
     if (!scene.textures.exists(key)) {
-        // PhaserにはCanvasオブジェクトを渡す（高画質維持）
         const canvas = drawCardToCanvas(type);
         scene.textures.addCanvas(key, canvas);
     }
@@ -125,7 +122,6 @@ class Card extends Phaser.GameObjects.Container {
         const bg = scene.add.rectangle(0, 0, W, H, 0x222222).setStrokeStyle(2, 0x555555);
         bg.setInteractive({ useHandCursor: true, draggable: true });
         
-        // Phaser用はここで取得
         const iconKey = getCardTextureKey(scene, type);
         const icon = scene.add.image(0, -40, iconKey).setScale(1/HIGH_RES_SCALE);
         if(type === 'aerial' && scene.textures.exists('card_img_bomb')) icon.setDisplaySize(120, 80);
@@ -300,18 +296,44 @@ class Card extends Phaser.GameObjects.Container {
 }
 
 // ==========================================
-//  UI SCENE
+//  UI SCENE (デッキUIの管理)
 // ==========================================
 class UIScene extends Phaser.Scene {
-    constructor() { super({ key: 'UIScene', active: false }); this.cards=[]; this.handContainer=null; this.uiVfxGraphics=null; }
+    constructor() { super({ key: 'UIScene', active: false }); this.cards=[]; this.handContainer=null; this.gradientBg=null; this.uiVfxGraphics=null; }
     
     create() {
         const w = this.scale.width; const h = this.scale.height;
         window.createGradientTexture(this);
-        this.add.image(w/2, h, 'ui_gradient').setOrigin(0.5, 1).setDepth(0).setDisplaySize(w, h*0.45);
+        
+        // 背景グラデーション (参照を保持)
+        this.gradientBg = this.add.image(w/2, h, 'ui_gradient').setOrigin(0.5, 1).setDepth(0).setDisplaySize(w, h*0.45);
+        
+        // 手札コンテナ (参照を保持)
         this.handContainer = this.add.container(w/2, h);
+        
         this.uiVfxGraphics = this.add.graphics().setDepth(10000);
+        
+        // ★リサイズイベントの監視
+        this.scale.on('resize', this.onResize, this);
+
         this.time.delayedCall(1000, ()=>{ this.dealStart(['infantry','tank','aerial','infantry','tiger']); });
+    }
+
+    // ★リサイズ時の処理
+    onResize(gameSize) {
+        const w = gameSize.width;
+        const h = gameSize.height;
+
+        // 背景位置とサイズの更新
+        if (this.gradientBg) {
+            this.gradientBg.setPosition(w / 2, h);
+            this.gradientBg.setDisplaySize(w, h * 0.45);
+        }
+
+        // 手札コンテナ位置の更新
+        if (this.handContainer) {
+            this.handContainer.setPosition(w / 2, h);
+        }
     }
 
     update() { 
@@ -331,6 +353,8 @@ class UIScene extends Phaser.Scene {
         const card = new Card(this, 0, 0, type);
         this.handContainer.add(card);
         this.cards.push(card);
+        
+        // 画面右下付近 (ローカル座標なので 画面幅の半分くらい右)
         card.physX = 600; 
         card.physY = 300; 
         card.setPosition(card.physX, card.physY);
