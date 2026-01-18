@@ -1,11 +1,20 @@
 /**
  * GAME LOGIC
- * ゲームのルール、マップデータ、ユニット管理、戦闘計算を担当
  */
 
-var MAP_W = 15; 
-var MAP_H = 9;  
-var HEX_SIZE = 40;
+// 重複エラー回避のため、windowオブジェクトに直接定義し、存在チェックを行う
+if (typeof window.MAP_W === 'undefined') {
+    window.MAP_W = 15; 
+    window.MAP_H = 9;  
+    window.HEX_SIZE = 40; 
+}
+
+// 既存のコードが変数を参照できるようにローカル変数としても受けておく（念のため）
+var MAP_W = window.MAP_W;
+var MAP_H = window.MAP_H;
+var HEX_SIZE = window.HEX_SIZE;
+
+// ... 以下、class GameLogic { ... へ続く
 
 class GameLogic {
     constructor() {
