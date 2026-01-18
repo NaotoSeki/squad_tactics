@@ -4,12 +4,25 @@
 
 let phaserScene = null; // 外部アクセス用
 
+// ★復活＆修正: カード用アイコン生成関数 (Canvas API使用)
+window.createCardIcon = function(type) {
+    const c = document.createElement('canvas'); c.width=100; c.height=60; const ctx = c.getContext('2d');
+    ctx.translate(50, 30); ctx.scale(2,2);
+    if(type==='infantry') { ctx.fillStyle="#444"; ctx.fillRect(-15,0,30,4); ctx.fillStyle="#642"; ctx.fillRect(-15,0,10,4); }
+    else if(type==='heavy') { ctx.fillStyle="#111"; ctx.fillRect(-10,-2,20,4); ctx.fillRect(-5,2,2,6); ctx.fillRect(5,2,2,6); }
+    else if(type==='sniper') { ctx.fillStyle="#222"; ctx.fillRect(-18,0,36,3); ctx.fillRect(-5,-4,10,4); }
+    else if(type==='tank') { ctx.fillStyle="#444"; ctx.fillRect(-12,-6,24,12); ctx.fillStyle="#222"; ctx.fillRect(0,-2,16,4); }
+    else if(type==='mortar') { ctx.fillStyle="#333"; ctx.fillRect(-14,-8,28,16); ctx.fillStyle="#111"; ctx.beginPath(); ctx.arc(0,-2, 6, 0, Math.PI*2); ctx.fill(); ctx.fillStyle="#522"; ctx.fillRect(-12,-6,4,12); }
+    else if(type==='tiger') { ctx.fillStyle="#554"; ctx.fillRect(-14,-8,28,16); ctx.fillStyle="#111"; ctx.fillRect(2,-2,20,4); } // Tiger追加
+    else if(type==='heal') { ctx.fillStyle="#eee"; ctx.fillRect(-10,-8,20,16); ctx.fillStyle="#d00"; ctx.fillRect(-3,-6,6,12); ctx.fillRect(-8,-1,16,2); }
+    return c.toDataURL();
+};
+
 const Renderer = {
     game: null,
     
     // logic.js が呼ぶ初期化関数
     init(canvasElement) {
-        // 既存のCanvas要素はPhaserが置換/管理するため、ID指定だけ行う
         const config = {
             type: Phaser.AUTO,
             parent: 'game-view',
@@ -22,7 +35,6 @@ const Renderer = {
         };
         this.game = new Phaser.Game(config);
         
-        // リサイズ対応
         window.addEventListener('resize', () => this.resize());
     },
 
@@ -38,14 +50,12 @@ const Renderer = {
         if(phaserScene) phaserScene.centerCamera(q, r);
     },
 
-    // 座標変換ユーティリティ
     hexToPx(q, r) {
         return { x: HEX_SIZE * 3/2 * q, y: HEX_SIZE * Math.sqrt(3) * (r + q/2) };
     },
     
     pxToHex(mx, my) {
         if(!phaserScene) return {q:0, r:0};
-        // Phaserのカメラ位置を加味した座標変換
         const worldPoint = phaserScene.cameras.main.getWorldPoint(mx, my);
         const q = (2/3 * worldPoint.x) / HEX_SIZE;
         const r = (-1/3 * worldPoint.x + Math.sqrt(3)/3 * worldPoint.y) / HEX_SIZE;
@@ -59,7 +69,6 @@ const Renderer = {
         return {q:rq, r:rr}; 
     },
 
-    // 旧logicとの互換用（Phaserループで描画するので中身は空で良い）
     frame: 0,
     draw() { /* No-op */ }
 };
@@ -74,7 +83,7 @@ class MainScene extends Phaser.Scene {
         this.unitGroup = null;
         this.overlayGraphics = null;
         this.mapGenerated = false;
-        this.hexSprites = new Map(); // q,r -> Sprite
+        this.hexSprites = new Map();
     }
 
     preload() {
@@ -112,26 +121,21 @@ class MainScene extends Phaser.Scene {
         phaserScene = this;
         this.cameras.main.setBackgroundColor('#0b0e0a');
         
-        // グループ
         this.hexGroup = this.add.group();
-        this.unitGroup = this.add.group(); // ユニット用
-        this.vfxGroup = this.add.group();  // エフェクト用
-        this.overlayGraphics = this.add.graphics(); // 射程範囲などの描画用
+        this.unitGroup = this.add.group();
+        this.vfxGroup = this.add.group();
+        this.overlayGraphics = this.add.graphics();
 
-        // 入力イベント
         this.input.on('pointerdown', (pointer) => {
-            // 左クリック
             if(pointer.button === 0) {
                 const hex = Renderer.pxToHex(pointer.x, pointer.y);
                 if(window.gameLogic) window.gameLogic.handleClick(hex);
             }
-            // 右クリック（コンテキストメニュー）
             else if(pointer.button === 2) {
                 if(window.gameLogic) window.gameLogic.showContext(pointer.x, pointer.y);
             }
         });
 
-        // カメラ操作（ドラッグ）
         this.input.on('pointermove', (pointer) => {
             if (pointer.isDown) {
                 this.cameras.main.scrollX -= (pointer.x - pointer.prevPosition.x);
@@ -139,7 +143,6 @@ class MainScene extends Phaser.Scene {
             }
         });
 
-        // 右クリックメニュー抑制
         this.input.mouse.disableContextMenu();
     }
 
@@ -153,7 +156,6 @@ class MainScene extends Phaser.Scene {
         }
 
         // 2. ユニット同期（簡易実装：毎回クリアして再描画）
-        // ※ 本来はID管理してtweenさせるべきだが、まずは移植優先
         this.unitGroup.clear(true, true);
         
         window.gameLogic.units.forEach(u => {
@@ -161,24 +163,20 @@ class MainScene extends Phaser.Scene {
             const pos = Renderer.hexToPx(u.q, u.r);
             const texture = u.team === 'player' ? 'unit_player' : 'unit_enemy';
             
-            // ユニットコンテナ
             const container = this.add.container(pos.x, pos.y);
             const sprite = this.add.sprite(0, 0, texture);
             
-            // 色分け
             if(u.def.isTank) sprite.setTint(0x888888);
             if(u.team === 'player') sprite.setTint(0x6688aa);
             else sprite.setTint(0xcc6655);
 
             container.add(sprite);
 
-            // HPバー
             const hpPct = u.hp / u.maxHp;
             const bar = this.add.rectangle(0, -20, 20, 4, 0x000000);
             const barFill = this.add.rectangle(-10 + (10*hpPct), -20, 20*hpPct, 4, hpPct > 0.5 ? 0x00ff00 : 0xff0000);
             container.add([bar, barFill]);
 
-            // 選択中ハイライト
             if(window.gameLogic.selectedUnit === u) {
                 const cursor = this.add.image(0, 0, 'cursor');
                 this.tweens.add({
@@ -193,22 +191,18 @@ class MainScene extends Phaser.Scene {
             this.unitGroup.add(container);
         });
 
-        // 3. オーバーレイ描画（射程・移動パス）
+        // 3. オーバーレイ描画
         this.overlayGraphics.clear();
         const selected = window.gameLogic.selectedUnit;
         
-        // 射程表示
         if(selected && selected.ap >= 2) {
             const wpn = WPNS[selected.curWpn];
             const q = selected.q, r = selected.r;
-            // 簡易的な範囲描画（Logicと同じロジックで円を描く）
-            // ※ 正確にはHexを塗るべきだが、一旦円で表現
             const center = Renderer.hexToPx(q, r);
             this.overlayGraphics.lineStyle(2, 0xff0000, 0.3);
-            this.overlayGraphics.strokeCircle(center.x, center.y, wpn.rng * HEX_SIZE * 1.5); // 概算サイズ
+            this.overlayGraphics.strokeCircle(center.x, center.y, wpn.rng * HEX_SIZE * 1.5);
         }
 
-        // パス表示
         const path = window.gameLogic.path;
         if(path.length > 0 && selected) {
             this.overlayGraphics.lineStyle(3, 0xffffff, 0.5);
@@ -233,17 +227,15 @@ class MainScene extends Phaser.Scene {
                 const pos = Renderer.hexToPx(q, r);
                 const hex = this.add.image(pos.x, pos.y, 'hex_base');
                 
-                // 地形色設定
                 let tint = 0x555555;
-                if(t.id === 0) tint = 0x5a5245; // Dirt
-                else if(t.id === 1) tint = 0x425030; // Grass
-                else if(t.id === 2) tint = 0x222e1b; // Forest
-                else if(t.id === 4) tint = 0x504540; // Town
-                else if(t.id === 5) tint = 0x303840; // Water
+                if(t.id === 0) tint = 0x5a5245; 
+                else if(t.id === 1) tint = 0x425030; 
+                else if(t.id === 2) tint = 0x222e1b; 
+                else if(t.id === 4) tint = 0x504540; 
+                else if(t.id === 5) tint = 0x303840; 
                 
                 hex.setTint(tint);
                 
-                // 森の場合は木を生やす（円で表現）
                 if(t.id === 2) {
                     const tree = this.add.circle(pos.x, pos.y, HEX_SIZE*0.6, 0x112211, 0.5);
                     this.hexGroup.add(tree);
@@ -261,21 +253,10 @@ class MainScene extends Phaser.Scene {
     }
 }
 
-// サウンド互換用（エラー防止のダミー）
-// ※ 後でPhaserのSound Managerに置き換えると良いです
-const Sfx = {
-    play(id) { 
-        // console.log("Sound:", id); 
-    }
-};
-
-// VFX互換用（パーティクルなど）
-// ※ これもPhaserのParticle Emitterに置き換えるべきですが、一旦空実装でエラー回避
+const Sfx = { play(id) { /* console.log("Sound:", id); */ } };
 const VFX = {
     debris: [],
     add(p) {}, addProj(p) {}, addExplosion(x,y,c){}, 
-    addUnitDebris(x,y){}, addStaticDebris(q,r,t){ 
-        // 静的デブリはMap上にSpriteを置く形に変えると良い
-    },
+    addUnitDebris(x,y){}, addStaticDebris(q,r,t){},
     update() {}, draw(ctx) {}
 };
