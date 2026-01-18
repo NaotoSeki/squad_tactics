@@ -1,29 +1,47 @@
-/** * PHASER BRIDGE (Scene Discovery Fix & Canvas UI) */
+/** * PHASER BRIDGE (Fix: Added centerOn, Scene Safety) */
 let phaserGame = null;
 const HIGH_RES_SCALE = 4; 
 
 // --- 描画関数 ---
 function drawCardToCanvas(type) {
-    const w = 100 * HIGH_RES_SCALE; const h = 60 * HIGH_RES_SCALE;
-    const c = document.createElement('canvas'); c.width = w; c.height = h; const x = c.getContext('2d');
-    x.scale(HIGH_RES_SCALE, HIGH_RES_SCALE); x.translate(50, 30); x.scale(2, 2);
+    const w = 100 * HIGH_RES_SCALE; 
+    const h = 60 * HIGH_RES_SCALE;
+    const c = document.createElement('canvas'); 
+    c.width = w; c.height = h; 
+    const x = c.getContext('2d');
+    
+    x.scale(HIGH_RES_SCALE, HIGH_RES_SCALE); 
+    x.translate(50, 30); 
+    x.scale(2, 2);
+    
     if(type==='infantry'){x.fillStyle="#444";x.fillRect(-15,0,30,4);x.fillStyle="#642";x.fillRect(-15,0,10,4);}
     else if(type==='tank'){x.fillStyle="#444";x.fillRect(-12,-6,24,12);x.fillStyle="#222";x.fillRect(0,-2,16,4);}
     else if(type==='heal'){x.fillStyle="#eee";x.fillRect(-10,-8,20,16);x.fillStyle="#d00";x.fillRect(-3,-6,6,12);x.fillRect(-8,-1,16,2);}
     else if(type==='tiger'){x.fillStyle="#554";x.fillRect(-14,-8,28,16);x.fillStyle="#111";x.fillRect(2,-2,20,4);}
-    else if(type==='aerial'){ x.fillStyle="#343"; x.beginPath(); x.ellipse(0, 0, 15, 6, 0, 0, Math.PI*2); x.fill(); x.fillStyle="#222"; x.fillRect(-5, -2, 10, 4); }
+    else if(type==='aerial'){ 
+        x.fillStyle="#343"; x.beginPath(); x.ellipse(0, 0, 15, 6, 0, 0, Math.PI*2); x.fill();
+        x.fillStyle="#222"; x.fillRect(-5, -2, 10, 4);
+    }
     else {x.fillStyle="#333";x.fillRect(-10,-5,20,10);} 
+    
     return c;
 }
 
-// HTML用
-window.createCardIcon = function(type) { return drawCardToCanvas(type).toDataURL(); };
+// HTML UI用
+window.createCardIcon = function(type) {
+    const canvas = drawCardToCanvas(type);
+    return canvas.toDataURL(); 
+};
 
 // Phaser用
 function getCardTextureKey(scene, type) {
-    if (type === 'aerial' && scene.textures.exists('card_img_bomb')) return 'card_img_bomb'; 
+    if (type === 'aerial' && scene.textures.exists('card_img_bomb')) {
+        return 'card_img_bomb'; 
+    }
     const key = `card_icon_${type}`;
-    if (!scene.textures.exists(key)) scene.textures.addCanvas(key, drawCardToCanvas(type));
+    if (!scene.textures.exists(key)) {
+        scene.textures.addCanvas(key, drawCardToCanvas(type));
+    }
     return key;
 }
 
@@ -49,21 +67,24 @@ const Renderer = {
     pxToHex(mx, my) { const main = phaserGame.scene.getScene('MainScene'); if(!main) return {q:0, r:0}; const w = main.cameras.main.getWorldPoint(mx, my); return this.roundHex((2/3*w.x)/HEX_SIZE, (-1/3*w.x+Math.sqrt(3)/3*w.y)/HEX_SIZE); },
     roundHex(q,r) { let rq=Math.round(q), rr=Math.round(r), rs=Math.round(-q-r); const dq=Math.abs(rq-q), dr=Math.abs(rr-r), ds=Math.abs(rs-(-q-r)); if(dq>dr&&dq>ds) rq=-rr-rs; else if(dr>ds) rr=-rq-rs; return {q:rq, r:rr}; },
     
-    // ★強化版 dealCards
+    // ★ここを追加！ (Logicからのカメラ移動命令を受け取る)
+    centerOn(q, r) {
+        const main = this.game.scene.getScene('MainScene');
+        if (main && main.centerCamera) {
+            main.centerCamera(q, r);
+        }
+    },
+
     dealCards(types) { 
-        // 通常取得を試みる
+        // シーン取得を強化
         let ui = this.game.scene.getScene('UIScene');
-        // 失敗したらシーンリストから探す（念のため）
         if(!ui || !ui.sys) ui = this.game.scene.scenes.find(s => s.scene.key === 'UIScene');
-        
-        if(ui) ui.dealStart(types); 
-        else console.error("Renderer: UIScene not found!");
+        if(ui) ui.dealStart(types);
     },
     dealCard(type) { const ui = this.game.scene.getScene('UIScene'); if(ui) ui.addCardToHand(type); },
     checkUIHover(x, y) { if (this.isCardDragging) return true; const ui = this.game.scene.getScene('UIScene'); if (!ui) return false; for (let card of ui.cards) { const dx = Math.abs(x - card.x); const dy = Math.abs(y - card.y); if (dx < 70 && dy < 100) return true; } return false; }
 };
 
-// ... Cardクラスは変更なし ...
 class Card extends Phaser.GameObjects.Container {
     constructor(scene, x, y, type) {
         super(scene, x, y); this.scene = scene; this.cardType = type; this.setSize(140, 200);
@@ -105,10 +126,7 @@ class Card extends Phaser.GameObjects.Container {
                 if (this.visuals) this.visuals.clearMask(true); if (maskShape) maskShape.destroy();
                 this.scene.removeCard(this); const type = this.cardType; this.destroy();
                 try {
-                    if (type === 'aerial') {
-                        const main = phaserGame.scene.getScene('MainScene');
-                        if (main) main.triggerBombardment(hex);
-                    } 
+                    if (type === 'aerial') { const main = phaserGame.scene.getScene('MainScene'); if (main) main.triggerBombardment(hex); } 
                     else if(window.gameLogic) window.gameLogic.deployUnit(hex, type); 
                 } catch(e) { console.error("Logic Error:", e); }
             }
@@ -134,10 +152,7 @@ class UIScene extends Phaser.Scene {
     }
     update() { this.cards.forEach(card => { if (card.active) card.updatePhysics(); }); UIVFX.update(); this.uiVfxGraphics.clear(); UIVFX.draw(this.uiVfxGraphics); }
     dealStart(types) { types.forEach((type, i) => { this.time.delayedCall(i * 150, () => { this.addCardToHand(type); }); }); }
-    addCardToHand(type) {
-        const card = new Card(this, 0, 0, type); this.handContainer.add(card); this.cards.push(card);
-        card.physX = 600; card.physY = 300; card.setPosition(card.physX, card.physY); this.arrangeHand();
-    }
+    addCardToHand(type) { const card = new Card(this, 0, 0, type); this.handContainer.add(card); this.cards.push(card); card.physX = 600; card.physY = 300; card.setPosition(card.physX, card.physY); this.arrangeHand(); }
     removeCard(cardToRemove) { this.cards = this.cards.filter(c => c !== cardToRemove); this.arrangeHand(); }
     arrangeHand() { const total = this.cards.length; const centerIdx = (total - 1) / 2; const spacing = 160; this.cards.forEach((card, i) => { const offset = i - centerIdx; card.baseX = offset * spacing; card.baseY = -120; }); }
 }
@@ -145,6 +160,7 @@ class UIScene extends Phaser.Scene {
 class MainScene extends Phaser.Scene {
     constructor() { super({ key: 'MainScene' }); this.hexGroup=null; this.unitGroup=null; this.vfxGraphics=null; this.overlayGraphics=null; this.mapGenerated=false; this.dragHighlightHex=null; }
     preload() {
+        // 画像読み込み (404エラーが出ても進行自体は止まらない)
         this.load.image('card_img_bomb', 'image_6e3646.jpg'); 
         const g = this.make.graphics({x:0, y:0, add:false}); const S = HEX_SIZE * HIGH_RES_SCALE; 
         g.lineStyle(2 * HIGH_RES_SCALE, 0x888888, 1); g.fillStyle(0xffffff, 1); g.beginPath(); for(let i=0; i<6; i++) { const a = Math.PI/180 * 60 * i; g.lineTo(S + S * Math.cos(a), S + S * Math.sin(a)); } g.closePath(); g.fillPath(); g.strokePath(); g.generateTexture('hex_base', S*2, S*2);
