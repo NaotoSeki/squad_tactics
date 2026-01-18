@@ -1,9 +1,9 @@
-/** * PHASER BRIDGE (Final Fix: HTML Icons & Manual Deal) */
+/** * PHASER BRIDGE (Ultimate Fix: Canvas UI + High-Res + Physics + Bombardment) */
 let phaserGame = null;
 const HIGH_RES_SCALE = 4; 
 
 // ---------------------------------------------------------
-//  共通描画関数 (Canvasを生成)
+//  ★コア描画関数 (高解像度Canvasを生成)
 // ---------------------------------------------------------
 function drawCardToCanvas(type) {
     const w = 100 * HIGH_RES_SCALE; 
@@ -12,6 +12,7 @@ function drawCardToCanvas(type) {
     c.width = w; c.height = h; 
     const x = c.getContext('2d');
     
+    // 高解像度スケーリング
     x.scale(HIGH_RES_SCALE, HIGH_RES_SCALE); 
     x.translate(50, 30); 
     x.scale(2, 2);
@@ -30,8 +31,8 @@ function drawCardToCanvas(type) {
 }
 
 // ---------------------------------------------------------
-//  ★修正: HTML UI用 (Data URL文字列を返す)
-//  これで初期画面の <img src="..."> が正常に表示されます
+//  ★HTML UI用 (Deployment Phase用)
+//  文字列(DataURL)を返す
 // ---------------------------------------------------------
 window.createCardIcon = function(type) {
     const canvas = drawCardToCanvas(type);
@@ -39,7 +40,7 @@ window.createCardIcon = function(type) {
 };
 
 // ---------------------------------------------------------
-//  Phaser内部用 (Canvasをテクスチャ化)
+//  Phaser内部用 (テクスチャ登録)
 // ---------------------------------------------------------
 function getCardTextureKey(scene, type) {
     if (type === 'aerial' && scene.textures.exists('card_img_bomb')) {
@@ -47,7 +48,6 @@ function getCardTextureKey(scene, type) {
     }
     const key = `card_icon_${type}`;
     if (!scene.textures.exists(key)) {
-        // PhaserにはCanvasオブジェクトを渡す（高画質維持）
         const canvas = drawCardToCanvas(type);
         scene.textures.addCanvas(key, canvas);
     }
@@ -91,7 +91,6 @@ const Renderer = {
     },
     roundHex(q,r) { let rq=Math.round(q), rr=Math.round(r), rs=Math.round(-q-r); const dq=Math.abs(rq-q), dr=Math.abs(rr-r), ds=Math.abs(rs-(-q-r)); if(dq>dr&&dq>ds) rq=-rr-rs; else if(dr>ds) rr=-rq-rs; return {q:rq, r:rr}; },
     
-    // Logicから呼ばれる関数
     dealCards(types) { const ui = this.game.scene.getScene('UIScene'); if(ui) ui.dealStart(types); },
     dealCard(type) { const ui = this.game.scene.getScene('UIScene'); if(ui) ui.addCardToHand(type); },
     
@@ -310,8 +309,6 @@ class UIScene extends Phaser.Scene {
         this.uiVfxGraphics = this.add.graphics().setDepth(10000);
         
         this.scale.on('resize', this.onResize, this);
-
-        // ★自動配付は削除！ (Logic側でstartCampaign時に配るため)
     }
 
     onResize(gameSize) {
@@ -338,7 +335,7 @@ class UIScene extends Phaser.Scene {
         this.handContainer.add(card);
         this.cards.push(card);
         
-        // 配付位置: 画面右下付近 (ローカル座標)
+        // 配付位置: 画面右下付近 (ローカル座標なので 画面幅の半分くらい右)
         card.physX = 600; 
         card.physY = 300; 
         card.setPosition(card.physX, card.physY);
@@ -514,7 +511,6 @@ window.VFX = {
                 bomb.destroy();
                 scene.cameras.main.shake(300, 0.03); 
                 this.addRealExplosion(tx, ty); 
-                // ロジック連携
                 if(window.gameLogic && window.gameLogic.applyBombardment) {
                     window.gameLogic.applyBombardment(hex);
                 }
