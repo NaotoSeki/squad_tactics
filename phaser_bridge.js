@@ -1,4 +1,4 @@
-/** * PHASER BRIDGE (Input Fix & Linear Layout) */
+/** * PHASER BRIDGE (Final UI Polish) */
 let phaserScene = null;
 
 // カード画像生成
@@ -9,6 +9,25 @@ window.createCardIcon = function(type) {
     else if(type==='heal'){x.fillStyle="#eee";x.fillRect(-10,-8,20,16);x.fillStyle="#d00";x.fillRect(-3,-6,6,12);x.fillRect(-8,-1,16,2);}
     else if(type==='tiger'){x.fillStyle="#554";x.fillRect(-14,-8,28,16);x.fillStyle="#111";x.fillRect(2,-2,20,4);}
     else {x.fillStyle="#333";x.fillRect(-10,-5,20,10);} return c.toDataURL();
+};
+
+// ★追加: グラデーションテクスチャ生成
+window.createGradientTexture = function(scene) {
+    const w = scene.scale.width;
+    const h = scene.scale.height * 0.4; // 画面下部40%
+    const c = document.createElement('canvas'); c.width=w; c.height=h; const x = c.getContext('2d');
+    
+    // 下（黒・不透明） -> 上（透明）へのグラデーション
+    const grd = x.createLinearGradient(0, h, 0, 0);
+    grd.addColorStop(0, "rgba(0,0,0,1)");
+    grd.addColorStop(0.4, "rgba(0,0,0,0.8)");
+    grd.addColorStop(0.8, "rgba(0,0,0,0.2)");
+    grd.addColorStop(1, "rgba(0,0,0,0)");
+    
+    x.fillStyle = grd;
+    x.fillRect(0, 0, w, h);
+    
+    scene.textures.addBase64('ui_gradient', c.toDataURL());
 };
 
 const Renderer = {
@@ -24,7 +43,6 @@ const Renderer = {
     hexToPx(q, r) { return { x: HEX_SIZE * 3/2 * q, y: HEX_SIZE * Math.sqrt(3) * (r + q/2) }; },
     pxToHex(mx, my) { 
         if(!phaserScene) return {q:0, r:0}; 
-        // 画面座標(mx, my)をワールド座標に変換して計算
         const w = phaserScene.cameras.main.getWorldPoint(mx, my); 
         return this.roundHex((2/3*w.x)/HEX_SIZE, (-1/3*w.x+Math.sqrt(3)/3*w.y)/HEX_SIZE); 
     },
@@ -37,9 +55,12 @@ class Card extends Phaser.GameObjects.Container {
         super(scene, x, y);
         this.scene = scene;
         this.cardType = type;
-        this.setSize(140, 200);
+        
+        // カードサイズ
+        const W = 140; const H = 200;
+        this.setSize(W, H);
 
-        const bg = scene.add.rectangle(0, 0, 140, 200, 0x222222).setStrokeStyle(2, 0x555555);
+        const bg = scene.add.rectangle(0, 0, W, H, 0x222222).setStrokeStyle(2, 0x555555);
         const iconKey = `card_icon_${type}`;
         if(!scene.textures.exists(iconKey)) scene.textures.addBase64(iconKey, window.createCardIcon(type));
         const icon = scene.add.image(0, -40, iconKey);
@@ -47,7 +68,10 @@ class Card extends Phaser.GameObjects.Container {
         const desc = scene.add.text(0, 70, "DRAG TO DEPLOY", { fontSize: '10px', color: '#888' }).setOrigin(0.5);
         this.add([bg, icon, text, desc]);
 
-        this.setInteractive({ draggable: true });
+        // ★修正: ヒットエリアを明示的に指定 (中心基準: -W/2, -H/2)
+        // これによりScrollFactor(0)の影響下でも正しくクリック判定されます
+        const hitArea = new Phaser.Geom.Rectangle(-W/2, -H/2, W, H);
+        this.setInteractive(hitArea, Phaser.Geom.Rectangle.Contains, { draggable: true });
         
         this.baseX = x; this.baseY = y;
         this.prevX = x;
@@ -63,7 +87,6 @@ class Card extends Phaser.GameObjects.Container {
     onHover() {
         if(this.isDragging) return;
         this.parentContainer.bringToTop(this);
-        // まっすぐ上に浮き上がる
         this.scene.tweens.add({ targets: this, y: this.baseY - 40, scale: 1.1, duration: 150, ease: 'Back.out' });
     }
 
@@ -79,33 +102,28 @@ class Card extends Phaser.GameObjects.Container {
 
         // コンテナから脱出
         const hand = this.parentContainer;
-        // pointer.position (画面座標) を基準にセット
         const screenX = pointer.position.x;
         const screenY = pointer.position.y;
         
         hand.remove(this);
         this.scene.add.existing(this);
         
-        this.setScrollFactor(0); // 画面固定
+        this.setScrollFactor(0);
         this.setPosition(screenX, screenY);
         this.setDepth(1000);
         this.setScale(1.1);
     }
 
     onDrag(pointer, dragX, dragY) {
-        // ★修正: pointer.position (画面座標) を使用
-        // これでカメラ位置に関係なくマウスに追従します
         this.x = pointer.position.x;
         this.y = pointer.position.y;
 
-        // 慣性（少し控えめに）
         const dx = this.x - this.prevX;
         const targetAngle = Phaser.Math.Clamp(dx * 1.5, -20, 20);
         this.angle += (targetAngle - this.angle) * 0.2;
         this.prevX = this.x;
 
-        // ハイライト判定
-        const dropZoneY = this.scene.scale.height * 0.66;
+        const dropZoneY = this.scene.scale.height * 0.60; // 少し広めに判定
         if (this.y < dropZoneY) {
              const hex = Renderer.pxToHex(pointer.x, pointer.y);
              this.scene.dragHighlightHex = hex;
@@ -118,10 +136,10 @@ class Card extends Phaser.GameObjects.Container {
         this.isDragging = false;
         this.scene.isDraggingCard = false;
         this.setAlpha(1.0);
-        this.angle = 0; // 角度リセット
+        this.angle = 0;
         this.scene.dragHighlightHex = null;
 
-        const dropZoneY = this.scene.scale.height * 0.66;
+        const dropZoneY = this.scene.scale.height * 0.60;
         if (this.y < dropZoneY && window.gameLogic) {
              const hex = Renderer.pxToHex(pointer.x, pointer.y);
              console.log(`Card dropped at: ${hex.q}, ${hex.r}`);
@@ -134,7 +152,6 @@ class Card extends Phaser.GameObjects.Container {
 
     returnToHand() {
         const hand = this.scene.handContainer;
-        // コンテナ位置を考慮したスクリーン座標へ戻る
         const targetX = hand.x + this.baseX;
         const targetY = hand.y + this.baseY;
         
@@ -173,23 +190,25 @@ class MainScene extends Phaser.Scene {
 
         const h = this.scale.height;
         const w = this.scale.width;
-        
-        const bg = this.add.rectangle(w/2, h, w, h*0.35, 0x000000, 0.8).setOrigin(0.5, 1).setDepth(200);
+
+        // ★グラデーション生成＆配置
+        window.createGradientTexture(this);
+        const bg = this.add.image(w/2, h, 'ui_gradient').setOrigin(0.5, 1).setDepth(200);
         bg.setScrollFactor(0);
-        
+        bg.setDisplaySize(w, h*0.4); // 画面幅に合わせて伸縮
+
+        // UIコンテナ
         this.handContainer = this.add.container(w/2, h).setDepth(201);
         this.handContainer.setScrollFactor(0);
         
         this.input.on('pointerdown', (p) => {
-            // ★修正: p.position.y (画面座標) で判定。スクロールしても判定位置は変わりません。
-            if(p.position.y > h * 0.66) return; 
+            if(p.position.y > h * 0.6) return; // UIエリア判定を少し上に
             if(p.button===0) { if(window.gameLogic) window.gameLogic.handleClick(Renderer.pxToHex(p.x, p.y)); }
             else if(p.button===2) { if(window.gameLogic) window.gameLogic.showContext(p.x, p.y); }
         });
         
         this.input.on('pointermove', (p) => {
-            // ★修正: ここも p.position.y で判定
-            if (p.isDown && !this.isDraggingCard && p.position.y < h * 0.66) { 
+            if (p.isDown && !this.isDraggingCard && p.position.y < h * 0.6) { 
                 this.cameras.main.scrollX -= (p.x - p.prevPosition.x); 
                 this.cameras.main.scrollY -= (p.y - p.prevPosition.y); 
             }
@@ -210,12 +229,12 @@ class MainScene extends Phaser.Scene {
     arrangeHand() {
         const total = this.cards.length;
         const centerIdx = (total - 1) / 2;
-        const spacing = 110; // 少し広めに
+        const spacing = 150; // ★間隔を広げて等間隔に
 
         this.cards.forEach((card, i) => {
             const offset = i - centerIdx;
             const targetX = offset * spacing;
-            const targetY = -120; // 画面下から一定位置に固定（扇形にしない）
+            const targetY = -120; // ★高さ固定（横一列）
             
             card.baseX = targetX; card.baseY = targetY;
 
