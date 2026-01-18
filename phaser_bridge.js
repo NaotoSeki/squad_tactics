@@ -1,14 +1,12 @@
-/** * PHASER BRIDGE (Auto-Deal Restored & Aerial Ready) */
+/** * PHASER BRIDGE (Reliable Deal, Physics Fix, Aerial Ready) */
 let phaserGame = null;
 const HIGH_RES_SCALE = 4; 
 
 // --- ユーティリティ ---
 window.createCardIcon = function(scene, type) {
-    // リアル画像があればそれを使う
     if (type === 'aerial' && scene.textures.exists('card_img_bomb')) {
         return 'card_img_bomb'; 
     }
-
     const key = `card_icon_${type}`;
     if (scene.textures.exists(key)) return key;
 
@@ -20,12 +18,11 @@ window.createCardIcon = function(scene, type) {
     else if(type==='tank'){x.fillStyle="#444";x.fillRect(-12,-6,24,12);x.fillStyle="#222";x.fillRect(0,-2,16,4);}
     else if(type==='heal'){x.fillStyle="#eee";x.fillRect(-10,-8,20,16);x.fillStyle="#d00";x.fillRect(-3,-6,6,12);x.fillRect(-8,-1,16,2);}
     else if(type==='tiger'){x.fillStyle="#554";x.fillRect(-14,-8,28,16);x.fillStyle="#111";x.fillRect(2,-2,20,4);}
-    else if(type==='aerial'){ // フォールバック用爆弾アイコン
+    else if(type==='aerial'){ 
         x.fillStyle="#343"; x.beginPath(); x.ellipse(0, 0, 15, 6, 0, 0, Math.PI*2); x.fill();
         x.fillStyle="#222"; x.fillRect(-5, -2, 10, 4);
     }
     else {x.fillStyle="#333";x.fillRect(-10,-5,20,10);} 
-    
     scene.textures.addCanvas(key, c);
     return key;
 };
@@ -66,12 +63,9 @@ const Renderer = {
         return this.roundHex((2/3*w.x)/HEX_SIZE, (-1/3*w.x+Math.sqrt(3)/3*w.y)/HEX_SIZE); 
     },
     roundHex(q,r) { let rq=Math.round(q), rr=Math.round(r), rs=Math.round(-q-r); const dq=Math.abs(rq-q), dr=Math.abs(rr-r), ds=Math.abs(rs-(-q-r)); if(dq>dr&&dq>ds) rq=-rr-rs; else if(dr>ds) rr=-rq-rs; return {q:rq, r:rr}; },
-    
-    // 外部からのカード配布
     dealCards(types) { const ui = this.game.scene.getScene('UIScene'); if(ui) ui.dealStart(types); },
-    // 外部からの単発配布
     dealCard(type) { const ui = this.game.scene.getScene('UIScene'); if(ui) ui.addCardToHand(type); },
-
+    
     checkUIHover(x, y) {
         if (this.isCardDragging) return true;
         const ui = this.game.scene.getScene('UIScene');
@@ -99,16 +93,9 @@ class Card extends Phaser.GameObjects.Container {
         const bg = scene.add.rectangle(0, 0, W, H, 0x222222).setStrokeStyle(2, 0x555555);
         bg.setInteractive({ useHandCursor: true, draggable: true });
         
-        // アイコン生成 (画像優先)
         const iconKey = window.createCardIcon(scene, type);
-        const icon = scene.add.image(0, -40, iconKey);
-        
-        // 画像ならアスペクト比維持、キャンバスなら縮小
-        if(type === 'aerial' && scene.textures.exists('card_img_bomb')) {
-            icon.setDisplaySize(120, 80);
-        } else {
-            icon.setScale(1/HIGH_RES_SCALE);
-        }
+        const icon = scene.add.image(0, -40, iconKey).setScale(1/HIGH_RES_SCALE);
+        if(type === 'aerial' && scene.textures.exists('card_img_bomb')) icon.setDisplaySize(120, 80);
 
         const text = scene.add.text(0, 40, type.toUpperCase(), { fontSize: '16px', color: '#d84', fontStyle: 'bold' }).setOrigin(0.5);
         const desc = scene.add.text(0, 70, "DRAG TO DEPLOY", { fontSize: '10px', color: '#888' }).setOrigin(0.5);
@@ -292,8 +279,8 @@ class UIScene extends Phaser.Scene {
         this.handContainer = this.add.container(w/2, h);
         this.uiVfxGraphics = this.add.graphics().setDepth(10000);
         
-        // ★初期配付復活！ (自動テスト)
-        this.time.delayedCall(1000, ()=>{ this.dealStart(['infantry','tank','aerial','infantry','tiger']); });
+        // ★自動配付復活 (500ms後)
+        this.time.delayedCall(500, ()=>{ this.dealStart(['infantry','tank','aerial','infantry','tiger']); });
     }
 
     update() { 
@@ -314,9 +301,10 @@ class UIScene extends Phaser.Scene {
         this.handContainer.add(card);
         this.cards.push(card);
         
-        // 画面右下から
-        card.physX = this.scale.width + 100; 
-        card.physY = this.scale.height + 100; 
+        // ★修正: 画面内（右下）に近い位置から出現させる
+        // handContainerは画面下中央にあるので、ローカル座標で (画面幅/2, 0) 付近に置けば画面右端
+        card.physX = 600; // コンテナ中心から右へ600px
+        card.physY = 300; // 画面下へ
         card.setPosition(card.physX, card.physY);
         
         this.arrangeHand();
