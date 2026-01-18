@@ -2,7 +2,8 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>SQUAD TACTICS v2.1 - HEROES OF THE SECTOR</title>
+    <title>SQUAD TACTICS - PHASER REFACTOR</title>
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
     <style>
         :root { --bg: #0b0e0a; --panel: #1a1a1a; --text: #bbb; --accent: #d84; --border: #444; }
         body {
@@ -13,10 +14,12 @@
         }
 
         #app { display: flex; width: 100%; height: 100%; }
-        #game-view { flex: 1; position: relative; overflow: hidden; cursor: crosshair; background: var(--bg); }
-        canvas { display: block; width: 100%; height: 100%; position: absolute; top: 0; left: 0; }
+        /* Phaserのマウントポイント */
+        #game-view { flex: 1; position: relative; overflow: hidden; background: var(--bg); }
+        /* Phaserが生成するCanvas用 */
+        canvas { display: block; width: 100%; height: 100%; outline: none; }
 
-        /* Sidebar */
+        /* --- 以下、既存のUIスタイルはそのまま維持 --- */
         #sidebar {
             width: 320px; background: var(--panel); border-left: 2px solid var(--border);
             display: flex; flex-direction: column; z-index: 20;
@@ -83,7 +86,10 @@
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(10,12,10,0.95); z-index: 100;
             display: flex; flex-direction: column; justify-content: center; align-items: center;
+            pointer-events: none; /* 下のPhaserをクリックできるように */
         }
+        .overlay > * { pointer-events: auto; } /* オーバーレイ内の要素はクリック可能に */
+
         .card-container { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; max-width: 900px; }
         
         .card {
@@ -124,7 +130,7 @@
             position: absolute; display: none; background: rgba(0, 20, 30, 0.95);
             border: 1px solid #0af; padding: 10px; width: 220px; color: #fff;
             font-size: 11px; z-index: 50; box-shadow: 0 5px 15px rgba(0,0,0,0.8);
-            pointer-events: none;
+            pointer-events: none; /* Logic側でautoに戻されます */
         }
     </style>
 </head>
@@ -132,31 +138,36 @@
 
 <div id="app">
     <div id="game-view">
-        <canvas id="cvs"></canvas>
         <div id="sector-counter">SECTOR: 01</div>
         <div id="eyecatch">ENEMY PHASE</div>
         <div id="context-menu"></div>
-        <div id="auto-toggle" onclick="game.toggleAuto()">
+        <div id="auto-toggle" onclick="gameLogic.toggleAuto()">
             <div class="indicator"></div> AUTO PILOT
         </div>
         
         <div id="setup-screen" class="overlay">
-            <h1 style="color:#d84; font-size:24px; letter-spacing:2px; border-bottom:2px solid #d84; margin-bottom:20px;">DEPLOYMENT PHASE</h1>
-            <p style="color:#ccc; margin-bottom:20px;">部隊を選択してください（残り <span id="slots-left" style="color:#d84; font-weight:bold;">3</span> 枠）</p>
-            <div class="card-container" id="setup-cards"></div>
-            <button id="btn-start" style="width:200px; margin-top:30px; border:2px solid #d84; background:#421; display:none;" onclick="game.startCampaign()">>>> EXECUTE MISSION</button>
+            <div style="background:rgba(10,12,10,0.95); padding:40px; border:1px solid #d84; text-align:center; pointer-events:auto;">
+                <h1 style="color:#d84; font-size:24px; letter-spacing:2px; border-bottom:2px solid #d84; margin-bottom:20px;">DEPLOYMENT PHASE</h1>
+                <p style="color:#ccc; margin-bottom:20px;">部隊を選択してください（残り <span id="slots-left" style="color:#d84; font-weight:bold;">3</span> 枠）</p>
+                <div class="card-container" id="setup-cards"></div>
+                <button id="btn-start" style="width:200px; margin-top:30px; border:2px solid #d84; background:#421; display:none;" onclick="gameLogic.startCampaign()">>>> EXECUTE MISSION</button>
+            </div>
         </div>
 
         <div id="reward-screen" class="overlay" style="display:none;">
-            <h1 style="color:#da4; font-size:32px; text-shadow:0 0 10px #da4;">SECTOR CLEARED!</h1>
-            <p style="margin-bottom:20px;">司令部より補給物資が投下されました。</p>
-            <div class="card-container" id="reward-cards"></div>
+            <div style="background:rgba(10,12,10,0.95); padding:40px; border:1px solid #da4; text-align:center; pointer-events:auto;">
+                <h1 style="color:#da4; font-size:32px; text-shadow:0 0 10px #da4;">SECTOR CLEARED!</h1>
+                <p style="margin-bottom:20px;">司令部より補給物資が投下されました。</p>
+                <div class="card-container" id="reward-cards"></div>
+            </div>
         </div>
 
-        <div id="gameover-screen" class="overlay" style="display:none; background:rgba(30,0,0,0.9);">
-            <h1 style="color:#f33; font-size:48px; text-shadow:0 0 20px #f00;">MISSION FAILED</h1>
-            <p style="color:#eaa;">全戦力が失われました。</p>
-            <button style="width:200px; margin-top:30px; border:2px solid #f33; background:#300;" onclick="location.reload()">RETRY</button>
+        <div id="gameover-screen" class="overlay" style="display:none; background:rgba(30,0,0,0.9); pointer-events:auto;">
+            <div style="text-align:center;">
+                <h1 style="color:#f33; font-size:48px; text-shadow:0 0 20px #f00;">MISSION FAILED</h1>
+                <p style="color:#eaa;">全戦力が失われました。</p>
+                <button style="width:200px; margin-top:30px; border:2px solid #f33; background:#300;" onclick="location.reload()">RETRY</button>
+            </div>
         </div>
     </div>
 
@@ -172,12 +183,8 @@
 </div>
 
 <script src="data.js"></script>
-<script src="renderer.js"></script>
+<script src="phaser_bridge.js"></script>
 <script src="logic.js"></script>
-
-<script>
-    const game = new Game();
-</script>
 
 </body>
 </html>
