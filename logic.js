@@ -1,8 +1,8 @@
-/** LOGIC (Phaser Adapter Version - Full VFX & Movement Fix) */
+/** LOGIC (Phaser Adapter Version - Aerial Damage Added) */
 class Game {
     constructor() {
         this.units=[]; this.map=[]; this.setupSlots=[]; this.state='SETUP'; 
-        this.path=[]; this.reachableHexes=[]; // ★移動可能範囲リスト
+        this.path=[]; this.reachableHexes=[]; 
         this.hoverHex=null;
         this.isAuto=false; this.isProcessingTurn = false; 
         this.sector = 1;
@@ -19,7 +19,6 @@ class Game {
     }
 
     initSetup() {
-        // (セットアップ画面のコードは変更なし。長いので省略せず既存のものを使ってください)
         const box=document.getElementById('setup-cards');
         ['infantry','heavy','sniper','tank'].forEach(k=>{
             const u=UNITS[k]; const d=document.createElement('div'); d.className='card';
@@ -51,7 +50,66 @@ class Game {
         if(this.units.length>0) Renderer.centerOn(this.units[0].q, this.units[0].r);
     }
 
-    // ★追加: 移動可能範囲の計算 (幅優先探索)
+    // ★追加: 航空爆撃のダメージ処理 (敵味方問わず / 500dmg / 75%)
+    applyBombardment(targetHex) {
+        this.log(`[支援] 爆撃着弾地点: ${targetHex.q},${targetHex.r}`);
+        
+        // 着弾ヘックスにいる生存ユニットを取得 (敵味方区別なし)
+        const u = this.getUnit(targetHex.q, targetHex.r);
+        
+        if (u) {
+            // 命中率 75%
+            if (Math.random() < 0.75) {
+                const dmg = 500;
+                u.hp -= dmg;
+                this.log(`>> 直撃！ ${u.def.name} に ${dmg} ダメージ`);
+                
+                // 撃破判定
+                if (u.hp <= 0) {
+                    u.hp = 0;
+                    if (!u.deadProcessed) {
+                        u.deadProcessed = true;
+                        this.log(`*** ${u.def.name} は消滅した ***`);
+                        Sfx.play('death');
+                        // ユニットの残骸エフェクトを追加
+                        if (window.VFX) {
+                            const p = Renderer.hexToPx(u.q, u.r);
+                            VFX.addUnitDebris(p.x, p.y);
+                        }
+                    }
+                }
+                this.updateSidebar();
+            } else {
+                this.log(">> 爆撃は外れた！(MISS)");
+            }
+        } else {
+            this.log(">> 目標地点にユニットなし");
+        }
+        
+        // 勝敗チェック
+        if(this.checkWin()) return;
+        this.checkLose();
+    }
+
+    // 通常のカード展開 (ユニット配置)
+    deployUnit(targetHex, cardType) {
+        const existing = this.units.find(u => u.q === targetHex.q && u.r === targetHex.r && u.hp > 0);
+        if (existing) { 
+            this.log("配置不可: ユニットが既に存在します"); 
+            return; 
+        }
+        
+        // 味方として配置
+        this.spawnUnit('player', cardType, targetHex.q, targetHex.r);
+        this.log(`増援到着: ${UNITS[cardType].name}`);
+        
+        if(window.VFX) { 
+            const pos = Renderer.hexToPx(targetHex.q, targetHex.r); 
+            window.VFX.addSmoke(pos.x, pos.y); 
+        }
+        this.updateSidebar();
+    }
+
     calcReachableHexes(u) {
         this.reachableHexes = [];
         if(!u) return;
@@ -63,9 +121,7 @@ class Game {
         while(frontier.length > 0) {
             let current = frontier.shift();
             
-            // 隣接ヘックスをチェック
             this.getNeighbors(current.q, current.r).forEach(n => {
-                // ユニットがいる、またはコスト無限の場所は通れない
                 if(this.getUnit(n.q, n.r) || this.map[n.q][n.r].cost >= 99) return;
 
                 let newCost = current.cost + this.map[n.q][n.r].cost;
@@ -81,15 +137,12 @@ class Game {
         }
     }
 
-    // ★追加: Phaserからマウス移動時に呼ばれる
     handleHover(p) {
         if(this.state !== 'PLAY') return;
         this.hoverHex = p;
         
-        // ユニット選択中かつ、ホバー地点が移動可能範囲内ならパスを引く
         if(this.selectedUnit && this.isValidHex(p.q, p.r)) {
             const isReachable = this.reachableHexes.some(h => h.q === p.q && h.r === p.r);
-            // 敵の上にカーソルがある場合はパスを引かない（攻撃判定になるため）
             const enemy = this.getUnit(p.q, p.r);
             
             if(isReachable && !enemy) {
@@ -104,25 +157,20 @@ class Game {
         const isValid = this.isValidHex(p.q, p.r);
         const u = isValid ? this.getUnit(p.q, p.r) : null;
 
-        // 1. 味方ユニットをクリック -> 選択 & 移動範囲計算
         if(u && u.team==='player') { 
             this.selectedUnit=u; 
-            this.calcReachableHexes(u); // 移動範囲を更新
+            this.calcReachableHexes(u);
             this.path = [];
             Sfx.play('click'); 
             this.updateSidebar(); 
         }
-        // 2. 選択中の処理
         else if(this.selectedUnit) {
-            // 敵なら攻撃
             if(u && u.team==='enemy') {
                 this.actionAttack(this.selectedUnit, u);
             }
-            // 移動 (パスが存在する = 到達可能でユニットがいない)
             else if(!u && isValid && this.path.length > 0) {
                 this.actionMove(this.selectedUnit, this.path);
             }
-            // ★それ以外 (範囲外クリックなど) -> 選択解除
             else {
                 this.selectedUnit = null;
                 this.reachableHexes = [];
@@ -132,9 +180,7 @@ class Game {
         }
     }
 
-    // (以下のメソッド群は変更なし。generateMap, spawn系, auto系, actionMove, Attackなど)
-    // ※長いので省略せず、前回のコードのまま貼り付けてください
-    generateMap() { /* 前回のコード */ 
+    generateMap() { 
         this.map=[]; const cx=Math.floor(MAP_W/2), cy=Math.floor(MAP_H/2), maxRadius=Math.min(MAP_W,MAP_H)/2-2;
         for(let q=0;q<MAP_W;q++){ this.map[q]=[]; for(let r=0;r<MAP_H;r++){
             const dist=(Math.abs(q-cx)+Math.abs(q+r-cx-cy)+Math.abs(r-cy))/2;
@@ -183,7 +229,6 @@ class Game {
     getNeighbors(q,r){return [[1,0],[1,-1],[0,-1],[-1,0],[-1,1],[0,1]].map(d=>({q:q+d[0],r:r+d[1]})).filter(h=>this.isValidHex(h.q,h.r));}
     findPath(u,tq,tr){let f=[{q:u.q,r:u.r}],cf={},cs={}; cf[`${u.q},${u.r}`]=null; cs[`${u.q},${u.r}`]=0; while(f.length>0){let c=f.shift();if(c.q===tq&&c.r===tr)break; this.getNeighbors(c.q,c.r).forEach(n=>{if(this.getUnit(n.q,n.r)&&(n.q!==tq||n.r!==tr))return; const cost=this.map[n.q][n.r].cost; if(cost>=99)return; const nc=cs[`${c.q},${c.r}`]+cost; if(nc<=u.ap){const k=`${n.q},${n.r}`;if(!(k in cs)||nc<cs[k]){cs[k]=nc;f.push(n);cf[k]=c;}}});} let p=[],c={q:tq,r:tr}; if(!cf[`${tq},${tr}`])return[]; while(c){if(c.q===u.q&&c.r===u.r)break;p.push(c);c=cf[`${c.q},${c.r}`];} return p.reverse();}
     log(m){const c=document.getElementById('log-container'),d=document.createElement('div');d.className='log-entry';d.innerText=`> ${m}`;c.appendChild(d);c.scrollTop=c.scrollHeight;}
-    // (showContext, getStatus, updateSidebar は前回と同じ)
     showContext(mx,my){const p=Renderer.pxToHex(mx,my),m=document.getElementById('context-menu'),u=this.getUnit(p.q,p.r),t=this.isValidHex(p.q,p.r)?this.map[p.q][p.r]:null; let h=""; if(u)h+=`<div style="color:#0af;font-weight:bold">${u.def.name}</div>HP:${u.hp}<br>AP:${u.ap}`;else if(t)h+=`${t.name}<br>C:${t.cost} D:${t.cover}%`; m.style.pointerEvents='auto'; h+=`<button onclick="gameLogic.endTurn();document.getElementById('context-menu').style.display='none';" style="margin-top:10px;border-color:#d44;background:#311;">TURN END</button>`; m.innerHTML=h; m.style.display='block'; m.style.left=(mx+5)+'px'; m.style.top=(my+5)+'px';}
     getStatus(u){if(u.hp<=0)return "DEAD";const r=u.hp/u.maxHp;if(r>0.8)return "NORMAL";if(r>0.5)return "DAMAGED";return "CRITICAL";}
     updateSidebar(){const ui=document.getElementById('unit-info'),u=this.selectedUnit;if(u){const w=WPNS[u.curWpn],s=this.getStatus(u); ui.innerHTML=`<h2 style="color:#d84;margin:0 0 5px 0;">${u.def.name}</h2><div style="font-size:10px;color:#888;">STATUS:<span style="color:${u.hp/u.maxHp<0.3?'#f55':'#5f5'}">${s}</span></div>HP:${u.hp}/${u.maxHp} AP:${u.ap}/${u.maxAp}<br><div id="btn-weapon" onclick="gameLogic.swapWeapon()"><div><small>Main:</small> ${w.name}</div><div class="ap-cost">SWAP(1)</div></div><div>Rng:${w.rng} Dmg:${w.dmg}</div><div style="margin-top:15px;"><button class="btn-stance ${u.stance==='stand'?'active-stance':''}" onclick="gameLogic.setStance('stand')">立</button><button class="btn-stance ${u.stance==='crouch'?'active-stance':''}" onclick="gameLogic.setStance('crouch')">屈</button><button class="btn-stance ${u.stance==='prone'?'active-stance':''}" onclick="gameLogic.setStance('prone')">伏</button></div><button onclick="gameLogic.endTurn()" class="${this.state!=='PLAY'?'disabled':''}" style="background:#522;border-color:#d44;margin-top:20px;">TURN END</button>`; if(u.def.isTank)document.querySelectorAll('.btn-stance').forEach(b=>b.classList.add('disabled'));}else ui.innerHTML=`<div style="text-align:center;color:#555;margin-top:80px;">// NO SIGNAL //</div>`;}
