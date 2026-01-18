@@ -1,4 +1,4 @@
-/** * PHASER BRIDGE (Bug Fix: Texture, Hover Stability, Input Conflict) */
+/** * PHASER BRIDGE (Hit Area Alignment & Drag Fix) */
 let phaserScene = null;
 
 // カード画像生成
@@ -8,8 +8,7 @@ window.createCardIcon = function(type) {
     else if(type==='tank'){x.fillStyle="#444";x.fillRect(-12,-6,24,12);x.fillStyle="#222";x.fillRect(0,-2,16,4);}
     else if(type==='heal'){x.fillStyle="#eee";x.fillRect(-10,-8,20,16);x.fillStyle="#d00";x.fillRect(-3,-6,6,12);x.fillRect(-8,-1,16,2);}
     else if(type==='tiger'){x.fillStyle="#554";x.fillRect(-14,-8,28,16);x.fillStyle="#111";x.fillRect(2,-2,20,4);}
-    else {x.fillStyle="#333";x.fillRect(-10,-5,20,10);} 
-    return c; // ★Canvas要素そのものを返すように変更
+    else {x.fillStyle="#333";x.fillRect(-10,-5,20,10);} return c;
 };
 
 // グラデーションテクスチャ生成
@@ -17,17 +16,12 @@ window.createGradientTexture = function(scene) {
     const w = scene.scale.width;
     const h = scene.scale.height * 0.45;
     const c = document.createElement('canvas'); c.width=w; c.height=h; const x = c.getContext('2d');
-    
     const grd = x.createLinearGradient(0, h, 0, 0);
     grd.addColorStop(0, "rgba(0,0,0,1)");
     grd.addColorStop(0.3, "rgba(0,0,0,0.9)");
     grd.addColorStop(0.7, "rgba(0,0,0,0.3)");
     grd.addColorStop(1, "rgba(0,0,0,0)");
-    
-    x.fillStyle = grd;
-    x.fillRect(0, 0, w, h);
-    
-    // ★修正: addCanvasを使用して同期的に登録
+    x.fillStyle = grd; x.fillRect(0, 0, w, h);
     if(scene.textures.exists('ui_gradient')) scene.textures.remove('ui_gradient');
     scene.textures.addCanvas('ui_gradient', c);
 };
@@ -58,12 +52,13 @@ class Card extends Phaser.GameObjects.Container {
         this.scene = scene;
         this.cardType = type;
         
+        // カードサイズ定義
         const W = 140; const H = 200;
-        this.setSize(W, H);
+        this.setSize(W, H); // コンテナのサイズを設定
 
+        // 背景 (中心基準 0,0)
         const bg = scene.add.rectangle(0, 0, W, H, 0x222222).setStrokeStyle(2, 0x555555);
         
-        // ★修正: addCanvasで同期登録
         const iconKey = `card_icon_${type}`;
         if(!scene.textures.exists(iconKey)) scene.textures.addCanvas(iconKey, window.createCardIcon(type));
         const icon = scene.add.image(0, -40, iconKey);
@@ -72,10 +67,10 @@ class Card extends Phaser.GameObjects.Container {
         const desc = scene.add.text(0, 70, "DRAG TO DEPLOY", { fontSize: '10px', color: '#888' }).setOrigin(0.5);
         this.add([bg, icon, text, desc]);
 
-        // ★修正: ヒットエリアを下方向に拡張 (W, H*1.5)
-        // これでカードが浮き上がってもマウスが外れない
-        const hitArea = new Phaser.Geom.Rectangle(-W/2, -H/2, W, H * 1.5);
-        this.setInteractive(hitArea, Phaser.Geom.Rectangle.Contains, { useHandCursor: true });
+        // ★修正: ヒットエリアをカードサイズと完全に一致させる
+        // 引数なしで setInteractive を呼ぶと、setSizeで設定したサイズ(140x200)が中心基準で適用される
+        // これにより「見た目通りの四角形」が判定エリアになります
+        this.setInteractive({ draggable: true, useHandCursor: true });
         
         this.setScrollFactor(0);
         
@@ -92,10 +87,10 @@ class Card extends Phaser.GameObjects.Container {
     }
 
     onHover() {
-        // マップドラッグ中は反応させない
         if(this.isDragging || this.scene.isMapDragging) return;
         this.setDepth(1000); 
-        this.scene.tweens.add({ targets: this, y: this.baseY - 40, scale: 1.1, duration: 150, ease: 'Back.out' });
+        // 浮き上がり量を少し控えめにして(40->30)、マウスが外れるのを防ぐ
+        this.scene.tweens.add({ targets: this, y: this.baseY - 30, scale: 1.1, duration: 150, ease: 'Back.out' });
     }
 
     onHoverOut() {
@@ -105,7 +100,8 @@ class Card extends Phaser.GameObjects.Container {
     }
 
     onDragStart(pointer, dragX, dragY) {
-        if(this.scene.isMapDragging) return; // マップ操作中は掴めない
+        // マップ移動中はカードを掴ませない
+        if(this.scene.isMapDragging) return;
 
         this.isDragging = true;
         this.scene.isDraggingCard = true;
@@ -183,47 +179,39 @@ class MainScene extends Phaser.Scene {
         const h = this.scale.height;
         const w = this.scale.width;
 
-        // グラデーション背景
         window.createGradientTexture(this);
         const bg = this.add.image(w/2, h, 'ui_gradient').setOrigin(0.5, 1).setDepth(200);
         bg.setScrollFactor(0);
         bg.setDisplaySize(w, h*0.45);
 
-        // --- マウス入力ハンドリング ---
+        // --- 入力ハンドリング修正 ---
         
-        // 1. ポインターダウン (クリック開始)
         this.input.on('pointerdown', (p, currentlyOver) => {
-            // カードの上をクリックした場合は、マップ操作をしない
+            // ★重要: currentlyOverには「マウスの下にあるインタラクティブなオブジェクト」が入っています
+            // これが空でない＝カードの上をクリックした、ということなので、マップ移動はキャンセル
             if (currentlyOver.length > 0) return;
 
-            // 左クリック: マップ移動開始フラグON または ユニット選択
             if(p.button === 0) {
                 this.isMapDragging = true;
                 if(window.gameLogic) window.gameLogic.handleClick(Renderer.pxToHex(p.x, p.y));
             }
-            // 右クリック: コンテキストメニュー
             else if(p.button === 2) {
                 if(window.gameLogic) window.gameLogic.showContext(p.x, p.y);
             }
         });
 
-        // 2. ポインターアップ (クリック終了)
         this.input.on('pointerup', () => {
-            this.isMapDragging = false; // マップ移動終了
+            this.isMapDragging = false;
         });
         
-        // 3. ポインタームーブ (ドラッグ & ホバー)
         this.input.on('pointermove', (p) => {
-            // カードドラッグ中はカメラを動かさない
             if (this.isDraggingCard) return;
 
-            // マップドラッグ中ならカメラ移動
             if (p.isDown && this.isMapDragging) {
                 this.cameras.main.scrollX -= (p.x - p.prevPosition.x); 
                 this.cameras.main.scrollY -= (p.y - p.prevPosition.y);
             }
 
-            // マップ上のホバー処理 (マップ移動中以外)
             if(!this.isMapDragging && window.gameLogic) {
                 window.gameLogic.handleHover(Renderer.pxToHex(p.x, p.y));
             }
