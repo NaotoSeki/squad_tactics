@@ -48,6 +48,11 @@ class Game {
         this.log(`MISSION START - SECTOR ${this.sector}`);
         document.getElementById('sector-counter').innerText = `SECTOR: ${this.sector.toString().padStart(2, '0')}`;
         if(this.units.length>0) Renderer.centerOn(this.units[0].q, this.units[0].r);
+        // ★追加: ゲーム開始と同時にカードを配る
+        // （とりあえず固定の5枚を配ります。必要に応じて中身を変えてください）
+        if (Renderer.dealCards) {
+            Renderer.dealCards(['infantry', 'tank', 'aerial', 'infantry', 'tiger']);
+        }
     }
 
     // ★追加: 航空爆撃のダメージ処理 (敵味方問わず / 500dmg / 75%)
