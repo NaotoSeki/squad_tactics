@@ -1,4 +1,4 @@
-/** * PHASER BRIDGE (Stable Interaction & Visual Separation) */
+/** * PHASER BRIDGE (Solid Interaction & Drag Fix) */
 let phaserGame = null;
 
 // カード画像生成
@@ -28,8 +28,8 @@ window.createGradientTexture = function(scene) {
 // ★状態管理ハブ
 const Renderer = {
     game: null,
-    isMapDragging: false, // マップドラッグ中フラグ
-    isCardDragging: false, // カードドラッグ中フラグ
+    isMapDragging: false, 
+    isCardDragging: false,
 
     init(canvasElement) {
         const config = { 
@@ -38,9 +38,10 @@ const Renderer = {
             width: document.getElementById('game-view').clientWidth, 
             height: document.getElementById('game-view').clientHeight, 
             backgroundColor: '#0b0e0a', 
-            scene: [MainScene, UIScene], // 2シーン構成
+            scene: [MainScene, UIScene], 
             fps: { target: 60 }, 
-            physics: { default: 'arcade', arcade: { debug: false } } 
+            physics: { default: 'arcade', arcade: { debug: false } },
+            input: { activePointers: 1 } // マルチタッチ誤爆防止
         };
         this.game = new Phaser.Game(config);
         phaserGame = this.game;
@@ -69,74 +70,71 @@ class Card extends Phaser.GameObjects.Container {
         this.cardType = type;
         
         const W = 140; const H = 200;
-        this.setSize(W, H); // コンテナサイズ設定
+        this.setSize(W, H);
 
-        // ★構造改革: 見た目(visuals)だけを別コンテナにまとめる
-        this.visuals = scene.add.container(0, 0);
-        
-        // 背景
+        // ★修正: 背景(bg)自体をインタラクティブにする
+        // これで「見た目」と「判定」が完全に一致します。
         const bg = scene.add.rectangle(0, 0, W, H, 0x222222).setStrokeStyle(2, 0x555555);
+        bg.setInteractive({ useHandCursor: true, draggable: true });
+        
         const iconKey = `card_icon_${type}`;
         if(!scene.textures.exists(iconKey)) scene.textures.addCanvas(iconKey, window.createCardIcon(type));
         const icon = scene.add.image(0, -40, iconKey);
         const text = scene.add.text(0, 40, type.toUpperCase(), { fontSize: '16px', color: '#d84', fontStyle: 'bold' }).setOrigin(0.5);
         const desc = scene.add.text(0, 70, "DRAG TO DEPLOY", { fontSize: '10px', color: '#888' }).setOrigin(0.5);
         
-        this.visuals.add([bg, icon, text, desc]);
-        this.add(this.visuals); // 親に追加
-
-        // ★インタラクション設定
-        // 中心基準(-W/2, -H/2)の矩形をHitAreaにする。これでズレなし。
-        const hitArea = new Phaser.Geom.Rectangle(-W/2, -H/2, W, H);
-        this.setInteractive(hitArea, Phaser.Geom.Rectangle.Contains, { draggable: true });
+        // アイコンやテキストは判定を邪魔しないようにする
+        icon.disableInteractive();
+        
+        this.add([bg, icon, text, desc]);
         
         this.baseX = x; this.baseY = y;
         this.prevX = x;
         this.dragOffsetX = 0; this.dragOffsetY = 0;
-        this.isHovering = false;
-
-        this.on('pointerover', this.onHover, this);
-        this.on('pointerout', this.onHoverOut, this);
-        this.on('dragstart', this.onDragStart, this);
-        this.on('drag', this.onDrag, this);
-        this.on('dragend', this.onDragEnd, this);
+        
+        // ★重要: イベントリスナーは bg (背景) に対して設定する
+        bg.on('pointerover', this.onHover, this);
+        bg.on('pointerout', this.onHoverOut, this);
+        bg.on('pointerdown', this.onPointerDown, this); // クリック検知用
+        
+        // ドラッグイベント
+        bg.on('dragstart', this.onDragStart, this);
+        bg.on('drag', this.onDrag, this);
+        bg.on('dragend', this.onDragEnd, this);
         
         scene.add.existing(this);
     }
 
+    onPointerDown(pointer) {
+        // カードをクリックした瞬間、ログを出す（デバッグ用）
+        console.log("Card Clicked:", this.cardType);
+    }
+
     onHover() {
-        // マップドラッグ中や、カードドラッグ中は反応させない
+        // マップドラッグ中、または他のカードをドラッグ中は反応させない（カクつき防止）
         if(Renderer.isMapDragging || Renderer.isCardDragging) return;
-        this.isHovering = true;
-        this.parentContainer.bringToTop(this);
         
-        // ★重要: this.y（判定領域）は動かさず、this.visuals.y（見た目）だけ動かす
-        // これにより、マウスが動かなくても判定から外れることがなくなり、ピクつきが消える
-        this.scene.tweens.add({ targets: this.visuals, y: -40, scale: 1.1, duration: 150, ease: 'Back.out' });
+        this.parentContainer.bringToTop(this);
+        // this.y を動かすと判定も動くが、bgで判定しているので追従するはず。
+        // ピクつき防止のため、少し控えめに動かす
+        this.scene.tweens.add({ targets: this, y: this.baseY - 20, scale: 1.05, duration: 100, ease: 'Back.out' });
     }
 
     onHoverOut() {
-        if(Renderer.isCardDragging && this.isDragging) return; // 自分がドラッグ中なら無視
-        this.isHovering = false;
-        
-        // 見た目を元に戻す
-        this.scene.tweens.add({ targets: this.visuals, y: 0, scale: 1.0, duration: 200, ease: 'Power2' });
+        if(Renderer.isCardDragging && this.isDragging) return;
+        this.scene.tweens.add({ targets: this, y: this.baseY, x: this.baseX, scale: 1.0, duration: 200, ease: 'Power2' });
     }
 
-    onDragStart(pointer) {
+    onDragStart(pointer, dragX, dragY) {
         if(Renderer.isMapDragging) return; // マップ移動中は掴めない
 
         this.isDragging = true;
-        Renderer.isCardDragging = true;
+        Renderer.isCardDragging = true; // 全体に通知
         
-        // ドラッグ開始時は見た目をリセットして全体追従モードへ
-        this.visuals.y = 0; 
-        this.visuals.scale = 1.0;
-
         this.setAlpha(0.8);
         this.setScale(1.1);
 
-        // コンテナから一時脱出させてUIScene直下に置く（描画順最優先のため）
+        // Handコンテナから出して、UIScene直下に置く（最前面表示のため）
         const hand = this.parentContainer;
         const worldPos = hand.getLocalTransformMatrix().transformPoint(this.x, this.y);
         hand.remove(this);
@@ -149,9 +147,8 @@ class Card extends Phaser.GameObjects.Container {
         this.dragOffsetY = this.y - pointer.y;
     }
 
-    onDrag(pointer) {
-        if(!this.isDragging) return;
-
+    onDrag(pointer, dragX, dragY) {
+        // bgのドラッグイベントだが、動かすのは Container (this)
         this.x = pointer.x + this.dragOffsetX;
         this.y = pointer.y + this.dragOffsetY;
 
@@ -161,7 +158,7 @@ class Card extends Phaser.GameObjects.Container {
         this.angle += (targetAngle - this.angle) * 0.2;
         this.prevX = this.x;
 
-        // ドロップ候補通知
+        // ドロップ候補ハイライト (MainSceneへ通知)
         const main = this.scene.game.scene.getScene('MainScene');
         if (this.y < this.scene.scale.height * 0.65) {
              const hex = Renderer.pxToHex(pointer.x, pointer.y);
@@ -173,18 +170,18 @@ class Card extends Phaser.GameObjects.Container {
 
     onDragEnd(pointer) {
         this.isDragging = false;
-        Renderer.isCardDragging = false;
+        Renderer.isCardDragging = false; // ドラッグ終了
         this.setAlpha(1.0);
         this.angle = 0;
         
         const main = this.scene.game.scene.getScene('MainScene');
-        main.dragHighlightHex = null;
+        if(main) main.dragHighlightHex = null;
 
         // ドロップ判定
         if (this.y < this.scene.scale.height * 0.65 && window.gameLogic) {
              const hex = Renderer.pxToHex(pointer.x, pointer.y);
              console.log(`Card dropped at: ${hex.q}, ${hex.r}`);
-             // ★ここに将来の配置ロジックが入る
+             // TODO: 配置ロジック
              this.returnToHand(); 
         } else {
              this.returnToHand();
@@ -202,19 +199,16 @@ class Card extends Phaser.GameObjects.Container {
             duration: 300, ease: 'Back.out',
             onComplete: () => {
                 this.scene.children.remove(this);
-                hand.add(this); // 元のコンテナに戻す
+                hand.add(this); // 元の場所へ
                 this.setPosition(this.baseX, this.baseY);
                 this.setDepth(0);
-                // 念のため見た目もリセット
-                this.visuals.y = 0;
-                this.visuals.scale = 1.0;
             }
         });
     }
 }
 
 // ==========================================
-//  UI SCENE (手札・オーバーレイ)
+//  UI SCENE
 // ==========================================
 class UIScene extends Phaser.Scene {
     constructor() { super({ key: 'UIScene', active: false }); this.cards=[]; this.handContainer=null; }
@@ -228,6 +222,7 @@ class UIScene extends Phaser.Scene {
 
         this.handContainer = this.add.container(w/2, h);
         
+        // カード配るテスト
         this.time.delayedCall(500, ()=>{ ['infantry','tank','heal','infantry','tiger'].forEach(t => this.addCardToHand(t)); });
     }
 
@@ -246,17 +241,16 @@ class UIScene extends Phaser.Scene {
         this.cards.forEach((card, i) => {
             const offset = i - centerIdx;
             const targetX = offset * spacing;
-            const targetY = -120; // 画面下からの固定位置
+            const targetY = -120;
             
             card.baseX = targetX; card.baseY = targetY;
-            
             this.tweens.add({ targets: card, x: targetX, y: targetY, angle: 0, duration: 400, ease: 'Back.out' });
         });
     }
 }
 
 // ==========================================
-//  MAIN SCENE (マップ)
+//  MAIN SCENE
 // ==========================================
 class MainScene extends Phaser.Scene {
     constructor() { super({ key: 'MainScene' }); this.hexGroup=null; this.unitGroup=null; this.vfxGraphics=null; this.overlayGraphics=null; this.mapGenerated=false; this.dragHighlightHex=null; }
@@ -277,16 +271,28 @@ class MainScene extends Phaser.Scene {
         this.vfxGraphics = this.add.graphics().setDepth(100);
         this.overlayGraphics = this.add.graphics().setDepth(50);
         
-        this.scene.launch('UIScene'); // UI起動
+        this.scene.launch('UIScene'); 
 
         // --- マップ操作ハンドリング ---
-
         this.input.on('pointerdown', (p) => {
-            // カード操作中、または画面下部UIエリアならマップ操作無効
-            if (Renderer.isCardDragging || p.y > this.scale.height * 0.6) return;
+            // カードドラッグ中は無視
+            if (Renderer.isCardDragging) return;
 
+            // ★重要: カードの上をクリックしたかどうかを判定
+            // UIScene側のポインタ位置にあるオブジェクトを取得し、あればマップ操作をキャンセル
+            const uiScene = this.scene.get('UIScene');
+            // UISceneのカメラで、現在のマウス位置にあるオブジェクトを探す
+            // (注: UISceneはスクロールしないので p.x, p.y そのままでOK)
+            const objectsUnderPointer = uiScene.input.hitTestPointer(p);
+
+            if (objectsUnderPointer.length > 0) {
+                // カードの上なのでマップ操作はしない
+                return;
+            }
+
+            // カード以外ならマップ操作
             if(p.button === 0) {
-                Renderer.isMapDragging = true; // ★フラグON
+                Renderer.isMapDragging = true;
                 if(window.gameLogic) window.gameLogic.handleClick(Renderer.pxToHex(p.x, p.y));
             }
             else if(p.button === 2) {
@@ -295,17 +301,19 @@ class MainScene extends Phaser.Scene {
         });
 
         this.input.on('pointerup', () => {
-            Renderer.isMapDragging = false; // ★フラグOFF
+            Renderer.isMapDragging = false;
         });
         
         this.input.on('pointermove', (p) => {
             if (Renderer.isCardDragging) return;
 
+            // マップドラッグ中
             if (p.isDown && Renderer.isMapDragging) {
                 this.cameras.main.scrollX -= (p.x - p.prevPosition.x); 
                 this.cameras.main.scrollY -= (p.y - p.prevPosition.y);
             }
             
+            // マップドラッグ中でなければホバー処理
             if(!Renderer.isMapDragging && window.gameLogic) {
                 window.gameLogic.handleHover(Renderer.pxToHex(p.x, p.y));
             }
@@ -339,12 +347,10 @@ class MainScene extends Phaser.Scene {
         });
 
         this.overlayGraphics.clear();
-        
         if (this.dragHighlightHex) {
             this.overlayGraphics.lineStyle(4, 0xffffff, 1.0);
             this.drawHexOutline(this.overlayGraphics, this.dragHighlightHex.q, this.dragHighlightHex.r);
         }
-
         const selected = window.gameLogic.selectedUnit;
         if(selected && window.gameLogic.reachableHexes.length > 0) {
             this.overlayGraphics.lineStyle(2, 0xffffff, 0.4); 
