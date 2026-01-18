@@ -1,4 +1,4 @@
-/** * PHASER BRIDGE (Logic Restored & Fast Burn) */
+/** * PHASER BRIDGE (Crash Fix, Turbo Burn, Robust Logic) */
 let phaserGame = null;
 const HIGH_RES_SCALE = 4; 
 
@@ -97,6 +97,9 @@ class Card extends Phaser.GameObjects.Container {
     }
 
     updatePhysics() {
+        // 破棄済みなら処理しない (フリーズ防止)
+        if (!this.scene || !this.bgRect) return;
+
         if (!this.isDragging && !this.scene.isReturning) {
             this.targetX = this.baseX;
             this.targetY = this.baseY - (this.isHovering ? 30 : 0);
@@ -173,9 +176,13 @@ class Card extends Phaser.GameObjects.Container {
         }
     }
 
+    // ★フリーズ対策版: 燃焼＆消滅
     burnAndConsume(hex) {
-        // ★ここでlogic.jsへ通知 (本来ならここで呼ぶが、アニメーション後に呼ぶ)
+        console.log(`Deploying ${this.cardType} at ${hex.q},${hex.r}`);
+        
+        // 物理更新を無効化
         this.updatePhysics = () => {}; 
+        
         this.bgRect.setFillStyle(0x220000);
         this.bgRect.setStrokeStyle(2, 0xff4400);
         
@@ -188,9 +195,12 @@ class Card extends Phaser.GameObjects.Container {
         const burnProgress = { val: 0 }; 
         this.scene.tweens.add({
             targets: burnProgress, val: 1, 
-            duration: 400, // ★高速化 (倍速)
+            duration: 200, // ★さらに倍速 (200ms)
             ease: 'Linear',
             onUpdate: () => {
+                // オブジェクトが破棄されていたら停止
+                if(!this.scene || !maskShape.scene) return;
+
                 maskShape.clear(); maskShape.fillStyle(0xffffff);
                 maskShape.fillRect(-70, -100, 140, 200 * (1 - burnProgress.val)); 
                 maskShape.x = this.x; maskShape.y = this.y + (200 * burnProgress.val);
@@ -199,22 +209,33 @@ class Card extends Phaser.GameObjects.Container {
                 const cos = Math.cos(rad); const sin = Math.sin(rad);
                 const burnLineY = 100 - (200 * burnProgress.val); 
                 
-                for(let i=0; i<6; i++) { 
+                for(let i=0; i<8; i++) { 
                     const randX = (Math.random() - 0.5) * 140;
                     const wx = this.x + (randX * cos - burnLineY * sin);
                     const wy = this.y + (randX * sin + burnLineY * cos);
                     UIVFX.addFire(wx, wy);
-                    if(Math.random()<0.2) UIVFX.addSmoke(wx, wy);
+                    if(Math.random()<0.3) UIVFX.addSmoke(wx, wy);
                 }
-                this.x += (Math.random()-0.5) * 3;
-                this.y += (Math.random()-0.5) * 3;
+                this.x += (Math.random()-0.5) * 4;
+                this.y += (Math.random()-0.5) * 4;
             },
             onComplete: () => {
-                maskShape.destroy();
+                // ★フリーズ防止: 安全な破棄手順
+                if (this.visuals) this.visuals.clearMask(true); // マスクを解除して破棄
+                if (maskShape) maskShape.destroy();
+                
+                // カード管理から外す
                 this.scene.removeCard(this);
+                
+                // ゲームオブジェクト破棄
                 this.destroy();
-                // ★logic.jsへの通知復活
-                if(window.gameLogic) window.gameLogic.deployUnit(hex, this.cardType); 
+
+                // ★ロジック呼び出しをTry-Catchで保護
+                try {
+                    if(window.gameLogic) window.gameLogic.deployUnit(hex, this.cardType); 
+                } catch(e) {
+                    console.error("Logic Error:", e);
+                }
             }
         });
     }
@@ -245,7 +266,10 @@ class UIScene extends Phaser.Scene {
     }
 
     update() { 
-        this.cards.forEach(card => card.updatePhysics()); 
+        // 存在チェック付き更新
+        this.cards.forEach(card => {
+            if (card.active) card.updatePhysics();
+        });
         UIVFX.update(); 
         this.uiVfxGraphics.clear(); 
         UIVFX.draw(this.uiVfxGraphics);
@@ -410,7 +434,7 @@ class MainScene extends Phaser.Scene {
     }
 }
 
-// ★VFX/SFXのグローバル復帰
+// ★外部公開（Logic連携用）
 window.VFX = { 
     particles:[], projectiles:[], 
     add(p){this.particles.push(p);}, 
@@ -437,47 +461,27 @@ window.VFX = {
         }); 
     }
 };
+window.Sfx = { play(id){} };
 
-window.Sfx = { play(id){} }; // 音声プレースホルダー
-
-// UI専用パーティクル (微細)
+// UI専用VFX
 const UIVFX = {
     particles: [],
     add(p){ this.particles.push(p); },
     addFire(x, y) {
-        this.add({
-            x, y,
-            vx: (Math.random() - 0.5) * 1.5,
-            vy: -Math.random() * 2 - 1,
-            life: 10 + Math.random() * 15,
-            maxLife: 25,
-            size: 2 + Math.random(), 
-            colorType: 'fire'
-        });
+        this.add({ x, y, vx: (Math.random() - 0.5) * 1.5, vy: -Math.random() * 2 - 1, life: 10 + Math.random() * 15, maxLife: 25, size: 2 + Math.random(), colorType: 'fire' });
     },
     addSmoke(x, y) {
-        this.add({
-            x, y,
-            vx: (Math.random() - 0.5) * 1,
-            vy: -1,
-            life: 20 + Math.random() * 20,
-            maxLife: 40,
-            size: 3 + Math.random() * 2,
-            colorType: 'smoke'
-        });
+        this.add({ x, y, vx: (Math.random() - 0.5) * 1, vy: -1, life: 20 + Math.random() * 20, maxLife: 40, size: 3 + Math.random() * 2, colorType: 'smoke' });
     },
     update() {
-        this.particles.forEach(p => {
-            p.x += p.vx; p.y += p.vy; p.life--; p.size *= 0.94;
-        });
+        this.particles.forEach(p => { p.x += p.vx; p.y += p.vy; p.life--; p.size *= 0.94; });
         this.particles = this.particles.filter(p => p.life > 0);
     },
     draw(g) {
         this.particles.forEach(p => {
             let color = 0xffffff; let alpha = p.life / p.maxLife;
-            if (p.colorType === 'fire') {
-                if (alpha > 0.7) color = 0xffff00; else if (alpha > 0.3) color = 0xff4400; else color = 0x330000;
-            } else { color = 0x555555; alpha *= 0.5; }
+            if (p.colorType === 'fire') { if (alpha > 0.7) color = 0xffff00; else if (alpha > 0.3) color = 0xff4400; else color = 0x330000; } 
+            else { color = 0x555555; alpha *= 0.5; }
             g.fillStyle(color, alpha); g.fillCircle(p.x, p.y, p.size);
         });
     }
