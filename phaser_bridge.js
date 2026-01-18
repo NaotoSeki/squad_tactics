@@ -1,4 +1,4 @@
-/** * PHASER BRIDGE (Hanging Physics, Burn VFX, & Deal Animation) */
+/** * PHASER BRIDGE (Burning Mask VFX & Physics) */
 let phaserGame = null;
 
 const HIGH_RES_SCALE = 4; 
@@ -52,7 +52,6 @@ const Renderer = {
     },
     roundHex(q,r) { let rq=Math.round(q), rr=Math.round(r), rs=Math.round(-q-r); const dq=Math.abs(rq-q), dr=Math.abs(rr-r), ds=Math.abs(rs-(-q-r)); if(dq>dr&&dq>ds) rq=-rr-rs; else if(dr>ds) rr=-rq-rs; return {q:rq, r:rr}; },
     
-    // ★外部からのカード配布トリガー
     dealCards(types) {
         const ui = this.game.scene.getScene('UIScene');
         if(ui && ui.scene.settings.active) ui.dealStart(types);
@@ -60,7 +59,7 @@ const Renderer = {
 };
 
 // ==========================================
-//  CARD CLASS (Hanging Physics & Burn VFX)
+//  CARD CLASS
 // ==========================================
 class Card extends Phaser.GameObjects.Container {
     constructor(scene, x, y, type) {
@@ -71,8 +70,12 @@ class Card extends Phaser.GameObjects.Container {
         const W = 140; const H = 200;
         this.setSize(W, H);
 
+        // ★ビジュアルをグループ化（マスク適用のため）
+        this.visuals = scene.add.container(0, 0);
+
         // 背景
         const bg = scene.add.rectangle(0, 0, W, H, 0x222222).setStrokeStyle(2, 0x555555);
+        // 背景自体をインタラクティブに
         bg.setInteractive({ useHandCursor: true, draggable: true });
         
         // アイコン
@@ -83,9 +86,12 @@ class Card extends Phaser.GameObjects.Container {
         const desc = scene.add.text(0, 70, "DRAG TO DEPLOY", { fontSize: '10px', color: '#888' }).setOrigin(0.5);
         
         icon.disableInteractive();
-        this.add([bg, icon, text, desc]);
-        this.bgRect = bg; // 参照保持（色変え用）
-        this.mainText = text;
+        
+        // visualsにまとめて追加
+        this.visuals.add([bg, icon, text, desc]);
+        this.add(this.visuals);
+        
+        this.bgRect = bg; 
         
         this.setScrollFactor(0);
         
@@ -112,44 +118,24 @@ class Card extends Phaser.GameObjects.Container {
             this.targetX = this.baseX;
             this.targetY = this.baseY - (this.isHovering ? 30 : 0);
         }
-
-        // 1. 位置のバネ (Spring) - 少し弱めてしっとりさせる
+        // 位置バネ
         const stiffness = this.isDragging ? 0.2 : 0.08; 
         const damping = 0.65; 
-
         const ax = (this.targetX - this.physX) * stiffness;
         const ay = (this.targetY - this.physY) * stiffness;
-
-        this.velocityX += ax;
-        this.velocityY += ay;
-        this.velocityX *= damping;
-        this.velocityY *= damping;
-
-        this.physX += this.velocityX;
-        this.physY += this.velocityY;
-
+        this.velocityX += ax; this.velocityY += ay;
+        this.velocityX *= damping; this.velocityY *= damping;
+        this.physX += this.velocityX; this.physY += this.velocityY;
         this.setPosition(this.physX, this.physY);
 
-        // 2. 角度の振り子 (Hanging Pendulum)
-        // 掴んでいる場所(dragOffsetX)に応じて、重心が下にくるように傾く
-        // 右側を掴む(dragOffset > 0) -> 重心は左 -> 左に傾く(Angle < 0)
+        // 角度振り子
         let staticAngle = 0;
-        if (this.isDragging) {
-            // 掴んでいる点による静的な傾き (最大45度)
-            staticAngle = -this.dragOffsetX * 0.4; 
-        }
-
-        // 慣性による動的な揺れ
+        if (this.isDragging) staticAngle = -this.dragOffsetX * 0.4; 
         const targetDynamicAngle = -this.velocityX * 1.5;
-        
-        // 目標角度 = 静的傾き + 動的揺れ
         const totalTargetAngle = staticAngle + targetDynamicAngle;
-
-        // ゆっくり追従
         const angleForce = (totalTargetAngle - this.angle) * 0.12;
         this.velocityAngle += angleForce;
-        this.velocityAngle *= 0.85; // 減衰
-
+        this.velocityAngle *= 0.85; 
         this.angle += this.velocityAngle;
         this.angle = Phaser.Math.Clamp(this.angle, -50, 50); 
     }
@@ -159,7 +145,6 @@ class Card extends Phaser.GameObjects.Container {
         this.isHovering = true;
         this.parentContainer.bringToTop(this);
     }
-
     onHoverOut() { this.isHovering = false; }
 
     onDragStart(pointer) {
@@ -205,47 +190,84 @@ class Card extends Phaser.GameObjects.Container {
         main.dragHighlightHex = null;
 
         const dropZoneY = this.scene.scale.height * 0.65;
-        // ドロップ成功判定
         if (this.y < dropZoneY) {
              const hex = Renderer.pxToHex(pointer.x, pointer.y);
-             // ★燃焼＆消費処理へ
              this.burnAndConsume(hex);
         } else {
              this.returnToHand();
         }
     }
 
-    // ★燃え尽きるエフェクト
+    // ★燃え尽きるエフェクト (Mask + Particles)
     burnAndConsume(hex) {
         console.log(`Deploying ${this.cardType} at ${hex.q},${hex.r}`);
+        this.updatePhysics = () => {}; // 物理停止
         
-        // 物理演算停止
-        this.updatePhysics = () => {}; 
+        // 1. 赤黒く変化
+        this.bgRect.setFillStyle(0x220000);
+        this.bgRect.setStrokeStyle(2, 0xff4400);
         
-        // 1. 赤黒く焦げる
-        this.bgRect.setFillStyle(0x330000);
-        this.bgRect.setStrokeStyle(2, 0xffaa00);
-        this.mainText.setColor('#ff0000');
+        // 2. マスク作成 (下から上へ消す)
+        // カードのローカル座標系におけるマスク用Graphics
+        const maskShape = this.scene.make.graphics();
+        maskShape.fillStyle(0xffffff);
+        // 初期状態: カード全体を覆う矩形
+        maskShape.fillRect(-70, -100, 140, 200); 
         
-        // 2. 縮小しながら消滅アニメーション
+        // マスクはワールド座標で管理する必要があるため少し特殊
+        // ここではシンプルに、GeometryMaskを使用
+        const mask = maskShape.createGeometryMask();
+        this.visuals.setMask(mask);
+        
+        // マスク用のダミーオブジェクトを作ってTweenし、onUpdateでGraphicsを再描画する方式が確実
+        const burnProgress = { val: 0 }; // 0(下) -> 1(上)
+        
         this.scene.tweens.add({
-            targets: this,
-            scale: 0.8,
-            alpha: 0,
-            y: this.y - 50, // 少し上に昇りながら
-            duration: 600,
-            ease: 'Power2',
-            onUpdate: (tween) => {
-                // 3. パーティクル放出 (VFX)
-                if(Math.random() < 0.5) {
-                    VFX.addFire(this.x + (Math.random()-0.5)*100, this.y + (Math.random()-0.5)*140);
+            targets: burnProgress,
+            val: 1,
+            duration: 800,
+            ease: 'Linear',
+            onUpdate: () => {
+                // マスク更新: 下から削る
+                maskShape.clear();
+                maskShape.fillStyle(0xffffff);
+                const currentY = -100 + (200 * burnProgress.val);
+                // 上半分だけ残す矩形を描画 (Maskは「描画された部分」が見える)
+                maskShape.fillRect(-70, -100, 140, 200 * (1 - burnProgress.val)); // 上から縮めるのではなく、矩形の高さを変える
+                
+                // 位置合わせ（コンテナが動いてもマスクが追従するように）
+                maskShape.x = this.x;
+                maskShape.y = this.y + (200 * burnProgress.val); // マスク自体を下げる、あるいは描画領域を変える
+                // ※GeometryMaskの座標合わせは難しいので、ここでは「矩形の高さを縮める」アプローチで上部を残す
+                
+                // 3. 燃焼ラインからパーティクル
+                // カードの回転(this.angle)も考慮して火の粉を散らすと最高にかっこいい
+                const rad = Phaser.Math.DegToRad(this.angle);
+                const cos = Math.cos(rad);
+                const sin = Math.sin(rad);
+                
+                // 燃焼ラインのY座標 (ローカル)
+                const burnLineY = 100 - (200 * burnProgress.val); 
+                
+                // 横幅いっぱいにランダム生成
+                for(let i=0; i<3; i++) {
+                    const randX = (Math.random() - 0.5) * 140;
+                    // 回転行列でワールド座標へ
+                    const wx = this.x + (randX * cos - burnLineY * sin);
+                    const wy = this.y + (randX * sin + burnLineY * cos);
+                    
+                    VFX.addFire(wx, wy);
+                    if(Math.random()<0.3) VFX.addSmoke(wx, wy);
                 }
+
+                // 4. 断末魔の振動
+                this.x += (Math.random()-0.5) * 4;
+                this.y += (Math.random()-0.5) * 4;
             },
             onComplete: () => {
-                // デッキから削除ロジック
+                maskShape.destroy();
                 this.scene.removeCard(this);
                 this.destroy();
-                // ★ここでゲームロジック側の召喚処理を呼ぶ
                 // if(window.gameLogic) window.gameLogic.deployUnit(hex, this.cardType); 
             }
         });
@@ -262,7 +284,7 @@ class Card extends Phaser.GameObjects.Container {
 }
 
 // ==========================================
-//  UI SCENE (Hand Manager)
+//  UI SCENE
 // ==========================================
 class UIScene extends Phaser.Scene {
     constructor() { super({ key: 'UIScene', active: false }); this.cards=[]; this.handContainer=null; }
@@ -275,19 +297,17 @@ class UIScene extends Phaser.Scene {
         this.handContainer = this.add.container(w/2, h);
         
         // 初期配付
-        this.time.delayedCall(1000, ()=>{ 
+        this.time.delayedCall(800, ()=>{ 
             this.dealStart(['infantry','tank','heal','infantry','tiger']); 
         });
     }
 
     update() { this.cards.forEach(card => card.updatePhysics()); }
 
-    // ★カードを配るアニメーション
     dealStart(types) {
         types.forEach((type, i) => {
-            this.time.delayedCall(i * 150, () => { // 150msごとに1枚
+            this.time.delayedCall(i * 100, () => { 
                 this.addCardToHand(type);
-                // 配布時の効果音とか入れたいね
             });
         });
     }
@@ -297,9 +317,9 @@ class UIScene extends Phaser.Scene {
         this.handContainer.add(card);
         this.cards.push(card);
         
-        // 初期位置: 画面右下から飛び出してくるように
-        card.physX = this.scale.width/2 + 200; 
-        card.physY = 200; // 画面下
+        // 配布演出: 画面右下外から
+        card.physX = this.scale.width/2 + 300; 
+        card.physY = 300; 
         card.setPosition(card.physX, card.physY);
         
         this.arrangeHand();
@@ -307,17 +327,15 @@ class UIScene extends Phaser.Scene {
 
     removeCard(cardToRemove) {
         this.cards = this.cards.filter(c => c !== cardToRemove);
-        this.arrangeHand(); // 残ったカードで詰め直す
+        this.arrangeHand(); 
     }
 
     arrangeHand() {
         const total = this.cards.length;
         const centerIdx = (total - 1) / 2;
         const spacing = 160; 
-
         this.cards.forEach((card, i) => {
             const offset = i - centerIdx;
-            // 定位置更新
             card.baseX = offset * spacing;
             card.baseY = -120;
         });
@@ -325,7 +343,7 @@ class UIScene extends Phaser.Scene {
 }
 
 // ==========================================
-//  MAIN SCENE (Map & VFX)
+//  MAIN SCENE
 // ==========================================
 class MainScene extends Phaser.Scene {
     constructor() { super({ key: 'MainScene' }); this.hexGroup=null; this.unitGroup=null; this.vfxGraphics=null; this.overlayGraphics=null; this.mapGenerated=false; this.dragHighlightHex=null; }
@@ -451,23 +469,29 @@ class MainScene extends Phaser.Scene {
 }
 
 const Sfx = { play(id){} };
-const VFX = { /* (前回と同じ + Fire) */
+const VFX = { 
     particles:[], projectiles:[], 
     add(p){this.particles.push(p);}, 
-    addFire(x,y){this.add({x,y,vx:(Math.random()-0.5)*2,vy:-Math.random()*3-1,life:30+Math.random()*20,maxLife:50,color:'#fa0',size:4,type:'f'});},
+    addFire(x,y){this.add({x,y,vx:(Math.random()-0.5)*2,vy:-Math.random()*4-1,life:20+Math.random()*20,maxLife:40,color:'#fa0',size:6,type:'f'});},
+    addSmoke(x,y){this.add({x,y,vx:(Math.random()-0.5)*1,vy:-1,life:40+Math.random()*20,maxLife:60,color:'#444',size:5,type:'s'});},
     addProj(p){this.projectiles.push(p);},
     addExplosion(x,y,c,n){for(let i=0;i<n;i++){const a=Math.random()*6.28,s=Math.random()*5+1;this.add({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:30+Math.random()*20,maxLife:50,color:c,size:2,type:'s'});}},
     addUnitDebris(x,y){}, 
     update(){ 
         this.particles.forEach(p=>{
             p.x+=p.vx;p.y+=p.vy;p.life--;
-            if(p.type==='f') { p.size*=0.95; p.color=Math.random()>0.5?'#f40':'#666'; } // 火の粉ロジック
+            if(p.type==='f') { p.size*=0.9; p.color=Math.random()>0.4?'#ff4':(Math.random()>0.5?'#f40':'#620'); } 
+            else if(p.type==='s') { p.size*=1.02; p.y-=0.5; p.alpha = p.life/p.maxLife; }
         }); 
         this.projectiles.forEach(p=>{if(p.type.includes('shell')||p.type==='rocket'){p.progress+=p.speed;if(p.progress>=1){p.dead=true;p.onHit();return;}const lx=p.sx+(p.ex-p.sx)*p.progress,ly=p.sy+(p.ey-p.sy)*p.progress,a=Math.sin(p.progress*Math.PI)*p.arcHeight;p.x=lx;p.y=ly-a;}else{p.x+=p.vx;p.y+=p.vy;p.life--;if(p.life<=0){p.dead=true;p.onHit();}}}); 
         this.particles=this.particles.filter(p=>p.life>0); this.projectiles=this.projectiles.filter(p=>!p.dead); 
     }, 
     draw(g){ 
         this.projectiles.forEach(p=>{g.fillStyle(0xffff00,1); g.fillCircle(p.x,p.y,3);}); 
-        this.particles.forEach(p=>{g.fillStyle(p.color==='#fa0'?0xffaa00:(p.color==='#f40'?0xff4400:0x888888), p.life/p.maxLife); g.fillCircle(p.x,p.y,p.size);}); 
+        this.particles.forEach(p=>{
+            const c = p.color==='#fa0'?0xffaa00:(p.color==='#f40'?0xff4400:(p.color==='#ff4'?0xffff44:(p.color==='#620'?0x662200:0x444444)));
+            g.fillStyle(c, p.alpha!==undefined?p.alpha:(p.life/p.maxLife)); 
+            g.fillCircle(p.x,p.y,p.size);
+        }); 
     }
 };
