@@ -1,4 +1,4 @@
-/** * PHASER BRIDGE (Water Animation, CenterOn Fix, Canvas UI) */
+/** * PHASER BRIDGE (Sparkling Water, CenterOn, Scene Safety) */
 let phaserGame = null;
 const HIGH_RES_SCALE = 4; 
 
@@ -59,32 +59,17 @@ window.createGradientTexture = function(scene) {
 
 // ★状態管理
 const Renderer = {
-    game: null,
-    isMapDragging: false, 
-    isCardDragging: false,
-
+    game: null, isMapDragging: false, isCardDragging: false,
     init(canvasElement) {
-        const config = { 
-            type: Phaser.AUTO, parent: 'game-view', 
-            width: document.getElementById('game-view').clientWidth, height: document.getElementById('game-view').clientHeight, 
-            backgroundColor: '#0b0e0a', scene: [MainScene, UIScene], 
-            fps: { target: 60 }, physics: { default: 'arcade', arcade: { debug: false } },
-            input: { activePointers: 1 }
-        };
-        this.game = new Phaser.Game(config);
-        phaserGame = this.game;
-        window.addEventListener('resize', () => this.resize());
+        const config = { type: Phaser.AUTO, parent: 'game-view', width: document.getElementById('game-view').clientWidth, height: document.getElementById('game-view').clientHeight, backgroundColor: '#0b0e0a', scene: [MainScene, UIScene], fps: { target: 60 }, physics: { default: 'arcade', arcade: { debug: false } }, input: { activePointers: 1 } };
+        this.game = new Phaser.Game(config); phaserGame = this.game; window.addEventListener('resize', () => this.resize());
     },
     resize() { if(this.game) this.game.scale.resize(document.getElementById('game-view').clientWidth, document.getElementById('game-view').clientHeight); },
     hexToPx(q, r) { return { x: HEX_SIZE * 3/2 * q, y: HEX_SIZE * Math.sqrt(3) * (r + q/2) }; },
-    pxToHex(mx, my) { 
-        const main = phaserGame.scene.getScene('MainScene'); if(!main) return {q:0, r:0}; 
-        const w = main.cameras.main.getWorldPoint(mx, my); 
-        return this.roundHex((2/3*w.x)/HEX_SIZE, (-1/3*w.x+Math.sqrt(3)/3*w.y)/HEX_SIZE); 
-    },
+    pxToHex(mx, my) { const main = phaserGame.scene.getScene('MainScene'); if(!main) return {q:0, r:0}; const w = main.cameras.main.getWorldPoint(mx, my); return this.roundHex((2/3*w.x)/HEX_SIZE, (-1/3*w.x+Math.sqrt(3)/3*w.y)/HEX_SIZE); },
     roundHex(q,r) { let rq=Math.round(q), rr=Math.round(r), rs=Math.round(-q-r); const dq=Math.abs(rq-q), dr=Math.abs(rr-r), ds=Math.abs(rs-(-q-r)); if(dq>dr&&dq>ds) rq=-rr-rs; else if(dr>ds) rr=-rq-rs; return {q:rq, r:rr}; },
     
-    // Logicからのカメラ移動命令を受け取る
+    // カメラ移動
     centerOn(q, r) {
         const main = this.game.scene.getScene('MainScene');
         if (main && main.centerCamera) {
@@ -92,6 +77,7 @@ const Renderer = {
         }
     },
 
+    // カード配付
     dealCards(types) { 
         let ui = this.game.scene.getScene('UIScene');
         if(!ui || !ui.sys) ui = this.game.scene.scenes.find(s => s.scene.key === 'UIScene');
@@ -101,7 +87,7 @@ const Renderer = {
     checkUIHover(x, y) { if (this.isCardDragging) return true; const ui = this.game.scene.getScene('UIScene'); if (!ui) return false; for (let card of ui.cards) { const dx = Math.abs(x - card.x); const dy = Math.abs(y - card.y); if (dx < 70 && dy < 100) return true; } return false; }
 };
 
-// ... Cardクラス ...
+// ... Card Class ...
 class Card extends Phaser.GameObjects.Container {
     constructor(scene, x, y, type) {
         super(scene, x, y); this.scene = scene; this.cardType = type; this.setSize(140, 200);
@@ -176,20 +162,25 @@ class UIScene extends Phaser.Scene {
 }
 
 // ==========================================
-//  MAIN SCENE (水面アニメーション実装)
+//  MAIN SCENE (Sparkling Water Implemented)
 // ==========================================
 class MainScene extends Phaser.Scene {
     constructor() { 
         super({ key: 'MainScene' }); 
         this.hexGroup=null; this.unitGroup=null; this.vfxGraphics=null; this.overlayGraphics=null; 
         this.mapGenerated=false; this.dragHighlightHex=null;
-        this.waterHexes = []; // ★水タイル管理用
+        this.waterHexes = []; 
     }
     
     preload() {
         this.load.image('card_img_bomb', 'image_6e3646.jpg'); 
+        
         const g = this.make.graphics({x:0, y:0, add:false}); const S = HEX_SIZE * HIGH_RES_SCALE; 
         g.lineStyle(2 * HIGH_RES_SCALE, 0x888888, 1); g.fillStyle(0xffffff, 1); g.beginPath(); for(let i=0; i<6; i++) { const a = Math.PI/180 * 60 * i; g.lineTo(S + S * Math.cos(a), S + S * Math.sin(a)); } g.closePath(); g.fillPath(); g.strokePath(); g.generateTexture('hex_base', S*2, S*2);
+        
+        // ★キラキラ用テクスチャ
+        g.clear(); g.fillStyle(0xffffff, 0.8); g.fillCircle(10, 10, 8); g.generateTexture('glint', 20, 20);
+
         g.clear(); g.fillStyle(0x00ff00, 1); g.fillCircle(16*HIGH_RES_SCALE, 16*HIGH_RES_SCALE, 12*HIGH_RES_SCALE); g.generateTexture('unit_player', 32*HIGH_RES_SCALE, 32*HIGH_RES_SCALE);
         g.clear(); g.fillStyle(0xff0000, 1); g.fillRect(4*HIGH_RES_SCALE, 4*HIGH_RES_SCALE, 24*HIGH_RES_SCALE, 24*HIGH_RES_SCALE); g.generateTexture('unit_enemy', 32*HIGH_RES_SCALE, 32*HIGH_RES_SCALE);
         g.clear(); g.lineStyle(3*HIGH_RES_SCALE, 0x00ff00, 1); g.strokeCircle(32*HIGH_RES_SCALE, 32*HIGH_RES_SCALE, 28*HIGH_RES_SCALE); g.generateTexture('cursor', 64*HIGH_RES_SCALE, 64*HIGH_RES_SCALE);
@@ -216,22 +207,19 @@ class MainScene extends Phaser.Scene {
     
     createMap() { 
         const map = window.gameLogic.map; 
-        this.waterHexes = []; // クリア
-        
+        this.waterHexes = []; 
         for(let q=0; q<MAP_W; q++) { 
             for(let r=0; r<MAP_H; r++) { 
                 const t = map[q][r]; if(t.id===-1)continue; 
                 const pos = Renderer.hexToPx(q, r); 
                 const hex = this.add.image(pos.x, pos.y, 'hex_base').setScale(1/HIGH_RES_SCALE); 
-                
                 let tint = 0x555555; 
                 if(t.id===0)tint=0x5a5245; else if(t.id===1)tint=0x425030; else if(t.id===2)tint=0x222e1b; else if(t.id===4)tint=0x504540; 
                 else if(t.id===5) { 
                     tint=0x303840; 
-                    // ★水タイルを登録
+                    // ★水タイル登録
                     this.waterHexes.push({ sprite: hex, baseY: pos.y, q: q, r: r, offset: Math.random() * 6.28 });
                 }
-                
                 hex.setTint(tint); 
                 if(t.id===2) { const tr=this.add.circle(pos.x, pos.y, HEX_SIZE*0.6, 0x112211, 0.5); this.hexGroup.add(tr); } 
                 this.hexGroup.add(hex); 
@@ -245,14 +233,30 @@ class MainScene extends Phaser.Scene {
         VFX.update(); this.vfxGraphics.clear(); VFX.draw(this.vfxGraphics);
         if (window.gameLogic.map.length > 0 && !this.mapGenerated) { this.createMap(); this.mapGenerated = true; }
         
-        // ★水面のアニメーション (ゆらゆら)
+        // ★水面ゆらゆら & キラキラ
         const waveSpeed = time * 0.001;
         this.waterHexes.forEach(w => {
             const wave = Math.sin(waveSpeed + w.q * 0.3 + w.r * 0.3 + w.offset);
-            w.sprite.y = w.baseY + wave * 3; // 上下に3px揺れる
-            const scaleBase = 1/HIGH_RES_SCALE;
-            w.sprite.setScale(scaleBase + (wave * 0.01)); // 微妙に伸縮
+            w.sprite.y = w.baseY + wave * 3;
+            w.sprite.setScale((1/HIGH_RES_SCALE) + (wave * 0.01));
         });
+
+        if(this.waterHexes.length > 0 && Math.random() < 0.2) { 
+            const w = this.waterHexes[Math.floor(Math.random() * this.waterHexes.length)];
+            const r = HEX_SIZE * 0.7 * Math.sqrt(Math.random());
+            const th = Math.random() * Math.PI * 2;
+            const gx = w.sprite.x + r * Math.cos(th);
+            const gy = w.sprite.y + r * Math.sin(th);
+            
+            const glint = this.add.image(gx, gy, 'glint').setScale(0).setAlpha(0);
+            this.tweens.add({
+                targets: glint,
+                scale: { from: 0, to: 0.8 },
+                alpha: { from: 1, to: 0 },
+                duration: 600 + Math.random() * 400,
+                onComplete: () => glint.destroy()
+            });
+        }
 
         this.unitGroup.clear(true, true);
         window.gameLogic.units.forEach(u => {
@@ -272,7 +276,6 @@ class MainScene extends Phaser.Scene {
     drawHexOutline(g, q, r) { const c = Renderer.hexToPx(q, r); g.beginPath(); for(let i=0; i<6; i++) { const a = Math.PI/180*60*i; g.lineTo(c.x+HEX_SIZE*0.9*Math.cos(a), c.y+HEX_SIZE*0.9*Math.sin(a)); } g.closePath(); g.strokePath(); }
 }
 
-// VFX ... (変更なし)
 window.VFX = { 
     particles:[], projectiles:[], shockwaves:[], add(p){this.particles.push(p);}, 
     addBombardment(scene, tx, ty, hex) {
