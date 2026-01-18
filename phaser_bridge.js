@@ -1,8 +1,10 @@
-/** * PHASER BRIDGE (Fix: Added centerOn, Scene Safety) */
+/** * PHASER BRIDGE (Water Animation, CenterOn Fix, Canvas UI) */
 let phaserGame = null;
 const HIGH_RES_SCALE = 4; 
 
-// --- 描画関数 ---
+// ---------------------------------------------------------
+//  共通描画関数 (Canvasを生成)
+// ---------------------------------------------------------
 function drawCardToCanvas(type) {
     const w = 100 * HIGH_RES_SCALE; 
     const h = 60 * HIGH_RES_SCALE;
@@ -57,17 +59,32 @@ window.createGradientTexture = function(scene) {
 
 // ★状態管理
 const Renderer = {
-    game: null, isMapDragging: false, isCardDragging: false,
+    game: null,
+    isMapDragging: false, 
+    isCardDragging: false,
+
     init(canvasElement) {
-        const config = { type: Phaser.AUTO, parent: 'game-view', width: document.getElementById('game-view').clientWidth, height: document.getElementById('game-view').clientHeight, backgroundColor: '#0b0e0a', scene: [MainScene, UIScene], fps: { target: 60 }, physics: { default: 'arcade', arcade: { debug: false } }, input: { activePointers: 1 } };
-        this.game = new Phaser.Game(config); phaserGame = this.game; window.addEventListener('resize', () => this.resize());
+        const config = { 
+            type: Phaser.AUTO, parent: 'game-view', 
+            width: document.getElementById('game-view').clientWidth, height: document.getElementById('game-view').clientHeight, 
+            backgroundColor: '#0b0e0a', scene: [MainScene, UIScene], 
+            fps: { target: 60 }, physics: { default: 'arcade', arcade: { debug: false } },
+            input: { activePointers: 1 }
+        };
+        this.game = new Phaser.Game(config);
+        phaserGame = this.game;
+        window.addEventListener('resize', () => this.resize());
     },
     resize() { if(this.game) this.game.scale.resize(document.getElementById('game-view').clientWidth, document.getElementById('game-view').clientHeight); },
     hexToPx(q, r) { return { x: HEX_SIZE * 3/2 * q, y: HEX_SIZE * Math.sqrt(3) * (r + q/2) }; },
-    pxToHex(mx, my) { const main = phaserGame.scene.getScene('MainScene'); if(!main) return {q:0, r:0}; const w = main.cameras.main.getWorldPoint(mx, my); return this.roundHex((2/3*w.x)/HEX_SIZE, (-1/3*w.x+Math.sqrt(3)/3*w.y)/HEX_SIZE); },
+    pxToHex(mx, my) { 
+        const main = phaserGame.scene.getScene('MainScene'); if(!main) return {q:0, r:0}; 
+        const w = main.cameras.main.getWorldPoint(mx, my); 
+        return this.roundHex((2/3*w.x)/HEX_SIZE, (-1/3*w.x+Math.sqrt(3)/3*w.y)/HEX_SIZE); 
+    },
     roundHex(q,r) { let rq=Math.round(q), rr=Math.round(r), rs=Math.round(-q-r); const dq=Math.abs(rq-q), dr=Math.abs(rr-r), ds=Math.abs(rs-(-q-r)); if(dq>dr&&dq>ds) rq=-rr-rs; else if(dr>ds) rr=-rq-rs; return {q:rq, r:rr}; },
     
-    // ★ここを追加！ (Logicからのカメラ移動命令を受け取る)
+    // Logicからのカメラ移動命令を受け取る
     centerOn(q, r) {
         const main = this.game.scene.getScene('MainScene');
         if (main && main.centerCamera) {
@@ -76,7 +93,6 @@ const Renderer = {
     },
 
     dealCards(types) { 
-        // シーン取得を強化
         let ui = this.game.scene.getScene('UIScene');
         if(!ui || !ui.sys) ui = this.game.scene.scenes.find(s => s.scene.key === 'UIScene');
         if(ui) ui.dealStart(types);
@@ -85,6 +101,7 @@ const Renderer = {
     checkUIHover(x, y) { if (this.isCardDragging) return true; const ui = this.game.scene.getScene('UIScene'); if (!ui) return false; for (let card of ui.cards) { const dx = Math.abs(x - card.x); const dy = Math.abs(y - card.y); if (dx < 70 && dy < 100) return true; } return false; }
 };
 
+// ... Cardクラス ...
 class Card extends Phaser.GameObjects.Container {
     constructor(scene, x, y, type) {
         super(scene, x, y); this.scene = scene; this.cardType = type; this.setSize(140, 200);
@@ -135,6 +152,7 @@ class Card extends Phaser.GameObjects.Container {
     returnToHand() { const hand = this.scene.handContainer; this.scene.children.remove(this); hand.add(this); this.setDepth(0); this.physX = this.x; this.physY = this.y; this.targetX = this.baseX; this.targetY = this.baseY; }
 }
 
+// ... UIScene ...
 class UIScene extends Phaser.Scene {
     constructor() { super({ key: 'UIScene', active: false }); this.cards=[]; this.handContainer=null; this.gradientBg=null; this.uiVfxGraphics=null; }
     create() {
@@ -157,10 +175,18 @@ class UIScene extends Phaser.Scene {
     arrangeHand() { const total = this.cards.length; const centerIdx = (total - 1) / 2; const spacing = 160; this.cards.forEach((card, i) => { const offset = i - centerIdx; card.baseX = offset * spacing; card.baseY = -120; }); }
 }
 
+// ==========================================
+//  MAIN SCENE (水面アニメーション実装)
+// ==========================================
 class MainScene extends Phaser.Scene {
-    constructor() { super({ key: 'MainScene' }); this.hexGroup=null; this.unitGroup=null; this.vfxGraphics=null; this.overlayGraphics=null; this.mapGenerated=false; this.dragHighlightHex=null; }
+    constructor() { 
+        super({ key: 'MainScene' }); 
+        this.hexGroup=null; this.unitGroup=null; this.vfxGraphics=null; this.overlayGraphics=null; 
+        this.mapGenerated=false; this.dragHighlightHex=null;
+        this.waterHexes = []; // ★水タイル管理用
+    }
+    
     preload() {
-        // 画像読み込み (404エラーが出ても進行自体は止まらない)
         this.load.image('card_img_bomb', 'image_6e3646.jpg'); 
         const g = this.make.graphics({x:0, y:0, add:false}); const S = HEX_SIZE * HIGH_RES_SCALE; 
         g.lineStyle(2 * HIGH_RES_SCALE, 0x888888, 1); g.fillStyle(0xffffff, 1); g.beginPath(); for(let i=0; i<6; i++) { const a = Math.PI/180 * 60 * i; g.lineTo(S + S * Math.cos(a), S + S * Math.sin(a)); } g.closePath(); g.fillPath(); g.strokePath(); g.generateTexture('hex_base', S*2, S*2);
@@ -169,6 +195,7 @@ class MainScene extends Phaser.Scene {
         g.clear(); g.lineStyle(3*HIGH_RES_SCALE, 0x00ff00, 1); g.strokeCircle(32*HIGH_RES_SCALE, 32*HIGH_RES_SCALE, 28*HIGH_RES_SCALE); g.generateTexture('cursor', 64*HIGH_RES_SCALE, 64*HIGH_RES_SCALE);
         g.clear(); g.fillStyle(0x223322, 1); g.fillEllipse(15, 30, 10, 25); g.generateTexture('bomb_body', 30, 60);
     }
+    
     create() {
         this.cameras.main.setBackgroundColor('#0b0e0a'); this.hexGroup = this.add.group(); this.unitGroup = this.add.group(); this.vfxGraphics = this.add.graphics().setDepth(100); this.overlayGraphics = this.add.graphics().setDepth(50); this.scene.launch('UIScene'); 
         this.input.on('wheel', (pointer, gameObjects, deltaX, deltaY, deltaZ) => { let newZoom = this.cameras.main.zoom; if (deltaY > 0) newZoom -= 0.5; else if (deltaY < 0) newZoom += 0.5; newZoom = Phaser.Math.Clamp(newZoom, 0.25, 4.0); this.tweens.add({ targets: this.cameras.main, zoom: newZoom, duration: 150, ease: 'Cubic.out' }); });
@@ -176,19 +203,57 @@ class MainScene extends Phaser.Scene {
         this.input.on('pointerup', () => { Renderer.isMapDragging = false; });
         this.input.on('pointermove', (p) => { if (Renderer.isCardDragging) return; if (p.isDown && Renderer.isMapDragging) { const zoom = this.cameras.main.zoom; this.cameras.main.scrollX -= (p.x - p.prevPosition.x) / zoom; this.cameras.main.scrollY -= (p.y - p.prevPosition.y) / zoom; } if(!Renderer.isMapDragging && window.gameLogic) window.gameLogic.handleHover(Renderer.pxToHex(p.x, p.y)); }); this.input.mouse.disableContextMenu();
     }
+    
     triggerBombardment(hex) { 
         this.time.delayedCall(500, () => {
             const targetPos = Renderer.hexToPx(hex.q, hex.r);
             VFX.addBombardment(this, targetPos.x, targetPos.y, hex);
         }); 
     }
+    
     centerCamera(q, r) { const p = Renderer.hexToPx(q, r); this.cameras.main.centerOn(p.x, p.y); }
     centerMap() { this.cameras.main.centerOn((MAP_W * HEX_SIZE * 1.5) / 2, (MAP_H * HEX_SIZE * 1.732) / 2); }
-    createMap() { const map = window.gameLogic.map; for(let q=0; q<MAP_W; q++) { for(let r=0; r<MAP_H; r++) { const t = map[q][r]; if(t.id===-1)continue; const pos = Renderer.hexToPx(q, r); const hex = this.add.image(pos.x, pos.y, 'hex_base').setScale(1/HIGH_RES_SCALE); let tint = 0x555555; if(t.id===0)tint=0x5a5245; else if(t.id===1)tint=0x425030; else if(t.id===2)tint=0x222e1b; else if(t.id===4)tint=0x504540; else if(t.id===5)tint=0x303840; hex.setTint(tint); if(t.id===2) { const tr=this.add.circle(pos.x, pos.y, HEX_SIZE*0.6, 0x112211, 0.5); this.hexGroup.add(tr); } this.hexGroup.add(hex); } } this.centerMap(); }
+    
+    createMap() { 
+        const map = window.gameLogic.map; 
+        this.waterHexes = []; // クリア
+        
+        for(let q=0; q<MAP_W; q++) { 
+            for(let r=0; r<MAP_H; r++) { 
+                const t = map[q][r]; if(t.id===-1)continue; 
+                const pos = Renderer.hexToPx(q, r); 
+                const hex = this.add.image(pos.x, pos.y, 'hex_base').setScale(1/HIGH_RES_SCALE); 
+                
+                let tint = 0x555555; 
+                if(t.id===0)tint=0x5a5245; else if(t.id===1)tint=0x425030; else if(t.id===2)tint=0x222e1b; else if(t.id===4)tint=0x504540; 
+                else if(t.id===5) { 
+                    tint=0x303840; 
+                    // ★水タイルを登録
+                    this.waterHexes.push({ sprite: hex, baseY: pos.y, q: q, r: r, offset: Math.random() * 6.28 });
+                }
+                
+                hex.setTint(tint); 
+                if(t.id===2) { const tr=this.add.circle(pos.x, pos.y, HEX_SIZE*0.6, 0x112211, 0.5); this.hexGroup.add(tr); } 
+                this.hexGroup.add(hex); 
+            } 
+        } 
+        this.centerMap(); 
+    }
+    
     update(time, delta) {
         if (!window.gameLogic) return;
         VFX.update(); this.vfxGraphics.clear(); VFX.draw(this.vfxGraphics);
         if (window.gameLogic.map.length > 0 && !this.mapGenerated) { this.createMap(); this.mapGenerated = true; }
+        
+        // ★水面のアニメーション (ゆらゆら)
+        const waveSpeed = time * 0.001;
+        this.waterHexes.forEach(w => {
+            const wave = Math.sin(waveSpeed + w.q * 0.3 + w.r * 0.3 + w.offset);
+            w.sprite.y = w.baseY + wave * 3; // 上下に3px揺れる
+            const scaleBase = 1/HIGH_RES_SCALE;
+            w.sprite.setScale(scaleBase + (wave * 0.01)); // 微妙に伸縮
+        });
+
         this.unitGroup.clear(true, true);
         window.gameLogic.units.forEach(u => {
             if(u.hp <= 0) return; const pos = Renderer.hexToPx(u.q, u.r); const container = this.add.container(pos.x, pos.y); const sprite = this.add.sprite(0, 0, u.team==='player'?'unit_player':'unit_enemy').setScale(1/HIGH_RES_SCALE); if(u.def.isTank) sprite.setTint(0x888888); if(u.team==='player') sprite.setTint(0x6688aa); else sprite.setTint(0xcc6655); container.add(sprite);
@@ -207,6 +272,7 @@ class MainScene extends Phaser.Scene {
     drawHexOutline(g, q, r) { const c = Renderer.hexToPx(q, r); g.beginPath(); for(let i=0; i<6; i++) { const a = Math.PI/180*60*i; g.lineTo(c.x+HEX_SIZE*0.9*Math.cos(a), c.y+HEX_SIZE*0.9*Math.sin(a)); } g.closePath(); g.strokePath(); }
 }
 
+// VFX ... (変更なし)
 window.VFX = { 
     particles:[], projectiles:[], shockwaves:[], add(p){this.particles.push(p);}, 
     addBombardment(scene, tx, ty, hex) {
