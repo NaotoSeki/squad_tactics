@@ -316,7 +316,6 @@ class UIScene extends Phaser.Scene {
         // ★リサイズイベントの監視
         this.scale.on('resize', this.onResize, this);
 
-        this.time.delayedCall(1000, ()=>{ this.dealStart(['infantry','tank','aerial','infantry','tiger']); });
     }
 
     // ★リサイズ時の処理
