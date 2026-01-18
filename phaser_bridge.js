@@ -1,17 +1,34 @@
-/** * PHASER BRIDGE (Crash Fix, Turbo Burn, Robust Logic) */
+/** * PHASER BRIDGE (Aerial Bombardment & Realistic VFX) */
 let phaserGame = null;
 const HIGH_RES_SCALE = 4; 
 
-// --- ユーティリティ ---
-window.createCardIcon = function(type) {
+// --- ユーティリティ: アイコン描画 (画像がない場合のフォールバック含む) ---
+window.createCardIcon = function(scene, type) {
+    // もしリアル画像がロードされていればそれを使う
+    if (type === 'aerial' && scene.textures.exists('card_img_bomb')) {
+        return 'card_img_bomb'; // テクスチャキーを返す
+    }
+
+    const key = `card_icon_${type}`;
+    if (scene.textures.exists(key)) return key;
+
+    // キャンバスで描画 (フォールバック)
     const w = 100 * HIGH_RES_SCALE; const h = 60 * HIGH_RES_SCALE;
     const c = document.createElement('canvas'); c.width=w; c.height=h; const x = c.getContext('2d');
     x.scale(HIGH_RES_SCALE, HIGH_RES_SCALE); x.translate(50, 30); x.scale(2,2);
+    
     if(type==='infantry'){x.fillStyle="#444";x.fillRect(-15,0,30,4);x.fillStyle="#642";x.fillRect(-15,0,10,4);}
     else if(type==='tank'){x.fillStyle="#444";x.fillRect(-12,-6,24,12);x.fillStyle="#222";x.fillRect(0,-2,16,4);}
     else if(type==='heal'){x.fillStyle="#eee";x.fillRect(-10,-8,20,16);x.fillStyle="#d00";x.fillRect(-3,-6,6,12);x.fillRect(-8,-1,16,2);}
     else if(type==='tiger'){x.fillStyle="#554";x.fillRect(-14,-8,28,16);x.fillStyle="#111";x.fillRect(2,-2,20,4);}
-    else {x.fillStyle="#333";x.fillRect(-10,-5,20,10);} return c;
+    else if(type==='aerial'){ // 爆弾アイコン（画像未ロード時）
+        x.fillStyle="#343"; x.beginPath(); x.ellipse(0, 0, 15, 6, 0, 0, Math.PI*2); x.fill();
+        x.fillStyle="#222"; x.fillRect(-5, -2, 10, 4);
+    }
+    else {x.fillStyle="#333";x.fillRect(-10,-5,20,10);} 
+    
+    scene.textures.addCanvas(key, c);
+    return key;
 };
 
 window.createGradientTexture = function(scene) {
@@ -68,9 +85,16 @@ class Card extends Phaser.GameObjects.Container {
         const bg = scene.add.rectangle(0, 0, W, H, 0x222222).setStrokeStyle(2, 0x555555);
         bg.setInteractive({ useHandCursor: true, draggable: true });
         
-        const iconKey = `card_icon_${type}`;
-        if(!scene.textures.exists(iconKey)) scene.textures.addCanvas(iconKey, window.createCardIcon(type));
-        const icon = scene.add.image(0, -40, iconKey).setScale(1/HIGH_RES_SCALE);
+        // ★画像生成ロジック変更
+        const iconKey = window.createCardIcon(scene, type);
+        // 画像ならアスペクト比維持でフィット、Canvasなら固定スケール
+        const icon = scene.add.image(0, -40, iconKey);
+        if(type === 'aerial' && scene.textures.exists('card_img_bomb')) {
+            icon.setDisplaySize(120, 80); // 画像サイズ調整
+        } else {
+            icon.setScale(1/HIGH_RES_SCALE);
+        }
+
         const text = scene.add.text(0, 40, type.toUpperCase(), { fontSize: '16px', color: '#d84', fontStyle: 'bold' }).setOrigin(0.5);
         const desc = scene.add.text(0, 70, "DRAG TO DEPLOY", { fontSize: '10px', color: '#888' }).setOrigin(0.5);
         icon.disableInteractive();
@@ -97,9 +121,7 @@ class Card extends Phaser.GameObjects.Container {
     }
 
     updatePhysics() {
-        // 破棄済みなら処理しない (フリーズ防止)
         if (!this.scene || !this.bgRect) return;
-
         if (!this.isDragging && !this.scene.isReturning) {
             this.targetX = this.baseX;
             this.targetY = this.baseY - (this.isHovering ? 30 : 0);
@@ -176,13 +198,9 @@ class Card extends Phaser.GameObjects.Container {
         }
     }
 
-    // ★フリーズ対策版: 燃焼＆消滅
     burnAndConsume(hex) {
         console.log(`Deploying ${this.cardType} at ${hex.q},${hex.r}`);
-        
-        // 物理更新を無効化
         this.updatePhysics = () => {}; 
-        
         this.bgRect.setFillStyle(0x220000);
         this.bgRect.setStrokeStyle(2, 0xff4400);
         
@@ -195,12 +213,10 @@ class Card extends Phaser.GameObjects.Container {
         const burnProgress = { val: 0 }; 
         this.scene.tweens.add({
             targets: burnProgress, val: 1, 
-            duration: 200, // ★さらに倍速 (200ms)
+            duration: 300, // 高速化
             ease: 'Linear',
             onUpdate: () => {
-                // オブジェクトが破棄されていたら停止
                 if(!this.scene || !maskShape.scene) return;
-
                 maskShape.clear(); maskShape.fillStyle(0xffffff);
                 maskShape.fillRect(-70, -100, 140, 200 * (1 - burnProgress.val)); 
                 maskShape.x = this.x; maskShape.y = this.y + (200 * burnProgress.val);
@@ -220,22 +236,23 @@ class Card extends Phaser.GameObjects.Container {
                 this.y += (Math.random()-0.5) * 4;
             },
             onComplete: () => {
-                // ★フリーズ防止: 安全な破棄手順
-                if (this.visuals) this.visuals.clearMask(true); // マスクを解除して破棄
+                if (this.visuals) this.visuals.clearMask(true);
                 if (maskShape) maskShape.destroy();
-                
-                // カード管理から外す
                 this.scene.removeCard(this);
-                
-                // ゲームオブジェクト破棄
+                const type = this.cardType; // 破壊前に保持
                 this.destroy();
 
-                // ★ロジック呼び出しをTry-Catchで保護
                 try {
-                    if(window.gameLogic) window.gameLogic.deployUnit(hex, this.cardType); 
-                } catch(e) {
-                    console.error("Logic Error:", e);
-                }
+                    // ★爆撃カードなら特殊エフェクト
+                    if (type === 'aerial') {
+                        const main = phaserGame.scene.getScene('MainScene');
+                        if (main) main.triggerBombardment(hex);
+                    } 
+                    // 通常ユニット展開
+                    else if(window.gameLogic) {
+                        window.gameLogic.deployUnit(hex, type); 
+                    }
+                } catch(e) { console.error("Logic Error:", e); }
             }
         });
     }
@@ -262,14 +279,13 @@ class UIScene extends Phaser.Scene {
         this.add.image(w/2, h, 'ui_gradient').setOrigin(0.5, 1).setDepth(0).setDisplaySize(w, h*0.45);
         this.handContainer = this.add.container(w/2, h);
         this.uiVfxGraphics = this.add.graphics().setDepth(10000);
-        this.time.delayedCall(800, ()=>{ this.dealStart(['infantry','tank','heal','infantry','tiger']); });
+        
+        // ★カード配布 (爆撃カードを含める)
+        this.time.delayedCall(800, ()=>{ this.dealStart(['infantry','tank','aerial','infantry','tiger']); });
     }
 
     update() { 
-        // 存在チェック付き更新
-        this.cards.forEach(card => {
-            if (card.active) card.updatePhysics();
-        });
+        this.cards.forEach(card => { if (card.active) card.updatePhysics(); });
         UIVFX.update(); 
         this.uiVfxGraphics.clear(); 
         UIVFX.draw(this.uiVfxGraphics);
@@ -315,14 +331,23 @@ class MainScene extends Phaser.Scene {
     constructor() { super({ key: 'MainScene' }); this.hexGroup=null; this.unitGroup=null; this.vfxGraphics=null; this.overlayGraphics=null; this.mapGenerated=false; this.dragHighlightHex=null; }
 
     preload() {
+        // ★リアル画像ロード (ユーザーの環境に合わせてパスを確認してください)
+        // ここではダミーURLではなく、ファイル名を指定。ローカルサーバー等で配置が必要。
+        // もし配置されていない場合は自動的にCanvasフォールバックが動きます。
+        this.load.image('card_img_bomb', 'image_6e3646.jpg'); 
+
         const g = this.make.graphics({x:0, y:0, add:false});
         const S = HEX_SIZE * HIGH_RES_SCALE; 
         g.lineStyle(2 * HIGH_RES_SCALE, 0x888888, 1); g.fillStyle(0xffffff, 1); g.beginPath();
         for(let i=0; i<6; i++) { const a = Math.PI/180 * 60 * i; g.lineTo(S + S * Math.cos(a), S + S * Math.sin(a)); }
         g.closePath(); g.fillPath(); g.strokePath(); g.generateTexture('hex_base', S*2, S*2);
+        
         g.clear(); g.fillStyle(0x00ff00, 1); g.fillCircle(16*HIGH_RES_SCALE, 16*HIGH_RES_SCALE, 12*HIGH_RES_SCALE); g.generateTexture('unit_player', 32*HIGH_RES_SCALE, 32*HIGH_RES_SCALE);
         g.clear(); g.fillStyle(0xff0000, 1); g.fillRect(4*HIGH_RES_SCALE, 4*HIGH_RES_SCALE, 24*HIGH_RES_SCALE, 24*HIGH_RES_SCALE); g.generateTexture('unit_enemy', 32*HIGH_RES_SCALE, 32*HIGH_RES_SCALE);
         g.clear(); g.lineStyle(3*HIGH_RES_SCALE, 0x00ff00, 1); g.strokeCircle(32*HIGH_RES_SCALE, 32*HIGH_RES_SCALE, 28*HIGH_RES_SCALE); g.generateTexture('cursor', 64*HIGH_RES_SCALE, 64*HIGH_RES_SCALE);
+        
+        // 爆弾のテクスチャ (フォールバック用)
+        g.clear(); g.fillStyle(0x223322, 1); g.fillEllipse(15, 30, 10, 25); g.generateTexture('bomb_body', 30, 60);
     }
 
     create() {
@@ -362,6 +387,15 @@ class MainScene extends Phaser.Scene {
             if(!Renderer.isMapDragging && window.gameLogic) window.gameLogic.handleHover(Renderer.pxToHex(p.x, p.y));
         });
         this.input.mouse.disableContextMenu();
+    }
+
+    // ★爆撃トリガー (一呼吸おいて発動)
+    triggerBombardment(hex) {
+        // 一呼吸 (500ms)
+        this.time.delayedCall(500, () => {
+            const targetPos = Renderer.hexToPx(hex.q, hex.r);
+            VFX.addBombardment(this, targetPos.x, targetPos.y);
+        });
     }
 
     centerCamera(q, r) { const p = Renderer.hexToPx(q, r); this.cameras.main.centerOn(p.x, p.y); }
@@ -434,49 +468,144 @@ class MainScene extends Phaser.Scene {
     }
 }
 
-// ★外部公開（Logic連携用）
+// ★VFXのグローバル公開 & リアル爆撃実装
 window.VFX = { 
-    particles:[], projectiles:[], 
+    particles:[], projectiles:[], shockwaves:[],
     add(p){this.particles.push(p);}, 
+    
+    // リアル爆撃シーケンス
+    addBombardment(scene, tx, ty) {
+        // 1. 爆弾落下
+        const startY = ty - 800; // はるか上空
+        const bomb = scene.add.sprite(tx, startY, 'bomb_body').setDepth(2000).setScale(1.5);
+        
+        scene.tweens.add({
+            targets: bomb,
+            y: ty,
+            duration: 400, // 高速落下
+            ease: 'Quad.In',
+            onComplete: () => {
+                bomb.destroy();
+                // 2. 着弾！
+                scene.cameras.main.shake(300, 0.03); // 激しい揺れ
+                this.addRealExplosion(tx, ty); // リアル爆発
+            }
+        });
+    },
+
+    // リアル爆発 (5層構造)
+    addRealExplosion(x, y) {
+        // 1. 閃光 (Flash) - 一瞬で消える
+        this.add({x, y, vx:0, vy:0, life:3, maxLife:3, size:150, color:'#fff', type:'flash'});
+        
+        // 2. 衝撃波 (Shockwave)
+        this.shockwaves.push({x, y, radius:10, maxRadius:150, alpha:1.0});
+
+        // 3. 爆炎 (Fire Core) - 中心から上へ
+        for(let i=0; i<30; i++) {
+            const a = Math.random() * Math.PI * 2;
+            const s = Math.random() * 8;
+            this.add({
+                x, y, 
+                vx: Math.cos(a)*s, vy: Math.sin(a)*s - 5, // 上方向バイアス
+                life: 30 + Math.random()*20, maxLife:50, 
+                color: '#fa0', size: 10 + Math.random()*15, type:'fire_core'
+            });
+        }
+
+        // 4. 黒煙 (Smoke) - 遅く広がる
+        for(let i=0; i<40; i++) {
+            const a = Math.random() * Math.PI * 2;
+            const s = Math.random() * 4;
+            this.add({
+                x: x + (Math.random()-0.5)*30, y: y + (Math.random()-0.5)*30,
+                vx: Math.cos(a)*s, vy: Math.sin(a)*s - 1, 
+                life: 60 + Math.random()*40, maxLife:100, 
+                color: '#222', size: 8 + Math.random()*12, type:'smoke_dark'
+            });
+        }
+
+        // 5. 破片 (Debris) - 高速で飛び散る
+        for(let i=0; i<20; i++) {
+            const a = Math.random() * Math.PI * 2;
+            const s = 5 + Math.random() * 10;
+            this.add({
+                x, y,
+                vx: Math.cos(a)*s, vy: Math.sin(a)*s - 8,
+                life: 40 + Math.random()*20, maxLife:60,
+                color: '#444', size: 3, type:'debris', gravity: 0.5
+            });
+        }
+    },
+
     addFire(x,y){this.add({x,y,vx:(Math.random()-0.5)*2,vy:-Math.random()*4-1,life:20+Math.random()*20,maxLife:40,color:'#fa0',size:6,type:'f'});},
     addSmoke(x,y){this.add({x,y,vx:(Math.random()-0.5)*1,vy:-1,life:40+Math.random()*20,maxLife:60,color:'#444',size:5,type:'s'});},
     addProj(p){this.projectiles.push(p);},
-    addExplosion(x,y,c,n){for(let i=0;i<n;i++){const a=Math.random()*6.28,s=Math.random()*5+1;this.add({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:30+Math.random()*20,maxLife:50,color:c,size:2,type:'s'});}},
+    addExplosion(x,y,c,n){
+        // 既存の簡易爆発 (ユニット死亡時など)
+        for(let i=0;i<n;i++){
+            const a=Math.random()*6.28,s=Math.random()*5+1;
+            this.add({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:30+Math.random()*20,maxLife:50,color:c,size:2,type:'s'});
+        }
+    },
     addUnitDebris(x,y){}, 
+    
     update(){ 
         this.particles.forEach(p=>{
-            p.x+=p.vx;p.y+=p.vy;p.life--;
+            p.x+=p.vx; p.y+=p.vy; p.life--;
+            // タイプ別挙動
+            if(p.type==='debris') p.vy += p.gravity || 0; // 重力
+            if(p.type==='flash') {/*no move*/}
+            if(p.type==='fire_core') { p.size*=0.95; p.color=Math.random()>0.3?'#f40':'#300'; }
+            if(p.type==='smoke_dark') { p.size*=1.02; p.vx*=0.95; p.vy*=0.95; p.alpha = p.life/p.maxLife * 0.8; }
             if(p.type==='f') { p.size*=0.9; p.color=Math.random()>0.4?'#ff4':(Math.random()>0.5?'#f40':'#620'); } 
             else if(p.type==='s') { p.size*=1.02; p.y-=0.5; p.alpha = p.life/p.maxLife; }
         }); 
         this.projectiles.forEach(p=>{if(p.type.includes('shell')||p.type==='rocket'){p.progress+=p.speed;if(p.progress>=1){p.dead=true;p.onHit();return;}const lx=p.sx+(p.ex-p.sx)*p.progress,ly=p.sy+(p.ey-p.sy)*p.progress,a=Math.sin(p.progress*Math.PI)*p.arcHeight;p.x=lx;p.y=ly-a;}else{p.x+=p.vx;p.y+=p.vy;p.life--;if(p.life<=0){p.dead=true;p.onHit();}}}); 
+        
+        // 衝撃波更新
+        this.shockwaves.forEach(s => { s.radius += 8; s.alpha -= 0.08; });
+        this.shockwaves = this.shockwaves.filter(s => s.alpha > 0);
+
         this.particles=this.particles.filter(p=>p.life>0); this.projectiles=this.projectiles.filter(p=>!p.dead); 
     }, 
+    
     draw(g){ 
+        // 衝撃波
+        this.shockwaves.forEach(s => {
+            g.lineStyle(4, 0xffffff, s.alpha);
+            g.strokeCircle(s.x, s.y, s.radius);
+        });
+
         this.projectiles.forEach(p=>{g.fillStyle(0xffff00,1); g.fillCircle(p.x,p.y,3);}); 
         this.particles.forEach(p=>{
-            const c = p.color==='#fa0'?0xffaa00:(p.color==='#f40'?0xff4400:(p.color==='#ff4'?0xffff44:(p.color==='#620'?0x662200:0x444444)));
-            g.fillStyle(c, p.alpha!==undefined?p.alpha:(p.life/p.maxLife)); 
+            const c = (typeof p.color === 'string' && p.color.startsWith('#')) ? parseInt(p.color.replace('#','0x')) : p.color;
+            // 簡易カラー変換
+            let colorInt = 0xffffff;
+            if(p.color==='#fa0') colorInt=0xffaa00;
+            else if(p.color==='#f40') colorInt=0xff4400;
+            else if(p.color==='#ff4') colorInt=0xffff44;
+            else if(p.color==='#620') colorInt=0x662200;
+            else if(p.color==='#222') colorInt=0x222222;
+            else if(p.color==='#444') colorInt=0x444444;
+            else if(p.color==='#fff') colorInt=0xffffff;
+            else colorInt = p.color; // 数値の場合
+
+            g.fillStyle(colorInt, p.alpha!==undefined?p.alpha:(p.life/p.maxLife)); 
             g.fillCircle(p.x,p.y,p.size);
         }); 
     }
 };
+
 window.Sfx = { play(id){} };
 
 // UI専用VFX
 const UIVFX = {
     particles: [],
     add(p){ this.particles.push(p); },
-    addFire(x, y) {
-        this.add({ x, y, vx: (Math.random() - 0.5) * 1.5, vy: -Math.random() * 2 - 1, life: 10 + Math.random() * 15, maxLife: 25, size: 2 + Math.random(), colorType: 'fire' });
-    },
-    addSmoke(x, y) {
-        this.add({ x, y, vx: (Math.random() - 0.5) * 1, vy: -1, life: 20 + Math.random() * 20, maxLife: 40, size: 3 + Math.random() * 2, colorType: 'smoke' });
-    },
-    update() {
-        this.particles.forEach(p => { p.x += p.vx; p.y += p.vy; p.life--; p.size *= 0.94; });
-        this.particles = this.particles.filter(p => p.life > 0);
-    },
+    addFire(x, y) { this.add({ x, y, vx: (Math.random() - 0.5) * 1.5, vy: -Math.random() * 2 - 1, life: 10 + Math.random() * 15, maxLife: 25, size: 2 + Math.random(), colorType: 'fire' }); },
+    addSmoke(x, y) { this.add({ x, y, vx: (Math.random() - 0.5) * 1, vy: -1, life: 20 + Math.random() * 20, maxLife: 40, size: 3 + Math.random() * 2, colorType: 'smoke' }); },
+    update() { this.particles.forEach(p => { p.x += p.vx; p.y += p.vy; p.life--; p.size *= 0.94; }); this.particles = this.particles.filter(p => p.life > 0); },
     draw(g) {
         this.particles.forEach(p => {
             let color = 0xffffff; let alpha = p.life / p.maxLife;
