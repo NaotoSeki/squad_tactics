@@ -3,9 +3,9 @@
  * ゲームのルール、マップデータ、ユニット管理、戦闘計算を担当
  */
 
-const MAP_W = 15; // マップ幅
-const MAP_H = 9;  // マップ高さ
-const HEX_SIZE = 40; // ヘックスサイズ（描画と共有）
+var MAP_W = 15; 
+var MAP_H = 9;  
+var HEX_SIZE = 40;
 
 class GameLogic {
     constructor() {
