@@ -1,24 +1,35 @@
-/** * PHASER BRIDGE (Physics Inertia, Zoom, & Solid Drag) */
+/** * PHASER BRIDGE (Physics Spring Card & High-Res Map) */
 let phaserGame = null;
 
-// カード画像生成
+// --- 定数設定 ---
+const HIGH_RES_SCALE = 4; // テクスチャ生成倍率（4倍で描いて1/4で表示＝高精細）
+
+// カード画像生成 (高解像度版)
 window.createCardIcon = function(type) {
-    const c=document.createElement('canvas');c.width=100;c.height=60;const x=c.getContext('2d');x.translate(50,30);x.scale(2,2);
+    const w = 100 * HIGH_RES_SCALE;
+    const h = 60 * HIGH_RES_SCALE;
+    const c = document.createElement('canvas'); c.width=w; c.height=h; 
+    const x = c.getContext('2d');
+    
+    x.scale(HIGH_RES_SCALE, HIGH_RES_SCALE); // 描画コンテキストをスケール
+    x.translate(50, 30); x.scale(2,2);
+    
     if(type==='infantry'){x.fillStyle="#444";x.fillRect(-15,0,30,4);x.fillStyle="#642";x.fillRect(-15,0,10,4);}
     else if(type==='tank'){x.fillStyle="#444";x.fillRect(-12,-6,24,12);x.fillStyle="#222";x.fillRect(0,-2,16,4);}
     else if(type==='heal'){x.fillStyle="#eee";x.fillRect(-10,-8,20,16);x.fillStyle="#d00";x.fillRect(-3,-6,6,12);x.fillRect(-8,-1,16,2);}
     else if(type==='tiger'){x.fillStyle="#554";x.fillRect(-14,-8,28,16);x.fillStyle="#111";x.fillRect(2,-2,20,4);}
-    else {x.fillStyle="#333";x.fillRect(-10,-5,20,10);} return c;
+    else {x.fillStyle="#333";x.fillRect(-10,-5,20,10);} 
+    return c;
 };
 
+// グラデーション生成
 window.createGradientTexture = function(scene) {
     const w = scene.scale.width;
     const h = scene.scale.height * 0.45;
     const c = document.createElement('canvas'); c.width=w; c.height=h; const x = c.getContext('2d');
     const grd = x.createLinearGradient(0, h, 0, 0);
     grd.addColorStop(0, "rgba(0,0,0,1)");
-    grd.addColorStop(0.3, "rgba(0,0,0,0.9)");
-    grd.addColorStop(0.7, "rgba(0,0,0,0.3)");
+    grd.addColorStop(0.4, "rgba(0,0,0,0.8)");
     grd.addColorStop(1, "rgba(0,0,0,0)");
     x.fillStyle = grd; x.fillRect(0, 0, w, h);
     if(scene.textures.exists('ui_gradient')) scene.textures.remove('ui_gradient');
@@ -61,7 +72,7 @@ const Renderer = {
 };
 
 // ==========================================
-//  CARD CLASS
+//  CARD CLASS (Physics Based)
 // ==========================================
 class Card extends Phaser.GameObjects.Container {
     constructor(scene, x, y, type) {
@@ -76,9 +87,11 @@ class Card extends Phaser.GameObjects.Container {
         const bg = scene.add.rectangle(0, 0, W, H, 0x222222).setStrokeStyle(2, 0x555555);
         bg.setInteractive({ useHandCursor: true, draggable: true });
         
+        // アイコン (高解像度版を縮小表示)
         const iconKey = `card_icon_${type}`;
         if(!scene.textures.exists(iconKey)) scene.textures.addCanvas(iconKey, window.createCardIcon(type));
-        const icon = scene.add.image(0, -40, iconKey);
+        const icon = scene.add.image(0, -40, iconKey).setScale(1/HIGH_RES_SCALE); // 1/4に縮小
+        
         const text = scene.add.text(0, 40, type.toUpperCase(), { fontSize: '16px', color: '#d84', fontStyle: 'bold' }).setOrigin(0.5);
         const desc = scene.add.text(0, 70, "DRAG TO DEPLOY", { fontSize: '10px', color: '#888' }).setOrigin(0.5);
         
@@ -87,13 +100,19 @@ class Card extends Phaser.GameObjects.Container {
         
         this.setScrollFactor(0);
         
-        this.baseX = x; this.baseY = y;
-        this.prevX = x;
+        // --- 物理演算用パラメータ ---
+        this.baseX = x; this.baseY = y; // 手札内での定位置
+        
+        // 現在の物理的な位置（慣性計算用）
+        this.physX = x; this.physY = y;
+        this.velocityX = 0; this.velocityY = 0;
+        this.velocityAngle = 0;
+        
+        // ドラッグ目標地点
+        this.targetX = x; this.targetY = y;
         this.dragOffsetX = 0; this.dragOffsetY = 0;
         
-        // ★慣性計算用パラメータ
-        this.velocityAngle = 0; // 角速度
-        
+        // イベント
         bg.on('pointerover', this.onHover, this);
         bg.on('pointerout', this.onHoverOut, this);
         bg.on('dragstart', this.onDragStart, this);
@@ -103,82 +122,89 @@ class Card extends Phaser.GameObjects.Container {
         scene.add.existing(this);
     }
 
-    // ★毎フレーム呼ばれる更新処理（慣性シミュレーション）
-    updateCardPhysics() {
-        // ドラッグ中でない時も、揺れを減衰させる
-        if (!this.isDragging) {
-            // 角度を0（垂直）に戻そうとする力 (バネ)
-            const restoreForce = -this.angle * 0.1;
-            // 速度に加算
-            this.velocityAngle += restoreForce;
-            // 空気抵抗 (減衰)
-            this.velocityAngle *= 0.85;
-            
-            // 角度更新
-            this.angle += this.velocityAngle;
-            
-            // ほぼ止まったら計算ストップ
-            if (Math.abs(this.angle) < 0.1 && Math.abs(this.velocityAngle) < 0.1) {
-                this.angle = 0;
-                this.velocityAngle = 0;
-            }
+    // ★心臓部: 物理シミュレーション (毎フレーム実行)
+    updatePhysics() {
+        if (!this.isDragging && !this.scene.isReturning) {
+            // ドラッグしていない時: 定位置(baseX, baseY)に戻ろうとする
+            this.targetX = this.baseX;
+            this.targetY = this.baseY - (this.isHovering ? 40 : 0); // ホバー時は少し上
         }
+
+        // 1. 位置のバネ挙動 (Spring)
+        const stiffness = this.isDragging ? 0.2 : 0.15; // ドラッグ中は追従性を高く、離したらゆるく
+        const damping = 0.75; // 減衰率
+
+        const ax = (this.targetX - this.physX) * stiffness;
+        const ay = (this.targetY - this.physY) * stiffness;
+
+        this.velocityX += ax;
+        this.velocityY += ay;
+        this.velocityX *= damping;
+        this.velocityY *= damping;
+
+        this.physX += this.velocityX;
+        this.physY += this.velocityY;
+
+        // 実際に表示位置を更新
+        this.setPosition(this.physX, this.physY);
+
+        // 2. 角度の振り子挙動 (Pendulum)
+        // 横移動の加速度に応じて傾く
+        const targetAngle = -this.velocityX * 1.5; // 逆方向に傾く
+        
+        // 角度を戻そうとする力 + 揺れ
+        const angleForce = (targetAngle - this.angle) * 0.1;
+        this.velocityAngle += angleForce;
+        this.velocityAngle *= 0.85; // 減衰
+
+        this.angle += this.velocityAngle;
+        this.angle = Phaser.Math.Clamp(this.angle, -35, 35); // 角度制限
     }
 
     onHover() {
         if(Renderer.isMapDragging || Renderer.isCardDragging) return;
+        this.isHovering = true;
         this.parentContainer.bringToTop(this);
-        this.scene.tweens.add({ targets: this, y: this.baseY - 20, scale: 1.05, duration: 100, ease: 'Back.out' });
     }
 
     onHoverOut() {
-        if(Renderer.isCardDragging && this.isDragging) return;
-        this.scene.tweens.add({ targets: this, y: this.baseY, x: this.baseX, scale: 1.0, duration: 200, ease: 'Power2' });
+        this.isHovering = false;
     }
 
-    onDragStart(pointer, dragX, dragY) {
+    onDragStart(pointer) {
         if(Renderer.isMapDragging) return;
 
         this.isDragging = true;
         Renderer.isCardDragging = true;
-        
         this.setAlpha(0.8);
         this.setScale(1.1);
 
-        // コンテナから出してUIScene直下に配置
+        // コンテナから出してUIScene直下に置く
         const hand = this.parentContainer;
         const worldPos = hand.getLocalTransformMatrix().transformPoint(this.x, this.y);
         hand.remove(this);
         this.scene.add.existing(this);
-        this.setPosition(worldPos.x, worldPos.y);
+        
+        // 物理座標を引き継ぐ
+        this.physX = worldPos.x;
+        this.physY = worldPos.y;
+        this.targetX = this.physX;
+        this.targetY = this.physY;
         this.setDepth(9999);
 
-        this.dragOffsetX = this.x - pointer.x;
-        this.dragOffsetY = this.y - pointer.y;
-        this.prevX = this.x;
-        this.velocityAngle = 0;
+        // 掴んだ場所のオフセット
+        this.dragOffsetX = this.physX - pointer.x;
+        this.dragOffsetY = this.physY - pointer.y;
     }
 
-    onDrag(pointer, dragX, dragY) {
-        this.x = pointer.position.x + this.dragOffsetX;
-        this.y = pointer.position.y + this.dragOffsetY;
+    onDrag(pointer) {
+        // マウスの位置を「目標地点」にする（直接代入しない！）
+        this.targetX = pointer.x + this.dragOffsetX;
+        this.targetY = pointer.y + this.dragOffsetY;
 
-        // ★慣性の計算: 移動速度に応じて「目標角度」を決める
-        const velocityX = this.x - this.prevX;
-        
-        // 移動方向と逆に傾く（最大30度）
-        const targetAngle = Phaser.Math.Clamp(velocityX * 2.0, -30, 30);
-        
-        // 現在の角度から目標角度へ、少し遅れて追従する (Lerp)
-        // これにより「引っ張られる」感じが出る
-        this.angle += (targetAngle - this.angle) * 0.15;
-        
-        this.prevX = this.x;
-
-        // ハイライト
-        const dropZoneY = this.scene.scale.height * 0.65;
+        // ドロップハイライト
         const main = this.scene.game.scene.getScene('MainScene');
-        if (this.y < dropZoneY) {
+        if (this.y < this.scene.scale.height * 0.65) {
              const hex = Renderer.pxToHex(pointer.x, pointer.y);
              main.dragHighlightHex = hex;
         } else {
@@ -190,7 +216,7 @@ class Card extends Phaser.GameObjects.Container {
         this.isDragging = false;
         Renderer.isCardDragging = false;
         this.setAlpha(1.0);
-        // ここでは角度を0にリセットしない！ updateCardPhysicsの減衰に任せる
+        this.setScale(1.0);
         
         const main = this.scene.game.scene.getScene('MainScene');
         if(main) main.dragHighlightHex = null;
@@ -206,23 +232,23 @@ class Card extends Phaser.GameObjects.Container {
     }
 
     returnToHand() {
+        // コンテナに戻す
         const hand = this.scene.handContainer;
-        const targetX = hand.x + this.baseX;
-        const targetY = hand.y + this.baseY;
+        this.scene.children.remove(this);
+        hand.add(this); 
+        this.setDepth(0);
         
-        this.scene.tweens.add({
-            targets: this,
-            x: targetX, y: targetY, scale: 1.0,
-            duration: 300, ease: 'Back.out',
-            onComplete: () => {
-                // コンテナに戻す処理
-                // ★修正: 一瞬のズレを防ぐため、コンテナ追加直後に座標を再設定
-                this.scene.children.remove(this);
-                hand.add(this); 
-                this.setPosition(this.baseX, this.baseY);
-                this.setDepth(0);
-            }
-        });
+        // 物理座標をコンテナ内のローカル座標に変換して維持する
+        // これで「吹っ飛び」がなくなる
+        this.physX = this.x; 
+        this.physY = this.y;
+        
+        // 目標地点を定位置に戻す（あとは物理演算が勝手にアニメーションしてくれる）
+        this.targetX = this.baseX;
+        this.targetY = this.baseY;
+        
+        // 戻る瞬間に少し跳ねさせる演出
+        this.velocityY = 15; 
     }
 }
 
@@ -245,8 +271,8 @@ class UIScene extends Phaser.Scene {
     }
 
     update(time, delta) {
-        // 各カードの物理シミュレーションを回す
-        this.cards.forEach(card => card.updateCardPhysics());
+        // 全カードの物理更新
+        this.cards.forEach(card => card.updatePhysics());
     }
 
     addCardToHand(type) {
@@ -263,29 +289,40 @@ class UIScene extends Phaser.Scene {
 
         this.cards.forEach((card, i) => {
             const offset = i - centerIdx;
-            const targetX = offset * spacing;
-            const targetY = -120;
-            
-            card.baseX = targetX; card.baseY = targetY;
-            this.tweens.add({ targets: card, x: targetX, y: targetY, angle: 0, duration: 400, ease: 'Back.out' });
+            // 定位置(baseX)を更新するだけで、あとは物理演算がそこへ移動してくれる
+            card.baseX = offset * spacing;
+            card.baseY = -120;
         });
     }
 }
 
 // ==========================================
-//  MAIN SCENE
+//  MAIN SCENE (High-Res Map)
 // ==========================================
 class MainScene extends Phaser.Scene {
     constructor() { super({ key: 'MainScene' }); this.hexGroup=null; this.unitGroup=null; this.vfxGraphics=null; this.overlayGraphics=null; this.mapGenerated=false; this.dragHighlightHex=null; }
 
     preload() {
         const g = this.make.graphics({x:0, y:0, add:false});
-        g.lineStyle(2, 0x888888, 1); g.fillStyle(0xffffff, 1); g.beginPath();
-        for(let i=0; i<6; i++) { const a = Math.PI/180 * 60 * i; g.lineTo(HEX_SIZE+HEX_SIZE*Math.cos(a), HEX_SIZE+HEX_SIZE*Math.sin(a)); }
-        g.closePath(); g.fillPath(); g.strokePath(); g.generateTexture('hex_base', HEX_SIZE*2, HEX_SIZE*2);
-        g.clear(); g.fillStyle(0x00ff00, 1); g.fillCircle(16, 16, 10); g.generateTexture('unit_player', 32, 32);
-        g.clear(); g.fillStyle(0xff0000, 1); g.fillRect(4, 4, 24, 24); g.generateTexture('unit_enemy', 32, 32);
-        g.clear(); g.lineStyle(3, 0x00ff00, 1); g.strokeCircle(32, 32, 28); g.generateTexture('cursor', 64, 64);
+        
+        // ★高解像度テクスチャ生成 (4倍サイズで描画)
+        const S = HEX_SIZE * HIGH_RES_SCALE; 
+        
+        // 1. Hexagon
+        g.lineStyle(2 * HIGH_RES_SCALE, 0x888888, 1); 
+        g.fillStyle(0xffffff, 1); 
+        g.beginPath();
+        for(let i=0; i<6; i++) { 
+            const a = Math.PI/180 * 60 * i; 
+            g.lineTo(S + S * Math.cos(a), S + S * Math.sin(a)); 
+        }
+        g.closePath(); g.fillPath(); g.strokePath(); 
+        g.generateTexture('hex_base', S*2, S*2);
+        
+        // 2. Unit & Cursor
+        g.clear(); g.fillStyle(0x00ff00, 1); g.fillCircle(16*HIGH_RES_SCALE, 16*HIGH_RES_SCALE, 12*HIGH_RES_SCALE); g.generateTexture('unit_player', 32*HIGH_RES_SCALE, 32*HIGH_RES_SCALE);
+        g.clear(); g.fillStyle(0xff0000, 1); g.fillRect(4*HIGH_RES_SCALE, 4*HIGH_RES_SCALE, 24*HIGH_RES_SCALE, 24*HIGH_RES_SCALE); g.generateTexture('unit_enemy', 32*HIGH_RES_SCALE, 32*HIGH_RES_SCALE);
+        g.clear(); g.lineStyle(3*HIGH_RES_SCALE, 0x00ff00, 1); g.strokeCircle(32*HIGH_RES_SCALE, 32*HIGH_RES_SCALE, 28*HIGH_RES_SCALE); g.generateTexture('cursor', 64*HIGH_RES_SCALE, 64*HIGH_RES_SCALE);
     }
 
     create() {
@@ -296,27 +333,19 @@ class MainScene extends Phaser.Scene {
         
         this.scene.launch('UIScene'); 
 
-        // --- マウスホイール: ズーム ---
+        // --- マウスホイール: ズーム (感度アップ) ---
         this.input.on('wheel', (pointer, gameObjects, deltaX, deltaY, deltaZ) => {
-            // 現在のズームレベル取得
             let newZoom = this.cameras.main.zoom;
-            // ホイールの方向でズーム増減
-            if (deltaY > 0) newZoom -= 0.1;
-            else if (deltaY < 0) newZoom += 0.1;
-            // 制限 (0.5倍 ～ 3.0倍)
-            newZoom = Phaser.Math.Clamp(newZoom, 0.5, 3.0);
+            // ★感度調整: 0.1 -> 0.3 にアップ
+            if (deltaY > 0) newZoom -= 0.3;
+            else if (deltaY < 0) newZoom += 0.3;
+            newZoom = Phaser.Math.Clamp(newZoom, 0.25, 4.0);
             
-            // ズーム実行（少し滑らかに）
-            this.tweens.add({
-                targets: this.cameras.main,
-                zoom: newZoom,
-                duration: 100,
-                ease: 'Linear'
-            });
+            this.tweens.add({ targets: this.cameras.main, zoom: newZoom, duration: 150, ease: 'Cubic.out' });
         });
 
         // --- マップ操作 ---
-        this.input.on('pointerdown', (p, currentlyOver) => {
+        this.input.on('pointerdown', (p) => {
             if (Renderer.isCardDragging) return;
             const uiScene = this.scene.get('UIScene');
             const objectsUnderPointer = uiScene.input.hitTestPointer(p);
@@ -336,7 +365,6 @@ class MainScene extends Phaser.Scene {
         this.input.on('pointermove', (p) => {
             if (Renderer.isCardDragging) return;
             if (p.isDown && Renderer.isMapDragging) {
-                // ズームしていても移動速度が変わらないように調整
                 const zoom = this.cameras.main.zoom;
                 this.cameras.main.scrollX -= (p.x - p.prevPosition.x) / zoom;
                 this.cameras.main.scrollY -= (p.y - p.prevPosition.y) / zoom;
@@ -350,6 +378,26 @@ class MainScene extends Phaser.Scene {
 
     centerCamera(q, r) { const p = Renderer.hexToPx(q, r); this.cameras.main.centerOn(p.x, p.y); }
 
+    // ★Map生成時に高解像度テクスチャを縮小表示
+    createMap() { 
+        const map = window.gameLogic.map; 
+        for(let q=0; q<MAP_W; q++) { 
+            for(let r=0; r<MAP_H; r++) { 
+                const t = map[q][r]; if(t.id===-1)continue; 
+                const pos = Renderer.hexToPx(q, r); 
+                
+                // 1/4サイズで表示＝見た目は同じだが密度4倍
+                const hex = this.add.image(pos.x, pos.y, 'hex_base').setScale(1/HIGH_RES_SCALE); 
+                
+                let tint = 0x555555; 
+                if(t.id===0)tint=0x5a5245; else if(t.id===1)tint=0x425030; else if(t.id===2)tint=0x222e1b; else if(t.id===4)tint=0x504540; else if(t.id===5)tint=0x303840; 
+                hex.setTint(tint); 
+                if(t.id===2) { const tr=this.add.circle(pos.x, pos.y, HEX_SIZE*0.6, 0x112211, 0.5); this.hexGroup.add(tr); } 
+                this.hexGroup.add(hex); 
+            } 
+        } 
+    }
+
     update(time, delta) {
         if (!window.gameLogic) return;
         VFX.update(); this.vfxGraphics.clear(); VFX.draw(this.vfxGraphics);
@@ -360,14 +408,15 @@ class MainScene extends Phaser.Scene {
             if(u.hp <= 0) return;
             const pos = Renderer.hexToPx(u.q, u.r);
             const container = this.add.container(pos.x, pos.y);
-            const sprite = this.add.sprite(0, 0, u.team==='player'?'unit_player':'unit_enemy');
+            // ユニット画像も高解像度版を縮小
+            const sprite = this.add.sprite(0, 0, u.team==='player'?'unit_player':'unit_enemy').setScale(1/HIGH_RES_SCALE);
             if(u.def.isTank) sprite.setTint(0x888888); if(u.team==='player') sprite.setTint(0x6688aa); else sprite.setTint(0xcc6655);
             container.add(sprite);
             const hpPct = u.hp / u.maxHp;
             container.add([this.add.rectangle(0, -20, 20, 4, 0x000000), this.add.rectangle(-10+(10*hpPct), -20, 20*hpPct, 4, hpPct>0.5?0x00ff00:0xff0000)]);
             if(window.gameLogic.selectedUnit === u) {
-                const c = this.add.image(0, 0, 'cursor');
-                this.tweens.add({ targets: c, scale: { from: 1, to: 1.1 }, alpha: { from: 1, to: 0.5 }, yoyo: true, repeat: -1, duration: 800 });
+                const c = this.add.image(0, 0, 'cursor').setScale(1/HIGH_RES_SCALE);
+                this.tweens.add({ targets: c, scale: { from: 1/HIGH_RES_SCALE, to: 1.1/HIGH_RES_SCALE }, alpha: { from: 1, to: 0.5 }, yoyo: true, repeat: -1, duration: 800 });
                 container.add(c);
             }
             this.unitGroup.add(container);
@@ -399,7 +448,6 @@ class MainScene extends Phaser.Scene {
         for(let i=0; i<6; i++) { const a = Math.PI/180*60*i; g.lineTo(c.x+HEX_SIZE*0.9*Math.cos(a), c.y+HEX_SIZE*0.9*Math.sin(a)); }
         g.closePath(); g.strokePath();
     }
-    createMap() { /* (前回と同じ) */ const map = window.gameLogic.map; for(let q=0; q<MAP_W; q++) { for(let r=0; r<MAP_H; r++) { const t = map[q][r]; if(t.id===-1)continue; const pos = Renderer.hexToPx(q, r); const hex = this.add.image(pos.x, pos.y, 'hex_base'); let tint = 0x555555; if(t.id===0)tint=0x5a5245; else if(t.id===1)tint=0x425030; else if(t.id===2)tint=0x222e1b; else if(t.id===4)tint=0x504540; else if(t.id===5)tint=0x303840; hex.setTint(tint); if(t.id===2) { const tr=this.add.circle(pos.x, pos.y, HEX_SIZE*0.6, 0x112211, 0.5); this.hexGroup.add(tr); } this.hexGroup.add(hex); } } }
 }
 
 const Sfx = { play(id){} };
