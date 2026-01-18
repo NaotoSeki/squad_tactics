@@ -1,4 +1,4 @@
-/** LOGIC (Final Fix: Removed Duplicate Constants) */
+/** LOGIC (Delay Deal Fix & Aerial Damage) */
 class Game {
     constructor() {
         this.units=[]; this.map=[]; this.setupSlots=[]; this.state='SETUP'; 
@@ -20,7 +20,6 @@ class Game {
 
     initSetup() {
         const box=document.getElementById('setup-cards');
-        // HTML側でアイコンを表示するために createCardIcon を呼ぶ
         ['infantry','heavy','sniper','tank'].forEach(k=>{
             const u=UNITS[k]; const d=document.createElement('div'); d.className='card';
             d.innerHTML=`<div class="card-badge">x0</div><div class="card-img-box"><img src="${createCardIcon(k)}"></div><div class="card-body"><h3>${u.name}</h3><p>${u.desc}</p></div>`;
@@ -42,27 +41,20 @@ class Game {
         document.getElementById('setup-screen').style.display='none'; 
         Renderer.resize();
         this.generateMap();
-        
-        // 味方配置
-        if(this.units.length === 0) { 
-            this.setupSlots.forEach(k=>this.spawnAtSafeGround('player',k)); 
-        } else { 
-            this.units.filter(u=>u.team==='player').forEach(u=>{ 
-                u.q=null; this.spawnAtSafeGround('player',null,u); 
-            }); 
-        }
-        
+        if(this.units.length === 0) { this.setupSlots.forEach(k=>this.spawnAtSafeGround('player',k)); }
+        else { this.units.filter(u=>u.team==='player').forEach(u=>{ u.q=null; this.spawnAtSafeGround('player',null,u); }); }
         this.spawnEnemies();
         this.state='PLAY'; 
         this.log(`MISSION START - SECTOR ${this.sector}`);
         document.getElementById('sector-counter').innerText = `SECTOR: ${this.sector.toString().padStart(2, '0')}`;
-        
         if(this.units.length>0) Renderer.centerOn(this.units[0].q, this.units[0].r);
 
-        // ★ゲーム開始時、手札を配る
-        if (Renderer.dealCards) {
-            Renderer.dealCards(['infantry', 'tank', 'aerial', 'infantry', 'tiger']);
-        }
+        // ★修正: タイミングを遅らせてカードを配る（シーン初期化待ち）
+        setTimeout(() => {
+            if (Renderer.dealCards) {
+                Renderer.dealCards(['infantry', 'tank', 'aerial', 'infantry', 'tiger']);
+            }
+        }, 500);
     }
 
     // 航空爆撃処理 (敵味方問わず / 500dmg / 75%)
@@ -114,7 +106,6 @@ class Game {
         this.updateSidebar();
     }
 
-    // --- 以下、既存ロジック ---
     calcReachableHexes(u) {
         this.reachableHexes = [];
         if(!u) return;
