@@ -1,4 +1,4 @@
-/** * PHASER BRIDGE (Fine Particles, Screen-Space VFX, Center Map) */
+/** * PHASER BRIDGE (Logic Restored & Fast Burn) */
 let phaserGame = null;
 const HIGH_RES_SCALE = 4; 
 
@@ -174,7 +174,7 @@ class Card extends Phaser.GameObjects.Container {
     }
 
     burnAndConsume(hex) {
-        console.log(`Deploying ${this.cardType} at ${hex.q},${hex.r}`);
+        // ★ここでlogic.jsへ通知 (本来ならここで呼ぶが、アニメーション後に呼ぶ)
         this.updatePhysics = () => {}; 
         this.bgRect.setFillStyle(0x220000);
         this.bgRect.setStrokeStyle(2, 0xff4400);
@@ -187,22 +187,22 @@ class Card extends Phaser.GameObjects.Container {
         
         const burnProgress = { val: 0 }; 
         this.scene.tweens.add({
-            targets: burnProgress, val: 1, duration: 800, ease: 'Linear',
+            targets: burnProgress, val: 1, 
+            duration: 400, // ★高速化 (倍速)
+            ease: 'Linear',
             onUpdate: () => {
                 maskShape.clear(); maskShape.fillStyle(0xffffff);
                 maskShape.fillRect(-70, -100, 140, 200 * (1 - burnProgress.val)); 
                 maskShape.x = this.x; maskShape.y = this.y + (200 * burnProgress.val);
                 
-                // ★燃焼パーティクル (UIScene専用のVFXを使用)
                 const rad = Phaser.Math.DegToRad(this.angle);
                 const cos = Math.cos(rad); const sin = Math.sin(rad);
                 const burnLineY = 100 - (200 * burnProgress.val); 
                 
-                for(let i=0; i<5; i++) { // 数を増やして微細に
+                for(let i=0; i<6; i++) { 
                     const randX = (Math.random() - 0.5) * 140;
                     const wx = this.x + (randX * cos - burnLineY * sin);
                     const wy = this.y + (randX * sin + burnLineY * cos);
-                    // UISceneのパーティクル呼び出し
                     UIVFX.addFire(wx, wy);
                     if(Math.random()<0.2) UIVFX.addSmoke(wx, wy);
                 }
@@ -213,6 +213,8 @@ class Card extends Phaser.GameObjects.Container {
                 maskShape.destroy();
                 this.scene.removeCard(this);
                 this.destroy();
+                // ★logic.jsへの通知復活
+                if(window.gameLogic) window.gameLogic.deployUnit(hex, this.cardType); 
             }
         });
     }
@@ -228,7 +230,7 @@ class Card extends Phaser.GameObjects.Container {
 }
 
 // ==========================================
-//  UI SCENE (Screen Space)
+//  UI SCENE
 // ==========================================
 class UIScene extends Phaser.Scene {
     constructor() { super({ key: 'UIScene', active: false }); this.cards=[]; this.handContainer=null; this.uiVfxGraphics=null; }
@@ -238,16 +240,12 @@ class UIScene extends Phaser.Scene {
         window.createGradientTexture(this);
         this.add.image(w/2, h, 'ui_gradient').setOrigin(0.5, 1).setDepth(0).setDisplaySize(w, h*0.45);
         this.handContainer = this.add.container(w/2, h);
-        
-        // ★UI用VFXグラフィックス
         this.uiVfxGraphics = this.add.graphics().setDepth(10000);
-
         this.time.delayedCall(800, ()=>{ this.dealStart(['infantry','tank','heal','infantry','tiger']); });
     }
 
     update() { 
         this.cards.forEach(card => card.updatePhysics()); 
-        // UI用VFX更新
         UIVFX.update(); 
         this.uiVfxGraphics.clear(); 
         UIVFX.draw(this.uiVfxGraphics);
@@ -263,13 +261,9 @@ class UIScene extends Phaser.Scene {
         const card = new Card(this, 0, 0, type);
         this.handContainer.add(card);
         this.cards.push(card);
-        
-        // ★配付位置修正: 画面の右下（外側）から
         card.physX = this.scale.width/2 + 300; 
         card.physY = 300; 
-        // 物理座標を強制セット
         card.setPosition(card.physX, card.physY);
-        
         this.arrangeHand();
     }
 
@@ -291,7 +285,7 @@ class UIScene extends Phaser.Scene {
 }
 
 // ==========================================
-//  MAIN SCENE (World Space)
+//  MAIN SCENE
 // ==========================================
 class MainScene extends Phaser.Scene {
     constructor() { super({ key: 'MainScene' }); this.hexGroup=null; this.unitGroup=null; this.vfxGraphics=null; this.overlayGraphics=null; this.mapGenerated=false; this.dragHighlightHex=null; }
@@ -302,7 +296,6 @@ class MainScene extends Phaser.Scene {
         g.lineStyle(2 * HIGH_RES_SCALE, 0x888888, 1); g.fillStyle(0xffffff, 1); g.beginPath();
         for(let i=0; i<6; i++) { const a = Math.PI/180 * 60 * i; g.lineTo(S + S * Math.cos(a), S + S * Math.sin(a)); }
         g.closePath(); g.fillPath(); g.strokePath(); g.generateTexture('hex_base', S*2, S*2);
-        
         g.clear(); g.fillStyle(0x00ff00, 1); g.fillCircle(16*HIGH_RES_SCALE, 16*HIGH_RES_SCALE, 12*HIGH_RES_SCALE); g.generateTexture('unit_player', 32*HIGH_RES_SCALE, 32*HIGH_RES_SCALE);
         g.clear(); g.fillStyle(0xff0000, 1); g.fillRect(4*HIGH_RES_SCALE, 4*HIGH_RES_SCALE, 24*HIGH_RES_SCALE, 24*HIGH_RES_SCALE); g.generateTexture('unit_enemy', 32*HIGH_RES_SCALE, 32*HIGH_RES_SCALE);
         g.clear(); g.lineStyle(3*HIGH_RES_SCALE, 0x00ff00, 1); g.strokeCircle(32*HIGH_RES_SCALE, 32*HIGH_RES_SCALE, 28*HIGH_RES_SCALE); g.generateTexture('cursor', 64*HIGH_RES_SCALE, 64*HIGH_RES_SCALE);
@@ -347,14 +340,8 @@ class MainScene extends Phaser.Scene {
         this.input.mouse.disableContextMenu();
     }
 
-    // ★マップの中央にカメラを合わせる
-    centerMap() {
-        const centerX = (MAP_W * HEX_SIZE * 1.5) / 2;
-        const centerY = (MAP_H * HEX_SIZE * 1.732) / 2;
-        this.cameras.main.centerOn(centerX, centerY);
-    }
-    
     centerCamera(q, r) { const p = Renderer.hexToPx(q, r); this.cameras.main.centerOn(p.x, p.y); }
+    centerMap() { this.cameras.main.centerOn((MAP_W * HEX_SIZE * 1.5) / 2, (MAP_H * HEX_SIZE * 1.732) / 2); }
 
     createMap() { 
         const map = window.gameLogic.map; 
@@ -369,7 +356,6 @@ class MainScene extends Phaser.Scene {
                 this.hexGroup.add(hex); 
             } 
         }
-        // ★マップ生成後にセンタリング
         this.centerMap();
     }
 
@@ -424,37 +410,48 @@ class MainScene extends Phaser.Scene {
     }
 }
 
-// ★マップ用VFX (既存)
-const VFX = { 
+// ★VFX/SFXのグローバル復帰
+window.VFX = { 
     particles:[], projectiles:[], 
     add(p){this.particles.push(p);}, 
+    addFire(x,y){this.add({x,y,vx:(Math.random()-0.5)*2,vy:-Math.random()*4-1,life:20+Math.random()*20,maxLife:40,color:'#fa0',size:6,type:'f'});},
+    addSmoke(x,y){this.add({x,y,vx:(Math.random()-0.5)*1,vy:-1,life:40+Math.random()*20,maxLife:60,color:'#444',size:5,type:'s'});},
     addProj(p){this.projectiles.push(p);},
     addExplosion(x,y,c,n){for(let i=0;i<n;i++){const a=Math.random()*6.28,s=Math.random()*5+1;this.add({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:30+Math.random()*20,maxLife:50,color:c,size:2,type:'s'});}},
     addUnitDebris(x,y){}, 
     update(){ 
-        this.particles.forEach(p=>{ p.x+=p.vx;p.y+=p.vy;p.life--; }); 
+        this.particles.forEach(p=>{
+            p.x+=p.vx;p.y+=p.vy;p.life--;
+            if(p.type==='f') { p.size*=0.9; p.color=Math.random()>0.4?'#ff4':(Math.random()>0.5?'#f40':'#620'); } 
+            else if(p.type==='s') { p.size*=1.02; p.y-=0.5; p.alpha = p.life/p.maxLife; }
+        }); 
         this.projectiles.forEach(p=>{if(p.type.includes('shell')||p.type==='rocket'){p.progress+=p.speed;if(p.progress>=1){p.dead=true;p.onHit();return;}const lx=p.sx+(p.ex-p.sx)*p.progress,ly=p.sy+(p.ey-p.sy)*p.progress,a=Math.sin(p.progress*Math.PI)*p.arcHeight;p.x=lx;p.y=ly-a;}else{p.x+=p.vx;p.y+=p.vy;p.life--;if(p.life<=0){p.dead=true;p.onHit();}}}); 
         this.particles=this.particles.filter(p=>p.life>0); this.projectiles=this.projectiles.filter(p=>!p.dead); 
     }, 
     draw(g){ 
         this.projectiles.forEach(p=>{g.fillStyle(0xffff00,1); g.fillCircle(p.x,p.y,3);}); 
-        this.particles.forEach(p=>{g.fillStyle(p.color==='#fa0'?0xffaa00:0xffffff, p.life/p.maxLife); g.fillCircle(p.x,p.y,p.size);}); 
+        this.particles.forEach(p=>{
+            const c = p.color==='#fa0'?0xffaa00:(p.color==='#f40'?0xff4400:(p.color==='#ff4'?0xffff44:(p.color==='#620'?0x662200:0x444444)));
+            g.fillStyle(c, p.alpha!==undefined?p.alpha:(p.life/p.maxLife)); 
+            g.fillCircle(p.x,p.y,p.size);
+        }); 
     }
 };
 
-// ★UI用VFX (新規: 画面座標で動作する微細パーティクル)
+window.Sfx = { play(id){} }; // 音声プレースホルダー
+
+// UI専用パーティクル (微細)
 const UIVFX = {
     particles: [],
     add(p){ this.particles.push(p); },
     addFire(x, y) {
-        // 微細でチリチリした火の粉
         this.add({
             x, y,
             vx: (Math.random() - 0.5) * 1.5,
             vy: -Math.random() * 2 - 1,
-            life: 15 + Math.random() * 20,
-            maxLife: 35,
-            size: 2 + Math.random(), // 2px〜3px
+            life: 10 + Math.random() * 15,
+            maxLife: 25,
+            size: 2 + Math.random(), 
             colorType: 'fire'
         });
     },
@@ -463,37 +460,25 @@ const UIVFX = {
             x, y,
             vx: (Math.random() - 0.5) * 1,
             vy: -1,
-            life: 30 + Math.random() * 30,
-            maxLife: 60,
+            life: 20 + Math.random() * 20,
+            maxLife: 40,
             size: 3 + Math.random() * 2,
             colorType: 'smoke'
         });
     },
     update() {
         this.particles.forEach(p => {
-            p.x += p.vx;
-            p.y += p.vy;
-            p.life--;
-            // サイズ減衰
-            p.size *= 0.94;
+            p.x += p.vx; p.y += p.vy; p.life--; p.size *= 0.94;
         });
         this.particles = this.particles.filter(p => p.life > 0);
     },
     draw(g) {
         this.particles.forEach(p => {
-            let color = 0xffffff;
-            let alpha = p.life / p.maxLife;
+            let color = 0xffffff; let alpha = p.life / p.maxLife;
             if (p.colorType === 'fire') {
-                // 黄色 -> 赤 -> 黒
-                if (alpha > 0.7) color = 0xffff00; 
-                else if (alpha > 0.3) color = 0xff4400;
-                else color = 0x330000;
-            } else {
-                color = 0x555555;
-                alpha *= 0.5;
-            }
-            g.fillStyle(color, alpha);
-            g.fillCircle(p.x, p.y, p.size);
+                if (alpha > 0.7) color = 0xffff00; else if (alpha > 0.3) color = 0xff4400; else color = 0x330000;
+            } else { color = 0x555555; alpha *= 0.5; }
+            g.fillStyle(color, alpha); g.fillCircle(p.x, p.y, p.size);
         });
     }
 };
