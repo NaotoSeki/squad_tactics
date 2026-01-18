@@ -1,4 +1,4 @@
-/** * PHASER BRIDGE (Card Drag & Drop Polish) */
+/** * PHASER BRIDGE (UI Fix & Polish) */
 let phaserScene = null;
 
 // カード画像生成
@@ -20,7 +20,7 @@ const Renderer = {
     },
     resize() { if(this.game) this.game.scale.resize(document.getElementById('game-view').clientWidth, document.getElementById('game-view').clientHeight); },
     centerOn(q, r) { if(phaserScene) phaserScene.centerCamera(q, r); },
-    dealCard(type) { if(phaserScene) phaserScene.addCardToHand(type); }, // 外部呼び出し用
+    dealCard(type) { if(phaserScene) phaserScene.addCardToHand(type); },
     hexToPx(q, r) { return { x: HEX_SIZE * 3/2 * q, y: HEX_SIZE * Math.sqrt(3) * (r + q/2) }; },
     pxToHex(mx, my) { if(!phaserScene) return {q:0, r:0}; const w = phaserScene.cameras.main.getWorldPoint(mx, my); return this.roundHex((2/3*w.x)/HEX_SIZE, (-1/3*w.x+Math.sqrt(3)/3*w.y)/HEX_SIZE); },
     roundHex(q,r) { let rq=Math.round(q), rr=Math.round(r), rs=Math.round(-q-r); const dq=Math.abs(rq-q), dr=Math.abs(rr-r), ds=Math.abs(rs-(-q-r)); if(dq>dr&&dq>ds) rq=-rr-rs; else if(dr>ds) rr=-rq-rs; return {q:rq, r:rr}; },
@@ -48,7 +48,6 @@ class Card extends Phaser.GameObjects.Container {
 
         this.setInteractive({ draggable: true });
         
-        // ローカル座標の基準点
         this.baseX = x; this.baseY = y; this.baseAngle = 0;
         this.prevX = x;
 
@@ -75,14 +74,17 @@ class Card extends Phaser.GameObjects.Container {
         this.isDragging = true;
         this.setAlpha(0.6); // ★半透明化
 
-        // コンテナから脱出してWorld座標へ移動 (手札コンテナの座標を加算)
+        // コンテナから脱出してWorld座標へ移動
+        // ただし、ScrollFactor(0)を設定して「画面固定」にする
         const hand = this.parentContainer;
-        const worldX = hand.x + this.x;
-        const worldY = hand.y + this.y;
+        const screenX = hand.x + this.x;
+        const screenY = hand.y + this.y;
         
         hand.remove(this); // コンテナから外す
         this.scene.add.existing(this); // シーン直下に置く
-        this.setPosition(worldX, worldY);
+        
+        this.setScrollFactor(0); // ★重要：カメラ移動の影響を受けないようにする
+        this.setPosition(screenX, screenY);
         this.setDepth(1000); // 最前面へ
         this.setScale(1.1);
     }
@@ -91,17 +93,18 @@ class Card extends Phaser.GameObjects.Container {
         this.x = dragX;
         this.y = dragY;
 
-        // 慣性
+        // 慣性表現
         const dx = this.x - this.prevX;
         const targetAngle = Phaser.Math.Clamp(dx * 2, -30, 30);
         this.angle += (targetAngle - this.angle) * 0.2;
         this.prevX = this.x;
 
-        // ★ドロップ候補のハイライト
+        // ドロップ候補のハイライト
         const dropZoneY = this.scene.scale.height * 0.66;
         if (this.y < dropZoneY) {
-             const hex = Renderer.pxToHex(this.x, this.y);
-             this.scene.dragHighlightHex = hex; // Sceneに伝える
+             // 画面上のポインタ位置から、ワールドのHexを逆算
+             const hex = Renderer.pxToHex(pointer.x, pointer.y);
+             this.scene.dragHighlightHex = hex;
         } else {
              this.scene.dragHighlightHex = null;
         }
@@ -109,15 +112,15 @@ class Card extends Phaser.GameObjects.Container {
 
     onDragEnd(pointer) {
         this.isDragging = false;
-        this.setAlpha(1.0); // 不透明に戻す
+        this.setAlpha(1.0);
         this.scene.dragHighlightHex = null;
 
         const dropZoneY = this.scene.scale.height * 0.66;
         if (this.y < dropZoneY && window.gameLogic) {
-             const hex = Renderer.pxToHex(this.x, this.y);
+             const hex = Renderer.pxToHex(pointer.x, pointer.y);
              console.log(`Card dropped at: ${hex.q}, ${hex.r}`);
-             // TODO: ここで gameLogic.deployUnit(hex, this.cardType) を呼ぶ
-             this.returnToHand(); // 仮：手札に戻す
+             // TODO: gameLogic.deployUnit(hex, this.cardType)
+             this.returnToHand(); 
         } else {
              this.returnToHand();
         }
@@ -125,7 +128,7 @@ class Card extends Phaser.GameObjects.Container {
 
     returnToHand() {
         const hand = this.scene.handContainer;
-        // World座標での戻り先を計算
+        // 戻るべきスクリーン座標
         const targetX = hand.x + this.baseX;
         const targetY = hand.y + this.baseY;
         
@@ -134,10 +137,10 @@ class Card extends Phaser.GameObjects.Container {
             x: targetX, y: targetY, angle: this.baseAngle, scale: 1.0,
             duration: 300, ease: 'Back.out',
             onComplete: () => {
-                // コンテナに戻す
                 this.scene.children.remove(this);
                 hand.add(this);
-                this.setPosition(this.baseX, this.baseY); // ローカル座標に戻す
+                this.setPosition(this.baseX, this.baseY); // コンテナ内のローカル座標に戻す
+                this.setScrollFactor(1); // リセット（コンテナに入れるので継承されるが念の為）
             }
         });
     }
@@ -166,16 +169,21 @@ class MainScene extends Phaser.Scene {
         const h = this.scale.height;
         const w = this.scale.width;
         
-        // UI Layer (Hand Area)
-        this.add.rectangle(w/2, h, w, h*0.35, 0x000000, 0.8).setOrigin(0.5, 1).setDepth(200);
-        this.handContainer = this.add.container(w/2, h).setDepth(201); // 画面最下部中央に配置
+        // ★UI Layer (ScrollFactor 0 で画面固定！)
+        const bg = this.add.rectangle(w/2, h, w, h*0.35, 0x000000, 0.8).setOrigin(0.5, 1).setDepth(200);
+        bg.setScrollFactor(0);
+        
+        this.handContainer = this.add.container(w/2, h).setDepth(201);
+        this.handContainer.setScrollFactor(0); // ★ここが重要
         
         this.input.on('pointerdown', (p) => {
             if(p.y > h * 0.66) return; // UIエリアは無視
             if(p.button===0) { if(window.gameLogic) window.gameLogic.handleClick(Renderer.pxToHex(p.x, p.y)); }
             else if(p.button===2) { if(window.gameLogic) window.gameLogic.showContext(p.x, p.y); }
         });
+        
         this.input.on('pointermove', (p) => {
+            // ドラッグ中のカメラ操作（UIエリア外のみ）
             if (p.isDown && !this.input.activePointer.curr.length && p.y < h * 0.66) { 
                 this.cameras.main.scrollX -= (p.x - p.prevPosition.x); this.cameras.main.scrollY -= (p.y - p.prevPosition.y); 
             }
@@ -188,7 +196,7 @@ class MainScene extends Phaser.Scene {
     }
 
     addCardToHand(type) {
-        const card = new Card(this, 0, 200, type); // 初期位置
+        const card = new Card(this, 0, 200, type);
         this.handContainer.add(card);
         this.cards.push(card);
         this.arrangeHand();
@@ -202,7 +210,6 @@ class MainScene extends Phaser.Scene {
         this.cards.forEach((card, i) => {
             const offset = i - centerIdx;
             const targetX = offset * spacing;
-            // 扇状配置: 中央ほど高く(-150), 端ほど低い(-120)
             const targetY = -150 + Math.abs(offset) * 20; 
             const targetAngle = offset * 5;
 
@@ -238,7 +245,7 @@ class MainScene extends Phaser.Scene {
         // Overlay Drawing
         this.overlayGraphics.clear();
         
-        // 1. Drag Highlight (White Hex)
+        // ★ドロップ候補のハイライト（太い白枠）
         if (this.dragHighlightHex) {
             this.overlayGraphics.lineStyle(4, 0xffffff, 1.0);
             this.drawHexOutline(this.overlayGraphics, this.dragHighlightHex.q, this.dragHighlightHex.r);
@@ -270,7 +277,7 @@ class MainScene extends Phaser.Scene {
 }
 
 const Sfx = { play(id){} };
-const VFX = { /* (前回と同じVFXコード) */
+const VFX = { /* (前回と同じ) */
     particles:[], projectiles:[], 
     add(p){this.particles.push(p);}, addProj(p){this.projectiles.push(p);},
     addExplosion(x,y,c,n){for(let i=0;i<n;i++){const a=Math.random()*6.28,s=Math.random()*5+1;this.add({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:30+Math.random()*20,maxLife:50,color:c,size:2,type:'s'});}},
