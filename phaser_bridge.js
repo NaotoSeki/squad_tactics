@@ -1,4 +1,4 @@
-/** * PHASER BRIDGE (Solid Interaction & Drag Fix) */
+/** * PHASER BRIDGE (Physics Inertia, Zoom, & Solid Drag) */
 let phaserGame = null;
 
 // カード画像生成
@@ -25,7 +25,7 @@ window.createGradientTexture = function(scene) {
     scene.textures.addCanvas('ui_gradient', c);
 };
 
-// ★状態管理ハブ
+// ★状態管理
 const Renderer = {
     game: null,
     isMapDragging: false, 
@@ -41,7 +41,7 @@ const Renderer = {
             scene: [MainScene, UIScene], 
             fps: { target: 60 }, 
             physics: { default: 'arcade', arcade: { debug: false } },
-            input: { activePointers: 1 } // マルチタッチ誤爆防止
+            input: { activePointers: 1 }
         };
         this.game = new Phaser.Game(config);
         phaserGame = this.game;
@@ -72,8 +72,7 @@ class Card extends Phaser.GameObjects.Container {
         const W = 140; const H = 200;
         this.setSize(W, H);
 
-        // ★修正: 背景(bg)自体をインタラクティブにする
-        // これで「見た目」と「判定」が完全に一致します。
+        // 背景
         const bg = scene.add.rectangle(0, 0, W, H, 0x222222).setStrokeStyle(2, 0x555555);
         bg.setInteractive({ useHandCursor: true, draggable: true });
         
@@ -83,21 +82,20 @@ class Card extends Phaser.GameObjects.Container {
         const text = scene.add.text(0, 40, type.toUpperCase(), { fontSize: '16px', color: '#d84', fontStyle: 'bold' }).setOrigin(0.5);
         const desc = scene.add.text(0, 70, "DRAG TO DEPLOY", { fontSize: '10px', color: '#888' }).setOrigin(0.5);
         
-        // アイコンやテキストは判定を邪魔しないようにする
         icon.disableInteractive();
-        
         this.add([bg, icon, text, desc]);
+        
+        this.setScrollFactor(0);
         
         this.baseX = x; this.baseY = y;
         this.prevX = x;
         this.dragOffsetX = 0; this.dragOffsetY = 0;
         
-        // ★重要: イベントリスナーは bg (背景) に対して設定する
+        // ★慣性計算用パラメータ
+        this.velocityAngle = 0; // 角速度
+        
         bg.on('pointerover', this.onHover, this);
         bg.on('pointerout', this.onHoverOut, this);
-        bg.on('pointerdown', this.onPointerDown, this); // クリック検知用
-        
-        // ドラッグイベント
         bg.on('dragstart', this.onDragStart, this);
         bg.on('drag', this.onDrag, this);
         bg.on('dragend', this.onDragEnd, this);
@@ -105,18 +103,31 @@ class Card extends Phaser.GameObjects.Container {
         scene.add.existing(this);
     }
 
-    onPointerDown(pointer) {
-        // カードをクリックした瞬間、ログを出す（デバッグ用）
-        console.log("Card Clicked:", this.cardType);
+    // ★毎フレーム呼ばれる更新処理（慣性シミュレーション）
+    updateCardPhysics() {
+        // ドラッグ中でない時も、揺れを減衰させる
+        if (!this.isDragging) {
+            // 角度を0（垂直）に戻そうとする力 (バネ)
+            const restoreForce = -this.angle * 0.1;
+            // 速度に加算
+            this.velocityAngle += restoreForce;
+            // 空気抵抗 (減衰)
+            this.velocityAngle *= 0.85;
+            
+            // 角度更新
+            this.angle += this.velocityAngle;
+            
+            // ほぼ止まったら計算ストップ
+            if (Math.abs(this.angle) < 0.1 && Math.abs(this.velocityAngle) < 0.1) {
+                this.angle = 0;
+                this.velocityAngle = 0;
+            }
+        }
     }
 
     onHover() {
-        // マップドラッグ中、または他のカードをドラッグ中は反応させない（カクつき防止）
         if(Renderer.isMapDragging || Renderer.isCardDragging) return;
-        
         this.parentContainer.bringToTop(this);
-        // this.y を動かすと判定も動くが、bgで判定しているので追従するはず。
-        // ピクつき防止のため、少し控えめに動かす
         this.scene.tweens.add({ targets: this, y: this.baseY - 20, scale: 1.05, duration: 100, ease: 'Back.out' });
     }
 
@@ -126,15 +137,15 @@ class Card extends Phaser.GameObjects.Container {
     }
 
     onDragStart(pointer, dragX, dragY) {
-        if(Renderer.isMapDragging) return; // マップ移動中は掴めない
+        if(Renderer.isMapDragging) return;
 
         this.isDragging = true;
-        Renderer.isCardDragging = true; // 全体に通知
+        Renderer.isCardDragging = true;
         
         this.setAlpha(0.8);
         this.setScale(1.1);
 
-        // Handコンテナから出して、UIScene直下に置く（最前面表示のため）
+        // コンテナから出してUIScene直下に配置
         const hand = this.parentContainer;
         const worldPos = hand.getLocalTransformMatrix().transformPoint(this.x, this.y);
         hand.remove(this);
@@ -142,25 +153,32 @@ class Card extends Phaser.GameObjects.Container {
         this.setPosition(worldPos.x, worldPos.y);
         this.setDepth(9999);
 
-        // 掴んだ位置のオフセット計算
         this.dragOffsetX = this.x - pointer.x;
         this.dragOffsetY = this.y - pointer.y;
+        this.prevX = this.x;
+        this.velocityAngle = 0;
     }
 
     onDrag(pointer, dragX, dragY) {
-        // bgのドラッグイベントだが、動かすのは Container (this)
-        this.x = pointer.x + this.dragOffsetX;
-        this.y = pointer.y + this.dragOffsetY;
+        this.x = pointer.position.x + this.dragOffsetX;
+        this.y = pointer.position.y + this.dragOffsetY;
 
-        // 慣性（揺れ）
-        const dx = this.x - this.prevX;
-        const targetAngle = Phaser.Math.Clamp(dx * 1.5, -20, 20);
-        this.angle += (targetAngle - this.angle) * 0.2;
+        // ★慣性の計算: 移動速度に応じて「目標角度」を決める
+        const velocityX = this.x - this.prevX;
+        
+        // 移動方向と逆に傾く（最大30度）
+        const targetAngle = Phaser.Math.Clamp(velocityX * 2.0, -30, 30);
+        
+        // 現在の角度から目標角度へ、少し遅れて追従する (Lerp)
+        // これにより「引っ張られる」感じが出る
+        this.angle += (targetAngle - this.angle) * 0.15;
+        
         this.prevX = this.x;
 
-        // ドロップ候補ハイライト (MainSceneへ通知)
+        // ハイライト
+        const dropZoneY = this.scene.scale.height * 0.65;
         const main = this.scene.game.scene.getScene('MainScene');
-        if (this.y < this.scene.scale.height * 0.65) {
+        if (this.y < dropZoneY) {
              const hex = Renderer.pxToHex(pointer.x, pointer.y);
              main.dragHighlightHex = hex;
         } else {
@@ -170,18 +188,17 @@ class Card extends Phaser.GameObjects.Container {
 
     onDragEnd(pointer) {
         this.isDragging = false;
-        Renderer.isCardDragging = false; // ドラッグ終了
+        Renderer.isCardDragging = false;
         this.setAlpha(1.0);
-        this.angle = 0;
+        // ここでは角度を0にリセットしない！ updateCardPhysicsの減衰に任せる
         
         const main = this.scene.game.scene.getScene('MainScene');
         if(main) main.dragHighlightHex = null;
 
-        // ドロップ判定
-        if (this.y < this.scene.scale.height * 0.65 && window.gameLogic) {
+        const dropZoneY = this.scene.scale.height * 0.65;
+        if (this.y < dropZoneY && window.gameLogic) {
              const hex = Renderer.pxToHex(pointer.x, pointer.y);
              console.log(`Card dropped at: ${hex.q}, ${hex.r}`);
-             // TODO: 配置ロジック
              this.returnToHand(); 
         } else {
              this.returnToHand();
@@ -195,11 +212,13 @@ class Card extends Phaser.GameObjects.Container {
         
         this.scene.tweens.add({
             targets: this,
-            x: targetX, y: targetY, angle: 0, scale: 1.0,
+            x: targetX, y: targetY, scale: 1.0,
             duration: 300, ease: 'Back.out',
             onComplete: () => {
+                // コンテナに戻す処理
+                // ★修正: 一瞬のズレを防ぐため、コンテナ追加直後に座標を再設定
                 this.scene.children.remove(this);
-                hand.add(this); // 元の場所へ
+                hand.add(this); 
                 this.setPosition(this.baseX, this.baseY);
                 this.setDepth(0);
             }
@@ -222,8 +241,12 @@ class UIScene extends Phaser.Scene {
 
         this.handContainer = this.add.container(w/2, h);
         
-        // カード配るテスト
         this.time.delayedCall(500, ()=>{ ['infantry','tank','heal','infantry','tiger'].forEach(t => this.addCardToHand(t)); });
+    }
+
+    update(time, delta) {
+        // 各カードの物理シミュレーションを回す
+        this.cards.forEach(card => card.updateCardPhysics());
     }
 
     addCardToHand(type) {
@@ -273,24 +296,32 @@ class MainScene extends Phaser.Scene {
         
         this.scene.launch('UIScene'); 
 
-        // --- マップ操作ハンドリング ---
-        this.input.on('pointerdown', (p) => {
-            // カードドラッグ中は無視
+        // --- マウスホイール: ズーム ---
+        this.input.on('wheel', (pointer, gameObjects, deltaX, deltaY, deltaZ) => {
+            // 現在のズームレベル取得
+            let newZoom = this.cameras.main.zoom;
+            // ホイールの方向でズーム増減
+            if (deltaY > 0) newZoom -= 0.1;
+            else if (deltaY < 0) newZoom += 0.1;
+            // 制限 (0.5倍 ～ 3.0倍)
+            newZoom = Phaser.Math.Clamp(newZoom, 0.5, 3.0);
+            
+            // ズーム実行（少し滑らかに）
+            this.tweens.add({
+                targets: this.cameras.main,
+                zoom: newZoom,
+                duration: 100,
+                ease: 'Linear'
+            });
+        });
+
+        // --- マップ操作 ---
+        this.input.on('pointerdown', (p, currentlyOver) => {
             if (Renderer.isCardDragging) return;
-
-            // ★重要: カードの上をクリックしたかどうかを判定
-            // UIScene側のポインタ位置にあるオブジェクトを取得し、あればマップ操作をキャンセル
             const uiScene = this.scene.get('UIScene');
-            // UISceneのカメラで、現在のマウス位置にあるオブジェクトを探す
-            // (注: UISceneはスクロールしないので p.x, p.y そのままでOK)
             const objectsUnderPointer = uiScene.input.hitTestPointer(p);
+            if (objectsUnderPointer.length > 0) return;
 
-            if (objectsUnderPointer.length > 0) {
-                // カードの上なのでマップ操作はしない
-                return;
-            }
-
-            // カード以外ならマップ操作
             if(p.button === 0) {
                 Renderer.isMapDragging = true;
                 if(window.gameLogic) window.gameLogic.handleClick(Renderer.pxToHex(p.x, p.y));
@@ -300,20 +331,16 @@ class MainScene extends Phaser.Scene {
             }
         });
 
-        this.input.on('pointerup', () => {
-            Renderer.isMapDragging = false;
-        });
+        this.input.on('pointerup', () => { Renderer.isMapDragging = false; });
         
         this.input.on('pointermove', (p) => {
             if (Renderer.isCardDragging) return;
-
-            // マップドラッグ中
             if (p.isDown && Renderer.isMapDragging) {
-                this.cameras.main.scrollX -= (p.x - p.prevPosition.x); 
-                this.cameras.main.scrollY -= (p.y - p.prevPosition.y);
+                // ズームしていても移動速度が変わらないように調整
+                const zoom = this.cameras.main.zoom;
+                this.cameras.main.scrollX -= (p.x - p.prevPosition.x) / zoom;
+                this.cameras.main.scrollY -= (p.y - p.prevPosition.y) / zoom;
             }
-            
-            // マップドラッグ中でなければホバー処理
             if(!Renderer.isMapDragging && window.gameLogic) {
                 window.gameLogic.handleHover(Renderer.pxToHex(p.x, p.y));
             }
