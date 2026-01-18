@@ -1,31 +1,48 @@
-/** * PHASER BRIDGE (Reliable Deal, Physics Fix, Aerial Ready) */
+/** * PHASER BRIDGE (Deployment Fix, Aerial Bombardment, Physics) */
 let phaserGame = null;
 const HIGH_RES_SCALE = 4; 
 
-// --- ユーティリティ ---
-window.createCardIcon = function(scene, type) {
-    if (type === 'aerial' && scene.textures.exists('card_img_bomb')) {
-        return 'card_img_bomb'; 
-    }
-    const key = `card_icon_${type}`;
-    if (scene.textures.exists(key)) return key;
-
-    const w = 100 * HIGH_RES_SCALE; const h = 60 * HIGH_RES_SCALE;
-    const c = document.createElement('canvas'); c.width=w; c.height=h; const x = c.getContext('2d');
-    x.scale(HIGH_RES_SCALE, HIGH_RES_SCALE); x.translate(50, 30); x.scale(2,2);
+// --- ★重要修正: HTML UI互換用（Canvasオブジェクトを返す） ---
+window.createCardIcon = function(type) {
+    const w = 100 * HIGH_RES_SCALE; 
+    const h = 60 * HIGH_RES_SCALE;
+    const c = document.createElement('canvas'); 
+    c.width = w; c.height = h; 
+    const x = c.getContext('2d');
+    
+    // 高解像度描画
+    x.scale(HIGH_RES_SCALE, HIGH_RES_SCALE); 
+    x.translate(50, 30); 
+    x.scale(2, 2);
     
     if(type==='infantry'){x.fillStyle="#444";x.fillRect(-15,0,30,4);x.fillStyle="#642";x.fillRect(-15,0,10,4);}
     else if(type==='tank'){x.fillStyle="#444";x.fillRect(-12,-6,24,12);x.fillStyle="#222";x.fillRect(0,-2,16,4);}
     else if(type==='heal'){x.fillStyle="#eee";x.fillRect(-10,-8,20,16);x.fillStyle="#d00";x.fillRect(-3,-6,6,12);x.fillRect(-8,-1,16,2);}
     else if(type==='tiger'){x.fillStyle="#554";x.fillRect(-14,-8,28,16);x.fillStyle="#111";x.fillRect(2,-2,20,4);}
-    else if(type==='aerial'){ 
+    else if(type==='aerial'){ // 爆弾アイコン（Canvas用）
         x.fillStyle="#343"; x.beginPath(); x.ellipse(0, 0, 15, 6, 0, 0, Math.PI*2); x.fill();
         x.fillStyle="#222"; x.fillRect(-5, -2, 10, 4);
     }
     else {x.fillStyle="#333";x.fillRect(-10,-5,20,10);} 
-    scene.textures.addCanvas(key, c);
-    return key;
+    
+    return c; // ★HTML側が期待するCanvas要素を返す
 };
+
+// --- Phaser内部用: テクスチャ登録ヘルパー ---
+function getCardTextureKey(scene, type) {
+    // リアル画像があればそれを使う
+    if (type === 'aerial' && scene.textures.exists('card_img_bomb')) {
+        return 'card_img_bomb'; 
+    }
+    
+    const key = `card_icon_${type}`;
+    if (!scene.textures.exists(key)) {
+        // Canvasを生成してPhaserに登録
+        const canvas = window.createCardIcon(type);
+        scene.textures.addCanvas(key, canvas);
+    }
+    return key;
+}
 
 window.createGradientTexture = function(scene) {
     const w = scene.scale.width; const h = scene.scale.height * 0.45;
@@ -63,6 +80,7 @@ const Renderer = {
         return this.roundHex((2/3*w.x)/HEX_SIZE, (-1/3*w.x+Math.sqrt(3)/3*w.y)/HEX_SIZE); 
     },
     roundHex(q,r) { let rq=Math.round(q), rr=Math.round(r), rs=Math.round(-q-r); const dq=Math.abs(rq-q), dr=Math.abs(rr-r), ds=Math.abs(rs-(-q-r)); if(dq>dr&&dq>ds) rq=-rr-rs; else if(dr>ds) rr=-rq-rs; return {q:rq, r:rr}; },
+    
     dealCards(types) { const ui = this.game.scene.getScene('UIScene'); if(ui) ui.dealStart(types); },
     dealCard(type) { const ui = this.game.scene.getScene('UIScene'); if(ui) ui.addCardToHand(type); },
     
@@ -93,9 +111,16 @@ class Card extends Phaser.GameObjects.Container {
         const bg = scene.add.rectangle(0, 0, W, H, 0x222222).setStrokeStyle(2, 0x555555);
         bg.setInteractive({ useHandCursor: true, draggable: true });
         
-        const iconKey = window.createCardIcon(scene, type);
-        const icon = scene.add.image(0, -40, iconKey).setScale(1/HIGH_RES_SCALE);
-        if(type === 'aerial' && scene.textures.exists('card_img_bomb')) icon.setDisplaySize(120, 80);
+        // Phaser用テクスチャ取得
+        const iconKey = getCardTextureKey(scene, type);
+        const icon = scene.add.image(0, -40, iconKey);
+        
+        // リアル画像ならサイズ調整、Canvasなら縮小
+        if(type === 'aerial' && scene.textures.exists('card_img_bomb')) {
+            icon.setDisplaySize(120, 80);
+        } else {
+            icon.setScale(1/HIGH_RES_SCALE);
+        }
 
         const text = scene.add.text(0, 40, type.toUpperCase(), { fontSize: '16px', color: '#d84', fontStyle: 'bold' }).setOrigin(0.5);
         const desc = scene.add.text(0, 70, "DRAG TO DEPLOY", { fontSize: '10px', color: '#888' }).setOrigin(0.5);
@@ -279,8 +304,8 @@ class UIScene extends Phaser.Scene {
         this.handContainer = this.add.container(w/2, h);
         this.uiVfxGraphics = this.add.graphics().setDepth(10000);
         
-        // ★自動配付復活 (500ms後)
-        this.time.delayedCall(500, ()=>{ this.dealStart(['infantry','tank','aerial','infantry','tiger']); });
+        // ★自動配付テスト (Logic側で配るなら不要だが、動作確認用に入れておく)
+        this.time.delayedCall(1000, ()=>{ this.dealStart(['infantry','tank','aerial','infantry','tiger']); });
     }
 
     update() { 
@@ -301,12 +326,10 @@ class UIScene extends Phaser.Scene {
         this.handContainer.add(card);
         this.cards.push(card);
         
-        // ★修正: 画面内（右下）に近い位置から出現させる
-        // handContainerは画面下中央にあるので、ローカル座標で (画面幅/2, 0) 付近に置けば画面右端
-        card.physX = 600; // コンテナ中心から右へ600px
-        card.physY = 300; // 画面下へ
+        // 配付座標修正 (画面右下付近)
+        card.physX = 600; 
+        card.physY = 300; 
         card.setPosition(card.physX, card.physY);
-        
         this.arrangeHand();
     }
 
@@ -465,7 +488,7 @@ class MainScene extends Phaser.Scene {
     }
 }
 
-// ★VFX (Logic連携 & 爆撃)
+// ★VFX
 window.VFX = { 
     particles:[], projectiles:[], shockwaves:[],
     add(p){this.particles.push(p);}, 
