@@ -1,4 +1,4 @@
-/** * PHASER BRIDGE (UI Resize Fix, HTML Compatibility, High-Res, Physics) */
+/** * PHASER BRIDGE (Final Fix: HTML Icons & Manual Deal) */
 let phaserGame = null;
 const HIGH_RES_SCALE = 4; 
 
@@ -30,18 +30,16 @@ function drawCardToCanvas(type) {
 }
 
 // ---------------------------------------------------------
-//  HTML UI用
+//  ★修正: HTML UI用 (Data URL文字列を返す)
+//  これで初期画面の <img src="..."> が正常に表示されます
 // ---------------------------------------------------------
 window.createCardIcon = function(type) {
     const canvas = drawCardToCanvas(type);
-    canvas.style.width = "100px";
-    canvas.style.height = "60px";
-    canvas.style.imageRendering = "pixelated"; 
-    return canvas; 
+    return canvas.toDataURL(); 
 };
 
 // ---------------------------------------------------------
-//  Phaser内部用
+//  Phaser内部用 (Canvasをテクスチャ化)
 // ---------------------------------------------------------
 function getCardTextureKey(scene, type) {
     if (type === 'aerial' && scene.textures.exists('card_img_bomb')) {
@@ -49,6 +47,7 @@ function getCardTextureKey(scene, type) {
     }
     const key = `card_icon_${type}`;
     if (!scene.textures.exists(key)) {
+        // PhaserにはCanvasオブジェクトを渡す（高画質維持）
         const canvas = drawCardToCanvas(type);
         scene.textures.addCanvas(key, canvas);
     }
@@ -92,6 +91,7 @@ const Renderer = {
     },
     roundHex(q,r) { let rq=Math.round(q), rr=Math.round(r), rs=Math.round(-q-r); const dq=Math.abs(rq-q), dr=Math.abs(rr-r), ds=Math.abs(rs-(-q-r)); if(dq>dr&&dq>ds) rq=-rr-rs; else if(dr>ds) rr=-rq-rs; return {q:rq, r:rr}; },
     
+    // Logicから呼ばれる関数
     dealCards(types) { const ui = this.game.scene.getScene('UIScene'); if(ui) ui.dealStart(types); },
     dealCard(type) { const ui = this.game.scene.getScene('UIScene'); if(ui) ui.addCardToHand(type); },
     
@@ -296,7 +296,7 @@ class Card extends Phaser.GameObjects.Container {
 }
 
 // ==========================================
-//  UI SCENE (デッキUIの管理)
+//  UI SCENE (デッキUI)
 // ==========================================
 class UIScene extends Phaser.Scene {
     constructor() { super({ key: 'UIScene', active: false }); this.cards=[]; this.handContainer=null; this.gradientBg=null; this.uiVfxGraphics=null; }
@@ -305,34 +305,19 @@ class UIScene extends Phaser.Scene {
         const w = this.scale.width; const h = this.scale.height;
         window.createGradientTexture(this);
         
-        // 背景グラデーション (参照を保持)
         this.gradientBg = this.add.image(w/2, h, 'ui_gradient').setOrigin(0.5, 1).setDepth(0).setDisplaySize(w, h*0.45);
-        
-        // 手札コンテナ (参照を保持)
         this.handContainer = this.add.container(w/2, h);
-        
         this.uiVfxGraphics = this.add.graphics().setDepth(10000);
         
-        // ★リサイズイベントの監視
         this.scale.on('resize', this.onResize, this);
 
+        // ★自動配付は削除！ (Logic側でstartCampaign時に配るため)
     }
 
-    // ★リサイズ時の処理
     onResize(gameSize) {
-        const w = gameSize.width;
-        const h = gameSize.height;
-
-        // 背景位置とサイズの更新
-        if (this.gradientBg) {
-            this.gradientBg.setPosition(w / 2, h);
-            this.gradientBg.setDisplaySize(w, h * 0.45);
-        }
-
-        // 手札コンテナ位置の更新
-        if (this.handContainer) {
-            this.handContainer.setPosition(w / 2, h);
-        }
+        const w = gameSize.width; const h = gameSize.height;
+        if (this.gradientBg) { this.gradientBg.setPosition(w / 2, h); this.gradientBg.setDisplaySize(w, h * 0.45); }
+        if (this.handContainer) { this.handContainer.setPosition(w / 2, h); }
     }
 
     update() { 
@@ -353,7 +338,7 @@ class UIScene extends Phaser.Scene {
         this.handContainer.add(card);
         this.cards.push(card);
         
-        // 画面右下付近 (ローカル座標なので 画面幅の半分くらい右)
+        // 配付位置: 画面右下付近 (ローカル座標)
         card.physX = 600; 
         card.physY = 300; 
         card.setPosition(card.physX, card.physY);
@@ -529,6 +514,7 @@ window.VFX = {
                 bomb.destroy();
                 scene.cameras.main.shake(300, 0.03); 
                 this.addRealExplosion(tx, ty); 
+                // ロジック連携
                 if(window.gameLogic && window.gameLogic.applyBombardment) {
                     window.gameLogic.applyBombardment(hex);
                 }
