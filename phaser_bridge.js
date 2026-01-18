@@ -1,4 +1,4 @@
-/** * PHASER BRIDGE (Hit Area Alignment & Drag Fix) */
+/** * PHASER BRIDGE (Physics Drag & Solid Interaction) */
 let phaserScene = null;
 
 // カード画像生成
@@ -52,36 +52,42 @@ class Card extends Phaser.GameObjects.Container {
         this.scene = scene;
         this.cardType = type;
         
-        // カードサイズ定義
         const W = 140; const H = 200;
-        this.setSize(W, H); // コンテナのサイズを設定
+        this.setSize(W, H); // コンテナ自体のサイズ設定
 
-        // 背景 (中心基準 0,0)
+        // ★修正: 背景画像自体をInteractiveにする
+        // これが一番確実な方法です。矩形計算のズレがなくなります。
         const bg = scene.add.rectangle(0, 0, W, H, 0x222222).setStrokeStyle(2, 0x555555);
-        
+        bg.setInteractive({ useHandCursor: true, draggable: true });
+
         const iconKey = `card_icon_${type}`;
         if(!scene.textures.exists(iconKey)) scene.textures.addCanvas(iconKey, window.createCardIcon(type));
         const icon = scene.add.image(0, -40, iconKey);
-        
+        // アイコン等はインタラクションを無効化して背景へのイベントを邪魔させない
+        icon.disableInteractive(); 
+
         const text = scene.add.text(0, 40, type.toUpperCase(), { fontSize: '16px', color: '#d84', fontStyle: 'bold' }).setOrigin(0.5);
         const desc = scene.add.text(0, 70, "DRAG TO DEPLOY", { fontSize: '10px', color: '#888' }).setOrigin(0.5);
         this.add([bg, icon, text, desc]);
 
-        // ★修正: ヒットエリアをカードサイズと完全に一致させる
-        // 引数なしで setInteractive を呼ぶと、setSizeで設定したサイズ(140x200)が中心基準で適用される
-        // これにより「見た目通りの四角形」が判定エリアになります
-        this.setInteractive({ draggable: true, useHandCursor: true });
-        
         this.setScrollFactor(0);
         
         this.baseX = x; this.baseY = y;
         this.prevX = x;
+        // ドラッグ時のオフセット保持用
+        this.dragOffsetX = 0;
+        this.dragOffsetY = 0;
 
-        this.on('pointerover', this.onHover, this);
-        this.on('pointerout', this.onHoverOut, this);
-        this.on('dragstart', this.onDragStart, this);
-        this.on('drag', this.onDrag, this);
-        this.on('dragend', this.onDragEnd, this);
+        // イベントは背景(bg)から発火するが、リスナーはContainer(this)で受け取るためにバブリングを利用、
+        // あるいはbgのイベントをトリガーにする。ここではbgのイベントを直接ハンドリングしてContainerを動かす。
+        
+        bg.on('pointerover', this.onHover, this);
+        bg.on('pointerout', this.onHoverOut, this);
+        
+        // ドラッグイベントは scene.input.setDraggable(bg) されているため bg で発生する
+        bg.on('dragstart', this.onDragStart, this);
+        bg.on('drag', this.onDrag, this);
+        bg.on('dragend', this.onDragEnd, this);
         
         scene.add.existing(this);
     }
@@ -89,7 +95,6 @@ class Card extends Phaser.GameObjects.Container {
     onHover() {
         if(this.isDragging || this.scene.isMapDragging) return;
         this.setDepth(1000); 
-        // 浮き上がり量を少し控えめにして(40->30)、マウスが外れるのを防ぐ
         this.scene.tweens.add({ targets: this, y: this.baseY - 30, scale: 1.1, duration: 150, ease: 'Back.out' });
     }
 
@@ -99,26 +104,41 @@ class Card extends Phaser.GameObjects.Container {
         this.scene.tweens.add({ targets: this, y: this.baseY, x: this.baseX, scale: 1.0, duration: 200, ease: 'Power2' });
     }
 
-    onDragStart(pointer, dragX, dragY) {
-        // マップ移動中はカードを掴ませない
+    onDragStart(pointer) {
         if(this.scene.isMapDragging) return;
 
         this.isDragging = true;
         this.scene.isDraggingCard = true;
-        this.setAlpha(0.6);
+        this.setAlpha(0.8); // 少し透けさせる
         this.setDepth(2000);
         this.setScale(1.1);
+
+        // ★重要: 「掴んだ場所」と「カード中心」のズレを記録
+        // pointer.position は画面座標。this.x, this.y も画面座標(ScrollFactor 0のため)
+        this.dragOffsetX = this.x - pointer.position.x;
+        this.dragOffsetY = this.y - pointer.position.y;
     }
 
-    onDrag(pointer, dragX, dragY) {
-        this.x = pointer.position.x;
-        this.y = pointer.position.y;
+    onDrag(pointer) {
+        if(!this.isDragging) return;
 
-        const dx = this.x - this.prevX;
-        const targetAngle = Phaser.Math.Clamp(dx * 1.5, -20, 20);
-        this.angle += (targetAngle - this.angle) * 0.2;
+        // ★重要: オフセットを加味して位置を更新
+        // これで「掴んだ場所」がマウスカーソルについてくる（中心がワープしない）
+        this.x = pointer.position.x + this.dragOffsetX;
+        this.y = pointer.position.y + this.dragOffsetY;
+
+        // 慣性（揺れ）の計算
+        // 現在のマウス移動速度
+        const velocityX = this.x - this.prevX;
+        // 移動方向と逆に傾ける（最大25度）
+        const targetAngle = Phaser.Math.Clamp(velocityX * 1.5, -25, 25);
+        
+        // 現在の角度からターゲット角度へ滑らかに補間 (Lerp)
+        this.angle += (targetAngle - this.angle) * 0.15;
+        
         this.prevX = this.x;
 
+        // ドロップ候補ハイライト
         const dropZoneY = this.scene.scale.height * 0.65;
         if (this.y < dropZoneY) {
              const hex = Renderer.pxToHex(pointer.x, pointer.y);
@@ -132,7 +152,6 @@ class Card extends Phaser.GameObjects.Container {
         this.isDragging = false;
         this.scene.isDraggingCard = false;
         this.setAlpha(1.0);
-        this.angle = 0;
         this.scene.dragHighlightHex = null;
 
         const dropZoneY = this.scene.scale.height * 0.65;
@@ -179,16 +198,16 @@ class MainScene extends Phaser.Scene {
         const h = this.scale.height;
         const w = this.scale.width;
 
+        // グラデーション背景
         window.createGradientTexture(this);
         const bg = this.add.image(w/2, h, 'ui_gradient').setOrigin(0.5, 1).setDepth(200);
         bg.setScrollFactor(0);
         bg.setDisplaySize(w, h*0.45);
 
-        // --- 入力ハンドリング修正 ---
+        // --- マウス入力ハンドリング ---
         
         this.input.on('pointerdown', (p, currentlyOver) => {
-            // ★重要: currentlyOverには「マウスの下にあるインタラクティブなオブジェクト」が入っています
-            // これが空でない＝カードの上をクリックした、ということなので、マップ移動はキャンセル
+            // カードの上をクリックした場合は、マップ操作をしない
             if (currentlyOver.length > 0) return;
 
             if(p.button === 0) {
