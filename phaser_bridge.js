@@ -1,4 +1,4 @@
-/** * PHASER BRIDGE (UI Fix & Polish) */
+/** * PHASER BRIDGE (Coordinate Fix & Scroll Fix) */
 let phaserScene = null;
 
 // カード画像生成
@@ -22,14 +22,16 @@ const Renderer = {
     centerOn(q, r) { if(phaserScene) phaserScene.centerCamera(q, r); },
     dealCard(type) { if(phaserScene) phaserScene.addCardToHand(type); },
     hexToPx(q, r) { return { x: HEX_SIZE * 3/2 * q, y: HEX_SIZE * Math.sqrt(3) * (r + q/2) }; },
-    pxToHex(mx, my) { if(!phaserScene) return {q:0, r:0}; const w = phaserScene.cameras.main.getWorldPoint(mx, my); return this.roundHex((2/3*w.x)/HEX_SIZE, (-1/3*w.x+Math.sqrt(3)/3*w.y)/HEX_SIZE); },
+    // 画面座標(mx, my)をワールド座標に変換してからHex計算
+    pxToHex(mx, my) { 
+        if(!phaserScene) return {q:0, r:0}; 
+        const w = phaserScene.cameras.main.getWorldPoint(mx, my); 
+        return this.roundHex((2/3*w.x)/HEX_SIZE, (-1/3*w.x+Math.sqrt(3)/3*w.y)/HEX_SIZE); 
+    },
     roundHex(q,r) { let rq=Math.round(q), rr=Math.round(r), rs=Math.round(-q-r); const dq=Math.abs(rq-q), dr=Math.abs(rr-r), ds=Math.abs(rs-(-q-r)); if(dq>dr&&dq>ds) rq=-rr-rs; else if(dr>ds) rr=-rq-rs; return {q:rq, r:rr}; },
     frame: 0, draw() {}
 };
 
-/**
- * リッチなカードUIクラス
- */
 class Card extends Phaser.GameObjects.Container {
     constructor(scene, x, y, type) {
         super(scene, x, y);
@@ -37,7 +39,6 @@ class Card extends Phaser.GameObjects.Container {
         this.cardType = type;
         this.setSize(140, 200);
 
-        // ビジュアル
         const bg = scene.add.rectangle(0, 0, 140, 200, 0x222222).setStrokeStyle(2, 0x555555);
         const iconKey = `card_icon_${type}`;
         if(!scene.textures.exists(iconKey)) scene.textures.addBase64(iconKey, window.createCardIcon(type));
@@ -72,37 +73,35 @@ class Card extends Phaser.GameObjects.Container {
 
     onDragStart(pointer, dragX, dragY) {
         this.isDragging = true;
-        this.setAlpha(0.6); // ★半透明化
+        this.scene.isDraggingCard = true; // ★マップスクロール抑制フラグON
+        this.setAlpha(0.6);
 
-        // コンテナから脱出してWorld座標へ移動
-        // ただし、ScrollFactor(0)を設定して「画面固定」にする
         const hand = this.parentContainer;
         const screenX = hand.x + this.x;
         const screenY = hand.y + this.y;
         
-        hand.remove(this); // コンテナから外す
-        this.scene.add.existing(this); // シーン直下に置く
+        hand.remove(this);
+        this.scene.add.existing(this);
         
-        this.setScrollFactor(0); // ★重要：カメラ移動の影響を受けないようにする
+        this.setScrollFactor(0);
         this.setPosition(screenX, screenY);
-        this.setDepth(1000); // 最前面へ
+        this.setDepth(1000);
         this.setScale(1.1);
     }
 
     onDrag(pointer, dragX, dragY) {
-        this.x = dragX;
-        this.y = dragY;
+        // ★修正点: dragX/dragYではなく、pointer.x/y(スクリーン座標)を直接使う
+        // setScrollFactor(0)のオブジェクトはこれでマウス位置と完全同期します
+        this.x = pointer.x;
+        this.y = pointer.y;
 
-        // 慣性表現
         const dx = this.x - this.prevX;
         const targetAngle = Phaser.Math.Clamp(dx * 2, -30, 30);
         this.angle += (targetAngle - this.angle) * 0.2;
         this.prevX = this.x;
 
-        // ドロップ候補のハイライト
         const dropZoneY = this.scene.scale.height * 0.66;
         if (this.y < dropZoneY) {
-             // 画面上のポインタ位置から、ワールドのHexを逆算
              const hex = Renderer.pxToHex(pointer.x, pointer.y);
              this.scene.dragHighlightHex = hex;
         } else {
@@ -112,6 +111,7 @@ class Card extends Phaser.GameObjects.Container {
 
     onDragEnd(pointer) {
         this.isDragging = false;
+        this.scene.isDraggingCard = false; // ★マップスクロール抑制フラグOFF
         this.setAlpha(1.0);
         this.scene.dragHighlightHex = null;
 
@@ -119,7 +119,6 @@ class Card extends Phaser.GameObjects.Container {
         if (this.y < dropZoneY && window.gameLogic) {
              const hex = Renderer.pxToHex(pointer.x, pointer.y);
              console.log(`Card dropped at: ${hex.q}, ${hex.r}`);
-             // TODO: gameLogic.deployUnit(hex, this.cardType)
              this.returnToHand(); 
         } else {
              this.returnToHand();
@@ -128,7 +127,6 @@ class Card extends Phaser.GameObjects.Container {
 
     returnToHand() {
         const hand = this.scene.handContainer;
-        // 戻るべきスクリーン座標
         const targetX = hand.x + this.baseX;
         const targetY = hand.y + this.baseY;
         
@@ -139,19 +137,18 @@ class Card extends Phaser.GameObjects.Container {
             onComplete: () => {
                 this.scene.children.remove(this);
                 hand.add(this);
-                this.setPosition(this.baseX, this.baseY); // コンテナ内のローカル座標に戻す
-                this.setScrollFactor(1); // リセット（コンテナに入れるので継承されるが念の為）
+                this.setPosition(this.baseX, this.baseY);
+                this.setScrollFactor(1); 
             }
         });
     }
 }
 
 class MainScene extends Phaser.Scene {
-    constructor() { super({ key: 'MainScene' }); this.hexGroup=null; this.unitGroup=null; this.vfxGraphics=null; this.overlayGraphics=null; this.mapGenerated=false; this.handContainer=null; this.cards=[]; this.dragHighlightHex=null; }
+    constructor() { super({ key: 'MainScene' }); this.hexGroup=null; this.unitGroup=null; this.vfxGraphics=null; this.overlayGraphics=null; this.mapGenerated=false; this.handContainer=null; this.cards=[]; this.dragHighlightHex=null; this.isDraggingCard=false; }
 
     preload() {
         const g = this.make.graphics({x:0, y:0, add:false});
-        // Assets
         g.lineStyle(2, 0x888888, 1); g.fillStyle(0xffffff, 1); g.beginPath();
         for(let i=0; i<6; i++) { const a = Math.PI/180 * 60 * i; g.lineTo(HEX_SIZE+HEX_SIZE*Math.cos(a), HEX_SIZE+HEX_SIZE*Math.sin(a)); }
         g.closePath(); g.fillPath(); g.strokePath(); g.generateTexture('hex_base', HEX_SIZE*2, HEX_SIZE*2);
@@ -169,29 +166,28 @@ class MainScene extends Phaser.Scene {
         const h = this.scale.height;
         const w = this.scale.width;
         
-        // ★UI Layer (ScrollFactor 0 で画面固定！)
         const bg = this.add.rectangle(w/2, h, w, h*0.35, 0x000000, 0.8).setOrigin(0.5, 1).setDepth(200);
         bg.setScrollFactor(0);
         
         this.handContainer = this.add.container(w/2, h).setDepth(201);
-        this.handContainer.setScrollFactor(0); // ★ここが重要
+        this.handContainer.setScrollFactor(0);
         
         this.input.on('pointerdown', (p) => {
-            if(p.y > h * 0.66) return; // UIエリアは無視
+            if(p.y > h * 0.66) return;
             if(p.button===0) { if(window.gameLogic) window.gameLogic.handleClick(Renderer.pxToHex(p.x, p.y)); }
             else if(p.button===2) { if(window.gameLogic) window.gameLogic.showContext(p.x, p.y); }
         });
         
         this.input.on('pointermove', (p) => {
-            // ドラッグ中のカメラ操作（UIエリア外のみ）
-            if (p.isDown && !this.input.activePointer.curr.length && p.y < h * 0.66) { 
-                this.cameras.main.scrollX -= (p.x - p.prevPosition.x); this.cameras.main.scrollY -= (p.y - p.prevPosition.y); 
+            // ★修正: カードドラッグ中はカメラ操作を無効化
+            if (p.isDown && !this.isDraggingCard && p.y < h * 0.66) { 
+                this.cameras.main.scrollX -= (p.x - p.prevPosition.x); 
+                this.cameras.main.scrollY -= (p.y - p.prevPosition.y); 
             }
             if(window.gameLogic) window.gameLogic.handleHover(Renderer.pxToHex(p.x, p.y));
         });
         this.input.mouse.disableContextMenu();
         
-        // テスト配布
         this.time.delayedCall(500, ()=>{ ['infantry','tank','heal','infantry','tiger'].forEach(t => this.addCardToHand(t)); });
     }
 
@@ -212,9 +208,7 @@ class MainScene extends Phaser.Scene {
             const targetX = offset * spacing;
             const targetY = -150 + Math.abs(offset) * 20; 
             const targetAngle = offset * 5;
-
             card.baseX = targetX; card.baseY = targetY; card.baseAngle = targetAngle;
-
             this.tweens.add({ targets: card, x: targetX, y: targetY, angle: targetAngle, duration: 400, ease: 'Back.out' });
         });
     }
@@ -242,15 +236,11 @@ class MainScene extends Phaser.Scene {
             this.unitGroup.add(container);
         });
 
-        // Overlay Drawing
         this.overlayGraphics.clear();
-        
-        // ★ドロップ候補のハイライト（太い白枠）
         if (this.dragHighlightHex) {
             this.overlayGraphics.lineStyle(4, 0xffffff, 1.0);
             this.drawHexOutline(this.overlayGraphics, this.dragHighlightHex.q, this.dragHighlightHex.r);
         }
-
         const selected = window.gameLogic.selectedUnit;
         if(selected && window.gameLogic.reachableHexes.length > 0) {
             this.overlayGraphics.lineStyle(2, 0xffffff, 0.4); 
