@@ -1,17 +1,33 @@
-/** * PHASER BRIDGE (Final Fix: Syntax Error Resolved) */
+/** * PHASER BRIDGE (Auto-Deal Restored & Aerial Ready) */
 let phaserGame = null;
 const HIGH_RES_SCALE = 4; 
 
 // --- ユーティリティ ---
-window.createCardIcon = function(type) {
+window.createCardIcon = function(scene, type) {
+    // リアル画像があればそれを使う
+    if (type === 'aerial' && scene.textures.exists('card_img_bomb')) {
+        return 'card_img_bomb'; 
+    }
+
+    const key = `card_icon_${type}`;
+    if (scene.textures.exists(key)) return key;
+
     const w = 100 * HIGH_RES_SCALE; const h = 60 * HIGH_RES_SCALE;
     const c = document.createElement('canvas'); c.width=w; c.height=h; const x = c.getContext('2d');
     x.scale(HIGH_RES_SCALE, HIGH_RES_SCALE); x.translate(50, 30); x.scale(2,2);
+    
     if(type==='infantry'){x.fillStyle="#444";x.fillRect(-15,0,30,4);x.fillStyle="#642";x.fillRect(-15,0,10,4);}
     else if(type==='tank'){x.fillStyle="#444";x.fillRect(-12,-6,24,12);x.fillStyle="#222";x.fillRect(0,-2,16,4);}
     else if(type==='heal'){x.fillStyle="#eee";x.fillRect(-10,-8,20,16);x.fillStyle="#d00";x.fillRect(-3,-6,6,12);x.fillRect(-8,-1,16,2);}
     else if(type==='tiger'){x.fillStyle="#554";x.fillRect(-14,-8,28,16);x.fillStyle="#111";x.fillRect(2,-2,20,4);}
-    else {x.fillStyle="#333";x.fillRect(-10,-5,20,10);} return c;
+    else if(type==='aerial'){ // フォールバック用爆弾アイコン
+        x.fillStyle="#343"; x.beginPath(); x.ellipse(0, 0, 15, 6, 0, 0, Math.PI*2); x.fill();
+        x.fillStyle="#222"; x.fillRect(-5, -2, 10, 4);
+    }
+    else {x.fillStyle="#333";x.fillRect(-10,-5,20,10);} 
+    
+    scene.textures.addCanvas(key, c);
+    return key;
 };
 
 window.createGradientTexture = function(scene) {
@@ -51,14 +67,11 @@ const Renderer = {
     },
     roundHex(q,r) { let rq=Math.round(q), rr=Math.round(r), rs=Math.round(-q-r); const dq=Math.abs(rq-q), dr=Math.abs(rr-r), ds=Math.abs(rs-(-q-r)); if(dq>dr&&dq>ds) rq=-rr-rs; else if(dr>ds) rr=-rq-rs; return {q:rq, r:rr}; },
     
-    // ★外部(Logic)からのカード配布トリガー
-    dealCards(types) { 
-        const ui = this.game.scene.getScene('UIScene'); 
-        // シーンが準備できていれば配る
-        if(ui && ui.scene.settings.active) ui.dealStart(types); 
-    },
+    // 外部からのカード配布
+    dealCards(types) { const ui = this.game.scene.getScene('UIScene'); if(ui) ui.dealStart(types); },
+    // 外部からの単発配布
+    dealCard(type) { const ui = this.game.scene.getScene('UIScene'); if(ui) ui.addCardToHand(type); },
 
-    // UIホバー判定
     checkUIHover(x, y) {
         if (this.isCardDragging) return true;
         const ui = this.game.scene.getScene('UIScene');
@@ -86,10 +99,16 @@ class Card extends Phaser.GameObjects.Container {
         const bg = scene.add.rectangle(0, 0, W, H, 0x222222).setStrokeStyle(2, 0x555555);
         bg.setInteractive({ useHandCursor: true, draggable: true });
         
-        const iconKey = `card_icon_${type}`;
-        if(!scene.textures.exists(iconKey)) scene.textures.addCanvas(iconKey, window.createCardIcon(type));
-        const icon = scene.add.image(0, -40, iconKey).setScale(1/HIGH_RES_SCALE);
-        if(type === 'aerial' && scene.textures.exists('card_img_bomb')) icon.setDisplaySize(120, 80);
+        // アイコン生成 (画像優先)
+        const iconKey = window.createCardIcon(scene, type);
+        const icon = scene.add.image(0, -40, iconKey);
+        
+        // 画像ならアスペクト比維持、キャンバスなら縮小
+        if(type === 'aerial' && scene.textures.exists('card_img_bomb')) {
+            icon.setDisplaySize(120, 80);
+        } else {
+            icon.setScale(1/HIGH_RES_SCALE);
+        }
 
         const text = scene.add.text(0, 40, type.toUpperCase(), { fontSize: '16px', color: '#d84', fontStyle: 'bold' }).setOrigin(0.5);
         const desc = scene.add.text(0, 70, "DRAG TO DEPLOY", { fontSize: '10px', color: '#888' }).setOrigin(0.5);
@@ -272,7 +291,9 @@ class UIScene extends Phaser.Scene {
         this.add.image(w/2, h, 'ui_gradient').setOrigin(0.5, 1).setDepth(0).setDisplaySize(w, h*0.45);
         this.handContainer = this.add.container(w/2, h);
         this.uiVfxGraphics = this.add.graphics().setDepth(10000);
-        // ★自動配布テストは削除しました（Logic側からのRenderer.dealCards呼び出しを待ちます）
+        
+        // ★初期配付復活！ (自動テスト)
+        this.time.delayedCall(1000, ()=>{ this.dealStart(['infantry','tank','aerial','infantry','tiger']); });
     }
 
     update() { 
@@ -292,9 +313,12 @@ class UIScene extends Phaser.Scene {
         const card = new Card(this, 0, 0, type);
         this.handContainer.add(card);
         this.cards.push(card);
+        
+        // 画面右下から
         card.physX = this.scale.width + 100; 
         card.physY = this.scale.height + 100; 
         card.setPosition(card.physX, card.physY);
+        
         this.arrangeHand();
     }
 
@@ -353,7 +377,6 @@ class MainScene extends Phaser.Scene {
 
         this.input.on('pointerdown', (p) => {
             if (Renderer.isCardDragging) return;
-            // UIホバー時はマップ操作しない
             if (Renderer.checkUIHover(p.x, p.y)) return;
 
             if(p.button === 0) {
