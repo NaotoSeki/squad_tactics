@@ -1,27 +1,18 @@
-/** LOGIC (Phaser Adapter Version) */
+/** LOGIC (Phaser Adapter Version - Full VFX) */
 class Game {
     constructor() {
         this.units=[]; this.map=[]; this.setupSlots=[]; this.state='SETUP'; this.path=[]; 
         this.isAuto=false; this.isProcessingTurn = false; 
         this.sector = 1;
         
-        // initDOMで初期化するが、イベントリスナはPhaserに任せるため簡略化
         this.initDOM(); 
         this.initSetup();
-
-        // ★変更点：requestAnimationFrameループを削除
-        // 描画ループはPhaserが勝手に回してくれます
     }
 
     initDOM() {
-        // Renderer.init は phaser_bridge.js のものを呼びます
-        Renderer.init(document.getElementById('game-view')); // ID変更なし
+        Renderer.init(document.getElementById('game-view'));
         
-        // ★変更点：Canvasへの直接のaddEventListenerを削除
-        // クリック等の入力は phaser_bridge.js 内の Scene.input.on から
-        // this.handleClick() や this.showContext() が直接呼ばれます。
-
-        // Context Menuの非表示処理だけ残す
+        // Context Menuの非表示処理
         window.addEventListener('click', (e)=>{
             if(!e.target.closest('#context-menu')) document.getElementById('context-menu').style.display='none';
         });
@@ -56,12 +47,10 @@ class Game {
         this.state='PLAY'; 
         this.log(`MISSION START - SECTOR ${this.sector}`);
         document.getElementById('sector-counter').innerText = `SECTOR: ${this.sector.toString().padStart(2, '0')}`;
-        // VFX初期化
         if(this.units.length>0) Renderer.centerOn(this.units[0].q, this.units[0].r);
     }
 
     generateMap() {
-        // 円形マップ生成ロジック（そのまま維持）
         this.map=[]; 
         const cx = Math.floor(MAP_W/2);
         const cy = Math.floor(MAP_H/2);
@@ -85,7 +74,6 @@ class Game {
                 }
             }
         }
-        // 川生成
         let riverQ = cx, riverR = cy;
         const steps = 30;
         for(let i=0; i<steps; i++) {
@@ -101,7 +89,6 @@ class Game {
     }
 
     spawnEnemies() {
-        // 敵生成ロジック（そのまま維持）
         const count = 4 + Math.floor(this.sector * 0.7);
         const tankChance = Math.min(0.8, 0.1 + (this.sector * 0.1));
         for(let i=0; i<count; i++) {
@@ -177,14 +164,34 @@ class Game {
         }
     }
 
-    // ★Phaserから呼ばれる
+    // ★改良: クリック判定ロジック
     handleClick(p) {
-        if(!this.isValidHex(p.q, p.r)) return;
-        const u=this.getUnit(p.q, p.r);
-        if(u && u.team==='player') { this.selectedUnit=u; Sfx.play('click'); this.updateSidebar(); }
+        // マップ外、または無効なヘックスをクリックした場合も選択解除を試みる
+        const isValid = this.isValidHex(p.q, p.r);
+        const u = isValid ? this.getUnit(p.q, p.r) : null;
+
+        // 1. 自分のユニットをクリック -> 選択
+        if(u && u.team==='player') { 
+            this.selectedUnit=u; Sfx.play('click'); this.updateSidebar(); 
+        }
+        // 2. 選択中なら...
         else if(this.selectedUnit) {
-            if(u && u.team==='enemy') this.actionAttack(this.selectedUnit, u);
-            else if(!u && this.path.length>0) this.actionMove(this.selectedUnit, this.path);
+            // 敵なら攻撃
+            if(u && u.team==='enemy') {
+                this.actionAttack(this.selectedUnit, u);
+            }
+            // 空き地かつ移動可能な場所なら移動
+            else if(!u && isValid && this.path.length>0) {
+                this.actionMove(this.selectedUnit, this.path);
+            }
+            // ★それ以外（移動不可エリアや、何もない場所）なら選択解除
+            else {
+                this.selectedUnit = null;
+                this.path = [];
+                this.updateSidebar();
+                // 選択解除のフィードバック音（お好みで）
+                // Sfx.play('click'); 
+            }
         }
     }
 
@@ -202,8 +209,10 @@ class Game {
         const enemies = this.units.filter(e => e.team !== u.team && e.hp > 0 && e.def.isTank && this.hexDist(u, e) <= 2);
         enemies.forEach(tank => {
             this.log(`!! 近接防御射撃: ${tank.def.name} -> ${u.def.name}`);
-            u.hp -= 15; Sfx.play('mg');
-            // VFXは一旦無効化
+            u.hp -= 15; 
+            // VFX復活
+            VFX.addExplosion(Renderer.hexToPx(u.q,u.r).x, Renderer.hexToPx(u.q,u.r).y, "#ffaa00", 5); 
+            Sfx.play('mg');
             if(u.hp<=0 && !u.deadProcessed) { u.deadProcessed=true; this.log(`${u.def.name} 撃破`); Sfx.play('death'); }
         });
     }
@@ -217,35 +226,101 @@ class Game {
         }
     }
 
+    // ★完全復活: 射撃計算＆VFXロジック
     async actionAttack(atk, def) {
-        // ... (攻撃ロジックは長いのでそのまま維持。ただしVFX呼び出しはphaser_bridge.jsの空関数を叩くのでエラーにはならない) ...
-        // 省略せず既存コードを使ってください。VFX.addExplosionなどが空実装になっているので安全です。
-        
         if(atk.ap<2) { this.log("AP不足!"); return; }
         const wpn=WPNS[atk.curWpn];
-        const dist = this.hexDist(atk, def);
-        if(dist > wpn.rng) { this.log("射程外です"); return; }
+        if(this.hexDist(atk, def) > wpn.rng) { this.log("射程外です"); return; }
         
         atk.ap-=2; this.state='ANIM';
         
-        // (中略：計算ロジックはそのまま)
-        
-        // 攻撃演出（awaitを入れているのでターン進行はブロックされる）
-        this.log(`${atk.def.name} 攻撃開始...`);
-        Sfx.play('shot');
-        await new Promise(r=>setTimeout(r, 600)); // アニメーション待ちの代わり
-        
-        // 命中計算（簡易版）
-        let dmg = wpn.dmg;
-        def.hp -= dmg;
-        this.log(`>> 命中! ${dmg}ダメージ`);
-        
-        if(def.hp<=0) {
-             this.log(`${def.def.name} 撃破`);
-             Sfx.play('death');
-        }
+        const getSkillCount = (unit, key) => unit.skills.filter(s => s === key).length;
 
-        this.state='PLAY'; this.updateSidebar(); this.checkPhaseEnd();
+        let bonus = this.getNeighbors(atk.q, atk.r).filter(n => this.getUnit(n.q, n.r)?.team === atk.team).length * 10;
+        if(atk.skills.includes("Radio")) bonus += (15 * getSkillCount(atk, "Radio"));
+        
+        let accMod = (atk.rank || 0) * 8 + (getSkillCount(atk, "Precision") * 15); 
+        let dmgMod = 1.0 + (getSkillCount(atk, "HighPower") * 0.2);
+
+        this.log(`${atk.def.name} 攻撃(支援+${bonus}%)`);
+        
+        let burst = wpn.burst || 1;
+        burst += (getSkillCount(atk, "AmmoBox") * (wpn.name === 'MG42' ? 3 : 1));
+
+        const pType = wpn.type; const isShell = pType.includes('shell');
+        const isRocket = pType === 'rocket'; 
+
+        for(let i=0; i<burst; i++) {
+            if(def.hp <= 0 && !isRocket) break;
+            Sfx.play(isRocket ? 'rocket' : (isShell?'cannon':(burst>1?'mg':'shot')));
+            const s=Renderer.hexToPx(atk.q, atk.r), e=Renderer.hexToPx(def.q, def.r);
+            const ex=e.x+(Math.random()-0.5)*10, ey=e.y+(Math.random()-0.5)*10;
+            const proj = { 
+                x:s.x, y:s.y, sx:s.x, sy:s.y, ex:ex, ey:ey, type:pType, progress:0, 
+                speed: isRocket ? 0.02 : (pType==='shell_fast'? 0.1 : 0.05),
+                arcHeight: isRocket ? 250 : (isShell?(pType==='shell_fast'?40:120):0),
+                onHit: () => {
+                    if (isRocket) {
+                        VFX.addExplosion(ex, ey, "#fa0", 50); Sfx.play('boom');
+                        [{q:def.q, r:def.r}, ...this.getNeighbors(def.q, def.r)].forEach(loc => {
+                            const v = this.getUnit(loc.q, loc.r);
+                            if(v) {
+                                let dmg = wpn.dmg * dmgMod; 
+                                v.hp -= dmg;
+                                this.log(`>> 爆風: ${v.def.name} (-${Math.floor(dmg)})`);
+                                if(v.hp<=0 && !v.deadProcessed) { v.deadProcessed = true; this.log(`${v.def.name} 爆散`); VFX.addUnitDebris(Renderer.hexToPx(v.q,v.r).x, Renderer.hexToPx(v.q,v.r).y); VFX.addStaticDebris(v.q, v.r, v.def.isTank ? 'wreck' : 'crater'); }
+                            }
+                        });
+                    } else {
+                        if(def.hp <= 0) return;
+                        let hit = wpn.acc - this.map[def.q][def.r].cover + accMod;
+                        if(def.stance==='prone') hit-=25;
+                        if(def.skills && def.skills.includes("Ambush")) hit-= (getSkillCount(def, "Ambush") * 15);
+
+                        if(Math.random()*100 < hit) {
+                            let dmg = Math.floor(wpn.dmg * (1+bonus/100) * (0.8+Math.random()*0.4) * dmgMod);
+                            if(def.stance==='prone') dmg=Math.floor(dmg*0.6);
+
+                            const armorLevel = getSkillCount(def, "Armor");
+                            if(armorLevel > 0) {
+                                const reduction = armorLevel * 10;
+                                dmg = Math.max(1, dmg - reduction);
+                                if(i === 0) this.log(`>> 装甲が衝撃を吸収 (-${reduction})`);
+                            }
+
+                            def.hp-=dmg; 
+                            VFX.addExplosion(ex, ey, "#f55", 5); Sfx.play(isShell?'boom':'shot');
+                            if(wpn.area || Math.random() < 0.2) {
+                                this.getNeighbors(def.q, def.r).forEach(n=>{
+                                    const v = this.getUnit(n.q, n.r);
+                                    if(v && Math.random()<0.4){ v.hp-=10; if(v.hp<=0 && !v.deadProcessed) { v.deadProcessed=true; this.log(`${v.def.name} 爆散`); VFX.addUnitDebris(Renderer.hexToPx(v.q,v.r).x, Renderer.hexToPx(v.q,v.r).y); } }
+                                });
+                            }
+                        } else { Sfx.play('ricochet'); VFX.add({x:ex,y:ey,vx:(Math.random()-0.5)*5,vy:-5,life:5,maxLife:5,color:"#fff",size:2,type:'spark'}); }
+                    }
+                }
+            };
+            if(!isShell && !isRocket) { 
+                const dx=ex-s.x, dy=ey-s.y, ang=Math.atan2(dy,dx); 
+                proj.vx=Math.cos(ang)*25; proj.vy=Math.sin(ang)*25; proj.life=Math.sqrt(dx*dx+dy*dy)/25; 
+            }
+            // ★Phaser側のVFX配列に追加
+            VFX.addProj(proj);
+            await new Promise(r=>setTimeout(r, isRocket ? 800 : (isShell?200:40)));
+        }
+        
+        setTimeout(() => { 
+            const dead = this.units.filter(u=>u.hp<=0);
+            dead.forEach(d => {
+                if(!d.deadProcessed) {
+                    d.deadProcessed = true; if(d === def) { this.log(`${d.def.name} 撃破`); Sfx.play('death'); }
+                    VFX.addUnitDebris(Renderer.hexToPx(d.q,d.r).x, Renderer.hexToPx(d.q,d.r).y);
+                    VFX.addStaticDebris(d.q, d.r, d.def.isTank ? 'wreck' : 'crater');
+                }
+            });
+            if (this.checkWin()) return; this.checkLose();
+            this.state='PLAY'; this.updateSidebar(); this.checkPhaseEnd();
+        }, isRocket ? 1200 : 500);
     }
 
     checkPhaseEnd() { if(this.units.filter(u=>u.team==='player'&&u.hp>0&&u.ap>0).length===0 && this.state==='PLAY') this.endTurn(); }
@@ -257,27 +332,81 @@ class Game {
 
         this.selectedUnit=null; this.state='ANIM'; document.getElementById('eyecatch').style.opacity=1;
         
+        this.units.filter(u=>u.team==='player'&&u.hp>0&&u.skills.includes("Mechanic")).forEach(u=>{
+            const count = u.skills.filter(s => s === "Mechanic").length;
+            if(u.hp < u.maxHp) { u.hp = Math.min(u.maxHp, u.hp + (count * 20)); this.log(`${u.def.name} 自己修復`); }
+        });
+
         setTimeout(async () => {
             document.getElementById('eyecatch').style.opacity=0;
-            // 敵AIターン処理（既存コードを維持）
             const enemies=this.units.filter(u=>u.team==='enemy'&&u.hp>0);
             for(let e of enemies) {
-                // ... (敵の移動・攻撃ロジック)
-                // 簡易的にAP回復だけして終わる
-                e.ap = e.maxAp;
+                const players=this.units.filter(u=>u.team==='player'&&u.hp>0); if(players.length===0) { this.checkLose(); break; }
+                e.ap=e.maxAp; let target=players[0], minDist=999;
+                players.forEach(p=>{ const d=this.hexDist(e,p); if(d<minDist){minDist=d; target=p;} });
+                if(minDist <= 6) {
+                    if(minDist<=4 && e.ap>=1 && !e.def.isTank) e.stance='crouch';
+                    await this.actionAttack(e, target);
+                } else { 
+                    const nq=e.q+(target.q>e.q?1:-1); if(!this.getUnit(nq,e.r)&&this.isValidHex(nq,e.r)&&this.map[nq][e.r].cost<99){ e.q=nq; e.ap--; await new Promise(r=>setTimeout(r,200)); } 
+                }
             }
-            
-            this.units.forEach(u=>{if(u.team==='player') u.ap=u.maxAp;}); 
-            this.log("-- PLAYER PHASE --"); this.state='PLAY';
+            this.units.forEach(u=>{if(u.team==='player') u.ap=u.maxAp;}); this.log("-- PLAYER PHASE --"); this.state='PLAY';
             this.isProcessingTurn = false;
         }, 1200);
     }
 
-    // ... (healSurvivors, promoteSurvivors, checkWin, checkLose, createConfetti 等はそのまま) ...
-    // confettiはCanvas描画だったので動かなくなりますが、エラーにはなりません
+    healSurvivors() {
+        this.units.filter(u=>u.team==='player'&&u.hp>0).forEach(u=>{ 
+            const target=Math.floor(u.maxHp*0.8); if(u.hp<target)u.hp=target; 
+        });
+        this.log("生存部隊 治療完了 (MAX 80%)");
+    }
+    promoteSurvivors() {
+        const skKeys = Object.keys(SKILLS).filter(k => k !== "Hero");
+        this.units.filter(u=>u.team==='player'&&u.hp>0).forEach(u=>{ 
+            u.sectorsSurvived++;
+            if(u.sectorsSurvived === 5) {
+                u.skills.push("Hero");
+                u.maxAp += 1;
+                this.log(`${u.def.name} 【英雄】昇格 (AP+1)`);
+            }
+            
+            u.rank=Math.min(5, (u.rank||0)+1); u.maxHp+=30; u.hp+=30; 
+            
+            if(u.skills.length < 8 && Math.random() < 0.7) {
+                const newSkill = skKeys[Math.floor(Math.random()*skKeys.length)];
+                u.skills.push(newSkill);
+                this.log(`${u.def.name} 強化: ${SKILLS[newSkill].name}習得`);
+            }
+            this.log(`${u.def.name} 昇進 -> ${RANKS[u.rank]}`); 
+        });
+    }
+
+    checkWin() {
+        if(this.units.filter(u=>u.team==='enemy'&&u.hp>0).length===0) {
+            Sfx.play('win'); this.createConfetti(); document.getElementById('reward-screen').style.display='flex';
+            this.promoteSurvivors(); 
+            const box=document.getElementById('reward-cards'); box.innerHTML='';
+            const options = [{k:'infantry',t:'新兵'},{k:'tank',t:'戦車'},{k:'heal',t:'医療支援'}];
+            if(Math.random()<0.3) options.push({k:'mortar',t:'突撃臼砲'});
+            options.forEach(opt=>{
+                const d=document.createElement('div'); d.className='card';
+                const img = opt.k==='heal' ? createCardIcon('heal') : createCardIcon(opt.k);
+                d.innerHTML=`<div class="card-img-box"><img src="${img}"></div><div class="card-body"><h3>${opt.t}</h3><p>補給実行</p></div>`;
+                d.onclick=()=>{ 
+                    if(opt.k==='heal') this.healSurvivors(); else this.spawnAtSafeGround('player', opt.k);
+                    this.sector++; document.getElementById('reward-screen').style.display='none'; this.startCampaign();
+                }; box.appendChild(d);
+            });
+            return true;
+        }
+        return false;
+    }
     
-    // ユーティリティ関数群（そのまま）
-    createConfetti() {} // Canvas用なので空にする
+    checkLose() { if(this.units.filter(u=>u.team==='player'&&u.hp>0).length===0) document.getElementById('gameover-screen').style.display='flex'; }
+
+    createConfetti() {} // Canvas用なので空実装
     updateConfetti() {}
     getUnit(q,r){return this.units.find(u=>u.q===q&&u.r===r&&u.hp>0);}
     isValidHex(q,r){return q>=0&&q<MAP_W&&r>=0&&r<MAP_H;}
@@ -315,11 +444,8 @@ class Game {
 
     getStatus(u) { if(u.hp<=0)return "DEAD"; const r=u.hp/u.maxHp; if(r>0.8)return "NORMAL"; if(r>0.5)return u.def.isTank?"TRACK DMG":"LIGHT W."; if(r>0.2)return u.def.isTank?"GUN DMG":"HEAVY W."; return "CRITICAL"; }
     updateSidebar() {
-        // (UI更新処理はHTML操作なのでそのまま維持)
         const ui=document.getElementById('unit-info'), u=this.selectedUnit;
         if(u) {
-            // ... (既存のHTML生成コード) ...
-            // 省略時は元のコードを使ってください
             const wpn = WPNS[u.curWpn], st=this.getStatus(u), rank=RANKS[u.rank||0];
             const skillCounts = u.skills.reduce((acc, s) => { acc[s] = (acc[s] || 0) + 1; return acc; }, {});
             const skillBadges = Object.keys(skillCounts).map(s => {
@@ -343,9 +469,6 @@ class Game {
             if(u.def.isTank) document.querySelectorAll('.btn-stance').forEach(b=>b.classList.add('disabled'));
         } else ui.innerHTML=`<div style="text-align:center; color:#555; margin-top:80px;">// NO SIGNAL //</div>`;
     }
-    
-    // draw() は削除 (Phaserがやるため)
 }
 
-// グローバル公開 (Phaserから呼ぶため)
 window.gameLogic = new Game();
