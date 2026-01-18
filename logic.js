@@ -1,4 +1,4 @@
-/** LOGIC (Phaser Adapter Version - Aerial Damage Added) */
+/** LOGIC (Final Fix: Removed Duplicate Constants) */
 class Game {
     constructor() {
         this.units=[]; this.map=[]; this.setupSlots=[]; this.state='SETUP'; 
@@ -20,6 +20,7 @@ class Game {
 
     initSetup() {
         const box=document.getElementById('setup-cards');
+        // HTML側でアイコンを表示するために createCardIcon を呼ぶ
         ['infantry','heavy','sniper','tank'].forEach(k=>{
             const u=UNITS[k]; const d=document.createElement('div'); d.className='card';
             d.innerHTML=`<div class="card-badge">x0</div><div class="card-img-box"><img src="${createCardIcon(k)}"></div><div class="card-body"><h3>${u.name}</h3><p>${u.desc}</p></div>`;
@@ -41,42 +42,45 @@ class Game {
         document.getElementById('setup-screen').style.display='none'; 
         Renderer.resize();
         this.generateMap();
-        if(this.units.length === 0) { this.setupSlots.forEach(k=>this.spawnAtSafeGround('player',k)); }
-        else { this.units.filter(u=>u.team==='player').forEach(u=>{ u.q=null; this.spawnAtSafeGround('player',null,u); }); }
+        
+        // 味方配置
+        if(this.units.length === 0) { 
+            this.setupSlots.forEach(k=>this.spawnAtSafeGround('player',k)); 
+        } else { 
+            this.units.filter(u=>u.team==='player').forEach(u=>{ 
+                u.q=null; this.spawnAtSafeGround('player',null,u); 
+            }); 
+        }
+        
         this.spawnEnemies();
         this.state='PLAY'; 
         this.log(`MISSION START - SECTOR ${this.sector}`);
         document.getElementById('sector-counter').innerText = `SECTOR: ${this.sector.toString().padStart(2, '0')}`;
+        
         if(this.units.length>0) Renderer.centerOn(this.units[0].q, this.units[0].r);
-        // ★追加: ゲーム開始と同時にカードを配る
-        // （とりあえず固定の5枚を配ります。必要に応じて中身を変えてください）
+
+        // ★ゲーム開始時、手札を配る
         if (Renderer.dealCards) {
             Renderer.dealCards(['infantry', 'tank', 'aerial', 'infantry', 'tiger']);
         }
     }
 
-    // ★追加: 航空爆撃のダメージ処理 (敵味方問わず / 500dmg / 75%)
+    // 航空爆撃処理 (敵味方問わず / 500dmg / 75%)
     applyBombardment(targetHex) {
         this.log(`[支援] 爆撃着弾地点: ${targetHex.q},${targetHex.r}`);
-        
-        // 着弾ヘックスにいる生存ユニットを取得 (敵味方区別なし)
         const u = this.getUnit(targetHex.q, targetHex.r);
         
         if (u) {
-            // 命中率 75%
             if (Math.random() < 0.75) {
                 const dmg = 500;
                 u.hp -= dmg;
                 this.log(`>> 直撃！ ${u.def.name} に ${dmg} ダメージ`);
-                
-                // 撃破判定
                 if (u.hp <= 0) {
                     u.hp = 0;
                     if (!u.deadProcessed) {
                         u.deadProcessed = true;
                         this.log(`*** ${u.def.name} は消滅した ***`);
                         Sfx.play('death');
-                        // ユニットの残骸エフェクトを追加
                         if (window.VFX) {
                             const p = Renderer.hexToPx(u.q, u.r);
                             VFX.addUnitDebris(p.x, p.y);
@@ -90,24 +94,19 @@ class Game {
         } else {
             this.log(">> 目標地点にユニットなし");
         }
-        
-        // 勝敗チェック
         if(this.checkWin()) return;
         this.checkLose();
     }
 
-    // 通常のカード展開 (ユニット配置)
+    // カードによるユニット配置
     deployUnit(targetHex, cardType) {
         const existing = this.units.find(u => u.q === targetHex.q && u.r === targetHex.r && u.hp > 0);
         if (existing) { 
             this.log("配置不可: ユニットが既に存在します"); 
             return; 
         }
-        
-        // 味方として配置
         this.spawnUnit('player', cardType, targetHex.q, targetHex.r);
         this.log(`増援到着: ${UNITS[cardType].name}`);
-        
         if(window.VFX) { 
             const pos = Renderer.hexToPx(targetHex.q, targetHex.r); 
             window.VFX.addSmoke(pos.x, pos.y); 
@@ -115,20 +114,17 @@ class Game {
         this.updateSidebar();
     }
 
+    // --- 以下、既存ロジック ---
     calcReachableHexes(u) {
         this.reachableHexes = [];
         if(!u) return;
-
         let frontier = [{q:u.q, r:u.r, cost:0}];
         let costSoFar = new Map();
         costSoFar.set(`${u.q},${u.r}`, 0);
-
         while(frontier.length > 0) {
             let current = frontier.shift();
-            
             this.getNeighbors(current.q, current.r).forEach(n => {
                 if(this.getUnit(n.q, n.r) || this.map[n.q][n.r].cost >= 99) return;
-
                 let newCost = current.cost + this.map[n.q][n.r].cost;
                 if(newCost <= u.ap) {
                     let key = `${n.q},${n.r}`;
@@ -145,43 +141,23 @@ class Game {
     handleHover(p) {
         if(this.state !== 'PLAY') return;
         this.hoverHex = p;
-        
         if(this.selectedUnit && this.isValidHex(p.q, p.r)) {
             const isReachable = this.reachableHexes.some(h => h.q === p.q && h.r === p.r);
             const enemy = this.getUnit(p.q, p.r);
-            
-            if(isReachable && !enemy) {
-                this.path = this.findPath(this.selectedUnit, p.q, p.r);
-            } else {
-                this.path = [];
-            }
+            if(isReachable && !enemy) this.path = this.findPath(this.selectedUnit, p.q, p.r);
+            else this.path = [];
         }
     }
 
     handleClick(p) {
         const isValid = this.isValidHex(p.q, p.r);
         const u = isValid ? this.getUnit(p.q, p.r) : null;
-
         if(u && u.team==='player') { 
-            this.selectedUnit=u; 
-            this.calcReachableHexes(u);
-            this.path = [];
-            Sfx.play('click'); 
-            this.updateSidebar(); 
-        }
-        else if(this.selectedUnit) {
-            if(u && u.team==='enemy') {
-                this.actionAttack(this.selectedUnit, u);
-            }
-            else if(!u && isValid && this.path.length > 0) {
-                this.actionMove(this.selectedUnit, this.path);
-            }
-            else {
-                this.selectedUnit = null;
-                this.reachableHexes = [];
-                this.path = [];
-                this.updateSidebar();
-            }
+            this.selectedUnit=u; this.calcReachableHexes(u); this.path = []; Sfx.play('click'); this.updateSidebar(); 
+        } else if(this.selectedUnit) {
+            if(u && u.team==='enemy') this.actionAttack(this.selectedUnit, u);
+            else if(!u && isValid && this.path.length > 0) this.actionMove(this.selectedUnit, this.path);
+            else { this.selectedUnit = null; this.reachableHexes = []; this.path = []; this.updateSidebar(); }
         }
     }
 
