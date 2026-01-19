@@ -1,4 +1,4 @@
-/** * PHASER BRIDGE (Procedural Generation - No Load Errors) */
+/** * PHASER BRIDGE (Fully Procedural Assets - No Load Required) */
 let phaserGame = null;
 
 // ---------------------------------------------------------
@@ -16,7 +16,7 @@ const Renderer = {
             width: document.getElementById('game-view').clientWidth, 
             height: document.getElementById('game-view').clientHeight, 
             backgroundColor: '#0b0e0a', 
-            pixelArt: false, // プロシージャル生成なのでスムーズでOK
+            pixelArt: false, 
             scene: [MainScene, UIScene], 
             fps: { target: 60 }, 
             physics: { default: 'arcade', arcade: { debug: false } }, 
@@ -67,13 +67,20 @@ class Card extends Phaser.GameObjects.Container {
         const shadow = scene.add.rectangle(6, 6, 130, 190, 0x000000, 0.6);
         const contentBg = scene.add.rectangle(0, 0, 130, 190, 0x1a1a1a);
         
-        // フレーム画像がない場合はフォールバック
+        // フォールバック: フレームがない場合は描画で作る
         let frame;
         if(scene.textures.exists('card_frame')) {
             frame = scene.add.image(0, 0, 'card_frame').setDisplaySize(140, 200);
         } else {
-            frame = scene.add.rectangle(0, 0, 140, 200, 0x444444).setStrokeStyle(2, 0x888888);
+            // プロシージャルフレーム
+            const g = scene.make.graphics({x:0, y:0, add:false});
+            g.lineStyle(4, 0x888888);
+            g.fillStyle(0x333333);
+            g.strokeRect(0, 0, 140, 200);
+            g.generateTexture('temp_frame', 140, 200);
+            frame = scene.add.image(0,0,'temp_frame');
         }
+        
         frame.setInteractive({ useHandCursor: true, draggable: true });
         this.frameImage = frame;
         
@@ -202,13 +209,11 @@ class UIScene extends Phaser.Scene {
     constructor() { super({ key: 'UIScene', active: false }); this.cards=[]; this.handContainer=null; this.gradientBg=null; this.uiVfxGraphics=null; }
     create() {
         const w = this.scale.width; const h = this.scale.height;
-        // グラデーションテクスチャの生成（vfxの関数を使う）
         if(window.createGradientTexture) window.createGradientTexture(this);
         
         if (this.textures.exists('ui_gradient')) {
             this.gradientBg = this.add.image(w/2, h, 'ui_gradient').setOrigin(0.5, 1).setDepth(0).setDisplaySize(w, h*0.25);
         } else {
-            // エラー回避用
             this.gradientBg = this.add.rectangle(w/2, h, w, h*0.25, 0x000000, 0.8).setOrigin(0.5, 1);
         }
         
@@ -232,7 +237,7 @@ class UIScene extends Phaser.Scene {
 }
 
 // ---------------------------------------------------------
-//  MAIN SCENE (Procedural Generation)
+//  MAIN SCENE (Synchronous Asset Generation)
 // ---------------------------------------------------------
 class MainScene extends Phaser.Scene {
     constructor() { 
@@ -241,21 +246,20 @@ class MainScene extends Phaser.Scene {
         this.mapGenerated=false; this.dragHighlightHex=null;
         this.unitVisuals = new Map();
         this.crosshairGroup = null;
+        this.isReady = false;
     }
     
     preload() { 
         if(window.EnvSystem) window.EnvSystem.preload(this);
-        // ★ロードはしない
     }
 
     create() {
-        // ★1. テクスチャをプログラムで生成 (もうロードエラーは起きない)
+        // ★重要: 画像をプログラムで描いて登録する (ロードエラー回避)
         this.generateAssets();
 
         this.cameras.main.setBackgroundColor('#0b0e0a'); 
         this.hexGroup = this.add.group(); this.unitGroup = this.add.group(); 
         
-        // 照準用グループ
         this.crosshairGroup = this.add.graphics().setDepth(200);
         this.vfxGraphics = this.add.graphics().setDepth(100); this.overlayGraphics = this.add.graphics().setDepth(50); 
         if(window.EnvSystem) window.EnvSystem.clear();
@@ -265,7 +269,7 @@ class MainScene extends Phaser.Scene {
         if (!this.anims.exists('boom_anim')) {
             this.anims.create({
                 key: 'boom_anim',
-                frames: this.anims.generateFrameNumbers('explosion_sheet', { start: 0, end: 15 }), // 4x4=16frames
+                frames: this.anims.generateFrameNumbers('explosion_sheet', { start: 0, end: 15 }), 
                 frameRate: 30,
                 repeat: 0,
                 hideOnComplete: true
@@ -284,9 +288,12 @@ class MainScene extends Phaser.Scene {
         this.input.on('pointerup', () => { Renderer.isMapDragging = false; });
         this.input.on('pointermove', (p) => { if (Renderer.isCardDragging) return; if (p.isDown && Renderer.isMapDragging) { const zoom = this.cameras.main.zoom; this.cameras.main.scrollX -= (p.x - p.prevPosition.x) / zoom; this.cameras.main.scrollY -= (p.y - p.prevPosition.y) / zoom; } if(!Renderer.isMapDragging && window.gameLogic) window.gameLogic.handleHover(Renderer.pxToHex(p.x, p.y)); }); 
         this.input.mouse.disableContextMenu();
+        
+        // 準備完了
+        this.isReady = true;
     }
 
-    // ★重要: アセット生成メソッド
+    // ★アセット生成: これならロードエラーは起きない
     generateAssets() {
         // 1. 爆撃カード画像
         if (!this.textures.exists('card_img_bomb')) {
@@ -320,29 +327,24 @@ class MainScene extends Phaser.Scene {
             g.destroy();
         }
 
-        // 4. 爆発スプライトシート (Explosion Sheet - 4x4)
+        // 4. 爆発スプライトシート (Canvasで描画してテクスチャ化)
         if (!this.textures.exists('explosion_sheet')) {
             const canvas = document.createElement('canvas');
             canvas.width = 256; canvas.height = 256; // 64x64 * 4x4
             const ctx = canvas.getContext('2d');
             
-            // 4x4=16コマのアニメーションを描画
             for(let i=0; i<16; i++) {
                 const col = i % 4;
                 const row = Math.floor(i / 4);
                 const x = col * 64 + 32;
                 const y = row * 64 + 32;
-                
-                const progress = i / 15.0; // 0.0 to 1.0
+                const progress = i / 15.0;
                 const radius = 5 + progress * 25;
                 const alpha = 1.0 - Math.pow(progress, 3);
-                
                 ctx.beginPath();
                 ctx.arc(x, y, radius, 0, Math.PI*2);
                 ctx.fillStyle = `rgba(255, ${Math.floor(200*(1-progress))}, 0, ${alpha})`;
                 ctx.fill();
-                
-                // Inner white core
                 if (progress < 0.5) {
                     ctx.beginPath();
                     ctx.arc(x, y, radius * 0.5, 0, Math.PI*2);
@@ -384,21 +386,32 @@ class MainScene extends Phaser.Scene {
         this.centerMap(); 
     }
     
+    // ★画像スプライトを使用
     createUnitVisual(u) {
         const container = this.add.container(0, 0);
         let key = 'soldier_img'; 
         if (u.def.isTank) key = 'tank_img';
 
-        const sprite = this.add.sprite(0, 0, key).setScale(1.5); // サイズ調整
-        if(u.team === 'player') sprite.setTint(0xaaccff); else sprite.setTint(0xffaaaa);
+        // 生成済みなので必ず存在するはずだが、念のため
+        if (!this.textures.exists(key)) {
+            // もし何かの間違いでテクスチャがない場合は四角を描いて回避
+            const g = this.add.rectangle(0,0,32,32, 0xff00ff);
+            container.add(g);
+            container.sprite = g; // setTintを持たせるため
+        } else {
+            const sprite = this.add.sprite(0, 0, key).setScale(1.5); 
+            if(u.team === 'player') sprite.setTint(0xaaccff); else sprite.setTint(0xffaaaa);
+            container.add(sprite);
+            container.sprite = sprite;
+        }
 
         const hpBg = this.add.rectangle(0, -30, 20, 4, 0x000000); 
         const hpBar = this.add.rectangle(-10, -30, 20, 4, 0x00ff00);
         const cursor = this.add.image(0, 0, 'cursor').setScale(1/window.HIGH_RES_SCALE).setAlpha(0).setVisible(false);
         this.tweens.add({ targets: cursor, scale: { from: 1/window.HIGH_RES_SCALE, to: 1.1/window.HIGH_RES_SCALE }, alpha: { from: 1, to: 0.5 }, yoyo: true, repeat: -1, duration: 800 });
         
-        container.add([sprite, hpBg, hpBar, cursor]);
-        container.sprite = sprite; container.hpBar = hpBar; container.cursor = cursor;
+        container.add([hpBg, hpBar, cursor]);
+        container.hpBar = hpBar; container.cursor = cursor;
         container.walkTween = null;
         return container;
     }
@@ -410,11 +423,11 @@ class MainScene extends Phaser.Scene {
         
         const dist = Phaser.Math.Distance.Between(currentX, currentY, targetPos.x, targetPos.y);
         if (dist > 1) {
-            if (!container.walkTween) {
+            if (!container.walkTween && container.sprite) {
                 container.walkTween = this.tweens.add({ targets: container.sprite, angle: { from: -10, to: 10 }, y: "-=5", duration: 150, yoyo: true, repeat: -1 });
             }
         } else {
-            if (container.walkTween) { container.walkTween.stop(); container.sprite.setAngle(0); container.sprite.y = 0; container.walkTween = null; }
+            if (container.walkTween) { container.walkTween.stop(); if(container.sprite) {container.sprite.setAngle(0); container.sprite.y = 0;} container.walkTween = null; }
         }
 
         const hpPct = u.hp / u.maxHp; container.hpBar.width = 20 * hpPct; container.hpBar.x = -10 + (10 * hpPct); container.hpBar.fillColor = hpPct > 0.5 ? 0x00ff00 : 0xff0000;
@@ -422,7 +435,9 @@ class MainScene extends Phaser.Scene {
     }
 
     update(time, delta) {
+        if (!this.isReady) return; // ★ガード
         if (!window.gameLogic) return;
+
         if(window.VFX && window.VFX.shakeRequest > 0) { this.cameras.main.shake(100, window.VFX.shakeRequest * 0.001); window.VFX.shakeRequest = 0; }
         if(window.EnvSystem) window.EnvSystem.update(time);
         if(window.VFX) { window.VFX.update(); this.vfxGraphics.clear(); window.VFX.draw(this.vfxGraphics); }
