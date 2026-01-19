@@ -1,4 +1,4 @@
-/** * PHASER SOUND ENGINE (Independent Specialist) */
+/** * PHASER SOUND ENGINE (Rich Metal Ricochet) */
 const Sfx = {
     ctx: null,
     init() { 
@@ -27,21 +27,34 @@ const Sfx = {
         o.connect(g); g.connect(this.ctx.destination);
         o.start(t); o.stop(t+dur);
     },
-    // ★昨日確定させた「金属的な跳弾音」
+    // ★改良版: 複合金属音
     metalImpact() {
         if(!this.ctx) return;
         const t = this.ctx.currentTime;
-        const o = this.ctx.createOscillator();
-        o.type = 'square';
-        o.frequency.setValueAtTime(1200, t);
-        o.frequency.exponentialRampToValueAtTime(100, t + 0.15);
-        const g = this.ctx.createGain();
-        g.gain.setValueAtTime(0.1, t);
-        g.gain.exponentialRampToValueAtTime(0.001, t + 0.2);
-        const f = this.ctx.createBiquadFilter();
-        f.type = 'highpass'; f.frequency.value = 1000;
-        o.connect(f); f.connect(g); g.connect(this.ctx.destination);
-        o.start(t); o.stop(t + 0.2);
+        
+        // 音1: 衝撃音（矩形波で鋭く）
+        const o1 = this.ctx.createOscillator();
+        o1.type = 'square';
+        o1.frequency.setValueAtTime(800, t);
+        o1.frequency.exponentialRampToValueAtTime(50, t + 0.1);
+        const g1 = this.ctx.createGain();
+        g1.gain.setValueAtTime(0.1, t);
+        g1.gain.exponentialRampToValueAtTime(0.001, t + 0.15);
+        
+        // 音2: 金属共鳴（サイン波でキィーンと響かせる）
+        const o2 = this.ctx.createOscillator();
+        o2.type = 'sine';
+        o2.frequency.setValueAtTime(2000, t); // 高周波
+        o2.frequency.linearRampToValueAtTime(1500, t + 0.3);
+        const g2 = this.ctx.createGain();
+        g2.gain.setValueAtTime(0.05, t);
+        g2.gain.exponentialRampToValueAtTime(0.001, t + 0.3); // 少し長く残す
+
+        o1.connect(g1); g1.connect(this.ctx.destination);
+        o2.connect(g2); g2.connect(this.ctx.destination);
+        
+        o1.start(t); o1.stop(t + 0.15);
+        o2.start(t); o2.stop(t + 0.3);
     },
     play(id) {
         this.init();
