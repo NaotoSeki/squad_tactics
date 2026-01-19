@@ -1,23 +1,52 @@
-/** * PHASER VFX SPECIALIST (Cleaned Preload) */
+/** * PHASER VFX SPECIALIST (Helpers Restored) */
 window.HIGH_RES_SCALE = 4;
 
-// ... (前半部分は変更なし) ...
+// ---------------------------------------------------------
+//  0. Global Helpers (復活！)
+// ---------------------------------------------------------
+window.drawCardToCanvas = function(type) {
+    const w = 100 * window.HIGH_RES_SCALE; const h = 60 * window.HIGH_RES_SCALE;
+    const c = document.createElement('canvas'); c.width = w; c.height = h; const x = c.getContext('2d');
+    x.scale(window.HIGH_RES_SCALE, window.HIGH_RES_SCALE); x.translate(50, 30); x.scale(2, 2);
+    // シンプルな図形でアイコンを描画
+    if(type==='infantry'){x.fillStyle="#444";x.fillRect(-15,0,30,4);x.fillStyle="#642";x.fillRect(-15,0,10,4);}
+    else if(type==='tank'){x.fillStyle="#444";x.fillRect(-12,-6,24,12);x.fillStyle="#222";x.fillRect(0,-2,16,4);}
+    else if(type==='heal'){x.fillStyle="#eee";x.fillRect(-10,-8,20,16);x.fillStyle="#d00";x.fillRect(-3,-6,6,12);x.fillRect(-8,-1,16,2);}
+    else if(type==='tiger'){x.fillStyle="#554";x.fillRect(-14,-8,28,16);x.fillStyle="#111";x.fillRect(2,-2,20,4);}
+    else if(type==='aerial'){ x.fillStyle="#343"; x.beginPath(); x.ellipse(0, 0, 15, 6, 0, 0, Math.PI*2); x.fill(); x.fillStyle="#222"; x.fillRect(-5, -2, 10, 4); }
+    else {x.fillStyle="#333";x.fillRect(-10,-5,20,10);} 
+    return c;
+};
+
+window.createCardIcon = function(type) { return window.drawCardToCanvas(type).toDataURL(); };
+
+window.getCardTextureKey = function(scene, type) {
+    if (type === 'aerial' && scene.textures.exists('card_img_bomb')) return 'card_img_bomb'; 
+    const key = `card_icon_${type}`; 
+    if (!scene.textures.exists(key)) scene.textures.addCanvas(key, window.drawCardToCanvas(type)); 
+    return key;
+};
+
+window.createGradientTexture = function(scene) {
+    if(scene.textures.exists('ui_gradient')) return;
+    const w = scene.scale.width; const h = scene.scale.height * 0.25; 
+    const c = document.createElement('canvas'); c.width=w; c.height=h; const x = c.getContext('2d');
+    const grd = x.createLinearGradient(0, h, 0, 0); 
+    grd.addColorStop(0, "rgba(0,0,0,1)"); 
+    grd.addColorStop(0.5, "rgba(0,0,0,0.8)"); 
+    grd.addColorStop(1, "rgba(0,0,0,0)");
+    x.fillStyle = grd; x.fillRect(0, 0, w, h);
+    scene.textures.addCanvas('ui_gradient', c);
+};
 
 // ---------------------------------------------------------
-//  2. 環境システム
+//  1. 環境システム (エラー回避のため画像ロード削除)
 // ---------------------------------------------------------
 window.EnvSystem = {
     waterHexes: [], forestTrees: [], grassBlades: [],
     
     preload(scene) {
-        // ★修正: ここでの画像ロードは削除！
-        // Bridge側でBase64ロードや自動生成を行っているため、ここでのロードは不要。
-        // 404エラーの原因となるためコメントアウトまたは削除します。
-        
-        // scene.load.image('card_img_bomb', 'image_6e3646.jpg'); 
-        // scene.load.image('card_frame', 'asset/card_frame.png'); 
-        
-        // ↓以下のグラフィック生成コードはそのまま残す
+        // 画像読み込みは廃止し、Bridge側で生成します
         const g = scene.make.graphics({x:0, y:0, add:false}); const S = HEX_SIZE * window.HIGH_RES_SCALE; 
         g.lineStyle(0.1 * window.HIGH_RES_SCALE, 0x000000, 0.2); 
         g.fillStyle(0xffffff, 1); 
@@ -32,13 +61,12 @@ window.EnvSystem = {
         g.clear(); g.lineStyle(3*window.HIGH_RES_SCALE, 0x00ff00, 1); g.strokeCircle(32*window.HIGH_RES_SCALE, 32*window.HIGH_RES_SCALE, 28*window.HIGH_RES_SCALE); g.generateTexture('cursor', 64*window.HIGH_RES_SCALE, 64*window.HIGH_RES_SCALE);
         g.clear(); g.fillStyle(0x223322, 1); g.fillEllipse(15, 30, 10, 25); g.generateTexture('bomb_body', 30, 60);
     },
-    
-    // ... (以下変更なし) ...
     clear() { 
         this.waterHexes.forEach(w => { if(w.waves) w.waves.forEach(wave => wave.destroy()); }); this.waterHexes = [];
         this.forestTrees.forEach(t => { if(t.sprite) t.sprite.destroy(); }); this.forestTrees = [];
         this.grassBlades.forEach(g => { if(g.sprite) g.sprite.destroy(); }); this.grassBlades = []; 
     },
+    // ... (以下、registerWater, spawnGrass, update などは変更なし) ...
     registerWater(hexSprite, baseY, q, r, hexGroup) {
         const scene = hexSprite.scene;
         const w1 = scene.add.image(hexSprite.x + (Math.random()-0.5)*20, hexSprite.y + (Math.random()-0.5)*15, 'wave_line').setScale(0.8);
@@ -95,7 +123,6 @@ window.EnvSystem = {
     }
 };
 
-// ... (VFX, UIVFX 部分は変更なし、そのままコピペで使用可) ...
 window.VFX = { 
     particles:[], projectiles:[], shockwaves:[], shakeRequest: 0,
     add(p){this.particles.push(p);}, 
