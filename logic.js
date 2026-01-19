@@ -1,23 +1,15 @@
-/** LOGIC (Smart Respawn, Organic Island, Safe Spawn Fix) */
+/** LOGIC (Fixed Spawn, Organic Map) */
 class Game {
     constructor() {
         this.units=[]; this.map=[]; this.setupSlots=[]; this.state='SETUP'; 
-        this.path=[]; this.reachableHexes=[]; 
-        this.hoverHex=null;
-        this.isAuto=false; this.isProcessingTurn = false; 
-        this.sector = 1;
-        
-        this.initDOM(); 
-        this.initSetup();
+        this.path=[]; this.reachableHexes=[]; this.hoverHex=null;
+        this.isAuto=false; this.isProcessingTurn = false; this.sector = 1;
+        this.initDOM(); this.initSetup();
     }
-
     initDOM() {
         Renderer.init(document.getElementById('game-view'));
-        window.addEventListener('click', (e)=>{
-            if(!e.target.closest('#context-menu')) document.getElementById('context-menu').style.display='none';
-        });
+        window.addEventListener('click', (e)=>{if(!e.target.closest('#context-menu')) document.getElementById('context-menu').style.display='none';});
     }
-
     initSetup() {
         const box=document.getElementById('setup-cards');
         ['infantry','heavy','sniper','tank'].forEach(k=>{
@@ -27,8 +19,7 @@ class Game {
                 if(this.setupSlots.length<3) {
                     this.setupSlots.push(k);
                     const count = this.setupSlots.filter(s => s === k).length;
-                    const badge = d.querySelector('.card-badge');
-                    badge.style.display = 'block'; badge.innerText = "x" + count;
+                    d.querySelector('.card-badge').style.display = 'block'; d.querySelector('.card-badge').innerText = "x" + count;
                     this.log(`> 選択: ${u.name}`);
                     document.getElementById('slots-left').innerText=3-this.setupSlots.length;
                     if(this.setupSlots.length===3) document.getElementById('btn-start').style.display='block';
@@ -36,99 +27,57 @@ class Game {
             }; box.appendChild(d);
         });
     }
-
     startCampaign() {
         document.getElementById('setup-screen').style.display='none'; 
         Renderer.resize();
-        
-        // 1. 新しい島を生成
         this.generateMap(); 
         
-        // 2. ユニット配置 (生存ユニット or 新規配置)
+        // ★修正: 生存ユニットの座標をまず一括リセット（亡霊対策）
+        const survivors = this.units.filter(u => u.team === 'player');
+        survivors.forEach(u => { u.q = null; u.r = null; });
+
+        // ユニット配置
         if(this.units.length === 0) { 
-            // 初回: スロットから生成
             this.setupSlots.forEach(k => this.spawnAtSafeGround('player', k)); 
         } else { 
-            // 2回目以降: 生存しているプレイヤーユニットを再配置
-            this.units.filter(u => u.team === 'player').forEach(u => { 
-                // ★重要: 古い座標を捨てて、新しい島で場所を探し直す
-                u.q = null; 
-                u.r = null; 
-                this.spawnAtSafeGround('player', null, u); 
-            }); 
+            survivors.forEach(u => this.spawnAtSafeGround('player', null, u)); 
         }
         
-        // 3. 敵の配置
         this.spawnEnemies();
-        
         this.state='PLAY'; 
         this.log(`MISSION START - SECTOR ${this.sector}`);
         document.getElementById('sector-counter').innerText = `SECTOR: ${this.sector.toString().padStart(2, '0')}`;
         
-        // カメラをプレイヤー先頭に合わせる
         const leader = this.units.find(u => u.team === 'player');
-        if(leader && leader.q !== null) {
-            Renderer.centerOn(leader.q, leader.r);
-        }
+        if(leader && leader.q !== null) Renderer.centerOn(leader.q, leader.r);
 
-        setTimeout(() => {
-            if (Renderer.dealCards) {
-                Renderer.dealCards(['infantry', 'tank', 'aerial', 'infantry', 'tiger']);
-            }
-        }, 500);
+        setTimeout(() => { if (Renderer.dealCards) Renderer.dealCards(['infantry', 'tank', 'aerial', 'infantry', 'tiger']); }, 500);
     }
-
     applyBombardment(targetHex) {
         this.log(`[支援] 爆撃着弾地点: ${targetHex.q},${targetHex.r}`);
         const u = this.getUnit(targetHex.q, targetHex.r);
         if (u) {
             if (Math.random() < 0.75) {
-                const dmg = 500; u.hp -= dmg;
-                this.log(`>> 直撃！ ${u.def.name} に ${dmg} ダメージ`);
-                if (u.hp <= 0) {
-                    u.hp = 0;
-                    if (!u.deadProcessed) {
-                        u.deadProcessed = true;
-                        this.log(`*** ${u.def.name} は消滅した ***`);
-                        if(window.Sfx) window.Sfx.play('death');
-                        if (window.VFX) {
-                            const p = Renderer.hexToPx(u.q, u.r);
-                            VFX.addUnitDebris(p.x, p.y);
-                        }
-                    }
-                }
+                const dmg = 500; u.hp -= dmg; this.log(`>> 直撃！ ${u.def.name} に ${dmg} ダメージ`);
+                if (u.hp <= 0) { u.hp = 0; if (!u.deadProcessed) { u.deadProcessed = true; this.log(`*** ${u.def.name} は消滅した ***`); if(window.Sfx) window.Sfx.play('death'); if(window.VFX){const p=Renderer.hexToPx(u.q,u.r);VFX.addUnitDebris(p.x,p.y);} } }
                 this.updateSidebar();
             } else { this.log(">> 爆撃は外れた！(MISS)"); }
         } else { this.log(">> 目標地点にユニットなし"); }
-        if(this.checkWin()) return;
-        this.checkLose();
+        if(this.checkWin()) return; this.checkLose();
     }
-
     deployUnit(targetHex, cardType) {
-        if(!this.isValidHex(targetHex.q, targetHex.r) || this.map[targetHex.q][targetHex.r].id === -1) {
-            this.log("配置不可: 進入不可能な地形です"); return;
-        }
-        if(this.map[targetHex.q][targetHex.r].id === 5) {
-            this.log("配置不可: 水上には配置できません"); return;
-        }
+        if(!this.isValidHex(targetHex.q, targetHex.r) || this.map[targetHex.q][targetHex.r].id === -1) { this.log("配置不可: 進入不可能な地形です"); return; }
+        if(this.map[targetHex.q][targetHex.r].id === 5) { this.log("配置不可: 水上には配置できません"); return; }
         const existing = this.units.find(u => u.q === targetHex.q && u.r === targetHex.r && u.hp > 0);
         if (existing) { this.log("配置不可: ユニットが既に存在します"); return; }
-        
         this.spawnUnit('player', cardType, targetHex.q, targetHex.r);
         this.log(`増援到着: ${UNITS[cardType].name}`);
-        if(window.VFX) { 
-            const pos = Renderer.hexToPx(targetHex.q, targetHex.r); 
-            window.VFX.addSmoke(pos.x, pos.y); 
-        }
+        if(window.VFX) { const pos = Renderer.hexToPx(targetHex.q, targetHex.r); window.VFX.addSmoke(pos.x, pos.y); }
         this.updateSidebar();
     }
-
     calcReachableHexes(u) {
-        this.reachableHexes = [];
-        if(!u) return;
-        let frontier = [{q:u.q, r:u.r, cost:0}];
-        let costSoFar = new Map();
-        costSoFar.set(`${u.q},${u.r}`, 0);
+        this.reachableHexes = []; if(!u) return;
+        let frontier = [{q:u.q, r:u.r, cost:0}], costSoFar = new Map(); costSoFar.set(`${u.q},${u.r}`, 0);
         while(frontier.length > 0) {
             let current = frontier.shift();
             this.getNeighbors(current.q, current.r).forEach(n => {
@@ -137,26 +86,20 @@ class Game {
                 if(newCost <= u.ap) {
                     let key = `${n.q},${n.r}`;
                     if(!costSoFar.has(key) || newCost < costSoFar.get(key)) {
-                        costSoFar.set(key, newCost);
-                        frontier.push({q:n.q, r:n.r, cost:newCost});
-                        this.reachableHexes.push({q:n.q, r:n.r});
+                        costSoFar.set(key, newCost); frontier.push({q:n.q, r:n.r, cost:newCost}); this.reachableHexes.push({q:n.q, r:n.r});
                     }
                 }
             });
         }
     }
-
     handleHover(p) {
-        if(this.state !== 'PLAY') return;
-        this.hoverHex = p;
+        if(this.state !== 'PLAY') return; this.hoverHex = p;
         if(this.selectedUnit && this.isValidHex(p.q, p.r)) {
             const isReachable = this.reachableHexes.some(h => h.q === p.q && h.r === p.r);
             const enemy = this.getUnit(p.q, p.r);
-            if(isReachable && !enemy) this.path = this.findPath(this.selectedUnit, p.q, p.r);
-            else this.path = [];
+            if(isReachable && !enemy) this.path = this.findPath(this.selectedUnit, p.q, p.r); else this.path = [];
         }
     }
-
     handleClick(p) {
         const isValid = this.isValidHex(p.q, p.r) && this.map[p.q][p.r].id !== -1;
         const u = isValid ? this.getUnit(p.q, p.r) : null;
@@ -168,132 +111,77 @@ class Game {
             else { this.selectedUnit = null; this.reachableHexes = []; this.path = []; this.updateSidebar(); }
         }
     }
-
-    // ★マップ生成: 雲形定規 + 外周海域
     generateMap() { 
         this.map = [];
-        for(let q=0; q<MAP_W; q++){ 
-            this.map[q] = []; 
-            for(let r=0; r<MAP_H; r++){ 
-                this.map[q][r] = TERRAIN.VOID; 
-            }
-        }
-
-        const cx = Math.floor(MAP_W/2);
-        const cy = Math.floor(MAP_H/2);
-        
-        // 1. 太いブラシでランダムウォーク
+        for(let q=0; q<MAP_W; q++){ this.map[q] = []; for(let r=0; r<MAP_H; r++){ this.map[q][r] = TERRAIN.VOID; } }
+        const cx = Math.floor(MAP_W/2), cy = Math.floor(MAP_H/2);
         let walkers = [{q:cx, r:cy}]; 
-        const maxSteps = 120;
-        
-        const paintBrush = (centerQ, centerR) => {
-            const brush = [{q:centerQ, r:centerR}, ...this.getNeighbors(centerQ, centerR)];
-            brush.forEach(h => {
-                if(this.isValidHex(h.q, h.r)) {
-                    this.map[h.q][h.r] = TERRAIN.GRASS;
-                }
-            });
+        const paintBrush = (cq, cr) => {
+            const brush = [{q:cq, r:cr}, ...this.getNeighbors(cq, cr)];
+            brush.forEach(h => { if(this.isValidHex(h.q, h.r)) this.map[h.q][h.r] = TERRAIN.GRASS; });
         };
-
-        for(let i=0; i<maxSteps; i++) {
-            const wIdx = Math.floor(Math.random() * walkers.length);
-            const w = walkers[wIdx];
-            paintBrush(w.q, w.r);
-            
-            const neighbors = [[1,0],[1,-1],[0,-1],[-1,0],[-1,1],[0,1]];
-            const dir = neighbors[Math.floor(Math.random() * 6)];
+        for(let i=0; i<120; i++) {
+            const wIdx = Math.floor(Math.random() * walkers.length); const w = walkers[wIdx]; paintBrush(w.q, w.r);
+            const neighbors = [[1,0],[1,-1],[0,-1],[-1,0],[-1,1],[0,1]]; const dir = neighbors[Math.floor(Math.random() * 6)];
             const next = { q: w.q + dir[0], r: w.r + dir[1] };
-            
-            if(Math.random() < 0.08 && walkers.length < 4) {
-                walkers.push(next);
-            } else {
-                walkers[wIdx] = next;
-            }
+            if(Math.random() < 0.08 && walkers.length < 4) walkers.push(next); else walkers[wIdx] = next;
         }
-
-        // 2. 穴埋め
         for(let i=0; i<3; i++) {
-            for(let q=1; q<MAP_W-1; q++){
-                for(let r=1; r<MAP_H-1; r++){
-                    if(this.map[q][r].id === -1) { 
-                        const landNeighbors = this.getNeighbors(q, r).filter(n => this.map[n.q][n.r].id !== -1).length;
-                        if(landNeighbors >= 4) {
-                            this.map[q][r] = TERRAIN.GRASS;
-                        }
-                    }
+            for(let q=1; q<MAP_W-1; q++){ for(let r=1; r<MAP_H-1; r++){
+                if(this.map[q][r].id === -1) { 
+                    const ln = this.getNeighbors(q, r).filter(n => this.map[n.q][n.r].id !== -1).length;
+                    if(ln >= 4) this.map[q][r] = TERRAIN.GRASS;
                 }
-            }
+            }}
         }
-
-        // 3. 外周海域 (Coastline)
         for(let loop=0; loop<2; loop++) {
-            const waterCandidates = [];
-            for(let q=0; q<MAP_W; q++){
-                for(let r=0; r<MAP_H; r++){
-                    if(this.map[q][r].id === -1) {
-                        const hasNeighbor = this.getNeighbors(q, r).some(n => {
-                            const nid = this.map[n.q][n.r].id;
-                            return nid !== -1;
-                        });
-                        if(hasNeighbor) waterCandidates.push({q, r});
-                    }
+            const wC = [];
+            for(let q=0; q<MAP_W; q++){ for(let r=0; r<MAP_H; r++){
+                if(this.map[q][r].id === -1) {
+                    const hn = this.getNeighbors(q, r).some(n => this.map[n.q][n.r].id !== -1);
+                    if(hn) wC.push({q, r});
                 }
-            }
-            waterCandidates.forEach(w => { this.map[w.q][w.r] = TERRAIN.WATER; });
+            }}
+            wC.forEach(w => { this.map[w.q][w.r] = TERRAIN.WATER; });
         }
-
-        // 4. 地形適用
-        for(let q=0; q<MAP_W; q++){ 
-            for(let r=0; r<MAP_H; r++){
-                const tId = this.map[q][r].id;
-                if(tId !== -1 && tId !== 5) { // 陸地
-                    const n = Math.sin(q*0.4) + Math.cos(r*0.4) + Math.random()*0.4; 
-                    let t = TERRAIN.GRASS; 
-                    if(n > 1.1) t = TERRAIN.FOREST; 
-                    else if(n < -0.9) t = TERRAIN.DIRT; 
-                    if(t !== TERRAIN.WATER && Math.random() < 0.05) t = TERRAIN.TOWN; 
-                    this.map[q][r] = t;
-                }
+        for(let q=0; q<MAP_W; q++){ for(let r=0; r<MAP_H; r++){
+            const tId = this.map[q][r].id;
+            if(tId !== -1 && tId !== 5) {
+                const n = Math.sin(q*0.4) + Math.cos(r*0.4) + Math.random()*0.4; 
+                let t = TERRAIN.GRASS; if(n > 1.1) t = TERRAIN.FOREST; else if(n < -0.9) t = TERRAIN.DIRT; 
+                if(t !== TERRAIN.WATER && Math.random() < 0.05) t = TERRAIN.TOWN; 
+                this.map[q][r] = t;
             }
-        }
+        }}
     }
-
     spawnEnemies(){ 
         const c=4+Math.floor(this.sector*0.7);
         for(let i=0;i<c;i++){ 
             let k='infantry'; const r=Math.random(); 
-            if(r<0.1 + this.sector*0.1) k='tank';
-            else if(r<0.4) k='heavy';
-            else if(r<0.6) k='sniper'; 
-            
+            if(r<0.1 + this.sector*0.1) k='tank'; else if(r<0.4) k='heavy'; else if(r<0.6) k='sniper'; 
             const e=this.spawnAtSafeGround('enemy', k); 
             if(e){
-                e.rank=Math.floor(Math.random()*Math.min(5,this.sector/2)); 
-                e.maxHp+=e.rank*30; e.hp=e.maxHp; 
+                e.rank=Math.floor(Math.random()*Math.min(5,this.sector/2)); e.maxHp+=e.rank*30; e.hp=e.maxHp; 
                 if(this.sector>2&&Math.random()<0.4) e.skills=[Object.keys(SKILLS)[Math.floor(Math.random()*8)]];
             }
         }
     }
-    
-    // ★安全なスポーン地点の検索 (改良版: 全域フォールバック機能付き)
+    // ★安全なスポーン地点の検索 (ホワイトリスト方式)
     spawnAtSafeGround(team, type, existingUnit=null) { 
         const cy = Math.floor(MAP_H/2);
+        const ALLOWED_TERRAIN = [0, 1, 2, 3, 4]; // DIRT, GRASS, FOREST, ROAD, TOWN
         
-        // 内部関数: 条件に合う候補地リストを返す
         const findCandidates = (ignoreZone) => {
             let list = [];
             for(let q=0; q<MAP_W; q++) {
                 for(let r=0; r<MAP_H; r++) {
-                    // 絶対NG条件
-                    if(this.map[q][r].id === -1) continue; // 虚空
-                    if(this.map[q][r].id === 5) continue;  // 海
-                    if(this.map[q][r].cost >= 99) continue; // 障害物
-                    if(this.getUnit(q, r)) continue; // 誰かいる
-
-                    // ゾーン制限 (ignoreZone=trueなら無視して全域検索)
+                    const t = this.map[q][r];
+                    // ★ホワイトリストで陸地のみを許可
+                    if(!ALLOWED_TERRAIN.includes(t.id)) continue;
+                    if(this.getUnit(q, r)) continue; // 重なりチェック
                     if(!ignoreZone) {
-                        if(team === 'player' && r < cy) continue; // プレイヤーは下半分
-                        if(team === 'enemy' && r > cy) continue;  // 敵は上半分
+                        if(team === 'player' && r < cy) continue;
+                        if(team === 'enemy' && r > cy) continue;
                     }
                     list.push({q, r});
                 }
@@ -301,35 +189,17 @@ class Game {
             return list;
         };
 
-        // 1. まずは正規の陣地で探す
         let candidates = findCandidates(false);
-
-        // 2. なければ全域から探す (島が偏っている場合への保険)
         if(candidates.length === 0) {
             console.warn(`[Logic] ${team}の正規配置場所なし。全域検索します。`);
             candidates = findCandidates(true);
         }
+        if(candidates.length === 0) { console.error("CRITICAL: No spawnable land found!"); return null; }
 
-        // 3. それでもなければエラー (通常ありえない)
-        if(candidates.length === 0) {
-            console.error("CRITICAL: No spawnable land found!");
-            return null;
-        }
-
-        // 4. ランダム決定
         const choice = candidates[Math.floor(Math.random() * candidates.length)];
-
-        if(existingUnit) {
-            // 生存ユニットの座標更新
-            existingUnit.q = choice.q;
-            existingUnit.r = choice.r;
-            return existingUnit;
-        } else {
-            // 新規ユニット生成
-            return this.spawnUnit(team, type, choice.q, choice.r);
-        }
+        if(existingUnit) { existingUnit.q = choice.q; existingUnit.r = choice.r; return existingUnit; }
+        else { return this.spawnUnit(team, type, choice.q, choice.r); }
     }
-    
     spawnUnit(t,k,q,r){ const d=UNITS[k], a=d.ap; this.units.push({id:Math.random(),team:t,q,r,def:d,hp:d.hp,maxHp:d.hp,ap:a,maxAp:a,stance:'stand',curWpn:d.wpn,rank:0,deadProcessed:false,skills:[],sectorsSurvived:0}); }
     toggleAuto(){ this.isAuto=!this.isAuto; document.getElementById('auto-toggle').classList.toggle('active'); this.log(`AUTO: ${this.isAuto?"ON":"OFF"}`); this.selectedUnit=null; this.path=[]; if(this.isAuto)this.runAuto(); }
     runAuto(){ if(this.state!=='PLAY'||this.autoTimer>0){if(this.autoTimer>0)this.autoTimer--;return;} const ac=this.units.filter(u=>u.team==='player'&&u.hp>0&&u.ap>0); if(ac.length===0){this.endTurn();return;} const u=ac[0], en=this.units.filter(e=>e.team==='enemy'&&e.hp>0); if(en.length===0)return; let tg=en[0], sc=-9999; en.forEach(e=>{const d=this.hexDist(u,e), v=(100-e.hp)*2-(d*10); if(v>sc){sc=v;tg=e;}}); const w=WPNS[u.curWpn], d=this.hexDist(u,tg); if(d<=w.rng&&u.ap>=2){this.actionAttack(u,tg);this.autoTimer=80;}else{const p=this.findPath(u,tg.q,tg.r); if(p.length>0&&this.map[p[0].q][p[0].r].cost<=u.ap){u.q=p[0].q;u.r=p[0].r;u.ap-=this.map[u.q][u.r].cost;if(window.Sfx)Sfx.play('move');this.autoTimer=20;this.checkReactionFire(u);}else u.ap=0;} }
