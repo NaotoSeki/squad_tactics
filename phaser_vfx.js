@@ -36,6 +36,7 @@ window.EnvSystem = {
     waterHexes: [], forestTrees: [], grassBlades: [],
     preload(scene) {
         scene.load.image('card_img_bomb', 'image_6e3646.jpg'); 
+        scene.load.image('card_frame', 'asset/card_frame.png');
         const g = scene.make.graphics({x:0, y:0, add:false}); const S = HEX_SIZE * window.HIGH_RES_SCALE; 
         g.lineStyle(0.1 * window.HIGH_RES_SCALE, 0x000000, 0.2); 
         g.fillStyle(0xffffff, 1); 
