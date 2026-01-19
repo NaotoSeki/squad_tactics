@@ -1,4 +1,4 @@
-/** * PHASER BRIDGE (Fully Procedural Assets - No Load Required) */
+/** * PHASER BRIDGE (Rolled Back: Geometric Units, Particles, Advanced UI) */
 let phaserGame = null;
 
 // ---------------------------------------------------------
@@ -67,20 +67,15 @@ class Card extends Phaser.GameObjects.Container {
         const shadow = scene.add.rectangle(6, 6, 130, 190, 0x000000, 0.6);
         const contentBg = scene.add.rectangle(0, 0, 130, 190, 0x1a1a1a);
         
-        // フォールバック: フレームがない場合は描画で作る
         let frame;
         if(scene.textures.exists('card_frame')) {
             frame = scene.add.image(0, 0, 'card_frame').setDisplaySize(140, 200);
         } else {
-            // プロシージャルフレーム
             const g = scene.make.graphics({x:0, y:0, add:false});
-            g.lineStyle(4, 0x888888);
-            g.fillStyle(0x333333);
-            g.strokeRect(0, 0, 140, 200);
+            g.lineStyle(4, 0x888888); g.fillStyle(0x333333); g.strokeRect(0, 0, 140, 200);
             g.generateTexture('temp_frame', 140, 200);
             frame = scene.add.image(0,0,'temp_frame');
         }
-        
         frame.setInteractive({ useHandCursor: true, draggable: true });
         this.frameImage = frame;
         
@@ -93,7 +88,6 @@ class Card extends Phaser.GameObjects.Container {
         
         this.visuals.add([shadow, contentBg, icon, text, desc, frame]);
         this.add(this.visuals); 
-        
         this.setScrollFactor(0); 
         this.baseX = x; this.baseY = y; 
         this.physX = x; this.physY = y; 
@@ -107,97 +101,34 @@ class Card extends Phaser.GameObjects.Container {
         frame.on('dragstart', this.onDragStart, this); 
         frame.on('drag', this.onDrag, this); 
         frame.on('dragend', this.onDragEnd, this);
-        
         scene.add.existing(this);
     }
 
     updatePhysics() { 
         if (!this.scene || !this.frameImage) return; 
-        if (!this.isDragging && !this.scene.isReturning) { 
-            this.targetX = this.baseX; 
-            this.targetY = this.baseY - (this.isHovering ? 30 : 0); 
-        } 
-        const stiffness = this.isDragging ? 0.2 : 0.08; 
-        const damping = 0.65; 
-        const ax = (this.targetX - this.physX) * stiffness; 
-        const ay = (this.targetY - this.physY) * stiffness; 
-        this.velocityX += ax; this.velocityY += ay; 
-        this.velocityX *= damping; this.velocityY *= damping; 
-        this.physX += this.velocityX; this.physY += this.velocityY; 
-        this.setPosition(this.physX, this.physY); 
-
-        let staticAngle = 0; 
-        if (this.isDragging) staticAngle = -this.dragOffsetX * 0.4; 
-        const targetDynamicAngle = -this.velocityX * 1.5; 
-        const totalTargetAngle = staticAngle + targetDynamicAngle; 
-        const angleForce = (totalTargetAngle - this.angle) * 0.12; 
-        this.velocityAngle += angleForce; 
-        this.velocityAngle *= 0.85; 
-        this.angle += this.velocityAngle; 
-        this.angle = Phaser.Math.Clamp(this.angle, -50, 50); 
+        if (!this.isDragging && !this.scene.isReturning) { this.targetX = this.baseX; this.targetY = this.baseY - (this.isHovering ? 30 : 0); } 
+        const stiffness = this.isDragging ? 0.2 : 0.08; const damping = 0.65; 
+        const ax = (this.targetX - this.physX) * stiffness; const ay = (this.targetY - this.physY) * stiffness; 
+        this.velocityX += ax; this.velocityY += ay; this.velocityX *= damping; this.velocityY *= damping; 
+        this.physX += this.velocityX; this.physY += this.velocityY; this.setPosition(this.physX, this.physY); 
+        let staticAngle = 0; if (this.isDragging) staticAngle = -this.dragOffsetX * 0.4; 
+        const targetDynamicAngle = -this.velocityX * 1.5; const totalTargetAngle = staticAngle + targetDynamicAngle; 
+        const angleForce = (totalTargetAngle - this.angle) * 0.12; this.velocityAngle += angleForce; this.velocityAngle *= 0.85; 
+        this.angle += this.velocityAngle; this.angle = Phaser.Math.Clamp(this.angle, -50, 50); 
     }
 
     onHover() { if(Renderer.isMapDragging || Renderer.isCardDragging) return; this.isHovering = true; this.parentContainer.bringToTop(this); }
     onHoverOut() { this.isHovering = false; }
     onDragStart(pointer) { if(Renderer.isMapDragging) return; this.isDragging = true; Renderer.isCardDragging = true; this.setAlpha(0.9); this.setScale(1.1); const hand = this.parentContainer; const worldPos = hand.getLocalTransformMatrix().transformPoint(this.x, this.y); hand.remove(this); this.scene.add.existing(this); this.physX = worldPos.x; this.physY = worldPos.y; this.targetX = this.physX; this.targetY = this.physY; this.setDepth(9999); this.dragOffsetX = this.physX - pointer.x; this.dragOffsetY = this.physY - pointer.y; }
     onDrag(pointer) { this.targetX = pointer.x + this.dragOffsetX; this.targetY = pointer.y + this.dragOffsetY; const main = this.scene.game.scene.getScene('MainScene'); if (this.y < this.scene.scale.height * 0.65) main.dragHighlightHex = Renderer.pxToHex(pointer.x, pointer.y); else main.dragHighlightHex = null; }
-    
-    onDragEnd(pointer) { 
-        this.isDragging = false; 
-        Renderer.isCardDragging = false; 
-        this.setAlpha(1.0); 
-        this.setScale(1.0); 
-        const main = this.scene.game.scene.getScene('MainScene'); 
-        main.dragHighlightHex = null; 
-        const dropZoneY = this.scene.scale.height * 0.65; 
-        
-        if (this.y < dropZoneY) {
-            const hex = Renderer.pxToHex(pointer.x, pointer.y);
-            let canDeploy = false;
-            if (window.gameLogic) {
-                if (this.cardType === 'aerial') {
-                    if (window.gameLogic.isValidHex(hex.q, hex.r)) canDeploy = true;
-                    else window.gameLogic.log("配置不可: マップ範囲外です");
-                } else {
-                    canDeploy = window.gameLogic.checkDeploy(hex);
-                }
-            }
-            if (canDeploy) this.burnAndConsume(hex); else this.returnToHand();
-        } else {
-            this.returnToHand(); 
-        }
-    }
+    onDragEnd(pointer) { this.isDragging = false; Renderer.isCardDragging = false; this.setAlpha(1.0); this.setScale(1.0); const main = this.scene.game.scene.getScene('MainScene'); main.dragHighlightHex = null; const dropZoneY = this.scene.scale.height * 0.65; if (this.y < dropZoneY) { const hex = Renderer.pxToHex(pointer.x, pointer.y); let canDeploy = false; if (window.gameLogic) { if (this.cardType === 'aerial') { if (window.gameLogic.isValidHex(hex.q, hex.r)) canDeploy = true; else window.gameLogic.log("配置不可: マップ範囲外です"); } else { canDeploy = window.gameLogic.checkDeploy(hex); } } if (canDeploy) this.burnAndConsume(hex); else this.returnToHand(); } else { this.returnToHand(); } }
     
     burnAndConsume(hex) {
-        this.updatePhysics = () => {}; 
-        this.frameImage.setTint(0x552222);
+        this.updatePhysics = () => {}; this.frameImage.setTint(0x552222);
         const maskShape = this.scene.make.graphics(); maskShape.fillStyle(0xffffff); maskShape.fillRect(-70, -100, 140, 200); 
         this.visuals.setMask(maskShape.createGeometryMask());
         const burnProgress = { val: 0 }; 
-        this.scene.tweens.add({
-            targets: burnProgress, val: 1, duration: 200, ease: 'Linear',
-            onUpdate: () => {
-                if(!this.scene || !maskShape.scene) return;
-                maskShape.clear(); maskShape.fillStyle(0xffffff); maskShape.fillRect(-70, -100, 140, 200 * (1 - burnProgress.val)); 
-                maskShape.x = this.x; maskShape.y = this.y + (200 * burnProgress.val);
-                const rad = Phaser.Math.DegToRad(this.angle); const cos = Math.cos(rad); const sin = Math.sin(rad); 
-                for(let i=0; i<8; i++) { 
-                    const randX = (Math.random() - 0.5) * 140; 
-                    const wx = this.x + (randX * cos - sin); 
-                    const wy = this.y + (randX * sin + cos); 
-                    if(window.UIVFX) { window.UIVFX.addFire(wx, wy); if(Math.random()<0.3) window.UIVFX.addSmoke(wx, wy); }
-                }
-                this.x += (Math.random()-0.5) * 4; this.y += (Math.random()-0.5) * 4;
-            },
-            onComplete: () => {
-                if (this.visuals) this.visuals.clearMask(true); if (maskShape) maskShape.destroy();
-                this.scene.removeCard(this); const type = this.cardType; this.destroy();
-                try { 
-                    if (type === 'aerial') { const main = phaserGame.scene.getScene('MainScene'); if (main) main.triggerBombardment(hex); } 
-                    else if(window.gameLogic) { window.gameLogic.deployUnit(hex, type); }
-                } catch(e) { console.error("Logic Error:", e); }
-            }
-        });
+        this.scene.tweens.add({ targets: burnProgress, val: 1, duration: 200, ease: 'Linear', onUpdate: () => { if(!this.scene || !maskShape.scene) return; maskShape.clear(); maskShape.fillStyle(0xffffff); maskShape.fillRect(-70, -100, 140, 200 * (1 - burnProgress.val)); maskShape.x = this.x; maskShape.y = this.y + (200 * burnProgress.val); const rad = Phaser.Math.DegToRad(this.angle); const cos = Math.cos(rad); const sin = Math.sin(rad); for(let i=0; i<8; i++) { const randX = (Math.random() - 0.5) * 140; const wx = this.x + (randX * cos - sin); const wy = this.y + (randX * sin + cos); if(window.UIVFX) { window.UIVFX.addFire(wx, wy); if(Math.random()<0.3) window.UIVFX.addSmoke(wx, wy); } } this.x += (Math.random()-0.5) * 4; this.y += (Math.random()-0.5) * 4; }, onComplete: () => { if (this.visuals) this.visuals.clearMask(true); if (maskShape) maskShape.destroy(); this.scene.removeCard(this); const type = this.cardType; this.destroy(); try { if (type === 'aerial') { const main = phaserGame.scene.getScene('MainScene'); if (main) main.triggerBombardment(hex); } else if(window.gameLogic) { window.gameLogic.deployUnit(hex, type); } } catch(e) { console.error("Logic Error:", e); } } });
     }
     returnToHand() { const hand = this.scene.handContainer; this.scene.children.remove(this); hand.add(this); this.setDepth(0); this.physX = this.x; this.physY = this.y; this.targetX = this.baseX; this.targetY = this.baseY; }
 }
@@ -210,13 +141,8 @@ class UIScene extends Phaser.Scene {
     create() {
         const w = this.scale.width; const h = this.scale.height;
         if(window.createGradientTexture) window.createGradientTexture(this);
-        
-        if (this.textures.exists('ui_gradient')) {
-            this.gradientBg = this.add.image(w/2, h, 'ui_gradient').setOrigin(0.5, 1).setDepth(0).setDisplaySize(w, h*0.25);
-        } else {
-            this.gradientBg = this.add.rectangle(w/2, h, w, h*0.25, 0x000000, 0.8).setOrigin(0.5, 1);
-        }
-        
+        if (this.textures.exists('ui_gradient')) { this.gradientBg = this.add.image(w/2, h, 'ui_gradient').setOrigin(0.5, 1).setDepth(0).setDisplaySize(w, h*0.25); } 
+        else { this.gradientBg = this.add.rectangle(w/2, h, w, h*0.25, 0x000000, 0.8).setOrigin(0.5, 1); }
         this.handContainer = this.add.container(w/2, h);
         this.uiVfxGraphics = this.add.graphics().setDepth(10000);
         this.scale.on('resize', this.onResize, this);
@@ -237,7 +163,7 @@ class UIScene extends Phaser.Scene {
 }
 
 // ---------------------------------------------------------
-//  MAIN SCENE (Synchronous Asset Generation)
+//  MAIN SCENE (Procedural, Rolled Back Visuals)
 // ---------------------------------------------------------
 class MainScene extends Phaser.Scene {
     constructor() { 
@@ -246,17 +172,11 @@ class MainScene extends Phaser.Scene {
         this.mapGenerated=false; this.dragHighlightHex=null;
         this.unitVisuals = new Map();
         this.crosshairGroup = null;
-        this.isReady = false;
     }
     
-    preload() { 
-        if(window.EnvSystem) window.EnvSystem.preload(this);
-    }
+    preload() { if(window.EnvSystem) window.EnvSystem.preload(this); }
 
     create() {
-        // ★重要: 画像をプログラムで描いて登録する (ロードエラー回避)
-        this.generateAssets();
-
         this.cameras.main.setBackgroundColor('#0b0e0a'); 
         this.hexGroup = this.add.group(); this.unitGroup = this.add.group(); 
         
@@ -264,106 +184,17 @@ class MainScene extends Phaser.Scene {
         this.vfxGraphics = this.add.graphics().setDepth(100); this.overlayGraphics = this.add.graphics().setDepth(50); 
         if(window.EnvSystem) window.EnvSystem.clear();
         this.scene.launch('UIScene'); 
-        
-        // アニメ定義
-        if (!this.anims.exists('boom_anim')) {
-            this.anims.create({
-                key: 'boom_anim',
-                frames: this.anims.generateFrameNumbers('explosion_sheet', { start: 0, end: 15 }), 
-                frameRate: 30,
-                repeat: 0,
-                hideOnComplete: true
-            });
-        }
-
-        if (window.VFX) {
-            window.VFX.addExplosion = (x, y, color, count) => {
-                this.playExplosion(x, y);
-                if(window.VFX.add) { for(let i=0; i<5; i++) window.VFX.add({x:x,y:y,vx:(Math.random()-0.5)*8,vy:(Math.random()-0.5)*8,life:10,maxLife:10,color:color||"#fa0",size:3,type:'spark'}); }
-            };
-        }
 
         this.input.on('wheel', (pointer, gameObjects, deltaX, deltaY, deltaZ) => { let newZoom = this.cameras.main.zoom; if (deltaY > 0) newZoom -= 0.5; else if (deltaY < 0) newZoom += 0.5; newZoom = Phaser.Math.Clamp(newZoom, 0.25, 4.0); this.tweens.add({ targets: this.cameras.main, zoom: newZoom, duration: 150, ease: 'Cubic.out' }); });
         this.input.on('pointerdown', (p) => { if (Renderer.isCardDragging || Renderer.checkUIHover(p.x, p.y)) return; if(p.button === 0) { Renderer.isMapDragging = true; if(window.gameLogic) window.gameLogic.handleClick(Renderer.pxToHex(p.x, p.y)); } else if(p.button === 2) { if(window.gameLogic) window.gameLogic.showContext(p.x, p.y); } });
         this.input.on('pointerup', () => { Renderer.isMapDragging = false; });
         this.input.on('pointermove', (p) => { if (Renderer.isCardDragging) return; if (p.isDown && Renderer.isMapDragging) { const zoom = this.cameras.main.zoom; this.cameras.main.scrollX -= (p.x - p.prevPosition.x) / zoom; this.cameras.main.scrollY -= (p.y - p.prevPosition.y) / zoom; } if(!Renderer.isMapDragging && window.gameLogic) window.gameLogic.handleHover(Renderer.pxToHex(p.x, p.y)); }); 
         this.input.mouse.disableContextMenu();
-        
-        // 準備完了
-        this.isReady = true;
-    }
-
-    // ★アセット生成: これならロードエラーは起きない
-    generateAssets() {
-        // 1. 爆撃カード画像
-        if (!this.textures.exists('card_img_bomb')) {
-            const g = this.make.graphics();
-            g.fillStyle(0x333333); g.fillRect(0,0,120,80);
-            g.fillStyle(0xaa2222); g.fillCircle(60,40,25);
-            g.fillStyle(0xffaa00); g.fillTriangle(60,20, 40,60, 80,60);
-            g.generateTexture('card_img_bomb', 120, 80);
-            g.destroy();
-        }
-
-        // 2. 兵士 (Soldier)
-        if (!this.textures.exists('soldier_img')) {
-            const g = this.make.graphics();
-            g.fillStyle(0xffffff); g.fillCircle(16,16,14); // Head
-            g.fillStyle(0x888888); g.fillRect(8,16,16,16); // Body
-            g.fillStyle(0x222222); g.fillRect(20,18,10,4); // Gun
-            g.generateTexture('soldier_img', 32, 32);
-            g.destroy();
-        }
-
-        // 3. 戦車 (Tank)
-        if (!this.textures.exists('tank_img')) {
-            const g = this.make.graphics();
-            g.fillStyle(0x444444); g.fillRect(4,8,24,16); // Body
-            g.fillStyle(0x222222); g.fillRect(0,6,32,6); // Treads Top
-            g.fillRect(0,20,32,6); // Treads Bottom
-            g.fillStyle(0x666666); g.fillCircle(16,16,8); // Turret
-            g.fillStyle(0x111111); g.fillRect(16,14,14,4); // Barrel
-            g.generateTexture('tank_img', 32, 32);
-            g.destroy();
-        }
-
-        // 4. 爆発スプライトシート (Canvasで描画してテクスチャ化)
-        if (!this.textures.exists('explosion_sheet')) {
-            const canvas = document.createElement('canvas');
-            canvas.width = 256; canvas.height = 256; // 64x64 * 4x4
-            const ctx = canvas.getContext('2d');
-            
-            for(let i=0; i<16; i++) {
-                const col = i % 4;
-                const row = Math.floor(i / 4);
-                const x = col * 64 + 32;
-                const y = row * 64 + 32;
-                const progress = i / 15.0;
-                const radius = 5 + progress * 25;
-                const alpha = 1.0 - Math.pow(progress, 3);
-                ctx.beginPath();
-                ctx.arc(x, y, radius, 0, Math.PI*2);
-                ctx.fillStyle = `rgba(255, ${Math.floor(200*(1-progress))}, 0, ${alpha})`;
-                ctx.fill();
-                if (progress < 0.5) {
-                    ctx.beginPath();
-                    ctx.arc(x, y, radius * 0.5, 0, Math.PI*2);
-                    ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
-                    ctx.fill();
-                }
-            }
-            this.textures.addCanvas('explosion_sheet', canvas);
-        }
     }
 
     playExplosion(x, y) {
-        if (this.textures.exists('explosion_sheet')) {
-            const explosion = this.add.sprite(x, y, 'explosion_sheet');
-            explosion.setDepth(200); 
-            explosion.setScale(2.0); 
-            explosion.play('boom_anim');
-            if(window.VFX) window.VFX.shake(500);
-        }
+        // ★ロールバック: パーティクル爆発に戻す
+        if(window.VFX) window.VFX.addExplosion(x, y, "#fa0", 20);
     }
 
     triggerBombardment(hex) { this.time.delayedCall(500, () => { const targetPos = Renderer.hexToPx(hex.q, hex.r); if(window.VFX) window.VFX.addBombardment(this, targetPos.x, targetPos.y, hex); }); }
@@ -386,58 +217,34 @@ class MainScene extends Phaser.Scene {
         this.centerMap(); 
     }
     
-    // ★画像スプライトを使用
+    // ★ロールバック: ユニット表示を緑丸/赤四角に戻す
     createUnitVisual(u) {
         const container = this.add.container(0, 0);
-        let key = 'soldier_img'; 
-        if (u.def.isTank) key = 'tank_img';
-
-        // 生成済みなので必ず存在するはずだが、念のため
-        if (!this.textures.exists(key)) {
-            // もし何かの間違いでテクスチャがない場合は四角を描いて回避
-            const g = this.add.rectangle(0,0,32,32, 0xff00ff);
-            container.add(g);
-            container.sprite = g; // setTintを持たせるため
-        } else {
-            const sprite = this.add.sprite(0, 0, key).setScale(1.5); 
-            if(u.team === 'player') sprite.setTint(0xaaccff); else sprite.setTint(0xffaaaa);
-            container.add(sprite);
-            container.sprite = sprite;
-        }
-
-        const hpBg = this.add.rectangle(0, -30, 20, 4, 0x000000); 
-        const hpBar = this.add.rectangle(-10, -30, 20, 4, 0x00ff00);
+        // 画像ではなく、プリミティブ形状を使う（確実に存在する）
+        const sprite = this.add.sprite(0, 0, u.team==='player'?'unit_player':'unit_enemy').setScale(1/window.HIGH_RES_SCALE); 
+        
+        if(u.def.isTank) sprite.setTint(0x888888); 
+        if(u.team==='player') sprite.setTint(0x6688aa); else sprite.setTint(0xcc6655); 
+        
+        const hpBg = this.add.rectangle(0, -20, 20, 4, 0x000000); 
+        const hpBar = this.add.rectangle(-10, -20, 20, 4, 0x00ff00);
         const cursor = this.add.image(0, 0, 'cursor').setScale(1/window.HIGH_RES_SCALE).setAlpha(0).setVisible(false);
         this.tweens.add({ targets: cursor, scale: { from: 1/window.HIGH_RES_SCALE, to: 1.1/window.HIGH_RES_SCALE }, alpha: { from: 1, to: 0.5 }, yoyo: true, repeat: -1, duration: 800 });
         
-        container.add([hpBg, hpBar, cursor]);
-        container.hpBar = hpBar; container.cursor = cursor;
-        container.walkTween = null;
+        container.add([sprite, hpBg, hpBar, cursor]);
+        container.sprite = sprite; container.hpBar = hpBar; container.cursor = cursor;
         return container;
     }
 
     updateUnitVisual(container, u) {
-        const targetPos = Renderer.hexToPx(u.q, u.r);
-        const currentX = container.x; const currentY = container.y;
-        container.setPosition(targetPos.x, targetPos.y);
-        
-        const dist = Phaser.Math.Distance.Between(currentX, currentY, targetPos.x, targetPos.y);
-        if (dist > 1) {
-            if (!container.walkTween && container.sprite) {
-                container.walkTween = this.tweens.add({ targets: container.sprite, angle: { from: -10, to: 10 }, y: "-=5", duration: 150, yoyo: true, repeat: -1 });
-            }
-        } else {
-            if (container.walkTween) { container.walkTween.stop(); if(container.sprite) {container.sprite.setAngle(0); container.sprite.y = 0;} container.walkTween = null; }
-        }
-
+        const pos = Renderer.hexToPx(u.q, u.r); 
+        container.setPosition(pos.x, pos.y);
         const hpPct = u.hp / u.maxHp; container.hpBar.width = 20 * hpPct; container.hpBar.x = -10 + (10 * hpPct); container.hpBar.fillColor = hpPct > 0.5 ? 0x00ff00 : 0xff0000;
         if(window.gameLogic.selectedUnit === u) { container.cursor.setVisible(true); container.cursor.setAlpha(1); } else { container.cursor.setVisible(false); }
     }
 
     update(time, delta) {
-        if (!this.isReady) return; // ★ガード
         if (!window.gameLogic) return;
-
         if(window.VFX && window.VFX.shakeRequest > 0) { this.cameras.main.shake(100, window.VFX.shakeRequest * 0.001); window.VFX.shakeRequest = 0; }
         if(window.EnvSystem) window.EnvSystem.update(time);
         if(window.VFX) { window.VFX.update(); this.vfxGraphics.clear(); window.VFX.draw(this.vfxGraphics); }
