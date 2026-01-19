@@ -1,14 +1,13 @@
-/** * PHASER VFX SPECIALIST (Helpers Restored) */
+/** * PHASER VFX SPECIALIST (Stable: Particles & Helpers) */
 window.HIGH_RES_SCALE = 4;
 
 // ---------------------------------------------------------
-//  0. Global Helpers (復活！)
+//  0. Global Helpers (確実に定義)
 // ---------------------------------------------------------
 window.drawCardToCanvas = function(type) {
     const w = 100 * window.HIGH_RES_SCALE; const h = 60 * window.HIGH_RES_SCALE;
     const c = document.createElement('canvas'); c.width = w; c.height = h; const x = c.getContext('2d');
     x.scale(window.HIGH_RES_SCALE, window.HIGH_RES_SCALE); x.translate(50, 30); x.scale(2, 2);
-    // シンプルな図形でアイコンを描画
     if(type==='infantry'){x.fillStyle="#444";x.fillRect(-15,0,30,4);x.fillStyle="#642";x.fillRect(-15,0,10,4);}
     else if(type==='tank'){x.fillStyle="#444";x.fillRect(-12,-6,24,12);x.fillStyle="#222";x.fillRect(0,-2,16,4);}
     else if(type==='heal'){x.fillStyle="#eee";x.fillRect(-10,-8,20,16);x.fillStyle="#d00";x.fillRect(-3,-6,6,12);x.fillRect(-8,-1,16,2);}
@@ -21,7 +20,7 @@ window.drawCardToCanvas = function(type) {
 window.createCardIcon = function(type) { return window.drawCardToCanvas(type).toDataURL(); };
 
 window.getCardTextureKey = function(scene, type) {
-    if (type === 'aerial' && scene.textures.exists('card_img_bomb')) return 'card_img_bomb'; 
+    // 爆撃画像がない場合は自動生成キャンバスを使う
     const key = `card_icon_${type}`; 
     if (!scene.textures.exists(key)) scene.textures.addCanvas(key, window.drawCardToCanvas(type)); 
     return key;
@@ -40,13 +39,12 @@ window.createGradientTexture = function(scene) {
 };
 
 // ---------------------------------------------------------
-//  1. 環境システム (エラー回避のため画像ロード削除)
+//  1. 環境システム
 // ---------------------------------------------------------
 window.EnvSystem = {
     waterHexes: [], forestTrees: [], grassBlades: [],
-    
     preload(scene) {
-        // 画像読み込みは廃止し、Bridge側で生成します
+        // 画像ロードは削除。すべてプログラム描画で賄う。
         const g = scene.make.graphics({x:0, y:0, add:false}); const S = HEX_SIZE * window.HIGH_RES_SCALE; 
         g.lineStyle(0.1 * window.HIGH_RES_SCALE, 0x000000, 0.2); 
         g.fillStyle(0xffffff, 1); 
@@ -56,8 +54,11 @@ window.EnvSystem = {
         g.clear(); g.fillStyle(0xffffff, 0.4); g.fillEllipse(15, 5, 12, 2); g.generateTexture('wave_line', 30, 10);
         g.clear(); g.fillStyle(0x1a1a10, 1); g.fillRect(38, 70, 4, 20); g.fillStyle(0x1e3a1e, 1); g.fillTriangle(40, 20, 25, 80, 55, 80); g.fillStyle(0x2a4d2a, 1); g.fillTriangle(40, 5, 30, 50, 50, 50); g.generateTexture('tree', 80, 100);
         g.clear(); g.fillStyle(0x668855, 1); g.fillRect(0, 0, 1, 14); g.generateTexture('grass_blade', 2, 14);
+        
+        // ユニット用テクスチャ (シンプル図形)
         g.clear(); g.fillStyle(0x00ff00, 1); g.fillCircle(16*window.HIGH_RES_SCALE, 16*window.HIGH_RES_SCALE, 12*window.HIGH_RES_SCALE); g.generateTexture('unit_player', 32*window.HIGH_RES_SCALE, 32*window.HIGH_RES_SCALE);
         g.clear(); g.fillStyle(0xff0000, 1); g.fillRect(4*window.HIGH_RES_SCALE, 4*window.HIGH_RES_SCALE, 24*window.HIGH_RES_SCALE, 24*window.HIGH_RES_SCALE); g.generateTexture('unit_enemy', 32*window.HIGH_RES_SCALE, 32*window.HIGH_RES_SCALE);
+        
         g.clear(); g.lineStyle(3*window.HIGH_RES_SCALE, 0x00ff00, 1); g.strokeCircle(32*window.HIGH_RES_SCALE, 32*window.HIGH_RES_SCALE, 28*window.HIGH_RES_SCALE); g.generateTexture('cursor', 64*window.HIGH_RES_SCALE, 64*window.HIGH_RES_SCALE);
         g.clear(); g.fillStyle(0x223322, 1); g.fillEllipse(15, 30, 10, 25); g.generateTexture('bomb_body', 30, 60);
     },
@@ -66,7 +67,6 @@ window.EnvSystem = {
         this.forestTrees.forEach(t => { if(t.sprite) t.sprite.destroy(); }); this.forestTrees = [];
         this.grassBlades.forEach(g => { if(g.sprite) g.sprite.destroy(); }); this.grassBlades = []; 
     },
-    // ... (以下、registerWater, spawnGrass, update などは変更なし) ...
     registerWater(hexSprite, baseY, q, r, hexGroup) {
         const scene = hexSprite.scene;
         const w1 = scene.add.image(hexSprite.x + (Math.random()-0.5)*20, hexSprite.y + (Math.random()-0.5)*15, 'wave_line').setScale(0.8);
@@ -132,6 +132,7 @@ window.VFX = {
         const startY = ty - 800; const bomb = scene.add.sprite(tx, startY, 'bomb_body').setDepth(2000).setScale(1.5);
         scene.tweens.add({ targets: bomb, y: ty, duration: 400, ease: 'Quad.In', onComplete: () => { if(window.Sfx) window.Sfx.play('boom'); bomb.destroy(); this.requestShake(15); this.addRealExplosion(tx, ty); if(window.gameLogic && window.gameLogic.applyBombardment) window.gameLogic.applyBombardment(hex); } });
     },
+    // ★復活: パーティクル爆発
     addRealExplosion(x, y) {
         this.add({x, y, vx:0, vy:0, life:3, maxLife:3, size:150, color:0xffffff, type:'flash'});
         this.shockwaves.push({x, y, radius:10, maxRadius:150, alpha:1.0});
