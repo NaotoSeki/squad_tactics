@@ -1,4 +1,4 @@
-/** LOGIC (AP Check, Elastic Aim) */
+/** LOGIC (Instant Aim Update, AP Check, Elastic Aim) */
 class Game {
     constructor() {
         this.units=[]; this.map=[]; this.setupSlots=[]; this.state='SETUP'; 
@@ -54,6 +54,7 @@ class Game {
             if (mainScene) { mainScene.mapGenerated = false; if(mainScene.hexGroup) mainScene.hexGroup.clear(true, true); if(window.EnvSystem) window.EnvSystem.clear(); }
         }
         Renderer.resize();
+        
         this.selectedUnit = null;
         this.reachableHexes = [];
         this.attackLine = []; 
@@ -72,6 +73,8 @@ class Game {
         if(leader && leader.q !== -999) Renderer.centerOn(leader.q, leader.r);
         setTimeout(() => { if (Renderer.dealCards) Renderer.dealCards(['infantry', 'tank', 'aerial', 'infantry', 'tiger']); }, 500);
     }
+
+    // ★重要: アクション後の状態更新 (移動範囲 & 射程ガイド)
     refreshUnitState(u) {
         if (!u || u.hp <= 0) {
             this.selectedUnit = null;
@@ -79,18 +82,28 @@ class Game {
             this.attackLine = [];
             this.aimTargetUnit = null;
         } else {
+            // 1. 移動範囲の再計算
             this.calcReachableHexes(u);
+            
+            // 2. ★射程ガイドの即時再計算
+            // マウスカーソルが有効な場所にあれば、AP残量に応じて赤枠を更新または消去する
+            if (this.hoverHex && this.isValidHex(this.hoverHex.q, this.hoverHex.r)) {
+                this.calcAttackLine(u, this.hoverHex.q, this.hoverHex.r);
+            } else {
+                this.attackLine = [];
+                this.aimTargetUnit = null;
+            }
         }
         this.updateSidebar();
     }
 
-    // ★修正: APチェックを追加
+    // 伸縮射線 & ロックオン計算
     calcAttackLine(u, targetQ, targetR) {
         this.attackLine = [];
         this.aimTargetUnit = null;
         if (!u) return;
         
-        // ★AP不足ならターゲット表示なし
+        // AP不足なら表示しない
         if (u.ap < 2) return;
 
         const w = WPNS[u.curWpn];
@@ -173,7 +186,7 @@ class Game {
         }
     }
     
-    // ... (以下変更なし) ...
+    // ... (以下既存ロジック) ...
     spawnAtSafeGround(team, type, existingUnit=null) { 
         const cy = Math.floor(MAP_H/2); const candidates = [];
         for(let q=0; q<MAP_W; q++) { for(let r=0; r<MAP_H; r++) { const t = this.map[q][r]; if(t.id !== -1 && t.id !== 5 && t.cost < 99 && !this.getUnit(q, r)) { candidates.push({q, r}); } } }
@@ -294,7 +307,7 @@ class Game {
     }
     checkPhaseEnd(){if(this.units.filter(u=>u.team==='player'&&u.hp>0&&u.ap>0).length===0&&this.state==='PLAY')this.endTurn();}
     setStance(s){if(this.selectedUnit&&this.selectedUnit.ap>=1&&!this.selectedUnit.def.isTank){this.selectedUnit.ap--;this.selectedUnit.stance=s;this.refreshUnitState(this.selectedUnit);this.checkPhaseEnd();}}
-    endTurn(){if(this.isProcessingTurn)return; this.isProcessingTurn=true; this.selectedUnit=null; this.reachableHexes=[]; this.attackLine=[]; this.aimTargetUnit=null; this.path=[]; this.state='ANIM'; document.getElementById('eyecatch').style.opacity=1;
+    endTurn(){if(this.isProcessingTurn)return; this.isProcessingTurn=true; this.selectedUnit=null; this.reachableHexes=[]; this.attackLine=[]; this.path=[]; this.state='ANIM'; document.getElementById('eyecatch').style.opacity=1;
         this.units.filter(u=>u.team==='player'&&u.hp>0&&u.skills.includes("Mechanic")).forEach(u=>{const c=u.skills.filter(s=>s==="Mechanic").length; if(u.hp<u.maxHp){u.hp=Math.min(u.maxHp,u.hp+c*20);this.log(`${u.def.name} 修理`);}});
         setTimeout(async()=>{document.getElementById('eyecatch').style.opacity=0; const es=this.units.filter(u=>u.team==='enemy'&&u.hp>0); for(let e of es){const ps=this.units.filter(u=>u.team==='player'&&u.hp>0); if(ps.length===0){this.checkLose();break;} e.ap=e.maxAp; let t=ps[0],md=999; ps.forEach(p=>{const d=this.hexDist(e,p);if(d<md){md=d;t=p;}}); if(md<=6){if(md<=4&&e.ap>=1&&!e.def.isTank)e.stance='crouch';await this.actionAttack(e,t);}else{const nq=e.q+(t.q>e.q?1:-1);if(!this.getUnit(nq,e.r)&&this.isValidHex(nq,e.r)&&this.map[nq][e.r].cost<99){e.q=nq;e.ap--;await new Promise(r=>setTimeout(r,200));}}} this.units.forEach(u=>{if(u.team==='player')u.ap=u.maxAp;}); this.log("-- PLAYER PHASE --"); this.state='PLAY'; this.isProcessingTurn=false;},1200);
     }
