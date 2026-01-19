@@ -1,4 +1,4 @@
-/** LOGIC (Safe Spawn, Island Coastline, Organic Map) */
+/** LOGIC (Smart Respawn, Organic Island, Safe Spawn Fix) */
 class Game {
     constructor() {
         this.units=[]; this.map=[]; this.setupSlots=[]; this.state='SETUP'; 
@@ -40,24 +40,35 @@ class Game {
     startCampaign() {
         document.getElementById('setup-screen').style.display='none'; 
         Renderer.resize();
+        
+        // 1. 新しい島を生成
         this.generateMap(); 
         
-        // ユニット配置 (新しい安全ロジック)
+        // 2. ユニット配置 (生存ユニット or 新規配置)
         if(this.units.length === 0) { 
-            this.setupSlots.forEach(k=>this.spawnAtSafeGround('player',k)); 
+            // 初回: スロットから生成
+            this.setupSlots.forEach(k => this.spawnAtSafeGround('player', k)); 
         } else { 
-            this.units.filter(u=>u.team==='player').forEach(u=>{ 
-                u.q=null; this.spawnAtSafeGround('player',null,u); 
+            // 2回目以降: 生存しているプレイヤーユニットを再配置
+            this.units.filter(u => u.team === 'player').forEach(u => { 
+                // ★重要: 古い座標を捨てて、新しい島で場所を探し直す
+                u.q = null; 
+                u.r = null; 
+                this.spawnAtSafeGround('player', null, u); 
             }); 
         }
         
+        // 3. 敵の配置
         this.spawnEnemies();
+        
         this.state='PLAY'; 
         this.log(`MISSION START - SECTOR ${this.sector}`);
         document.getElementById('sector-counter').innerText = `SECTOR: ${this.sector.toString().padStart(2, '0')}`;
         
-        if(this.units.length>0 && this.units[0].q !== null) {
-            Renderer.centerOn(this.units[0].q, this.units[0].r);
+        // カメラをプレイヤー先頭に合わせる
+        const leader = this.units.find(u => u.team === 'player');
+        if(leader && leader.q !== null) {
+            Renderer.centerOn(leader.q, leader.r);
         }
 
         setTimeout(() => {
@@ -158,7 +169,7 @@ class Game {
         }
     }
 
-    // ★新マップ生成: 雲形定規 + 外周海域 (Coastline)
+    // ★マップ生成: 雲形定規 + 外周海域
     generateMap() { 
         this.map = [];
         for(let q=0; q<MAP_W; q++){ 
@@ -171,7 +182,7 @@ class Game {
         const cx = Math.floor(MAP_W/2);
         const cy = Math.floor(MAP_H/2);
         
-        // 1. 太いブラシでランダムウォーク (雲形)
+        // 1. 太いブラシでランダムウォーク
         let walkers = [{q:cx, r:cy}]; 
         const maxSteps = 120;
         
@@ -200,7 +211,7 @@ class Game {
             }
         }
 
-        // 2. 穴埋め (Filling Voids)
+        // 2. 穴埋め
         for(let i=0; i<3; i++) {
             for(let q=1; q<MAP_W-1; q++){
                 for(let r=1; r<MAP_H-1; r++){
@@ -214,38 +225,32 @@ class Game {
             }
         }
 
-        // 3. ★外周海域の生成 (Coastline)
-        // 陸地の周りのVOIDをWATERに変える処理を2回行う（2マス分の海）
+        // 3. 外周海域 (Coastline)
         for(let loop=0; loop<2; loop++) {
             const waterCandidates = [];
             for(let q=0; q<MAP_W; q++){
                 for(let r=0; r<MAP_H; r++){
-                    // VOIDの場合、隣に陸地か水があれば水になる候補
                     if(this.map[q][r].id === -1) {
                         const hasNeighbor = this.getNeighbors(q, r).some(n => {
                             const nid = this.map[n.q][n.r].id;
-                            return nid !== -1; // 陸地か水がある
+                            return nid !== -1;
                         });
                         if(hasNeighbor) waterCandidates.push({q, r});
                     }
                 }
             }
-            // 一括適用
-            waterCandidates.forEach(w => {
-                this.map[w.q][w.r] = TERRAIN.WATER;
-            });
+            waterCandidates.forEach(w => { this.map[w.q][w.r] = TERRAIN.WATER; });
         }
 
-        // 4. 地形適用 (森、町、荒地)
+        // 4. 地形適用
         for(let q=0; q<MAP_W; q++){ 
             for(let r=0; r<MAP_H; r++){
                 const tId = this.map[q][r].id;
-                if(tId !== -1 && tId !== 5) { // 陸地のみ
+                if(tId !== -1 && tId !== 5) { // 陸地
                     const n = Math.sin(q*0.4) + Math.cos(r*0.4) + Math.random()*0.4; 
                     let t = TERRAIN.GRASS; 
                     if(n > 1.1) t = TERRAIN.FOREST; 
                     else if(n < -0.9) t = TERRAIN.DIRT; 
-                    
                     if(t !== TERRAIN.WATER && Math.random() < 0.05) t = TERRAIN.TOWN; 
                     this.map[q][r] = t;
                 }
@@ -253,58 +258,74 @@ class Game {
         }
     }
 
-    spawnEnemies(){ const c=4+Math.floor(this.sector*0.7), tc=Math.min(0.8,0.1+this.sector*0.1); for(let i=0;i<c;i++){ let k='infantry'; const r=Math.random(); if(r<tc)k='tank';else if(r<tc+0.3)k='heavy';else if(r<tc+0.5)k='sniper'; const e=this.spawnAtSafeGround('enemy',k); if(e){e.rank=Math.floor(Math.random()*Math.min(5,this.sector/2)); e.maxHp+=e.rank*30; e.hp=e.maxHp; if(this.sector>2&&Math.random()<0.4)e.skills=[Object.keys(SKILLS)[Math.floor(Math.random()*8)]];}}}
+    spawnEnemies(){ 
+        const c=4+Math.floor(this.sector*0.7);
+        for(let i=0;i<c;i++){ 
+            let k='infantry'; const r=Math.random(); 
+            if(r<0.1 + this.sector*0.1) k='tank';
+            else if(r<0.4) k='heavy';
+            else if(r<0.6) k='sniper'; 
+            
+            const e=this.spawnAtSafeGround('enemy', k); 
+            if(e){
+                e.rank=Math.floor(Math.random()*Math.min(5,this.sector/2)); 
+                e.maxHp+=e.rank*30; e.hp=e.maxHp; 
+                if(this.sector>2&&Math.random()<0.4) e.skills=[Object.keys(SKILLS)[Math.floor(Math.random()*8)]];
+            }
+        }
+    }
     
-    // ★修正版: 安全なスポーン地点の検索 (虚空送り防止)
+    // ★安全なスポーン地点の検索 (改良版: 全域フォールバック機能付き)
     spawnAtSafeGround(team, type, existingUnit=null) { 
         const cy = Math.floor(MAP_H/2);
         
-        // 1. 全マップから配置可能な候補地をリストアップ
-        let candidates = [];
-        for(let q=0; q<MAP_W; q++) {
-            for(let r=0; r<MAP_H; r++) {
-                // VOID(-1) と WATER(5) はNG
-                if(this.map[q][r].id === -1 || this.map[q][r].id === 5) continue;
-                // コスト99以上もNG
-                if(this.map[q][r].cost >= 99) continue;
-                // ユニットが既にいる場所もNG
-                if(this.getUnit(q, r)) continue;
-
-                // チームごとのエリア分け
-                if(team === 'player' && r < cy) continue; // プレイヤーは下半分
-                if(team === 'enemy' && r > cy) continue;  // 敵は上半分
-
-                candidates.push({q, r});
-            }
-        }
-
-        // 2. 候補がない場合 (島が極端に偏った場合など)、エリア制限を解除して再検索
-        if(candidates.length === 0) {
-            this.log(`警告: ${team}の正規配置位置なし。全域検索します。`);
+        // 内部関数: 条件に合う候補地リストを返す
+        const findCandidates = (ignoreZone) => {
+            let list = [];
             for(let q=0; q<MAP_W; q++) {
                 for(let r=0; r<MAP_H; r++) {
-                    if(this.map[q][r].id === -1 || this.map[q][r].id === 5) continue;
-                    if(this.map[q][r].cost >= 99) continue;
-                    if(this.getUnit(q, r)) continue;
-                    candidates.push({q, r});
+                    // 絶対NG条件
+                    if(this.map[q][r].id === -1) continue; // 虚空
+                    if(this.map[q][r].id === 5) continue;  // 海
+                    if(this.map[q][r].cost >= 99) continue; // 障害物
+                    if(this.getUnit(q, r)) continue; // 誰かいる
+
+                    // ゾーン制限 (ignoreZone=trueなら無視して全域検索)
+                    if(!ignoreZone) {
+                        if(team === 'player' && r < cy) continue; // プレイヤーは下半分
+                        if(team === 'enemy' && r > cy) continue;  // 敵は上半分
+                    }
+                    list.push({q, r});
                 }
             }
+            return list;
+        };
+
+        // 1. まずは正規の陣地で探す
+        let candidates = findCandidates(false);
+
+        // 2. なければ全域から探す (島が偏っている場合への保険)
+        if(candidates.length === 0) {
+            console.warn(`[Logic] ${team}の正規配置場所なし。全域検索します。`);
+            candidates = findCandidates(true);
         }
 
-        // 3. それでも候補がない場合 (陸地ゼロ!?)
+        // 3. それでもなければエラー (通常ありえない)
         if(candidates.length === 0) {
             console.error("CRITICAL: No spawnable land found!");
             return null;
         }
 
-        // 4. 候補からランダムに決定
+        // 4. ランダム決定
         const choice = candidates[Math.floor(Math.random() * candidates.length)];
 
         if(existingUnit) {
+            // 生存ユニットの座標更新
             existingUnit.q = choice.q;
             existingUnit.r = choice.r;
             return existingUnit;
         } else {
+            // 新規ユニット生成
             return this.spawnUnit(team, type, choice.q, choice.r);
         }
     }
