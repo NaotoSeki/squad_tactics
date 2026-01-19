@@ -1,4 +1,4 @@
-/** * PHASER BRIDGE (Forest Sway, Water Ripples, Safe Logic) */
+/** * PHASER BRIDGE (Deep Forest, Ripples, UI Fixes) */
 let phaserGame = null;
 const HIGH_RES_SCALE = 4; 
 
@@ -160,7 +160,7 @@ class UIScene extends Phaser.Scene {
 }
 
 // ==========================================
-//  MAIN SCENE (Forest Sway & Water Ripples)
+//  MAIN SCENE (Deep Forest & Ripples)
 // ==========================================
 class MainScene extends Phaser.Scene {
     constructor() { 
@@ -168,7 +168,7 @@ class MainScene extends Phaser.Scene {
         this.hexGroup=null; this.unitGroup=null; this.vfxGraphics=null; this.overlayGraphics=null; 
         this.mapGenerated=false; this.dragHighlightHex=null;
         this.waterHexes = []; 
-        this.forestTrees = []; // ★森の木々管理用
+        this.forestTrees = []; 
     }
     
     preload() {
@@ -177,18 +177,21 @@ class MainScene extends Phaser.Scene {
         const g = this.make.graphics({x:0, y:0, add:false}); const S = HEX_SIZE * HIGH_RES_SCALE; 
         g.lineStyle(2 * HIGH_RES_SCALE, 0x888888, 1); g.fillStyle(0xffffff, 1); g.beginPath(); for(let i=0; i<6; i++) { const a = Math.PI/180 * 60 * i; g.lineTo(S + S * Math.cos(a), S + S * Math.sin(a)); } g.closePath(); g.fillPath(); g.strokePath(); g.generateTexture('hex_base', S*2, S*2);
         
-        // さざ波用
+        // さざ波
         g.clear(); g.fillStyle(0xffffff, 0.4); g.fillEllipse(15, 5, 12, 2); g.generateTexture('wave_line', 30, 10);
 
-        // ★木（Tree）の高解像度テクスチャ
-        // シンプルな松の木っぽいシルエット
+        // ★木（Deep Forest Tree）
+        // 暗く細い針葉樹
         g.clear(); 
-        g.fillStyle(0x1a2e12, 1); // 幹
-        g.fillRect(35, 70, 10, 20); 
-        g.fillStyle(0x2d4f21, 1); // 葉（下段）
-        g.fillTriangle(40, 30, 10, 80, 70, 80);
-        g.fillStyle(0x3e6b2e, 1); // 葉（上段・ハイライト）
-        g.fillTriangle(40, 10, 20, 50, 60, 50);
+        g.fillStyle(0x1a1a10, 1); // 幹（より暗く、細く）
+        g.fillRect(38, 70, 4, 20); 
+        
+        g.fillStyle(0x1e3a1e, 1); // 葉（下段・暗い深緑）
+        g.fillTriangle(40, 20, 25, 80, 55, 80); // 幅を狭く鋭く
+        
+        g.fillStyle(0x2a4d2a, 1); // 葉（上段・少しだけ明るい深緑）
+        g.fillTriangle(40, 5, 30, 50, 50, 50); 
+        
         g.generateTexture('tree', 80, 100);
 
         g.clear(); g.fillStyle(0x00ff00, 1); g.fillCircle(16*HIGH_RES_SCALE, 16*HIGH_RES_SCALE, 12*HIGH_RES_SCALE); g.generateTexture('unit_player', 32*HIGH_RES_SCALE, 32*HIGH_RES_SCALE);
@@ -234,20 +237,26 @@ class MainScene extends Phaser.Scene {
                     this.waterHexes.push({ sprite: hex, waves: [w1, w2], baseY: pos.y, q: q, r: r, offset: Math.random() * 6.28 });
                 }
                 
-                // ★森なら木を生やす
+                // ★森 (id:1) の密度アップ
                 if(t.id === 1) {
-                    for(let i=0; i<4; i++) {
-                        const tx = pos.x + (Math.random()-0.5) * HEX_SIZE * 1.2;
-                        const ty = pos.y + (Math.random()-0.5) * HEX_SIZE * 1.0;
-                        const scale = (0.35 + Math.random()*0.15); // ちょっとサイズばらつき
+                    // 6〜9本の木をランダム配置
+                    const count = 6 + Math.floor(Math.random() * 4);
+                    for(let i=0; i<count; i++) {
+                        // ヘックス内に散らす
+                        const rad = Math.random() * HEX_SIZE * 0.7;
+                        const ang = Math.random() * Math.PI * 2;
+                        const tx = pos.x + rad * Math.cos(ang);
+                        const ty = pos.y + rad * Math.sin(ang) * 0.8;
                         
+                        const scale = (0.3 + Math.random()*0.3); // サイズのバラつき大
                         const tree = this.add.image(tx, ty, 'tree').setOrigin(0.5, 1.0).setScale(scale);
-                        // 色味を少しランダムに（枯れ木まじりなど）
-                        if(Math.random() < 0.2) tree.setTint(0xccaa88);
-                        else tree.setTint(0x88cc88);
+                        
+                        // 色味を暗い緑〜青緑でランダム化
+                        const shade = 150 + Math.floor(Math.random() * 100); 
+                        tree.setTint(Phaser.Display.Color.GetColor(shade, shade, shade + 20));
 
                         this.hexGroup.add(tree);
-                        this.forestTrees.push({ sprite: tree, speed: 0.001 + Math.random()*0.001, offset: Math.random() * 10 });
+                        this.forestTrees.push({ sprite: tree, speed: 0.002 + Math.random()*0.002, offset: Math.random() * 10, sway: 0.05 + Math.random()*0.05 });
                     }
                 }
 
@@ -264,7 +273,7 @@ class MainScene extends Phaser.Scene {
         VFX.update(); this.vfxGraphics.clear(); VFX.draw(this.vfxGraphics);
         if (window.gameLogic.map.length > 0 && !this.mapGenerated) { this.createMap(); this.mapGenerated = true; }
         
-        // 水面アニメーション
+        // 水面
         const waveSpeed = time * 0.001;
         this.waterHexes.forEach(w => {
             const wave = Math.sin(waveSpeed + w.q * 0.3 + w.r * 0.3 + w.offset);
@@ -277,11 +286,10 @@ class MainScene extends Phaser.Scene {
             });
         });
 
-        // ★木のアニメーション (風でそよぐ)
+        // 木のアニメーション (ゆったり大きく揺れる)
         this.forestTrees.forEach(t => {
-            // 根元を中心に回転させる
             const wind = Math.sin(time * t.speed + t.offset);
-            t.sprite.rotation = wind * 0.08; // 揺れ幅
+            t.sprite.rotation = wind * t.sway;
         });
 
         this.unitGroup.clear(true, true);
