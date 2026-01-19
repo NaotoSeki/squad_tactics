@@ -1,4 +1,4 @@
-/** * PHASER BRIDGE (Living Wind, Delicate Grass, Metallic Ricochet) */
+/** * PHASER BRIDGE (Living Wind, Metal Ricochet, Shadow UI, Hand Limit) */
 let phaserGame = null;
 const HIGH_RES_SCALE = 4; 
 
@@ -35,27 +35,26 @@ const Sfx = {
         o.connect(g); g.connect(this.ctx.destination);
         o.start(t); o.stop(t+dur);
     },
-    // ★金属音生成用
+    // ★金属的な跳弾音 (Ricochet)
     metalImpact() {
         if(!this.ctx) return;
         const t = this.ctx.currentTime;
-        // 高周波の不協和音で金属感を出す
-        [1, 1.5].forEach(mul => {
-            const o = this.ctx.createOscillator();
-            o.type = 'square'; // 矩形波で鋭さを出す
-            o.frequency.setValueAtTime(2000 * mul, t);
-            o.frequency.exponentialRampToValueAtTime(100, t + 0.1); // 急激なピッチダウン
-            
-            const g = this.ctx.createGain();
-            g.gain.setValueAtTime(0.05, t);
-            g.gain.exponentialRampToValueAtTime(0.001, t + 0.15); // 短く切る
-            
-            const f = this.ctx.createBiquadFilter(); // ハイパスで軽い音に
-            f.type = 'highpass'; f.frequency.value = 1500;
+        // 高周波の矩形波を急激にピッチダウンさせて「カキン！」を作る
+        const o = this.ctx.createOscillator();
+        o.type = 'square';
+        o.frequency.setValueAtTime(1200, t);
+        o.frequency.exponentialRampToValueAtTime(100, t + 0.15); // 急降下
+        
+        const g = this.ctx.createGain();
+        g.gain.setValueAtTime(0.1, t);
+        g.gain.exponentialRampToValueAtTime(0.001, t + 0.2); // 短い減衰
+        
+        // 高域を通して金属感を強調
+        const f = this.ctx.createBiquadFilter();
+        f.type = 'highpass'; f.frequency.value = 1000;
 
-            o.connect(f); f.connect(g); g.connect(this.ctx.destination);
-            o.start(t); o.stop(t + 0.15);
-        });
+        o.connect(f); f.connect(g); g.connect(this.ctx.destination);
+        o.start(t); o.stop(t + 0.2);
     },
     play(id) {
         this.init();
@@ -67,7 +66,7 @@ const Sfx = {
         else if(id==='cannon') { this.noise(0.6, 100, 'lowpass', 0.6); this.noise(0.3, 400, 'lowpass', 0.4); }
         else if(id==='boom') { this.noise(1.2, 60, 'lowpass', 0.8); this.noise(0.5, 200, 'lowpass', 0.5); }
         else if(id==='rocket') { this.noise(1.5, 120, 'lowpass', 0.6); }
-        else if(id==='ricochet') { this.metalImpact(); } // ★金属音に変更
+        else if(id==='ricochet') { this.metalImpact(); } // 金属音
         else if(id==='death') { this.noise(0.5, 150, 'lowpass', 0.5); }
         else if(id==='win') { 
             setTimeout(()=>this.tone(440,'square',0.1),0);
@@ -93,9 +92,19 @@ function drawCardToCanvas(type) {
 }
 window.createCardIcon = function(type) { return drawCardToCanvas(type).toDataURL(); };
 function getCardTextureKey(scene, type) { if (type === 'aerial' && scene.textures.exists('card_img_bomb')) return 'card_img_bomb'; const key = `card_icon_${type}`; if (!scene.textures.exists(key)) scene.textures.addCanvas(key, drawCardToCanvas(type)); return key; }
-window.createGradientTexture = function(scene) { const w = scene.scale.width; const h = scene.scale.height * 0.45; const c = document.createElement('canvas'); c.width=w; c.height=h; const x = c.getContext('2d'); const grd = x.createLinearGradient(0, h, 0, 0); grd.addColorStop(0, "rgba(0,0,0,1)"); grd.addColorStop(0.4, "rgba(0,0,0,0.8)"); grd.addColorStop(1, "rgba(0,0,0,0)"); x.fillStyle = grd; x.fillRect(0, 0, w, h); if(scene.textures.exists('ui_gradient')) scene.textures.remove('ui_gradient'); scene.textures.addCanvas('ui_gradient', c); };
 
-// ... Renderer (Outline Fix) ...
+// ★グラデーション調整: 1/4 (0.25) に変更
+window.createGradientTexture = function(scene) { 
+    const w = scene.scale.width; const h = scene.scale.height * 0.25; 
+    const c = document.createElement('canvas'); c.width=w; c.height=h; const x = c.getContext('2d'); 
+    const grd = x.createLinearGradient(0, h, 0, 0); 
+    grd.addColorStop(0, "rgba(0,0,0,1)"); grd.addColorStop(0.5, "rgba(0,0,0,0.8)"); grd.addColorStop(1, "rgba(0,0,0,0)"); 
+    x.fillStyle = grd; x.fillRect(0, 0, w, h); 
+    if(scene.textures.exists('ui_gradient')) scene.textures.remove('ui_gradient'); 
+    scene.textures.addCanvas('ui_gradient', c); 
+};
+
+// ... Renderer ...
 const Renderer = {
     game: null, isMapDragging: false, isCardDragging: false,
     init(canvasElement) {
@@ -114,11 +123,15 @@ const Renderer = {
     checkUIHover(x, y) { if (this.isCardDragging) return true; const ui = this.game.scene.getScene('UIScene'); if (!ui) return false; for (let card of ui.cards) { const dx = Math.abs(x - card.x); const dy = Math.abs(y - card.y); if (dx < 70 && dy < 100) return true; } return false; }
 };
 
-// ... Card Class ... (No Change)
+// ... Card Class (Added Shadow) ...
 class Card extends Phaser.GameObjects.Container {
     constructor(scene, x, y, type) {
         super(scene, x, y); this.scene = scene; this.cardType = type; this.setSize(140, 200);
         this.visuals = scene.add.container(0, 0);
+        
+        // ★ドロップシャドウ (少しずらして半透明の黒)
+        const shadow = scene.add.rectangle(6, 6, 140, 200, 0x000000, 0.6);
+        
         const bg = scene.add.rectangle(0, 0, 140, 200, 0x222222).setStrokeStyle(2, 0x555555);
         bg.setInteractive({ useHandCursor: true, draggable: true });
         const iconKey = getCardTextureKey(scene, type);
@@ -126,7 +139,10 @@ class Card extends Phaser.GameObjects.Container {
         if(type === 'aerial' && scene.textures.exists('card_img_bomb')) icon.setDisplaySize(120, 80);
         const text = scene.add.text(0, 40, type.toUpperCase(), { fontSize: '16px', color: '#d84', fontStyle: 'bold' }).setOrigin(0.5);
         const desc = scene.add.text(0, 70, "DRAG TO DEPLOY", { fontSize: '10px', color: '#888' }).setOrigin(0.5);
-        this.visuals.add([bg, icon, text, desc]); this.add(this.visuals); this.bgRect = bg; 
+        
+        this.visuals.add([shadow, bg, icon, text, desc]); // シャドウを追加
+        this.add(this.visuals); this.bgRect = bg; 
+        
         this.setScrollFactor(0); this.baseX = x; this.baseY = y; this.physX = x; this.physY = y; this.velocityX = 0; this.velocityY = 0; this.velocityAngle = 0; this.targetX = x; this.targetY = y; this.dragOffsetX = 0; this.dragOffsetY = 0;
         bg.on('pointerover', this.onHover, this); bg.on('pointerout', this.onHoverOut, this); bg.on('dragstart', this.onDragStart, this); bg.on('drag', this.onDrag, this); bg.on('dragend', this.onDragEnd, this);
         scene.add.existing(this);
@@ -162,31 +178,53 @@ class Card extends Phaser.GameObjects.Container {
     returnToHand() { const hand = this.scene.handContainer; this.scene.children.remove(this); hand.add(this); this.setDepth(0); this.physX = this.x; this.physY = this.y; this.targetX = this.baseX; this.targetY = this.baseY; }
 }
 
-// ... UIScene ... (No Change)
+// ... UIScene ...
 class UIScene extends Phaser.Scene {
     constructor() { super({ key: 'UIScene', active: false }); this.cards=[]; this.handContainer=null; this.gradientBg=null; this.uiVfxGraphics=null; }
     create() {
         const w = this.scale.width; const h = this.scale.height;
         window.createGradientTexture(this);
-        this.gradientBg = this.add.image(w/2, h, 'ui_gradient').setOrigin(0.5, 1).setDepth(0).setDisplaySize(w, h*0.45);
+        // ★グラデーション背景 (1/4サイズ)
+        this.gradientBg = this.add.image(w/2, h, 'ui_gradient').setOrigin(0.5, 1).setDepth(0).setDisplaySize(w, h*0.25);
         this.handContainer = this.add.container(w/2, h);
         this.uiVfxGraphics = this.add.graphics().setDepth(10000);
         this.scale.on('resize', this.onResize, this);
     }
     onResize(gameSize) {
         const w = gameSize.width; const h = gameSize.height;
-        if (this.gradientBg) { this.gradientBg.setPosition(w / 2, h); this.gradientBg.setDisplaySize(w, h * 0.45); }
+        if (this.gradientBg) { this.gradientBg.setPosition(w / 2, h); this.gradientBg.setDisplaySize(w, h * 0.25); }
         if (this.handContainer) { this.handContainer.setPosition(w / 2, h); }
     }
     update() { this.cards.forEach(card => { if (card.active) card.updatePhysics(); }); UIVFX.update(); this.uiVfxGraphics.clear(); UIVFX.draw(this.uiVfxGraphics); }
-    dealStart(types) { types.forEach((type, i) => { this.time.delayedCall(i * 150, () => { this.addCardToHand(type); }); }); }
-    addCardToHand(type) { const card = new Card(this, 0, 0, type); this.handContainer.add(card); this.cards.push(card); card.physX = 600; card.physY = 300; card.setPosition(card.physX, card.physY); this.arrangeHand(); }
+    
+    dealStart(types) { 
+        types.forEach((type, i) => { 
+            this.time.delayedCall(i * 150, () => { 
+                this.addCardToHand(type); 
+            }); 
+        }); 
+    }
+    
+    addCardToHand(type) { 
+        // ★手札枚数制限 (Max 5)
+        if (this.cards.length >= 5) {
+            console.log("Hand full! Card discarded.");
+            return;
+        }
+        const card = new Card(this, 0, 0, type); 
+        this.handContainer.add(card); 
+        this.cards.push(card); 
+        card.physX = 600; card.physY = 300; 
+        card.setPosition(card.physX, card.physY); 
+        this.arrangeHand(); 
+    }
+    
     removeCard(cardToRemove) { this.cards = this.cards.filter(c => c !== cardToRemove); this.arrangeHand(); }
     arrangeHand() { const total = this.cards.length; const centerIdx = (total - 1) / 2; const spacing = 160; this.cards.forEach((card, i) => { const offset = i - centerIdx; card.baseX = offset * spacing; card.baseY = -120; }); }
 }
 
 // ==========================================
-//  MAIN SCENE
+//  MAIN SCENE (Refined Wind & Grass)
 // ==========================================
 class MainScene extends Phaser.Scene {
     constructor() { 
@@ -207,18 +245,18 @@ class MainScene extends Phaser.Scene {
         // さざ波
         g.clear(); g.fillStyle(0xffffff, 0.4); g.fillEllipse(15, 5, 12, 2); g.generateTexture('wave_line', 30, 10);
 
-        // 木 (Deep Forest Tree)
+        // 木 (Deep Forest)
         g.clear(); 
         g.fillStyle(0x1a1a10, 1); g.fillRect(38, 70, 4, 20); 
         g.fillStyle(0x1e3a1e, 1); g.fillTriangle(40, 20, 25, 80, 55, 80); 
         g.fillStyle(0x2a4d2a, 1); g.fillTriangle(40, 5, 30, 50, 50, 50); 
         g.generateTexture('tree', 80, 100);
 
-        // ★草 (Hairgrass: 矩形, 細く, 繊細)
+        // ★草 (Hairgrass: 矩形で極細 1px幅)
         g.clear();
-        g.fillStyle(0x557744, 1);
-        g.fillRect(0, 0, 1.5, 12); // 幅1.5pxの線
-        g.generateTexture('grass_blade', 2, 12);
+        g.fillStyle(0x668855, 1);
+        g.fillRect(0, 0, 1, 14); // 繊細な直線
+        g.generateTexture('grass_blade', 2, 14);
 
         g.clear(); g.fillStyle(0x00ff00, 1); g.fillCircle(16*HIGH_RES_SCALE, 16*HIGH_RES_SCALE, 12*HIGH_RES_SCALE); g.generateTexture('unit_player', 32*HIGH_RES_SCALE, 32*HIGH_RES_SCALE);
         g.clear(); g.fillStyle(0xff0000, 1); g.fillRect(4*HIGH_RES_SCALE, 4*HIGH_RES_SCALE, 24*HIGH_RES_SCALE, 24*HIGH_RES_SCALE); g.generateTexture('unit_enemy', 32*HIGH_RES_SCALE, 32*HIGH_RES_SCALE);
@@ -266,17 +304,20 @@ class MainScene extends Phaser.Scene {
                 
                 // ★草地 (id:1)
                 if(t.id === 1) {
-                    const count = 18 + Math.floor(Math.random() * 8); // 密度アップ
+                    const count = 15 + Math.floor(Math.random() * 6);
                     for(let i=0; i<count; i++) {
                         const rad = Math.random() * HEX_SIZE * 0.8;
                         const ang = Math.random() * Math.PI * 2;
                         const tx = pos.x + rad * Math.cos(ang);
                         const ty = pos.y + rad * Math.sin(ang) * 0.8;
+                        // ヘアーグラス (細い線)
                         const blade = this.add.image(tx, ty, 'grass_blade').setOrigin(0.5, 1.0);
-                        blade.setScale(0.5 + Math.random() * 0.5); // 細く
-                        const shade = 120 + Math.floor(Math.random()*80);
+                        blade.setScale(0.5 + Math.random() * 0.5); 
+                        
+                        const shade = 100 + Math.floor(Math.random()*80);
                         blade.setTint(Phaser.Display.Color.GetColor(shade, shade+40, shade));
-                        this.grassBlades.push({ sprite: blade, px: tx, py: ty, offset: Math.random() * 10 });
+                        
+                        this.grassBlades.push({ sprite: blade, px: tx, py: ty });
                     }
                 }
 
@@ -293,7 +334,7 @@ class MainScene extends Phaser.Scene {
                         const shade = 100 + Math.floor(Math.random() * 80); 
                         tree.setTint(Phaser.Display.Color.GetColor(shade, shade+20, shade+30));
                         this.hexGroup.add(tree);
-                        this.forestTrees.push({ sprite: tree, px: tx, py: ty, offset: Math.random() * 10, sway: 0.04 + Math.random()*0.04 });
+                        this.forestTrees.push({ sprite: tree, px: tx, py: ty, sway: 0.04 + Math.random()*0.04 });
                     }
                 }
 
@@ -312,9 +353,14 @@ class MainScene extends Phaser.Scene {
         const timeSec = time * 0.001;
         const waveSpeed = timeSec;
 
-        // ★風の生成 (不規則なうねり)
-        // ベースの風 + 大きなうねり(突風)
-        const globalWind = Math.sin(timeSec * 0.5) * 0.2 + (Math.sin(timeSec * 0.2) > 0.5 ? Math.sin(timeSec * 2) * 0.5 : 0);
+        // ★風の方程式 (北西から南東へ抜ける波)
+        // 座標(x-y)を使うことで斜めの動きを作る。
+        // Math.pow(Math.sin(...), 4) を使うことで、緩やかな「凪」と鋭い「突風」のリズムを作る。
+        const createWind = (px, py, speedOffset) => {
+            const flow = (px - py) * 0.002 + timeSec * 0.8 + speedOffset;
+            const gust = Math.pow(Math.sin(flow), 6); // 6乗してピークを鋭くする（突風感）
+            return gust; // 0.0 〜 1.0
+        };
 
         // 水面
         this.waterHexes.forEach(w => {
@@ -328,21 +374,19 @@ class MainScene extends Phaser.Scene {
             });
         });
 
-        // ★草と森の呼応 (globalWind を共有)
-        // 草: 反応が早い
+        // ★草のそよぎ (風と呼応)
         this.grassBlades.forEach(g => {
-            // 座標による位相ズレ（風が渡る表現）
-            const localPhase = (g.px + g.py) * 0.005;
-            // 自身の揺れ + 風の影響
-            const wind = Math.sin(timeSec * 2 + g.offset) * 0.1 + globalWind * 1.5 + Math.sin(timeSec + localPhase) * 0.3;
-            g.sprite.rotation = wind * 0.3; 
+            const wind = createWind(g.px, g.py, 0);
+            // さわさわっと揺れる: 風の強さにノイズを混ぜる
+            const flutter = Math.sin(timeSec * 15 + g.px) * 0.1; 
+            g.sprite.rotation = (wind * 0.4) + (wind > 0.1 ? flutter : 0);
         });
 
-        // 森: 重く、少し遅れて揺れる
+        // ★森のそよぎ (草より少し遅れて、重く揺れる)
         this.forestTrees.forEach(t => {
-            const localPhase = (t.px + t.py) * 0.005;
-            const wind = Math.sin(timeSec + t.offset) * 0.2 + globalWind * 1.0 + Math.sin(timeSec * 0.8 + localPhase) * 0.2;
-            t.sprite.rotation = wind * t.sway;
+            const wind = createWind(t.px, t.py, -0.5); // 位相をずらす
+            // 木はゆっくり大きくしなる
+            t.sprite.rotation = wind * t.sway * 1.5; 
         });
 
         this.unitGroup.clear(true, true);
@@ -360,10 +404,10 @@ class MainScene extends Phaser.Scene {
         const path = window.gameLogic.path;
         if(path.length > 0 && selected) { this.overlayGraphics.lineStyle(3, 0xffffff, 0.5); this.overlayGraphics.beginPath(); const s = Renderer.hexToPx(selected.q, selected.r); this.overlayGraphics.moveTo(s.x, s.y); path.forEach(p => { const px = Renderer.hexToPx(p.q, p.r); this.overlayGraphics.lineTo(px.x, px.y); }); this.overlayGraphics.strokePath(); }
     }
-    drawHexOutline(g, q, r) { const c = Renderer.hexToPx(q, r); g.beginPath(); for(let i=0; i<6; i++) { const a = Math.PI/180*60*i; g.lineTo(c.x+HEX_SIZE*0.9*Math.cos(a), c.y+HEX_SIZE*0.9*Math.sin(a)); } g.closePath(); g.lineWidth=0.3; g.strokePath(); } // 極細
+    // 極細アウトライン
+    drawHexOutline(g, q, r) { const c = Renderer.hexToPx(q, r); g.beginPath(); for(let i=0; i<6; i++) { const a = Math.PI/180*60*i; g.lineTo(c.x+HEX_SIZE*0.9*Math.cos(a), c.y+HEX_SIZE*0.9*Math.sin(a)); } g.closePath(); g.lineWidth=0.3; g.strokePath(); }
 }
 
-// ... VFX (Added Boom Sound) ...
 window.VFX = { 
     particles:[], projectiles:[], shockwaves:[], add(p){this.particles.push(p);}, 
     addBombardment(scene, tx, ty, hex) {
@@ -371,7 +415,7 @@ window.VFX = {
         scene.tweens.add({
             targets: bomb, y: ty, duration: 400, ease: 'Quad.In',
             onComplete: () => {
-                Sfx.play('boom'); // ★着弾音追加
+                Sfx.play('boom'); 
                 bomb.destroy(); scene.cameras.main.shake(300, 0.03); 
                 this.addRealExplosion(tx, ty); 
                 if(window.gameLogic && window.gameLogic.applyBombardment) window.gameLogic.applyBombardment(hex);
