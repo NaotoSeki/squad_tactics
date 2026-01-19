@@ -1,4 +1,4 @@
-/** * PHASER BRIDGE (Deep Forest, Ripples, UI Fixes) */
+/** * PHASER BRIDGE (Forest by ID, Thin Outlines, Ripples) */
 let phaserGame = null;
 const HIGH_RES_SCALE = 4; 
 
@@ -181,17 +181,13 @@ class MainScene extends Phaser.Scene {
         g.clear(); g.fillStyle(0xffffff, 0.4); g.fillEllipse(15, 5, 12, 2); g.generateTexture('wave_line', 30, 10);
 
         // ★木（Deep Forest Tree）
-        // 暗く細い針葉樹
         g.clear(); 
-        g.fillStyle(0x1a1a10, 1); // 幹（より暗く、細く）
+        g.fillStyle(0x1a1a10, 1); 
         g.fillRect(38, 70, 4, 20); 
-        
-        g.fillStyle(0x1e3a1e, 1); // 葉（下段・暗い深緑）
-        g.fillTriangle(40, 20, 25, 80, 55, 80); // 幅を狭く鋭く
-        
-        g.fillStyle(0x2a4d2a, 1); // 葉（上段・少しだけ明るい深緑）
+        g.fillStyle(0x1e3a1e, 1); 
+        g.fillTriangle(40, 20, 25, 80, 55, 80); 
+        g.fillStyle(0x2a4d2a, 1); 
         g.fillTriangle(40, 5, 30, 50, 50, 50); 
-        
         g.generateTexture('tree', 80, 100);
 
         g.clear(); g.fillStyle(0x00ff00, 1); g.fillCircle(16*HIGH_RES_SCALE, 16*HIGH_RES_SCALE, 12*HIGH_RES_SCALE); g.generateTexture('unit_player', 32*HIGH_RES_SCALE, 32*HIGH_RES_SCALE);
@@ -237,31 +233,27 @@ class MainScene extends Phaser.Scene {
                     this.waterHexes.push({ sprite: hex, waves: [w1, w2], baseY: pos.y, q: q, r: r, offset: Math.random() * 6.28 });
                 }
                 
-                // ★森 (id:1) の密度アップ
+                // ★修正: ID判定 (id === 2: FOREST)
                 if(t.id === 2) {
-                    // 6〜9本の木をランダム配置
-                    const count = 6 + Math.floor(Math.random() * 4);
+                    const count = 8 + Math.floor(Math.random() * 5);
                     for(let i=0; i<count; i++) {
-                        // ヘックス内に散らす
                         const rad = Math.random() * HEX_SIZE * 0.7;
                         const ang = Math.random() * Math.PI * 2;
                         const tx = pos.x + rad * Math.cos(ang);
                         const ty = pos.y + rad * Math.sin(ang) * 0.8;
                         
-                        const scale = (0.3 + Math.random()*0.3); // サイズのバラつき大
+                        const scale = (0.25 + Math.random()*0.35); 
                         const tree = this.add.image(tx, ty, 'tree').setOrigin(0.5, 1.0).setScale(scale);
                         
-                        // 色味を暗い緑〜青緑でランダム化
-                        const shade = 150 + Math.floor(Math.random() * 100); 
-                        tree.setTint(Phaser.Display.Color.GetColor(shade, shade, shade + 20));
+                        const shade = 100 + Math.floor(Math.random() * 80); 
+                        tree.setTint(Phaser.Display.Color.GetColor(shade, shade+20, shade+30));
 
                         this.hexGroup.add(tree);
-                        this.forestTrees.push({ sprite: tree, speed: 0.002 + Math.random()*0.002, offset: Math.random() * 10, sway: 0.05 + Math.random()*0.05 });
+                        this.forestTrees.push({ sprite: tree, speed: 0.0015 + Math.random()*0.002, offset: Math.random() * 10, sway: 0.04 + Math.random()*0.04 });
                     }
                 }
 
                 hex.setTint(tint); 
-                if(t.id===2) { const tr=this.add.circle(pos.x, pos.y, HEX_SIZE*0.6, 0x112211, 0.5); this.hexGroup.add(tr); } 
                 this.hexGroup.add(hex); 
             } 
         } 
@@ -286,7 +278,7 @@ class MainScene extends Phaser.Scene {
             });
         });
 
-        // 木のアニメーション (ゆったり大きく揺れる)
+        // 木
         this.forestTrees.forEach(t => {
             const wind = Math.sin(time * t.speed + t.offset);
             t.sprite.rotation = wind * t.sway;
@@ -307,7 +299,8 @@ class MainScene extends Phaser.Scene {
         const path = window.gameLogic.path;
         if(path.length > 0 && selected) { this.overlayGraphics.lineStyle(3, 0xffffff, 0.5); this.overlayGraphics.beginPath(); const s = Renderer.hexToPx(selected.q, selected.r); this.overlayGraphics.moveTo(s.x, s.y); path.forEach(p => { const px = Renderer.hexToPx(p.q, p.r); this.overlayGraphics.lineTo(px.x, px.y); }); this.overlayGraphics.strokePath(); }
     }
-    drawHexOutline(g, q, r) { const c = Renderer.hexToPx(q, r); g.beginPath(); for(let i=0; i<6; i++) { const a = Math.PI/180*60*i; g.lineTo(c.x+HEX_SIZE*0.9*Math.cos(a), c.y+HEX_SIZE*0.9*Math.sin(a)); } g.closePath(); g.strokePath(); }
+    // ★ヘックスアウトライン細く (lineWidth 0.5)
+    drawHexOutline(g, q, r) { const c = Renderer.hexToPx(q, r); g.beginPath(); for(let i=0; i<6; i++) { const a = Math.PI/180*60*i; g.lineTo(c.x+HEX_SIZE*0.9*Math.cos(a), c.y+HEX_SIZE*0.9*Math.sin(a)); } g.closePath(); g.lineWidth=0.5; g.strokePath(); }
 }
 
 window.VFX = { 
