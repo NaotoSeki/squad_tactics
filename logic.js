@@ -1,4 +1,4 @@
-/** LOGIC (Fixed Spawn, Organic Map) */
+/** LOGIC (Land-List Spawn, Ghost Fix) */
 class Game {
     constructor() {
         this.units=[]; this.map=[]; this.setupSlots=[]; this.state='SETUP'; 
@@ -30,17 +30,18 @@ class Game {
     startCampaign() {
         document.getElementById('setup-screen').style.display='none'; 
         Renderer.resize();
+        
+        // ★重要: 前の島の亡霊を消すため、座標を完全に無効化
+        this.units.forEach(u => { u.q = -999; u.r = -999; });
+
         this.generateMap(); 
         
-        // ★修正: 生存ユニットの座標をまず一括リセット（亡霊対策）
-        const survivors = this.units.filter(u => u.team === 'player');
-        survivors.forEach(u => { u.q = null; u.r = null; });
-
-        // ユニット配置
+        // 配置ロジック
         if(this.units.length === 0) { 
             this.setupSlots.forEach(k => this.spawnAtSafeGround('player', k)); 
         } else { 
-            survivors.forEach(u => this.spawnAtSafeGround('player', null, u)); 
+            // 生存ユニット再配置
+            this.units.filter(u => u.team === 'player').forEach(u => this.spawnAtSafeGround('player', null, u)); 
         }
         
         this.spawnEnemies();
@@ -49,7 +50,7 @@ class Game {
         document.getElementById('sector-counter').innerText = `SECTOR: ${this.sector.toString().padStart(2, '0')}`;
         
         const leader = this.units.find(u => u.team === 'player');
-        if(leader && leader.q !== null) Renderer.centerOn(leader.q, leader.r);
+        if(leader && leader.q !== -999) Renderer.centerOn(leader.q, leader.r);
 
         setTimeout(() => { if (Renderer.dealCards) Renderer.dealCards(['infantry', 'tank', 'aerial', 'infantry', 'tiger']); }, 500);
     }
@@ -166,40 +167,53 @@ class Game {
             }
         }
     }
-    // ★安全なスポーン地点の検索 (ホワイトリスト方式)
+    
+    // ★究極修正版: 確実に陸地に配置するロジック
     spawnAtSafeGround(team, type, existingUnit=null) { 
-        const cy = Math.floor(MAP_H/2);
-        const ALLOWED_TERRAIN = [0, 1, 2, 3, 4]; // DIRT, GRASS, FOREST, ROAD, TOWN
-        
-        const findCandidates = (ignoreZone) => {
-            let list = [];
-            for(let q=0; q<MAP_W; q++) {
-                for(let r=0; r<MAP_H; r++) {
-                    const t = this.map[q][r];
-                    // ★ホワイトリストで陸地のみを許可
-                    if(!ALLOWED_TERRAIN.includes(t.id)) continue;
-                    if(this.getUnit(q, r)) continue; // 重なりチェック
-                    if(!ignoreZone) {
-                        if(team === 'player' && r < cy) continue;
-                        if(team === 'enemy' && r > cy) continue;
-                    }
-                    list.push({q, r});
+        // 1. まず全ての「歩行可能な陸地」をリストアップする
+        const landTiles = [];
+        for(let q=0; q<MAP_W; q++) {
+            for(let r=0; r<MAP_H; r++) {
+                const t = this.map[q][r];
+                // VOID(-1), WATER(5), 障害物(cost99) は除外
+                if(t.id !== -1 && t.id !== 5 && t.cost < 99 && !this.getUnit(q, r)) {
+                    landTiles.push({q, r});
                 }
             }
-            return list;
-        };
-
-        let candidates = findCandidates(false);
-        if(candidates.length === 0) {
-            console.warn(`[Logic] ${team}の正規配置場所なし。全域検索します。`);
-            candidates = findCandidates(true);
         }
-        if(candidates.length === 0) { console.error("CRITICAL: No spawnable land found!"); return null; }
 
+        if(landTiles.length === 0) { console.error("CRITICAL: No spawnable land found!"); return null; }
+
+        // 2. Y座標(r)でソートして、島の上と下を判定
+        landTiles.sort((a, b) => a.r - b.r);
+
+        // 3. チームごとにエリアを割り当て
+        let candidates = [];
+        const splitIdx = Math.floor(landTiles.length / 2); // 中間地点
+
+        if(team === 'enemy') {
+            // 敵は上半分 (リストの前半)
+            candidates = landTiles.slice(0, Math.max(1, splitIdx));
+        } else {
+            // プレイヤーは下半分 (リストの後半)
+            candidates = landTiles.slice(splitIdx);
+        }
+
+        // 万が一候補がない場合（島が狭すぎるなど）、全陸地から選ぶ
+        if(candidates.length === 0) candidates = landTiles;
+
+        // 4. 候補からランダムに決定
         const choice = candidates[Math.floor(Math.random() * candidates.length)];
-        if(existingUnit) { existingUnit.q = choice.q; existingUnit.r = choice.r; return existingUnit; }
-        else { return this.spawnUnit(team, type, choice.q, choice.r); }
+
+        if(existingUnit) {
+            existingUnit.q = choice.q;
+            existingUnit.r = choice.r;
+            return existingUnit;
+        } else {
+            return this.spawnUnit(team, type, choice.q, choice.r);
+        }
     }
+    
     spawnUnit(t,k,q,r){ const d=UNITS[k], a=d.ap; this.units.push({id:Math.random(),team:t,q,r,def:d,hp:d.hp,maxHp:d.hp,ap:a,maxAp:a,stance:'stand',curWpn:d.wpn,rank:0,deadProcessed:false,skills:[],sectorsSurvived:0}); }
     toggleAuto(){ this.isAuto=!this.isAuto; document.getElementById('auto-toggle').classList.toggle('active'); this.log(`AUTO: ${this.isAuto?"ON":"OFF"}`); this.selectedUnit=null; this.path=[]; if(this.isAuto)this.runAuto(); }
     runAuto(){ if(this.state!=='PLAY'||this.autoTimer>0){if(this.autoTimer>0)this.autoTimer--;return;} const ac=this.units.filter(u=>u.team==='player'&&u.hp>0&&u.ap>0); if(ac.length===0){this.endTurn();return;} const u=ac[0], en=this.units.filter(e=>e.team==='enemy'&&e.hp>0); if(en.length===0)return; let tg=en[0], sc=-9999; en.forEach(e=>{const d=this.hexDist(u,e), v=(100-e.hp)*2-(d*10); if(v>sc){sc=v;tg=e;}}); const w=WPNS[u.curWpn], d=this.hexDist(u,tg); if(d<=w.rng&&u.ap>=2){this.actionAttack(u,tg);this.autoTimer=80;}else{const p=this.findPath(u,tg.q,tg.r); if(p.length>0&&this.map[p[0].q][p[0].r].cost<=u.ap){u.q=p[0].q;u.r=p[0].r;u.ap-=this.map[u.q][u.r].cost;if(window.Sfx)Sfx.play('move');this.autoTimer=20;this.checkReactionFire(u);}else u.ap=0;} }
