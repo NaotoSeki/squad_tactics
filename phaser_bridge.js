@@ -312,7 +312,7 @@ class MainScene extends Phaser.Scene {
     
     drawHexOutline(g, q, r) { const c = Renderer.hexToPx(q, r); g.beginPath(); for(let i=0; i<6; i++) { const a = Math.PI/180*60*i; g.lineTo(c.x+HEX_SIZE*0.9*Math.cos(a), c.y+HEX_SIZE*0.9*Math.sin(a)); } g.closePath(); g.lineWidth=0.1; g.strokePath(); }
 
-    // ★追加: 破線枠描画 (点線アルゴリズム)
+    // ★追加: 破線枠描画 (自前で点線を引く)
     drawDashedHexOutline(g, q, r) {
         const c = Renderer.hexToPx(q, r);
         const pts = [];
@@ -320,16 +320,26 @@ class MainScene extends Phaser.Scene {
             const a = Math.PI/180*60*i;
             pts.push({ x: c.x+HEX_SIZE*0.9*Math.cos(a), y: c.y+HEX_SIZE*0.9*Math.sin(a) });
         }
+        // 各辺を破線にする
         for(let i=0; i<6; i++) {
             const p1 = pts[i];
             const p2 = pts[(i+1)%6];
+            // 1辺を分割して描く
             const dist = Phaser.Math.Distance.Between(p1.x, p1.y, p2.x, p2.y);
-            const dashLen = 5; const gapLen = 5; const steps = dist / (dashLen + gapLen);
-            const dx = (p2.x - p1.x) / steps; const dy = (p2.y - p1.y) / steps;
+            const dashLen = 5;
+            const gapLen = 5;
+            const steps = dist / (dashLen + gapLen);
+            const dx = (p2.x - p1.x) / steps;
+            const dy = (p2.y - p1.y) / steps;
+            
             for(let j=0; j<steps; j++) {
-                if(j % 2 === 0) {
-                    const sx = p1.x + dx * j; const sy = p1.y + dy * j;
-                    g.beginPath(); g.moveTo(sx, sy); g.lineTo(sx + dx, sy + dy); g.strokePath();
+                if(j % 2 === 0) { // 描く部分
+                    const sx = p1.x + dx * j;
+                    const sy = p1.y + dy * j;
+                    g.beginPath();
+                    g.moveTo(sx, sy);
+                    g.lineTo(sx + dx, sy + dy);
+                    g.strokePath();
                 }
             }
         }
