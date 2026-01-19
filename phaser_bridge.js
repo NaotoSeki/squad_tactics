@@ -1,6 +1,4 @@
 /** * PHASER BRIDGE (Logic & View Controller) */
-// HIGH_RES_SCALE は phaser_vfx.js で定義済みなので再宣言しません
-
 let phaserGame = null;
 
 // ---------------------------------------------------------
@@ -28,7 +26,7 @@ const Renderer = {
         
         window.addEventListener('resize', () => this.resize());
         
-        // ユーザー操作でオーディオコンテキストを開始 (ブラウザ制限対策)
+        // ユーザー操作でオーディオコンテキストを開始
         const startAudio = () => { 
             if(window.Sfx && window.Sfx.ctx && window.Sfx.ctx.state === 'suspended') {
                 window.Sfx.ctx.resume(); 
@@ -109,7 +107,7 @@ class Card extends Phaser.GameObjects.Container {
         
         // テクスチャ取得 (phaser_vfx.js の関数を使用)
         const iconKey = window.getCardTextureKey(scene, type);
-        const icon = scene.add.image(0, -40, iconKey).setScale(1/HIGH_RES_SCALE);
+        const icon = scene.add.image(0, -40, iconKey).setScale(1/window.HIGH_RES_SCALE);
         if(type === 'aerial' && scene.textures.exists('card_img_bomb')) icon.setDisplaySize(120, 80);
         
         const text = scene.add.text(0, 40, type.toUpperCase(), { fontSize: '16px', color: '#d84', fontStyle: 'bold' }).setOrigin(0.5);
@@ -228,12 +226,11 @@ class Card extends Phaser.GameObjects.Container {
                 
                 const rad = Phaser.Math.DegToRad(this.angle); 
                 const cos = Math.cos(rad); const sin = Math.sin(rad); 
-                const burnLineY = 100 - (200 * burnProgress.val); 
                 
                 for(let i=0; i<8; i++) { 
                     const randX = (Math.random() - 0.5) * 140; 
-                    const wx = this.x + (randX * cos - burnLineY * sin); 
-                    const wy = this.y + (randX * sin + burnLineY * cos); 
+                    const wx = this.x + (randX * cos - sin); 
+                    const wy = this.y + (randX * sin + cos); 
                     // phaser_vfx.js のエフェクト使用
                     if(window.UIVFX) {
                         window.UIVFX.addFire(wx, wy); 
@@ -414,13 +411,13 @@ class MainScene extends Phaser.Scene {
             for(let r=0; r<MAP_H; r++) { 
                 const t = map[q][r]; if(t.id===-1)continue; 
                 const pos = Renderer.hexToPx(q, r); 
-                const hex = this.add.image(pos.x, pos.y, 'hex_base').setScale(1/HIGH_RES_SCALE); 
+                const hex = this.add.image(pos.x, pos.y, 'hex_base').setScale(1/window.HIGH_RES_SCALE); 
                 let tint = 0x555555; 
                 if(t.id===0)tint=0x5a5245; else if(t.id===1)tint=0x425030; else if(t.id===2)tint=0x222e1b; else if(t.id===4)tint=0x504540; 
                 else if(t.id===5) { 
                     tint=0x303840; 
-                    // EnvSystemに水タイル登録を依頼
-                    if(window.EnvSystem) window.EnvSystem.registerWater(hex, pos.y, q, r);
+                    // ★修正: hexGroup を渡す
+                    if(window.EnvSystem) window.EnvSystem.registerWater(hex, pos.y, q, r, this.hexGroup);
                 }
                 
                 // EnvSystemに装飾（木、草）を依頼
@@ -455,15 +452,15 @@ class MainScene extends Phaser.Scene {
             if(u.hp <= 0) return; 
             const pos = Renderer.hexToPx(u.q, u.r); 
             const container = this.add.container(pos.x, pos.y); 
-            const sprite = this.add.sprite(0, 0, u.team==='player'?'unit_player':'unit_enemy').setScale(1/HIGH_RES_SCALE); 
+            const sprite = this.add.sprite(0, 0, u.team==='player'?'unit_player':'unit_enemy').setScale(1/window.HIGH_RES_SCALE); 
             if(u.def.isTank) sprite.setTint(0x888888); 
             if(u.team==='player') sprite.setTint(0x6688aa); else sprite.setTint(0xcc6655); 
             container.add(sprite);
             const hpPct = u.hp / u.maxHp; 
             container.add([this.add.rectangle(0, -20, 20, 4, 0x000000), this.add.rectangle(-10+(10*hpPct), -20, 20*hpPct, 4, hpPct>0.5?0x00ff00:0xff0000)]);
             if(window.gameLogic.selectedUnit === u) { 
-                const c = this.add.image(0, 0, 'cursor').setScale(1/HIGH_RES_SCALE); 
-                this.tweens.add({ targets: c, scale: { from: 1/HIGH_RES_SCALE, to: 1.1/HIGH_RES_SCALE }, alpha: { from: 1, to: 0.5 }, yoyo: true, repeat: -1, duration: 800 }); 
+                const c = this.add.image(0, 0, 'cursor').setScale(1/window.HIGH_RES_SCALE); 
+                this.tweens.add({ targets: c, scale: { from: 1/window.HIGH_RES_SCALE, to: 1.1/window.HIGH_RES_SCALE }, alpha: { from: 1, to: 0.5 }, yoyo: true, repeat: -1, duration: 800 }); 
                 container.add(c); 
             } 
             this.unitGroup.add(container);
