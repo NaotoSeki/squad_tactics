@@ -1,4 +1,4 @@
-/** * PHASER BRIDGE (Safe Deployment, Optimized, Hex Lock-on) */
+/** * PHASER BRIDGE (Safe Deployment, Optimized, Marching Ants) */
 let phaserGame = null;
 
 // ---------------------------------------------------------
@@ -291,18 +291,17 @@ class MainScene extends Phaser.Scene {
         const selected = window.gameLogic.selectedUnit;
         if(selected && window.gameLogic.reachableHexes.length > 0) { this.overlayGraphics.lineStyle(2, 0xffffff, 0.4); window.gameLogic.reachableHexes.forEach(h => this.drawHexOutline(this.overlayGraphics, h.q, h.r)); }
         
-        // ★修正: 射線 & ロックオン回転描画
+        // ★修正: ロックオン中の回転と通常射線の描画
         if(selected && window.gameLogic.attackLine && window.gameLogic.attackLine.length > 0) {
             this.overlayGraphics.lineStyle(3, 0xff2222, 0.8);
             const targetUnit = window.gameLogic.aimTargetUnit;
-            
             window.gameLogic.attackLine.forEach(h => {
-                let rotation = 0;
-                // もしこのヘックスにロックオン対象の敵がいるなら、枠を回転させる
+                let offset = 0;
+                // ロックオン中の敵ヘックスだけ回す
                 if (targetUnit && targetUnit.q === h.q && targetUnit.r === h.r) {
-                    rotation = time * 0.003; 
+                    offset = time * 0.05; 
                 }
-                this.drawDashedHexOutline(this.overlayGraphics, h.q, h.r, rotation);
+                this.drawDashedHexOutline(this.overlayGraphics, h.q, h.r, offset);
             });
         }
         
@@ -319,26 +318,56 @@ class MainScene extends Phaser.Scene {
     
     drawHexOutline(g, q, r) { const c = Renderer.hexToPx(q, r); g.beginPath(); for(let i=0; i<6; i++) { const a = Math.PI/180*60*i; g.lineTo(c.x+HEX_SIZE*0.9*Math.cos(a), c.y+HEX_SIZE*0.9*Math.sin(a)); } g.closePath(); g.lineWidth=0.1; g.strokePath(); }
 
-    // ★修正: 回転対応の破線描画
-    drawDashedHexOutline(g, q, r, rotation = 0) {
+    // ★重要: ヘックス枠に沿って回る破線 (Marching Ants)
+    drawDashedHexOutline(g, q, r, timeOffset = 0) {
         const c = Renderer.hexToPx(q, r);
         const pts = [];
+        // 頂点は回転させない（枠は固定）
         for(let i=0; i<6; i++) {
-            const a = Math.PI/180*60*i + rotation; // 回転を加算
+            const a = Math.PI/180*60*i;
             pts.push({ x: c.x+HEX_SIZE*0.9*Math.cos(a), y: c.y+HEX_SIZE*0.9*Math.sin(a) });
         }
+
+        const dashLen = 6;
+        const gapLen = 4;
+        const period = dashLen + gapLen;
+        
+        // 全周を回るオフセット (マイナスで逆回転させて流れる方向を調整)
+        let currentDistInPath = -timeOffset; 
+
         for(let i=0; i<6; i++) {
             const p1 = pts[i];
             const p2 = pts[(i+1)%6];
             const dist = Phaser.Math.Distance.Between(p1.x, p1.y, p2.x, p2.y);
-            const dashLen = 5; const gapLen = 5; const steps = dist / (dashLen + gapLen);
-            const dx = (p2.x - p1.x) / steps; const dy = (p2.y - p1.y) / steps;
-            for(let j=0; j<steps; j++) {
-                if(j % 2 === 0) {
-                    const sx = p1.x + dx * j; const sy = p1.y + dy * j;
-                    g.beginPath(); g.moveTo(sx, sy); g.lineTo(sx + dx, sy + dy); g.strokePath();
+            const dx = (p2.x - p1.x) / dist;
+            const dy = (p2.y - p1.y) / dist;
+
+            // この辺の開始時点での「周期内の位置」
+            let patternPhase = currentDistInPath % period;
+            if(patternPhase < 0) patternPhase += period;
+
+            let distCovered = 0;
+            
+            while(distCovered < dist) {
+                const isDash = patternPhase < dashLen;
+                const lenToNextChange = isDash ? (dashLen - patternPhase) : (period - patternPhase);
+                const segmentLen = Math.min(lenToNextChange, dist - distCovered);
+                
+                if(isDash) {
+                    const sx = p1.x + dx * distCovered;
+                    const sy = p1.y + dy * distCovered;
+                    const ex = p1.x + dx * (distCovered + segmentLen);
+                    const ey = p1.y + dy * (distCovered + segmentLen);
+                    g.beginPath();
+                    g.moveTo(sx, sy);
+                    g.lineTo(ex, ey);
+                    g.strokePath();
                 }
+                
+                distCovered += segmentLen;
+                patternPhase = (patternPhase + segmentLen) % period;
             }
+            currentDistInPath += dist;
         }
     }
 }
