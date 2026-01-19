@@ -1,4 +1,4 @@
-/** * PHASER BRIDGE (Sparkling Water, CenterOn, Scene Safety) */
+/** * PHASER BRIDGE (Ripples Water, CenterOn, Scene Safety) */
 let phaserGame = null;
 const HIGH_RES_SCALE = 4; 
 
@@ -69,7 +69,6 @@ const Renderer = {
     pxToHex(mx, my) { const main = phaserGame.scene.getScene('MainScene'); if(!main) return {q:0, r:0}; const w = main.cameras.main.getWorldPoint(mx, my); return this.roundHex((2/3*w.x)/HEX_SIZE, (-1/3*w.x+Math.sqrt(3)/3*w.y)/HEX_SIZE); },
     roundHex(q,r) { let rq=Math.round(q), rr=Math.round(r), rs=Math.round(-q-r); const dq=Math.abs(rq-q), dr=Math.abs(rr-r), ds=Math.abs(rs-(-q-r)); if(dq>dr&&dq>ds) rq=-rr-rs; else if(dr>ds) rr=-rq-rs; return {q:rq, r:rr}; },
     
-    // カメラ移動
     centerOn(q, r) {
         const main = this.game.scene.getScene('MainScene');
         if (main && main.centerCamera) {
@@ -77,7 +76,6 @@ const Renderer = {
         }
     },
 
-    // カード配付
     dealCards(types) { 
         let ui = this.game.scene.getScene('UIScene');
         if(!ui || !ui.sys) ui = this.game.scene.scenes.find(s => s.scene.key === 'UIScene');
@@ -162,7 +160,7 @@ class UIScene extends Phaser.Scene {
 }
 
 // ==========================================
-//  MAIN SCENE (Sparkling Water Implemented)
+//  MAIN SCENE (Ripples Effect Implemented)
 // ==========================================
 class MainScene extends Phaser.Scene {
     constructor() { 
@@ -178,8 +176,11 @@ class MainScene extends Phaser.Scene {
         const g = this.make.graphics({x:0, y:0, add:false}); const S = HEX_SIZE * HIGH_RES_SCALE; 
         g.lineStyle(2 * HIGH_RES_SCALE, 0x888888, 1); g.fillStyle(0xffffff, 1); g.beginPath(); for(let i=0; i<6; i++) { const a = Math.PI/180 * 60 * i; g.lineTo(S + S * Math.cos(a), S + S * Math.sin(a)); } g.closePath(); g.fillPath(); g.strokePath(); g.generateTexture('hex_base', S*2, S*2);
         
-        // ★キラキラ用テクスチャ
-        g.clear(); g.fillStyle(0xffffff, 0.8); g.fillCircle(10, 10, 8); g.generateTexture('glint', 20, 20);
+        // ★さざ波用テクスチャ (白い横長の楕円)
+        g.clear(); 
+        g.fillStyle(0xffffff, 0.4); 
+        g.fillEllipse(15, 5, 12, 2); 
+        g.generateTexture('wave_line', 30, 10);
 
         g.clear(); g.fillStyle(0x00ff00, 1); g.fillCircle(16*HIGH_RES_SCALE, 16*HIGH_RES_SCALE, 12*HIGH_RES_SCALE); g.generateTexture('unit_player', 32*HIGH_RES_SCALE, 32*HIGH_RES_SCALE);
         g.clear(); g.fillStyle(0xff0000, 1); g.fillRect(4*HIGH_RES_SCALE, 4*HIGH_RES_SCALE, 24*HIGH_RES_SCALE, 24*HIGH_RES_SCALE); g.generateTexture('unit_enemy', 32*HIGH_RES_SCALE, 32*HIGH_RES_SCALE);
@@ -217,8 +218,16 @@ class MainScene extends Phaser.Scene {
                 if(t.id===0)tint=0x5a5245; else if(t.id===1)tint=0x425030; else if(t.id===2)tint=0x222e1b; else if(t.id===4)tint=0x504540; 
                 else if(t.id===5) { 
                     tint=0x303840; 
-                    // ★水タイル登録
-                    this.waterHexes.push({ sprite: hex, baseY: pos.y, q: q, r: r, offset: Math.random() * 6.28 });
+                    // ★さざ波を追加
+                    const w1 = this.add.image(pos.x + (Math.random()-0.5)*20, pos.y + (Math.random()-0.5)*15, 'wave_line').setScale(0.8);
+                    const w2 = this.add.image(pos.x + (Math.random()-0.5)*20, pos.y + (Math.random()-0.5)*15, 'wave_line').setScale(0.6);
+                    this.waterHexes.push({ 
+                        sprite: hex, 
+                        waves: [w1, w2],
+                        baseY: pos.y, 
+                        q: q, r: r, 
+                        offset: Math.random() * 6.28 
+                    });
                 }
                 hex.setTint(tint); 
                 if(t.id===2) { const tr=this.add.circle(pos.x, pos.y, HEX_SIZE*0.6, 0x112211, 0.5); this.hexGroup.add(tr); } 
@@ -233,30 +242,23 @@ class MainScene extends Phaser.Scene {
         VFX.update(); this.vfxGraphics.clear(); VFX.draw(this.vfxGraphics);
         if (window.gameLogic.map.length > 0 && !this.mapGenerated) { this.createMap(); this.mapGenerated = true; }
         
-        // ★水面ゆらゆら & キラキラ
+        // ★さざ波アニメーション
         const waveSpeed = time * 0.001;
         this.waterHexes.forEach(w => {
+            // 本体ゆらゆら
             const wave = Math.sin(waveSpeed + w.q * 0.3 + w.r * 0.3 + w.offset);
             w.sprite.y = w.baseY + wave * 3;
             w.sprite.setScale((1/HIGH_RES_SCALE) + (wave * 0.01));
-        });
 
-        if(this.waterHexes.length > 0 && Math.random() < 0.2) { 
-            const w = this.waterHexes[Math.floor(Math.random() * this.waterHexes.length)];
-            const r = HEX_SIZE * 0.7 * Math.sqrt(Math.random());
-            const th = Math.random() * Math.PI * 2;
-            const gx = w.sprite.x + r * Math.cos(th);
-            const gy = w.sprite.y + r * Math.sin(th);
-            
-            const glint = this.add.image(gx, gy, 'glint').setScale(0).setAlpha(0);
-            this.tweens.add({
-                targets: glint,
-                scale: { from: 0, to: 0.8 },
-                alpha: { from: 1, to: 0 },
-                duration: 600 + Math.random() * 400,
-                onComplete: () => glint.destroy()
+            // さざ波
+            w.waves.forEach((ws, i) => {
+                ws.y = w.sprite.y + (i === 0 ? -5 : 5); 
+                ws.x = w.sprite.x + Math.sin(waveSpeed * 0.5 + w.offset + i) * 8; 
+                // 明滅 (波の反射)
+                const alpha = (Math.sin(waveSpeed * 1.5 + w.offset + i * 2) + 1) * 0.2 + 0.1;
+                ws.setAlpha(alpha);
             });
-        }
+        });
 
         this.unitGroup.clear(true, true);
         window.gameLogic.units.forEach(u => {
