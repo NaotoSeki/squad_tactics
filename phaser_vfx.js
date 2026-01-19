@@ -1,4 +1,4 @@
-/** * PHASER VFX SPECIALIST (Warm Smoke, Fast Tracers) */
+/** * PHASER VFX SPECIALIST (Realistic Soil Smoke, Physics Particles) */
 window.HIGH_RES_SCALE = 4;
 
 // ---------------------------------------------------------
@@ -30,7 +30,7 @@ window.createGradientTexture = function(scene) {
 };
 
 // ---------------------------------------------------------
-//  2. 環境システム
+//  2. 環境システム (Group管理)
 // ---------------------------------------------------------
 window.EnvSystem = {
     waterHexes: [], forestTrees: [], grassBlades: [],
@@ -112,12 +112,16 @@ window.EnvSystem = {
 };
 
 // ---------------------------------------------------------
-//  3. VFX (Particles, Shake, Tracers)
+//  3. VFX (Realistic Smoke, Physics Debris, Tracers)
 // ---------------------------------------------------------
 window.VFX = { 
     particles:[], projectiles:[], shockwaves:[], shakeRequest: 0,
     add(p){this.particles.push(p);}, 
     requestShake(intensity) { this.shakeRequest = Math.max(this.shakeRequest, intensity); },
+
+    // 煙の色パレット (泥っぽい茶色、暗いグレー、オリーブドラブ)
+    // 青みを完全に排除した土煙セット
+    smokeColors: [0x4d463e, 0x3d3834, 0x2a2520, 0x555048],
 
     addBombardment(scene, tx, ty, hex) {
         const startY = ty - 800; const bomb = scene.add.sprite(tx, startY, 'bomb_body').setDepth(2000).setScale(1.5);
@@ -133,70 +137,84 @@ window.VFX = {
         });
     },
     
-    // リアルな爆発 (煙を暖色系グレーにして青さを消す)
+    // ★リアルな爆発 (物理挙動＆土煙)
     addRealExplosion(x, y) {
-        this.add({x, y, vx:0, vy:0, life:3, maxLife:3, size:150, color:'#fff', type:'flash'});
+        this.add({x, y, vx:0, vy:0, life:3, maxLife:3, size:150, color:0xffffff, type:'flash'});
         this.shockwaves.push({x, y, radius:10, maxRadius:150, alpha:1.0});
         
-        for(let i=0; i<30; i++) this.add({ x, y, vx: Math.cos(Math.random()*6.28)*Math.random()*8, vy: Math.sin(Math.random()*6.28)*Math.random()*8-5, life: 30+Math.random()*20, maxLife:50, color: '#fa0', size: 10+Math.random()*15, type:'fire_core' });
+        // 火花
+        for(let i=0; i<30; i++) this.add({ x, y, vx: Math.cos(Math.random()*6.28)*Math.random()*8, vy: Math.sin(Math.random()*6.28)*Math.random()*8-5, life: 30+Math.random()*20, maxLife:50, color: 0xffaa00, size: 10+Math.random()*15, type:'fire_core' });
         
-        // ★修正: 煙の色を #222 から #2b2826 (焦げ茶グレー) に変更
-        for(let i=0; i<50; i++) {
+        // ★リアル煙: 矩形回転 + 空気抵抗 + 土色
+        for(let i=0; i<60; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            const speed = 2 + Math.random() * 5; // 初期速度は速く
+            const color = this.smokeColors[Math.floor(Math.random() * this.smokeColors.length)];
+            
             this.add({ 
-                x: x+(Math.random()-0.5)*30, y: y+(Math.random()-0.5)*30, 
-                vx: Math.cos(Math.random()*6.28)*Math.random()*3, vy: Math.sin(Math.random()*6.28)*Math.random()*3-2, 
-                life: 60+Math.random()*40, maxLife:100, color: '#2b2826', size: 10+Math.random()*20, type:'smoke_dark',
-                angle: Math.random()*Math.PI*2, angVel: (Math.random()-0.5)*0.1 
+                x: x + (Math.random()-0.5)*20, y: y + (Math.random()-0.5)*20, 
+                vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed - 1, // 上昇成分
+                life: 60 + Math.random()*50, maxLife: 110, 
+                color: color, size: 15 + Math.random()*20, 
+                type: 'smoke_heavy', // 新タイプ: 重い煙
+                angle: Math.random()*6, angVel: (Math.random()-0.5)*0.2 
             });
         }
+        
+        // 破片
         for(let i=0; i<30; i++) {
             this.add({ 
                 x, y, 
                 vx: Math.cos(Math.random()*6.28)*(5+Math.random()*15), vy: Math.sin(Math.random()*6.28)*(5+Math.random()*15)-10, 
-                life: 50+Math.random()*30, maxLife:80, color: '#444', size: 4+Math.random()*4, 
+                life: 50+Math.random()*30, maxLife:80, color: 0x444444, size: 4+Math.random()*4, 
                 type:'debris_rect', gravity: 0.6, angle: Math.random()*6, angVel: (Math.random()-0.5)*0.5 
             });
         }
     },
     
+    // 通常ヒット (少し控えめだがリアルに)
     addExplosion(x, y, c, n) { 
         this.requestShake(3); 
         for(let i=0; i<n; i++) {
+            // 色文字列判定
+            const cInt = (typeof c==='string'&&c.startsWith('#')) ? parseInt(c.replace('#','0x')) : c;
             this.add({
                 x, y, 
                 vx: Math.cos(Math.random()*6.28)*Math.random()*6, vy: Math.sin(Math.random()*6.28)*Math.random()*6, 
-                life: 20+Math.random()*20, maxLife:40, color:c, size:2+Math.random()*3, 
+                life: 20+Math.random()*20, maxLife:40, color:cInt, size:2+Math.random()*3, 
                 type: 'debris_rect', 
                 gravity: 0.4, angle: Math.random()*6, angVel: (Math.random()-0.5)*0.5
             });
         }
-        for(let i=0; i<5; i++) {
+        // ヒットスモーク (土色)
+        for(let i=0; i<8; i++) {
+            const color = this.smokeColors[Math.floor(Math.random() * this.smokeColors.length)];
             this.add({
-                x, y, vx:(Math.random()-0.5)*2, vy:-1-Math.random(), life:40, maxLife:40, 
-                color:'#bbb', size:5+Math.random()*5, type:'smoke_puff', alpha:0.5 // 少し濃く
+                x, y, vx:(Math.random()-0.5)*3, vy:-2-Math.random()*2, 
+                life:40+Math.random()*20, maxLife:60, 
+                color: color, size: 8+Math.random()*8, 
+                type: 'smoke_heavy', // 重い煙を使用
+                angle: Math.random()*6, angVel: (Math.random()-0.5)*0.1
             });
         }
     },
     
-    // ★修正: 弾丸の超高速化 & トレーサー間引き
+    // 弾丸 (超高速化)
     addProj(p){
-        // 弾速ハック: ロジックを変えずに見た目だけ10倍速
         if(p.type === 'bullet' || p.type.includes('shell')) {
             p.speed *= 10.0;
         }
-        // トレーサー判定: 3発に1発だけ光らせる
-        p.isTracer = Math.random() < 0.3;
-        
+        p.isTracer = Math.random() < 0.3; // 30%の確率で曳光弾
         p.trailX = p.x;
         p.trailY = p.y;
         this.projectiles.push(p);
         
-        this.add({x:p.x, y:p.y, life:3, maxLife:3, size:20, color:'#ffaa00', type:'flash'});
+        this.add({x:p.x, y:p.y, life:3, maxLife:3, size:20, color:0xffaa00, type:'flash'});
         this.requestShake(2);
     },
     
     addUnitDebris(x,y){
-        this.addExplosion(x,y, "#888", 15);
+        this.addExplosion(x,y, 0x888888, 15);
     }, 
     
     update() { 
@@ -205,9 +223,16 @@ window.VFX = {
             if(p.gravity) p.vy += p.gravity;
             if(p.angVel) p.angle += p.angVel;
             
+            // ★物理挙動: 破片
             if(p.type==='debris_rect') { p.vx *= 0.95; p.vy *= 0.95; }
-            if(p.type==='smoke_dark'){ p.size*=1.01; p.vx*=0.95; p.vy*=0.95; p.alpha=p.life/p.maxLife*0.8; }
-            if(p.type==='smoke_puff'){ p.size*=1.05; p.vy*=0.9; p.alpha=p.life/p.maxLife*0.4; }
+            
+            // ★物理挙動: 重い煙 (急減速して漂う)
+            if(p.type==='smoke_heavy'){ 
+                p.size *= 1.02; // モコモコ広がる
+                p.vx *= 0.85;   // 空気抵抗強め
+                p.vy *= 0.85; 
+                p.alpha = p.life/p.maxLife * 0.7; // 少し透明
+            }
             if(p.type==='flash'){ p.size*=0.8; }
         }); 
         
@@ -233,31 +258,36 @@ window.VFX = {
     draw(g) { 
         this.shockwaves.forEach(s=>{g.lineStyle(4,0xffffff,s.alpha);g.strokeCircle(s.x,s.y,s.radius);}); 
         
-        // ★修正: 弾丸描画
         this.projectiles.forEach(p=>{
             if(p.type === 'rocket') {
                 g.fillStyle(0xffaa00, 1); g.fillCircle(p.x, p.y, 4);
-                if(Math.random()<0.5) this.add({x:p.x, y:p.y, vx:0, vy:0, life:20, maxLife:20, size:5, color:'#888', type:'smoke_puff'});
+                if(Math.random()<0.5) this.add({x:p.x, y:p.y, vx:0, vy:0, life:20, maxLife:20, size:5, color:0x888888, type:'smoke_heavy'});
             } else {
-                // 通常弾はトレーサーの場合のみ、極細の線を描く
                 if(p.isTracer) {
-                    g.lineStyle(0.8, 0xffffaa, 0.6); // 極細(0.8), 淡い黄色, 透明度低め
+                    g.lineStyle(0.8, 0xffffaa, 0.6); 
                     g.beginPath();
                     g.moveTo(p.trailX, p.trailY);
                     g.lineTo(p.x, p.y);
                     g.strokePath();
                 }
-                // それ以外は描画しない（不可視）
             }
         }); 
         
         this.particles.forEach(p=>{ 
-            const cStr = p.color;
-            const cInt = (typeof cStr==='string'&&cStr.startsWith('#')) ? parseInt(cStr.replace('#','0x')) : cStr;
+            // カラーコード変換不要 (Intで統一)
             const alpha = p.alpha !== undefined ? p.alpha : (p.life/p.maxLife);
-            g.fillStyle(cInt, alpha);
-            if (p.type === 'debris_rect') { const s = p.size; g.fillRect(p.x - s/2, p.y - s/2, s, s); } 
-            else { g.fillCircle(p.x, p.y, p.size); }
+            g.fillStyle(p.color, alpha);
+            
+            if (p.type === 'debris_rect') { 
+                const s = p.size; g.fillRect(p.x - s/2, p.y - s/2, s, s); 
+            } else if (p.type === 'smoke_heavy') {
+                // 煙も矩形で描画して回転させることで「丸ではない」質感を出す
+                const s = p.size;
+                // Graphicsでの回転はコストが高いので、擬似的に少し歪ませる
+                g.fillEllipse(p.x, p.y, s, s*0.8); // 楕円にする
+            } else { 
+                g.fillCircle(p.x, p.y, p.size); 
+            }
         }); 
     }
 };
