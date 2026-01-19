@@ -1,18 +1,17 @@
 /** * PHASER VFX SPECIALIST (Environment, Particles, Textures) */
-const HIGH_RES_SCALE = 4; // 高解像度スケール
+window.HIGH_RES_SCALE = 4; // グローバル定数化
 
 // ---------------------------------------------------------
 //  1. テクスチャ生成 & 共通描画ヘルパー
 // ---------------------------------------------------------
-// グローバルにしてBridgeからも呼べるようにする
 window.drawCardToCanvas = function(type) {
-    const w = 100 * HIGH_RES_SCALE; 
-    const h = 60 * HIGH_RES_SCALE;
+    const w = 100 * window.HIGH_RES_SCALE; 
+    const h = 60 * window.HIGH_RES_SCALE;
     const c = document.createElement('canvas'); 
     c.width = w; c.height = h; 
     const x = c.getContext('2d');
     
-    x.scale(HIGH_RES_SCALE, HIGH_RES_SCALE); 
+    x.scale(window.HIGH_RES_SCALE, window.HIGH_RES_SCALE); 
     x.translate(50, 30); 
     x.scale(2, 2);
     
@@ -29,7 +28,7 @@ window.drawCardToCanvas = function(type) {
     return c;
 };
 
-// HTML UI用 (Deployment Phase)
+// HTML UI用
 window.createCardIcon = function(type) {
     return window.drawCardToCanvas(type).toDataURL(); 
 };
@@ -48,7 +47,7 @@ window.getCardTextureKey = function(scene, type) {
 
 // UIグラデーション生成
 window.createGradientTexture = function(scene) {
-    const w = scene.scale.width; const h = scene.scale.height * 0.25; // 1/4サイズ
+    const w = scene.scale.width; const h = scene.scale.height * 0.25; 
     const c = document.createElement('canvas'); c.width=w; c.height=h; const x = c.getContext('2d');
     const grd = x.createLinearGradient(0, h, 0, 0);
     grd.addColorStop(0, "rgba(0,0,0,1)"); grd.addColorStop(0.5, "rgba(0,0,0,0.8)"); grd.addColorStop(1, "rgba(0,0,0,0)");
@@ -66,38 +65,39 @@ window.EnvSystem = {
     grassBlades: [],
 
     preload(scene) {
-        // 画像読み込み
         scene.load.image('card_img_bomb', 'image_6e3646.jpg'); 
         
-        // --- プロシージャルテクスチャ生成 ---
         const g = scene.make.graphics({x:0, y:0, add:false}); 
-        const S = HEX_SIZE * HIGH_RES_SCALE; 
+        const S = HEX_SIZE * window.HIGH_RES_SCALE; 
 
-        // ヘックスベース
-        g.lineStyle(2 * HIGH_RES_SCALE, 0x888888, 1); g.fillStyle(0xffffff, 1); 
+        // ★ヘックス枠（極細化 & 薄色化）
+        // 0.1 * HIGH_RES_SCALE = 0.4px (Texture) -> 0.1px (Screen)
+        // 色も #888888 -> #444444 に落として目立たなくする
+        g.lineStyle(0.1 * window.HIGH_RES_SCALE, 0x444444, 0.5); 
+        g.fillStyle(0xffffff, 1); 
         g.beginPath(); for(let i=0; i<6; i++) { const a = Math.PI/180 * 60 * i; g.lineTo(S + S * Math.cos(a), S + S * Math.sin(a)); } g.closePath(); 
         g.fillPath(); g.strokePath(); g.generateTexture('hex_base', S*2, S*2);
         
-        // さざ波 (Wave Line)
+        // さざ波
         g.clear(); g.fillStyle(0xffffff, 0.4); g.fillEllipse(15, 5, 12, 2); g.generateTexture('wave_line', 30, 10);
 
-        // 木 (Deep Forest Tree: 暗く細い)
+        // 木 (Deep Forest Tree)
         g.clear(); 
         g.fillStyle(0x1a1a10, 1); g.fillRect(38, 70, 4, 20); 
         g.fillStyle(0x1e3a1e, 1); g.fillTriangle(40, 20, 25, 80, 55, 80); 
         g.fillStyle(0x2a4d2a, 1); g.fillTriangle(40, 5, 30, 50, 50, 50); 
         g.generateTexture('tree', 80, 100);
 
-        // 草 (Hairgrass: 極細 1px)
+        // 草 (Hairgrass)
         g.clear();
         g.fillStyle(0x668855, 1);
         g.fillRect(0, 0, 1, 14); 
         g.generateTexture('grass_blade', 2, 14);
 
-        // ユニット、カーソル、爆弾など
-        g.clear(); g.fillStyle(0x00ff00, 1); g.fillCircle(16*HIGH_RES_SCALE, 16*HIGH_RES_SCALE, 12*HIGH_RES_SCALE); g.generateTexture('unit_player', 32*HIGH_RES_SCALE, 32*HIGH_RES_SCALE);
-        g.clear(); g.fillStyle(0xff0000, 1); g.fillRect(4*HIGH_RES_SCALE, 4*HIGH_RES_SCALE, 24*HIGH_RES_SCALE, 24*HIGH_RES_SCALE); g.generateTexture('unit_enemy', 32*HIGH_RES_SCALE, 32*HIGH_RES_SCALE);
-        g.clear(); g.lineStyle(3*HIGH_RES_SCALE, 0x00ff00, 1); g.strokeCircle(32*HIGH_RES_SCALE, 32*HIGH_RES_SCALE, 28*HIGH_RES_SCALE); g.generateTexture('cursor', 64*HIGH_RES_SCALE, 64*HIGH_RES_SCALE);
+        // ユニット等
+        g.clear(); g.fillStyle(0x00ff00, 1); g.fillCircle(16*window.HIGH_RES_SCALE, 16*window.HIGH_RES_SCALE, 12*window.HIGH_RES_SCALE); g.generateTexture('unit_player', 32*window.HIGH_RES_SCALE, 32*window.HIGH_RES_SCALE);
+        g.clear(); g.fillStyle(0xff0000, 1); g.fillRect(4*window.HIGH_RES_SCALE, 4*window.HIGH_RES_SCALE, 24*window.HIGH_RES_SCALE, 24*window.HIGH_RES_SCALE); g.generateTexture('unit_enemy', 32*window.HIGH_RES_SCALE, 32*window.HIGH_RES_SCALE);
+        g.clear(); g.lineStyle(3*window.HIGH_RES_SCALE, 0x00ff00, 1); g.strokeCircle(32*window.HIGH_RES_SCALE, 32*window.HIGH_RES_SCALE, 28*window.HIGH_RES_SCALE); g.generateTexture('cursor', 64*window.HIGH_RES_SCALE, 64*window.HIGH_RES_SCALE);
         g.clear(); g.fillStyle(0x223322, 1); g.fillEllipse(15, 30, 10, 25); g.generateTexture('bomb_body', 30, 60);
     },
 
@@ -107,20 +107,6 @@ window.EnvSystem = {
         this.grassBlades = [];
     },
 
-    // マップ上の特定ヘックスに環境オブジェクト（木や草）を生成して配置する
-    decorate(scene, hexGroup, q, r, terrainId, px, py) {
-        // 水域 (id:5)
-        if(terrainId === 5) { 
-            // ヘックス自体はBridge側で生成済みだが、波エフェクトを追加するために情報を保存
-            // ※ここではヘックスのスプライトそのものを管理リストに追加する必要があるため、
-            // Bridge側で生成したhexスプライトを渡してもらうか、ここでエフェクトだけ追加するか。
-            // 設計上、Bridgeで生成したhexスプライトを後から登録するのが綺麗。
-            // → updateメソッドで bridge側のhexGroupにアクセスするよりも、
-            //    BridgeのcreateMapで、生成したhexスプライトをこのdecorate関数に渡す設計にします。
-        }
-    },
-    
-    // Bridgeから呼ばれる登録用関数
     registerWater(hexSprite, baseY, q, r) {
         const scene = hexSprite.scene;
         const w1 = scene.add.image(hexSprite.x + (Math.random()-0.5)*20, hexSprite.y + (Math.random()-0.5)*15, 'wave_line').setScale(0.8);
@@ -163,7 +149,6 @@ window.EnvSystem = {
         }
     },
 
-    // ★風のアニメーション更新 (The Perfect Wind Logic)
     update(time) {
         const timeSec = time * 0.001;
         const waveSpeed = timeSec;
@@ -174,13 +159,12 @@ window.EnvSystem = {
             const gust = Math.pow(Math.sin(flow), 6); 
             return gust; 
         };
-        const globalWind = Math.sin(timeSec * 0.5) * 0.2 + (Math.sin(timeSec * 0.2) > 0.5 ? Math.sin(timeSec * 2) * 0.5 : 0);
 
         // 水面
         this.waterHexes.forEach(w => {
             const wave = Math.sin(waveSpeed + w.q * 0.3 + w.r * 0.3 + w.offset);
             w.sprite.y = w.baseY + wave * 3;
-            w.sprite.setScale((1/HIGH_RES_SCALE) + (wave * 0.01));
+            w.sprite.setScale((1/window.HIGH_RES_SCALE) + (wave * 0.01));
             w.waves.forEach((ws, i) => {
                 ws.y = w.sprite.y + (i === 0 ? -5 : 5); 
                 ws.x = w.sprite.x + Math.sin(waveSpeed * 0.5 + w.offset + i) * 8; 
@@ -188,14 +172,14 @@ window.EnvSystem = {
             });
         });
 
-        // 草 (風と呼応)
+        // 草
         this.grassBlades.forEach(g => {
             const wind = createWind(g.px, g.py, 0);
             const flutter = Math.sin(timeSec * 15 + g.px) * 0.1; 
             g.sprite.rotation = (wind * 0.4) + (wind > 0.1 ? flutter : 0);
         });
 
-        // 森 (遅れて重く揺れる)
+        // 森
         this.forestTrees.forEach(t => {
             const wind = createWind(t.px, t.py, -0.5); 
             t.sprite.rotation = wind * t.sway * 1.5; 
@@ -229,11 +213,11 @@ window.VFX = {
         for(let i=0; i<40; i++) this.add({ x: x+(Math.random()-0.5)*30, y: y+(Math.random()-0.5)*30, vx: Math.cos(Math.random()*6.28)*Math.random()*4, vy: Math.sin(Math.random()*6.28)*Math.random()*4-1, life: 60+Math.random()*40, maxLife:100, color: '#222', size: 8+Math.random()*12, type:'smoke_dark' });
         for(let i=0; i<20; i++) this.add({ x, y, vx: Math.cos(Math.random()*6.28)*(5+Math.random()*10), vy: Math.sin(Math.random()*6.28)*(5+Math.random()*10)-8, life: 40+Math.random()*20, maxLife:60, color: '#444', size: 3, type:'debris', gravity: 0.5 });
     },
-    addExplosion(x, y, c, n) { // 通常のヒットエフェクト
+    addExplosion(x, y, c, n) { 
         for(let i=0; i<n; i++) this.add({x, y, vx:Math.cos(Math.random()*6.28)*Math.random()*5+1, vy:Math.sin(Math.random()*6.28)*Math.random()*5+1, life:30+Math.random()*20, maxLife:50, color:c, size:2, type:'s'});
     },
     addProj(p){this.projectiles.push(p);},
-    addUnitDebris(x,y){}, // (Placeholder)
+    addUnitDebris(x,y){}, 
     
     update() { 
         this.particles.forEach(p=>{ p.x+=p.vx; p.y+=p.vy; p.life--; if(p.type==='debris') p.vy+=p.gravity||0; if(p.type==='fire_core'){p.size*=0.95;p.color=Math.random()>0.3?'#f40':'#300';} if(p.type==='smoke_dark'){p.size*=1.02;p.vx*=0.95;p.vy*=0.95;p.alpha=p.life/p.maxLife*0.8;} if(p.type==='f'){p.size*=0.9;p.color=Math.random()>0.4?'#ff4':(Math.random()>0.5?'#f40':'#620');} else if(p.type==='s'){p.size*=1.02;p.y-=0.5;p.alpha=p.life/p.maxLife;} }); 
