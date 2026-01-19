@@ -1,8 +1,8 @@
-/** * PHASER VFX SPECIALIST (Stable: Particles & Helpers) */
+/** * PHASER VFX SPECIALIST (Stable Geometric Rollback) */
 window.HIGH_RES_SCALE = 4;
 
 // ---------------------------------------------------------
-//  0. Global Helpers (確実に定義)
+//  0. Global Helpers
 // ---------------------------------------------------------
 window.drawCardToCanvas = function(type) {
     const w = 100 * window.HIGH_RES_SCALE; const h = 60 * window.HIGH_RES_SCALE;
@@ -20,7 +20,6 @@ window.drawCardToCanvas = function(type) {
 window.createCardIcon = function(type) { return window.drawCardToCanvas(type).toDataURL(); };
 
 window.getCardTextureKey = function(scene, type) {
-    // 爆撃画像がない場合は自動生成キャンバスを使う
     const key = `card_icon_${type}`; 
     if (!scene.textures.exists(key)) scene.textures.addCanvas(key, window.drawCardToCanvas(type)); 
     return key;
@@ -39,34 +38,43 @@ window.createGradientTexture = function(scene) {
 };
 
 // ---------------------------------------------------------
-//  1. 環境システム
+//  1. 環境システム (素材生成)
 // ---------------------------------------------------------
 window.EnvSystem = {
     waterHexes: [], forestTrees: [], grassBlades: [],
+    
     preload(scene) {
-        // 画像ロードは削除。すべてプログラム描画で賄う。
+        // ★重要: ここでユニットの形（丸と四角）を作る
         const g = scene.make.graphics({x:0, y:0, add:false}); const S = HEX_SIZE * window.HIGH_RES_SCALE; 
-        g.lineStyle(0.1 * window.HIGH_RES_SCALE, 0x000000, 0.2); 
-        g.fillStyle(0xffffff, 1); 
+        
+        // ヘックス
+        g.lineStyle(0.1 * window.HIGH_RES_SCALE, 0x000000, 0.2); g.fillStyle(0xffffff, 1); 
         g.beginPath(); for(let i=0; i<6; i++) { const a = Math.PI/180 * 60 * i; g.lineTo(S + S * Math.cos(a), S + S * Math.sin(a)); } g.closePath(); 
         g.fillPath(); g.strokePath(); g.generateTexture('hex_base', S*2, S*2);
         
+        // 環境パーツ
         g.clear(); g.fillStyle(0xffffff, 0.4); g.fillEllipse(15, 5, 12, 2); g.generateTexture('wave_line', 30, 10);
         g.clear(); g.fillStyle(0x1a1a10, 1); g.fillRect(38, 70, 4, 20); g.fillStyle(0x1e3a1e, 1); g.fillTriangle(40, 20, 25, 80, 55, 80); g.fillStyle(0x2a4d2a, 1); g.fillTriangle(40, 5, 30, 50, 50, 50); g.generateTexture('tree', 80, 100);
         g.clear(); g.fillStyle(0x668855, 1); g.fillRect(0, 0, 1, 14); g.generateTexture('grass_blade', 2, 14);
         
-        // ユニット用テクスチャ (シンプル図形)
-        g.clear(); g.fillStyle(0x00ff00, 1); g.fillCircle(16*window.HIGH_RES_SCALE, 16*window.HIGH_RES_SCALE, 12*window.HIGH_RES_SCALE); g.generateTexture('unit_player', 32*window.HIGH_RES_SCALE, 32*window.HIGH_RES_SCALE);
-        g.clear(); g.fillStyle(0xff0000, 1); g.fillRect(4*window.HIGH_RES_SCALE, 4*window.HIGH_RES_SCALE, 24*window.HIGH_RES_SCALE, 24*window.HIGH_RES_SCALE); g.generateTexture('unit_enemy', 32*window.HIGH_RES_SCALE, 32*window.HIGH_RES_SCALE);
+        // ★ユニット (Player: 丸, Enemy: 四角)
+        g.clear(); g.fillStyle(0xffffff, 1); g.fillCircle(16*window.HIGH_RES_SCALE, 16*window.HIGH_RES_SCALE, 12*window.HIGH_RES_SCALE); 
+        g.generateTexture('unit_player', 32*window.HIGH_RES_SCALE, 32*window.HIGH_RES_SCALE);
         
+        g.clear(); g.fillStyle(0xffffff, 1); g.fillRect(4*window.HIGH_RES_SCALE, 4*window.HIGH_RES_SCALE, 24*window.HIGH_RES_SCALE, 24*window.HIGH_RES_SCALE); 
+        g.generateTexture('unit_enemy', 32*window.HIGH_RES_SCALE, 32*window.HIGH_RES_SCALE);
+        
+        // カーソルなど
         g.clear(); g.lineStyle(3*window.HIGH_RES_SCALE, 0x00ff00, 1); g.strokeCircle(32*window.HIGH_RES_SCALE, 32*window.HIGH_RES_SCALE, 28*window.HIGH_RES_SCALE); g.generateTexture('cursor', 64*window.HIGH_RES_SCALE, 64*window.HIGH_RES_SCALE);
         g.clear(); g.fillStyle(0x223322, 1); g.fillEllipse(15, 30, 10, 25); g.generateTexture('bomb_body', 30, 60);
     },
+    
     clear() { 
         this.waterHexes.forEach(w => { if(w.waves) w.waves.forEach(wave => wave.destroy()); }); this.waterHexes = [];
         this.forestTrees.forEach(t => { if(t.sprite) t.sprite.destroy(); }); this.forestTrees = [];
         this.grassBlades.forEach(g => { if(g.sprite) g.sprite.destroy(); }); this.grassBlades = []; 
     },
+    // ... (registerWater, spawnGrass, spawnTrees, update は以前と同じ) ...
     registerWater(hexSprite, baseY, q, r, hexGroup) {
         const scene = hexSprite.scene;
         const w1 = scene.add.image(hexSprite.x + (Math.random()-0.5)*20, hexSprite.y + (Math.random()-0.5)*15, 'wave_line').setScale(0.8);
@@ -130,20 +138,20 @@ window.VFX = {
     smokeColors: [0x4d463e, 0x3d3834, 0x2a2520, 0x555048],
     addBombardment(scene, tx, ty, hex) {
         const startY = ty - 800; const bomb = scene.add.sprite(tx, startY, 'bomb_body').setDepth(2000).setScale(1.5);
-        scene.tweens.add({ targets: bomb, y: ty, duration: 400, ease: 'Quad.In', onComplete: () => { if(window.Sfx) window.Sfx.play('boom'); bomb.destroy(); this.requestShake(15); this.addRealExplosion(tx, ty); if(window.gameLogic && window.gameLogic.applyBombardment) window.gameLogic.applyBombardment(hex); } });
+        scene.tweens.add({ targets: bomb, y: ty, duration: 400, ease: 'Quad.In', onComplete: () => { if(window.Sfx) window.Sfx.play('boom'); bomb.destroy(); this.requestShake(15); this.addExplosion(tx, ty, "#fa0", 30); if(window.gameLogic && window.gameLogic.applyBombardment) window.gameLogic.applyBombardment(hex); } });
     },
-    // ★復活: パーティクル爆発
-    addRealExplosion(x, y) {
-        this.add({x, y, vx:0, vy:0, life:3, maxLife:3, size:150, color:0xffffff, type:'flash'});
-        this.shockwaves.push({x, y, radius:10, maxRadius:150, alpha:1.0});
-        for(let i=0; i<30; i++) this.add({ x, y, vx: Math.cos(Math.random()*6.28)*Math.random()*8, vy: Math.sin(Math.random()*6.28)*Math.random()*8-5, life: 30+Math.random()*20, maxLife:50, color: 0xffaa00, size: 10+Math.random()*15, type:'fire_core' });
-        for(let i=0; i<50; i++) { this.add({ x: x+(Math.random()-0.5)*30, y: y+(Math.random()-0.5)*30, vx: Math.cos(Math.random()*6.28)*Math.random()*3, vy: Math.sin(Math.random()*6.28)*Math.random()*3-2, life: 60+Math.random()*40, maxLife:100, color: '#2b2826', size: 10+Math.random()*20, type:'smoke_dark', angle: Math.random()*Math.PI*2, angVel: (Math.random()-0.5)*0.1 }); }
-        for(let i=0; i<30; i++) { this.add({ x, y, vx: Math.cos(Math.random()*6.28)*(5+Math.random()*15), vy: Math.sin(Math.random()*6.28)*(5+Math.random()*15)-10, life: 50+Math.random()*30, maxLife:80, color: 0x444444, size: 4+Math.random()*4, type:'debris_rect', gravity: 0.6, angle: Math.random()*6, angVel: (Math.random()-0.5)*0.5 }); }
-    },
+    // ★パーティクル爆発のみにする
     addExplosion(x, y, c, n) { 
         this.requestShake(3); 
-        for(let i=0; i<n; i++) { const cInt = (typeof c==='string'&&c.startsWith('#')) ? parseInt(c.replace('#','0x')) : c; this.add({ x, y, vx: Math.cos(Math.random()*6.28)*Math.random()*6, vy: Math.sin(Math.random()*6.28)*Math.random()*6, life: 20+Math.random()*20, maxLife:40, color:cInt, size:2+Math.random()*3, type: 'debris_rect', gravity: 0.4, angle: Math.random()*6, angVel: (Math.random()-0.5)*0.5 }); }
-        for(let i=0; i<8; i++) { const color = this.smokeColors[Math.floor(Math.random() * this.smokeColors.length)]; this.add({ x, y, vx:(Math.random()-0.5)*3, vy:-2-Math.random()*2, life:40+Math.random()*20, maxLife:60, color: color, size: 8+Math.random()*8, type: 'smoke_heavy', angle: Math.random()*6, angVel: (Math.random()-0.5)*0.1 }); }
+        for(let i=0; i<n; i++) { 
+            const cInt = (typeof c==='string'&&c.startsWith('#')) ? parseInt(c.replace('#','0x')) : c; 
+            this.add({ x, y, vx: Math.cos(Math.random()*6.28)*Math.random()*6, vy: Math.sin(Math.random()*6.28)*Math.random()*6, life: 20+Math.random()*20, maxLife:40, color:cInt, size:2+Math.random()*3, type: 'debris_rect', gravity: 0.4, angle: Math.random()*6, angVel: (Math.random()-0.5)*0.5 }); 
+        }
+        for(let i=0; i<8; i++) { 
+            const color = this.smokeColors[Math.floor(Math.random() * this.smokeColors.length)]; 
+            this.add({ x, y, vx:(Math.random()-0.5)*3, vy:-2-Math.random()*2, life:40+Math.random()*20, maxLife:60, color: color, size: 8+Math.random()*8, type: 'smoke_heavy', angle: Math.random()*6, angVel: (Math.random()-0.5)*0.1 }); 
+        }
+        this.shockwaves.push({x, y, radius:10, maxRadius:100, alpha:1.0});
     },
     addProj(p){ if(p.type === 'bullet' || p.type.includes('shell')) { p.speed *= 10.0; } p.isTracer = Math.random() < 0.3; p.trailX = p.x; p.trailY = p.y; this.projectiles.push(p); this.add({x:p.x, y:p.y, life:3, maxLife:3, size:20, color:0xffaa00, type:'flash'}); this.requestShake(2); },
     addUnitDebris(x,y){ this.addExplosion(x,y, 0x888888, 15); }, 
