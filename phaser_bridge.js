@@ -1,9 +1,9 @@
-/** * PHASER BRIDGE (Sound Fix, Hairgrass, Deep Forest, Ripples) */
+/** * PHASER BRIDGE (Living Wind, Delicate Grass, Metallic Ricochet) */
 let phaserGame = null;
 const HIGH_RES_SCALE = 4; 
 
 // ---------------------------------------------------------
-//  ★サウンドエンジン (復活！)
+//  ★サウンドエンジン (金属音強化版)
 // ---------------------------------------------------------
 const Sfx = {
     ctx: null,
@@ -35,6 +35,28 @@ const Sfx = {
         o.connect(g); g.connect(this.ctx.destination);
         o.start(t); o.stop(t+dur);
     },
+    // ★金属音生成用
+    metalImpact() {
+        if(!this.ctx) return;
+        const t = this.ctx.currentTime;
+        // 高周波の不協和音で金属感を出す
+        [1, 1.5].forEach(mul => {
+            const o = this.ctx.createOscillator();
+            o.type = 'square'; // 矩形波で鋭さを出す
+            o.frequency.setValueAtTime(2000 * mul, t);
+            o.frequency.exponentialRampToValueAtTime(100, t + 0.1); // 急激なピッチダウン
+            
+            const g = this.ctx.createGain();
+            g.gain.setValueAtTime(0.05, t);
+            g.gain.exponentialRampToValueAtTime(0.001, t + 0.15); // 短く切る
+            
+            const f = this.ctx.createBiquadFilter(); // ハイパスで軽い音に
+            f.type = 'highpass'; f.frequency.value = 1500;
+
+            o.connect(f); f.connect(g); g.connect(this.ctx.destination);
+            o.start(t); o.stop(t + 0.15);
+        });
+    },
     play(id) {
         this.init();
         if(id==='click') this.tone(1200, 'sine', 0.05, 0.05);
@@ -45,7 +67,7 @@ const Sfx = {
         else if(id==='cannon') { this.noise(0.6, 100, 'lowpass', 0.6); this.noise(0.3, 400, 'lowpass', 0.4); }
         else if(id==='boom') { this.noise(1.2, 60, 'lowpass', 0.8); this.noise(0.5, 200, 'lowpass', 0.5); }
         else if(id==='rocket') { this.noise(1.5, 120, 'lowpass', 0.6); }
-        else if(id==='ricochet') { this.tone(800 + Math.random()*400, 'sawtooth', 0.1, 0.1); }
+        else if(id==='ricochet') { this.metalImpact(); } // ★金属音に変更
         else if(id==='death') { this.noise(0.5, 150, 'lowpass', 0.5); }
         else if(id==='win') { 
             setTimeout(()=>this.tone(440,'square',0.1),0);
@@ -54,99 +76,45 @@ const Sfx = {
         }
     }
 };
-// グローバルに公開（Logicから呼べるように）
 window.Sfx = Sfx;
 
-
-// ---------------------------------------------------------
-//  共通描画関数 (Canvasを生成)
-// ---------------------------------------------------------
+// ... 描画関数 ...
 function drawCardToCanvas(type) {
-    const w = 100 * HIGH_RES_SCALE; 
-    const h = 60 * HIGH_RES_SCALE;
-    const c = document.createElement('canvas'); 
-    c.width = w; c.height = h; 
-    const x = c.getContext('2d');
-    
-    x.scale(HIGH_RES_SCALE, HIGH_RES_SCALE); 
-    x.translate(50, 30); 
-    x.scale(2, 2);
-    
+    const w = 100 * HIGH_RES_SCALE; const h = 60 * HIGH_RES_SCALE;
+    const c = document.createElement('canvas'); c.width = w; c.height = h; const x = c.getContext('2d');
+    x.scale(HIGH_RES_SCALE, HIGH_RES_SCALE); x.translate(50, 30); x.scale(2, 2);
     if(type==='infantry'){x.fillStyle="#444";x.fillRect(-15,0,30,4);x.fillStyle="#642";x.fillRect(-15,0,10,4);}
     else if(type==='tank'){x.fillStyle="#444";x.fillRect(-12,-6,24,12);x.fillStyle="#222";x.fillRect(0,-2,16,4);}
     else if(type==='heal'){x.fillStyle="#eee";x.fillRect(-10,-8,20,16);x.fillStyle="#d00";x.fillRect(-3,-6,6,12);x.fillRect(-8,-1,16,2);}
     else if(type==='tiger'){x.fillStyle="#554";x.fillRect(-14,-8,28,16);x.fillStyle="#111";x.fillRect(2,-2,20,4);}
-    else if(type==='aerial'){ 
-        x.fillStyle="#343"; x.beginPath(); x.ellipse(0, 0, 15, 6, 0, 0, Math.PI*2); x.fill();
-        x.fillStyle="#222"; x.fillRect(-5, -2, 10, 4);
-    }
+    else if(type==='aerial'){ x.fillStyle="#343"; x.beginPath(); x.ellipse(0, 0, 15, 6, 0, 0, Math.PI*2); x.fill(); x.fillStyle="#222"; x.fillRect(-5, -2, 10, 4); }
     else {x.fillStyle="#333";x.fillRect(-10,-5,20,10);} 
-    
     return c;
 }
+window.createCardIcon = function(type) { return drawCardToCanvas(type).toDataURL(); };
+function getCardTextureKey(scene, type) { if (type === 'aerial' && scene.textures.exists('card_img_bomb')) return 'card_img_bomb'; const key = `card_icon_${type}`; if (!scene.textures.exists(key)) scene.textures.addCanvas(key, drawCardToCanvas(type)); return key; }
+window.createGradientTexture = function(scene) { const w = scene.scale.width; const h = scene.scale.height * 0.45; const c = document.createElement('canvas'); c.width=w; c.height=h; const x = c.getContext('2d'); const grd = x.createLinearGradient(0, h, 0, 0); grd.addColorStop(0, "rgba(0,0,0,1)"); grd.addColorStop(0.4, "rgba(0,0,0,0.8)"); grd.addColorStop(1, "rgba(0,0,0,0)"); x.fillStyle = grd; x.fillRect(0, 0, w, h); if(scene.textures.exists('ui_gradient')) scene.textures.remove('ui_gradient'); scene.textures.addCanvas('ui_gradient', c); };
 
-// HTML UI用
-window.createCardIcon = function(type) {
-    const canvas = drawCardToCanvas(type);
-    return canvas.toDataURL(); 
-};
-
-// Phaser用
-function getCardTextureKey(scene, type) {
-    if (type === 'aerial' && scene.textures.exists('card_img_bomb')) {
-        return 'card_img_bomb'; 
-    }
-    const key = `card_icon_${type}`;
-    if (!scene.textures.exists(key)) {
-        scene.textures.addCanvas(key, drawCardToCanvas(type));
-    }
-    return key;
-}
-
-window.createGradientTexture = function(scene) {
-    const w = scene.scale.width; const h = scene.scale.height * 0.45;
-    const c = document.createElement('canvas'); c.width=w; c.height=h; const x = c.getContext('2d');
-    const grd = x.createLinearGradient(0, h, 0, 0);
-    grd.addColorStop(0, "rgba(0,0,0,1)"); grd.addColorStop(0.4, "rgba(0,0,0,0.8)"); grd.addColorStop(1, "rgba(0,0,0,0)");
-    x.fillStyle = grd; x.fillRect(0, 0, w, h);
-    if(scene.textures.exists('ui_gradient')) scene.textures.remove('ui_gradient');
-    scene.textures.addCanvas('ui_gradient', c);
-};
-
-// ★状態管理
+// ... Renderer (Outline Fix) ...
 const Renderer = {
     game: null, isMapDragging: false, isCardDragging: false,
     init(canvasElement) {
         const config = { type: Phaser.AUTO, parent: 'game-view', width: document.getElementById('game-view').clientWidth, height: document.getElementById('game-view').clientHeight, backgroundColor: '#0b0e0a', scene: [MainScene, UIScene], fps: { target: 60 }, physics: { default: 'arcade', arcade: { debug: false } }, input: { activePointers: 1 } };
         this.game = new Phaser.Game(config); phaserGame = this.game; window.addEventListener('resize', () => this.resize());
-        
-        // ユーザー操作時にAudioContextを開始するリスナー
         const startAudio = () => { if(Sfx.ctx && Sfx.ctx.state==='suspended') Sfx.ctx.resume(); };
-        document.addEventListener('click', startAudio);
-        document.addEventListener('keydown', startAudio);
+        document.addEventListener('click', startAudio); document.addEventListener('keydown', startAudio);
     },
     resize() { if(this.game) this.game.scale.resize(document.getElementById('game-view').clientWidth, document.getElementById('game-view').clientHeight); },
     hexToPx(q, r) { return { x: HEX_SIZE * 3/2 * q, y: HEX_SIZE * Math.sqrt(3) * (r + q/2) }; },
     pxToHex(mx, my) { const main = phaserGame.scene.getScene('MainScene'); if(!main) return {q:0, r:0}; const w = main.cameras.main.getWorldPoint(mx, my); return this.roundHex((2/3*w.x)/HEX_SIZE, (-1/3*w.x+Math.sqrt(3)/3*w.y)/HEX_SIZE); },
     roundHex(q,r) { let rq=Math.round(q), rr=Math.round(r), rs=Math.round(-q-r); const dq=Math.abs(rq-q), dr=Math.abs(rr-r), ds=Math.abs(rs-(-q-r)); if(dq>dr&&dq>ds) rq=-rr-rs; else if(dr>ds) rr=-rq-rs; return {q:rq, r:rr}; },
-    
-    centerOn(q, r) {
-        const main = this.game.scene.getScene('MainScene');
-        if (main && main.centerCamera) {
-            main.centerCamera(q, r);
-        }
-    },
-
-    dealCards(types) { 
-        let ui = this.game.scene.getScene('UIScene');
-        if(!ui || !ui.sys) ui = this.game.scene.scenes.find(s => s.scene.key === 'UIScene');
-        if(ui) ui.dealStart(types);
-    },
+    centerOn(q, r) { const main = this.game.scene.getScene('MainScene'); if (main && main.centerCamera) main.centerCamera(q, r); },
+    dealCards(types) { let ui = this.game.scene.getScene('UIScene'); if(!ui || !ui.sys) ui = this.game.scene.scenes.find(s => s.scene.key === 'UIScene'); if(ui) ui.dealStart(types); },
     dealCard(type) { const ui = this.game.scene.getScene('UIScene'); if(ui) ui.addCardToHand(type); },
     checkUIHover(x, y) { if (this.isCardDragging) return true; const ui = this.game.scene.getScene('UIScene'); if (!ui) return false; for (let card of ui.cards) { const dx = Math.abs(x - card.x); const dy = Math.abs(y - card.y); if (dx < 70 && dy < 100) return true; } return false; }
 };
 
-// ... Card Class ...
+// ... Card Class ... (No Change)
 class Card extends Phaser.GameObjects.Container {
     constructor(scene, x, y, type) {
         super(scene, x, y); this.scene = scene; this.cardType = type; this.setSize(140, 200);
@@ -187,17 +155,14 @@ class Card extends Phaser.GameObjects.Container {
             onComplete: () => {
                 if (this.visuals) this.visuals.clearMask(true); if (maskShape) maskShape.destroy();
                 this.scene.removeCard(this); const type = this.cardType; this.destroy();
-                try {
-                    if (type === 'aerial') { const main = phaserGame.scene.getScene('MainScene'); if (main) main.triggerBombardment(hex); } 
-                    else if(window.gameLogic) window.gameLogic.deployUnit(hex, type); 
-                } catch(e) { console.error("Logic Error:", e); }
+                try { if (type === 'aerial') { const main = phaserGame.scene.getScene('MainScene'); if (main) main.triggerBombardment(hex); } else if(window.gameLogic) window.gameLogic.deployUnit(hex, type); } catch(e) { console.error("Logic Error:", e); }
             }
         });
     }
     returnToHand() { const hand = this.scene.handContainer; this.scene.children.remove(this); hand.add(this); this.setDepth(0); this.physX = this.x; this.physY = this.y; this.targetX = this.baseX; this.targetY = this.baseY; }
 }
 
-// ... UIScene ...
+// ... UIScene ... (No Change)
 class UIScene extends Phaser.Scene {
     constructor() { super({ key: 'UIScene', active: false }); this.cards=[]; this.handContainer=null; this.gradientBg=null; this.uiVfxGraphics=null; }
     create() {
@@ -221,7 +186,7 @@ class UIScene extends Phaser.Scene {
 }
 
 // ==========================================
-//  MAIN SCENE (Hairgrass & Deep Forest)
+//  MAIN SCENE
 // ==========================================
 class MainScene extends Phaser.Scene {
     constructor() { 
@@ -230,7 +195,7 @@ class MainScene extends Phaser.Scene {
         this.mapGenerated=false; this.dragHighlightHex=null;
         this.waterHexes = []; 
         this.forestTrees = []; 
-        this.grassBlades = []; // ★草（ヘアーグラス）管理
+        this.grassBlades = []; 
     }
     
     preload() {
@@ -242,14 +207,18 @@ class MainScene extends Phaser.Scene {
         // さざ波
         g.clear(); g.fillStyle(0xffffff, 0.4); g.fillEllipse(15, 5, 12, 2); g.generateTexture('wave_line', 30, 10);
 
-        // 木
-        g.clear(); g.fillStyle(0x1a1a10, 1); g.fillRect(38, 70, 4, 20); g.fillStyle(0x1e3a1e, 1); g.fillTriangle(40, 20, 25, 80, 55, 80); g.fillStyle(0x2a4d2a, 1); g.fillTriangle(40, 5, 30, 50, 50, 50); g.generateTexture('tree', 80, 100);
+        // 木 (Deep Forest Tree)
+        g.clear(); 
+        g.fillStyle(0x1a1a10, 1); g.fillRect(38, 70, 4, 20); 
+        g.fillStyle(0x1e3a1e, 1); g.fillTriangle(40, 20, 25, 80, 55, 80); 
+        g.fillStyle(0x2a4d2a, 1); g.fillTriangle(40, 5, 30, 50, 50, 50); 
+        g.generateTexture('tree', 80, 100);
 
-        // ★草 (Hairgrass: 短く細い線)
+        // ★草 (Hairgrass: 矩形, 細く, 繊細)
         g.clear();
         g.fillStyle(0x557744, 1);
-        g.beginPath(); g.moveTo(2, 15); g.lineTo(4, 0); g.lineTo(6, 15); g.fill();
-        g.generateTexture('grass_blade', 8, 15);
+        g.fillRect(0, 0, 1.5, 12); // 幅1.5pxの線
+        g.generateTexture('grass_blade', 2, 12);
 
         g.clear(); g.fillStyle(0x00ff00, 1); g.fillCircle(16*HIGH_RES_SCALE, 16*HIGH_RES_SCALE, 12*HIGH_RES_SCALE); g.generateTexture('unit_player', 32*HIGH_RES_SCALE, 32*HIGH_RES_SCALE);
         g.clear(); g.fillStyle(0xff0000, 1); g.fillRect(4*HIGH_RES_SCALE, 4*HIGH_RES_SCALE, 24*HIGH_RES_SCALE, 24*HIGH_RES_SCALE); g.generateTexture('unit_enemy', 32*HIGH_RES_SCALE, 32*HIGH_RES_SCALE);
@@ -295,28 +264,23 @@ class MainScene extends Phaser.Scene {
                     this.waterHexes.push({ sprite: hex, waves: [w1, w2], baseY: pos.y, q: q, r: r, offset: Math.random() * 6.28 });
                 }
                 
-                // ★草地 (id:1) にヘアーグラスを生やす
+                // ★草地 (id:1)
                 if(t.id === 1) {
-                    // 15〜20本
-                    const count = 15 + Math.floor(Math.random() * 6);
+                    const count = 18 + Math.floor(Math.random() * 8); // 密度アップ
                     for(let i=0; i<count; i++) {
                         const rad = Math.random() * HEX_SIZE * 0.8;
                         const ang = Math.random() * Math.PI * 2;
                         const tx = pos.x + rad * Math.cos(ang);
-                        const ty = pos.y + rad * Math.sin(ang) * 0.8; // 楕円状に分布
-                        
+                        const ty = pos.y + rad * Math.sin(ang) * 0.8;
                         const blade = this.add.image(tx, ty, 'grass_blade').setOrigin(0.5, 1.0);
-                        // 色味とサイズをランダムに
-                        blade.setScale(0.6 + Math.random() * 0.4);
-                        const shade = 100 + Math.floor(Math.random()*100);
+                        blade.setScale(0.5 + Math.random() * 0.5); // 細く
+                        const shade = 120 + Math.floor(Math.random()*80);
                         blade.setTint(Phaser.Display.Color.GetColor(shade, shade+40, shade));
-                        
-                        // バッチ処理のためGroupには入れないが描画リストに追加
-                        this.grassBlades.push({ sprite: blade, px: tx, py: ty });
+                        this.grassBlades.push({ sprite: blade, px: tx, py: ty, offset: Math.random() * 10 });
                     }
                 }
 
-                // 森 (id:2)
+                // ★森 (id:2)
                 if(t.id === 2) {
                     const count = 8 + Math.floor(Math.random() * 5);
                     for(let i=0; i<count; i++) {
@@ -329,7 +293,7 @@ class MainScene extends Phaser.Scene {
                         const shade = 100 + Math.floor(Math.random() * 80); 
                         tree.setTint(Phaser.Display.Color.GetColor(shade, shade+20, shade+30));
                         this.hexGroup.add(tree);
-                        this.forestTrees.push({ sprite: tree, speed: 0.0015 + Math.random()*0.002, offset: Math.random() * 10, sway: 0.04 + Math.random()*0.04 });
+                        this.forestTrees.push({ sprite: tree, px: tx, py: ty, offset: Math.random() * 10, sway: 0.04 + Math.random()*0.04 });
                     }
                 }
 
@@ -345,7 +309,12 @@ class MainScene extends Phaser.Scene {
         VFX.update(); this.vfxGraphics.clear(); VFX.draw(this.vfxGraphics);
         if (window.gameLogic.map.length > 0 && !this.mapGenerated) { this.createMap(); this.mapGenerated = true; }
         
-        const waveSpeed = time * 0.001;
+        const timeSec = time * 0.001;
+        const waveSpeed = timeSec;
+
+        // ★風の生成 (不規則なうねり)
+        // ベースの風 + 大きなうねり(突風)
+        const globalWind = Math.sin(timeSec * 0.5) * 0.2 + (Math.sin(timeSec * 0.2) > 0.5 ? Math.sin(timeSec * 2) * 0.5 : 0);
 
         // 水面
         this.waterHexes.forEach(w => {
@@ -359,19 +328,21 @@ class MainScene extends Phaser.Scene {
             });
         });
 
-        // 木
-        this.forestTrees.forEach(t => {
-            const wind = Math.sin(time * t.speed + t.offset);
-            t.sprite.rotation = wind * t.sway;
+        // ★草と森の呼応 (globalWind を共有)
+        // 草: 反応が早い
+        this.grassBlades.forEach(g => {
+            // 座標による位相ズレ（風が渡る表現）
+            const localPhase = (g.px + g.py) * 0.005;
+            // 自身の揺れ + 風の影響
+            const wind = Math.sin(timeSec * 2 + g.offset) * 0.1 + globalWind * 1.5 + Math.sin(timeSec + localPhase) * 0.3;
+            g.sprite.rotation = wind * 0.3; 
         });
 
-        // ★草のそよぎ (空間的な波)
-        // 座標(x,y)を使って位相をずらし、風が渡っていくように見せる
-        this.grassBlades.forEach(g => {
-            // x, y 座標自体を波の入力にする
-            const wind = Math.sin(time * 0.002 + g.px * 0.01 + g.py * 0.01);
-            // 傾き (風を受けて倒れる)
-            g.sprite.rotation = wind * 0.25; 
+        // 森: 重く、少し遅れて揺れる
+        this.forestTrees.forEach(t => {
+            const localPhase = (t.px + t.py) * 0.005;
+            const wind = Math.sin(timeSec + t.offset) * 0.2 + globalWind * 1.0 + Math.sin(timeSec * 0.8 + localPhase) * 0.2;
+            t.sprite.rotation = wind * t.sway;
         });
 
         this.unitGroup.clear(true, true);
@@ -389,10 +360,10 @@ class MainScene extends Phaser.Scene {
         const path = window.gameLogic.path;
         if(path.length > 0 && selected) { this.overlayGraphics.lineStyle(3, 0xffffff, 0.5); this.overlayGraphics.beginPath(); const s = Renderer.hexToPx(selected.q, selected.r); this.overlayGraphics.moveTo(s.x, s.y); path.forEach(p => { const px = Renderer.hexToPx(p.q, p.r); this.overlayGraphics.lineTo(px.x, px.y); }); this.overlayGraphics.strokePath(); }
     }
-    // ★極細アウトライン (0.3)
-    drawHexOutline(g, q, r) { const c = Renderer.hexToPx(q, r); g.beginPath(); for(let i=0; i<6; i++) { const a = Math.PI/180*60*i; g.lineTo(c.x+HEX_SIZE*0.9*Math.cos(a), c.y+HEX_SIZE*0.9*Math.sin(a)); } g.closePath(); g.lineWidth=0.3; g.strokePath(); }
+    drawHexOutline(g, q, r) { const c = Renderer.hexToPx(q, r); g.beginPath(); for(let i=0; i<6; i++) { const a = Math.PI/180*60*i; g.lineTo(c.x+HEX_SIZE*0.9*Math.cos(a), c.y+HEX_SIZE*0.9*Math.sin(a)); } g.closePath(); g.lineWidth=0.3; g.strokePath(); } // 極細
 }
 
+// ... VFX (Added Boom Sound) ...
 window.VFX = { 
     particles:[], projectiles:[], shockwaves:[], add(p){this.particles.push(p);}, 
     addBombardment(scene, tx, ty, hex) {
