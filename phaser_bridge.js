@@ -1,4 +1,4 @@
-/** * PHASER BRIDGE (Safe Deployment, Optimized) */
+/** * PHASER BRIDGE (Safe Deployment, Optimized, Dashed Attack Guide) */
 let phaserGame = null;
 
 // ---------------------------------------------------------
@@ -53,7 +53,7 @@ const Renderer = {
 };
 
 // ---------------------------------------------------------
-//  Card Class (Safe Deployment)
+//  Card Class
 // ---------------------------------------------------------
 class Card extends Phaser.GameObjects.Container {
     constructor(scene, x, y, type) {
@@ -126,7 +126,6 @@ class Card extends Phaser.GameObjects.Container {
     onDragStart(pointer) { if(Renderer.isMapDragging) return; this.isDragging = true; Renderer.isCardDragging = true; this.setAlpha(0.9); this.setScale(1.1); const hand = this.parentContainer; const worldPos = hand.getLocalTransformMatrix().transformPoint(this.x, this.y); hand.remove(this); this.scene.add.existing(this); this.physX = worldPos.x; this.physY = worldPos.y; this.targetX = this.physX; this.targetY = this.physY; this.setDepth(9999); this.dragOffsetX = this.physX - pointer.x; this.dragOffsetY = this.physY - pointer.y; }
     onDrag(pointer) { this.targetX = pointer.x + this.dragOffsetX; this.targetY = pointer.y + this.dragOffsetY; const main = this.scene.game.scene.getScene('MainScene'); if (this.y < this.scene.scale.height * 0.65) main.dragHighlightHex = Renderer.pxToHex(pointer.x, pointer.y); else main.dragHighlightHex = null; }
     
-    // ★重要: ドロップ時の判定処理
     onDragEnd(pointer) { 
         this.isDragging = false; 
         Renderer.isCardDragging = false; 
@@ -139,27 +138,15 @@ class Card extends Phaser.GameObjects.Container {
         if (this.y < dropZoneY) {
             const hex = Renderer.pxToHex(pointer.x, pointer.y);
             let canDeploy = false;
-
             if (window.gameLogic) {
                 if (this.cardType === 'aerial') {
-                    // 爆撃は範囲内ならOK
-                    if (window.gameLogic.isValidHex(hex.q, hex.r)) {
-                        canDeploy = true;
-                    } else {
-                        window.gameLogic.log("配置不可: マップ範囲外です");
-                    }
+                    if (window.gameLogic.isValidHex(hex.q, hex.r)) canDeploy = true;
+                    else window.gameLogic.log("配置不可: マップ範囲外です");
                 } else {
-                    // ユニットはLogicに聞いてみる
                     canDeploy = window.gameLogic.checkDeploy(hex);
                 }
             }
-            
-            // 許可が出たら燃やす、ダメなら戻す
-            if (canDeploy) {
-                this.burnAndConsume(hex); 
-            } else {
-                this.returnToHand();
-            }
+            if (canDeploy) this.burnAndConsume(hex); else this.returnToHand();
         } else {
             this.returnToHand(); 
         }
@@ -303,6 +290,15 @@ class MainScene extends Phaser.Scene {
         if (this.dragHighlightHex) { this.overlayGraphics.lineStyle(4, 0xffffff, 1.0); this.drawHexOutline(this.overlayGraphics, this.dragHighlightHex.q, this.dragHighlightHex.r); }
         const selected = window.gameLogic.selectedUnit;
         if(selected && window.gameLogic.reachableHexes.length > 0) { this.overlayGraphics.lineStyle(2, 0xffffff, 0.4); window.gameLogic.reachableHexes.forEach(h => this.drawHexOutline(this.overlayGraphics, h.q, h.r)); }
+        
+        // ★修正: 射線（赤破線）の描画
+        if(selected && window.gameLogic.attackLine && window.gameLogic.attackLine.length > 0) {
+            this.overlayGraphics.lineStyle(3, 0xff2222, 0.8);
+            window.gameLogic.attackLine.forEach(h => {
+                this.drawDashedHexOutline(this.overlayGraphics, h.q, h.r);
+            });
+        }
+        
         const hover = window.gameLogic.hoverHex;
         if(selected && hover && window.gameLogic.reachableHexes.some(h => h.q === hover.q && h.r === hover.r)) { this.overlayGraphics.lineStyle(4, 0xffffff, 1.0); this.drawHexOutline(this.overlayGraphics, hover.q, hover.r); }
         const path = window.gameLogic.path;
@@ -313,5 +309,29 @@ class MainScene extends Phaser.Scene {
             this.overlayGraphics.strokePath(); 
         }
     }
+    
     drawHexOutline(g, q, r) { const c = Renderer.hexToPx(q, r); g.beginPath(); for(let i=0; i<6; i++) { const a = Math.PI/180*60*i; g.lineTo(c.x+HEX_SIZE*0.9*Math.cos(a), c.y+HEX_SIZE*0.9*Math.sin(a)); } g.closePath(); g.lineWidth=0.1; g.strokePath(); }
+
+    // ★追加: 破線枠描画 (点線アルゴリズム)
+    drawDashedHexOutline(g, q, r) {
+        const c = Renderer.hexToPx(q, r);
+        const pts = [];
+        for(let i=0; i<6; i++) {
+            const a = Math.PI/180*60*i;
+            pts.push({ x: c.x+HEX_SIZE*0.9*Math.cos(a), y: c.y+HEX_SIZE*0.9*Math.sin(a) });
+        }
+        for(let i=0; i<6; i++) {
+            const p1 = pts[i];
+            const p2 = pts[(i+1)%6];
+            const dist = Phaser.Math.Distance.Between(p1.x, p1.y, p2.x, p2.y);
+            const dashLen = 5; const gapLen = 5; const steps = dist / (dashLen + gapLen);
+            const dx = (p2.x - p1.x) / steps; const dy = (p2.y - p1.y) / steps;
+            for(let j=0; j<steps; j++) {
+                if(j % 2 === 0) {
+                    const sx = p1.x + dx * j; const sy = p1.y + dy * j;
+                    g.beginPath(); g.moveTo(sx, sy); g.lineTo(sx + dx, sy + dy); g.strokePath();
+                }
+            }
+        }
+    }
 }
