@@ -1,4 +1,4 @@
-/** LOGIC (Organic Map Gen & Separate Files Ready) */
+/** LOGIC (Cloud Shape Map, Hole Filling, Safe Spawn) */
 class Game {
     constructor() {
         this.units=[]; this.map=[]; this.setupSlots=[]; this.state='SETUP'; 
@@ -40,9 +40,8 @@ class Game {
     startCampaign() {
         document.getElementById('setup-screen').style.display='none'; 
         Renderer.resize();
-        this.generateMap(); // ★新しいマップ生成
+        this.generateMap(); 
         
-        // 味方配置 (陸地がある場所を探す)
         if(this.units.length === 0) { 
             this.setupSlots.forEach(k=>this.spawnAtSafeGround('player',k)); 
         } else { 
@@ -65,7 +64,6 @@ class Game {
         }, 500);
     }
 
-    // 航空爆撃処理
     applyBombardment(targetHex) {
         this.log(`[支援] 爆撃着弾地点: ${targetHex.q},${targetHex.r}`);
         const u = this.getUnit(targetHex.q, targetHex.r);
@@ -93,10 +91,14 @@ class Game {
     }
 
     deployUnit(targetHex, cardType) {
-        // VOID(虚空)には置けない
         if(!this.isValidHex(targetHex.q, targetHex.r) || this.map[targetHex.q][targetHex.r].id === -1) {
             this.log("配置不可: 進入不可能な地形です"); return;
         }
+        // 水上配置禁止チェック
+        if(this.map[targetHex.q][targetHex.r].id === 5) {
+            this.log("配置不可: 水上には配置できません"); return;
+        }
+
         const existing = this.units.find(u => u.q === targetHex.q && u.r === targetHex.r && u.hp > 0);
         if (existing) { this.log("配置不可: ユニットが既に存在します"); return; }
         
@@ -144,7 +146,7 @@ class Game {
     }
 
     handleClick(p) {
-        const isValid = this.isValidHex(p.q, p.r) && this.map[p.q][p.r].id !== -1; // VOID除外
+        const isValid = this.isValidHex(p.q, p.r) && this.map[p.q][p.r].id !== -1;
         const u = isValid ? this.getUnit(p.q, p.r) : null;
         if(u && u.team==='player') { 
             this.selectedUnit=u; this.calcReachableHexes(u); this.path = []; if(window.Sfx)Sfx.play('click'); this.updateSidebar(); 
@@ -155,10 +157,9 @@ class Game {
         }
     }
 
-    // ★新マップ生成ロジック: 不定形な広がり（ゴルフ場・アメーバ型）
+    // ★新マップ生成: 雲形定規 & 穴埋め
     generateMap() { 
         this.map = [];
-        // 1. 全てVOID(虚空)で初期化
         for(let q=0; q<MAP_W; q++){ 
             this.map[q] = []; 
             for(let r=0; r<MAP_H; r++){ 
@@ -166,75 +167,105 @@ class Game {
             }
         }
 
-        // 2. ランダムウォーカーによる整地
         const cx = Math.floor(MAP_W/2);
         const cy = Math.floor(MAP_H/2);
-        let walkers = [{q:cx, r:cy}]; // スタート地点
-        const maxSteps = 300; // 土地の広さ
         
+        // 1. 太いブラシでランダムウォーク (雲形を作る)
+        let walkers = [{q:cx, r:cy}]; 
+        const maxSteps = 120; // ステップ数は減らす（ブラシが太いので面積は稼げる）
+        
+        // ヘックスを陸地にする関数（ブラシ半径1: 中心+周囲6マス）
+        const paintBrush = (centerQ, centerR) => {
+            const brush = [{q:centerQ, r:centerR}, ...this.getNeighbors(centerQ, centerR)];
+            brush.forEach(h => {
+                if(this.isValidHex(h.q, h.r)) {
+                    this.map[h.q][h.r] = TERRAIN.GRASS;
+                }
+            });
+        };
+
         for(let i=0; i<maxSteps; i++) {
-            // ランダムにウォーカーを選ぶ
             const wIdx = Math.floor(Math.random() * walkers.length);
             const w = walkers[wIdx];
             
-            // 現在地を仮のGRASSにする（はみ出しチェック）
-            if(this.isValidHex(w.q, w.r)) {
-                this.map[w.q][w.r] = TERRAIN.GRASS;
-            }
+            paintBrush(w.q, w.r); // 太く塗る
 
-            // 次の移動先をランダムに決定
             const neighbors = [[1,0],[1,-1],[0,-1],[-1,0],[-1,1],[0,1]];
             const dir = neighbors[Math.floor(Math.random() * 6)];
+            // 少し遠くへ歩かせることで「塊」を分散させる
             const next = { q: w.q + dir[0], r: w.r + dir[1] };
             
-            // 確率で分裂（枝分かれ）
-            if(Math.random() < 0.05 && walkers.length < 6) {
+            if(Math.random() < 0.08 && walkers.length < 4) {
                 walkers.push(next);
             } else {
                 walkers[wIdx] = next;
             }
         }
 
-        // 3. 陸地になった部分に地形ノイズを適用（森や荒地）
+        // 2. 穴埋め処理 (Filling Voids)
+        // 陸地に囲まれたVOIDを陸地にする
+        for(let i=0; i<3; i++) { // 3回繰り返して深い穴も埋める
+            for(let q=1; q<MAP_W-1; q++){
+                for(let r=1; r<MAP_H-1; r++){
+                    if(this.map[q][r].id === -1) { // VOIDなら
+                        // 周囲の陸地(VOID以外)をカウント
+                        const landNeighbors = this.getNeighbors(q, r).filter(n => this.map[n.q][n.r].id !== -1).length;
+                        // 周囲の4つ以上が陸地なら、ここも陸地にする
+                        if(landNeighbors >= 4) {
+                            this.map[q][r] = TERRAIN.GRASS;
+                        }
+                    }
+                }
+            }
+        }
+
+        // 3. 地形適用 (森、町、荒地)
         for(let q=0; q<MAP_W; q++){ 
             for(let r=0; r<MAP_H; r++){
-                if(this.map[q][r].id !== -1) { // VOIDでなければ
-                    const n = Math.sin(q*0.5) + Math.cos(r*0.5) + Math.random()*0.3; 
+                if(this.map[q][r].id !== -1) { 
+                    const n = Math.sin(q*0.4) + Math.cos(r*0.4) + Math.random()*0.4; 
                     let t = TERRAIN.GRASS; 
-                    if(n > 1.2) t = TERRAIN.FOREST;
-                    else if(n < -0.8) t = TERRAIN.DIRT; 
+                    if(n > 1.1) t = TERRAIN.FOREST; // 森
+                    else if(n < -0.9) t = TERRAIN.DIRT; // 荒地
                     
-                    if(t !== TERRAIN.WATER && Math.random() < 0.06) t = TERRAIN.TOWN; 
-                    
+                    if(t !== TERRAIN.WATER && Math.random() < 0.05) t = TERRAIN.TOWN; // 町
                     this.map[q][r] = t;
                 }
             }
         }
 
-        // 4. 川を作る (陸地の中だけを流れるように)
-        let rq=cx, rr=cy; 
-        for(let i=0;i<20;i++){ 
-            if(this.isValidHex(rq,rr) && this.map[rq][rr].id !== -1){ 
-                this.map[rq][rr] = TERRAIN.WATER; 
-                const d=[[1,0],[1,-1],[0,-1],[-1,0],[-1,1],[0,1]][Math.floor(Math.random()*6)]; 
-                rq+=d[0]; rr+=d[1]; 
-            } else break; 
+        // 4. 川 (確率低め)
+        if(Math.random() < 0.5) {
+            let rq=cx, rr=cy; 
+            for(let i=0;i<15;i++){ 
+                if(this.isValidHex(rq,rr) && this.map[rq][rr].id !== -1){ 
+                    this.map[rq][rr] = TERRAIN.WATER; 
+                    const d=[[1,0],[1,-1],[0,-1],[-1,0],[-1,1],[0,1]][Math.floor(Math.random()*6)]; 
+                    rq+=d[0]; rr+=d[1]; 
+                } else break; 
+            }
         }
     }
 
     spawnEnemies(){ const c=4+Math.floor(this.sector*0.7), tc=Math.min(0.8,0.1+this.sector*0.1); for(let i=0;i<c;i++){ let k='infantry'; const r=Math.random(); if(r<tc)k='tank';else if(r<tc+0.3)k='heavy';else if(r<tc+0.5)k='sniper'; const e=this.spawnAtSafeGround('enemy',k); if(e){e.rank=Math.floor(Math.random()*Math.min(5,this.sector/2)); e.maxHp+=e.rank*30; e.hp=e.maxHp; if(this.sector>2&&Math.random()<0.4)e.skills=[Object.keys(SKILLS)[Math.floor(Math.random()*8)]];}}}
-    // 安全地帯検索（VOID以外を探すように修正）
+    
+    // 安全地帯検索 (水上・虚空禁止)
     spawnAtSafeGround(t,k,ex=null){ 
         let q,r,tr=0; const cy=Math.floor(MAP_H/2); 
         do{ 
             q=Math.floor(Math.random()*MAP_W); r=Math.floor(Math.random()*MAP_H); tr++; 
             if(t==='player'&&r<cy)continue; if(t==='enemy'&&r>cy)continue; 
         } while(
-            (!this.isValidHex(q,r) || this.map[q][r].id===-1 || this.map[q][r].id===5 || this.map[q][r].cost>=99 || this.getUnit(q,r)) 
-            && tr<1000
+            (!this.isValidHex(q,r) || 
+             this.map[q][r].id === -1 || // VOID禁止
+             this.map[q][r].id === 5 ||  // WATER禁止
+             this.map[q][r].cost >= 99 || 
+             this.getUnit(q,r)) 
+            && tr<2000
         ); 
-        if(tr<1000){if(ex){ex.q=q;ex.r=r;return ex;}else return this.spawnUnit(t,k,q,r);} return null;
+        if(tr<2000){if(ex){ex.q=q;ex.r=r;return ex;}else return this.spawnUnit(t,k,q,r);} return null;
     }
+    
     spawnUnit(t,k,q,r){ const d=UNITS[k], a=d.ap; this.units.push({id:Math.random(),team:t,q,r,def:d,hp:d.hp,maxHp:d.hp,ap:a,maxAp:a,stance:'stand',curWpn:d.wpn,rank:0,deadProcessed:false,skills:[],sectorsSurvived:0}); }
     toggleAuto(){ this.isAuto=!this.isAuto; document.getElementById('auto-toggle').classList.toggle('active'); this.log(`AUTO: ${this.isAuto?"ON":"OFF"}`); this.selectedUnit=null; this.path=[]; if(this.isAuto)this.runAuto(); }
     runAuto(){ if(this.state!=='PLAY'||this.autoTimer>0){if(this.autoTimer>0)this.autoTimer--;return;} const ac=this.units.filter(u=>u.team==='player'&&u.hp>0&&u.ap>0); if(ac.length===0){this.endTurn();return;} const u=ac[0], en=this.units.filter(e=>e.team==='enemy'&&e.hp>0); if(en.length===0)return; let tg=en[0], sc=-9999; en.forEach(e=>{const d=this.hexDist(u,e), v=(100-e.hp)*2-(d*10); if(v>sc){sc=v;tg=e;}}); const w=WPNS[u.curWpn], d=this.hexDist(u,tg); if(d<=w.rng&&u.ap>=2){this.actionAttack(u,tg);this.autoTimer=80;}else{const p=this.findPath(u,tg.q,tg.r); if(p.length>0&&this.map[p[0].q][p[0].r].cost<=u.ap){u.q=p[0].q;u.r=p[0].r;u.ap-=this.map[u.q][u.r].cost;if(window.Sfx)Sfx.play('move');this.autoTimer=20;this.checkReactionFire(u);}else u.ap=0;} }
