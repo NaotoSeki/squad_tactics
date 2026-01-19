@@ -1,4 +1,4 @@
-/** * PHASER BRIDGE (Async Safety Fix, Procedural Assets) */
+/** * PHASER BRIDGE (Procedural Generation - No Load Errors) */
 let phaserGame = null;
 
 // ---------------------------------------------------------
@@ -16,7 +16,7 @@ const Renderer = {
             width: document.getElementById('game-view').clientWidth, 
             height: document.getElementById('game-view').clientHeight, 
             backgroundColor: '#0b0e0a', 
-            pixelArt: true, 
+            pixelArt: false, // プロシージャル生成なのでスムーズでOK
             scene: [MainScene, UIScene], 
             fps: { target: 60 }, 
             physics: { default: 'arcade', arcade: { debug: false } }, 
@@ -67,29 +67,24 @@ class Card extends Phaser.GameObjects.Container {
         const shadow = scene.add.rectangle(6, 6, 130, 190, 0x000000, 0.6);
         const contentBg = scene.add.rectangle(0, 0, 130, 190, 0x1a1a1a);
         
-        // フレーム画像の安全確保
-        let frameKey = 'card_frame';
-        if (!scene.textures.exists(frameKey)) {
-            // もしフレーム画像読み込みが間に合わなかった場合の緊急フォールバック(単色)
-            const fallback = scene.add.rectangle(0,0,140,200, 0x444444).setStrokeStyle(2,0x888888);
-            fallback.setInteractive({ useHandCursor: true, draggable: true });
-            this.visuals.add([shadow, contentBg, fallback]); 
-            this.frameImage = fallback; // 互換性のため
+        // フレーム画像がない場合はフォールバック
+        let frame;
+        if(scene.textures.exists('card_frame')) {
+            frame = scene.add.image(0, 0, 'card_frame').setDisplaySize(140, 200);
         } else {
-            const frame = scene.add.image(0, 0, 'card_frame').setDisplaySize(140, 200);
-            frame.setInteractive({ useHandCursor: true, draggable: true });
-            this.frameImage = frame;
-            
-            const iconKey = window.getCardTextureKey(scene, type);
-            const icon = scene.add.image(0, -40, iconKey).setScale(1/window.HIGH_RES_SCALE);
-            if(type === 'aerial') icon.setDisplaySize(120, 80); // 爆撃カードサイズ調整
-            
-            const text = scene.add.text(0, 40, type.toUpperCase(), { fontSize: '16px', color: '#d84', fontStyle: 'bold' }).setOrigin(0.5);
-            const desc = scene.add.text(0, 70, "DRAG TO DEPLOY", { fontSize: '10px', color: '#888' }).setOrigin(0.5);
-            
-            this.visuals.add([shadow, contentBg, icon, text, desc, frame]);
+            frame = scene.add.rectangle(0, 0, 140, 200, 0x444444).setStrokeStyle(2, 0x888888);
         }
+        frame.setInteractive({ useHandCursor: true, draggable: true });
+        this.frameImage = frame;
         
+        const iconKey = window.getCardTextureKey(scene, type);
+        const icon = scene.add.image(0, -40, iconKey).setScale(1/window.HIGH_RES_SCALE);
+        if(type === 'aerial') icon.setDisplaySize(120, 80);
+        
+        const text = scene.add.text(0, 40, type.toUpperCase(), { fontSize: '16px', color: '#d84', fontStyle: 'bold' }).setOrigin(0.5);
+        const desc = scene.add.text(0, 70, "DRAG TO DEPLOY", { fontSize: '10px', color: '#888' }).setOrigin(0.5);
+        
+        this.visuals.add([shadow, contentBg, icon, text, desc, frame]);
         this.add(this.visuals); 
         
         this.setScrollFactor(0); 
@@ -100,13 +95,11 @@ class Card extends Phaser.GameObjects.Container {
         this.targetX = x; this.targetY = y; 
         this.dragOffsetX = 0; this.dragOffsetY = 0;
         
-        // インタラクティブ設定（フレームがある場合のみ）
-        const interactObj = this.frameImage;
-        interactObj.on('pointerover', this.onHover, this); 
-        interactObj.on('pointerout', this.onHoverOut, this); 
-        interactObj.on('dragstart', this.onDragStart, this); 
-        interactObj.on('drag', this.onDrag, this); 
-        interactObj.on('dragend', this.onDragEnd, this);
+        frame.on('pointerover', this.onHover, this); 
+        frame.on('pointerout', this.onHoverOut, this); 
+        frame.on('dragstart', this.onDragStart, this); 
+        frame.on('drag', this.onDrag, this); 
+        frame.on('dragend', this.onDragEnd, this);
         
         scene.add.existing(this);
     }
@@ -209,8 +202,16 @@ class UIScene extends Phaser.Scene {
     constructor() { super({ key: 'UIScene', active: false }); this.cards=[]; this.handContainer=null; this.gradientBg=null; this.uiVfxGraphics=null; }
     create() {
         const w = this.scale.width; const h = this.scale.height;
-        window.createGradientTexture(this);
-        this.gradientBg = this.add.image(w/2, h, 'ui_gradient').setOrigin(0.5, 1).setDepth(0).setDisplaySize(w, h*0.25);
+        // グラデーションテクスチャの生成（vfxの関数を使う）
+        if(window.createGradientTexture) window.createGradientTexture(this);
+        
+        if (this.textures.exists('ui_gradient')) {
+            this.gradientBg = this.add.image(w/2, h, 'ui_gradient').setOrigin(0.5, 1).setDepth(0).setDisplaySize(w, h*0.25);
+        } else {
+            // エラー回避用
+            this.gradientBg = this.add.rectangle(w/2, h, w, h*0.25, 0x000000, 0.8).setOrigin(0.5, 1);
+        }
+        
         this.handContainer = this.add.container(w/2, h);
         this.uiVfxGraphics = this.add.graphics().setDepth(10000);
         this.scale.on('resize', this.onResize, this);
@@ -231,7 +232,7 @@ class UIScene extends Phaser.Scene {
 }
 
 // ---------------------------------------------------------
-//  MAIN SCENE (Async Asset Loading & Safety)
+//  MAIN SCENE (Procedural Generation)
 // ---------------------------------------------------------
 class MainScene extends Phaser.Scene {
     constructor() { 
@@ -240,72 +241,21 @@ class MainScene extends Phaser.Scene {
         this.mapGenerated=false; this.dragHighlightHex=null;
         this.unitVisuals = new Map();
         this.crosshairGroup = null;
-        
-        // ★重要: 準備完了フラグ。これがtrueになるまでupdateを走らせない
-        this.isReady = false;
     }
     
     preload() { 
         if(window.EnvSystem) window.EnvSystem.preload(this);
+        // ★ロードはしない
     }
 
     create() {
-        // 画像データの定義 (Base64)
-        const explosionBase64 = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAUAAAABABAMAAAB30k+FAAAAMFBMVEUAAAD///8UFBQoKCgwMDA8PDxERERMTExUVFRkZGR0dHSLi4uUlJSkpKS0tLTc3NwKGsidAAAAAXRSTlMAQObYZgAAAXpJREFUeNrt3D1uwzAMBeA4d+gEOUCOkCP4/qfIBXKCHiAH8AEMGbp061/R75El2qYF8uFBfEiF858B2gN7gD3Af5X31+0aYF+g1wNMBdoCrALdC7QLtD/QrUBrgW4GugfoNqA1QLcDrQY6G2g10FlA64DOAVoLdAq4DWAj0HWAW0EugpQCuBngP0HGAF0FKgXwE9B2gp0G9A5wAtBfoF0FqgpUAvgFYCPQVoJdBToH8B7QK0FugHQL8APQNoJ8A/A1oI9C3Q14B+A/QQoJ8APQZoHdA7gN4C9BqgnYD0FqDVA7wFaAnQa6C3AP0OaCegdUC/APoY0I+APgD0CKD3Ab0E6BNAbwP6FNB7gF4C9DGgTwG9A+glQG8D+hTQe4B2Ld8B+pbvAH3Nd4D/o+8A3+g7wDf7DvBf6B/gX97z7X1WpAAAAAElFTkSuQmCC';
-        const soldierBase64 = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAMAAACdt4HsAAAAPFBMVEUAAAAAAAB2AgB/BgCDEgCHGQCJJQCNLQCROACVQQCaSQCeUgCiWgCmYwCqaACubwCydwC2fQC6hgC+jQBj2x5AAAAAAXRSTlMAQObYZgAAAMFJREFUWIXt1sEKAjEMRNF+2tKq///RjQVxUwmCmJk78y4J5C04940x5p7760yA7i/gQ4D+Aj4E6C/gQ4D+Aj4E6C/gQ4D+Aj4E6C/gQ4D+Aj4E6C/gQ4D+Aj4E6C/gQ4D+Aj4E6C/gQ4D+Aj4E6C/gQ4D+Aj4E6C/gQ4D+Aj4E6C/gQ4D+Aj4E6C/gQ4D+Aj4E6C/gQ4D+Aj4E6C/gQ4D+An4P8A2D3w1hV8+V8AAAAABJRU5ErkJggg==';
-        const tankBase64 = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAMAAACdt4HsAAAATlBMVEUAAAAAAAB2AgB/BgCDEgCHGQCJJQCNLQCROACVQQCaSQCeUgCiWgCmYwCqaACubwCydwC2fQC6hgC+jQDCkwDGlQDJlwDMmQDPmgDSnAD89/71AAAAAXRSTlMAQObYZgAAAPxJREFUWIXt1sEKwjAQRdFfaVq1//+jFQuCoykI4syc230sA3kTzr1ijLnl/joToPsL+BCgv4APAfoL+BCgv4APAfoL+BCgv4APAfoL+BCgv4APAfoL+BCgv4APAfoL+BCgv4APAfoL+BCgv4APAfoL+BCgv4APAfoL+BCgv4APAfoL+BCgv4APAfoL+BCgv4APAfoL+BCgv4APAfoL+BCgv4APAfoL+BCgv4APAfoL+BCgv4APAfoL+BCgv4APAfoL+D3ANwx+N4Q9veQLE/7w1HAAAAAASUVORK5CYII=';
-        // フレーム画像 (GitHubに配置した画像)
-        // ※読み込みエラー防止のため、ここでは使わずpreload側で読むか、この仕組みで読むか統一すべきですが、
-        // ひとまず確実に動くBase64の3つだけをここで処理します。フレームはpreloadで読まれているはず。
+        // ★1. テクスチャをプログラムで生成 (もうロードエラーは起きない)
+        this.generateAssets();
 
-        const assets = {
-            'explosion_sheet': { src: explosionBase64, isSprite: true, w:64, h:64 },
-            'soldier_img': { src: soldierBase64, isSprite: false },
-            'tank_img': { src: tankBase64, isSprite: false }
-        };
-
-        let loadedCount = 0;
-        const total = Object.keys(assets).length;
-
-        // 非同期読み込みループ
-        Object.keys(assets).forEach(key => {
-            const img = new Image();
-            img.onload = () => {
-                if (assets[key].isSprite) {
-                    this.textures.addSpriteSheet(key, img, { frameWidth: assets[key].w, frameHeight: assets[key].h });
-                } else {
-                    this.textures.addImage(key, img);
-                }
-                loadedCount++;
-                // 全て読み込み終わったらゲーム開始
-                if (loadedCount >= total) {
-                    this.setupGame(); 
-                }
-            };
-            // エラーハンドリング: 万が一画像が壊れてても進むようにする
-            img.onerror = () => {
-                console.error("Asset load failed: " + key);
-                loadedCount++;
-                if (loadedCount >= total) this.setupGame();
-            };
-            img.src = assets[key].src;
-        });
-    }
-
-    setupGame() {
         this.cameras.main.setBackgroundColor('#0b0e0a'); 
         this.hexGroup = this.add.group(); this.unitGroup = this.add.group(); 
         
-        // 爆撃カード用のダミーテクスチャ生成 (404対策)
-        if (!this.textures.exists('card_img_bomb')) {
-            const g = this.make.graphics();
-            g.fillStyle(0x333333); g.fillRect(0,0,120,80);
-            g.fillStyle(0xaa2222); g.fillCircle(60,40,25);
-            g.fillStyle(0xffaa00); g.fillTriangle(60,20, 40,60, 80,60);
-            g.generateTexture('card_img_bomb', 120, 80);
-            g.destroy();
-        }
-
+        // 照準用グループ
         this.crosshairGroup = this.add.graphics().setDepth(200);
         this.vfxGraphics = this.add.graphics().setDepth(100); this.overlayGraphics = this.add.graphics().setDepth(50); 
         if(window.EnvSystem) window.EnvSystem.clear();
@@ -315,8 +265,8 @@ class MainScene extends Phaser.Scene {
         if (!this.anims.exists('boom_anim')) {
             this.anims.create({
                 key: 'boom_anim',
-                frames: this.anims.generateFrameNumbers('explosion_sheet', { start: 0, end: 4 }),
-                frameRate: 15,
+                frames: this.anims.generateFrameNumbers('explosion_sheet', { start: 0, end: 15 }), // 4x4=16frames
+                frameRate: 30,
                 repeat: 0,
                 hideOnComplete: true
             });
@@ -334,16 +284,82 @@ class MainScene extends Phaser.Scene {
         this.input.on('pointerup', () => { Renderer.isMapDragging = false; });
         this.input.on('pointermove', (p) => { if (Renderer.isCardDragging) return; if (p.isDown && Renderer.isMapDragging) { const zoom = this.cameras.main.zoom; this.cameras.main.scrollX -= (p.x - p.prevPosition.x) / zoom; this.cameras.main.scrollY -= (p.y - p.prevPosition.y) / zoom; } if(!Renderer.isMapDragging && window.gameLogic) window.gameLogic.handleHover(Renderer.pxToHex(p.x, p.y)); }); 
         this.input.mouse.disableContextMenu();
-        
-        // ★重要: ここで準備完了！
-        this.isReady = true;
+    }
+
+    // ★重要: アセット生成メソッド
+    generateAssets() {
+        // 1. 爆撃カード画像
+        if (!this.textures.exists('card_img_bomb')) {
+            const g = this.make.graphics();
+            g.fillStyle(0x333333); g.fillRect(0,0,120,80);
+            g.fillStyle(0xaa2222); g.fillCircle(60,40,25);
+            g.fillStyle(0xffaa00); g.fillTriangle(60,20, 40,60, 80,60);
+            g.generateTexture('card_img_bomb', 120, 80);
+            g.destroy();
+        }
+
+        // 2. 兵士 (Soldier)
+        if (!this.textures.exists('soldier_img')) {
+            const g = this.make.graphics();
+            g.fillStyle(0xffffff); g.fillCircle(16,16,14); // Head
+            g.fillStyle(0x888888); g.fillRect(8,16,16,16); // Body
+            g.fillStyle(0x222222); g.fillRect(20,18,10,4); // Gun
+            g.generateTexture('soldier_img', 32, 32);
+            g.destroy();
+        }
+
+        // 3. 戦車 (Tank)
+        if (!this.textures.exists('tank_img')) {
+            const g = this.make.graphics();
+            g.fillStyle(0x444444); g.fillRect(4,8,24,16); // Body
+            g.fillStyle(0x222222); g.fillRect(0,6,32,6); // Treads Top
+            g.fillRect(0,20,32,6); // Treads Bottom
+            g.fillStyle(0x666666); g.fillCircle(16,16,8); // Turret
+            g.fillStyle(0x111111); g.fillRect(16,14,14,4); // Barrel
+            g.generateTexture('tank_img', 32, 32);
+            g.destroy();
+        }
+
+        // 4. 爆発スプライトシート (Explosion Sheet - 4x4)
+        if (!this.textures.exists('explosion_sheet')) {
+            const canvas = document.createElement('canvas');
+            canvas.width = 256; canvas.height = 256; // 64x64 * 4x4
+            const ctx = canvas.getContext('2d');
+            
+            // 4x4=16コマのアニメーションを描画
+            for(let i=0; i<16; i++) {
+                const col = i % 4;
+                const row = Math.floor(i / 4);
+                const x = col * 64 + 32;
+                const y = row * 64 + 32;
+                
+                const progress = i / 15.0; // 0.0 to 1.0
+                const radius = 5 + progress * 25;
+                const alpha = 1.0 - Math.pow(progress, 3);
+                
+                ctx.beginPath();
+                ctx.arc(x, y, radius, 0, Math.PI*2);
+                ctx.fillStyle = `rgba(255, ${Math.floor(200*(1-progress))}, 0, ${alpha})`;
+                ctx.fill();
+                
+                // Inner white core
+                if (progress < 0.5) {
+                    ctx.beginPath();
+                    ctx.arc(x, y, radius * 0.5, 0, Math.PI*2);
+                    ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
+                    ctx.fill();
+                }
+            }
+            this.textures.addCanvas('explosion_sheet', canvas);
+        }
     }
 
     playExplosion(x, y) {
-        // 画像読み込みが成功している場合のみ再生
         if (this.textures.exists('explosion_sheet')) {
             const explosion = this.add.sprite(x, y, 'explosion_sheet');
-            explosion.setDepth(200); explosion.setScale(2.0); explosion.play('boom_anim');
+            explosion.setDepth(200); 
+            explosion.setScale(2.0); 
+            explosion.play('boom_anim');
             if(window.VFX) window.VFX.shake(500);
         }
     }
@@ -373,17 +389,7 @@ class MainScene extends Phaser.Scene {
         let key = 'soldier_img'; 
         if (u.def.isTank) key = 'tank_img';
 
-        // テクスチャが存在するか確認
-        if (!this.textures.exists(key)) key = null; // フォールバック
-
-        let sprite;
-        if (key) {
-            sprite = this.add.sprite(0, 0, key).setScale(2.0); 
-        } else {
-            // 画像がない場合の代替図形
-            sprite = this.add.circle(0, 0, 16, 0x00ff00);
-        }
-
+        const sprite = this.add.sprite(0, 0, key).setScale(1.5); // サイズ調整
         if(u.team === 'player') sprite.setTint(0xaaccff); else sprite.setTint(0xffaaaa);
 
         const hpBg = this.add.rectangle(0, -30, 20, 4, 0x000000); 
@@ -416,10 +422,7 @@ class MainScene extends Phaser.Scene {
     }
 
     update(time, delta) {
-        // ★重要: 準備完了までupdateしない
-        if (!this.isReady) return;
         if (!window.gameLogic) return;
-
         if(window.VFX && window.VFX.shakeRequest > 0) { this.cameras.main.shake(100, window.VFX.shakeRequest * 0.001); window.VFX.shakeRequest = 0; }
         if(window.EnvSystem) window.EnvSystem.update(time);
         if(window.VFX) { window.VFX.update(); this.vfxGraphics.clear(); window.VFX.draw(this.vfxGraphics); }
