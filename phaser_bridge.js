@@ -1,4 +1,4 @@
-/** * PHASER BRIDGE (Logic & View Controller) */
+/** * PHASER BRIDGE (High-Performance Rendering) */
 let phaserGame = null;
 
 // ---------------------------------------------------------
@@ -171,7 +171,7 @@ class Card extends Phaser.GameObjects.Container {
                 if(!this.scene || !maskShape.scene) return;
                 maskShape.clear(); maskShape.fillStyle(0xffffff); maskShape.fillRect(-70, -100, 140, 200 * (1 - burnProgress.val)); 
                 maskShape.x = this.x; maskShape.y = this.y + (200 * burnProgress.val);
-                const rad = Phaser.Math.DegToRad(this.angle); const cos = Math.cos(rad); const sin = Math.sin(rad); const burnLineY = 100 - (200 * burnProgress.val); 
+                const rad = Phaser.Math.DegToRad(this.angle); const cos = Math.cos(rad); const sin = Math.sin(rad); 
                 for(let i=0; i<8; i++) { 
                     const randX = (Math.random() - 0.5) * 140; 
                     const wx = this.x + (randX * cos - sin); 
@@ -222,13 +222,16 @@ class UIScene extends Phaser.Scene {
 }
 
 // ---------------------------------------------------------
-//  MAIN SCENE
+//  MAIN SCENE (Optimized)
 // ---------------------------------------------------------
 class MainScene extends Phaser.Scene {
     constructor() { 
         super({ key: 'MainScene' }); 
         this.hexGroup=null; this.unitGroup=null; this.vfxGraphics=null; this.overlayGraphics=null; 
         this.mapGenerated=false; this.dragHighlightHex=null;
+        
+        // ★最適化: ユニットの見た目をID管理するMap
+        this.unitVisuals = new Map();
     }
     preload() { if(window.EnvSystem) window.EnvSystem.preload(this); }
     create() {
@@ -237,17 +240,26 @@ class MainScene extends Phaser.Scene {
         this.vfxGraphics = this.add.graphics().setDepth(100); this.overlayGraphics = this.add.graphics().setDepth(50); 
         if(window.EnvSystem) window.EnvSystem.clear();
         this.scene.launch('UIScene'); 
+        
+        // Input handling
         this.input.on('wheel', (pointer, gameObjects, deltaX, deltaY, deltaZ) => { let newZoom = this.cameras.main.zoom; if (deltaY > 0) newZoom -= 0.5; else if (deltaY < 0) newZoom += 0.5; newZoom = Phaser.Math.Clamp(newZoom, 0.25, 4.0); this.tweens.add({ targets: this.cameras.main, zoom: newZoom, duration: 150, ease: 'Cubic.out' }); });
         this.input.on('pointerdown', (p) => { if (Renderer.isCardDragging || Renderer.checkUIHover(p.x, p.y)) return; if(p.button === 0) { Renderer.isMapDragging = true; if(window.gameLogic) window.gameLogic.handleClick(Renderer.pxToHex(p.x, p.y)); } else if(p.button === 2) { if(window.gameLogic) window.gameLogic.showContext(p.x, p.y); } });
         this.input.on('pointerup', () => { Renderer.isMapDragging = false; });
         this.input.on('pointermove', (p) => { if (Renderer.isCardDragging) return; if (p.isDown && Renderer.isMapDragging) { const zoom = this.cameras.main.zoom; this.cameras.main.scrollX -= (p.x - p.prevPosition.x) / zoom; this.cameras.main.scrollY -= (p.y - p.prevPosition.y) / zoom; } if(!Renderer.isMapDragging && window.gameLogic) window.gameLogic.handleHover(Renderer.pxToHex(p.x, p.y)); }); 
         this.input.mouse.disableContextMenu();
     }
+    
     triggerBombardment(hex) { this.time.delayedCall(500, () => { const targetPos = Renderer.hexToPx(hex.q, hex.r); if(window.VFX) window.VFX.addBombardment(this, targetPos.x, targetPos.y, hex); }); }
     centerCamera(q, r) { const p = Renderer.hexToPx(q, r); this.cameras.main.centerOn(p.x, p.y); }
     centerMap() { this.cameras.main.centerOn((MAP_W * HEX_SIZE * 1.5) / 2, (MAP_H * HEX_SIZE * 1.732) / 2); }
+    
     createMap() { 
         const map = window.gameLogic.map; 
+        
+        // ★マップ再生成時はユニット表示も一度クリアする
+        this.unitGroup.clear(true, true);
+        this.unitVisuals.clear();
+
         for(let q=0; q<MAP_W; q++) { 
             for(let r=0; r<MAP_H; r++) { 
                 const t = map[q][r]; if(t.id===-1)continue; 
@@ -262,30 +274,86 @@ class MainScene extends Phaser.Scene {
         this.centerMap(); 
     }
     
+    // ★最適化: ユニット表示の作成 (使い回し用)
+    createUnitVisual(u) {
+        const container = this.add.container(0, 0);
+        const sprite = this.add.sprite(0, 0, u.team==='player'?'unit_player':'unit_enemy').setScale(1/window.HIGH_RES_SCALE); 
+        if(u.def.isTank) sprite.setTint(0x888888); 
+        if(u.team==='player') sprite.setTint(0x6688aa); else sprite.setTint(0xcc6655); 
+        
+        const hpBg = this.add.rectangle(0, -20, 20, 4, 0x000000);
+        const hpBar = this.add.rectangle(-10, -20, 20, 4, 0x00ff00);
+        
+        const cursor = this.add.image(0, 0, 'cursor').setScale(1/window.HIGH_RES_SCALE).setAlpha(0).setVisible(false);
+        this.tweens.add({ targets: cursor, scale: { from: 1/window.HIGH_RES_SCALE, to: 1.1/window.HIGH_RES_SCALE }, alpha: { from: 1, to: 0.5 }, yoyo: true, repeat: -1, duration: 800 });
+        
+        container.add([sprite, hpBg, hpBar, cursor]);
+        
+        // 参照を保持して後でアクセスしやすくする
+        container.sprite = sprite;
+        container.hpBar = hpBar;
+        container.cursor = cursor;
+        
+        return container;
+    }
+
+    // ★最適化: ユニット表示の更新 (差分のみ)
+    updateUnitVisual(container, u) {
+        const pos = Renderer.hexToPx(u.q, u.r);
+        container.setPosition(pos.x, pos.y);
+        
+        // HPバー
+        const hpPct = u.hp / u.maxHp;
+        container.hpBar.width = 20 * hpPct;
+        container.hpBar.x = -10 + (10 * hpPct); // 左寄せにするための計算
+        container.hpBar.fillColor = hpPct > 0.5 ? 0x00ff00 : 0xff0000;
+        
+        // カーソル
+        if(window.gameLogic.selectedUnit === u) {
+            container.cursor.setVisible(true);
+            container.cursor.setAlpha(1); // Tweenが動いているが見えるように
+        } else {
+            container.cursor.setVisible(false);
+        }
+    }
+
     update(time, delta) {
         if (!window.gameLogic) return;
         
-        // ★画面シェイク処理 (VFXからのリクエストを処理)
+        // Shake
         if(window.VFX && window.VFX.shakeRequest > 0) {
-            this.cameras.main.shake(100, window.VFX.shakeRequest * 0.001); // 軽めのシェイク
-            window.VFX.shakeRequest = 0; // リセット
+            this.cameras.main.shake(100, window.VFX.shakeRequest * 0.001); 
+            window.VFX.shakeRequest = 0; 
         }
 
         if(window.EnvSystem) window.EnvSystem.update(time);
         if(window.VFX) { window.VFX.update(); this.vfxGraphics.clear(); window.VFX.draw(this.vfxGraphics); }
         if (window.gameLogic.map.length > 0 && !this.mapGenerated) { this.createMap(); this.mapGenerated = true; }
         
-        this.unitGroup.clear(true, true);
+        // ★最適化: ユニット描画ループ
+        const activeIds = new Set();
         window.gameLogic.units.forEach(u => {
-            if(u.hp <= 0) return; 
-            const pos = Renderer.hexToPx(u.q, u.r); const container = this.add.container(pos.x, pos.y); 
-            const sprite = this.add.sprite(0, 0, u.team==='player'?'unit_player':'unit_enemy').setScale(1/window.HIGH_RES_SCALE); 
-            if(u.def.isTank) sprite.setTint(0x888888); if(u.team==='player') sprite.setTint(0x6688aa); else sprite.setTint(0xcc6655); 
-            container.add(sprite);
-            const hpPct = u.hp / u.maxHp; container.add([this.add.rectangle(0, -20, 20, 4, 0x000000), this.add.rectangle(-10+(10*hpPct), -20, 20*hpPct, 4, hpPct>0.5?0x00ff00:0xff0000)]);
-            if(window.gameLogic.selectedUnit === u) { const c = this.add.image(0, 0, 'cursor').setScale(1/window.HIGH_RES_SCALE); this.tweens.add({ targets: c, scale: { from: 1/window.HIGH_RES_SCALE, to: 1.1/window.HIGH_RES_SCALE }, alpha: { from: 1, to: 0.5 }, yoyo: true, repeat: -1, duration: 800 }); container.add(c); } 
-            this.unitGroup.add(container);
+            if(u.hp <= 0) return;
+            activeIds.add(u.id); // 生存ユニットID
+            
+            let visual = this.unitVisuals.get(u.id);
+            if (!visual) {
+                // 新規作成
+                visual = this.createUnitVisual(u);
+                this.unitVisuals.set(u.id, visual);
+                this.unitGroup.add(visual);
+            }
+            // 差分更新
+            this.updateUnitVisual(visual, u);
         });
+
+        // 存在しない（死んだ）ユニットの表示を削除
+        for (const [id, visual] of this.unitVisuals) {
+            if (!activeIds.has(id)) {
+                visual.destroy();
+                this.unitVisuals.delete(id);
+            }
+        }
 
         this.overlayGraphics.clear();
         if (this.dragHighlightHex) { this.overlayGraphics.lineStyle(4, 0xffffff, 1.0); this.drawHexOutline(this.overlayGraphics, this.dragHighlightHex.q, this.dragHighlightHex.r); }
