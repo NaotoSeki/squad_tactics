@@ -1,9 +1,10 @@
-/** * PHASER VFX SPECIALIST (Environment, Particles, Textures) */
+/** * PHASER VFX SPECIALIST (High-End Particles & Shake) */
 window.HIGH_RES_SCALE = 4;
 
 // ---------------------------------------------------------
-//  1. テクスチャ生成 & 共通描画ヘルパー
+//  1. テクスチャ & 共通描画
 // ---------------------------------------------------------
+// (ここは変更なしですが、ファイル全体を置き換えるため再掲します)
 window.drawCardToCanvas = function(type) {
     const w = 100 * window.HIGH_RES_SCALE; const h = 60 * window.HIGH_RES_SCALE;
     const c = document.createElement('canvas'); c.width = w; c.height = h; const x = c.getContext('2d');
@@ -30,16 +31,13 @@ window.createGradientTexture = function(scene) {
 };
 
 // ---------------------------------------------------------
-//  2. 環境システム (Group管理版)
+//  2. 環境システム
 // ---------------------------------------------------------
 window.EnvSystem = {
     waterHexes: [], forestTrees: [], grassBlades: [],
-    
     preload(scene) {
         scene.load.image('card_img_bomb', 'image_6e3646.jpg'); 
         const g = scene.make.graphics({x:0, y:0, add:false}); const S = HEX_SIZE * window.HIGH_RES_SCALE; 
-
-        // ヘックス枠 (Ghost Line)
         g.lineStyle(0.1 * window.HIGH_RES_SCALE, 0x000000, 0.2); 
         g.fillStyle(0xffffff, 1); 
         g.beginPath(); for(let i=0; i<6; i++) { const a = Math.PI/180 * 60 * i; g.lineTo(S + S * Math.cos(a), S + S * Math.sin(a)); } g.closePath(); 
@@ -53,64 +51,45 @@ window.EnvSystem = {
         g.clear(); g.lineStyle(3*window.HIGH_RES_SCALE, 0x00ff00, 1); g.strokeCircle(32*window.HIGH_RES_SCALE, 32*window.HIGH_RES_SCALE, 28*window.HIGH_RES_SCALE); g.generateTexture('cursor', 64*window.HIGH_RES_SCALE, 64*window.HIGH_RES_SCALE);
         g.clear(); g.fillStyle(0x223322, 1); g.fillEllipse(15, 30, 10, 25); g.generateTexture('bomb_body', 30, 60);
     },
-
-    // ★修正: リストを空にするだけでOK (実体はhexGroupと共に消えるため)
     clear() { 
-        this.waterHexes = [];
-        this.forestTrees = [];
-        this.grassBlades = []; 
+        this.waterHexes.forEach(w => { if(w.waves) w.waves.forEach(wave => wave.destroy()); }); this.waterHexes = [];
+        this.forestTrees.forEach(t => { if(t.sprite) t.sprite.destroy(); }); this.forestTrees = [];
+        this.grassBlades.forEach(g => { if(g.sprite) g.sprite.destroy(); }); this.grassBlades = []; 
     },
-
-    // ★修正: hexGroupを受け取り、波を追加
     registerWater(hexSprite, baseY, q, r, hexGroup) {
         const scene = hexSprite.scene;
         const w1 = scene.add.image(hexSprite.x + (Math.random()-0.5)*20, hexSprite.y + (Math.random()-0.5)*15, 'wave_line').setScale(0.8);
         const w2 = scene.add.image(hexSprite.x + (Math.random()-0.5)*20, hexSprite.y + (Math.random()-0.5)*15, 'wave_line').setScale(0.6);
-        
-        if(hexGroup) { hexGroup.add(w1); hexGroup.add(w2); } // グループ管理下へ
-
+        if(hexGroup) { hexGroup.add(w1); hexGroup.add(w2); }
         this.waterHexes.push({ sprite: hexSprite, waves: [w1, w2], baseY: baseY, q: q, r: r, offset: Math.random() * 6.28 });
     },
-
-    // ★修正: 草をhexGroupに追加
     spawnGrass(scene, hexGroup, px, py) {
         const count = 15 + Math.floor(Math.random() * 6);
         for(let i=0; i<count; i++) {
             const rad = Math.random() * HEX_SIZE * 0.8; const ang = Math.random() * Math.PI * 2;
             const tx = px + rad * Math.cos(ang); const ty = py + rad * Math.sin(ang) * 0.8;
-            const blade = scene.add.image(tx, ty, 'grass_blade').setOrigin(0.5, 1.0);
-            blade.setScale(0.5 + Math.random() * 0.5); 
+            const blade = scene.add.image(tx, ty, 'grass_blade').setOrigin(0.5, 1.0).setScale(0.5 + Math.random() * 0.5); 
             const shade = 100 + Math.floor(Math.random()*80);
             blade.setTint(Phaser.Display.Color.GetColor(shade, shade+40, shade));
-            
-            if(hexGroup) hexGroup.add(blade); // グループ管理下へ
-
+            if(hexGroup) hexGroup.add(blade);
             this.grassBlades.push({ sprite: blade, px: tx, py: ty });
         }
     },
-
     spawnTrees(scene, hexGroup, px, py) {
         const count = 8 + Math.floor(Math.random() * 5);
         for(let i=0; i<count; i++) {
             const rad = Math.random() * HEX_SIZE * 0.7; const ang = Math.random() * Math.PI * 2;
             const tx = px + rad * Math.cos(ang); const ty = py + rad * Math.sin(ang) * 0.8;
-            const scale = (0.25 + Math.random()*0.35); 
-            const tree = scene.add.image(tx, ty, 'tree').setOrigin(0.5, 1.0).setScale(scale);
+            const tree = scene.add.image(tx, ty, 'tree').setOrigin(0.5, 1.0).setScale(0.25 + Math.random()*0.35);
             const shade = 100 + Math.floor(Math.random() * 80); 
             tree.setTint(Phaser.Display.Color.GetColor(shade, shade+20, shade+30));
-            
             if(hexGroup) hexGroup.add(tree);
-
             this.forestTrees.push({ sprite: tree, px: tx, py: ty, sway: 0.04 + Math.random()*0.04 });
         }
     },
-
     update(time) {
         const timeSec = time * 0.001; const waveSpeed = timeSec;
-        const createWind = (px, py, speedOffset) => {
-            const flow = (px - py) * 0.002 + timeSec * 0.8 + speedOffset;
-            const gust = Math.pow(Math.sin(flow), 6); return gust; 
-        };
+        const createWind = (px, py, speedOffset) => Math.pow(Math.sin((px - py) * 0.002 + timeSec * 0.8 + speedOffset), 6);
         this.waterHexes.forEach(w => {
             if(!w.sprite.scene) return; 
             const wave = Math.sin(waveSpeed + w.q * 0.3 + w.r * 0.3 + w.offset);
@@ -133,36 +112,187 @@ window.EnvSystem = {
     }
 };
 
+// ---------------------------------------------------------
+//  3. VFX (Particles, Shake, Tracers) - 大幅強化
+// ---------------------------------------------------------
 window.VFX = { 
-    particles:[], projectiles:[], shockwaves:[], add(p){this.particles.push(p);}, 
+    particles:[], projectiles:[], shockwaves:[], shakeRequest: 0,
+    add(p){this.particles.push(p);}, 
+    
+    // 画面シェイク要求 (Bridge側で処理)
+    requestShake(intensity) {
+        this.shakeRequest = Math.max(this.shakeRequest, intensity);
+    },
+
     addBombardment(scene, tx, ty, hex) {
         const startY = ty - 800; const bomb = scene.add.sprite(tx, startY, 'bomb_body').setDepth(2000).setScale(1.5);
         scene.tweens.add({
             targets: bomb, y: ty, duration: 400, ease: 'Quad.In',
             onComplete: () => {
                 if(window.Sfx) window.Sfx.play('boom'); 
-                bomb.destroy(); scene.cameras.main.shake(300, 0.03); this.addRealExplosion(tx, ty); 
+                bomb.destroy(); 
+                this.requestShake(15); // 強烈なシェイク
+                this.addRealExplosion(tx, ty); 
                 if(window.gameLogic && window.gameLogic.applyBombardment) window.gameLogic.applyBombardment(hex);
             }
         });
     },
+    // ★リアルな爆発 (破片と煙を強化)
     addRealExplosion(x, y) {
         this.add({x, y, vx:0, vy:0, life:3, maxLife:3, size:150, color:'#fff', type:'flash'});
         this.shockwaves.push({x, y, radius:10, maxRadius:150, alpha:1.0});
+        
+        // 火球
         for(let i=0; i<30; i++) this.add({ x, y, vx: Math.cos(Math.random()*6.28)*Math.random()*8, vy: Math.sin(Math.random()*6.28)*Math.random()*8-5, life: 30+Math.random()*20, maxLife:50, color: '#fa0', size: 10+Math.random()*15, type:'fire_core' });
-        for(let i=0; i<40; i++) this.add({ x: x+(Math.random()-0.5)*30, y: y+(Math.random()-0.5)*30, vx: Math.cos(Math.random()*6.28)*Math.random()*4, vy: Math.sin(Math.random()*6.28)*Math.random()*4-1, life: 60+Math.random()*40, maxLife:100, color: '#222', size: 8+Math.random()*12, type:'smoke_dark' });
-        for(let i=0; i<20; i++) this.add({ x, y, vx: Math.cos(Math.random()*6.28)*(5+Math.random()*10), vy: Math.sin(Math.random()*6.28)*(5+Math.random()*10)-8, life: 40+Math.random()*20, maxLife:60, color: '#444', size: 3, type:'debris', gravity: 0.5 });
+        
+        // 煙 (モコモコ感)
+        for(let i=0; i<50; i++) {
+            this.add({ 
+                x: x+(Math.random()-0.5)*30, y: y+(Math.random()-0.5)*30, 
+                vx: Math.cos(Math.random()*6.28)*Math.random()*3, vy: Math.sin(Math.random()*6.28)*Math.random()*3-2, 
+                life: 60+Math.random()*40, maxLife:100, color: '#222', size: 10+Math.random()*20, type:'smoke_dark',
+                angle: Math.random()*Math.PI*2, angVel: (Math.random()-0.5)*0.1 
+            });
+        }
+        // 破片 (四角い破片が飛び散る)
+        for(let i=0; i<30; i++) {
+            this.add({ 
+                x, y, 
+                vx: Math.cos(Math.random()*6.28)*(5+Math.random()*15), vy: Math.sin(Math.random()*6.28)*(5+Math.random()*15)-10, 
+                life: 50+Math.random()*30, maxLife:80, color: '#444', size: 4+Math.random()*4, 
+                type:'debris_rect', gravity: 0.6, angle: Math.random()*6, angVel: (Math.random()-0.5)*0.5 
+            });
+        }
     },
-    addExplosion(x, y, c, n) { for(let i=0; i<n; i++) this.add({x, y, vx:Math.cos(Math.random()*6.28)*Math.random()*5+1, vy:Math.sin(Math.random()*6.28)*Math.random()*5+1, life:30+Math.random()*20, maxLife:50, color:c, size:2, type:'s'}); },
-    addProj(p){this.projectiles.push(p);}, addUnitDebris(x,y){}, 
-    update() { 
-        this.particles.forEach(p=>{ p.x+=p.vx; p.y+=p.vy; p.life--; if(p.type==='debris') p.vy+=p.gravity||0; if(p.type==='fire_core'){p.size*=0.95;p.color=Math.random()>0.3?'#f40':'#300';} if(p.type==='smoke_dark'){p.size*=1.02;p.vx*=0.95;p.vy*=0.95;p.alpha=p.life/p.maxLife*0.8;} if(p.type==='f'){p.size*=0.9;p.color=Math.random()>0.4?'#ff4':(Math.random()>0.5?'#f40':'#620');} else if(p.type==='s'){p.size*=1.02;p.y-=0.5;p.alpha=p.life/p.maxLife;} }); 
-        this.projectiles.forEach(p=>{if(p.type.includes('shell')||p.type==='rocket'){p.progress+=p.speed;if(p.progress>=1){p.dead=true;p.onHit();return;}const lx=p.sx+(p.ex-p.sx)*p.progress,ly=p.sy+(p.ey-p.sy)*p.progress,a=Math.sin(p.progress*Math.PI)*p.arcHeight;p.x=lx;p.y=ly-a;}else{p.x+=p.vx;p.y+=p.vy;p.life--;if(p.life<=0){p.dead=true;p.onHit();}}}); 
-        this.shockwaves.forEach(s=>{s.radius+=8;s.alpha-=0.08;}); this.shockwaves=this.shockwaves.filter(s=>s.alpha>0); this.particles=this.particles.filter(p=>p.life>0); this.projectiles=this.projectiles.filter(p=>!p.dead); 
+    // 通常ヒット時のエフェクト (四角い破片を追加)
+    addExplosion(x, y, c, n) { 
+        this.requestShake(3); // 軽いシェイク
+        for(let i=0; i<n; i++) {
+            this.add({
+                x, y, 
+                vx: Math.cos(Math.random()*6.28)*Math.random()*6, vy: Math.sin(Math.random()*6.28)*Math.random()*6, 
+                life: 20+Math.random()*20, maxLife:40, color:c, size:2+Math.random()*3, 
+                type: 'debris_rect', // 四角い破片
+                gravity: 0.4, angle: Math.random()*6, angVel: (Math.random()-0.5)*0.5
+            });
+        }
+        // 硝煙
+        for(let i=0; i<5; i++) {
+            this.add({
+                x, y, vx:(Math.random()-0.5)*2, vy:-1-Math.random(), life:40, maxLife:40, 
+                color:'#ccc', size:5+Math.random()*5, type:'smoke_puff', alpha:0.5
+            });
+        }
+    },
+    
+    // ★弾丸 (弾速ハック & 曳光弾)
+    addProj(p){
+        // 弾速を強制的に上げる (ロジック側を変えずに見た目だけ速くする)
+        if(p.type === 'bullet' || p.type.includes('shell')) {
+            p.speed *= 5.0; // 5倍速
+        }
+        // 軌跡用の始点を記録
+        p.trailX = p.x;
+        p.trailY = p.y;
+        this.projectiles.push(p);
+        
+        // 発射時のフラッシュと微細シェイク
+        this.add({x:p.x, y:p.y, life:3, maxLife:3, size:20, color:'#ffaa00', type:'flash'});
+        this.requestShake(2);
+    },
+    
+    addUnitDebris(x,y){
+        this.addExplosion(x,y, "#888", 15);
     }, 
+    
+    update() { 
+        // パーティクル更新
+        this.particles.forEach(p=>{ 
+            p.x+=p.vx; p.y+=p.vy; p.life--; 
+            if(p.gravity) p.vy += p.gravity;
+            if(p.angVel) p.angle += p.angVel;
+            
+            // 挙動定義
+            if(p.type==='debris_rect') { p.vx *= 0.95; p.vy *= 0.95; }
+            if(p.type==='smoke_dark'){ p.size*=1.01; p.vx*=0.95; p.vy*=0.95; p.alpha=p.life/p.maxLife*0.8; }
+            if(p.type==='smoke_puff'){ p.size*=1.05; p.vy*=0.9; p.alpha=p.life/p.maxLife*0.4; }
+            if(p.type==='flash'){ p.size*=0.8; }
+        }); 
+        
+        // 弾丸更新
+        this.projectiles.forEach(p=>{
+            // 軌跡のために直前の位置を保存
+            p.trailX = p.x;
+            p.trailY = p.y;
+
+            if(p.type.includes('shell')||p.type==='rocket'){
+                p.progress+=p.speed;
+                if(p.progress>=1){p.dead=true;p.onHit();return;}
+                const lx=p.sx+(p.ex-p.sx)*p.progress,ly=p.sy+(p.ey-p.sy)*p.progress,a=Math.sin(p.progress*Math.PI)*p.arcHeight;
+                p.x=lx;p.y=ly-a;
+            }else{
+                p.x+=p.vx;p.y+=p.vy;p.life--;
+                if(p.life<=0){p.dead=true;p.onHit();}
+            }
+        }); 
+        
+        this.shockwaves.forEach(s=>{s.radius+=8;s.alpha-=0.08;}); 
+        this.shockwaves=this.shockwaves.filter(s=>s.alpha>0); 
+        this.particles=this.particles.filter(p=>p.life>0); 
+        this.projectiles=this.projectiles.filter(p=>!p.dead); 
+    }, 
+    
     draw(g) { 
-        this.shockwaves.forEach(s=>{g.lineStyle(4,0xffffff,s.alpha);g.strokeCircle(s.x,s.y,s.radius);}); this.projectiles.forEach(p=>{g.fillStyle(0xffff00,1);g.fillCircle(p.x,p.y,3);}); 
-        this.particles.forEach(p=>{ const c=(typeof p.color==='string'&&p.color.startsWith('#'))?parseInt(p.color.replace('#','0x')):p.color; let ci=0xffffff; if(p.color==='#fa0')ci=0xffaa00; else if(p.color==='#f40')ci=0xff4400; else if(p.color==='#ff4')ci=0xffff44; else if(p.color==='#620')ci=0x662200; else if(p.color==='#222')ci=0x222222; else if(p.color==='#444')ci=0x444444; else if(p.color==='#fff')ci=0xffffff; else ci=p.color; g.fillStyle(ci,p.alpha!==undefined?p.alpha:(p.life/p.maxLife)); g.fillCircle(p.x,p.y,p.size); }); 
+        // 衝撃波
+        this.shockwaves.forEach(s=>{g.lineStyle(4,0xffffff,s.alpha);g.strokeCircle(s.x,s.y,s.radius);}); 
+        
+        // ★弾丸の描画 (曳光弾)
+        this.projectiles.forEach(p=>{
+            if(p.type === 'rocket') {
+                g.fillStyle(0xffaa00, 1); g.fillCircle(p.x, p.y, 4);
+                // 煙のトレイル
+                if(Math.random()<0.5) this.add({x:p.x, y:p.y, vx:0, vy:0, life:20, maxLife:20, size:5, color:'#888', type:'smoke_puff'});
+            } else {
+                // 高速弾は線で描く (Tracer)
+                g.lineStyle(2, 0xffffaa, 1.0); // 明るい黄色
+                g.beginPath();
+                g.moveTo(p.trailX, p.trailY); // 直前の位置から
+                g.lineTo(p.x, p.y);           // 現在位置まで
+                g.strokePath();
+                
+                // 先端
+                g.fillStyle(0xffffff, 1);
+                g.fillCircle(p.x, p.y, 2);
+            }
+        }); 
+        
+        // パーティクル描画
+        this.particles.forEach(p=>{ 
+            const cStr = p.color;
+            const cInt = (typeof cStr==='string'&&cStr.startsWith('#')) ? parseInt(cStr.replace('#','0x')) : cStr;
+            const alpha = p.alpha !== undefined ? p.alpha : (p.life/p.maxLife);
+            
+            g.fillStyle(cInt, alpha);
+            
+            if (p.type === 'debris_rect') {
+                // 四角い破片 (回転対応)
+                // Graphicsでは回転が面倒なので簡易的に菱形っぽく描画するか、小さい矩形
+                // PhaserのGraphicsで回転矩形を描くのはコストが高いので、小さな正方形で代用
+                const s = p.size;
+                g.fillRect(p.x - s/2, p.y - s/2, s, s);
+            } else {
+                // 円形 (煙、火花)
+                g.fillCircle(p.x, p.y, p.size); 
+            }
+        }); 
     }
 };
-window.UIVFX = { particles: [], add(p){this.particles.push(p);}, addFire(x,y){this.add({x,y,vx:(Math.random()-0.5)*1.5,vy:-Math.random()*2-1,life:10+Math.random()*15,maxLife:25,size:2+Math.random(),colorType:'fire'});}, addSmoke(x,y){this.add({x,y,vx:(Math.random()-0.5)*1,vy:-1,life:20+Math.random()*20,maxLife:40,size:3+Math.random()*2,colorType:'smoke'});}, update(){this.particles.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.life--;p.size*=0.94;});this.particles=this.particles.filter(p=>p.life>0);}, draw(g){this.particles.forEach(p=>{let c=0xffffff;let a=p.life/p.maxLife;if(p.colorType==='fire'){if(a>0.7)c=0xffff00;else if(a>0.3)c=0xff4400;else c=0x330000;}else{c=0x555555;a*=0.5;}g.fillStyle(c,a);g.fillCircle(p.x,p.y,p.size);});} };
+
+window.UIVFX = { 
+    particles: [], 
+    add(p){this.particles.push(p);}, 
+    addFire(x,y){this.add({x,y,vx:(Math.random()-0.5)*1.5,vy:-Math.random()*2-1,life:10+Math.random()*15,maxLife:25,size:2+Math.random(),colorType:'fire'});}, 
+    addSmoke(x,y){this.add({x,y,vx:(Math.random()-0.5)*1,vy:-1,life:20+Math.random()*20,maxLife:40,size:3+Math.random()*2,colorType:'smoke'});}, 
+    update(){this.particles.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.life--;p.size*=0.94;});this.particles=this.particles.filter(p=>p.life>0);}, 
+    draw(g){this.particles.forEach(p=>{let c=0xffffff;let a=p.life/p.maxLife;if(p.colorType==='fire'){if(a>0.7)c=0xffff00;else if(a>0.3)c=0xff4400;else c=0x330000;}else{c=0x555555;a*=0.5;}g.fillStyle(c,a);g.fillCircle(p.x,p.y,p.size);});} 
+};
