@@ -1,4 +1,4 @@
-/** * PHASER BRIDGE (Ripples Water, CenterOn, Scene Safety) */
+/** * PHASER BRIDGE (Forest Sway, Water Ripples, Safe Logic) */
 let phaserGame = null;
 const HIGH_RES_SCALE = 4; 
 
@@ -160,7 +160,7 @@ class UIScene extends Phaser.Scene {
 }
 
 // ==========================================
-//  MAIN SCENE (Ripples Effect Implemented)
+//  MAIN SCENE (Forest Sway & Water Ripples)
 // ==========================================
 class MainScene extends Phaser.Scene {
     constructor() { 
@@ -168,6 +168,7 @@ class MainScene extends Phaser.Scene {
         this.hexGroup=null; this.unitGroup=null; this.vfxGraphics=null; this.overlayGraphics=null; 
         this.mapGenerated=false; this.dragHighlightHex=null;
         this.waterHexes = []; 
+        this.forestTrees = []; // ★森の木々管理用
     }
     
     preload() {
@@ -176,11 +177,19 @@ class MainScene extends Phaser.Scene {
         const g = this.make.graphics({x:0, y:0, add:false}); const S = HEX_SIZE * HIGH_RES_SCALE; 
         g.lineStyle(2 * HIGH_RES_SCALE, 0x888888, 1); g.fillStyle(0xffffff, 1); g.beginPath(); for(let i=0; i<6; i++) { const a = Math.PI/180 * 60 * i; g.lineTo(S + S * Math.cos(a), S + S * Math.sin(a)); } g.closePath(); g.fillPath(); g.strokePath(); g.generateTexture('hex_base', S*2, S*2);
         
-        // ★さざ波用テクスチャ (白い横長の楕円)
+        // さざ波用
+        g.clear(); g.fillStyle(0xffffff, 0.4); g.fillEllipse(15, 5, 12, 2); g.generateTexture('wave_line', 30, 10);
+
+        // ★木（Tree）の高解像度テクスチャ
+        // シンプルな松の木っぽいシルエット
         g.clear(); 
-        g.fillStyle(0xffffff, 0.4); 
-        g.fillEllipse(15, 5, 12, 2); 
-        g.generateTexture('wave_line', 30, 10);
+        g.fillStyle(0x1a2e12, 1); // 幹
+        g.fillRect(35, 70, 10, 20); 
+        g.fillStyle(0x2d4f21, 1); // 葉（下段）
+        g.fillTriangle(40, 30, 10, 80, 70, 80);
+        g.fillStyle(0x3e6b2e, 1); // 葉（上段・ハイライト）
+        g.fillTriangle(40, 10, 20, 50, 60, 50);
+        g.generateTexture('tree', 80, 100);
 
         g.clear(); g.fillStyle(0x00ff00, 1); g.fillCircle(16*HIGH_RES_SCALE, 16*HIGH_RES_SCALE, 12*HIGH_RES_SCALE); g.generateTexture('unit_player', 32*HIGH_RES_SCALE, 32*HIGH_RES_SCALE);
         g.clear(); g.fillStyle(0xff0000, 1); g.fillRect(4*HIGH_RES_SCALE, 4*HIGH_RES_SCALE, 24*HIGH_RES_SCALE, 24*HIGH_RES_SCALE); g.generateTexture('unit_enemy', 32*HIGH_RES_SCALE, 32*HIGH_RES_SCALE);
@@ -209,6 +218,8 @@ class MainScene extends Phaser.Scene {
     createMap() { 
         const map = window.gameLogic.map; 
         this.waterHexes = []; 
+        this.forestTrees = [];
+
         for(let q=0; q<MAP_W; q++) { 
             for(let r=0; r<MAP_H; r++) { 
                 const t = map[q][r]; if(t.id===-1)continue; 
@@ -218,17 +229,28 @@ class MainScene extends Phaser.Scene {
                 if(t.id===0)tint=0x5a5245; else if(t.id===1)tint=0x425030; else if(t.id===2)tint=0x222e1b; else if(t.id===4)tint=0x504540; 
                 else if(t.id===5) { 
                     tint=0x303840; 
-                    // ★さざ波を追加
                     const w1 = this.add.image(pos.x + (Math.random()-0.5)*20, pos.y + (Math.random()-0.5)*15, 'wave_line').setScale(0.8);
                     const w2 = this.add.image(pos.x + (Math.random()-0.5)*20, pos.y + (Math.random()-0.5)*15, 'wave_line').setScale(0.6);
-                    this.waterHexes.push({ 
-                        sprite: hex, 
-                        waves: [w1, w2],
-                        baseY: pos.y, 
-                        q: q, r: r, 
-                        offset: Math.random() * 6.28 
-                    });
+                    this.waterHexes.push({ sprite: hex, waves: [w1, w2], baseY: pos.y, q: q, r: r, offset: Math.random() * 6.28 });
                 }
+                
+                // ★森なら木を生やす
+                if(t.id === 1) {
+                    for(let i=0; i<4; i++) {
+                        const tx = pos.x + (Math.random()-0.5) * HEX_SIZE * 1.2;
+                        const ty = pos.y + (Math.random()-0.5) * HEX_SIZE * 1.0;
+                        const scale = (0.35 + Math.random()*0.15); // ちょっとサイズばらつき
+                        
+                        const tree = this.add.image(tx, ty, 'tree').setOrigin(0.5, 1.0).setScale(scale);
+                        // 色味を少しランダムに（枯れ木まじりなど）
+                        if(Math.random() < 0.2) tree.setTint(0xccaa88);
+                        else tree.setTint(0x88cc88);
+
+                        this.hexGroup.add(tree);
+                        this.forestTrees.push({ sprite: tree, speed: 0.001 + Math.random()*0.001, offset: Math.random() * 10 });
+                    }
+                }
+
                 hex.setTint(tint); 
                 if(t.id===2) { const tr=this.add.circle(pos.x, pos.y, HEX_SIZE*0.6, 0x112211, 0.5); this.hexGroup.add(tr); } 
                 this.hexGroup.add(hex); 
@@ -242,22 +264,24 @@ class MainScene extends Phaser.Scene {
         VFX.update(); this.vfxGraphics.clear(); VFX.draw(this.vfxGraphics);
         if (window.gameLogic.map.length > 0 && !this.mapGenerated) { this.createMap(); this.mapGenerated = true; }
         
-        // ★さざ波アニメーション
+        // 水面アニメーション
         const waveSpeed = time * 0.001;
         this.waterHexes.forEach(w => {
-            // 本体ゆらゆら
             const wave = Math.sin(waveSpeed + w.q * 0.3 + w.r * 0.3 + w.offset);
             w.sprite.y = w.baseY + wave * 3;
             w.sprite.setScale((1/HIGH_RES_SCALE) + (wave * 0.01));
-
-            // さざ波
             w.waves.forEach((ws, i) => {
                 ws.y = w.sprite.y + (i === 0 ? -5 : 5); 
                 ws.x = w.sprite.x + Math.sin(waveSpeed * 0.5 + w.offset + i) * 8; 
-                // 明滅 (波の反射)
-                const alpha = (Math.sin(waveSpeed * 1.5 + w.offset + i * 2) + 1) * 0.2 + 0.1;
-                ws.setAlpha(alpha);
+                ws.setAlpha((Math.sin(waveSpeed * 1.5 + w.offset + i * 2) + 1) * 0.2 + 0.1);
             });
+        });
+
+        // ★木のアニメーション (風でそよぐ)
+        this.forestTrees.forEach(t => {
+            // 根元を中心に回転させる
+            const wind = Math.sin(time * t.speed + t.offset);
+            t.sprite.rotation = wind * 0.08; // 揺れ幅
         });
 
         this.unitGroup.clear(true, true);
