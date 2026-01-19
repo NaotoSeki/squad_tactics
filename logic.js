@@ -32,18 +32,20 @@ class Game {
         document.getElementById('setup-screen').style.display='none'; 
         Renderer.resize();
         
-        // ★重要: 前の島の「亡霊」を消すため、座標を一旦無効値にする
+        // ★重要修正1: 前の島の亡霊座標を完全消去
         this.units.forEach(u => { u.q = -999; u.r = -999; });
 
         this.generateMap(); 
         
-        // ユニット配置
+        // ★重要修正2: 生存ユニットの再配置
+        const survivors = this.units.filter(u => u.team === 'player');
+        
         if(this.units.length === 0) { 
             // 初回プレイ
             this.setupSlots.forEach(k => this.spawnAtSafeGround('player', k)); 
         } else { 
             // 2回目以降（生存者）: 確実に新しい陸地へ再配置
-            this.units.filter(u => u.team === 'player').forEach(u => this.spawnAtSafeGround('player', null, u)); 
+            survivors.forEach(u => this.spawnAtSafeGround('player', null, u)); 
         }
         
         this.spawnEnemies();
@@ -51,11 +53,59 @@ class Game {
         this.log(`MISSION START - SECTOR ${this.sector}`);
         document.getElementById('sector-counter').innerText = `SECTOR: ${this.sector.toString().padStart(2, '0')}`;
         
-        // カメラをリーダーに合わせる
+        // カメラ移動
         const leader = this.units.find(u => u.team === 'player');
         if(leader && leader.q !== -999) Renderer.centerOn(leader.q, leader.r);
 
         setTimeout(() => { if (Renderer.dealCards) Renderer.dealCards(['infantry', 'tank', 'aerial', 'infantry', 'tiger']); }, 500);
+    }
+
+    // ★重要修正3: 確実な陸地検索ロジック (リストアップ方式)
+    spawnAtSafeGround(team, type, existingUnit=null) { 
+        const cy = Math.floor(MAP_H/2);
+        const candidates = [];
+
+        // 1. 全マップを走査して「乗れる陸地」をすべてリストアップ
+        for(let q=0; q<MAP_W; q++) {
+            for(let r=0; r<MAP_H; r++) {
+                const t = this.map[q][r];
+                // VOID(虚空), WATER(海), 障害物(cost99), ユニット重複 を除外
+                if(t.id !== -1 && t.id !== 5 && t.cost < 99 && !this.getUnit(q, r)) {
+                    candidates.push({q, r});
+                }
+            }
+        }
+
+        if(candidates.length === 0) {
+            console.error("CRITICAL: No land found!");
+            return null;
+        }
+
+        // 2. チームごとのエリアでフィルタリング
+        // 敵は上半分、味方は下半分
+        let filtered = candidates.filter(p => {
+            if(team === 'player') return p.r >= cy; 
+            if(team === 'enemy') return p.r < cy;   
+            return true;
+        });
+
+        // 3. ★ここがキモ: エリア内に陸地がなければ、全域候補(candidates)から選ぶ (フォールバック)
+        // これにより「島が偏って自分の陣地がない」場合でも、反対側の陸地に配置される
+        if(filtered.length === 0) {
+            console.warn(`${team} has no land in their zone. Using global fallback.`);
+            filtered = candidates;
+        }
+
+        // 4. 候補からランダムに1つ選ぶ
+        const choice = filtered[Math.floor(Math.random() * filtered.length)];
+
+        if(existingUnit) {
+            existingUnit.q = choice.q;
+            existingUnit.r = choice.r;
+            return existingUnit;
+        } else {
+            return this.spawnUnit(team, type, choice.q, choice.r);
+        }
     }
 
     applyBombardment(targetHex) {
@@ -70,7 +120,6 @@ class Game {
         } else { this.log(">> 目標地点にユニットなし"); }
         if(this.checkWin()) return; this.checkLose();
     }
-
     deployUnit(targetHex, cardType) {
         if(!this.isValidHex(targetHex.q, targetHex.r) || this.map[targetHex.q][targetHex.r].id === -1) { this.log("配置不可: 進入不可能な地形です"); return; }
         if(this.map[targetHex.q][targetHex.r].id === 5) { this.log("配置不可: 水上には配置できません"); return; }
@@ -81,7 +130,6 @@ class Game {
         if(window.VFX) { const pos = Renderer.hexToPx(targetHex.q, targetHex.r); window.VFX.addSmoke(pos.x, pos.y); }
         this.updateSidebar();
     }
-
     calcReachableHexes(u) {
         this.reachableHexes = []; if(!u) return;
         let frontier = [{q:u.q, r:u.r, cost:0}], costSoFar = new Map(); costSoFar.set(`${u.q},${u.r}`, 0);
@@ -99,7 +147,6 @@ class Game {
             });
         }
     }
-
     handleHover(p) {
         if(this.state !== 'PLAY') return; this.hoverHex = p;
         if(this.selectedUnit && this.isValidHex(p.q, p.r)) {
@@ -108,7 +155,6 @@ class Game {
             if(isReachable && !enemy) this.path = this.findPath(this.selectedUnit, p.q, p.r); else this.path = [];
         }
     }
-
     handleClick(p) {
         const isValid = this.isValidHex(p.q, p.r) && this.map[p.q][p.r].id !== -1;
         const u = isValid ? this.getUnit(p.q, p.r) : null;
@@ -120,7 +166,6 @@ class Game {
             else { this.selectedUnit = null; this.reachableHexes = []; this.path = []; this.updateSidebar(); }
         }
     }
-
     // マップ生成 (雲形・アメーバ)
     generateMap() { 
         this.map = [];
@@ -186,54 +231,6 @@ class Game {
                 e.rank=Math.floor(Math.random()*Math.min(5,this.sector/2)); e.maxHp+=e.rank*30; e.hp=e.maxHp; 
                 if(this.sector>2&&Math.random()<0.4) e.skills=[Object.keys(SKILLS)[Math.floor(Math.random()*8)]];
             }
-        }
-    }
-    
-    // ★究極修正版: 確実に陸地に配置するロジック (リストアップ方式)
-    spawnAtSafeGround(team, type, existingUnit=null) { 
-        // 1. 全マップから「安全な陸地」をリストアップ
-        const candidates = [];
-        for(let q=0; q<MAP_W; q++) {
-            for(let r=0; r<MAP_H; r++) {
-                const t = this.map[q][r];
-                // VOID, WATER, 障害物, ユニット重複 を徹底除外
-                if(t.id !== -1 && t.id !== 5 && t.cost < 99 && !this.getUnit(q, r)) {
-                    candidates.push({q, r});
-                }
-            }
-        }
-
-        // 万が一陸地がない (CRITICAL)
-        if(candidates.length === 0) { console.error("CRITICAL: No land found!"); return null; }
-
-        // 2. 候補地をY座標(r)でソート
-        candidates.sort((a, b) => a.r - b.r);
-
-        // 3. チームごとのエリア分割 (敵=上 / 味方=下)
-        let zoneCandidates = [];
-        const splitIdx = Math.floor(candidates.length / 2);
-
-        if(team === 'enemy') {
-            zoneCandidates = candidates.slice(0, splitIdx);
-        } else {
-            zoneCandidates = candidates.slice(splitIdx);
-        }
-
-        // 4. フォールバック: 指定エリアが満員なら、全域から探す
-        if(zoneCandidates.length === 0) {
-            console.warn(`Fallback spawn for ${team}`);
-            zoneCandidates = candidates;
-        }
-
-        // 5. ランダムに決定
-        const choice = zoneCandidates[Math.floor(Math.random() * zoneCandidates.length)];
-
-        if(existingUnit) {
-            existingUnit.q = choice.q;
-            existingUnit.r = choice.r;
-            return existingUnit;
-        } else {
-            return this.spawnUnit(team, type, choice.q, choice.r);
         }
     }
     
