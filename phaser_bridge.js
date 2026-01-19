@@ -1,4 +1,4 @@
-/** * PHASER BRIDGE (Safe Deployment, Optimized, Token Style Units) */
+/** * PHASER BRIDGE (Direct Texture Injection, Safe Deployment, Optimized) */
 let phaserGame = null;
 
 // ---------------------------------------------------------
@@ -16,7 +16,7 @@ const Renderer = {
             width: document.getElementById('game-view').clientWidth, 
             height: document.getElementById('game-view').clientHeight, 
             backgroundColor: '#0b0e0a', 
-            pixelArt: true, // ドット絵をくっきり
+            pixelArt: true, // ドット絵設定
             scene: [MainScene, UIScene], 
             fps: { target: 60 }, 
             physics: { default: 'arcade', arcade: { debug: false } }, 
@@ -216,7 +216,7 @@ class UIScene extends Phaser.Scene {
 }
 
 // ---------------------------------------------------------
-//  MAIN SCENE (Optimized, Sprite Units)
+//  MAIN SCENE (Direct Texture Injection)
 // ---------------------------------------------------------
 class MainScene extends Phaser.Scene {
     constructor() { 
@@ -229,21 +229,45 @@ class MainScene extends Phaser.Scene {
     
     preload() { 
         if(window.EnvSystem) window.EnvSystem.preload(this);
-        
-        // ★爆発 (スプライトシート)
-        const explosionBase64 = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAUAAAABABAMAAAB30k+FAAAAMFBMVEUAAAD///8UFBQoKCgwMDA8PDxERERMTExUVFRkZGR0dHSLi4uUlJSkpKS0tLTc3NwKGsidAAAAAXRSTlMAQObYZgAAAXpJREFUeNrt3D1uwzAMBeA4d+gEOUCOkCP4/qfIBXKCHiAH8AEMGbp061/R75El2qYF8uFBfEiF858B2gN7gD3Af5X31+0aYF+g1wNMBdoCrALdC7QLtD/QrUBrgW4GugfoNqA1QLcDrQY6G2g10FlA64DOAVoLdAq4DWAj0HWAW0EugpQCuBngP0HGAF0FKgXwE9B2gp0G9A5wAtBfoF0FqgpUAvgFYCPQVoJdBToH8B7QK0FugHQL8APQNoJ8A/A1oI9C3Q14B+A/QQoJ8APQZoHdA7gN4C9BqgnYD0FqDVA7wFaAnQa6C3AP0OaCegdUC/APoY0I+APgD0CKD3Ab0E6BNAbwP6FNB7gF4C9DGgTwG9A+glQG8D+hTQe4B2Ld8B+pbvAH3Nd4D/o+8A3+g7wDf7DvBf6B/gX97z7X1WpAAAAAElFTkSuQmCC';
-        this.load.spritesheet('explosion_sheet', explosionBase64, { frameWidth: 64, frameHeight: 64 });
-
-        // ★兵士 (1枚絵 Base64)
-        const soldierBase64 = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAMAAACdt4HsAAAAPFBMVEUAAAAAAAB2AgB/BgCDEgCHGQCJJQCNLQCROACVQQCaSQCeUgCiWgCmYwCqaACubwCydwC2fQC6hgC+jQBj2x5AAAAAAXRSTlMAs0kLhQAAAMFJREFUWIXt1sEKAjEMRNF+2tKq///RjQVxUwmCmJk78y4J5C04940x5p7760yA7i/gQ4D+Aj4E6C/gQ4D+Aj4E6C/gQ4D+Aj4E6C/gQ4D+Aj4E6C/gQ4D+Aj4E6C/gQ4D+Aj4E6C/gQ4D+Aj4E6C/gQ4D+Aj4E6C/gQ4D+Aj4E6C/gQ4D+Aj4E6C/gQ4D+Aj4E6C/gQ4D+Aj4E6C/gQ4D+Aj4E6C/gQ4D+Aj4E6C/gQ4D+Aj4E6C/gQ4D+Aj4E6C/gQ4D+Aj4E6C/gQ4D+An4P8A2D3w1hV8+V8AAAAABJRU5ErkJggg==';
-        this.load.image('soldier_img', soldierBase64);
-
-        // ★戦車 (1枚絵 Base64)
-        const tankBase64 = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAMAAACdt4HsAAAATlBMVEUAAAAAAAB2AgB/BgCDEgCHGQCJJQCNLQCROACVQQCaSQCeUgCiWgCmYwCqaACubwCydwC2fQC6hgC+jQDCkwDGlQDJlwDMmQDPmgDSnAD89/71AAAAAXRSTlMAQObYZgAAAPxJREFUWIXt1sEKwjAQRdFfaVq1//+jFQuCoykI4syc230sA3kTzr1ijLnl/joToPsL+BCgv4APAfoL+BCgv4APAfoL+BCgv4APAfoL+BCgv4APAfoL+BCgv4APAfoL+BCgv4APAfoL+BCgv4APAfoL+BCgv4APAfoL+BCgv4APAfoL+BCgv4APAfoL+BCgv4APAfoL+BCgv4APAfoL+BCgv4APAfoL+BCgv4APAfoL+BCgv4APAfoL+BCgv4APAfoL+BCgv4APAfoL+BCgv4APAfoL+BCgv4APAfoL+BCgv4APAfoL+BCgv4APAfoL+D3ANwx+N4Q9veQLE/7w1HAAAAAASUVORK5CYII=';
-        this.load.image('tank_img', tankBase64);
+        // ★重要: エラーが出るので preload での load.image は行わない！
     }
 
+    // ★重要: 自力で画像を読み込んでセットアップする
     create() {
+        const explosionBase64 = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAUAAAABABAMAAAB30k+FAAAAMFBMVEUAAAD///8UFBQoKCgwMDA8PDxERERMTExUVFRkZGR0dHSLi4uUlJSkpKS0tLTc3NwKGsidAAAAAXRSTlMAQObYZgAAAXpJREFUeNrt3D1uwzAMBeA4d+gEOUCOkCP4/qfIBXKCHiAH8AEMGbp061/R75El2qYF8uFBfEiF858B2gN7gD3Af5X31+0aYF+g1wNMBdoCrALdC7QLtD/QrUBrgW4GugfoNqA1QLcDrQY6G2g10FlA64DOAVoLdAq4DWAj0HWAW0EugpQCuBngP0HGAF0FKgXwE9B2gp0G9A5wAtBfoF0FqgpUAvgFYCPQVoJdBToH8B7QK0FugHQL8APQNoJ8A/A1oI9C3Q14B+A/QQoJ8APQZoHdA7gN4C9BqgnYD0FqDVA7wFaAnQa6C3AP0OaCegdUC/APoY0I+APgD0CKD3Ab0E6BNAbwP6FNB7gF4C9DGgTwG9A+glQG8D+hTQe4B2Ld8B+pbvAH3Nd4D/o+8A3+g7wDf7DvBf6B/gX97z7X1WpAAAAAElFTkSuQmCC';
+        const soldierBase64 = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAMAAACdt4HsAAAAPFBMVEUAAAAAAAB2AgB/BgCDEgCHGQCJJQCNLQCROACVQQCaSQCeUgCiWgCmYwCqaACubwCydwC2fQC6hgC+jQBj2x5AAAAAAXRSTlMAQObYZgAAAMFJREFUWIXt1sEKAjEMRNF+2tKq///RjQVxUwmCmJk78y4J5C04940x5p7760yA7i/gQ4D+Aj4E6C/gQ4D+Aj4E6C/gQ4D+Aj4E6C/gQ4D+Aj4E6C/gQ4D+Aj4E6C/gQ4D+Aj4E6C/gQ4D+Aj4E6C/gQ4D+Aj4E6C/gQ4D+Aj4E6C/gQ4D+Aj4E6C/gQ4D+Aj4E6C/gQ4D+Aj4E6C/gQ4D+Aj4E6C/gQ4D+Aj4E6C/gQ4D+An4P8A2D3w1hV8+V8AAAAABJRU5ErkJggg==';
+        const tankBase64 = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAMAAACdt4HsAAAATlBMVEUAAAAAAAB2AgB/BgCDEgCHGQCJJQCNLQCROACVQQCaSQCeUgCiWgCmYwCqaACubwCydwC2fQC6hgC+jQDCkwDGlQDJlwDMmQDPmgDSnAD89/71AAAAAXRSTlMAQObYZgAAAPxJREFUWIXt1sEKwjAQRdFfaVq1//+jFQuCoykI4syc230sA3kTzr1ijLnl/joToPsL+BCgv4APAfoL+BCgv4APAfoL+BCgv4APAfoL+BCgv4APAfoL+BCgv4APAfoL+BCgv4APAfoL+BCgv4APAfoL+BCgv4APAfoL+BCgv4APAfoL+BCgv4APAfoL+BCgv4APAfoL+BCgv4APAfoL+BCgv4APAfoL+BCgv4APAfoL+BCgv4APAfoL+BCgv4APAfoL+BCgv4APAfoL+BCgv4APAfoL+BCgv4APAfoL+BCgv4APAfoL+BCgv4APAfoL+BCgv4APAfoL+BCgv4APAfoL+D3ANwx+N4Q9veQLE/7w1HAAAAAASUVORK5CYII=';
+
+        const assets = {
+            'explosion_sheet': { src: explosionBase64, isSprite: true, w:64, h:64 },
+            'soldier_img': { src: soldierBase64, isSprite: false },
+            'tank_img': { src: tankBase64, isSprite: false }
+        };
+
+        let loadedCount = 0;
+        const total = Object.keys(assets).length;
+
+        // すべての画像を読み込んでからゲームを開始する処理
+        Object.keys(assets).forEach(key => {
+            const img = new Image();
+            img.onload = () => {
+                // Phaserのテクスチャマネージャに直接追加
+                if (assets[key].isSprite) {
+                    this.textures.addSpriteSheet(key, img, { frameWidth: assets[key].w, frameHeight: assets[key].h });
+                } else {
+                    this.textures.addImage(key, img);
+                }
+                loadedCount++;
+                if (loadedCount >= total) {
+                    this.setupGame(); // 全て読み終わったら開始
+                }
+            };
+            img.src = assets[key].src;
+        });
+    }
+
+    // ★本来の create の中身をここに移動
+    setupGame() {
         this.cameras.main.setBackgroundColor('#0b0e0a'); 
         this.hexGroup = this.add.group(); this.unitGroup = this.add.group(); 
         
@@ -305,17 +329,11 @@ class MainScene extends Phaser.Scene {
     // ★重要: ユニットを画像スプライトとして作成
     createUnitVisual(u) {
         const container = this.add.container(0, 0);
-        
-        // タイプ判定で画像を変更
-        let key = 'soldier_img'; // デフォルト
+        let key = 'soldier_img'; 
         if (u.def.isTank) key = 'tank_img';
-        // 他のタイプも必要ならここで分岐 (今は一旦ソルジャー共通)
 
-        const sprite = this.add.sprite(0, 0, key).setScale(2.0); // ドット絵なので拡大
-        
-        // 敵味方で色味を変える (赤っぽく/青っぽく)
-        if(u.team === 'player') sprite.setTint(0xaaccff); 
-        else sprite.setTint(0xffaaaa);
+        const sprite = this.add.sprite(0, 0, key).setScale(2.0); 
+        if(u.team === 'player') sprite.setTint(0xaaccff); else sprite.setTint(0xffaaaa);
 
         const hpBg = this.add.rectangle(0, -30, 20, 4, 0x000000); 
         const hpBar = this.add.rectangle(-10, -30, 20, 4, 0x00ff00);
@@ -324,45 +342,23 @@ class MainScene extends Phaser.Scene {
         
         container.add([sprite, hpBg, hpBar, cursor]);
         container.sprite = sprite; container.hpBar = hpBar; container.cursor = cursor;
-        
-        // 歩行アニメ用Tween参照
         container.walkTween = null;
-        
         return container;
     }
 
     updateUnitVisual(container, u) {
         const targetPos = Renderer.hexToPx(u.q, u.r);
-        const currentX = container.x;
-        const currentY = container.y;
-        
-        // 位置更新 (Lerpで少し遅らせるか、Logicのアニメ待機に合わせる)
-        // ここではLogicが座標を少しずつ書き換えているのでそのままセット
+        const currentX = container.x; const currentY = container.y;
         container.setPosition(targetPos.x, targetPos.y);
         
-        // ★歩行アニメ (位置が大きく動いていたら揺らす)
-        // Logic側で state='ANIM' かつ、座標変化があるとき
+        // 歩行アニメ
         const dist = Phaser.Math.Distance.Between(currentX, currentY, targetPos.x, targetPos.y);
         if (dist > 1) {
-            // 移動中
             if (!container.walkTween) {
-                container.walkTween = this.tweens.add({
-                    targets: container.sprite,
-                    angle: { from: -10, to: 10 }, // 左右に揺れる
-                    y: "-=5", // 少し跳ねる
-                    duration: 150,
-                    yoyo: true,
-                    repeat: -1
-                });
+                container.walkTween = this.tweens.add({ targets: container.sprite, angle: { from: -10, to: 10 }, y: "-=5", duration: 150, yoyo: true, repeat: -1 });
             }
         } else {
-            // 停止中
-            if (container.walkTween) {
-                container.walkTween.stop();
-                container.sprite.setAngle(0);
-                container.sprite.y = 0;
-                container.walkTween = null;
-            }
+            if (container.walkTween) { container.walkTween.stop(); container.sprite.setAngle(0); container.sprite.y = 0; container.walkTween = null; }
         }
 
         const hpPct = u.hp / u.maxHp; container.hpBar.width = 20 * hpPct; container.hpBar.x = -10 + (10 * hpPct); container.hpBar.fillColor = hpPct > 0.5 ? 0x00ff00 : 0xff0000;
@@ -450,9 +446,6 @@ class MainScene extends Phaser.Scene {
     }
 
     drawCrosshair(g, x, y, time) {
-        // 回転ヘックスで十分なので、ここは空にするか、追加の演出を入れるか
-        // ご要望により「くるくる円」は削除。
-        // 赤破線回転が機能しているのでここは空でOK、あるいは中心点だけ打つとか
-        // g.fillStyle(0xff2222, 0.8); g.fillCircle(x, y, 3);
+        // 回転ヘックスが機能しているので空でOK
     }
 }
