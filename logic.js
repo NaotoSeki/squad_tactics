@@ -1,4 +1,4 @@
-/** LOGIC (Sidebar Resize/Toggle, Fixed Spawn) */
+/** LOGIC (Enemy Purge, Fixed Spawn, Organic Map) */
 class Game {
     constructor() {
         this.units=[]; this.map=[]; this.setupSlots=[]; this.state='SETUP'; 
@@ -6,62 +6,36 @@ class Game {
         this.isAuto=false; this.isProcessingTurn = false; this.sector = 1;
         this.initDOM(); this.initSetup();
     }
-
     initDOM() {
         Renderer.init(document.getElementById('game-view'));
-        window.addEventListener('click', (e)=>{
-            if(!e.target.closest('#context-menu')) document.getElementById('context-menu').style.display='none';
-        });
+        window.addEventListener('click', (e)=>{if(!e.target.closest('#context-menu')) document.getElementById('context-menu').style.display='none';});
 
-        // --- ★サイドバー機能の実装 ---
+        // サイドバー機能
         const resizer = document.getElementById('resizer');
         const sidebar = document.getElementById('sidebar');
         const toggleBtn = document.getElementById('sidebar-toggle');
         let isResizing = false;
 
-        // リサイズ開始
-        resizer.addEventListener('mousedown', (e) => {
-            isResizing = true;
-            document.body.style.cursor = 'col-resize';
-            resizer.classList.add('active');
-        });
-
-        // ドラッグ中
-        window.addEventListener('mousemove', (e) => {
-            if (!isResizing) return;
-            const newWidth = document.body.clientWidth - e.clientX;
-            if (newWidth > 200 && newWidth < 800) { // 最小・最大幅制限
-                sidebar.style.width = newWidth + 'px';
-                if(sidebar.classList.contains('collapsed')) this.toggleSidebar(); // ドラッグしたら開く
-                Renderer.resize(); // Phaser画面も追従
-            }
-        });
-
-        // リサイズ終了
-        window.addEventListener('mouseup', () => {
-            if (isResizing) {
-                isResizing = false;
-                document.body.style.cursor = '';
-                resizer.classList.remove('active');
-                Renderer.resize();
-            }
-        });
+        if(resizer) {
+            resizer.addEventListener('mousedown', (e) => { isResizing = true; document.body.style.cursor = 'col-resize'; resizer.classList.add('active'); });
+            window.addEventListener('mousemove', (e) => {
+                if (!isResizing) return;
+                const newWidth = document.body.clientWidth - e.clientX;
+                if (newWidth > 200 && newWidth < 800) { 
+                    sidebar.style.width = newWidth + 'px';
+                    if(sidebar.classList.contains('collapsed')) this.toggleSidebar();
+                    Renderer.resize(); 
+                }
+            });
+            window.addEventListener('mouseup', () => { if (isResizing) { isResizing = false; document.body.style.cursor = ''; resizer.classList.remove('active'); Renderer.resize(); } });
+        }
     }
 
-    // ★サイドバー開閉切り替え
     toggleSidebar() {
         const sb = document.getElementById('sidebar');
         const tg = document.getElementById('sidebar-toggle');
         sb.classList.toggle('collapsed');
-        
-        // 矢印の向きを変える
-        if (sb.classList.contains('collapsed')) {
-            tg.innerText = '◀';
-        } else {
-            tg.innerText = '▶';
-        }
-        
-        // アニメーション完了後にリサイズ通知（少し待たないと幅0の状態で計算されてしまう）
+        if (sb.classList.contains('collapsed')) tg.innerText = '◀'; else tg.innerText = '▶';
         setTimeout(() => Renderer.resize(), 150); 
     }
 
@@ -85,15 +59,33 @@ class Game {
     
     startCampaign() {
         document.getElementById('setup-screen').style.display='none'; 
+        
+        // Phaser側の掃除
+        if (typeof Renderer !== 'undefined' && Renderer.game) {
+            const mainScene = Renderer.game.scene.getScene('MainScene');
+            if (mainScene) {
+                mainScene.mapGenerated = false;
+                if(mainScene.hexGroup) mainScene.hexGroup.clear(true, true);
+                if(window.EnvSystem) window.EnvSystem.clear();
+            }
+        }
         Renderer.resize();
+        
+        // ★最重要修正: 敵ユニットと死体をリストから完全に削除する
+        // これにより、前のセクターの敵が亡霊として残るのを防ぐ
+        this.units = this.units.filter(u => u.team === 'player' && u.hp > 0);
+
+        // 生存者の座標をリセット
         this.units.forEach(u => { u.q = -999; u.r = -999; });
+
         this.generateMap(); 
         
-        const survivors = this.units.filter(u => u.team === 'player');
+        // ユニット配置
         if(this.units.length === 0) { 
             this.setupSlots.forEach(k => this.spawnAtSafeGround('player', k)); 
         } else { 
-            survivors.forEach(u => this.spawnAtSafeGround('player', null, u)); 
+            // フィルタリング済みの生存者リストを使って再配置
+            this.units.forEach(u => this.spawnAtSafeGround('player', null, u)); 
         }
         
         this.spawnEnemies();
@@ -107,17 +99,21 @@ class Game {
         setTimeout(() => { if (Renderer.dealCards) Renderer.dealCards(['infantry', 'tank', 'aerial', 'infantry', 'tiger']); }, 500);
     }
 
+    // 確実な陸地検索ロジック
     spawnAtSafeGround(team, type, existingUnit=null) { 
         const cy = Math.floor(MAP_H/2);
         const candidates = [];
+
         for(let q=0; q<MAP_W; q++) {
             for(let r=0; r<MAP_H; r++) {
                 const t = this.map[q][r];
+                // ID:5(水)は絶対に除外
                 if(t.id !== -1 && t.id !== 5 && t.cost < 99 && !this.getUnit(q, r)) {
                     candidates.push({q, r});
                 }
             }
         }
+
         if(candidates.length === 0) { console.error("CRITICAL: No land found!"); return null; }
 
         let filtered = candidates.filter(p => {
@@ -132,6 +128,7 @@ class Game {
         }
 
         const choice = filtered[Math.floor(Math.random() * filtered.length)];
+
         if(existingUnit) {
             existingUnit.q = choice.q;
             existingUnit.r = choice.r;
