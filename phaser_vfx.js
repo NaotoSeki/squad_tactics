@@ -1,10 +1,9 @@
-/** * PHASER VFX SPECIALIST (High-End Particles & Shake) */
+/** * PHASER VFX SPECIALIST (Warm Smoke, Fast Tracers) */
 window.HIGH_RES_SCALE = 4;
 
 // ---------------------------------------------------------
 //  1. テクスチャ & 共通描画
 // ---------------------------------------------------------
-// (ここは変更なしですが、ファイル全体を置き換えるため再掲します)
 window.drawCardToCanvas = function(type) {
     const w = 100 * window.HIGH_RES_SCALE; const h = 60 * window.HIGH_RES_SCALE;
     const c = document.createElement('canvas'); c.width = w; c.height = h; const x = c.getContext('2d');
@@ -113,16 +112,12 @@ window.EnvSystem = {
 };
 
 // ---------------------------------------------------------
-//  3. VFX (Particles, Shake, Tracers) - 大幅強化
+//  3. VFX (Particles, Shake, Tracers)
 // ---------------------------------------------------------
 window.VFX = { 
     particles:[], projectiles:[], shockwaves:[], shakeRequest: 0,
     add(p){this.particles.push(p);}, 
-    
-    // 画面シェイク要求 (Bridge側で処理)
-    requestShake(intensity) {
-        this.shakeRequest = Math.max(this.shakeRequest, intensity);
-    },
+    requestShake(intensity) { this.shakeRequest = Math.max(this.shakeRequest, intensity); },
 
     addBombardment(scene, tx, ty, hex) {
         const startY = ty - 800; const bomb = scene.add.sprite(tx, startY, 'bomb_body').setDepth(2000).setScale(1.5);
@@ -131,30 +126,29 @@ window.VFX = {
             onComplete: () => {
                 if(window.Sfx) window.Sfx.play('boom'); 
                 bomb.destroy(); 
-                this.requestShake(15); // 強烈なシェイク
+                this.requestShake(15); 
                 this.addRealExplosion(tx, ty); 
                 if(window.gameLogic && window.gameLogic.applyBombardment) window.gameLogic.applyBombardment(hex);
             }
         });
     },
-    // ★リアルな爆発 (破片と煙を強化)
+    
+    // リアルな爆発 (煙を暖色系グレーにして青さを消す)
     addRealExplosion(x, y) {
         this.add({x, y, vx:0, vy:0, life:3, maxLife:3, size:150, color:'#fff', type:'flash'});
         this.shockwaves.push({x, y, radius:10, maxRadius:150, alpha:1.0});
         
-        // 火球
         for(let i=0; i<30; i++) this.add({ x, y, vx: Math.cos(Math.random()*6.28)*Math.random()*8, vy: Math.sin(Math.random()*6.28)*Math.random()*8-5, life: 30+Math.random()*20, maxLife:50, color: '#fa0', size: 10+Math.random()*15, type:'fire_core' });
         
-        // 煙 (モコモコ感)
+        // ★修正: 煙の色を #222 から #2b2826 (焦げ茶グレー) に変更
         for(let i=0; i<50; i++) {
             this.add({ 
                 x: x+(Math.random()-0.5)*30, y: y+(Math.random()-0.5)*30, 
                 vx: Math.cos(Math.random()*6.28)*Math.random()*3, vy: Math.sin(Math.random()*6.28)*Math.random()*3-2, 
-                life: 60+Math.random()*40, maxLife:100, color: '#222', size: 10+Math.random()*20, type:'smoke_dark',
+                life: 60+Math.random()*40, maxLife:100, color: '#2b2826', size: 10+Math.random()*20, type:'smoke_dark',
                 angle: Math.random()*Math.PI*2, angVel: (Math.random()-0.5)*0.1 
             });
         }
-        // 破片 (四角い破片が飛び散る)
         for(let i=0; i<30; i++) {
             this.add({ 
                 x, y, 
@@ -164,39 +158,39 @@ window.VFX = {
             });
         }
     },
-    // 通常ヒット時のエフェクト (四角い破片を追加)
+    
     addExplosion(x, y, c, n) { 
-        this.requestShake(3); // 軽いシェイク
+        this.requestShake(3); 
         for(let i=0; i<n; i++) {
             this.add({
                 x, y, 
                 vx: Math.cos(Math.random()*6.28)*Math.random()*6, vy: Math.sin(Math.random()*6.28)*Math.random()*6, 
                 life: 20+Math.random()*20, maxLife:40, color:c, size:2+Math.random()*3, 
-                type: 'debris_rect', // 四角い破片
+                type: 'debris_rect', 
                 gravity: 0.4, angle: Math.random()*6, angVel: (Math.random()-0.5)*0.5
             });
         }
-        // 硝煙
         for(let i=0; i<5; i++) {
             this.add({
                 x, y, vx:(Math.random()-0.5)*2, vy:-1-Math.random(), life:40, maxLife:40, 
-                color:'#ccc', size:5+Math.random()*5, type:'smoke_puff', alpha:0.5
+                color:'#bbb', size:5+Math.random()*5, type:'smoke_puff', alpha:0.5 // 少し濃く
             });
         }
     },
     
-    // ★弾丸 (弾速ハック & 曳光弾)
+    // ★修正: 弾丸の超高速化 & トレーサー間引き
     addProj(p){
-        // 弾速を強制的に上げる (ロジック側を変えずに見た目だけ速くする)
+        // 弾速ハック: ロジックを変えずに見た目だけ10倍速
         if(p.type === 'bullet' || p.type.includes('shell')) {
-            p.speed *= 5.0; // 5倍速
+            p.speed *= 10.0;
         }
-        // 軌跡用の始点を記録
+        // トレーサー判定: 3発に1発だけ光らせる
+        p.isTracer = Math.random() < 0.3;
+        
         p.trailX = p.x;
         p.trailY = p.y;
         this.projectiles.push(p);
         
-        // 発射時のフラッシュと微細シェイク
         this.add({x:p.x, y:p.y, life:3, maxLife:3, size:20, color:'#ffaa00', type:'flash'});
         this.requestShake(2);
     },
@@ -206,25 +200,19 @@ window.VFX = {
     }, 
     
     update() { 
-        // パーティクル更新
         this.particles.forEach(p=>{ 
             p.x+=p.vx; p.y+=p.vy; p.life--; 
             if(p.gravity) p.vy += p.gravity;
             if(p.angVel) p.angle += p.angVel;
             
-            // 挙動定義
             if(p.type==='debris_rect') { p.vx *= 0.95; p.vy *= 0.95; }
             if(p.type==='smoke_dark'){ p.size*=1.01; p.vx*=0.95; p.vy*=0.95; p.alpha=p.life/p.maxLife*0.8; }
             if(p.type==='smoke_puff'){ p.size*=1.05; p.vy*=0.9; p.alpha=p.life/p.maxLife*0.4; }
             if(p.type==='flash'){ p.size*=0.8; }
         }); 
         
-        // 弾丸更新
         this.projectiles.forEach(p=>{
-            // 軌跡のために直前の位置を保存
-            p.trailX = p.x;
-            p.trailY = p.y;
-
+            p.trailX = p.x; p.trailY = p.y;
             if(p.type.includes('shell')||p.type==='rocket'){
                 p.progress+=p.speed;
                 if(p.progress>=1){p.dead=true;p.onHit();return;}
@@ -243,47 +231,33 @@ window.VFX = {
     }, 
     
     draw(g) { 
-        // 衝撃波
         this.shockwaves.forEach(s=>{g.lineStyle(4,0xffffff,s.alpha);g.strokeCircle(s.x,s.y,s.radius);}); 
         
-        // ★弾丸の描画 (曳光弾)
+        // ★修正: 弾丸描画
         this.projectiles.forEach(p=>{
             if(p.type === 'rocket') {
                 g.fillStyle(0xffaa00, 1); g.fillCircle(p.x, p.y, 4);
-                // 煙のトレイル
                 if(Math.random()<0.5) this.add({x:p.x, y:p.y, vx:0, vy:0, life:20, maxLife:20, size:5, color:'#888', type:'smoke_puff'});
             } else {
-                // 高速弾は線で描く (Tracer)
-                g.lineStyle(2, 0xffffaa, 1.0); // 明るい黄色
-                g.beginPath();
-                g.moveTo(p.trailX, p.trailY); // 直前の位置から
-                g.lineTo(p.x, p.y);           // 現在位置まで
-                g.strokePath();
-                
-                // 先端
-                g.fillStyle(0xffffff, 1);
-                g.fillCircle(p.x, p.y, 2);
+                // 通常弾はトレーサーの場合のみ、極細の線を描く
+                if(p.isTracer) {
+                    g.lineStyle(0.8, 0xffffaa, 0.6); // 極細(0.8), 淡い黄色, 透明度低め
+                    g.beginPath();
+                    g.moveTo(p.trailX, p.trailY);
+                    g.lineTo(p.x, p.y);
+                    g.strokePath();
+                }
+                // それ以外は描画しない（不可視）
             }
         }); 
         
-        // パーティクル描画
         this.particles.forEach(p=>{ 
             const cStr = p.color;
             const cInt = (typeof cStr==='string'&&cStr.startsWith('#')) ? parseInt(cStr.replace('#','0x')) : cStr;
             const alpha = p.alpha !== undefined ? p.alpha : (p.life/p.maxLife);
-            
             g.fillStyle(cInt, alpha);
-            
-            if (p.type === 'debris_rect') {
-                // 四角い破片 (回転対応)
-                // Graphicsでは回転が面倒なので簡易的に菱形っぽく描画するか、小さい矩形
-                // PhaserのGraphicsで回転矩形を描くのはコストが高いので、小さな正方形で代用
-                const s = p.size;
-                g.fillRect(p.x - s/2, p.y - s/2, s, s);
-            } else {
-                // 円形 (煙、火花)
-                g.fillCircle(p.x, p.y, p.size); 
-            }
+            if (p.type === 'debris_rect') { const s = p.size; g.fillRect(p.x - s/2, p.y - s/2, s, s); } 
+            else { g.fillCircle(p.x, p.y, p.size); }
         }); 
     }
 };
