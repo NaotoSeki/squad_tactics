@@ -1,4 +1,4 @@
-/** * PHASER BRIDGE (Safe Deployment, Optimized, Dashed Attack Guide) */
+/** * PHASER BRIDGE (Safe Deployment, Optimized, Target Lock) */
 let phaserGame = null;
 
 // ---------------------------------------------------------
@@ -53,7 +53,7 @@ const Renderer = {
 };
 
 // ---------------------------------------------------------
-//  Card Class
+//  Card Class (Safe Deployment)
 // ---------------------------------------------------------
 class Card extends Phaser.GameObjects.Container {
     constructor(scene, x, y, type) {
@@ -223,11 +223,18 @@ class MainScene extends Phaser.Scene {
         this.hexGroup=null; this.unitGroup=null; this.vfxGraphics=null; this.overlayGraphics=null; 
         this.mapGenerated=false; this.dragHighlightHex=null;
         this.unitVisuals = new Map();
+        
+        // ★追加: 照準用
+        this.crosshairGroup = null;
     }
     preload() { if(window.EnvSystem) window.EnvSystem.preload(this); }
     create() {
         this.cameras.main.setBackgroundColor('#0b0e0a'); 
         this.hexGroup = this.add.group(); this.unitGroup = this.add.group(); 
+        
+        // 照準用グループ (VFXより上)
+        this.crosshairGroup = this.add.graphics().setDepth(200);
+
         this.vfxGraphics = this.add.graphics().setDepth(100); this.overlayGraphics = this.add.graphics().setDepth(50); 
         if(window.EnvSystem) window.EnvSystem.clear();
         this.scene.launch('UIScene'); 
@@ -291,7 +298,6 @@ class MainScene extends Phaser.Scene {
         const selected = window.gameLogic.selectedUnit;
         if(selected && window.gameLogic.reachableHexes.length > 0) { this.overlayGraphics.lineStyle(2, 0xffffff, 0.4); window.gameLogic.reachableHexes.forEach(h => this.drawHexOutline(this.overlayGraphics, h.q, h.r)); }
         
-        // ★修正: 射線（赤破線）の描画
         if(selected && window.gameLogic.attackLine && window.gameLogic.attackLine.length > 0) {
             this.overlayGraphics.lineStyle(3, 0xff2222, 0.8);
             window.gameLogic.attackLine.forEach(h => {
@@ -308,11 +314,18 @@ class MainScene extends Phaser.Scene {
             path.forEach(p => { const px = Renderer.hexToPx(p.q, p.r); this.overlayGraphics.lineTo(px.x, px.y); }); 
             this.overlayGraphics.strokePath(); 
         }
+
+        // ★追加: ロックオン照準の描画
+        this.crosshairGroup.clear();
+        if (window.gameLogic.aimTargetUnit) {
+            const u = window.gameLogic.aimTargetUnit;
+            const pos = Renderer.hexToPx(u.q, u.r);
+            this.drawCrosshair(this.crosshairGroup, pos.x, pos.y, time);
+        }
     }
     
     drawHexOutline(g, q, r) { const c = Renderer.hexToPx(q, r); g.beginPath(); for(let i=0; i<6; i++) { const a = Math.PI/180*60*i; g.lineTo(c.x+HEX_SIZE*0.9*Math.cos(a), c.y+HEX_SIZE*0.9*Math.sin(a)); } g.closePath(); g.lineWidth=0.1; g.strokePath(); }
 
-    // ★追加: 破線枠描画 (自前で点線を引く)
     drawDashedHexOutline(g, q, r) {
         const c = Renderer.hexToPx(q, r);
         const pts = [];
@@ -320,28 +333,40 @@ class MainScene extends Phaser.Scene {
             const a = Math.PI/180*60*i;
             pts.push({ x: c.x+HEX_SIZE*0.9*Math.cos(a), y: c.y+HEX_SIZE*0.9*Math.sin(a) });
         }
-        // 各辺を破線にする
         for(let i=0; i<6; i++) {
             const p1 = pts[i];
             const p2 = pts[(i+1)%6];
-            // 1辺を分割して描く
             const dist = Phaser.Math.Distance.Between(p1.x, p1.y, p2.x, p2.y);
-            const dashLen = 5;
-            const gapLen = 5;
-            const steps = dist / (dashLen + gapLen);
-            const dx = (p2.x - p1.x) / steps;
-            const dy = (p2.y - p1.y) / steps;
-            
+            const dashLen = 5; const gapLen = 5; const steps = dist / (dashLen + gapLen);
+            const dx = (p2.x - p1.x) / steps; const dy = (p2.y - p1.y) / steps;
             for(let j=0; j<steps; j++) {
-                if(j % 2 === 0) { // 描く部分
-                    const sx = p1.x + dx * j;
-                    const sy = p1.y + dy * j;
-                    g.beginPath();
-                    g.moveTo(sx, sy);
-                    g.lineTo(sx + dx, sy + dy);
-                    g.strokePath();
+                if(j % 2 === 0) {
+                    const sx = p1.x + dx * j; const sy = p1.y + dy * j;
+                    g.beginPath(); g.moveTo(sx, sy); g.lineTo(sx + dx, sy + dy); g.strokePath();
                 }
             }
         }
+    }
+
+    // ★照準描画メソッド
+    drawCrosshair(g, x, y, time) {
+        const size = 30;
+        const angle = time * 0.005; // 回転
+        
+        g.lineStyle(3, 0xff2222, 1.0);
+        
+        // 回転する外周の円弧
+        g.beginPath();
+        g.arc(x, y, size, angle, angle + Math.PI/2);
+        g.strokePath();
+        g.beginPath();
+        g.arc(x, y, size, angle + Math.PI, angle + Math.PI * 1.5);
+        g.strokePath();
+
+        // 十字
+        g.lineStyle(2, 0xffaaaa, 0.8);
+        const inner = 10;
+        g.beginPath(); g.moveTo(x - inner, y); g.lineTo(x + inner, y); g.strokePath();
+        g.beginPath(); g.moveTo(x, y - inner); g.lineTo(x, y + inner); g.strokePath();
     }
 }
