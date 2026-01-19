@@ -238,7 +238,7 @@ class MainScene extends Phaser.Scene {
                 }
                 
                 // ★森 (id:1) の密度アップ
-                if(t.id === 1) {
+                if(t.id === 2) {
                     // 6〜9本の木をランダム配置
                     const count = 6 + Math.floor(Math.random() * 4);
                     for(let i=0; i<count; i++) {
