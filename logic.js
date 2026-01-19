@@ -1,16 +1,15 @@
-/** LOGIC (Elastic Aim, Target Lock-on) */
+/** LOGIC (AP Check, Elastic Aim) */
 class Game {
     constructor() {
         this.units=[]; this.map=[]; this.setupSlots=[]; this.state='SETUP'; 
         this.path=[]; this.reachableHexes=[]; 
         this.attackLine=[]; 
-        this.aimTargetUnit = null; // ★追加: ロックオン中の敵
+        this.aimTargetUnit = null; 
         this.hoverHex=null;
         this.isAuto=false; this.isProcessingTurn = false; this.sector = 1;
         this.initDOM(); this.initSetup();
     }
     
-    // ... (initDOM, toggleSidebar, initSetup は変更なし) ...
     initDOM() {
         Renderer.init(document.getElementById('game-view'));
         window.addEventListener('click', (e)=>{if(!e.target.closest('#context-menu')) document.getElementById('context-menu').style.display='none';});
@@ -48,7 +47,6 @@ class Game {
             }; box.appendChild(d);
         });
     }
-
     startCampaign() {
         document.getElementById('setup-screen').style.display='none'; 
         if (typeof Renderer !== 'undefined' && Renderer.game) {
@@ -56,13 +54,11 @@ class Game {
             if (mainScene) { mainScene.mapGenerated = false; if(mainScene.hexGroup) mainScene.hexGroup.clear(true, true); if(window.EnvSystem) window.EnvSystem.clear(); }
         }
         Renderer.resize();
-        
         this.selectedUnit = null;
         this.reachableHexes = [];
         this.attackLine = []; 
-        this.aimTargetUnit = null; // リセット
+        this.aimTargetUnit = null;
         this.path = [];
-
         this.units = this.units.filter(u => u.team === 'player' && u.hp > 0);
         this.units.forEach(u => { u.q = -999; u.r = -999; });
         this.generateMap(); 
@@ -76,7 +72,6 @@ class Game {
         if(leader && leader.q !== -999) Renderer.centerOn(leader.q, leader.r);
         setTimeout(() => { if (Renderer.dealCards) Renderer.dealCards(['infantry', 'tank', 'aerial', 'infantry', 'tiger']); }, 500);
     }
-
     refreshUnitState(u) {
         if (!u || u.hp <= 0) {
             this.selectedUnit = null;
@@ -89,40 +84,33 @@ class Game {
         this.updateSidebar();
     }
 
-    // ★重要: 伸縮する射線と敵ロックオン計算
+    // ★修正: APチェックを追加
     calcAttackLine(u, targetQ, targetR) {
         this.attackLine = [];
         this.aimTargetUnit = null;
         if (!u) return;
         
+        // ★AP不足ならターゲット表示なし
+        if (u.ap < 2) return;
+
         const w = WPNS[u.curWpn];
         const range = w.rng;
-        
-        // ターゲットまでの実距離
         const dist = this.hexDist(u, {q:targetQ, r:targetR});
         if (dist === 0) return;
 
-        // 描画するのは「ターゲットまでの距離」か「射程限界」の近い方
         const drawLen = Math.min(dist, range);
-
         const start = this.axialToCube(u.q, u.r);
         const end = this.axialToCube(targetQ, targetR);
 
-        // 始点からターゲットへ向かって、drawLen の数だけヘックスを拾う
         for (let i = 1; i <= drawLen; i++) {
-            // 線形補間係数 t
-            // distがマウスまでの全距離なので、i/dist で途中経過が取れる
             const t = i / dist;
-            
             const lerpCube = {
                 x: start.x + (end.x - start.x) * t,
                 y: start.y + (end.y - start.y) * t,
                 z: start.z + (end.z - start.z) * t
             };
-            
             const roundCube = this.cubeRound(lerpCube);
             const hex = this.cubeToAxial(roundCube);
-            
             if (this.isValidHex(hex.q, hex.r)) {
                 this.attackLine.push({q: hex.q, r: hex.r});
             } else {
@@ -130,11 +118,8 @@ class Game {
             }
         }
 
-        // ★敵ロックオン判定
-        // 射線の先端に敵がいればロックオン
         if (this.attackLine.length > 0) {
             const lastHex = this.attackLine[this.attackLine.length - 1];
-            // マウスカーソル直下と一致しているか確認（射程不足で届いていない場合はロックしない）
             if (lastHex.q === targetQ && lastHex.r === targetR) {
                 const target = this.getUnit(lastHex.q, lastHex.r);
                 if (target && target.team !== u.team) {
@@ -156,8 +141,7 @@ class Game {
     handleHover(p) {
         if(this.state !== 'PLAY') return; this.hoverHex = p;
         if(this.selectedUnit && this.isValidHex(p.q, p.r)) {
-            this.calcAttackLine(this.selectedUnit, p.q, p.r); // 常時計算
-
+            this.calcAttackLine(this.selectedUnit, p.q, p.r);
             const isReachable = this.reachableHexes.some(h => h.q === p.q && h.r === p.r);
             const enemy = this.getUnit(p.q, p.r);
             if(isReachable && !enemy) this.path = this.findPath(this.selectedUnit, p.q, p.r); else this.path = [];
@@ -188,8 +172,8 @@ class Game {
             }
         }
     }
-
-    // ... (以下既存ロジック) ...
+    
+    // ... (以下変更なし) ...
     spawnAtSafeGround(team, type, existingUnit=null) { 
         const cy = Math.floor(MAP_H/2); const candidates = [];
         for(let q=0; q<MAP_W; q++) { for(let r=0; r<MAP_H; r++) { const t = this.map[q][r]; if(t.id !== -1 && t.id !== 5 && t.cost < 99 && !this.getUnit(q, r)) { candidates.push({q, r}); } } }
