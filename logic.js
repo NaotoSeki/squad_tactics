@@ -1,4 +1,4 @@
-/** LOGIC (Cloud Shape Map, Hole Filling, Safe Spawn) */
+/** LOGIC (Safe Spawn, Island Coastline, Organic Map) */
 class Game {
     constructor() {
         this.units=[]; this.map=[]; this.setupSlots=[]; this.state='SETUP'; 
@@ -42,6 +42,7 @@ class Game {
         Renderer.resize();
         this.generateMap(); 
         
+        // ユニット配置 (新しい安全ロジック)
         if(this.units.length === 0) { 
             this.setupSlots.forEach(k=>this.spawnAtSafeGround('player',k)); 
         } else { 
@@ -55,7 +56,9 @@ class Game {
         this.log(`MISSION START - SECTOR ${this.sector}`);
         document.getElementById('sector-counter').innerText = `SECTOR: ${this.sector.toString().padStart(2, '0')}`;
         
-        if(this.units.length>0) Renderer.centerOn(this.units[0].q, this.units[0].r);
+        if(this.units.length>0 && this.units[0].q !== null) {
+            Renderer.centerOn(this.units[0].q, this.units[0].r);
+        }
 
         setTimeout(() => {
             if (Renderer.dealCards) {
@@ -94,11 +97,9 @@ class Game {
         if(!this.isValidHex(targetHex.q, targetHex.r) || this.map[targetHex.q][targetHex.r].id === -1) {
             this.log("配置不可: 進入不可能な地形です"); return;
         }
-        // 水上配置禁止チェック
         if(this.map[targetHex.q][targetHex.r].id === 5) {
             this.log("配置不可: 水上には配置できません"); return;
         }
-
         const existing = this.units.find(u => u.q === targetHex.q && u.r === targetHex.r && u.hp > 0);
         if (existing) { this.log("配置不可: ユニットが既に存在します"); return; }
         
@@ -157,7 +158,7 @@ class Game {
         }
     }
 
-    // ★新マップ生成: 雲形定規 & 穴埋め
+    // ★新マップ生成: 雲形定規 + 外周海域 (Coastline)
     generateMap() { 
         this.map = [];
         for(let q=0; q<MAP_W; q++){ 
@@ -170,11 +171,10 @@ class Game {
         const cx = Math.floor(MAP_W/2);
         const cy = Math.floor(MAP_H/2);
         
-        // 1. 太いブラシでランダムウォーク (雲形を作る)
+        // 1. 太いブラシでランダムウォーク (雲形)
         let walkers = [{q:cx, r:cy}]; 
-        const maxSteps = 120; // ステップ数は減らす（ブラシが太いので面積は稼げる）
+        const maxSteps = 120;
         
-        // ヘックスを陸地にする関数（ブラシ半径1: 中心+周囲6マス）
         const paintBrush = (centerQ, centerR) => {
             const brush = [{q:centerQ, r:centerR}, ...this.getNeighbors(centerQ, centerR)];
             brush.forEach(h => {
@@ -187,12 +187,10 @@ class Game {
         for(let i=0; i<maxSteps; i++) {
             const wIdx = Math.floor(Math.random() * walkers.length);
             const w = walkers[wIdx];
+            paintBrush(w.q, w.r);
             
-            paintBrush(w.q, w.r); // 太く塗る
-
             const neighbors = [[1,0],[1,-1],[0,-1],[-1,0],[-1,1],[0,1]];
             const dir = neighbors[Math.floor(Math.random() * 6)];
-            // 少し遠くへ歩かせることで「塊」を分散させる
             const next = { q: w.q + dir[0], r: w.r + dir[1] };
             
             if(Math.random() < 0.08 && walkers.length < 4) {
@@ -202,15 +200,12 @@ class Game {
             }
         }
 
-        // 2. 穴埋め処理 (Filling Voids)
-        // 陸地に囲まれたVOIDを陸地にする
-        for(let i=0; i<3; i++) { // 3回繰り返して深い穴も埋める
+        // 2. 穴埋め (Filling Voids)
+        for(let i=0; i<3; i++) {
             for(let q=1; q<MAP_W-1; q++){
                 for(let r=1; r<MAP_H-1; r++){
-                    if(this.map[q][r].id === -1) { // VOIDなら
-                        // 周囲の陸地(VOID以外)をカウント
+                    if(this.map[q][r].id === -1) { 
                         const landNeighbors = this.getNeighbors(q, r).filter(n => this.map[n.q][n.r].id !== -1).length;
-                        // 周囲の4つ以上が陸地なら、ここも陸地にする
                         if(landNeighbors >= 4) {
                             this.map[q][r] = TERRAIN.GRASS;
                         }
@@ -219,51 +214,99 @@ class Game {
             }
         }
 
-        // 3. 地形適用 (森、町、荒地)
-        for(let q=0; q<MAP_W; q++){ 
-            for(let r=0; r<MAP_H; r++){
-                if(this.map[q][r].id !== -1) { 
-                    const n = Math.sin(q*0.4) + Math.cos(r*0.4) + Math.random()*0.4; 
-                    let t = TERRAIN.GRASS; 
-                    if(n > 1.1) t = TERRAIN.FOREST; // 森
-                    else if(n < -0.9) t = TERRAIN.DIRT; // 荒地
-                    
-                    if(t !== TERRAIN.WATER && Math.random() < 0.05) t = TERRAIN.TOWN; // 町
-                    this.map[q][r] = t;
+        // 3. ★外周海域の生成 (Coastline)
+        // 陸地の周りのVOIDをWATERに変える処理を2回行う（2マス分の海）
+        for(let loop=0; loop<2; loop++) {
+            const waterCandidates = [];
+            for(let q=0; q<MAP_W; q++){
+                for(let r=0; r<MAP_H; r++){
+                    // VOIDの場合、隣に陸地か水があれば水になる候補
+                    if(this.map[q][r].id === -1) {
+                        const hasNeighbor = this.getNeighbors(q, r).some(n => {
+                            const nid = this.map[n.q][n.r].id;
+                            return nid !== -1; // 陸地か水がある
+                        });
+                        if(hasNeighbor) waterCandidates.push({q, r});
+                    }
                 }
             }
+            // 一括適用
+            waterCandidates.forEach(w => {
+                this.map[w.q][w.r] = TERRAIN.WATER;
+            });
         }
 
-        // 4. 川 (確率低め)
-        if(Math.random() < 0.5) {
-            let rq=cx, rr=cy; 
-            for(let i=0;i<15;i++){ 
-                if(this.isValidHex(rq,rr) && this.map[rq][rr].id !== -1){ 
-                    this.map[rq][rr] = TERRAIN.WATER; 
-                    const d=[[1,0],[1,-1],[0,-1],[-1,0],[-1,1],[0,1]][Math.floor(Math.random()*6)]; 
-                    rq+=d[0]; rr+=d[1]; 
-                } else break; 
+        // 4. 地形適用 (森、町、荒地)
+        for(let q=0; q<MAP_W; q++){ 
+            for(let r=0; r<MAP_H; r++){
+                const tId = this.map[q][r].id;
+                if(tId !== -1 && tId !== 5) { // 陸地のみ
+                    const n = Math.sin(q*0.4) + Math.cos(r*0.4) + Math.random()*0.4; 
+                    let t = TERRAIN.GRASS; 
+                    if(n > 1.1) t = TERRAIN.FOREST; 
+                    else if(n < -0.9) t = TERRAIN.DIRT; 
+                    
+                    if(t !== TERRAIN.WATER && Math.random() < 0.05) t = TERRAIN.TOWN; 
+                    this.map[q][r] = t;
+                }
             }
         }
     }
 
     spawnEnemies(){ const c=4+Math.floor(this.sector*0.7), tc=Math.min(0.8,0.1+this.sector*0.1); for(let i=0;i<c;i++){ let k='infantry'; const r=Math.random(); if(r<tc)k='tank';else if(r<tc+0.3)k='heavy';else if(r<tc+0.5)k='sniper'; const e=this.spawnAtSafeGround('enemy',k); if(e){e.rank=Math.floor(Math.random()*Math.min(5,this.sector/2)); e.maxHp+=e.rank*30; e.hp=e.maxHp; if(this.sector>2&&Math.random()<0.4)e.skills=[Object.keys(SKILLS)[Math.floor(Math.random()*8)]];}}}
     
-    // 安全地帯検索 (水上・虚空禁止)
-    spawnAtSafeGround(t,k,ex=null){ 
-        let q,r,tr=0; const cy=Math.floor(MAP_H/2); 
-        do{ 
-            q=Math.floor(Math.random()*MAP_W); r=Math.floor(Math.random()*MAP_H); tr++; 
-            if(t==='player'&&r<cy)continue; if(t==='enemy'&&r>cy)continue; 
-        } while(
-            (!this.isValidHex(q,r) || 
-             this.map[q][r].id === -1 || // VOID禁止
-             this.map[q][r].id === 5 ||  // WATER禁止
-             this.map[q][r].cost >= 99 || 
-             this.getUnit(q,r)) 
-            && tr<2000
-        ); 
-        if(tr<2000){if(ex){ex.q=q;ex.r=r;return ex;}else return this.spawnUnit(t,k,q,r);} return null;
+    // ★修正版: 安全なスポーン地点の検索 (虚空送り防止)
+    spawnAtSafeGround(team, type, existingUnit=null) { 
+        const cy = Math.floor(MAP_H/2);
+        
+        // 1. 全マップから配置可能な候補地をリストアップ
+        let candidates = [];
+        for(let q=0; q<MAP_W; q++) {
+            for(let r=0; r<MAP_H; r++) {
+                // VOID(-1) と WATER(5) はNG
+                if(this.map[q][r].id === -1 || this.map[q][r].id === 5) continue;
+                // コスト99以上もNG
+                if(this.map[q][r].cost >= 99) continue;
+                // ユニットが既にいる場所もNG
+                if(this.getUnit(q, r)) continue;
+
+                // チームごとのエリア分け
+                if(team === 'player' && r < cy) continue; // プレイヤーは下半分
+                if(team === 'enemy' && r > cy) continue;  // 敵は上半分
+
+                candidates.push({q, r});
+            }
+        }
+
+        // 2. 候補がない場合 (島が極端に偏った場合など)、エリア制限を解除して再検索
+        if(candidates.length === 0) {
+            this.log(`警告: ${team}の正規配置位置なし。全域検索します。`);
+            for(let q=0; q<MAP_W; q++) {
+                for(let r=0; r<MAP_H; r++) {
+                    if(this.map[q][r].id === -1 || this.map[q][r].id === 5) continue;
+                    if(this.map[q][r].cost >= 99) continue;
+                    if(this.getUnit(q, r)) continue;
+                    candidates.push({q, r});
+                }
+            }
+        }
+
+        // 3. それでも候補がない場合 (陸地ゼロ!?)
+        if(candidates.length === 0) {
+            console.error("CRITICAL: No spawnable land found!");
+            return null;
+        }
+
+        // 4. 候補からランダムに決定
+        const choice = candidates[Math.floor(Math.random() * candidates.length)];
+
+        if(existingUnit) {
+            existingUnit.q = choice.q;
+            existingUnit.r = choice.r;
+            return existingUnit;
+        } else {
+            return this.spawnUnit(team, type, choice.q, choice.r);
+        }
     }
     
     spawnUnit(t,k,q,r){ const d=UNITS[k], a=d.ap; this.units.push({id:Math.random(),team:t,q,r,def:d,hp:d.hp,maxHp:d.hp,ap:a,maxAp:a,stance:'stand',curWpn:d.wpn,rank:0,deadProcessed:false,skills:[],sectorsSurvived:0}); }
