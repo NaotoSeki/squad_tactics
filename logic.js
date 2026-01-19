@@ -1,15 +1,14 @@
-/** LOGIC (Directional Range, Instant Update) */
+/** LOGIC (Beam Attack Guide, Instant Update) */
 class Game {
     constructor() {
         this.units=[]; this.map=[]; this.setupSlots=[]; this.state='SETUP'; 
         this.path=[]; this.reachableHexes=[]; 
-        this.attackLine=[]; // 射線ガイド用
+        this.attackLine=[]; // ★復活: 射線上のヘックスリスト
         this.hoverHex=null;
         this.isAuto=false; this.isProcessingTurn = false; this.sector = 1;
         this.initDOM(); this.initSetup();
     }
     
-    // ... (initDOM, toggleSidebar, initSetup は変更なし) ...
     initDOM() {
         Renderer.init(document.getElementById('game-view'));
         window.addEventListener('click', (e)=>{if(!e.target.closest('#context-menu')) document.getElementById('context-menu').style.display='none';});
@@ -47,7 +46,6 @@ class Game {
             }; box.appendChild(d);
         });
     }
-
     startCampaign() {
         document.getElementById('setup-screen').style.display='none'; 
         if (typeof Renderer !== 'undefined' && Renderer.game) {
@@ -56,7 +54,6 @@ class Game {
         }
         Renderer.resize();
         
-        // ★状態リセット (Sectorまたぎのバグ防止)
         this.selectedUnit = null;
         this.reachableHexes = [];
         this.attackLine = []; 
@@ -76,21 +73,18 @@ class Game {
         setTimeout(() => { if (Renderer.dealCards) Renderer.dealCards(['infantry', 'tank', 'aerial', 'infantry', 'tiger']); }, 500);
     }
 
-    // ★重要: アクション後の再計算を一元化
     refreshUnitState(u) {
         if (!u || u.hp <= 0) {
             this.selectedUnit = null;
             this.reachableHexes = [];
             this.attackLine = [];
         } else {
-            this.calcReachableHexes(u); // 白枠（移動範囲）を即更新
-            // 射線はホバー時に更新されるのでここではクリアだけでOK
-            // this.attackLine = []; 
+            this.calcReachableHexes(u);
         }
         this.updateSidebar();
     }
 
-    // ★射線計算: マウス方向へ射程限界まで伸ばす
+    // ★重要: マウス方向へ、射程ぶんだけヘックスをリストアップする
     calcAttackLine(u, targetQ, targetR) {
         this.attackLine = [];
         if (!u) return;
@@ -98,43 +92,41 @@ class Game {
         const w = WPNS[u.curWpn];
         const range = w.rng;
         
-        const start = this.axialToCube(u.q, u.r);
-        const end = this.axialToCube(targetQ, targetR);
-        
-        // 距離が0なら描画しない
+        // 自分の位置とマウス位置の距離
         const currentDist = this.hexDist(u, {q:targetQ, r:targetR});
         if (currentDist === 0) return;
 
-        // ベクトル計算 (Start -> End)
+        const start = this.axialToCube(u.q, u.r);
+        const end = this.axialToCube(targetQ, targetR);
+
+        // 方向ベクトル
         const vec = { x: end.x - start.x, y: end.y - start.y, z: end.z - start.z };
         
-        // ベクトルを正規化し、射程距離(range)倍にする
-        // Cube座標の距離は max(|x|, |y|, |z|) なので、それで割れば正規化できる
+        // 正規化して射程距離倍する（射程限界位置を計算）
         const len = Math.max(Math.abs(vec.x), Math.abs(vec.y), Math.abs(vec.z));
-        const scale = range / len;
+        const scale = range / len; // 常に最大射程まで伸ばすなら range / len
         
-        const rangeEnd = {
+        const limitEnd = {
             x: start.x + vec.x * scale,
             y: start.y + vec.y * scale,
             z: start.z + vec.z * scale
         };
 
-        // StartからRangeEndまでLerpでヘックスを拾う
+        // 1マスずつヘックスを拾ってリストに入れる
         for (let i = 1; i <= range; i++) {
             const t = i / range;
             const lerpCube = {
-                x: start.x + (rangeEnd.x - start.x) * t,
-                y: start.y + (rangeEnd.y - start.y) * t,
-                z: start.z + (rangeEnd.z - start.z) * t
+                x: start.x + (limitEnd.x - start.x) * t,
+                y: start.y + (limitEnd.y - start.y) * t,
+                z: start.z + (limitEnd.z - start.z) * t
             };
             const roundCube = this.cubeRound(lerpCube);
             const hex = this.cubeToAxial(roundCube);
             
-            // マップ外に出たら打ち切り
             if (this.isValidHex(hex.q, hex.r)) {
                 this.attackLine.push({q: hex.q, r: hex.r});
             } else {
-                break;
+                break; // マップ外に出たらそこまで
             }
         }
     }
@@ -151,14 +143,13 @@ class Game {
     handleHover(p) {
         if(this.state !== 'PLAY') return; this.hoverHex = p;
         if(this.selectedUnit && this.isValidHex(p.q, p.r)) {
-            // ★常時計算: マウス方向への射程ガイド
-            this.calcAttackLine(this.selectedUnit, p.q, p.r);
+            this.calcAttackLine(this.selectedUnit, p.q, p.r); // ★射線を計算
 
             const isReachable = this.reachableHexes.some(h => h.q === p.q && h.r === p.r);
             const enemy = this.getUnit(p.q, p.r);
             if(isReachable && !enemy) this.path = this.findPath(this.selectedUnit, p.q, p.r); else this.path = [];
         } else {
-            this.attackLine = []; // 選択なしなら消す
+            this.attackLine = [];
         }
     }
 
@@ -167,7 +158,8 @@ class Game {
         const u = isValid ? this.getUnit(p.q, p.r) : null;
         if(u && u.team==='player') { 
             this.selectedUnit=u; 
-            this.refreshUnitState(u); // 選択時に白枠計算
+            this.refreshUnitState(u); // 選択時に即更新
+            this.path = []; 
             if(window.Sfx)Sfx.play('click'); 
         } else if(this.selectedUnit) {
             if(u && u.team==='enemy') this.actionAttack(this.selectedUnit, u);
@@ -182,7 +174,7 @@ class Game {
         }
     }
 
-    // ... (以下既存ロジック、AP消費行動後に refreshUnitState を呼ぶ修正を含む) ...
+    // ... (以下、前回と同じくAP消費時の更新を入れた既存ロジック) ...
     spawnAtSafeGround(team, type, existingUnit=null) { 
         const cy = Math.floor(MAP_H/2); const candidates = [];
         for(let q=0; q<MAP_W; q++) { for(let r=0; r<MAP_H; r++) { const t = this.map[q][r]; if(t.id !== -1 && t.id !== 5 && t.cost < 99 && !this.getUnit(q, r)) { candidates.push({q, r}); } } }
@@ -280,12 +272,12 @@ class Game {
         this.state='PLAY'; 
         if(u.ap>0){ 
             this.selectedUnit=u; 
-            this.refreshUnitState(u); // ★移動後更新
+            this.refreshUnitState(u); // ★移動後に白枠更新
         } else { this.updateSidebar(); }
         this.checkPhaseEnd(); 
     }
     checkReactionFire(u){ this.units.filter(e=>e.team!==u.team&&e.hp>0&&e.def.isTank&&this.hexDist(u,e)<=2).forEach(t=>{ this.log(`!! 防御射撃: ${t.def.name}->${u.def.name}`); u.hp-=15; if(window.VFX)VFX.addExplosion(Renderer.hexToPx(u.q,u.r).x,Renderer.hexToPx(u.q,u.r).y,"#fa0",5); if(window.Sfx)Sfx.play('mg'); if(u.hp<=0&&!u.deadProcessed){u.deadProcessed=true;this.log(`${u.def.name} 撃破`);if(window.Sfx)Sfx.play('death');} }); }
-    swapWeapon(){ if(this.selectedUnit&&this.selectedUnit.ap>=1){ const u=this.selectedUnit; u.ap--; u.curWpn=(u.curWpn===u.def.wpn)?u.def.alt:u.def.wpn; if(window.Sfx)Sfx.play('swap'); this.log(`武装変更: ${WPNS[u.curWpn].name}`); this.refreshUnitState(u); } } // ★武器変更後更新
+    swapWeapon(){ if(this.selectedUnit&&this.selectedUnit.ap>=1){ const u=this.selectedUnit; u.ap--; u.curWpn=(u.curWpn===u.def.wpn)?u.def.alt:u.def.wpn; if(window.Sfx)Sfx.play('swap'); this.log(`武装変更: ${WPNS[u.curWpn].name}`); this.refreshUnitState(u); } }
     async actionAttack(a,d){ 
         if(a.ap<2){this.log("AP不足");return;} const w=WPNS[a.curWpn]; if(this.hexDist(a,d)>w.rng){this.log("射程外");return;} 
         a.ap-=2; this.state='ANIM'; 
@@ -302,10 +294,10 @@ class Game {
                 }
             }}; if(!isS&&!isR){const dx=ex-s.x,dy=ey-s.y,ag=Math.atan2(dy,dx); pr.vx=Math.cos(ag)*25; pr.vy=Math.sin(ag)*25; pr.life=Math.sqrt(dx*dx+dy*dy)/25;} if(window.VFX)VFX.addProj(pr); await new Promise(r=>setTimeout(r,isR?800:(isS?200:40)));
         }
-        setTimeout(()=>{const dd=this.units.filter(u=>u.hp<=0); dd.forEach(k=>{if(!k.deadProcessed){k.deadProcessed=true; if(k===d){this.log(`${k.def.name} 撃破`);if(window.Sfx)Sfx.play('death');} if(window.VFX)VFX.addUnitDebris(Renderer.hexToPx(k.q,k.r).x,Renderer.hexToPx(k.q,k.r).y);}}); if(this.checkWin())return; this.checkLose(); this.state='PLAY'; this.refreshUnitState(a); this.checkPhaseEnd();}, isR?1200:500); // ★攻撃後更新
+        setTimeout(()=>{const dd=this.units.filter(u=>u.hp<=0); dd.forEach(k=>{if(!k.deadProcessed){k.deadProcessed=true; if(k===d){this.log(`${k.def.name} 撃破`);if(window.Sfx)Sfx.play('death');} if(window.VFX)VFX.addUnitDebris(Renderer.hexToPx(k.q,k.r).x,Renderer.hexToPx(k.q,k.r).y);}}); if(this.checkWin())return; this.checkLose(); this.state='PLAY'; this.refreshUnitState(a); this.checkPhaseEnd();}, isR?1200:500);
     }
     checkPhaseEnd(){if(this.units.filter(u=>u.team==='player'&&u.hp>0&&u.ap>0).length===0&&this.state==='PLAY')this.endTurn();}
-    setStance(s){if(this.selectedUnit&&this.selectedUnit.ap>=1&&!this.selectedUnit.def.isTank){this.selectedUnit.ap--;this.selectedUnit.stance=s;this.refreshUnitState(this.selectedUnit);this.checkPhaseEnd();}} // ★姿勢変更後更新
+    setStance(s){if(this.selectedUnit&&this.selectedUnit.ap>=1&&!this.selectedUnit.def.isTank){this.selectedUnit.ap--;this.selectedUnit.stance=s;this.refreshUnitState(this.selectedUnit);this.checkPhaseEnd();}}
     endTurn(){if(this.isProcessingTurn)return; this.isProcessingTurn=true; this.selectedUnit=null; this.reachableHexes=[]; this.attackLine=[]; this.path=[]; this.state='ANIM'; document.getElementById('eyecatch').style.opacity=1;
         this.units.filter(u=>u.team==='player'&&u.hp>0&&u.skills.includes("Mechanic")).forEach(u=>{const c=u.skills.filter(s=>s==="Mechanic").length; if(u.hp<u.maxHp){u.hp=Math.min(u.maxHp,u.hp+c*20);this.log(`${u.def.name} 修理`);}});
         setTimeout(async()=>{document.getElementById('eyecatch').style.opacity=0; const es=this.units.filter(u=>u.team==='enemy'&&u.hp>0); for(let e of es){const ps=this.units.filter(u=>u.team==='player'&&u.hp>0); if(ps.length===0){this.checkLose();break;} e.ap=e.maxAp; let t=ps[0],md=999; ps.forEach(p=>{const d=this.hexDist(e,p);if(d<md){md=d;t=p;}}); if(md<=6){if(md<=4&&e.ap>=1&&!e.def.isTank)e.stance='crouch';await this.actionAttack(e,t);}else{const nq=e.q+(t.q>e.q?1:-1);if(!this.getUnit(nq,e.r)&&this.isValidHex(nq,e.r)&&this.map[nq][e.r].cost<99){e.q=nq;e.ap--;await new Promise(r=>setTimeout(r,200));}}} this.units.forEach(u=>{if(u.team==='player')u.ap=u.maxAp;}); this.log("-- PLAYER PHASE --"); this.state='PLAY'; this.isProcessingTurn=false;},1200);
