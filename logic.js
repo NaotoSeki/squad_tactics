@@ -1,4 +1,4 @@
-/** LOGIC (Fixed: Layer Compatibility for HexGroup Clear) */
+/** LOGIC (Added clearSelection) */
 class Game {
     constructor() {
         this.units=[]; this.map=[]; this.setupSlots=[]; this.state='SETUP'; 
@@ -11,6 +11,9 @@ class Game {
         this.initDOM(); this.initSetup();
     }
     
+    // ... (initDOM, toggleSidebar, initSetup, startCampaign, refreshUnitState, calcAttackLine, axialToCube, cubeToAxial, cubeRound, handleHover, handleClick, spawnAtSafeGround, checkDeploy, deployUnit, calcReachableHexes, generateMap, spawnEnemies, spawnUnit, toggleAuto, runAuto, actionMove, checkReactionFire, swapWeapon, actionAttack, checkPhaseEnd, setStance, endTurn, healSurvivors, promoteSurvivors, checkWin, checkLose, getUnit, isValidHex, hexDist, getNeighbors, findPath, log, showContext, getStatus, updateSidebar は変更なし) ...
+    // ※これらは既存コードのまま
+
     initDOM() {
         Renderer.init(document.getElementById('game-view'));
         window.addEventListener('click', (e)=>{if(!e.target.closest('#context-menu')) document.getElementById('context-menu').style.display='none';});
@@ -55,23 +58,17 @@ class Game {
             const mainScene = Renderer.game.scene.getScene('MainScene');
             if (mainScene) { 
                 mainScene.mapGenerated = false; 
-                // ★修正: Group(clear) と Layer(removeAll) の両対応
                 if(mainScene.hexGroup) {
-                    if (typeof mainScene.hexGroup.removeAll === 'function') {
-                        mainScene.hexGroup.removeAll();
-                    } else if (typeof mainScene.hexGroup.clear === 'function') {
-                        mainScene.hexGroup.clear(true, true);
-                    }
+                    if (typeof mainScene.hexGroup.removeAll === 'function') { mainScene.hexGroup.removeAll(); } 
+                    else if (typeof mainScene.hexGroup.clear === 'function') { mainScene.hexGroup.clear(true, true); }
                 }
                 if(window.EnvSystem) window.EnvSystem.clear(); 
             }
         }
         Renderer.resize();
-        
         this.selectedUnit = null; this.reachableHexes = []; this.attackLine = []; this.aimTargetUnit = null; this.path = [];
         this.units = this.units.filter(u => u.team === 'player' && u.hp > 0);
         this.units.forEach(u => { u.q = -999; u.r = -999; });
-        
         this.generateMap(); 
         if(this.units.length === 0) { this.setupSlots.forEach(k => this.spawnAtSafeGround('player', k)); } 
         else { this.units.forEach(u => this.spawnAtSafeGround('player', null, u)); }
@@ -106,6 +103,19 @@ class Game {
             }
         }
         this.updateSidebar();
+    }
+
+    // ★追加: 選択解除 (ESCキー用)
+    clearSelection() {
+        if (this.selectedUnit) {
+            this.selectedUnit = null;
+            this.reachableHexes = [];
+            this.attackLine = [];
+            this.aimTargetUnit = null;
+            this.path = [];
+            this.updateSidebar();
+            if(window.Sfx) Sfx.play('click'); // キャンセル音としてクリック音代用
+        }
     }
 
     calcAttackLine(u, targetQ, targetR) {
@@ -155,7 +165,7 @@ class Game {
         } else if(this.selectedUnit) {
             if(u && u.team==='enemy') this.actionAttack(this.selectedUnit, u);
             else if(!u && isValid && this.path.length > 0) this.actionMove(this.selectedUnit, this.path);
-            else { this.selectedUnit = null; this.reachableHexes = []; this.attackLine = []; this.aimTargetUnit = null; this.path = []; this.updateSidebar(); }
+            else { this.clearSelection(); } // 選択解除メソッドを使用
         }
     }
     spawnAtSafeGround(team, type, existingUnit=null) { 
@@ -258,15 +268,10 @@ class Game {
     }
     checkReactionFire(u){ this.units.filter(e=>e.team!==u.team&&e.hp>0&&e.def.isTank&&this.hexDist(u,e)<=2).forEach(t=>{ this.log(`!! 防御射撃: ${t.def.name}->${u.def.name}`); u.hp-=15; if(window.VFX)VFX.addExplosion(Renderer.hexToPx(u.q,u.r).x,Renderer.hexToPx(u.q,u.r).y,"#fa0",5); if(window.Sfx)Sfx.play('mg'); if(u.hp<=0&&!u.deadProcessed){u.deadProcessed=true;this.log(`${u.def.name} 撃破`);if(window.Sfx)Sfx.play('death');} }); }
     swapWeapon(){ if(this.selectedUnit&&this.selectedUnit.ap>=1){ const u=this.selectedUnit; u.ap--; u.curWpn=(u.curWpn===u.def.wpn)?u.def.alt:u.def.wpn; if(window.Sfx)Sfx.play('swap'); this.log(`武装変更: ${WPNS[u.curWpn].name}`); this.refreshUnitState(u); } }
-    
     async actionAttack(a,d){ 
         if(a.ap<2){this.log("AP不足");return;} const w=WPNS[a.curWpn]; if(this.hexDist(a,d)>w.rng){this.log("射程外");return;} 
         a.ap-=2; this.state='ANIM'; 
-        
-        if (typeof Renderer !== 'undefined' && Renderer.playAttackAnim) {
-            Renderer.playAttackAnim(a, d);
-        }
-
+        if (typeof Renderer !== 'undefined' && Renderer.playAttackAnim) { Renderer.playAttackAnim(a, d); }
         const gsc=(u,k)=>u.skills.filter(s=>s===k).length; let b=this.getNeighbors(a.q,a.r).filter(n=>this.getUnit(n.q,n.r)?.team===a.team).length*10; if(a.skills.includes("Radio"))b+=15*gsc(a,"Radio");
         let ac=(a.rank||0)*8+gsc(a,"Precision")*15, dm=1.0+gsc(a,"HighPower")*0.2; this.log(`${a.def.name} 攻撃`);
         let bu=w.burst||1; bu+=gsc(a,"AmmoBox")*(w.name==='MG42'?3:1); const pt=w.type, isR=pt==='rocket', isS=pt.includes('shell');
@@ -284,7 +289,6 @@ class Game {
     }
     checkPhaseEnd(){if(this.units.filter(u=>u.team==='player'&&u.hp>0&&u.ap>0).length===0&&this.state==='PLAY')this.endTurn();}
     setStance(s){if(this.selectedUnit&&this.selectedUnit.ap>=1&&!this.selectedUnit.def.isTank){this.selectedUnit.ap--;this.selectedUnit.stance=s;this.refreshUnitState(this.selectedUnit);this.checkPhaseEnd();}}
-
     endTurn(){
         if(this.isProcessingTurn)return; this.isProcessingTurn=true; 
         this.selectedUnit=null; this.reachableHexes=[]; this.attackLine=[]; this.aimTargetUnit=null; this.path=[]; 
