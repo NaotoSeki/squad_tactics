@@ -274,7 +274,7 @@ class MainScene extends Phaser.Scene {
         // ★ユニット表示分岐
         if (u.def.name === "Rifle Squad") {
             sprite = this.add.sprite(0, -10, 'soldier_sheet');
-            sprite.setScale(0.5); 
+            sprite.setScale(0.3); 
             sprite.play('soldier_idle');
             if(u.team === 'player') sprite.setTint(0xeeeeff); else sprite.setTint(0xffaaaa);
         } 
