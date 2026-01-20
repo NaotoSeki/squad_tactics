@@ -1,4 +1,4 @@
-/** LOGIC (Call Explosion Sprite) */
+/** LOGIC (Card Usage Limit: Max 2 per Sector) */
 class Game {
     constructor() {
         this.units=[]; this.map=[]; this.setupSlots=[]; this.state='SETUP'; 
@@ -8,6 +8,7 @@ class Game {
         this.hoverHex=null;
         this.isAuto=false; this.isProcessingTurn = false; this.sector = 1;
         this.enemyAI = 'AGGRESSIVE'; 
+        this.cardsUsed = 0; // ★追加: 使用済みカード枚数
         this.initDOM(); this.initSetup();
     }
     
@@ -56,11 +57,8 @@ class Game {
             if (mainScene) { 
                 mainScene.mapGenerated = false; 
                 if(mainScene.hexGroup) {
-                    if (typeof mainScene.hexGroup.removeAll === 'function') {
-                        mainScene.hexGroup.removeAll();
-                    } else if (typeof mainScene.hexGroup.clear === 'function') {
-                        mainScene.hexGroup.clear(true, true);
-                    }
+                    if (typeof mainScene.hexGroup.removeAll === 'function') { mainScene.hexGroup.removeAll(); } 
+                    else if (typeof mainScene.hexGroup.clear === 'function') { mainScene.hexGroup.clear(true, true); }
                 }
                 if(window.EnvSystem) window.EnvSystem.clear(); 
             }
@@ -68,6 +66,8 @@ class Game {
         Renderer.resize();
         
         this.selectedUnit = null; this.reachableHexes = []; this.attackLine = []; this.aimTargetUnit = null; this.path = [];
+        this.cardsUsed = 0; // ★リセット
+        
         this.units = this.units.filter(u => u.team === 'player' && u.hp > 0);
         this.units.forEach(u => { u.q = -999; u.r = -999; });
         
@@ -183,12 +183,19 @@ class Game {
         if(this.map[targetHex.q][targetHex.r].id === 5) { this.log("配置不可: 水上には配置できません"); return false; }
         const existing = this.units.find(u => u.q === targetHex.q && u.r === targetHex.r && u.hp > 0);
         if (existing) { this.log("配置不可: ユニットが既に存在します"); return false; }
+        
+        // ★追加: カード使用制限チェック
+        if (this.cardsUsed >= 2) { this.log("配置不可: 指揮コスト上限(2/2)に達しています"); return false; }
+        
         return true;
     }
     deployUnit(targetHex, cardType) {
         if(!this.checkDeploy(targetHex)) return;
         this.spawnUnit('player', cardType, targetHex.q, targetHex.r);
-        this.log(`増援到着: ${UNITS[cardType].name}`);
+        
+        this.cardsUsed++; // ★カウントアップ
+        this.log(`増援到着: ${UNITS[cardType].name} (残コスト:${2-this.cardsUsed})`);
+        
         if(window.VFX) { const pos = Renderer.hexToPx(targetHex.q, targetHex.r); window.VFX.addSmoke(pos.x, pos.y); }
         this.updateSidebar();
     }
@@ -270,7 +277,6 @@ class Game {
     checkReactionFire(u){ this.units.filter(e=>e.team!==u.team&&e.hp>0&&e.def.isTank&&this.hexDist(u,e)<=2).forEach(t=>{ this.log(`!! 防御射撃: ${t.def.name}->${u.def.name}`); u.hp-=15; if(window.VFX)VFX.addExplosion(Renderer.hexToPx(u.q,u.r).x,Renderer.hexToPx(u.q,u.r).y,"#fa0",5); if(window.Sfx)Sfx.play('mg'); if(u.hp<=0&&!u.deadProcessed){u.deadProcessed=true;this.log(`${u.def.name} 撃破`);if(window.Sfx)Sfx.play('death');} }); }
     swapWeapon(){ if(this.selectedUnit&&this.selectedUnit.ap>=1){ const u=this.selectedUnit; u.ap--; u.curWpn=(u.curWpn===u.def.wpn)?u.def.alt:u.def.wpn; if(window.Sfx)Sfx.play('swap'); this.log(`武装変更: ${WPNS[u.curWpn].name}`); this.refreshUnitState(u); } }
     
-    // ★重要: 攻撃処理 (爆発スプライト再生追加)
     async actionAttack(a,d){ 
         if(a.ap<2){this.log("AP不足");return;} const w=WPNS[a.curWpn]; if(this.hexDist(a,d)>w.rng){this.log("射程外");return;} 
         a.ap-=2; this.state='ANIM'; 
@@ -282,9 +288,7 @@ class Game {
             const s=Renderer.hexToPx(a.q,a.r), e=Renderer.hexToPx(d.q,d.r), ex=e.x+(Math.random()-0.5)*10, ey=e.y+(Math.random()-0.5)*10;
             const pr={x:s.x,y:s.y,sx:s.x,sy:s.y,ex:ex,ey:ey,type:pt,progress:0,speed:isR?0.02:(pt==='shell_fast'?0.1:0.05),arcHeight:isR?250:(isS?(pt==='shell_fast'?40:120):0),onHit:()=>{
                 if(isR){ 
-                    // ★追加: 爆発スプライト再生
                     if(typeof Renderer!=='undefined'&&Renderer.playExplosion) Renderer.playExplosion(ex, ey);
-                    // 既存パーティクルも一応残す(派手にするため)
                     if(window.VFX)VFX.addExplosion(ex,ey,"#fa0",50); 
                     if(window.Sfx)Sfx.play('boom'); 
                     [{q:d.q,r:d.r},...this.getNeighbors(d.q,d.r)].forEach(l=>{const v=this.getUnit(l.q,l.r);if(v){const dg=w.dmg*dm;v.hp-=dg;this.log(`>>爆風:${v.def.name}(-${Math.floor(dg)})`);if(v.hp<=0&&!v.deadProcessed){v.deadProcessed=true;this.log(`${v.def.name} 爆散`);if(window.VFX)VFX.addUnitDebris(Renderer.hexToPx(v.q,v.r).x,Renderer.hexToPx(v.q,v.r).y);}}}); 
@@ -292,7 +296,6 @@ class Game {
                 else{ if(d.hp<=0)return; let h=w.acc-this.map[d.q][d.r].cover+ac; if(d.stance==='prone')h-=25; if(d.skills?.includes("Ambush"))h-=gsc(d,"Ambush")*15;
                     if(Math.random()*100<h){ 
                         let dg=Math.floor(w.dmg*(1+b/100)*(0.8+Math.random()*0.4)*dm); if(d.stance==='prone')dg=Math.floor(dg*0.6); const al=gsc(d,"Armor"); if(al>0){const rd=al*10; dg=Math.max(1,dg-rd); if(i===0)this.log(`>>装甲防御(-${rd})`);} d.hp-=dg; 
-                        // 戦車砲(shell)の場合も爆発スプライト
                         if(isS && typeof Renderer!=='undefined'&&Renderer.playExplosion) Renderer.playExplosion(ex, ey);
                         if(window.VFX)VFX.addExplosion(ex,ey,"#f55",5); if(window.Sfx)Sfx.play(isS?'boom':'shot'); 
                     }
