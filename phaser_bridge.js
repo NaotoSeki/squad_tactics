@@ -1,4 +1,4 @@
-/** * PHASER BRIDGE (Docking Card UI & Usage Limit) */
+/** * PHASER BRIDGE (Added Rank/Skill Text on Map) */
 let phaserGame = null;
 
 const Renderer = {
@@ -58,154 +58,59 @@ const Renderer = {
     }
 };
 
-// --- Card Class (Updated Layout & Docking Logic) ---
+// --- Card Class (省略なし) ---
 class Card extends Phaser.GameObjects.Container {
     constructor(scene, x, y, type) {
-        super(scene, x, y); 
-        this.scene = scene; 
-        this.cardType = type; 
-        this.setSize(140, 200);
-
+        super(scene, x, y); this.scene = scene; this.cardType = type; this.setSize(140, 200);
         this.visuals = scene.add.container(0, 0);
         const shadow = scene.add.rectangle(6, 6, 130, 190, 0x000000, 0.6);
         const contentBg = scene.add.rectangle(0, 0, 130, 190, 0x1a1a1a);
-        
         let frame;
         if(scene.textures.exists('card_frame')) { frame = scene.add.image(0, 0, 'card_frame').setDisplaySize(140, 200); } 
         else { frame = scene.add.rectangle(0,0,140,200,0x333).setStrokeStyle(2,0x888); }
-        frame.setInteractive({ useHandCursor: true, draggable: true }); 
-        this.frameImage = frame;
-        
+        frame.setInteractive({ useHandCursor: true, draggable: true }); this.frameImage = frame;
         const iconKey = window.getCardTextureKey(scene, type);
-        // アイコン位置調整 (少し下へ)
         const icon = scene.add.image(0, 10, iconKey).setScale(1/window.HIGH_RES_SCALE);
         if(type === 'aerial') icon.setDisplaySize(120, 80);
-        
-        // ★修正: テキストを上部へ移動 (Y: -80)
         const text = scene.add.text(0, -80, type.toUpperCase(), { fontSize: '16px', color: '#d84', fontStyle: 'bold' }).setOrigin(0.5);
         const desc = scene.add.text(0, 70, "DRAG TO DEPLOY", { fontSize: '10px', color: '#888' }).setOrigin(0.5);
-        
-        this.visuals.add([shadow, contentBg, icon, text, desc, frame]); 
-        this.add(this.visuals); 
-        
-        this.setScrollFactor(0); 
-        this.baseX = x; this.baseY = y; 
-        this.physX = x; this.physY = y; 
-        this.velocityX = 0; this.velocityY = 0; 
-        this.velocityAngle = 0; 
-        this.targetX = x; this.targetY = y; 
-        this.dragOffsetX = 0; this.dragOffsetY = 0;
-        
-        frame.on('pointerover', this.onHover, this); 
-        frame.on('pointerout', this.onHoverOut, this); 
-        frame.on('dragstart', this.onDragStart, this); 
-        frame.on('drag', this.onDrag, this); 
-        frame.on('dragend', this.onDragEnd, this);
-        
+        this.visuals.add([shadow, contentBg, icon, text, desc, frame]); this.add(this.visuals); 
+        this.setScrollFactor(0); this.baseX = x; this.baseY = y; this.physX = x; this.physY = y; this.velocityX = 0; this.velocityY = 0; this.velocityAngle = 0; this.targetX = x; this.targetY = y; this.dragOffsetX = 0; this.dragOffsetY = 0;
+        frame.on('pointerover', this.onHover, this); frame.on('pointerout', this.onHoverOut, this); frame.on('dragstart', this.onDragStart, this); frame.on('drag', this.onDrag, this); frame.on('dragend', this.onDragEnd, this);
         scene.add.existing(this);
     }
-
     updatePhysics() { 
         if (!this.scene || !this.frameImage) return; 
-        
-        // ★使用制限チェック (グレーアウト処理)
         const isDisabled = (window.gameLogic && window.gameLogic.cardsUsed >= 2);
-        if (isDisabled) {
-            this.frameImage.setTint(0x555555); // 暗くする
-            this.setAlpha(0.6);
-        } else {
-            this.frameImage.clearTint();
-            this.setAlpha(1.0);
-        }
-
+        if (isDisabled) { this.frameImage.setTint(0x555555); this.setAlpha(0.6); } else { this.frameImage.clearTint(); this.setAlpha(1.0); }
         if (!this.isDragging && !this.scene.isReturning) { 
             this.targetX = this.baseX; 
-            
-            // ★ドッキング & ポップアップロジック
-            if (this.scene.isHandDocked) {
-                // ドック時は基本 Y=90 (頭だけ出す)
-                // ホバー時は Y=-120 (通常位置までポップアップ)
-                this.targetY = this.isHovering ? -120 : 90;
-            } else {
-                // 配付中などは通常位置
-                this.targetY = this.baseY - (this.isHovering ? 30 : 0); 
-            }
+            if (this.scene.isHandDocked) { this.targetY = this.isHovering ? -120 : 90; } else { this.targetY = this.baseY - (this.isHovering ? 30 : 0); }
         } 
-        
-        const stiffness = this.isDragging ? 0.2 : 0.08; 
-        const damping = 0.65; 
-        const ax = (this.targetX - this.physX) * stiffness; 
-        const ay = (this.targetY - this.physY) * stiffness; 
-        this.velocityX += ax; this.velocityY += ay; 
-        this.velocityX *= damping; this.velocityY *= damping; 
-        this.physX += this.velocityX; this.physY += this.velocityY; 
-        this.setPosition(this.physX, this.physY); 
-
-        let staticAngle = 0; 
-        if (this.isDragging) staticAngle = -this.dragOffsetX * 0.4; 
-        const targetDynamicAngle = -this.velocityX * 1.5; 
-        const totalTargetAngle = staticAngle + targetDynamicAngle; 
-        const angleForce = (totalTargetAngle - this.angle) * 0.12; 
-        this.velocityAngle += angleForce; 
-        this.velocityAngle *= 0.85; 
-        this.angle += this.velocityAngle; 
-        this.angle = Phaser.Math.Clamp(this.angle, -50, 50); 
+        const stiffness = this.isDragging ? 0.2 : 0.08; const damping = 0.65; 
+        const ax = (this.targetX - this.physX) * stiffness; const ay = (this.targetY - this.physY) * stiffness; 
+        this.velocityX += ax; this.velocityY += ay; this.velocityX *= damping; this.velocityY *= damping; 
+        this.physX += this.velocityX; this.physY += this.velocityY; this.setPosition(this.physX, this.physY); 
+        let staticAngle = 0; if (this.isDragging) staticAngle = -this.dragOffsetX * 0.4; 
+        const targetDynamicAngle = -this.velocityX * 1.5; const totalTargetAngle = staticAngle + targetDynamicAngle; 
+        const angleForce = (totalTargetAngle - this.angle) * 0.12; this.velocityAngle += angleForce; this.velocityAngle *= 0.85; 
+        this.angle += this.velocityAngle; this.angle = Phaser.Math.Clamp(this.angle, -50, 50); 
     }
-
     onHover() { if(Renderer.isMapDragging || Renderer.isCardDragging) return; this.isHovering = true; this.parentContainer.bringToTop(this); }
     onHoverOut() { this.isHovering = false; }
-    
     onDragStart(pointer) { 
         if(Renderer.isMapDragging) return; 
-        // ★使用制限ならドラッグ不可
         if(window.gameLogic && window.gameLogic.cardsUsed >= 2) return;
-
-        this.isDragging = true; 
-        Renderer.isCardDragging = true; 
-        this.setAlpha(0.9); 
-        this.setScale(1.1); 
-        const hand = this.parentContainer; 
-        const worldPos = hand.getLocalTransformMatrix().transformPoint(this.x, this.y); 
-        hand.remove(this); 
-        this.scene.add.existing(this); 
-        this.physX = worldPos.x; this.physY = worldPos.y; 
-        this.targetX = this.physX; this.targetY = this.physY; 
-        this.setDepth(9999); 
-        this.dragOffsetX = this.physX - pointer.x; this.dragOffsetY = this.physY - pointer.y; 
+        this.isDragging = true; Renderer.isCardDragging = true; this.setAlpha(0.9); this.setScale(1.1); const hand = this.parentContainer; const worldPos = hand.getLocalTransformMatrix().transformPoint(this.x, this.y); hand.remove(this); this.scene.add.existing(this); this.physX = worldPos.x; this.physY = worldPos.y; this.targetX = this.physX; this.targetY = this.physY; this.setDepth(9999); this.dragOffsetX = this.physX - pointer.x; this.dragOffsetY = this.physY - pointer.y; 
     }
-    
     onDrag(pointer) { if(!this.isDragging) return; this.targetX = pointer.x + this.dragOffsetX; this.targetY = pointer.y + this.dragOffsetY; const main = this.scene.game.scene.getScene('MainScene'); if (this.y < this.scene.scale.height * 0.65) main.dragHighlightHex = Renderer.pxToHex(pointer.x, pointer.y); else main.dragHighlightHex = null; }
-    
     onDragEnd(pointer) { 
         if(!this.isDragging) return;
-        this.isDragging = false; 
-        Renderer.isCardDragging = false; 
-        this.setAlpha(1.0); 
-        this.setScale(1.0); 
-        const main = this.scene.game.scene.getScene('MainScene'); 
-        main.dragHighlightHex = null; 
-        const dropZoneY = this.scene.scale.height * 0.65; 
-        
-        if (this.y < dropZoneY) {
-            const hex = Renderer.pxToHex(pointer.x, pointer.y);
-            let canDeploy = false;
-            if (window.gameLogic) {
-                if (this.cardType === 'aerial') {
-                    if (window.gameLogic.isValidHex(hex.q, hex.r)) canDeploy = true;
-                    else window.gameLogic.log("配置不可: マップ範囲外です");
-                } else {
-                    canDeploy = window.gameLogic.checkDeploy(hex);
-                }
-            }
-            if (canDeploy) this.burnAndConsume(hex); else this.returnToHand();
-        } else {
-            this.returnToHand(); 
-        }
+        this.isDragging = false; Renderer.isCardDragging = false; this.setAlpha(1.0); this.setScale(1.0); const main = this.scene.game.scene.getScene('MainScene'); main.dragHighlightHex = null; const dropZoneY = this.scene.scale.height * 0.65; 
+        if (this.y < dropZoneY) { const hex = Renderer.pxToHex(pointer.x, pointer.y); let canDeploy = false; if (window.gameLogic) { if (this.cardType === 'aerial') { if (window.gameLogic.isValidHex(hex.q, hex.r)) canDeploy = true; else window.gameLogic.log("配置不可: マップ範囲外です"); } else { canDeploy = window.gameLogic.checkDeploy(hex); } } if (canDeploy) this.burnAndConsume(hex); else this.returnToHand(); } else { this.returnToHand(); } 
     }
-    
     burnAndConsume(hex) {
-        this.updatePhysics = () => {}; 
-        this.frameImage.setTint(0x552222);
+        this.updatePhysics = () => {}; this.frameImage.setTint(0x552222);
         const maskShape = this.scene.make.graphics(); maskShape.fillStyle(0xffffff); maskShape.fillRect(-70, -100, 140, 200); 
         this.visuals.setMask(maskShape.createGeometryMask());
         const burnProgress = { val: 0 }; 
@@ -216,14 +121,7 @@ class Card extends Phaser.GameObjects.Container {
 
 // --- UI SCENE ---
 class UIScene extends Phaser.Scene {
-    constructor() { 
-        super({ key: 'UIScene', active: false }); 
-        this.cards=[]; 
-        this.handContainer=null; 
-        this.gradientBg=null; 
-        this.uiVfxGraphics=null; 
-        this.isHandDocked = false; // ★追加: ドック状態フラグ
-    }
+    constructor() { super({ key: 'UIScene', active: false }); this.cards=[]; this.handContainer=null; this.gradientBg=null; this.uiVfxGraphics=null; this.isHandDocked = false; }
     create() {
         const w = this.scale.width; const h = this.scale.height;
         if(window.createGradientTexture) window.createGradientTexture(this);
@@ -235,19 +133,11 @@ class UIScene extends Phaser.Scene {
     }
     onResize(gameSize) { const w = gameSize.width; const h = gameSize.height; if (this.gradientBg) { this.gradientBg.setPosition(w / 2, h); this.gradientBg.setDisplaySize(w, h * 0.25); } if (this.handContainer) { this.handContainer.setPosition(w / 2, h); } }
     update() { this.cards.forEach(card => { if (card.active) card.updatePhysics(); }); if(window.UIVFX) { window.UIVFX.update(); this.uiVfxGraphics.clear(); window.UIVFX.draw(this.uiVfxGraphics); } }
-    
     dealStart(types) { 
-        this.isHandDocked = false; // 配るときは通常位置
-        types.forEach((type, i) => { 
-            this.time.delayedCall(i * 150, () => { this.addCardToHand(type); }); 
-        }); 
-        
-        // ★配り終わった後、少し待ってからドックへ格納
-        this.time.delayedCall(150 * types.length + 1000, () => {
-            this.isHandDocked = true;
-        });
+        this.isHandDocked = false; 
+        types.forEach((type, i) => { this.time.delayedCall(i * 150, () => { this.addCardToHand(type); }); }); 
+        this.time.delayedCall(150 * types.length + 1000, () => { this.isHandDocked = true; });
     }
-    
     addCardToHand(type) { if (this.cards.length >= 5) return; const card = new Card(this, 0, 0, type); this.handContainer.add(card); this.cards.push(card); card.physX = 600; card.physY = 300; card.setPosition(card.physX, card.physY); this.arrangeHand(); }
     removeCard(cardToRemove) { this.cards = this.cards.filter(c => c !== cardToRemove); this.arrangeHand(); }
     arrangeHand() { const total = this.cards.length; const centerIdx = (total - 1) / 2; const spacing = 160; this.cards.forEach((card, i) => { const offset = i - centerIdx; card.baseX = offset * spacing; card.baseY = -120; }); }
@@ -391,21 +281,57 @@ class MainScene extends Phaser.Scene {
         const cursor = this.add.image(0, 0, 'cursor').setScale(1/window.HIGH_RES_SCALE).setAlpha(0).setVisible(false);
         this.tweens.add({ targets: cursor, scale: { from: 1/window.HIGH_RES_SCALE, to: 1.1/window.HIGH_RES_SCALE }, alpha: { from: 1, to: 0.5 }, yoyo: true, repeat: -1, duration: 800 });
         container.add([shadow, sprite, cursor]); 
-        container.sprite = sprite; container.cursor = cursor;
+        
+        // ★追加: ランク/スキル表示用テキスト
+        const rankText = this.add.text(10, -25, "", { 
+            fontSize: '10px', color: '#ffcc00', fontStyle: 'bold', 
+            stroke: '#000000', strokeThickness: 2 
+        }).setOrigin(0, 0.5);
+        
+        // HPゲージは hpGroup へ
         const hpBg = this.add.rectangle(0, 0, 20, 4, 0x000000).setOrigin(0, 0.5);
         const hpBar = this.add.rectangle(0, 0, 20, 4, 0x00ff00).setOrigin(0, 0.5);
         this.hpGroup.add(hpBg); this.hpGroup.add(hpBar);
-        container.hpBg = hpBg; container.hpBar = hpBar;
+        
+        // hpGroupにランクテキストも追加 (最前面表示のため)
+        this.hpGroup.add(rankText);
+
+        container.sprite = sprite; 
+        container.cursor = cursor;
+        container.hpBg = hpBg; 
+        container.hpBar = hpBar;
+        container.rankText = rankText; // 参照保持
+
         return container;
     }
 
     updateUnitVisual(container, u) {
-        const pos = Renderer.hexToPx(u.q, u.r); container.setPosition(pos.x, pos.y);
-        if(container.hpBg && container.hpBar) {
-            const barY = pos.y - 35; const barX = pos.x - 10; 
-            container.hpBg.setPosition(barX, barY); container.hpBar.setPosition(barX, barY);
-            const hpPct = u.hp / u.maxHp; container.hpBar.width = Math.max(0, 20 * hpPct); container.hpBar.fillColor = hpPct > 0.5 ? 0x00ff00 : 0xff0000;
+        const pos = Renderer.hexToPx(u.q, u.r); 
+        container.setPosition(pos.x, pos.y);
+        
+        if(container.hpBg && container.hpBar && container.rankText) {
+            const barY = pos.y - 35; 
+            const barX = pos.x - 10; 
+            
+            container.hpBg.setPosition(barX, barY);
+            container.hpBar.setPosition(barX, barY);
+            container.rankText.setPosition(barX + 22, barY); // バーの右側に配置
+            
+            const hpPct = u.hp / u.maxHp; 
+            container.hpBar.width = Math.max(0, 20 * hpPct); 
+            container.hpBar.fillColor = hpPct > 0.5 ? 0x00ff00 : 0xff0000;
+
+            // ★ランクとスキル数に応じたアイコン表示
+            let info = "";
+            if (u.rank > 0) info += RANKS[Math.min(u.rank, 5)] + " ";
+            if (u.skills.length > 0) {
+                // スキル数分だけ♦を表示 (最大3つくらいまで)
+                info += "♦".repeat(Math.min(u.skills.length, 3));
+                if (u.skills.length > 3) info += "+";
+            }
+            container.rankText.setText(info);
         }
+
         if(window.gameLogic.selectedUnit === u) { container.cursor.setVisible(true); container.cursor.setAlpha(1); } else { container.cursor.setVisible(false); }
     }
 
@@ -415,16 +341,37 @@ class MainScene extends Phaser.Scene {
         if(window.EnvSystem) window.EnvSystem.update(time);
         if(window.VFX) { window.VFX.update(); this.vfxGraphics.clear(); window.VFX.draw(this.vfxGraphics); }
         if (window.gameLogic.map.length > 0 && !this.mapGenerated) { this.createMap(); this.mapGenerated = true; }
+        
         const activeIds = new Set();
         window.gameLogic.units.forEach(u => { 
-            if(u.hp <= 0) return; activeIds.add(u.id); let visual = this.unitVisuals.get(u.id); 
-            if (!visual) { visual = this.createUnitVisual(u); this.unitVisuals.set(u.id, visual); this.unitGroup.add(visual); } 
+            if(u.hp <= 0) return; 
+            activeIds.add(u.id); 
+            let visual = this.unitVisuals.get(u.id); 
+            if (!visual) { 
+                visual = this.createUnitVisual(u); 
+                this.unitVisuals.set(u.id, visual); 
+                this.unitGroup.add(visual); 
+            } 
             this.updateUnitVisual(visual, u); 
+            
             const isSelected = (window.gameLogic.selectedUnit === u);
-            if (isSelected) { if (this.unitGroup.exists(visual)) { this.unitGroup.remove(visual); this.hpGroup.add(visual); } } 
-            else { if (this.hpGroup.exists(visual)) { this.hpGroup.remove(visual); this.unitGroup.add(visual); } }
+            if (isSelected) {
+                if (this.unitGroup.exists(visual)) { this.unitGroup.remove(visual); this.hpGroup.add(visual); }
+            } else {
+                if (this.hpGroup.exists(visual)) { this.hpGroup.remove(visual); this.unitGroup.add(visual); }
+            }
         });
-        for (const [id, visual] of this.unitVisuals) { if (!activeIds.has(id)) { if(visual.hpBg) visual.hpBg.destroy(); if(visual.hpBar) visual.hpBar.destroy(); visual.destroy(); this.unitVisuals.delete(id); } }
+        
+        for (const [id, visual] of this.unitVisuals) { 
+            if (!activeIds.has(id)) { 
+                if(visual.hpBg) visual.hpBg.destroy();
+                if(visual.hpBar) visual.hpBar.destroy();
+                if(visual.rankText) visual.rankText.destroy(); // テキストも削除
+                visual.destroy(); 
+                this.unitVisuals.delete(id); 
+            } 
+        }
+        
         this.overlayGraphics.clear();
         if (this.dragHighlightHex) { this.overlayGraphics.lineStyle(4, 0xffffff, 1.0); this.drawHexOutline(this.overlayGraphics, this.dragHighlightHex.q, this.dragHighlightHex.r); }
         const selected = window.gameLogic.selectedUnit;
