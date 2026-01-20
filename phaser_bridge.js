@@ -1,4 +1,4 @@
-/** * PHASER BRIDGE (Layers: Trees > Units > Ground, HP Bar Fix) */
+/** * PHASER BRIDGE (Use Layers for Depth Sorting & Perfect HP Bar) */
 let phaserGame = null;
 
 const Renderer = {
@@ -128,11 +128,10 @@ class UIScene extends Phaser.Scene {
 class MainScene extends Phaser.Scene {
     constructor() { 
         super({ key: 'MainScene' }); 
-        // グループ定義
         this.hexGroup = null; 
         this.unitGroup = null; 
-        this.treeGroup = null; // ★森林用レイヤー
-        this.hpGroup = null;   // ★HPゲージ用レイヤー（最前面）
+        this.treeGroup = null; 
+        this.hpGroup = null;   
         this.vfxGraphics = null; 
         this.overlayGraphics = null; 
         this.mapGenerated = false; 
@@ -151,11 +150,11 @@ class MainScene extends Phaser.Scene {
     create() {
         this.cameras.main.setBackgroundColor('#0b0e0a'); 
         
-        // ★レイヤー順序の定義 (数字が大きいほど手前)
-        this.hexGroup = this.add.group();   // Depth 0 (Ground)
-        this.unitGroup = this.add.group();  // Depth 1 (Units)
-        this.treeGroup = this.add.group();  // Depth 2 (Trees covers Units)
-        this.hpGroup = this.add.group();    // Depth 10 (HP Bars above everything)
+        // ★重要: GroupではなくLayerを使用 (確実な深度管理)
+        this.hexGroup = this.add.layer();   // Depth 0
+        this.unitGroup = this.add.layer();  // Depth 1
+        this.treeGroup = this.add.layer();  // Depth 2 (木がユニットより手前)
+        this.hpGroup = this.add.layer();    // Depth 10 (HPゲージ最前面)
         
         this.hexGroup.setDepth(0);
         this.unitGroup.setDepth(1);
@@ -201,7 +200,8 @@ class MainScene extends Phaser.Scene {
     
     createMap() { 
         const map = window.gameLogic.map; 
-        this.unitGroup.clear(true, true); this.treeGroup.clear(true, true); this.hpGroup.clear(true, true);
+        // Layerなので removeAll を使用
+        this.unitGroup.removeAll(true); this.treeGroup.removeAll(true); this.hpGroup.removeAll(true);
         this.unitVisuals.clear();
         for(let q=0; q<MAP_W; q++) { 
             for(let r=0; r<MAP_H; r++) { 
@@ -209,7 +209,7 @@ class MainScene extends Phaser.Scene {
                 const hex = this.add.image(pos.x, pos.y, 'hex_base').setScale(1/window.HIGH_RES_SCALE); 
                 let tint = 0x555555; if(t.id===0)tint=0x5a5245; else if(t.id===1)tint=0x425030; else if(t.id===2)tint=0x222e1b; else if(t.id===4)tint=0x504540; else if(t.id===5) { tint=0x303840; if(window.EnvSystem) window.EnvSystem.registerWater(hex, pos.y, q, r, this.hexGroup); }
                 
-                // ★修正: 木(2)は treeGroup に追加、それ以外の草(1)は hexGroup に追加
+                // 木は treeGroup (Layer) に追加
                 if(window.EnvSystem) { 
                     if(t.id === 1) window.EnvSystem.spawnGrass(this, this.hexGroup, pos.x, pos.y); 
                     if(t.id === 2) window.EnvSystem.spawnTrees(this, this.treeGroup, pos.x, pos.y); 
@@ -220,7 +220,7 @@ class MainScene extends Phaser.Scene {
         this.centerMap(); 
     }
     
-    // ★HPゲージ分離版
+    // ★HPゲージ修正版
     createUnitVisual(u) {
         const container = this.add.container(0, 0);
         let sprite;
@@ -246,16 +246,13 @@ class MainScene extends Phaser.Scene {
         container.sprite = sprite; 
         container.cursor = cursor;
 
-        // ★HPゲージの生成 (hpGroupに追加して分離)
-        // 背景バー: 中央揃え
-        const hpBg = this.add.rectangle(0, 0, 20, 4, 0x000000);
-        // 実ゲージ: 左揃え (OriginX=0)
+        // ★HPゲージ: 背景も中身も「左端基準(Origin=0)」で統一し、HPGroup (最前面Layer) に置く
+        const hpBg = this.add.rectangle(0, 0, 20, 4, 0x000000).setOrigin(0, 0.5);
         const hpBar = this.add.rectangle(0, 0, 20, 4, 0x00ff00).setOrigin(0, 0.5);
         
         this.hpGroup.add(hpBg);
         this.hpGroup.add(hpBar);
         
-        // 参照をコンテナに持たせておく（追従用）
         container.hpBg = hpBg;
         container.hpBar = hpBar;
 
@@ -266,12 +263,13 @@ class MainScene extends Phaser.Scene {
         const pos = Renderer.hexToPx(u.q, u.r); 
         container.setPosition(pos.x, pos.y);
         
-        // ★HPゲージの追従
+        // ★HPゲージ追従
         if(container.hpBg && container.hpBar) {
             const barY = pos.y - 35;
-            container.hpBg.setPosition(pos.x, barY);
-            // 左端へオフセット (-10px)
-            container.hpBar.setPosition(pos.x - 10, barY);
+            const barX = pos.x - 10; // 幅20の半分だけ左にずらす
+            
+            container.hpBg.setPosition(barX, barY);
+            container.hpBar.setPosition(barX, barY);
             
             const hpPct = u.hp / u.maxHp; 
             container.hpBar.width = Math.max(0, 20 * hpPct); 
@@ -301,7 +299,7 @@ class MainScene extends Phaser.Scene {
             this.updateUnitVisual(visual, u); 
         });
         
-        // 削除処理 (HPバーも忘れずに消す)
+        // 削除処理
         for (const [id, visual] of this.unitVisuals) { 
             if (!activeIds.has(id)) { 
                 if(visual.hpBg) visual.hpBg.destroy();
