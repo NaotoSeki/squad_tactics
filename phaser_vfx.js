@@ -1,4 +1,4 @@
-/** * PHASER VFX SPECIALIST (Stable Geometric Rollback) */
+/** * PHASER VFX SPECIALIST (Fixed: Added addSmoke) */
 window.HIGH_RES_SCALE = 4;
 
 // ---------------------------------------------------------
@@ -38,33 +38,23 @@ window.createGradientTexture = function(scene) {
 };
 
 // ---------------------------------------------------------
-//  1. 環境システム (素材生成)
+//  1. 環境システム
 // ---------------------------------------------------------
 window.EnvSystem = {
     waterHexes: [], forestTrees: [], grassBlades: [],
     
     preload(scene) {
-        // ★重要: ここでユニットの形（丸と四角）を作る
         const g = scene.make.graphics({x:0, y:0, add:false}); const S = HEX_SIZE * window.HIGH_RES_SCALE; 
-        
-        // ヘックス
-        g.lineStyle(0.1 * window.HIGH_RES_SCALE, 0x000000, 0.2); g.fillStyle(0xffffff, 1); 
+        g.lineStyle(0.1 * window.HIGH_RES_SCALE, 0x000000, 0.2); 
+        g.fillStyle(0xffffff, 1); 
         g.beginPath(); for(let i=0; i<6; i++) { const a = Math.PI/180 * 60 * i; g.lineTo(S + S * Math.cos(a), S + S * Math.sin(a)); } g.closePath(); 
         g.fillPath(); g.strokePath(); g.generateTexture('hex_base', S*2, S*2);
         
-        // 環境パーツ
         g.clear(); g.fillStyle(0xffffff, 0.4); g.fillEllipse(15, 5, 12, 2); g.generateTexture('wave_line', 30, 10);
         g.clear(); g.fillStyle(0x1a1a10, 1); g.fillRect(38, 70, 4, 20); g.fillStyle(0x1e3a1e, 1); g.fillTriangle(40, 20, 25, 80, 55, 80); g.fillStyle(0x2a4d2a, 1); g.fillTriangle(40, 5, 30, 50, 50, 50); g.generateTexture('tree', 80, 100);
         g.clear(); g.fillStyle(0x668855, 1); g.fillRect(0, 0, 1, 14); g.generateTexture('grass_blade', 2, 14);
-        
-        // ★ユニット (Player: 丸, Enemy: 四角)
-        g.clear(); g.fillStyle(0xffffff, 1); g.fillCircle(16*window.HIGH_RES_SCALE, 16*window.HIGH_RES_SCALE, 12*window.HIGH_RES_SCALE); 
-        g.generateTexture('unit_player', 32*window.HIGH_RES_SCALE, 32*window.HIGH_RES_SCALE);
-        
-        g.clear(); g.fillStyle(0xffffff, 1); g.fillRect(4*window.HIGH_RES_SCALE, 4*window.HIGH_RES_SCALE, 24*window.HIGH_RES_SCALE, 24*window.HIGH_RES_SCALE); 
-        g.generateTexture('unit_enemy', 32*window.HIGH_RES_SCALE, 32*window.HIGH_RES_SCALE);
-        
-        // カーソルなど
+        g.clear(); g.fillStyle(0x00ff00, 1); g.fillCircle(16*window.HIGH_RES_SCALE, 16*window.HIGH_RES_SCALE, 12*window.HIGH_RES_SCALE); g.generateTexture('unit_player', 32*window.HIGH_RES_SCALE, 32*window.HIGH_RES_SCALE);
+        g.clear(); g.fillStyle(0xff0000, 1); g.fillRect(4*window.HIGH_RES_SCALE, 4*window.HIGH_RES_SCALE, 24*window.HIGH_RES_SCALE, 24*window.HIGH_RES_SCALE); g.generateTexture('unit_enemy', 32*window.HIGH_RES_SCALE, 32*window.HIGH_RES_SCALE);
         g.clear(); g.lineStyle(3*window.HIGH_RES_SCALE, 0x00ff00, 1); g.strokeCircle(32*window.HIGH_RES_SCALE, 32*window.HIGH_RES_SCALE, 28*window.HIGH_RES_SCALE); g.generateTexture('cursor', 64*window.HIGH_RES_SCALE, 64*window.HIGH_RES_SCALE);
         g.clear(); g.fillStyle(0x223322, 1); g.fillEllipse(15, 30, 10, 25); g.generateTexture('bomb_body', 30, 60);
     },
@@ -74,7 +64,6 @@ window.EnvSystem = {
         this.forestTrees.forEach(t => { if(t.sprite) t.sprite.destroy(); }); this.forestTrees = [];
         this.grassBlades.forEach(g => { if(g.sprite) g.sprite.destroy(); }); this.grassBlades = []; 
     },
-    // ... (registerWater, spawnGrass, spawnTrees, update は以前と同じ) ...
     registerWater(hexSprite, baseY, q, r, hexGroup) {
         const scene = hexSprite.scene;
         const w1 = scene.add.image(hexSprite.x + (Math.random()-0.5)*20, hexSprite.y + (Math.random()-0.5)*15, 'wave_line').setScale(0.8);
@@ -140,7 +129,20 @@ window.VFX = {
         const startY = ty - 800; const bomb = scene.add.sprite(tx, startY, 'bomb_body').setDepth(2000).setScale(1.5);
         scene.tweens.add({ targets: bomb, y: ty, duration: 400, ease: 'Quad.In', onComplete: () => { if(window.Sfx) window.Sfx.play('boom'); bomb.destroy(); this.requestShake(15); this.addExplosion(tx, ty, "#fa0", 30); if(window.gameLogic && window.gameLogic.applyBombardment) window.gameLogic.applyBombardment(hex); } });
     },
-    // ★パーティクル爆発のみにする
+    // ★追加: ユニット配置時の煙
+    addSmoke(x, y) {
+        for(let i=0; i<10; i++) {
+            const color = this.smokeColors[Math.floor(Math.random() * this.smokeColors.length)];
+            this.add({
+                x: x + (Math.random()-0.5)*10, y: y + (Math.random()-0.5)*10,
+                vx: (Math.random()-0.5)*2, vy: -1 - Math.random(),
+                life: 30 + Math.random()*30, maxLife: 60,
+                color: color, size: 6 + Math.random()*6,
+                type: 'smoke_heavy', angle: Math.random()*6, angVel: (Math.random()-0.5)*0.1
+            });
+        }
+    },
+    addRealExplosion(x, y) { this.addExplosion(x, y, "#fa0", 30); }, // 互換性のため
     addExplosion(x, y, c, n) { 
         this.requestShake(3); 
         for(let i=0; i<n; i++) { 
