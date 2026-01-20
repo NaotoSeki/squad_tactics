@@ -1,4 +1,4 @@
-/** LOGIC (Card Usage Limit: Max 2 per Sector) */
+/** LOGIC (Skill Stack Display in Sidebar) */
 class Game {
     constructor() {
         this.units=[]; this.map=[]; this.setupSlots=[]; this.state='SETUP'; 
@@ -8,7 +8,7 @@ class Game {
         this.hoverHex=null;
         this.isAuto=false; this.isProcessingTurn = false; this.sector = 1;
         this.enemyAI = 'AGGRESSIVE'; 
-        this.cardsUsed = 0; // ★追加: 使用済みカード枚数
+        this.cardsUsed = 0; 
         this.initDOM(); this.initSetup();
     }
     
@@ -66,7 +66,7 @@ class Game {
         Renderer.resize();
         
         this.selectedUnit = null; this.reachableHexes = []; this.attackLine = []; this.aimTargetUnit = null; this.path = [];
-        this.cardsUsed = 0; // ★リセット
+        this.cardsUsed = 0; 
         
         this.units = this.units.filter(u => u.team === 'player' && u.hp > 0);
         this.units.forEach(u => { u.q = -999; u.r = -999; });
@@ -183,19 +183,14 @@ class Game {
         if(this.map[targetHex.q][targetHex.r].id === 5) { this.log("配置不可: 水上には配置できません"); return false; }
         const existing = this.units.find(u => u.q === targetHex.q && u.r === targetHex.r && u.hp > 0);
         if (existing) { this.log("配置不可: ユニットが既に存在します"); return false; }
-        
-        // ★追加: カード使用制限チェック
         if (this.cardsUsed >= 2) { this.log("配置不可: 指揮コスト上限(2/2)に達しています"); return false; }
-        
         return true;
     }
     deployUnit(targetHex, cardType) {
         if(!this.checkDeploy(targetHex)) return;
         this.spawnUnit('player', cardType, targetHex.q, targetHex.r);
-        
-        this.cardsUsed++; // ★カウントアップ
+        this.cardsUsed++; 
         this.log(`増援到着: ${UNITS[cardType].name} (残コスト:${2-this.cardsUsed})`);
-        
         if(window.VFX) { const pos = Renderer.hexToPx(targetHex.q, targetHex.r); window.VFX.addSmoke(pos.x, pos.y); }
         this.updateSidebar();
     }
@@ -276,7 +271,6 @@ class Game {
     }
     checkReactionFire(u){ this.units.filter(e=>e.team!==u.team&&e.hp>0&&e.def.isTank&&this.hexDist(u,e)<=2).forEach(t=>{ this.log(`!! 防御射撃: ${t.def.name}->${u.def.name}`); u.hp-=15; if(window.VFX)VFX.addExplosion(Renderer.hexToPx(u.q,u.r).x,Renderer.hexToPx(u.q,u.r).y,"#fa0",5); if(window.Sfx)Sfx.play('mg'); if(u.hp<=0&&!u.deadProcessed){u.deadProcessed=true;this.log(`${u.def.name} 撃破`);if(window.Sfx)Sfx.play('death');} }); }
     swapWeapon(){ if(this.selectedUnit&&this.selectedUnit.ap>=1){ const u=this.selectedUnit; u.ap--; u.curWpn=(u.curWpn===u.def.wpn)?u.def.alt:u.def.wpn; if(window.Sfx)Sfx.play('swap'); this.log(`武装変更: ${WPNS[u.curWpn].name}`); this.refreshUnitState(u); } }
-    
     async actionAttack(a,d){ 
         if(a.ap<2){this.log("AP不足");return;} const w=WPNS[a.curWpn]; if(this.hexDist(a,d)>w.rng){this.log("射程外");return;} 
         a.ap-=2; this.state='ANIM'; 
@@ -326,6 +320,43 @@ class Game {
     log(m){const c=document.getElementById('log-container'),d=document.createElement('div');d.className='log-entry';d.innerText=`> ${m}`;c.appendChild(d);c.scrollTop=c.scrollHeight;}
     showContext(mx,my){const p=Renderer.pxToHex(mx,my),m=document.getElementById('context-menu'),u=this.getUnit(p.q,p.r),t=this.isValidHex(p.q,p.r)?this.map[p.q][p.r]:null; let h=""; if(u)h+=`<div style="color:#0af;font-weight:bold">${u.def.name}</div>HP:${u.hp}<br>AP:${u.ap}`;else if(t)h+=`${t.name}<br>C:${t.cost} D:${t.cover}%`; m.style.pointerEvents='auto'; h+=`<button onclick="gameLogic.endTurn();document.getElementById('context-menu').style.display='none';" style="margin-top:10px;border-color:#d44;background:#311;">TURN END</button>`; m.innerHTML=h; m.style.display='block'; m.style.left=(mx+5)+'px'; m.style.top=(my+5)+'px';}
     getStatus(u){if(u.hp<=0)return "DEAD";const r=u.hp/u.maxHp;if(r>0.8)return "NORMAL";if(r>0.5)return "DAMAGED";return "CRITICAL";}
-    updateSidebar(){const ui=document.getElementById('unit-info'),u=this.selectedUnit;if(u){const w=WPNS[u.curWpn],s=this.getStatus(u); ui.innerHTML=`<h2 style="color:#d84;margin:0 0 5px 0;">${u.def.name}</h2><div style="font-size:10px;color:#888;">STATUS:<span style="color:${u.hp/u.maxHp<0.3?'#f55':'#5f5'}">${s}</span></div>HP:${u.hp}/${u.maxHp} AP:${u.ap}/${u.maxAp}<br><div id="btn-weapon" onclick="gameLogic.swapWeapon()"><div><small>Main:</small> ${w.name}</div><div class="ap-cost">SWAP(1)</div></div><div>Rng:${w.rng} Dmg:${w.dmg}</div><div style="margin-top:15px;"><button class="btn-stance ${u.stance==='stand'?'active-stance':''}" onclick="gameLogic.setStance('stand')">立</button><button class="btn-stance ${u.stance==='crouch'?'active-stance':''}" onclick="gameLogic.setStance('crouch')">屈</button><button class="btn-stance ${u.stance==='prone'?'active-stance':''}" onclick="gameLogic.setStance('prone')">伏</button></div><button onclick="gameLogic.endTurn()" class="${this.state!=='PLAY'?'disabled':''}" style="background:#522;border-color:#d44;margin-top:20px;">TURN END</button>`; if(u.def.isTank)document.querySelectorAll('.btn-stance').forEach(b=>b.classList.add('disabled'));}else ui.innerHTML=`<div style="text-align:center;color:#555;margin-top:80px;">// NO SIGNAL //</div>`;}
+    
+    // ★重要: スキルバッジ生成ロジックを追加
+    updateSidebar(){
+        const ui=document.getElementById('unit-info'),u=this.selectedUnit;
+        if(u){
+            const w=WPNS[u.curWpn], s=this.getStatus(u);
+            
+            // スキル集計
+            const skillCounts = {};
+            u.skills.forEach(sk => { skillCounts[sk] = (skillCounts[sk] || 0) + 1; });
+            let skillHtml = "";
+            for (const [sk, count] of Object.entries(skillCounts)) {
+                if (SKILLS[sk]) {
+                    skillHtml += `<div style="display:inline-block; background:#044; color:#0ff; font-size:10px; padding:2px 5px; margin:2px; border-radius:3px;">${SKILLS[sk].name} x${count}</div>`;
+                }
+            }
+
+            ui.innerHTML=`
+                <h2 style="color:#d84;margin:0 0 5px 0;">${u.def.name}</h2>
+                <div style="font-size:10px;color:#888;">STATUS:<span style="color:${u.hp/u.maxHp<0.3?'#f55':'#5f5'}">${s}</span></div>
+                HP:${u.hp}/${u.maxHp} AP:${u.ap}/${u.maxAp}<br>
+                <div style="margin:5px 0;">${skillHtml}</div>
+                <div id="btn-weapon" onclick="gameLogic.swapWeapon()">
+                    <div><small>Main:</small> ${w.name}</div><div class="ap-cost">SWAP(1)</div>
+                </div>
+                <div>Rng:${w.rng} Dmg:${w.dmg}</div>
+                <div style="margin-top:15px;">
+                    <button class="btn-stance ${u.stance==='stand'?'active-stance':''}" onclick="gameLogic.setStance('stand')">立</button>
+                    <button class="btn-stance ${u.stance==='crouch'?'active-stance':''}" onclick="gameLogic.setStance('crouch')">屈</button>
+                    <button class="btn-stance ${u.stance==='prone'?'active-stance':''}" onclick="gameLogic.setStance('prone')">伏</button>
+                </div>
+                <button onclick="gameLogic.endTurn()" class="${this.state!=='PLAY'?'disabled':''}" style="background:#522;border-color:#d44;margin-top:20px;">TURN END</button>
+            `;
+            if(u.def.isTank) document.querySelectorAll('.btn-stance').forEach(b=>b.classList.add('disabled'));
+        } else {
+            ui.innerHTML=`<div style="text-align:center;color:#555;margin-top:80px;">// NO SIGNAL //</div>`;
+        }
+    }
 }
 window.gameLogic = new Game();
