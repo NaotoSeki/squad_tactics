@@ -1,4 +1,4 @@
-/** * PHASER BRIDGE (Added Decor Layer for Grass/Waves) */
+/** * PHASER BRIDGE (Added Drop Shadows for Units) */
 let phaserGame = null;
 
 const Renderer = {
@@ -123,13 +123,13 @@ class UIScene extends Phaser.Scene {
 }
 
 // ---------------------------------------------------------
-//  MAIN SCENE (Layers & HP Fix)
+//  MAIN SCENE (Shadows, Layers, HP Fix)
 // ---------------------------------------------------------
 class MainScene extends Phaser.Scene {
     constructor() { 
         super({ key: 'MainScene' }); 
         this.hexGroup = null; 
-        this.decorGroup = null; // ★追加: 草や波のレイヤー
+        this.decorGroup = null; 
         this.unitGroup = null; 
         this.treeGroup = null; 
         this.hpGroup = null;   
@@ -151,12 +151,12 @@ class MainScene extends Phaser.Scene {
     create() {
         this.cameras.main.setBackgroundColor('#0b0e0a'); 
         
-        // ★レイヤー順序の定義
-        this.hexGroup = this.add.layer();   // Depth 0 (地面)
-        this.decorGroup = this.add.layer(); // Depth 0.5 (草・波) ★新設
-        this.unitGroup = this.add.layer();  // Depth 1 (ユニット)
-        this.treeGroup = this.add.layer();  // Depth 2 (木)
-        this.hpGroup = this.add.layer();    // Depth 10 (HPゲージ/選択ユニット)
+        // Layers
+        this.hexGroup = this.add.layer();   
+        this.decorGroup = this.add.layer(); 
+        this.unitGroup = this.add.layer();  
+        this.treeGroup = this.add.layer();  
+        this.hpGroup = this.add.layer();    
         
         this.hexGroup.setDepth(0);
         this.decorGroup.setDepth(0.5);
@@ -184,7 +184,7 @@ class MainScene extends Phaser.Scene {
         this.input.on('pointermove', (p) => { if (Renderer.isCardDragging) return; if (p.isDown && Renderer.isMapDragging) { const zoom = this.cameras.main.zoom; this.cameras.main.scrollX -= (p.x - p.prevPosition.x) / zoom; this.cameras.main.scrollY -= (p.y - p.prevPosition.y) / zoom; } if(!Renderer.isMapDragging && window.gameLogic) window.gameLogic.handleHover(Renderer.pxToHex(p.x, p.y)); }); 
         this.input.mouse.disableContextMenu();
 
-        // ESCキーで選択解除
+        // ESC Selection Clear
         this.input.keyboard.on('keydown-ESC', () => {
             if(window.gameLogic && window.gameLogic.clearSelection) {
                 window.gameLogic.clearSelection();
@@ -211,30 +211,20 @@ class MainScene extends Phaser.Scene {
     
     createMap() { 
         const map = window.gameLogic.map; 
-        // 全レイヤーをクリア
         this.hexGroup.removeAll(true);
-        this.decorGroup.removeAll(true); // ★
+        this.decorGroup.removeAll(true); 
         this.unitGroup.removeAll(true); 
         this.treeGroup.removeAll(true); 
         this.hpGroup.removeAll(true);
-        
         this.unitVisuals.clear();
         for(let q=0; q<MAP_W; q++) { 
             for(let r=0; r<MAP_H; r++) { 
                 const t = map[q][r]; if(t.id===-1)continue; const pos = Renderer.hexToPx(q, r); 
                 const hex = this.add.image(pos.x, pos.y, 'hex_base').setScale(1/window.HIGH_RES_SCALE); 
                 let tint = 0x555555; if(t.id===0)tint=0x5a5245; else if(t.id===1)tint=0x425030; else if(t.id===2)tint=0x222e1b; else if(t.id===4)tint=0x504540; 
-                
-                else if(t.id===5) { 
-                    tint=0x303840; 
-                    // ★水面の波は decorGroup へ
-                    if(window.EnvSystem) window.EnvSystem.registerWater(hex, pos.y, q, r, this.decorGroup); 
-                }
-                
+                else if(t.id===5) { tint=0x303840; if(window.EnvSystem) window.EnvSystem.registerWater(hex, pos.y, q, r, this.decorGroup); }
                 if(window.EnvSystem) { 
-                    // ★草は decorGroup へ
                     if(t.id === 1) window.EnvSystem.spawnGrass(this, this.decorGroup, pos.x, pos.y); 
-                    // 木は treeGroup (手前) へ
                     if(t.id === 2) window.EnvSystem.spawnTrees(this, this.treeGroup, pos.x, pos.y); 
                 }
                 hex.setTint(tint); this.hexGroup.add(hex); 
@@ -243,8 +233,13 @@ class MainScene extends Phaser.Scene {
         this.centerMap(); 
     }
     
+    // ★影の追加処理
     createUnitVisual(u) {
         const container = this.add.container(0, 0);
+        
+        // ★影 (Shadow)
+        const shadow = this.add.ellipse(0, 8, 20, 10, 0x000000, 0.5);
+        
         let sprite;
         if (u.def.name === "Rifle Squad") {
             sprite = this.add.sprite(0, -10, 'soldier_sheet');
@@ -256,6 +251,10 @@ class MainScene extends Phaser.Scene {
             sprite.setScale(0.5); 
             sprite.play('tank_idle');
             if(u.team === 'player') sprite.setTint(0xccddee); else sprite.setTint(0xffaaaa);
+            
+            // 戦車は影を大きく
+            shadow.setPosition(0, 10);
+            shadow.setSize(40, 20);
         } else {
             sprite = this.add.sprite(0, 0, u.team==='player'?'unit_player':'unit_enemy').setScale(1/window.HIGH_RES_SCALE); 
             if(u.team==='player') sprite.setTint(0x6688aa); else sprite.setTint(0xcc6655); 
@@ -264,10 +263,13 @@ class MainScene extends Phaser.Scene {
         const cursor = this.add.image(0, 0, 'cursor').setScale(1/window.HIGH_RES_SCALE).setAlpha(0).setVisible(false);
         this.tweens.add({ targets: cursor, scale: { from: 1/window.HIGH_RES_SCALE, to: 1.1/window.HIGH_RES_SCALE }, alpha: { from: 1, to: 0.5 }, yoyo: true, repeat: -1, duration: 800 });
         
-        container.add([sprite, cursor]); 
+        // ★追加順: 影 -> スプライト -> カーソル
+        container.add([shadow, sprite, cursor]); 
+        
         container.sprite = sprite; 
         container.cursor = cursor;
 
+        // HPバー
         const hpBg = this.add.rectangle(0, 0, 20, 4, 0x000000).setOrigin(0, 0.5);
         const hpBar = this.add.rectangle(0, 0, 20, 4, 0x00ff00).setOrigin(0, 0.5);
         
@@ -317,7 +319,6 @@ class MainScene extends Phaser.Scene {
             } 
             this.updateUnitVisual(visual, u); 
             
-            // 選択中のユニットだけ hpGroup (最前面) に移動
             const isSelected = (window.gameLogic.selectedUnit === u);
             if (isSelected) {
                 if (this.unitGroup.exists(visual)) {
