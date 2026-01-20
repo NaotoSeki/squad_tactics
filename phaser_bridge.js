@@ -1,4 +1,4 @@
-/** * PHASER BRIDGE (Directional Shooting & Slower Idle) */
+/** * PHASER BRIDGE (Tank Sprite Added: Idling Vibration) */
 let phaserGame = null;
 
 // ---------------------------------------------------------
@@ -51,8 +51,6 @@ const Renderer = {
         for (let card of ui.cards) { const dx = Math.abs(x - card.x); const dy = Math.abs(y - card.y); if (dx < 70 && dy < 100) return true; } 
         return false; 
     },
-    
-    // ★追加: 攻撃アニメ再生リクエスト (Logicから呼ばれる)
     playAttackAnim(attacker, target) {
         const main = this.game.scene.getScene('MainScene');
         if (main) main.triggerAttackAnimation(attacker, target);
@@ -170,7 +168,7 @@ class UIScene extends Phaser.Scene {
 }
 
 // ---------------------------------------------------------
-//  MAIN SCENE (Sprite: Directional Attack)
+//  MAIN SCENE (Tank & Infantry Sprites)
 // ---------------------------------------------------------
 class MainScene extends Phaser.Scene {
     constructor() { 
@@ -184,11 +182,18 @@ class MainScene extends Phaser.Scene {
     preload() { 
         if(window.EnvSystem) window.EnvSystem.preload(this);
         
-        // スプライトシート読み込み
+        // 歩兵スプライト (128x128)
         this.load.spritesheet('soldier_sheet', 'asset/soldier_sheet_1.png', { 
             frameWidth: 128, 
             frameHeight: 128 
         });
+        
+        // ★重要: 戦車スプライト (128x128)
+        this.load.spritesheet('tank_sheet', 'asset/tank_sheet_1.png', { 
+            frameWidth: 128, 
+            frameHeight: 128 
+        });
+        
         this.load.image('card_frame', 'asset/card_frame.png');
     }
 
@@ -200,35 +205,25 @@ class MainScene extends Phaser.Scene {
         if(window.EnvSystem) window.EnvSystem.clear();
         this.scene.launch('UIScene'); 
 
-        // --- アニメーション定義 ---
-        
-        // 待機 (Idle 1 + Idle 2) - ゆっくり (8fps)
+        // --- Infantry Anims ---
         if (!this.anims.exists('soldier_idle')) {
-            this.anims.create({
-                key: 'soldier_idle',
-                frames: this.anims.generateFrameNumbers('soldier_sheet', { start: 0, end: 15 }),
-                frameRate: 8,
-                repeat: -1
-            });
+            this.anims.create({ key: 'soldier_idle', frames: this.anims.generateFrameNumbers('soldier_sheet', { start: 0, end: 15 }), frameRate: 8, repeat: -1 });
         }
-        
-        // 攻撃 右 (Row 2: 16-23) - ササっと (15fps)
         if (!this.anims.exists('soldier_shoot_right')) {
-            this.anims.create({
-                key: 'soldier_shoot_right',
-                frames: this.anims.generateFrameNumbers('soldier_sheet', { start: 16, end: 23 }),
-                frameRate: 15,
-                repeat: 0 // 1回再生
-            });
+            this.anims.create({ key: 'soldier_shoot_right', frames: this.anims.generateFrameNumbers('soldier_sheet', { start: 16, end: 23 }), frameRate: 15, repeat: 0 });
+        }
+        if (!this.anims.exists('soldier_shoot_left')) {
+            this.anims.create({ key: 'soldier_shoot_left', frames: this.anims.generateFrameNumbers('soldier_sheet', { start: 24, end: 31 }), frameRate: 15, repeat: 0 });
         }
 
-        // 攻撃 左 (Row 3: 24-31) - ササっと (15fps)
-        if (!this.anims.exists('soldier_shoot_left')) {
+        // ★重要: Tank Anim (Vibration)
+        // 0をベースに、5,6,7を挟み込んでエンジンの振動を表現
+        if (!this.anims.exists('tank_idle')) {
             this.anims.create({
-                key: 'soldier_shoot_left',
-                frames: this.anims.generateFrameNumbers('soldier_sheet', { start: 24, end: 31 }),
-                frameRate: 15,
-                repeat: 0 // 1回再生
+                key: 'tank_idle',
+                frames: this.anims.generateFrameNumbers('tank_sheet', { frames: [0, 5, 0, 6, 0, 7] }),
+                frameRate: 15, // 小刻みに揺らすため少し速く
+                repeat: -1
             });
         }
 
@@ -239,31 +234,16 @@ class MainScene extends Phaser.Scene {
         this.input.mouse.disableContextMenu();
     }
 
-    // ★重要: 攻撃アニメーション再生メソッド (Logicから呼ばれる)
     triggerAttackAnimation(attacker, target) {
-        // 歩兵でなければ無視
         if (attacker.def.name !== "Rifle Squad") return;
-
         const visual = this.unitVisuals.get(attacker.id);
         if (!visual || !visual.sprite) return;
-
-        // 位置関係判定 (X座標)
         const attackerPx = Renderer.hexToPx(attacker.q, attacker.r);
         const targetPx = Renderer.hexToPx(target.q, target.r);
-        
         const isRight = targetPx.x >= attackerPx.x;
         const animKey = isRight ? 'soldier_shoot_right' : 'soldier_shoot_left';
-
-        // アニメ再生
         visual.sprite.play(animKey);
-        
-        // 再生終わったら待機に戻る (onceで1回だけリスナー登録)
-        visual.sprite.once('animationcomplete', () => {
-            // まだ生存していればアイドルに戻す
-            if (visual.scene) { 
-                visual.sprite.play('soldier_idle');
-            }
-        });
+        visual.sprite.once('animationcomplete', () => { if (visual.scene) visual.sprite.play('soldier_idle'); });
     }
 
     playExplosion(x, y) { if(window.VFX) window.VFX.addExplosion(x, y, "#fa0", 20); }
@@ -291,14 +271,24 @@ class MainScene extends Phaser.Scene {
         const container = this.add.container(0, 0);
         let sprite;
 
+        // ★ユニット表示分岐
         if (u.def.name === "Rifle Squad") {
             sprite = this.add.sprite(0, -10, 'soldier_sheet');
             sprite.setScale(0.5); 
             sprite.play('soldier_idle');
             if(u.team === 'player') sprite.setTint(0xeeeeff); else sprite.setTint(0xffaaaa);
-        } else {
+        } 
+        else if (u.def.isTank) {
+            // 戦車の場合
+            sprite = this.add.sprite(0, -10, 'tank_sheet');
+            sprite.setScale(0.5); // 128px -> 64px
+            sprite.play('tank_idle');
+            // 戦車っぽい色味
+            if(u.team === 'player') sprite.setTint(0xccddee); else sprite.setTint(0xffaaaa);
+        }
+        else {
+            // その他（Sniper, Heavyなど）
             sprite = this.add.sprite(0, 0, u.team==='player'?'unit_player':'unit_enemy').setScale(1/window.HIGH_RES_SCALE); 
-            if(u.def.isTank) sprite.setTint(0x888888); 
             if(u.team==='player') sprite.setTint(0x6688aa); else sprite.setTint(0xcc6655); 
         }
         
