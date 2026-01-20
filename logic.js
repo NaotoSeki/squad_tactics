@@ -1,4 +1,17 @@
-/** LOGIC (Skill Stack Display in Sidebar) */
+/** LOGIC (Skill Themes & Colored Sidebar Badges) */
+
+// ★スキルごとのテーマカラーとアイコン定義
+window.SKILL_STYLES = {
+    "Precision": { col: "#ff5555", icon: "⌖", name: "精密" }, // 赤: 攻撃
+    "HighPower": { col: "#ffaa00", icon: "⚡", name: "火力" }, // 橙: 威力
+    "Armor":     { col: "#4488ff", icon: "🛡", name: "装甲" }, // 青: 防御
+    "Mechanic":  { col: "#44cc44", icon: "✚", name: "修理" }, // 緑: 回復
+    "Radio":     { col: "#ffee44", icon: "📶", name: "通信" }, // 黄: 補助
+    "Ambush":    { col: "#cc44cc", icon: "☾", name: "奇襲" }, // 紫: 特殊
+    "AmmoBox":   { col: "#885522", icon: "▧", name: "弾薬" }, // 茶: リソース
+    "Hero":      { col: "#ffffff", icon: "★", name: "英雄" }  // 白/金: 特別
+};
+
 class Game {
     constructor() {
         this.units=[]; this.map=[]; this.setupSlots=[]; this.state='SETUP'; 
@@ -332,8 +345,9 @@ class Game {
             u.skills.forEach(sk => { skillCounts[sk] = (skillCounts[sk] || 0) + 1; });
             let skillHtml = "";
             for (const [sk, count] of Object.entries(skillCounts)) {
-                if (SKILLS[sk]) {
-                    skillHtml += `<div style="display:inline-block; background:#044; color:#0ff; font-size:10px; padding:2px 5px; margin:2px; border-radius:3px;">${SKILLS[sk].name} x${count}</div>`;
+                if (window.SKILL_STYLES && window.SKILL_STYLES[sk]) {
+                    const st = window.SKILL_STYLES[sk];
+                    skillHtml += `<div style="display:inline-block; background:${st.col}; color:#000; font-weight:bold; font-size:10px; padding:2px 5px; margin:2px; border-radius:3px; text-shadow:none;">${st.icon} ${st.name} x${count}</div>`;
                 }
             }
 
