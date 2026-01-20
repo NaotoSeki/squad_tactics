@@ -181,7 +181,7 @@ class MainScene extends Phaser.Scene {
         if (!this.anims.exists('explosion_anim')) {
             this.anims.create({
                 key: 'explosion_anim',
-                frames: this.anims.generateFrameNumbers('explosion_sheet', { start: 0, end: 7 }),
+                frames: this.anims.generateFrameNumbers('explosion_sheet', { start: 1, end: 5 }),
                 frameRate: 20, // 爆発は素早く
                 repeat: 0,
                 hideOnComplete: true
