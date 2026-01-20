@@ -3,6 +3,8 @@ let phaserGame = null;
 
 const Renderer = {
     game: null, 
+
+    
     isMapDragging: false, 
     isCardDragging: false,
 
@@ -213,7 +215,7 @@ class MainScene extends Phaser.Scene {
     triggerExplosion(x, y) {
         const explosion = this.add.sprite(x, y, 'explosion_sheet');
         explosion.setDepth(100); // 最前面に表示 (VFXレベル)
-        explosion.setScale(1.5); // 少し大きめに
+        explosion.setScale(1); // 少し大きめに
         explosion.play('explosion_anim');
         explosion.once('animationcomplete', () => {
             explosion.destroy();
