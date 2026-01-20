@@ -1,4 +1,4 @@
-/** * PHASER BRIDGE (Sprite Branch: Infantry 512px Animation) */
+/** * PHASER BRIDGE (New Sprite 128px: Round Robin Idle) */
 let phaserGame = null;
 
 // ---------------------------------------------------------
@@ -16,8 +16,7 @@ const Renderer = {
             width: document.getElementById('game-view').clientWidth, 
             height: document.getElementById('game-view').clientHeight, 
             backgroundColor: '#0b0e0a', 
-            // 高解像度スプライトを縮小表示するため false (滑らか補間) 推奨
-            pixelArt: false, 
+            pixelArt: false, // 128pxならfalse(スムース)がおすすめ
             scene: [MainScene, UIScene], 
             fps: { target: 60 }, 
             physics: { default: 'arcade', arcade: { debug: false } }, 
@@ -103,97 +102,34 @@ class Card extends Phaser.GameObjects.Container {
         frame.on('dragstart', this.onDragStart, this); 
         frame.on('drag', this.onDrag, this); 
         frame.on('dragend', this.onDragEnd, this);
-        
         scene.add.existing(this);
     }
 
     updatePhysics() { 
         if (!this.scene || !this.frameImage) return; 
-        if (!this.isDragging && !this.scene.isReturning) { 
-            this.targetX = this.baseX; 
-            this.targetY = this.baseY - (this.isHovering ? 30 : 0); 
-        } 
-        const stiffness = this.isDragging ? 0.2 : 0.08; 
-        const damping = 0.65; 
-        const ax = (this.targetX - this.physX) * stiffness; 
-        const ay = (this.targetY - this.physY) * stiffness; 
-        this.velocityX += ax; this.velocityY += ay; 
-        this.velocityX *= damping; this.velocityY *= damping; 
-        this.physX += this.velocityX; this.physY += this.velocityY; 
-        this.setPosition(this.physX, this.physY); 
-
-        let staticAngle = 0; 
-        if (this.isDragging) staticAngle = -this.dragOffsetX * 0.4; 
-        const targetDynamicAngle = -this.velocityX * 1.5; 
-        const totalTargetAngle = staticAngle + targetDynamicAngle; 
-        const angleForce = (totalTargetAngle - this.angle) * 0.12; 
-        this.velocityAngle += angleForce; 
-        this.velocityAngle *= 0.85; 
-        this.angle += this.velocityAngle; 
-        this.angle = Phaser.Math.Clamp(this.angle, -50, 50); 
+        if (!this.isDragging && !this.scene.isReturning) { this.targetX = this.baseX; this.targetY = this.baseY - (this.isHovering ? 30 : 0); } 
+        const stiffness = this.isDragging ? 0.2 : 0.08; const damping = 0.65; 
+        const ax = (this.targetX - this.physX) * stiffness; const ay = (this.targetY - this.physY) * stiffness; 
+        this.velocityX += ax; this.velocityY += ay; this.velocityX *= damping; this.velocityY *= damping; 
+        this.physX += this.velocityX; this.physY += this.velocityY; this.setPosition(this.physX, this.physY); 
+        let staticAngle = 0; if (this.isDragging) staticAngle = -this.dragOffsetX * 0.4; 
+        const targetDynamicAngle = -this.velocityX * 1.5; const totalTargetAngle = staticAngle + targetDynamicAngle; 
+        const angleForce = (totalTargetAngle - this.angle) * 0.12; this.velocityAngle += angleForce; this.velocityAngle *= 0.85; 
+        this.angle += this.velocityAngle; this.angle = Phaser.Math.Clamp(this.angle, -50, 50); 
     }
 
     onHover() { if(Renderer.isMapDragging || Renderer.isCardDragging) return; this.isHovering = true; this.parentContainer.bringToTop(this); }
     onHoverOut() { this.isHovering = false; }
     onDragStart(pointer) { if(Renderer.isMapDragging) return; this.isDragging = true; Renderer.isCardDragging = true; this.setAlpha(0.9); this.setScale(1.1); const hand = this.parentContainer; const worldPos = hand.getLocalTransformMatrix().transformPoint(this.x, this.y); hand.remove(this); this.scene.add.existing(this); this.physX = worldPos.x; this.physY = worldPos.y; this.targetX = this.physX; this.targetY = this.physY; this.setDepth(9999); this.dragOffsetX = this.physX - pointer.x; this.dragOffsetY = this.physY - pointer.y; }
     onDrag(pointer) { this.targetX = pointer.x + this.dragOffsetX; this.targetY = pointer.y + this.dragOffsetY; const main = this.scene.game.scene.getScene('MainScene'); if (this.y < this.scene.scale.height * 0.65) main.dragHighlightHex = Renderer.pxToHex(pointer.x, pointer.y); else main.dragHighlightHex = null; }
-    
-    onDragEnd(pointer) { 
-        this.isDragging = false; 
-        Renderer.isCardDragging = false; 
-        this.setAlpha(1.0); 
-        this.setScale(1.0); 
-        const main = this.scene.game.scene.getScene('MainScene'); 
-        main.dragHighlightHex = null; 
-        const dropZoneY = this.scene.scale.height * 0.65; 
-        
-        if (this.y < dropZoneY) {
-            const hex = Renderer.pxToHex(pointer.x, pointer.y);
-            let canDeploy = false;
-            if (window.gameLogic) {
-                if (this.cardType === 'aerial') {
-                    if (window.gameLogic.isValidHex(hex.q, hex.r)) canDeploy = true;
-                    else window.gameLogic.log("配置不可: マップ範囲外です");
-                } else {
-                    canDeploy = window.gameLogic.checkDeploy(hex);
-                }
-            }
-            if (canDeploy) this.burnAndConsume(hex); else this.returnToHand();
-        } else {
-            this.returnToHand(); 
-        }
-    }
+    onDragEnd(pointer) { this.isDragging = false; Renderer.isCardDragging = false; this.setAlpha(1.0); this.setScale(1.0); const main = this.scene.game.scene.getScene('MainScene'); main.dragHighlightHex = null; const dropZoneY = this.scene.scale.height * 0.65; if (this.y < dropZoneY) { const hex = Renderer.pxToHex(pointer.x, pointer.y); let canDeploy = false; if (window.gameLogic) { if (this.cardType === 'aerial') { if (window.gameLogic.isValidHex(hex.q, hex.r)) canDeploy = true; else window.gameLogic.log("配置不可: マップ範囲外です"); } else { canDeploy = window.gameLogic.checkDeploy(hex); } } if (canDeploy) this.burnAndConsume(hex); else this.returnToHand(); } else { this.returnToHand(); } }
     
     burnAndConsume(hex) {
-        this.updatePhysics = () => {}; 
-        this.frameImage.setTint(0x552222);
+        this.updatePhysics = () => {}; this.frameImage.setTint(0x552222);
         const maskShape = this.scene.make.graphics(); maskShape.fillStyle(0xffffff); maskShape.fillRect(-70, -100, 140, 200); 
         this.visuals.setMask(maskShape.createGeometryMask());
         const burnProgress = { val: 0 }; 
-        this.scene.tweens.add({
-            targets: burnProgress, val: 1, duration: 200, ease: 'Linear',
-            onUpdate: () => {
-                if(!this.scene || !maskShape.scene) return;
-                maskShape.clear(); maskShape.fillStyle(0xffffff); maskShape.fillRect(-70, -100, 140, 200 * (1 - burnProgress.val)); 
-                maskShape.x = this.x; maskShape.y = this.y + (200 * burnProgress.val);
-                const rad = Phaser.Math.DegToRad(this.angle); const cos = Math.cos(rad); const sin = Math.sin(rad); 
-                for(let i=0; i<8; i++) { 
-                    const randX = (Math.random() - 0.5) * 140; 
-                    const wx = this.x + (randX * cos - sin); 
-                    const wy = this.y + (randX * sin + cos); 
-                    if(window.UIVFX) { window.UIVFX.addFire(wx, wy); if(Math.random()<0.3) window.UIVFX.addSmoke(wx, wy); }
-                }
-                this.x += (Math.random()-0.5) * 4; this.y += (Math.random()-0.5) * 4;
-            },
-            onComplete: () => {
-                if (this.visuals) this.visuals.clearMask(true); if (maskShape) maskShape.destroy();
-                this.scene.removeCard(this); const type = this.cardType; this.destroy();
-                try { 
-                    if (type === 'aerial') { const main = phaserGame.scene.getScene('MainScene'); if (main) main.triggerBombardment(hex); } 
-                    else if(window.gameLogic) { window.gameLogic.deployUnit(hex, type); }
-                } catch(e) { console.error("Logic Error:", e); }
-            }
-        });
+        this.scene.tweens.add({ targets: burnProgress, val: 1, duration: 200, ease: 'Linear', onUpdate: () => { if(!this.scene || !maskShape.scene) return; maskShape.clear(); maskShape.fillStyle(0xffffff); maskShape.fillRect(-70, -100, 140, 200 * (1 - burnProgress.val)); maskShape.x = this.x; maskShape.y = this.y + (200 * burnProgress.val); const rad = Phaser.Math.DegToRad(this.angle); const cos = Math.cos(rad); const sin = Math.sin(rad); for(let i=0; i<8; i++) { const randX = (Math.random() - 0.5) * 140; const wx = this.x + (randX * cos - sin); const wy = this.y + (randX * sin + cos); if(window.UIVFX) { window.UIVFX.addFire(wx, wy); if(Math.random()<0.3) window.UIVFX.addSmoke(wx, wy); } } this.x += (Math.random()-0.5) * 4; this.y += (Math.random()-0.5) * 4; }, onComplete: () => { if (this.visuals) this.visuals.clearMask(true); if (maskShape) maskShape.destroy(); this.scene.removeCard(this); const type = this.cardType; this.destroy(); try { if (type === 'aerial') { const main = phaserGame.scene.getScene('MainScene'); if (main) main.triggerBombardment(hex); } else if(window.gameLogic) { window.gameLogic.deployUnit(hex, type); } } catch(e) { console.error("Logic Error:", e); } } });
     }
     returnToHand() { const hand = this.scene.handContainer; this.scene.children.remove(this); hand.add(this); this.setDepth(0); this.physX = this.x; this.physY = this.y; this.targetX = this.baseX; this.targetY = this.baseY; }
 }
@@ -206,13 +142,8 @@ class UIScene extends Phaser.Scene {
     create() {
         const w = this.scale.width; const h = this.scale.height;
         if(window.createGradientTexture) window.createGradientTexture(this);
-        
-        if (this.textures.exists('ui_gradient')) {
-            this.gradientBg = this.add.image(w/2, h, 'ui_gradient').setOrigin(0.5, 1).setDepth(0).setDisplaySize(w, h*0.25);
-        } else {
-            this.gradientBg = this.add.rectangle(w/2, h, w, h*0.25, 0x000000, 0.8).setOrigin(0.5, 1);
-        }
-        
+        if (this.textures.exists('ui_gradient')) { this.gradientBg = this.add.image(w/2, h, 'ui_gradient').setOrigin(0.5, 1).setDepth(0).setDisplaySize(w, h*0.25); } 
+        else { this.gradientBg = this.add.rectangle(w/2, h, w, h*0.25, 0x000000, 0.8).setOrigin(0.5, 1); }
         this.handContainer = this.add.container(w/2, h);
         this.uiVfxGraphics = this.add.graphics().setDepth(10000);
         this.scale.on('resize', this.onResize, this);
@@ -233,7 +164,7 @@ class UIScene extends Phaser.Scene {
 }
 
 // ---------------------------------------------------------
-//  MAIN SCENE (Sprite Animation Branch)
+//  MAIN SCENE (New Sprite: 128px, 6 Rows)
 // ---------------------------------------------------------
 class MainScene extends Phaser.Scene {
     constructor() { 
@@ -247,14 +178,12 @@ class MainScene extends Phaser.Scene {
     preload() { 
         if(window.EnvSystem) window.EnvSystem.preload(this);
         
-        // ★重要: 歩兵用スプライトシート読み込み
-        // 4096x512 = 横8コマ (512x512)
-        this.load.spritesheet('soldier_sheet', 'asset/soldier_sheet.png', { 
-            frameWidth: 512, 
-            frameHeight: 512 
+        // ★重要: 新しいスプライトシート (128x128)
+        this.load.spritesheet('soldier_sheet', 'asset/soldier_sheet_1.png', { 
+            frameWidth: 128, 
+            frameHeight: 128 
         });
         
-        // ★重要: カードフレーム読み込み (ここに入れておくと確実)
         this.load.image('card_frame', 'asset/card_frame.png');
     }
 
@@ -267,13 +196,41 @@ class MainScene extends Phaser.Scene {
         if(window.EnvSystem) window.EnvSystem.clear();
         this.scene.launch('UIScene'); 
 
-        // ★歩兵待機アニメーション定義
+        // ★アニメーション定義 (1行8枚)
+        // Row 0: Idle 1 (0-7)
+        // Row 1: Idle 2 (8-15)
+        // Row 2: Shoot Right (16-23)
+        // Row 3: Shoot Left (24-31)
+        // Row 4: Crouch (32-39)
+        // Row 5: Shoot Back (40-47)
+
+        // 待機 (Idle 1 + Idle 2 をループ)
         if (!this.anims.exists('soldier_idle')) {
             this.anims.create({
                 key: 'soldier_idle',
-                frames: this.anims.generateFrameNumbers('soldier_sheet', { start: 0, end: 7 }),
+                frames: this.anims.generateFrameNumbers('soldier_sheet', { start: 0, end: 15 }),
                 frameRate: 12,
-                repeat: -1 // ループ
+                repeat: -1
+            });
+        }
+        
+        // 攻撃 (右)
+        if (!this.anims.exists('soldier_shoot')) {
+            this.anims.create({
+                key: 'soldier_shoot',
+                frames: this.anims.generateFrameNumbers('soldier_sheet', { start: 16, end: 23 }),
+                frameRate: 15,
+                repeat: 0
+            });
+        }
+
+        // しゃがみ
+        if (!this.anims.exists('soldier_crouch')) {
+            this.anims.create({
+                key: 'soldier_crouch',
+                frames: this.anims.generateFrameNumbers('soldier_sheet', { start: 32, end: 39 }),
+                frameRate: 12,
+                repeat: -1
             });
         }
 
@@ -308,7 +265,7 @@ class MainScene extends Phaser.Scene {
         this.centerMap(); 
     }
     
-    // ★重要: 歩兵ならスプライト、それ以外は図形
+    // ★重要: 歩兵の表示 (128px版)
     createUnitVisual(u) {
         const container = this.add.container(0, 0);
         let sprite;
@@ -316,15 +273,15 @@ class MainScene extends Phaser.Scene {
         // Infantry (Rifle Squad) の場合
         if (u.def.name === "Rifle Squad") {
             sprite = this.add.sprite(0, -10, 'soldier_sheet');
-            // 512pxの画像をヘックス(約60px)に合わせるため大胆に縮小
-            sprite.setScale(0.12); 
+            // 128px なので 0.5 で 64px くらいになる
+            sprite.setScale(0.5); 
             sprite.play('soldier_idle');
             
-            // プレイヤーなら青み、敵なら赤みを加える（スプライトの色調補正）
+            // 色味調整 (プレイヤー:青系, 敵:赤系)
             if(u.team === 'player') sprite.setTint(0xeeeeff); else sprite.setTint(0xffaaaa);
         } 
         else {
-            // それ以外（戦車など）は従来の図形
+            // 他のユニットは従来通り
             sprite = this.add.sprite(0, 0, u.team==='player'?'unit_player':'unit_enemy').setScale(1/window.HIGH_RES_SCALE); 
             if(u.def.isTank) sprite.setTint(0x888888); 
             if(u.team==='player') sprite.setTint(0x6688aa); else sprite.setTint(0xcc6655); 
@@ -343,6 +300,13 @@ class MainScene extends Phaser.Scene {
     updateUnitVisual(container, u) {
         const pos = Renderer.hexToPx(u.q, u.r); 
         container.setPosition(pos.x, pos.y);
+        
+        // ★状態に応じたアニメーション切り替え (将来的に)
+        // if (u.def.name === "Rifle Squad" && container.sprite) {
+        //     if (u.stance === 'crouch') container.sprite.play('soldier_crouch', true);
+        //     else container.sprite.play('soldier_idle', true);
+        // }
+
         const hpPct = u.hp / u.maxHp; container.hpBar.width = 20 * hpPct; container.hpBar.x = -10 + (10 * hpPct); container.hpBar.fillColor = hpPct > 0.5 ? 0x00ff00 : 0xff0000;
         if(window.gameLogic.selectedUnit === u) { container.cursor.setVisible(true); container.cursor.setAlpha(1); } else { container.cursor.setVisible(false); }
     }
