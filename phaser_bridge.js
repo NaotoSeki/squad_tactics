@@ -221,8 +221,8 @@ class MainScene extends Phaser.Scene {
         if (!this.anims.exists('tank_idle')) {
             this.anims.create({
                 key: 'tank_idle',
-                frames: this.anims.generateFrameNumbers('tank_sheet', { frames: [0, 5, 0, 6, 0, 7] }),
-                frameRate: 15, // 小刻みに揺らすため少し速く
+                frames: this.anims.generateFrameNumbers('tank_sheet', { frames: [7, 6, 5, 6, 7, 5] }),
+                frameRate: 10, // 小刻みに揺らすため少し速く
                 repeat: -1
             });
         }
