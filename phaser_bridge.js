@@ -1,4 +1,4 @@
-/** * PHASER BRIDGE (Adjusted Tank Shadow Position) */
+/** * PHASER BRIDGE (Explosion Sprite Added) */
 let phaserGame = null;
 
 const Renderer = {
@@ -51,10 +51,15 @@ const Renderer = {
     playAttackAnim(attacker, target) {
         const main = this.game.scene.getScene('MainScene');
         if (main) main.triggerAttackAnimation(attacker, target);
+    },
+    // ★追加: 爆発アニメ再生リクエスト
+    playExplosion(x, y) {
+        const main = this.game.scene.getScene('MainScene');
+        if (main) main.triggerExplosion(x, y);
     }
 };
 
-// --- Card Class ---
+// --- Card Class (省略なし) ---
 class Card extends Phaser.GameObjects.Container {
     constructor(scene, x, y, type) {
         super(scene, x, y); this.scene = scene; this.cardType = type; this.setSize(140, 200);
@@ -123,28 +128,23 @@ class UIScene extends Phaser.Scene {
 }
 
 // ---------------------------------------------------------
-//  MAIN SCENE (Shadows, Layers, HP Fix)
+//  MAIN SCENE
 // ---------------------------------------------------------
 class MainScene extends Phaser.Scene {
     constructor() { 
         super({ key: 'MainScene' }); 
-        this.hexGroup = null; 
-        this.decorGroup = null; 
-        this.unitGroup = null; 
-        this.treeGroup = null; 
-        this.hpGroup = null;   
-        this.vfxGraphics = null; 
-        this.overlayGraphics = null; 
-        this.mapGenerated = false; 
-        this.dragHighlightHex = null;
-        this.unitVisuals = new Map();
-        this.crosshairGroup = null;
+        this.hexGroup = null; this.decorGroup = null; this.unitGroup = null; this.treeGroup = null; this.hpGroup = null;   
+        this.vfxGraphics = null; this.overlayGraphics = null; 
+        this.mapGenerated = false; this.dragHighlightHex = null;
+        this.unitVisuals = new Map(); this.crosshairGroup = null;
     }
     
     preload() { 
         if(window.EnvSystem) window.EnvSystem.preload(this);
         this.load.spritesheet('soldier_sheet', 'asset/soldier_sheet_1.png', { frameWidth: 128, frameHeight: 128 });
         this.load.spritesheet('tank_sheet', 'asset/tank_sheet_1.png', { frameWidth: 128, frameHeight: 128 });
+        // ★重要: 爆発シート読み込み (128x128仮定)
+        this.load.spritesheet('explosion_sheet', 'asset/explosion-sheet.png', { frameWidth: 128, frameHeight: 128 });
         this.load.image('card_frame', 'asset/card_frame.png');
     }
 
@@ -176,20 +176,25 @@ class MainScene extends Phaser.Scene {
         if (!this.anims.exists('soldier_shoot_right')) { this.anims.create({ key: 'soldier_shoot_right', frames: this.anims.generateFrameNumbers('soldier_sheet', { start: 16, end: 23 }), frameRate: 15, repeat: 0 }); }
         if (!this.anims.exists('soldier_shoot_left')) { this.anims.create({ key: 'soldier_shoot_left', frames: this.anims.generateFrameNumbers('soldier_sheet', { start: 24, end: 31 }), frameRate: 15, repeat: 0 }); }
         if (!this.anims.exists('tank_idle')) { this.anims.create({ key: 'tank_idle', frames: this.anims.generateFrameNumbers('tank_sheet', { frames: [7, 6, 5, 6, 7, 5] }), frameRate: 10, repeat: -1 }); }
+        
+        // ★重要: 爆発アニメ定義 (0-7フレーム, 1回再生)
+        if (!this.anims.exists('explosion_anim')) {
+            this.anims.create({
+                key: 'explosion_anim',
+                frames: this.anims.generateFrameNumbers('explosion_sheet', { start: 0, end: 7 }),
+                frameRate: 20, // 爆発は素早く
+                repeat: 0,
+                hideOnComplete: true
+            });
+        }
 
-        // Input
         this.input.on('wheel', (pointer, gameObjects, deltaX, deltaY, deltaZ) => { let newZoom = this.cameras.main.zoom; if (deltaY > 0) newZoom -= 0.5; else if (deltaY < 0) newZoom += 0.5; newZoom = Phaser.Math.Clamp(newZoom, 0.25, 4.0); this.tweens.add({ targets: this.cameras.main, zoom: newZoom, duration: 150, ease: 'Cubic.out' }); });
         this.input.on('pointerdown', (p) => { if (Renderer.isCardDragging || Renderer.checkUIHover(p.x, p.y)) return; if(p.button === 0) { Renderer.isMapDragging = true; if(window.gameLogic) window.gameLogic.handleClick(Renderer.pxToHex(p.x, p.y)); } else if(p.button === 2) { if(window.gameLogic) window.gameLogic.showContext(p.x, p.y); } });
         this.input.on('pointerup', () => { Renderer.isMapDragging = false; });
         this.input.on('pointermove', (p) => { if (Renderer.isCardDragging) return; if (p.isDown && Renderer.isMapDragging) { const zoom = this.cameras.main.zoom; this.cameras.main.scrollX -= (p.x - p.prevPosition.x) / zoom; this.cameras.main.scrollY -= (p.y - p.prevPosition.y) / zoom; } if(!Renderer.isMapDragging && window.gameLogic) window.gameLogic.handleHover(Renderer.pxToHex(p.x, p.y)); }); 
         this.input.mouse.disableContextMenu();
 
-        // ESC Selection Clear
-        this.input.keyboard.on('keydown-ESC', () => {
-            if(window.gameLogic && window.gameLogic.clearSelection) {
-                window.gameLogic.clearSelection();
-            }
-        });
+        this.input.keyboard.on('keydown-ESC', () => { if(window.gameLogic && window.gameLogic.clearSelection) { window.gameLogic.clearSelection(); } });
     }
 
     triggerAttackAnimation(attacker, target) {
@@ -204,6 +209,17 @@ class MainScene extends Phaser.Scene {
         visual.sprite.once('animationcomplete', () => { if (visual.scene) visual.sprite.play('soldier_idle'); });
     }
 
+    // ★重要: 爆発アニメ再生処理
+    triggerExplosion(x, y) {
+        const explosion = this.add.sprite(x, y, 'explosion_sheet');
+        explosion.setDepth(100); // 最前面に表示 (VFXレベル)
+        explosion.setScale(1.5); // 少し大きめに
+        explosion.play('explosion_anim');
+        explosion.once('animationcomplete', () => {
+            explosion.destroy();
+        });
+    }
+
     playExplosion(x, y) { if(window.VFX) window.VFX.addExplosion(x, y, "#fa0", 20); }
     triggerBombardment(hex) { this.time.delayedCall(500, () => { const targetPos = Renderer.hexToPx(hex.q, hex.r); if(window.VFX) window.VFX.addBombardment(this, targetPos.x, targetPos.y, hex); }); }
     centerCamera(q, r) { const p = Renderer.hexToPx(q, r); this.cameras.main.centerOn(p.x, p.y); }
@@ -211,11 +227,7 @@ class MainScene extends Phaser.Scene {
     
     createMap() { 
         const map = window.gameLogic.map; 
-        this.hexGroup.removeAll(true);
-        this.decorGroup.removeAll(true); 
-        this.unitGroup.removeAll(true); 
-        this.treeGroup.removeAll(true); 
-        this.hpGroup.removeAll(true);
+        this.hexGroup.removeAll(true); this.decorGroup.removeAll(true); this.unitGroup.removeAll(true); this.treeGroup.removeAll(true); this.hpGroup.removeAll(true);
         this.unitVisuals.clear();
         for(let q=0; q<MAP_W; q++) { 
             for(let r=0; r<MAP_H; r++) { 
@@ -233,13 +245,9 @@ class MainScene extends Phaser.Scene {
         this.centerMap(); 
     }
     
-    // ★影の追加処理
     createUnitVisual(u) {
         const container = this.add.container(0, 0);
-        
-        // ★影 (Shadow) デフォルト
         const shadow = this.add.ellipse(0, 8, 20, 10, 0x000000, 0.5);
-        
         let sprite;
         if (u.def.name === "Rifle Squad") {
             sprite = this.add.sprite(0, -10, 'soldier_sheet');
@@ -251,10 +259,7 @@ class MainScene extends Phaser.Scene {
             sprite.setScale(0.5); 
             sprite.play('tank_idle');
             if(u.team === 'player') sprite.setTint(0xccddee); else sprite.setTint(0xffaaaa);
-            
-            // ★戦車影の調整
-            shadow.setPosition(-2, 2); // 左上に寄せて接地感を出す
-            shadow.setSize(46, 18);    // 横長に
+            shadow.setPosition(-2, 2); shadow.setSize(46, 18);
         } else {
             sprite = this.add.sprite(0, 0, u.team==='player'?'unit_player':'unit_enemy').setScale(1/window.HIGH_RES_SCALE); 
             if(u.team==='player') sprite.setTint(0x6688aa); else sprite.setTint(0xcc6655); 
@@ -262,39 +267,22 @@ class MainScene extends Phaser.Scene {
         
         const cursor = this.add.image(0, 0, 'cursor').setScale(1/window.HIGH_RES_SCALE).setAlpha(0).setVisible(false);
         this.tweens.add({ targets: cursor, scale: { from: 1/window.HIGH_RES_SCALE, to: 1.1/window.HIGH_RES_SCALE }, alpha: { from: 1, to: 0.5 }, yoyo: true, repeat: -1, duration: 800 });
-        
         container.add([shadow, sprite, cursor]); 
-        
-        container.sprite = sprite; 
-        container.cursor = cursor;
-
+        container.sprite = sprite; container.cursor = cursor;
         const hpBg = this.add.rectangle(0, 0, 20, 4, 0x000000).setOrigin(0, 0.5);
         const hpBar = this.add.rectangle(0, 0, 20, 4, 0x00ff00).setOrigin(0, 0.5);
-        
-        this.hpGroup.add(hpBg);
-        this.hpGroup.add(hpBar);
-        
-        container.hpBg = hpBg;
-        container.hpBar = hpBar;
-
+        this.hpGroup.add(hpBg); this.hpGroup.add(hpBar);
+        container.hpBg = hpBg; container.hpBar = hpBar;
         return container;
     }
 
     updateUnitVisual(container, u) {
-        const pos = Renderer.hexToPx(u.q, u.r); 
-        container.setPosition(pos.x, pos.y);
-        
+        const pos = Renderer.hexToPx(u.q, u.r); container.setPosition(pos.x, pos.y);
         if(container.hpBg && container.hpBar) {
-            const barY = pos.y - 35;
-            const barX = pos.x - 10; 
-            container.hpBg.setPosition(barX, barY);
-            container.hpBar.setPosition(barX, barY);
-            
-            const hpPct = u.hp / u.maxHp; 
-            container.hpBar.width = Math.max(0, 20 * hpPct); 
-            container.hpBar.fillColor = hpPct > 0.5 ? 0x00ff00 : 0xff0000;
+            const barY = pos.y - 35; const barX = pos.x - 10; 
+            container.hpBg.setPosition(barX, barY); container.hpBar.setPosition(barX, barY);
+            const hpPct = u.hp / u.maxHp; container.hpBar.width = Math.max(0, 20 * hpPct); container.hpBar.fillColor = hpPct > 0.5 ? 0x00ff00 : 0xff0000;
         }
-
         if(window.gameLogic.selectedUnit === u) { container.cursor.setVisible(true); container.cursor.setAlpha(1); } else { container.cursor.setVisible(false); }
     }
 
@@ -304,42 +292,16 @@ class MainScene extends Phaser.Scene {
         if(window.EnvSystem) window.EnvSystem.update(time);
         if(window.VFX) { window.VFX.update(); this.vfxGraphics.clear(); window.VFX.draw(this.vfxGraphics); }
         if (window.gameLogic.map.length > 0 && !this.mapGenerated) { this.createMap(); this.mapGenerated = true; }
-        
         const activeIds = new Set();
         window.gameLogic.units.forEach(u => { 
-            if(u.hp <= 0) return; 
-            activeIds.add(u.id); 
-            let visual = this.unitVisuals.get(u.id); 
-            if (!visual) { 
-                visual = this.createUnitVisual(u); 
-                this.unitVisuals.set(u.id, visual); 
-                this.unitGroup.add(visual); 
-            } 
+            if(u.hp <= 0) return; activeIds.add(u.id); let visual = this.unitVisuals.get(u.id); 
+            if (!visual) { visual = this.createUnitVisual(u); this.unitVisuals.set(u.id, visual); this.unitGroup.add(visual); } 
             this.updateUnitVisual(visual, u); 
-            
             const isSelected = (window.gameLogic.selectedUnit === u);
-            if (isSelected) {
-                if (this.unitGroup.exists(visual)) {
-                    this.unitGroup.remove(visual);
-                    this.hpGroup.add(visual);
-                }
-            } else {
-                if (this.hpGroup.exists(visual)) {
-                    this.hpGroup.remove(visual);
-                    this.unitGroup.add(visual);
-                }
-            }
+            if (isSelected) { if (this.unitGroup.exists(visual)) { this.unitGroup.remove(visual); this.hpGroup.add(visual); } } 
+            else { if (this.hpGroup.exists(visual)) { this.hpGroup.remove(visual); this.unitGroup.add(visual); } }
         });
-        
-        for (const [id, visual] of this.unitVisuals) { 
-            if (!activeIds.has(id)) { 
-                if(visual.hpBg) visual.hpBg.destroy();
-                if(visual.hpBar) visual.hpBar.destroy();
-                visual.destroy(); 
-                this.unitVisuals.delete(id); 
-            } 
-        }
-        
+        for (const [id, visual] of this.unitVisuals) { if (!activeIds.has(id)) { if(visual.hpBg) visual.hpBg.destroy(); if(visual.hpBar) visual.hpBar.destroy(); visual.destroy(); this.unitVisuals.delete(id); } }
         this.overlayGraphics.clear();
         if (this.dragHighlightHex) { this.overlayGraphics.lineStyle(4, 0xffffff, 1.0); this.drawHexOutline(this.overlayGraphics, this.dragHighlightHex.q, this.dragHighlightHex.r); }
         const selected = window.gameLogic.selectedUnit;
