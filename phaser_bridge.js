@@ -1,4 +1,4 @@
-/** * PHASER BRIDGE (Safe Stable Rollback) */
+/** * PHASER BRIDGE (Sprite Branch: Infantry 512px Animation) */
 let phaserGame = null;
 
 // ---------------------------------------------------------
@@ -16,6 +16,7 @@ const Renderer = {
             width: document.getElementById('game-view').clientWidth, 
             height: document.getElementById('game-view').clientHeight, 
             backgroundColor: '#0b0e0a', 
+            // 高解像度スプライトを縮小表示するため false (滑らか補間) 推奨
             pixelArt: false, 
             scene: [MainScene, UIScene], 
             fps: { target: 60 }, 
@@ -67,7 +68,6 @@ class Card extends Phaser.GameObjects.Container {
         const shadow = scene.add.rectangle(6, 6, 130, 190, 0x000000, 0.6);
         const contentBg = scene.add.rectangle(0, 0, 130, 190, 0x1a1a1a);
         
-        // フォールバックフレーム
         let frame;
         if(scene.textures.exists('card_frame')) {
             frame = scene.add.image(0, 0, 'card_frame').setDisplaySize(140, 200);
@@ -233,7 +233,7 @@ class UIScene extends Phaser.Scene {
 }
 
 // ---------------------------------------------------------
-//  MAIN SCENE (Stable)
+//  MAIN SCENE (Sprite Animation Branch)
 // ---------------------------------------------------------
 class MainScene extends Phaser.Scene {
     constructor() { 
@@ -246,6 +246,16 @@ class MainScene extends Phaser.Scene {
     
     preload() { 
         if(window.EnvSystem) window.EnvSystem.preload(this);
+        
+        // ★重要: 歩兵用スプライトシート読み込み
+        // 4096x512 = 横8コマ (512x512)
+        this.load.spritesheet('soldier_sheet', 'asset/soldier_sheet.png', { 
+            frameWidth: 512, 
+            frameHeight: 512 
+        });
+        
+        // ★重要: カードフレーム読み込み (ここに入れておくと確実)
+        this.load.image('card_frame', 'asset/card_frame.png');
     }
 
     create() {
@@ -257,6 +267,16 @@ class MainScene extends Phaser.Scene {
         if(window.EnvSystem) window.EnvSystem.clear();
         this.scene.launch('UIScene'); 
 
+        // ★歩兵待機アニメーション定義
+        if (!this.anims.exists('soldier_idle')) {
+            this.anims.create({
+                key: 'soldier_idle',
+                frames: this.anims.generateFrameNumbers('soldier_sheet', { start: 0, end: 7 }),
+                frameRate: 12,
+                repeat: -1 // ループ
+            });
+        }
+
         this.input.on('wheel', (pointer, gameObjects, deltaX, deltaY, deltaZ) => { let newZoom = this.cameras.main.zoom; if (deltaY > 0) newZoom -= 0.5; else if (deltaY < 0) newZoom += 0.5; newZoom = Phaser.Math.Clamp(newZoom, 0.25, 4.0); this.tweens.add({ targets: this.cameras.main, zoom: newZoom, duration: 150, ease: 'Cubic.out' }); });
         this.input.on('pointerdown', (p) => { if (Renderer.isCardDragging || Renderer.checkUIHover(p.x, p.y)) return; if(p.button === 0) { Renderer.isMapDragging = true; if(window.gameLogic) window.gameLogic.handleClick(Renderer.pxToHex(p.x, p.y)); } else if(p.button === 2) { if(window.gameLogic) window.gameLogic.showContext(p.x, p.y); } });
         this.input.on('pointerup', () => { Renderer.isMapDragging = false; });
@@ -264,7 +284,6 @@ class MainScene extends Phaser.Scene {
         this.input.mouse.disableContextMenu();
     }
 
-    // ★重要: パーティクル爆発に戻す (アニメーション呼び出し削除)
     playExplosion(x, y) {
         if(window.VFX) window.VFX.addExplosion(x, y, "#fa0", 20);
     }
@@ -289,17 +308,30 @@ class MainScene extends Phaser.Scene {
         this.centerMap(); 
     }
     
-    // ★重要: ユニットをプリミティブ形状に戻す
+    // ★重要: 歩兵ならスプライト、それ以外は図形
     createUnitVisual(u) {
         const container = this.add.container(0, 0);
-        // unit_player と unit_enemy は VFX の preload で確実に作られている
-        const sprite = this.add.sprite(0, 0, u.team==='player'?'unit_player':'unit_enemy').setScale(1/window.HIGH_RES_SCALE); 
+        let sprite;
+
+        // Infantry (Rifle Squad) の場合
+        if (u.def.name === "Rifle Squad") {
+            sprite = this.add.sprite(0, -10, 'soldier_sheet');
+            // 512pxの画像をヘックス(約60px)に合わせるため大胆に縮小
+            sprite.setScale(0.12); 
+            sprite.play('soldier_idle');
+            
+            // プレイヤーなら青み、敵なら赤みを加える（スプライトの色調補正）
+            if(u.team === 'player') sprite.setTint(0xeeeeff); else sprite.setTint(0xffaaaa);
+        } 
+        else {
+            // それ以外（戦車など）は従来の図形
+            sprite = this.add.sprite(0, 0, u.team==='player'?'unit_player':'unit_enemy').setScale(1/window.HIGH_RES_SCALE); 
+            if(u.def.isTank) sprite.setTint(0x888888); 
+            if(u.team==='player') sprite.setTint(0x6688aa); else sprite.setTint(0xcc6655); 
+        }
         
-        if(u.def.isTank) sprite.setTint(0x888888); 
-        if(u.team==='player') sprite.setTint(0x6688aa); else sprite.setTint(0xcc6655); 
-        
-        const hpBg = this.add.rectangle(0, -20, 20, 4, 0x000000); 
-        const hpBar = this.add.rectangle(-10, -20, 20, 4, 0x00ff00);
+        const hpBg = this.add.rectangle(0, -35, 20, 4, 0x000000); 
+        const hpBar = this.add.rectangle(-10, -35, 20, 4, 0x00ff00);
         const cursor = this.add.image(0, 0, 'cursor').setScale(1/window.HIGH_RES_SCALE).setAlpha(0).setVisible(false);
         this.tweens.add({ targets: cursor, scale: { from: 1/window.HIGH_RES_SCALE, to: 1.1/window.HIGH_RES_SCALE }, alpha: { from: 1, to: 0.5 }, yoyo: true, repeat: -1, duration: 800 });
         
