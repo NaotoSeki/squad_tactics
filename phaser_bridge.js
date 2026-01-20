@@ -1,4 +1,4 @@
-/** * PHASER BRIDGE (Added Rank/Skill Text on Map) */
+/** * PHASER BRIDGE (Skill Ribbons & Rank at Unit Bottom) */
 let phaserGame = null;
 
 const Renderer = {
@@ -282,25 +282,21 @@ class MainScene extends Phaser.Scene {
         this.tweens.add({ targets: cursor, scale: { from: 1/window.HIGH_RES_SCALE, to: 1.1/window.HIGH_RES_SCALE }, alpha: { from: 1, to: 0.5 }, yoyo: true, repeat: -1, duration: 800 });
         container.add([shadow, sprite, cursor]); 
         
-        // ★追加: ランク/スキル表示用テキスト
-        const rankText = this.add.text(10, -25, "", { 
-            fontSize: '10px', color: '#ffcc00', fontStyle: 'bold', 
-            stroke: '#000000', strokeThickness: 2 
-        }).setOrigin(0, 0.5);
+        // ★足元情報用コンテナ
+        const infoContainer = this.add.container(0, 18); // 足元(Y=18付近)
+        const rankText = this.add.text(0, 0, "", { fontSize: '8px', color: '#ffcc00' }).setOrigin(0.5, 0.5);
         
-        // HPゲージは hpGroup へ
+        // HPバー
         const hpBg = this.add.rectangle(0, 0, 20, 4, 0x000000).setOrigin(0, 0.5);
         const hpBar = this.add.rectangle(0, 0, 20, 4, 0x00ff00).setOrigin(0, 0.5);
         this.hpGroup.add(hpBg); this.hpGroup.add(hpBar);
-        
-        // hpGroupにランクテキストも追加 (最前面表示のため)
-        this.hpGroup.add(rankText);
+        this.hpGroup.add(infoContainer); // InfoもHPGroup(最前面)へ
 
         container.sprite = sprite; 
         container.cursor = cursor;
-        container.hpBg = hpBg; 
-        container.hpBar = hpBar;
-        container.rankText = rankText; // 参照保持
+        container.hpBg = hpBg; container.hpBar = hpBar;
+        container.infoContainer = infoContainer;
+        container.rankText = rankText;
 
         return container;
     }
@@ -309,27 +305,49 @@ class MainScene extends Phaser.Scene {
         const pos = Renderer.hexToPx(u.q, u.r); 
         container.setPosition(pos.x, pos.y);
         
-        if(container.hpBg && container.hpBar && container.rankText) {
-            const barY = pos.y - 35; 
-            const barX = pos.x - 10; 
-            
-            container.hpBg.setPosition(barX, barY);
-            container.hpBar.setPosition(barX, barY);
-            container.rankText.setPosition(barX + 22, barY); // バーの右側に配置
-            
-            const hpPct = u.hp / u.maxHp; 
-            container.hpBar.width = Math.max(0, 20 * hpPct); 
-            container.hpBar.fillColor = hpPct > 0.5 ? 0x00ff00 : 0xff0000;
+        if(container.hpBg && container.hpBar && container.infoContainer) {
+            // HPバーは頭上
+            const barY = pos.y - 35; const barX = pos.x - 10; 
+            container.hpBg.setPosition(barX, barY); container.hpBar.setPosition(barX, barY);
+            const hpPct = u.hp / u.maxHp; container.hpBar.width = Math.max(0, 20 * hpPct); container.hpBar.fillColor = hpPct > 0.5 ? 0x00ff00 : 0xff0000;
 
-            // ★ランクとスキル数に応じたアイコン表示
-            let info = "";
-            if (u.rank > 0) info += RANKS[Math.min(u.rank, 5)] + " ";
-            if (u.skills.length > 0) {
-                // スキル数分だけ♦を表示 (最大3つくらいまで)
-                info += "♦".repeat(Math.min(u.skills.length, 3));
-                if (u.skills.length > 3) info += "+";
+            // ★足元情報（階級 + スキルリボン）
+            const infoY = pos.y + 18; 
+            container.infoContainer.setPosition(pos.x, infoY);
+            
+            // コンテナの中身を再構築 (Graphicsでリボンを描画)
+            container.infoContainer.removeAll(true);
+            
+            let currentX = 0;
+            
+            // 階級表示
+            if (u.rank > 0 && RANKS) {
+                const rText = this.add.text(0, 0, RANKS[Math.min(u.rank, 5)], { fontSize:'9px', color:'#eee', stroke:'#000', strokeThickness:2 }).setOrigin(0.5);
+                container.infoContainer.add(rText);
+                currentX += rText.width/2 + 4;
+            } else {
+                currentX -= 6; // 階級なしなら左詰め
             }
-            container.rankText.setText(info);
+
+            // スキルリボン描画
+            if (u.skills && u.skills.length > 0 && window.SKILL_STYLES) {
+                const g = this.add.graphics();
+                let ox = currentX;
+                u.skills.forEach(sk => {
+                    const st = window.SKILL_STYLES[sk];
+                    const color = st ? parseInt(st.col.replace('#','0x')) : 0x888888;
+                    g.fillStyle(0x000000, 1);
+                    g.fillRect(ox, -2, 5, 5); // 枠
+                    g.fillStyle(color, 1);
+                    g.fillRect(ox+1, -1, 3, 3); // 中身
+                    ox += 6;
+                });
+                container.infoContainer.add(g);
+                
+                // 全体を中央揃えっぽく調整
+                const totalW = ox;
+                container.infoContainer.x -= totalW / 4; 
+            }
         }
 
         if(window.gameLogic.selectedUnit === u) { container.cursor.setVisible(true); container.cursor.setAlpha(1); } else { container.cursor.setVisible(false); }
@@ -341,37 +359,16 @@ class MainScene extends Phaser.Scene {
         if(window.EnvSystem) window.EnvSystem.update(time);
         if(window.VFX) { window.VFX.update(); this.vfxGraphics.clear(); window.VFX.draw(this.vfxGraphics); }
         if (window.gameLogic.map.length > 0 && !this.mapGenerated) { this.createMap(); this.mapGenerated = true; }
-        
         const activeIds = new Set();
         window.gameLogic.units.forEach(u => { 
-            if(u.hp <= 0) return; 
-            activeIds.add(u.id); 
-            let visual = this.unitVisuals.get(u.id); 
-            if (!visual) { 
-                visual = this.createUnitVisual(u); 
-                this.unitVisuals.set(u.id, visual); 
-                this.unitGroup.add(visual); 
-            } 
+            if(u.hp <= 0) return; activeIds.add(u.id); let visual = this.unitVisuals.get(u.id); 
+            if (!visual) { visual = this.createUnitVisual(u); this.unitVisuals.set(u.id, visual); this.unitGroup.add(visual); } 
             this.updateUnitVisual(visual, u); 
-            
             const isSelected = (window.gameLogic.selectedUnit === u);
-            if (isSelected) {
-                if (this.unitGroup.exists(visual)) { this.unitGroup.remove(visual); this.hpGroup.add(visual); }
-            } else {
-                if (this.hpGroup.exists(visual)) { this.hpGroup.remove(visual); this.unitGroup.add(visual); }
-            }
+            if (isSelected) { if (this.unitGroup.exists(visual)) { this.unitGroup.remove(visual); this.hpGroup.add(visual); } } 
+            else { if (this.hpGroup.exists(visual)) { this.hpGroup.remove(visual); this.unitGroup.add(visual); } }
         });
-        
-        for (const [id, visual] of this.unitVisuals) { 
-            if (!activeIds.has(id)) { 
-                if(visual.hpBg) visual.hpBg.destroy();
-                if(visual.hpBar) visual.hpBar.destroy();
-                if(visual.rankText) visual.rankText.destroy(); // テキストも削除
-                visual.destroy(); 
-                this.unitVisuals.delete(id); 
-            } 
-        }
-        
+        for (const [id, visual] of this.unitVisuals) { if (!activeIds.has(id)) { if(visual.hpBg) visual.hpBg.destroy(); if(visual.hpBar) visual.hpBar.destroy(); if(visual.infoContainer) visual.infoContainer.destroy(); visual.destroy(); this.unitVisuals.delete(id); } }
         this.overlayGraphics.clear();
         if (this.dragHighlightHex) { this.overlayGraphics.lineStyle(4, 0xffffff, 1.0); this.drawHexOutline(this.overlayGraphics, this.dragHighlightHex.q, this.dragHighlightHex.r); }
         const selected = window.gameLogic.selectedUnit;
