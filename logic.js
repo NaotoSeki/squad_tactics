@@ -1,6 +1,5 @@
-/** LOGIC (Directional Attack Animation Call) */
+/** LOGIC (Fixed: Layer Compatibility for HexGroup Clear) */
 class Game {
-    // ... (constructorなどは変更なし) ...
     constructor() {
         this.units=[]; this.map=[]; this.setupSlots=[]; this.state='SETUP'; 
         this.path=[]; this.reachableHexes=[]; 
@@ -12,9 +11,6 @@ class Game {
         this.initDOM(); this.initSetup();
     }
     
-    // ... (initDOM, toggleSidebar, initSetup, startCampaign, refreshUnitState, calcAttackLine, axialToCube, cubeToAxial, cubeRound, handleHover, handleClick, spawnAtSafeGround, checkDeploy, deployUnit, calcReachableHexes, generateMap, spawnEnemies, spawnUnit, toggleAuto, runAuto, actionMove, checkReactionFire, swapWeapon は変更なし) ...
-    // ※これらは既存コードのまま
-
     initDOM() {
         Renderer.init(document.getElementById('game-view'));
         window.addEventListener('click', (e)=>{if(!e.target.closest('#context-menu')) document.getElementById('context-menu').style.display='none';});
@@ -57,7 +53,18 @@ class Game {
         document.getElementById('setup-screen').style.display='none'; 
         if (typeof Renderer !== 'undefined' && Renderer.game) {
             const mainScene = Renderer.game.scene.getScene('MainScene');
-            if (mainScene) { mainScene.mapGenerated = false; if(mainScene.hexGroup) mainScene.hexGroup.clear(true, true); if(window.EnvSystem) window.EnvSystem.clear(); }
+            if (mainScene) { 
+                mainScene.mapGenerated = false; 
+                // ★修正: Group(clear) と Layer(removeAll) の両対応
+                if(mainScene.hexGroup) {
+                    if (typeof mainScene.hexGroup.removeAll === 'function') {
+                        mainScene.hexGroup.removeAll();
+                    } else if (typeof mainScene.hexGroup.clear === 'function') {
+                        mainScene.hexGroup.clear(true, true);
+                    }
+                }
+                if(window.EnvSystem) window.EnvSystem.clear(); 
+            }
         }
         Renderer.resize();
         
@@ -252,12 +259,10 @@ class Game {
     checkReactionFire(u){ this.units.filter(e=>e.team!==u.team&&e.hp>0&&e.def.isTank&&this.hexDist(u,e)<=2).forEach(t=>{ this.log(`!! 防御射撃: ${t.def.name}->${u.def.name}`); u.hp-=15; if(window.VFX)VFX.addExplosion(Renderer.hexToPx(u.q,u.r).x,Renderer.hexToPx(u.q,u.r).y,"#fa0",5); if(window.Sfx)Sfx.play('mg'); if(u.hp<=0&&!u.deadProcessed){u.deadProcessed=true;this.log(`${u.def.name} 撃破`);if(window.Sfx)Sfx.play('death');} }); }
     swapWeapon(){ if(this.selectedUnit&&this.selectedUnit.ap>=1){ const u=this.selectedUnit; u.ap--; u.curWpn=(u.curWpn===u.def.wpn)?u.def.alt:u.def.wpn; if(window.Sfx)Sfx.play('swap'); this.log(`武装変更: ${WPNS[u.curWpn].name}`); this.refreshUnitState(u); } }
     
-    // ★修正: 攻撃時にアニメーションを再生
     async actionAttack(a,d){ 
         if(a.ap<2){this.log("AP不足");return;} const w=WPNS[a.curWpn]; if(this.hexDist(a,d)>w.rng){this.log("射程外");return;} 
         a.ap-=2; this.state='ANIM'; 
         
-        // ★Rendererのアニメーション再生をリクエスト (存在すれば)
         if (typeof Renderer !== 'undefined' && Renderer.playAttackAnim) {
             Renderer.playAttackAnim(a, d);
         }
@@ -279,9 +284,7 @@ class Game {
     }
     checkPhaseEnd(){if(this.units.filter(u=>u.team==='player'&&u.hp>0&&u.ap>0).length===0&&this.state==='PLAY')this.endTurn();}
     setStance(s){if(this.selectedUnit&&this.selectedUnit.ap>=1&&!this.selectedUnit.def.isTank){this.selectedUnit.ap--;this.selectedUnit.stance=s;this.refreshUnitState(this.selectedUnit);this.checkPhaseEnd();}}
-    
-    // ... (endTurn, healSurvivors, promoteSurvivors, checkWin, checkLose, getUnit, isValidHex, hexDist, getNeighbors, findPath, log, showContext, getStatus, updateSidebar) ...
-    // ※これらは既存コードのまま実装してください
+
     endTurn(){
         if(this.isProcessingTurn)return; this.isProcessingTurn=true; 
         this.selectedUnit=null; this.reachableHexes=[]; this.attackLine=[]; this.aimTargetUnit=null; this.path=[]; 
