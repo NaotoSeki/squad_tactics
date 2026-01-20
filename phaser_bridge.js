@@ -1,4 +1,4 @@
-/** * PHASER BRIDGE (Added Drop Shadows for Units) */
+/** * PHASER BRIDGE (Adjusted Tank Shadow Position) */
 let phaserGame = null;
 
 const Renderer = {
@@ -237,7 +237,7 @@ class MainScene extends Phaser.Scene {
     createUnitVisual(u) {
         const container = this.add.container(0, 0);
         
-        // ★影 (Shadow)
+        // ★影 (Shadow) デフォルト
         const shadow = this.add.ellipse(0, 8, 20, 10, 0x000000, 0.5);
         
         let sprite;
@@ -252,9 +252,9 @@ class MainScene extends Phaser.Scene {
             sprite.play('tank_idle');
             if(u.team === 'player') sprite.setTint(0xccddee); else sprite.setTint(0xffaaaa);
             
-            // 戦車は影を大きく
-            shadow.setPosition(0, 10);
-            shadow.setSize(40, 20);
+            // ★戦車影の調整
+            shadow.setPosition(-2, 2); // 左上に寄せて接地感を出す
+            shadow.setSize(46, 18);    // 横長に
         } else {
             sprite = this.add.sprite(0, 0, u.team==='player'?'unit_player':'unit_enemy').setScale(1/window.HIGH_RES_SCALE); 
             if(u.team==='player') sprite.setTint(0x6688aa); else sprite.setTint(0xcc6655); 
@@ -263,13 +263,11 @@ class MainScene extends Phaser.Scene {
         const cursor = this.add.image(0, 0, 'cursor').setScale(1/window.HIGH_RES_SCALE).setAlpha(0).setVisible(false);
         this.tweens.add({ targets: cursor, scale: { from: 1/window.HIGH_RES_SCALE, to: 1.1/window.HIGH_RES_SCALE }, alpha: { from: 1, to: 0.5 }, yoyo: true, repeat: -1, duration: 800 });
         
-        // ★追加順: 影 -> スプライト -> カーソル
         container.add([shadow, sprite, cursor]); 
         
         container.sprite = sprite; 
         container.cursor = cursor;
 
-        // HPバー
         const hpBg = this.add.rectangle(0, 0, 20, 4, 0x000000).setOrigin(0, 0.5);
         const hpBar = this.add.rectangle(0, 0, 20, 4, 0x00ff00).setOrigin(0, 0.5);
         
