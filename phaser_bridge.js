@@ -1,4 +1,4 @@
-/** * PHASER BRIDGE (Use Layers for Depth Sorting & Perfect HP Bar) */
+/** * PHASER BRIDGE (ESC Deselect & Pop-up Selected Unit) */
 let phaserGame = null;
 
 const Renderer = {
@@ -123,7 +123,7 @@ class UIScene extends Phaser.Scene {
 }
 
 // ---------------------------------------------------------
-//  MAIN SCENE (Layers & HP Fix)
+//  MAIN SCENE (ESC Key & Unit Pop-up)
 // ---------------------------------------------------------
 class MainScene extends Phaser.Scene {
     constructor() { 
@@ -150,11 +150,11 @@ class MainScene extends Phaser.Scene {
     create() {
         this.cameras.main.setBackgroundColor('#0b0e0a'); 
         
-        // ★重要: GroupではなくLayerを使用 (確実な深度管理)
+        // Layers
         this.hexGroup = this.add.layer();   // Depth 0
-        this.unitGroup = this.add.layer();  // Depth 1
-        this.treeGroup = this.add.layer();  // Depth 2 (木がユニットより手前)
-        this.hpGroup = this.add.layer();    // Depth 10 (HPゲージ最前面)
+        this.unitGroup = this.add.layer();  // Depth 1 (通常ユニット)
+        this.treeGroup = this.add.layer();  // Depth 2 (木)
+        this.hpGroup = this.add.layer();    // Depth 10 (HPゲージ & 選択ユニット)
         
         this.hexGroup.setDepth(0);
         this.unitGroup.setDepth(1);
@@ -174,11 +174,19 @@ class MainScene extends Phaser.Scene {
         if (!this.anims.exists('soldier_shoot_left')) { this.anims.create({ key: 'soldier_shoot_left', frames: this.anims.generateFrameNumbers('soldier_sheet', { start: 24, end: 31 }), frameRate: 15, repeat: 0 }); }
         if (!this.anims.exists('tank_idle')) { this.anims.create({ key: 'tank_idle', frames: this.anims.generateFrameNumbers('tank_sheet', { frames: [7, 6, 5, 6, 7, 5] }), frameRate: 10, repeat: -1 }); }
 
+        // Input
         this.input.on('wheel', (pointer, gameObjects, deltaX, deltaY, deltaZ) => { let newZoom = this.cameras.main.zoom; if (deltaY > 0) newZoom -= 0.5; else if (deltaY < 0) newZoom += 0.5; newZoom = Phaser.Math.Clamp(newZoom, 0.25, 4.0); this.tweens.add({ targets: this.cameras.main, zoom: newZoom, duration: 150, ease: 'Cubic.out' }); });
         this.input.on('pointerdown', (p) => { if (Renderer.isCardDragging || Renderer.checkUIHover(p.x, p.y)) return; if(p.button === 0) { Renderer.isMapDragging = true; if(window.gameLogic) window.gameLogic.handleClick(Renderer.pxToHex(p.x, p.y)); } else if(p.button === 2) { if(window.gameLogic) window.gameLogic.showContext(p.x, p.y); } });
         this.input.on('pointerup', () => { Renderer.isMapDragging = false; });
         this.input.on('pointermove', (p) => { if (Renderer.isCardDragging) return; if (p.isDown && Renderer.isMapDragging) { const zoom = this.cameras.main.zoom; this.cameras.main.scrollX -= (p.x - p.prevPosition.x) / zoom; this.cameras.main.scrollY -= (p.y - p.prevPosition.y) / zoom; } if(!Renderer.isMapDragging && window.gameLogic) window.gameLogic.handleHover(Renderer.pxToHex(p.x, p.y)); }); 
         this.input.mouse.disableContextMenu();
+
+        // ★追加: ESCキーで選択解除
+        this.input.keyboard.on('keydown-ESC', () => {
+            if(window.gameLogic && window.gameLogic.clearSelection) {
+                window.gameLogic.clearSelection();
+            }
+        });
     }
 
     triggerAttackAnimation(attacker, target) {
@@ -200,7 +208,6 @@ class MainScene extends Phaser.Scene {
     
     createMap() { 
         const map = window.gameLogic.map; 
-        // Layerなので removeAll を使用
         this.unitGroup.removeAll(true); this.treeGroup.removeAll(true); this.hpGroup.removeAll(true);
         this.unitVisuals.clear();
         for(let q=0; q<MAP_W; q++) { 
@@ -209,7 +216,6 @@ class MainScene extends Phaser.Scene {
                 const hex = this.add.image(pos.x, pos.y, 'hex_base').setScale(1/window.HIGH_RES_SCALE); 
                 let tint = 0x555555; if(t.id===0)tint=0x5a5245; else if(t.id===1)tint=0x425030; else if(t.id===2)tint=0x222e1b; else if(t.id===4)tint=0x504540; else if(t.id===5) { tint=0x303840; if(window.EnvSystem) window.EnvSystem.registerWater(hex, pos.y, q, r, this.hexGroup); }
                 
-                // 木は treeGroup (Layer) に追加
                 if(window.EnvSystem) { 
                     if(t.id === 1) window.EnvSystem.spawnGrass(this, this.hexGroup, pos.x, pos.y); 
                     if(t.id === 2) window.EnvSystem.spawnTrees(this, this.treeGroup, pos.x, pos.y); 
@@ -220,7 +226,6 @@ class MainScene extends Phaser.Scene {
         this.centerMap(); 
     }
     
-    // ★HPゲージ修正版
     createUnitVisual(u) {
         const container = this.add.container(0, 0);
         let sprite;
@@ -246,7 +251,6 @@ class MainScene extends Phaser.Scene {
         container.sprite = sprite; 
         container.cursor = cursor;
 
-        // ★HPゲージ: 背景も中身も「左端基準(Origin=0)」で統一し、HPGroup (最前面Layer) に置く
         const hpBg = this.add.rectangle(0, 0, 20, 4, 0x000000).setOrigin(0, 0.5);
         const hpBar = this.add.rectangle(0, 0, 20, 4, 0x00ff00).setOrigin(0, 0.5);
         
@@ -263,11 +267,9 @@ class MainScene extends Phaser.Scene {
         const pos = Renderer.hexToPx(u.q, u.r); 
         container.setPosition(pos.x, pos.y);
         
-        // ★HPゲージ追従
         if(container.hpBg && container.hpBar) {
             const barY = pos.y - 35;
-            const barX = pos.x - 10; // 幅20の半分だけ左にずらす
-            
+            const barX = pos.x - 10; 
             container.hpBg.setPosition(barX, barY);
             container.hpBar.setPosition(barX, barY);
             
@@ -297,9 +299,22 @@ class MainScene extends Phaser.Scene {
                 this.unitGroup.add(visual); 
             } 
             this.updateUnitVisual(visual, u); 
+            
+            // ★追加: 選択中のユニットだけ hpGroup (最前面) に移動させる
+            const isSelected = (window.gameLogic.selectedUnit === u);
+            if (isSelected) {
+                if (this.unitGroup.exists(visual)) {
+                    this.unitGroup.remove(visual);
+                    this.hpGroup.add(visual);
+                }
+            } else {
+                if (this.hpGroup.exists(visual)) {
+                    this.hpGroup.remove(visual);
+                    this.unitGroup.add(visual);
+                }
+            }
         });
         
-        // 削除処理
         for (const [id, visual] of this.unitVisuals) { 
             if (!activeIds.has(id)) { 
                 if(visual.hpBg) visual.hpBg.destroy();
