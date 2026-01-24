@@ -1,4 +1,4 @@
-/** LOGIC: Magazine Variants & Jamming Mechanics */
+/** LOGIC: Inventory System & Drag-Drop Swap */
 class Game {
     constructor() {
         this.units=[]; this.map=[]; this.setupSlots=[]; this.state='SETUP'; 
@@ -51,7 +51,7 @@ class Game {
         });
     }
 
-    // ★兵士生成 (マガジン抽選ロジック追加)
+    // ★重要: インベントリ構築ロジック (Hands + Bag)
     createSoldier(templateKey, team, q, r) {
         const t = UNIT_TEMPLATES[templateKey];
         if(!t) return null;
@@ -74,51 +74,86 @@ class Game {
             name = `${last} ${first}`; 
         }
 
-        // 装備生成ヘルパー
-        const createWpn = (key) => {
+        // 武器・アイテム生成ヘルパー
+        const createItem = (key, isMainWpn = false) => {
             if(!key || !WPNS[key]) return null;
-            let w = { ...WPNS[key], code:key }; // 基本データコピー
+            let base = WPNS[key];
+            let item = { ...base, code: key, id: Math.random() };
             
-            // ★マガジン抽選ロジック
-            if (MAG_VARIANTS && MAG_VARIANTS[key]) {
-                const vars = MAG_VARIANTS[key];
-                const choice = vars[Math.floor(Math.random() * vars.length)];
-                w.cap = choice.cap; // 装弾数上書き
-                w.jam = choice.jam; // ジャム率設定
-                w.magName = choice.name; // UI用
-                // 将来的にコスト計算もここで
+            // 銃の場合、マガジンタイプ決定と初期弾薬装填
+            if (base.type === 'bullet' || base.type === 'shell_fast') {
+                if (isMainWpn && MAG_VARIANTS && MAG_VARIANTS[key]) {
+                    const vars = MAG_VARIANTS[key];
+                    const choice = vars[Math.floor(Math.random() * vars.length)];
+                    item.cap = choice.cap; 
+                    item.jam = choice.jam; 
+                    item.magName = choice.name;
+                }
+                item.current = item.cap;
+            } else if (base.type === 'shell' || base.area) {
+                // 手榴弾等は使い切り
+                item.current = 1; 
+                item.isConsumable = true;
             }
-            
-            w.current = w.cap;
-            w.mags = WPNS[key].mag;
-            return w;
+            return item;
         };
 
-        const loadout = {};
-        if (t.main) loadout.main = createWpn(t.main);
-        if (t.sub)  loadout.sub  = createWpn(t.sub);
-        if (t.opt)  loadout.opt  = createWpn(t.opt);
-        if (loadout.opt) loadout.opt.current = 1; // オプション品は1個単位
+        // 装備構築
+        let hands = null;
+        let bag = [];
+
+        // メイン武器 -> Hands
+        if (t.main) hands = createItem(t.main, true);
+
+        // サブ武器 -> Bag
+        if (t.sub) bag.push(createItem(t.sub));
+
+        // オプション -> Bag
+        if (t.opt) {
+            const optBase = WPNS[t.opt];
+            const count = optBase.mag || 1; // オプションのmag値 = 所持個数として扱う
+            for(let i=0; i<count; i++) bag.push(createItem(t.opt));
+        }
+
+        // 予備マガジン (メイン武器用) -> Bag
+        if (hands && hands.mag && !hands.isConsumable) {
+            for(let i=0; i<hands.mag; i++) {
+                if (bag.length >= 4) break; // 4つまで
+                bag.push({
+                    type: 'ammo',
+                    name: (hands.magName || 'Clip'),
+                    ammoFor: hands.code, // どの武器用か
+                    cap: hands.cap,
+                    jam: hands.jam,
+                    code: 'mag'
+                });
+            }
+        }
+        
+        // 敵の場合はバッグを持たせず、無限マガジン扱いなどの簡易処理にする
+        if (!isPlayer) {
+            // 敵はリロードしない（簡易化）
+            if(hands) hands.current = 999;
+            bag = [];
+        }
 
         return {
             id: Math.random(),
             team: team, q: q, r: r,
-            def: t, 
-            name: name,
-            rank: rank,
-            faceSeed: faceSeed,
-            stats: stats, 
+            def: t, name: name, rank: rank, faceSeed: faceSeed, stats: stats, 
             hp: t.hp || (80 + (stats.str||0) * 5),
             maxHp: t.hp || (80 + (stats.str||0) * 5),
             ap: t.ap || Math.floor((stats.mob||0)/2) + 3,
             maxAp: t.ap || Math.floor((stats.mob||0)/2) + 3,
-            loadout: loadout,
-            equipped: 'main', 
+            
+            hands: hands, // 装備中
+            bag: bag,     // バックパック (Array)
+            
             stance: 'stand',
             skills: [],
             sectorsSurvived: 0,
             deadProcessed: false,
-            curWpn: t.main 
+            curWpn: hands ? hands.code : 'unarmed'
         };
     }
 
@@ -128,10 +163,7 @@ class Game {
             const mainScene = Renderer.game.scene.getScene('MainScene');
             if (mainScene) { 
                 mainScene.mapGenerated = false; 
-                if(mainScene.hexGroup) {
-                    if (typeof mainScene.hexGroup.removeAll === 'function') { mainScene.hexGroup.removeAll(); } 
-                    else if (typeof mainScene.hexGroup.clear === 'function') { mainScene.hexGroup.clear(true, true); }
-                }
+                if(mainScene.hexGroup && typeof mainScene.hexGroup.removeAll === 'function') mainScene.hexGroup.removeAll();
                 if(window.EnvSystem) window.EnvSystem.clear(); 
             }
         }
@@ -152,25 +184,12 @@ class Game {
                 this.units.push(u);
             });
         } else { 
-            this.units.forEach(u => { 
-                const p = this.getSafeSpawnPos('player');
-                u.q = p.q; u.r = p.r;
-            });
+            this.units.forEach(u => { const p = this.getSafeSpawnPos('player'); u.q = p.q; u.r = p.r; });
         }
         this.spawnEnemies();
-        
-        const aiTypes = ['AGGRESSIVE', 'DEFENSIVE', 'TACTICAL'];
-        this.enemyAI = aiTypes[Math.floor(Math.random() * aiTypes.length)];
-        let aiName = "";
-        if(this.enemyAI === 'AGGRESSIVE') aiName = "突撃部隊 (Aggressive)";
-        else if(this.enemyAI === 'DEFENSIVE') aiName = "防衛部隊 (Defensive)";
-        else aiName = "遊撃部隊 (Tactical)";
-
         this.state='PLAY'; 
-        this.log(`MISSION START - SECTOR ${this.sector}`);
-        this.log(`⚠ 敵軍無線傍受: ${aiName}`);
+        this.log(`SECTOR ${this.sector} START`);
         document.getElementById('sector-counter').innerText = `SECTOR: ${this.sector.toString().padStart(2, '0')}`;
-        
         const leader = this.units.find(u => u.team === 'player');
         if(leader && leader.q !== -999) Renderer.centerOn(leader.q, leader.r);
         setTimeout(() => { if (Renderer.dealCards) Renderer.dealCards(['rifleman', 'tank_pz4', 'gunner', 'scout', 'tank_tiger']); }, 500);
@@ -206,20 +225,99 @@ class Game {
 
     clearSelection() {
         if (this.selectedUnit) {
-            this.selectedUnit = null;
-            this.reachableHexes = [];
-            this.attackLine = [];
-            this.aimTargetUnit = null;
-            this.path = [];
+            this.selectedUnit = null; this.reachableHexes = []; this.attackLine = []; this.aimTargetUnit = null; this.path = [];
             this.updateSidebar();
             if(window.Sfx) Sfx.play('click'); 
         }
     }
 
+    // --- 装備操作: ドラッグ＆ドロップ ---
+    // src: {type:'main'|'bag', index:0}, tgt: {type:'main'|'bag', index:0}
+    swapEquipment(src, tgt) {
+        const u = this.selectedUnit;
+        if (!u || u.ap < 1) { this.log("AP不足"); return; }
+        if (src.type === tgt.type && src.index === tgt.index) return;
+
+        // アイテム取得
+        let srcItem = (src.type === 'main') ? u.hands : u.bag[src.index];
+        let tgtItem = (tgt.type === 'main') ? u.hands : u.bag[tgt.index];
+
+        if (!srcItem) return; // 空をつかんだ
+
+        // ルール: Mainには武器(弾薬以外)しか置けない
+        if (tgt.type === 'main' && srcItem.type === 'ammo') {
+            this.log("弾薬は装備できません");
+            return;
+        }
+        if (src.type === 'main' && tgtItem && tgtItem.type === 'ammo') {
+            this.log("弾薬とは交換できません");
+            return;
+        }
+
+        // 交換処理
+        u.ap -= 1;
+        
+        // 1. 取り出し
+        if (src.type === 'main') u.hands = null;
+        else u.bag[src.index] = null;
+
+        if (tgt.type === 'main') u.hands = null;
+        else u.bag[tgt.index] = null;
+
+        // 2. 配置
+        if (tgt.type === 'main') u.hands = srcItem;
+        else u.bag[tgt.index] = srcItem;
+
+        if (src.type === 'main') u.hands = tgtItem;
+        else u.bag[src.index] = tgtItem;
+
+        // 詰め直し（バッグのnullを詰めるかどうかはお好みだが、スロット固定ならnullのままが自然）
+        // u.bag = u.bag.filter(i => i !== null); // 今回は詰めない
+
+        this.log(`${u.name} 装備変更`);
+        if(window.Sfx) Sfx.play('swap');
+        
+        // 装備が変わったので射程など再計算
+        if (u.hands) u.curWpn = u.hands.code;
+        this.refreshUnitState(u);
+    }
+
+    reloadWeapon() {
+        const u = this.selectedUnit;
+        if (!u || u.ap < 1) return;
+        const w = u.hands;
+        if (!w || w.current === w.cap) return;
+
+        // バッグから適合するマガジンを探す
+        const magIndex = u.bag.findIndex(i => i && i.type === 'ammo' && i.ammoFor === w.code);
+        
+        if (magIndex === -1) {
+            this.log("予備マガジンがありません");
+            return;
+        }
+
+        const mag = u.bag[magIndex];
+        u.ap -= (w.rld || 1);
+        
+        // リロード処理: マガジンの性能（装弾数・ジャム率）を武器に適用
+        w.current = mag.cap;
+        w.cap = mag.cap; // マガジンによって容量が変わる場合に対応
+        w.jam = mag.jam;
+        w.magName = mag.name;
+
+        // マガジン消費（バッグから消す）
+        u.bag.splice(magIndex, 1);
+
+        this.log(`${u.name} リロード (${mag.name})`);
+        if(window.Sfx) Sfx.play('swap');
+        this.refreshUnitState(u);
+    }
+
+    // --- 戦闘 ---
     calcAttackLine(u, targetQ, targetR) {
         this.attackLine = []; this.aimTargetUnit = null;
         if (!u || u.ap < 2) return;
-        const w = u.loadout[u.equipped];
+        const w = u.hands; // ★修正
         if(!w) return;
         const range = w.rng;
         const dist = this.hexDist(u, {q:targetQ, r:targetR});
@@ -240,6 +338,7 @@ class Game {
             }
         }
     }
+    // ... axialToCube, cubeToAxial, cubeRound ... (変更なし)
     axialToCube(q, r) { return { x: q, y: r, z: -q-r }; }
     cubeToAxial(c) { return { q: c.x, r: c.y }; }
     cubeRound(c) {
@@ -248,6 +347,7 @@ class Game {
         if (x_diff > y_diff && x_diff > z_diff) rx = -ry - rz; else if (y_diff > z_diff) ry = -rx - rz; else rz = -rx - ry;
         return { x: rx, y: ry, z: rz };
     }
+
     handleHover(p) {
         if(this.state !== 'PLAY') return; this.hoverHex = p;
         if(this.selectedUnit && this.isValidHex(p.q, p.r)) {
@@ -268,35 +368,16 @@ class Game {
             else { this.clearSelection(); } 
         }
     }
-    
-    equipWeapon(slotKey) {
-        const u = this.selectedUnit;
-        if (!u || u.ap < 1 || !u.loadout[slotKey]) return;
-        if (u.equipped === slotKey) return; 
-        u.ap -= 1; 
-        u.equipped = slotKey;
-        u.curWpn = u.loadout[slotKey].name;
-        this.log(`${u.name} 持ち替え: ${u.loadout[slotKey].name}`);
-        if(window.Sfx) Sfx.play('swap');
-        this.refreshUnitState(u);
-    }
-
-    reloadWeapon() {
-        const u = this.selectedUnit;
-        if (!u || u.ap < 1) return;
-        const w = u.loadout[u.equipped];
-        if (!w || w.mags <= 0 || w.current === w.cap) return;
-        u.ap -= w.rld; 
-        w.mags--;
-        w.current = w.cap;
-        this.log(`${u.name} リロード (${w.mags} mag left)`);
-        if(window.Sfx) Sfx.play('swap');
-        this.refreshUnitState(u);
-    }
 
     async actionAttack(a, d) {
-        const w = a.loadout[a.equipped];
+        const w = a.hands; // ★修正
         if (!w) return;
+        
+        // 使い捨て武器（グレネード等）の場合、射程と弾数チェック
+        if (w.isConsumable && w.current <= 0) { 
+            this.log("使用済みです"); return; 
+        }
+        
         if (w.current <= 0) { this.log("弾切れ！リロードが必要だ！"); return; }
         if (a.ap < w.ap) { this.log("AP不足"); return; }
         const dist = this.hexDist(a, d);
@@ -311,17 +392,18 @@ class Game {
         if (d.stance === 'crouch') hitChance -= 10;
         let dmgMod = 1.0 + (a.stats?.str || 0) * 0.05;
 
-        const shots = Math.min(w.burst, w.current);
+        // 消費アイテムなら1発、そうでなければバースト
+        const shots = w.isConsumable ? 1 : Math.min(w.burst || 1, w.current);
         this.log(`${a.name} 攻撃開始 (${w.name})`);
 
         for(let i=0; i<shots; i++) {
             if (d.hp <= 0) break;
             
-            // ★重要: ジャム判定
-            if (w.jam && Math.random() < w.jam) {
+            // ジャム判定 (消費アイテム以外)
+            if (!w.isConsumable && w.jam && Math.random() < w.jam) {
                 this.log(`⚠ JAM!! ${w.name}が作動不良！`);
-                if(window.Sfx) Sfx.play('ricochet'); // カチッという音の代用
-                break; // 攻撃ループ中断
+                if(window.Sfx) Sfx.play('ricochet'); 
+                break; 
             }
 
             w.current--; 
@@ -361,6 +443,12 @@ class Game {
             });
             await new Promise(r => setTimeout(r, 100)); 
         }
+        
+        // 使い切ったら捨てる (消費アイテムの場合)
+        if (w.isConsumable && w.current <= 0) {
+            a.hands = null; // メイン装備から消滅
+            this.log(`${w.name} を消費しました`);
+        }
 
         setTimeout(() => {
             if (d.hp <= 0 && !d.deadProcessed) {
@@ -375,6 +463,7 @@ class Game {
         }, 800);
     }
 
+    // ... checkDeploy, deployUnit ...
     checkDeploy(targetHex) {
         if(!this.isValidHex(targetHex.q, targetHex.r) || this.map[targetHex.q][targetHex.r].id === -1) { this.log("配置不可: 進入不可能な地形です"); return false; }
         if(this.map[targetHex.q][targetHex.r].id === 5) { this.log("配置不可: 水上には配置できません"); return false; }
@@ -394,6 +483,7 @@ class Game {
             this.updateSidebar();
         }
     }
+    // ... calcReachableHexes, generateMap, spawnEnemies ...
     calcReachableHexes(u) {
         this.reachableHexes = []; if(!u) return;
         let frontier = [{q:u.q, r:u.r, cost:0}], costSoFar = new Map(); costSoFar.set(`${u.q},${u.r}`, 0);
@@ -462,6 +552,7 @@ class Game {
     toggleAuto(){ this.isAuto=!this.isAuto; document.getElementById('auto-toggle').classList.toggle('active'); this.log(`AUTO: ${this.isAuto?"ON":"OFF"}`); }
     runAuto(){ /* 省略 */ }
 
+    // ... actionMove, checkReactionFire, checkPhaseEnd, setStance, endTurn ...
     async actionMove(u,p){ 
         this.state='ANIM'; this.selectedUnit=null; this.path=[]; this.reachableHexes=[]; this.attackLine=[]; this.aimTargetUnit=null;
         for(let s of p){ u.ap-=this.map[s.q][s.r].cost; u.q=s.q; u.r=s.r; if(window.Sfx)Sfx.play('move'); await new Promise(r=>setTimeout(r,180)); } 
@@ -478,7 +569,7 @@ class Game {
             if(u.hp<=0&&!u.deadProcessed){u.deadProcessed=true;this.log(`${u.name} 撃破`);if(window.Sfx)Sfx.play('death');} 
         }); 
     }
-    swapWeapon(){ /* 使用しないがエラー回避用 */ } 
+    swapWeapon(){ /* 使用しない */ } 
 
     checkPhaseEnd(){if(this.units.filter(u=>u.team==='player'&&u.hp>0&&u.ap>0).length===0&&this.state==='PLAY')this.endTurn();}
     setStance(s){if(this.selectedUnit&&this.selectedUnit.ap>=1&&!this.selectedUnit.def.isTank){this.selectedUnit.ap--;this.selectedUnit.stance=s;this.refreshUnitState(this.selectedUnit);this.checkPhaseEnd();}}
@@ -502,7 +593,7 @@ class Game {
                 let target = ps[0]; let minDist = 999; 
                 ps.forEach(p => { const d = this.hexDist(e, p); if(d < minDist){ minDist = d; target = p; } }); 
                 e.ap = e.maxAp;
-                const w = e.loadout.main; 
+                const w = e.hands; 
                 if(!w) continue;
                 const distToTarget = this.hexDist(e, target); 
                 if (distToTarget <= w.rng && e.ap >= w.ap) { 
@@ -527,6 +618,7 @@ class Game {
         }, 1200);
     }
     
+    // ... healSurvivors, promoteSurvivors, checkWin, checkLose, getUnit, isValidHex, hexDist, getNeighbors, findPath, log, showContext, getStatus ...
     healSurvivors(){this.units.filter(u=>u.team==='player'&&u.hp>0).forEach(u=>{const t=Math.floor(u.maxHp*0.8);if(u.hp<t)u.hp=t;});this.log("治療完了");}
     promoteSurvivors(){this.units.filter(u=>u.team==='player'&&u.hp>0).forEach(u=>{u.sectorsSurvived++; if(u.sectorsSurvived===5){u.skills.push("Hero");u.maxAp++;this.log("英雄昇格");} u.rank=Math.min(5,(u.rank||0)+1); u.maxHp+=30; u.hp+=30; if(u.skills.length<8&&Math.random()<0.7){const k=Object.keys(SKILLS).filter(z=>z!=="Hero"); u.skills.push(k[Math.floor(Math.random()*k.length)]); this.log("スキル習得");} });}
     checkWin(){if(this.units.filter(u=>u.team==='enemy'&&u.hp>0).length===0){if(window.Sfx)Sfx.play('win'); document.getElementById('reward-screen').style.display='flex'; this.promoteSurvivors(); const b=document.getElementById('reward-cards'); b.innerHTML=''; [{k:'rifleman',t:'新兵'},{k:'tank_pz4',t:'戦車'},{k:'heal',t:'医療'}].forEach(o=>{const d=document.createElement('div');d.className='card';d.innerHTML=`<div class="card-img-box"><img src="${createCardIcon(o.k==='heal'?'heal':'infantry')}"></div><div class="card-body"><h3>${o.t}</h3><p>補給</p></div>`;d.onclick=()=>{if(o.k==='heal')this.healSurvivors();else this.spawnAtSafeGround('player',o.k);this.sector++;document.getElementById('reward-screen').style.display='none';this.startCampaign();};b.appendChild(d);}); return true;} return false;}
@@ -536,16 +628,15 @@ class Game {
     hexDist(a,b){return (Math.abs(a.q-b.q)+Math.abs(a.q+a.r-b.q-b.r)+Math.abs(a.r-b.r))/2;}
     getNeighbors(q,r){return [[1,0],[1,-1],[0,-1],[-1,0],[-1,1],[0,1]].map(d=>({q:q+d[0],r:r+d[1]})).filter(h=>this.isValidHex(h.q,h.r));}
     findPath(u,tq,tr){let f=[{q:u.q,r:u.r}],cf={},cs={}; cf[`${u.q},${u.r}`]=null; cs[`${u.q},${u.r}`]=0; while(f.length>0){let c=f.shift();if(c.q===tq&&c.r===tr)break; this.getNeighbors(c.q,c.r).forEach(n=>{if(this.getUnit(n.q,n.r)&&(n.q!==tq||n.r!==tr))return; const cost=this.map[n.q][n.r].cost; if(cost>=99)return; const nc=cs[`${c.q},${c.r}`]+cost; if(nc<=u.ap){const k=`${n.q},${n.r}`;if(!(k in cs)||nc<cs[k]){cs[k]=nc;f.push(n);cf[k]=c;}}});} let p=[],c={q:tq,r:tr}; if(!cf[`${tq},${tr}`])return[]; while(c){if(c.q===u.q&&c.r===u.r)break;p.push(c);c=cf[`${c.q},${c.r}`];} return p.reverse();}
-    
     log(m){const c=document.getElementById('log-container'); if(c){ const d=document.createElement('div');d.className='log-entry';d.innerText=`> ${m}`;c.appendChild(d);c.scrollTop=c.scrollHeight; }}
     showContext(mx,my){}
     getStatus(u){if(u.hp<=0)return "DEAD";const r=u.hp/u.maxHp;if(r>0.8)return "NORMAL";if(r>0.5)return "DAMAGED";return "CRITICAL";}
     
-    // ★UI更新 (マガジン名表示追加)
+    // ★UI更新: インベントリ構築とドラッグ＆ドロップ
     updateSidebar(){
         const ui=document.getElementById('unit-info'),u=this.selectedUnit;
         if(u){
-            const w=u.loadout[u.equipped];
+            const w=u.hands;
             const s=this.getStatus(u);
             const skillCounts = {}; u.skills.forEach(sk => { skillCounts[sk] = (skillCounts[sk] || 0) + 1; });
             let skillHtml = "";
@@ -557,33 +648,34 @@ class Game {
             }
             const faceUrl = (Renderer.generateFaceIcon) ? Renderer.generateFaceIcon(u.faceSeed) : "";
 
-            const makeSlot = (slotKey, isMain) => {
-                const item = u.loadout[slotKey];
-                if (!item) return `<div class="slot empty" ondragover="onSlotDragOver(event)" ondragleave="onSlotDragLeave(event)" ondrop="onSlotDrop(event, '${slotKey}')" style="opacity:0.3; text-align:center; font-size:10px; color:#555;">[EMPTY]</div>`;
-                const isActive = (u.equipped === slotKey);
-                const width = (item.current / item.cap) * 100;
-                // ★修正: slot-metaにマガジン名を表示
-                const magInfo = item.magName ? `<span style="color:#d84; font-size:8px;">[${item.magName}]</span>` : "";
+            // スロットHTML生成
+            const makeSlot = (item, type, index) => {
+                if (!item) return `<div class="slot empty" ondragover="onSlotDragOver(event)" ondragleave="onSlotDragLeave(event)" ondrop="onSlotDrop(event, '${type}', ${index})"><div style="font-size:10px; color:#555;">[EMPTY]</div></div>`;
+                
+                const isMain = (type === 'main');
+                const isAmmo = (item.type === 'ammo');
+                const width = (item.cap > 0) ? (item.current / item.cap) * 100 : 0;
+                
                 return `
-                <div class="slot ${isActive?'active-weapon':''} ${isMain?'main-weapon':'sub-item'}" 
-                     draggable="true" ondragstart="onSlotDragStart(event, '${slotKey}')" ondragend="onSlotDragEnd(event)" ondragover="onSlotDragOver(event)" ondragleave="onSlotDragLeave(event)" ondrop="onSlotDrop(event, '${slotKey}')" onclick="gameLogic.equipWeapon('${slotKey}')">
-                    <div class="slot-name">${isActive?'🔫':''} ${item.name} ${magInfo}</div>
-                    <div class="slot-meta">
-                        <span>DMG:${item.dmg} RNG:${item.rng}</span>
-                        <span class="ammo-text">${item.current}/${item.cap}</span>
-                    </div>
-                    <div class="ammo-bar"><div class="ammo-fill" style="width:${width}%"></div></div>
+                <div class="slot ${isMain?'main-weapon':'bag-item'}" 
+                     draggable="true" ondragstart="onSlotDragStart(event, '${type}', ${index})" ondragend="onSlotDragEnd(event)" ondragover="onSlotDragOver(event)" ondragleave="onSlotDragLeave(event)" ondrop="onSlotDrop(event, '${type}', ${index})">
+                    <div class="slot-name">${isMain?'🔫':''} ${item.name}</div>
+                    ${!isAmmo ? `<div class="slot-meta"><span>RNG:${item.rng} DMG:${item.dmg}</span> <span class="ammo-text">${item.current}/${item.cap}</span></div>` : `<div class="slot-meta" style="color:#d84">AMMO for ${item.ammoFor}</div>`}
+                    ${!isAmmo && item.cap > 0 ? `<div class="ammo-bar"><div class="ammo-fill" style="width:${width}%"></div></div>` : ''}
                 </div>`;
             };
 
-            const mainSlot = makeSlot('main', true);
-            const subSlot = makeSlot('sub', false);
-            const optSlot = makeSlot('opt', false); 
-
-            let reloadBtn = "";
-            if (w && w.current < w.cap && w.mags > 0) {
-                reloadBtn = `<button onclick="gameLogic.reloadWeapon()" style="width:100%; background:#442; color:#dd4; border:1px solid #884; cursor:pointer; margin-top:5px;">🔃 RELOAD (${w.rld} AP)</button>`;
+            const mainSlot = makeSlot(u.hands, 'main', 0);
+            let subSlots = "";
+            for(let i=0; i<4; i++) {
+                subSlots += makeSlot(u.bag[i], 'bag', i);
             }
+
+            // 予備マガジンがあるかチェック
+            let canReload = false;
+            if (w && w.current < w.cap && u.bag.some(i => i && i.type==='ammo' && i.ammoFor===w.code)) canReload = true;
+            
+            let reloadBtn = canReload ? `<button onclick="gameLogic.reloadWeapon()" style="width:100%; background:#442; color:#dd4; border:1px solid #884; cursor:pointer; margin-top:5px;">🔃 RELOAD (${w.rld||1} AP)</button>` : "";
 
             ui.innerHTML=`
                 <div class="soldier-header">
@@ -599,12 +691,14 @@ class Game {
                     <div class="stat-row"><span class="stat-label">AIM</span> <span class="stat-val">${u.stats?.aim||'-'}</span></div>
                     <div class="stat-row"><span class="stat-label">STR</span> <span class="stat-val">${u.stats?.str||'-'}</span></div>
                 </div>
+                
                 <div class="inv-header" style="padding:0 10px; margin-top:10px;">LOADOUT (Drag to Swap)</div>
                 <div class="loadout-container">
                     <div class="main-slot-area">${mainSlot}</div>
-                    <div class="sub-slot-area">${subSlot}${optSlot}</div>
+                    <div class="sub-slot-area">${subSlots}</div>
                 </div>
                 <div style="padding:0 10px;">${reloadBtn}</div>
+
                 <div style="margin:5px 0; padding:0 10px;">${skillHtml}</div>
                 <div style="padding:10px;">
                     <div style="font-size:10px; color:#666;">TACTICS</div>
