@@ -3,7 +3,6 @@ const HEX_SIZE = 34;
 const MAP_W = 24; 
 const MAP_H = 24; 
 
-// ★重要: 地形データの定義 (IDはPhaserBridgeの描画ロジックと一致)
 const TERRAIN = {
     VOID:   { id: -1, name: "---",  cost: 99, cover: 0 },
     DIRT:   { id: 0,  name: "荒地", cost: 1,  cover: 0 },
@@ -17,7 +16,6 @@ const RANKS = ["Pvt", "Pfc", "Cpl", "Sgt", "SSgt", "Lt", "Cpt"];
 const FIRST_NAMES = ["John", "Mike", "Robert", "James", "William", "David", "Richard", "Joseph", "Thomas", "Charles", "Daniel", "Matthew", "Donald", "Paul", "George"];
 const LAST_NAMES = ["Smith", "Johnson", "Williams", "Jones", "Brown", "Davis", "Miller", "Wilson", "Moore", "Taylor", "Anderson", "Thomas", "Jackson", "White", "Harris"];
 
-// スキル定義
 const SKILLS = {
     "Precision": { name: "精密", desc: "命中+15%" },
     "Radio":     { name: "通信", desc: "支援効果UP" },
@@ -30,8 +28,6 @@ const SKILLS = {
     "CQC":       { name: "白兵", desc: "近接反撃" }
 };
 
-// 武器データ詳細化
-// cap:装弾数, mag:初期マガジン数, ap:射撃コスト, wgt:重量, rld:リロードAP
 const WPNS = {
     // --- Main Arms ---
     m1: { name:"M1 Garand", rng:6, acc:85, dmg:40, cap:8, mag:6, ap:2, rld:1, wgt:4, type:'bullet', burst:1, desc:"米軍主力小銃。セミオート。" },
@@ -53,14 +49,20 @@ const WPNS = {
     kwk88: { name:"88mm KwK36", rng:10, acc:85, dmg:250, cap:1, mag:99, ap:3, rld:2, wgt:0, type:'shell_fast', burst:1, desc:"Tiger I 主砲。必殺。" }
 };
 
-// ユニットテンプレート
 const UNIT_TEMPLATES = {
     rifleman: { name:"Rifleman", role:"infantry", main:"m1", sub:"m1911", opt:"nade", stats:{str:5, aim:5, mob:5, mor:5} },
     scout:    { name:"Scout", role:"infantry", main:"thompson", sub:"knife", opt:"nade", stats:{str:4, aim:4, mob:8, mor:6} },
     gunner:   { name:"Gunner", role:"infantry", main:"bar", sub:"m1911", opt:null, stats:{str:8, aim:4, mob:3, mor:5} },
     sniper:   { name:"Sniper", role:"infantry", main:"k98_scope", sub:"m1911", opt:null, stats:{str:3, aim:9, mob:4, mor:4} },
     
-    // 敵・兵器
     tank_pz4: { name:"Panzer IV", role:"tank", main:"kwk", sub:"mg42", opt:null, hp:600, ap:5, isTank:true },
     tank_tiger: { name:"Tiger I", role:"tank", main:"kwk88", sub:"mg42", opt:null, hp:1200, ap:4, isTank:true, isBoss:true }
+};
+
+// ★追加: マガジンバリエーション定義
+const MAG_VARIANTS = {
+    thompson: [
+        { name: "20rd Box", code: "45ACP20T", cap: 20, cost: 28, jam: 0.0 },
+        { name: "30rd Box", code: "45ACP30T", cap: 30, cost: 54, jam: 0.008 } // 0.8% JAM chance per shot
+    ]
 };
