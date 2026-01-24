@@ -1,9 +1,11 @@
-/** * PHASER BRIDGE (Added Face Generator) */
+/** * PHASER BRIDGE (Refactored: Uses UnitView) */
 let phaserGame = null;
 
 const Renderer = {
     game: null, 
-    // ... init, resize などは既存のまま ...
+    isMapDragging: false, 
+    isCardDragging: false,
+
     init(canvasElement) {
         const config = { 
             type: Phaser.AUTO, 
@@ -24,7 +26,6 @@ const Renderer = {
         document.addEventListener('click', startAudio);
         document.addEventListener('keydown', startAudio);
     },
-    // ... 既存メソッド ...
     resize() { if(this.game) this.game.scale.resize(document.getElementById('game-view').clientWidth, document.getElementById('game-view').clientHeight); },
     hexToPx(q, r) { return { x: HEX_SIZE * 3/2 * q, y: HEX_SIZE * Math.sqrt(3) * (r + q/2) }; },
     pxToHex(mx, my) { 
@@ -47,75 +48,28 @@ const Renderer = {
         for (let card of ui.cards) { const dx = Math.abs(x - card.x); const dy = Math.abs(y - card.y); if (dx < 70 && dy < 100) return true; } 
         return false; 
     },
+    
+    // ★修正: UnitViewへ委譲
     playAttackAnim(attacker, target) {
         const main = this.game.scene.getScene('MainScene');
-        if (main) main.triggerAttackAnimation(attacker, target);
+        if (main && main.unitView) main.unitView.triggerAttack(attacker, target);
     },
     playExplosion(x, y) {
         const main = this.game.scene.getScene('MainScene');
         if (main) main.triggerExplosion(x, y);
     },
-
-    // ★プロシージャル顔生成
+    // ★Canvas顔生成(復活)
     generateFaceIcon(seed) {
-        const c = document.createElement('canvas');
-        c.width = 64; c.height = 64;
-        const ctx = c.getContext('2d');
-        
-        // 疑似乱数
-        const rnd = function() {
-            seed = (seed * 9301 + 49297) % 233280;
-            return seed / 233280;
-        };
-
-        // 背景
-        ctx.fillStyle = "#334";
-        ctx.fillRect(0,0,64,64);
-
-        // 肌色
-        const skinTones = ["#ffdbac", "#f1c27d", "#e0ac69", "#8d5524"];
-        const skin = skinTones[Math.floor(rnd() * skinTones.length)];
-        
-        // 顔輪郭
-        ctx.fillStyle = skin;
-        ctx.beginPath();
-        ctx.arc(32, 36, 18, 0, Math.PI*2);
-        ctx.fill();
-        
-        // ヘルメット
-        ctx.fillStyle = "#343";
-        ctx.beginPath();
-        ctx.arc(32, 28, 20, Math.PI, 0);
-        ctx.lineTo(54, 30);
-        ctx.lineTo(10, 30);
-        ctx.fill();
-        // ヘルメットのバンド
-        ctx.strokeStyle = "#121";
-        ctx.lineWidth = 2;
-        ctx.beginPath(); ctx.moveTo(10,28); ctx.lineTo(54,28); ctx.stroke();
-
-        // 目
-        ctx.fillStyle = "#000";
-        const eyeY = 36;
-        const eyeOff = 6 + rnd()*2;
-        ctx.fillRect(32-eyeOff-2, eyeY, 4, 2);
-        ctx.fillRect(32+eyeOff-2, eyeY, 4, 2);
-
-        // 口
-        ctx.strokeStyle = "#a76";
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        const mouthW = 4 + rnd()*6;
-        ctx.moveTo(32-mouthW/2, 48);
-        ctx.lineTo(32+mouthW/2, 48);
-        ctx.stroke();
-
-        // 汚れ
-        if (rnd() < 0.5) {
-            ctx.fillStyle = "rgba(0,0,0,0.2)";
-            ctx.fillRect(20 + rnd()*20, 30 + rnd()*20, 4, 2);
-        }
-
+        const c = document.createElement('canvas'); c.width = 64; c.height = 64; const ctx = c.getContext('2d');
+        const rnd = function() { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; };
+        ctx.fillStyle = "#334"; ctx.fillRect(0,0,64,64);
+        const skinTones = ["#ffdbac", "#f1c27d", "#e0ac69", "#8d5524"]; ctx.fillStyle = skinTones[Math.floor(rnd() * skinTones.length)];
+        ctx.beginPath(); ctx.arc(32, 36, 18, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = "#343"; ctx.beginPath(); ctx.arc(32, 28, 20, Math.PI, 0); ctx.lineTo(54, 30); ctx.lineTo(10, 30); ctx.fill();
+        ctx.strokeStyle = "#121"; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(10,28); ctx.lineTo(54,28); ctx.stroke();
+        ctx.fillStyle = "#000"; const eyeY = 36; const eyeOff = 6 + rnd()*2; ctx.fillRect(32-eyeOff-2, eyeY, 4, 2); ctx.fillRect(32+eyeOff-2, eyeY, 4, 2);
+        ctx.strokeStyle = "#a76"; ctx.lineWidth = 1; ctx.beginPath(); const mouthW = 4 + rnd()*6; ctx.moveTo(32-mouthW/2, 48); ctx.lineTo(32+mouthW/2, 48); ctx.stroke();
+        if (rnd() < 0.5) { ctx.fillStyle = "rgba(0,0,0,0.2)"; ctx.fillRect(20 + rnd()*20, 30 + rnd()*20, 4, 2); }
         return c.toDataURL();
     }
 };
@@ -195,24 +149,23 @@ class UIScene extends Phaser.Scene {
     }
     onResize(gameSize) { const w = gameSize.width; const h = gameSize.height; if (this.gradientBg) { this.gradientBg.setPosition(w / 2, h); this.gradientBg.setDisplaySize(w, h * 0.25); } if (this.handContainer) { this.handContainer.setPosition(w / 2, h); } }
     update() { this.cards.forEach(card => { if (card.active) card.updatePhysics(); }); if(window.UIVFX) { window.UIVFX.update(); this.uiVfxGraphics.clear(); window.UIVFX.draw(this.uiVfxGraphics); } }
-    dealStart(types) { 
-        this.isHandDocked = false; 
-        types.forEach((type, i) => { this.time.delayedCall(i * 150, () => { this.addCardToHand(type); }); }); 
-        this.time.delayedCall(150 * types.length + 1000, () => { this.isHandDocked = true; });
-    }
+    dealStart(types) { this.isHandDocked = false; types.forEach((type, i) => { this.time.delayedCall(i * 150, () => { this.addCardToHand(type); }); }); this.time.delayedCall(150 * types.length + 1000, () => { this.isHandDocked = true; }); }
     addCardToHand(type) { if (this.cards.length >= 5) return; const card = new Card(this, 0, 0, type); this.handContainer.add(card); this.cards.push(card); card.physX = 600; card.physY = 300; card.setPosition(card.physX, card.physY); this.arrangeHand(); }
     removeCard(cardToRemove) { this.cards = this.cards.filter(c => c !== cardToRemove); this.arrangeHand(); }
     arrangeHand() { const total = this.cards.length; const centerIdx = (total - 1) / 2; const spacing = 160; this.cards.forEach((card, i) => { const offset = i - centerIdx; card.baseX = offset * spacing; card.baseY = -120; }); }
 }
 
-// --- MAIN SCENE (変更なし) ---
+// --- MAIN SCENE ---
 class MainScene extends Phaser.Scene {
     constructor() { 
         super({ key: 'MainScene' }); 
-        this.hexGroup = null; this.decorGroup = null; this.unitGroup = null; this.treeGroup = null; this.hpGroup = null;   
-        this.vfxGraphics = null; this.overlayGraphics = null; 
-        this.mapGenerated = false; this.dragHighlightHex = null;
-        this.unitVisuals = new Map(); this.crosshairGroup = null;
+        this.hexGroup=null; this.decorGroup=null; this.unitGroup=null; this.treeGroup=null; this.hpGroup=null;   
+        this.vfxGraphics=null; this.overlayGraphics=null; 
+        this.mapGenerated=false; this.dragHighlightHex=null;
+        this.crosshairGroup=null;
+        
+        // ★追加: UnitView
+        this.unitView = null;
     }
     
     preload() { 
@@ -226,18 +179,11 @@ class MainScene extends Phaser.Scene {
     create() {
         this.cameras.main.setBackgroundColor('#0b0e0a'); 
         
-        // Layers
-        this.hexGroup = this.add.layer();   
-        this.decorGroup = this.add.layer(); 
-        this.unitGroup = this.add.layer();  
-        this.treeGroup = this.add.layer();  
-        this.hpGroup = this.add.layer();    
-        
-        this.hexGroup.setDepth(0);
-        this.decorGroup.setDepth(0.5);
-        this.unitGroup.setDepth(1);
-        this.treeGroup.setDepth(2);
-        this.hpGroup.setDepth(10);
+        this.hexGroup = this.add.layer(); this.hexGroup.setDepth(0);
+        this.decorGroup = this.add.layer(); this.decorGroup.setDepth(0.5);
+        this.unitGroup = this.add.layer(); this.unitGroup.setDepth(1);
+        this.treeGroup = this.add.layer(); this.treeGroup.setDepth(2);
+        this.hpGroup = this.add.layer(); this.hpGroup.setDepth(10);
 
         this.crosshairGroup = this.add.graphics().setDepth(200);
         this.vfxGraphics = this.add.graphics().setDepth(100); 
@@ -246,172 +192,62 @@ class MainScene extends Phaser.Scene {
         if(window.EnvSystem) window.EnvSystem.clear();
         this.scene.launch('UIScene'); 
 
+        // ★UnitViewの初期化
+        this.unitView = new UnitView(this, this.unitGroup, this.hpGroup);
+
         // --- Animations ---
         if (!this.anims.exists('soldier_idle')) { this.anims.create({ key: 'soldier_idle', frames: this.anims.generateFrameNumbers('soldier_sheet', { start: 0, end: 15 }), frameRate: 8, repeat: -1 }); }
         if (!this.anims.exists('soldier_shoot_right')) { this.anims.create({ key: 'soldier_shoot_right', frames: this.anims.generateFrameNumbers('soldier_sheet', { start: 16, end: 23 }), frameRate: 15, repeat: 0 }); }
         if (!this.anims.exists('soldier_shoot_left')) { this.anims.create({ key: 'soldier_shoot_left', frames: this.anims.generateFrameNumbers('soldier_sheet', { start: 24, end: 31 }), frameRate: 15, repeat: 0 }); }
         if (!this.anims.exists('tank_idle')) { this.anims.create({ key: 'tank_idle', frames: this.anims.generateFrameNumbers('tank_sheet', { frames: [7, 6, 5, 6, 7, 5] }), frameRate: 10, repeat: -1 }); }
-        
-        if (!this.anims.exists('explosion_anim')) {
-            this.anims.create({
-                key: 'explosion_anim',
-                frames: this.anims.generateFrameNumbers('explosion_sheet', { start: 0, end: 7 }),
-                frameRate: 20, 
-                repeat: 0,
-                hideOnComplete: true
-            });
-        }
+        if (!this.anims.exists('explosion_anim')) { this.anims.create({ key: 'explosion_anim', frames: this.anims.generateFrameNumbers('explosion_sheet', { start: 0, end: 7 }), frameRate: 20, repeat: 0, hideOnComplete: true }); }
 
         this.input.on('wheel', (pointer, gameObjects, deltaX, deltaY, deltaZ) => { let newZoom = this.cameras.main.zoom; if (deltaY > 0) newZoom -= 0.5; else if (deltaY < 0) newZoom += 0.5; newZoom = Phaser.Math.Clamp(newZoom, 0.25, 4.0); this.tweens.add({ targets: this.cameras.main, zoom: newZoom, duration: 150, ease: 'Cubic.out' }); });
         this.input.on('pointerdown', (p) => { if (Renderer.isCardDragging || Renderer.checkUIHover(p.x, p.y)) return; if(p.button === 0) { Renderer.isMapDragging = true; if(window.gameLogic) window.gameLogic.handleClick(Renderer.pxToHex(p.x, p.y)); } else if(p.button === 2) { if(window.gameLogic) window.gameLogic.showContext(p.x, p.y); } });
         this.input.on('pointerup', () => { Renderer.isMapDragging = false; });
         this.input.on('pointermove', (p) => { if (Renderer.isCardDragging) return; if (p.isDown && Renderer.isMapDragging) { const zoom = this.cameras.main.zoom; this.cameras.main.scrollX -= (p.x - p.prevPosition.x) / zoom; this.cameras.main.scrollY -= (p.y - p.prevPosition.y) / zoom; } if(!Renderer.isMapDragging && window.gameLogic) window.gameLogic.handleHover(Renderer.pxToHex(p.x, p.y)); }); 
         this.input.mouse.disableContextMenu();
-
         this.input.keyboard.on('keydown-ESC', () => { if(window.gameLogic && window.gameLogic.clearSelection) { window.gameLogic.clearSelection(); } });
-    }
-
-    triggerAttackAnimation(attacker, target) {
-        if (attacker.def.name !== "Rifle Squad") return;
-        const visual = this.unitVisuals.get(attacker.id);
-        if (!visual || !visual.sprite) return;
-        const attackerPx = Renderer.hexToPx(attacker.q, attacker.r);
-        const targetPx = Renderer.hexToPx(target.q, target.r);
-        const isRight = targetPx.x >= attackerPx.x;
-        const animKey = isRight ? 'soldier_shoot_right' : 'soldier_shoot_left';
-        visual.sprite.play(animKey);
-        visual.sprite.once('animationcomplete', () => { if (visual.scene) visual.sprite.play('soldier_idle'); });
     }
 
     triggerExplosion(x, y) {
         const explosion = this.add.sprite(x, y, 'explosion_sheet');
-        explosion.setDepth(100); 
-        explosion.setScale(1.5); 
+        explosion.setDepth(100); explosion.setScale(1.5); 
         explosion.play('explosion_anim');
-        explosion.once('animationcomplete', () => {
-            explosion.destroy();
-        });
+        explosion.once('animationcomplete', () => { explosion.destroy(); });
     }
 
-    playExplosion(x, y) { if(window.VFX) window.VFX.addExplosion(x, y, "#fa0", 20); }
-    triggerBombardment(hex) { this.time.delayedCall(500, () => { const targetPos = Renderer.hexToPx(hex.q, hex.r); if(window.VFX) window.VFX.addBombardment(this, targetPos.x, targetPos.y, hex); }); }
     centerCamera(q, r) { const p = Renderer.hexToPx(q, r); this.cameras.main.centerOn(p.x, p.y); }
     centerMap() { this.cameras.main.centerOn((MAP_W * HEX_SIZE * 1.5) / 2, (MAP_H * HEX_SIZE * 1.732) / 2); }
     
     createMap() { 
         const map = window.gameLogic.map; 
         this.hexGroup.removeAll(true); this.decorGroup.removeAll(true); this.unitGroup.removeAll(true); this.treeGroup.removeAll(true); this.hpGroup.removeAll(true);
-        this.unitVisuals.clear();
+        // ★UnitViewのリセット
+        if(this.unitView) this.unitView.visuals.clear();
+
         for(let q=0; q<MAP_W; q++) { 
             for(let r=0; r<MAP_H; r++) { 
                 const t = map[q][r]; if(t.id===-1)continue; const pos = Renderer.hexToPx(q, r); 
                 const hex = this.add.image(pos.x, pos.y, 'hex_base').setScale(1/window.HIGH_RES_SCALE); 
-                let tint = 0x555555; if(t.id===0)tint=0x5a5245; else if(t.id===1)tint=0x425030; else if(t.id===2)tint=0x222e1b; else if(t.id===4)tint=0x504540; 
-                else if(t.id===5) { tint=0x303840; if(window.EnvSystem) window.EnvSystem.registerWater(hex, pos.y, q, r, this.decorGroup); }
-                if(window.EnvSystem) { 
-                    if(t.id === 1) window.EnvSystem.spawnGrass(this, this.decorGroup, pos.x, pos.y); 
-                    if(t.id === 2) window.EnvSystem.spawnTrees(this, this.treeGroup, pos.x, pos.y); 
-                }
+                let tint = 0x555555; if(t.id===0)tint=0x5a5245; else if(t.id===1)tint=0x425030; else if(t.id===2)tint=0x222e1b; else if(t.id===4)tint=0x504540; else if(t.id===5) { tint=0x303840; if(window.EnvSystem) window.EnvSystem.registerWater(hex, pos.y, q, r, this.decorGroup); }
+                if(window.EnvSystem) { if(t.id === 1) window.EnvSystem.spawnGrass(this, this.decorGroup, pos.x, pos.y); if(t.id === 2) window.EnvSystem.spawnTrees(this, this.treeGroup, pos.x, pos.y); }
                 hex.setTint(tint); this.hexGroup.add(hex); 
             } 
         } 
         this.centerMap(); 
     }
     
-    createUnitVisual(u) {
-        const container = this.add.container(0, 0);
-        const shadow = this.add.ellipse(0, 8, 20, 10, 0x000000, 0.5);
-        let sprite;
-        if (u.def.name === "Rifle Squad") {
-            sprite = this.add.sprite(0, -10, 'soldier_sheet');
-            sprite.setScale(0.3); 
-            sprite.play('soldier_idle');
-            if(u.team === 'player') sprite.setTint(0xeeeeff); else sprite.setTint(0xffaaaa);
-        } else if (u.def.isTank) {
-            sprite = this.add.sprite(0, -10, 'tank_sheet');
-            sprite.setScale(0.5); 
-            sprite.play('tank_idle');
-            if(u.team === 'player') sprite.setTint(0xccddee); else sprite.setTint(0xffaaaa);
-            shadow.setPosition(-2, 2); shadow.setSize(46, 18);
-        } else {
-            sprite = this.add.sprite(0, 0, u.team==='player'?'unit_player':'unit_enemy').setScale(1/window.HIGH_RES_SCALE); 
-            if(u.team==='player') sprite.setTint(0x6688aa); else sprite.setTint(0xcc6655); 
-        }
-        
-        const cursor = this.add.image(0, 0, 'cursor').setScale(1/window.HIGH_RES_SCALE).setAlpha(0).setVisible(false);
-        this.tweens.add({ targets: cursor, scale: { from: 1/window.HIGH_RES_SCALE, to: 1.1/window.HIGH_RES_SCALE }, alpha: { from: 1, to: 0.5 }, yoyo: true, repeat: -1, duration: 800 });
-        container.add([shadow, sprite, cursor]); 
-        
-        const infoContainer = this.add.container(0, 18); 
-        const rankText = this.add.text(0, 0, "", { fontSize: '8px', color: '#ffcc00' }).setOrigin(0.5, 0.5);
-        
-        const hpBg = this.add.rectangle(0, 0, 20, 4, 0x000000).setOrigin(0, 0.5);
-        const hpBar = this.add.rectangle(0, 0, 20, 4, 0x00ff00).setOrigin(0, 0.5);
-        this.hpGroup.add(hpBg); this.hpGroup.add(hpBar);
-        this.hpGroup.add(infoContainer);
-
-        container.sprite = sprite; 
-        container.cursor = cursor;
-        container.hpBg = hpBg; container.hpBar = hpBar;
-        container.infoContainer = infoContainer;
-        container.rankText = rankText;
-
-        return container;
-    }
-
-    updateUnitVisual(container, u) {
-        const pos = Renderer.hexToPx(u.q, u.r); 
-        container.setPosition(pos.x, pos.y);
-        
-        if(container.hpBg && container.hpBar && container.infoContainer) {
-            const barY = pos.y - 35; const barX = pos.x - 10; 
-            container.hpBg.setPosition(barX, barY); container.hpBar.setPosition(barX, barY);
-            const hpPct = u.hp / u.maxHp; container.hpBar.width = Math.max(0, 20 * hpPct); container.hpBar.fillColor = hpPct > 0.5 ? 0x00ff00 : 0xff0000;
-
-            const infoY = pos.y + 18; 
-            container.infoContainer.setPosition(pos.x, infoY);
-            container.infoContainer.removeAll(true);
-            let currentX = 0;
-            if (u.rank > 0 && RANKS) {
-                const rText = this.add.text(0, 0, RANKS[Math.min(u.rank, 5)], { fontSize:'9px', color:'#eee', stroke:'#000', strokeThickness:2 }).setOrigin(0.5);
-                container.infoContainer.add(rText);
-                currentX += rText.width/2 + 4;
-            } else { currentX -= 6; }
-
-            if (u.skills && u.skills.length > 0 && window.SKILL_STYLES) {
-                const g = this.add.graphics();
-                let ox = currentX;
-                u.skills.forEach(sk => {
-                    const st = window.SKILL_STYLES[sk];
-                    const color = st ? parseInt(st.col.replace('#','0x')) : 0x888888;
-                    g.fillStyle(0x000000, 1); g.fillRect(ox, -2, 5, 5); 
-                    g.fillStyle(color, 1); g.fillRect(ox+1, -1, 3, 3); 
-                    ox += 6;
-                });
-                container.infoContainer.add(g);
-                const totalW = ox; container.infoContainer.x -= totalW / 4; 
-            }
-        }
-
-        if(window.gameLogic.selectedUnit === u) { container.cursor.setVisible(true); container.cursor.setAlpha(1); } else { container.cursor.setVisible(false); }
-    }
-
     update(time, delta) {
         if (!window.gameLogic) return;
         if(window.VFX && window.VFX.shakeRequest > 0) { this.cameras.main.shake(100, window.VFX.shakeRequest * 0.001); window.VFX.shakeRequest = 0; }
         if(window.EnvSystem) window.EnvSystem.update(time);
         if(window.VFX) { window.VFX.update(); this.vfxGraphics.clear(); window.VFX.draw(this.vfxGraphics); }
         if (window.gameLogic.map.length > 0 && !this.mapGenerated) { this.createMap(); this.mapGenerated = true; }
-        const activeIds = new Set();
-        window.gameLogic.units.forEach(u => { 
-            if(u.hp <= 0) return; activeIds.add(u.id); let visual = this.unitVisuals.get(u.id); 
-            if (!visual) { visual = this.createUnitVisual(u); this.unitVisuals.set(u.id, visual); this.unitGroup.add(visual); } 
-            this.updateUnitVisual(visual, u); 
-            const isSelected = (window.gameLogic.selectedUnit === u);
-            if (isSelected) { if (this.unitGroup.exists(visual)) { this.unitGroup.remove(visual); this.hpGroup.add(visual); } } 
-            else { if (this.hpGroup.exists(visual)) { this.hpGroup.remove(visual); this.unitGroup.add(visual); } }
-        });
-        for (const [id, visual] of this.unitVisuals) { if (!activeIds.has(id)) { if(visual.hpBg) visual.hpBg.destroy(); if(visual.hpBar) visual.hpBar.destroy(); if(visual.infoContainer) visual.infoContainer.destroy(); visual.destroy(); this.unitVisuals.delete(id); } }
+        
+        // ★修正: UnitViewの更新を呼ぶ
+        if(this.unitView) this.unitView.update(time, delta);
+        
         this.overlayGraphics.clear();
         if (this.dragHighlightHex) { this.overlayGraphics.lineStyle(4, 0xffffff, 1.0); this.drawHexOutline(this.overlayGraphics, this.dragHighlightHex.q, this.dragHighlightHex.r); }
         const selected = window.gameLogic.selectedUnit;
