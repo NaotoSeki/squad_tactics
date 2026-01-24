@@ -1,4 +1,4 @@
-/** * PHASER BRIDGE (Skill Ribbons & Rank at Unit Bottom) */
+/** * PHASER BRIDGE (Adjusted Card Docking Position) */
 let phaserGame = null;
 
 const Renderer = {
@@ -58,7 +58,7 @@ const Renderer = {
     }
 };
 
-// --- Card Class (省略なし) ---
+// --- Card Class (Updated Dock Position) ---
 class Card extends Phaser.GameObjects.Container {
     constructor(scene, x, y, type) {
         super(scene, x, y); this.scene = scene; this.cardType = type; this.setSize(140, 200);
@@ -85,7 +85,12 @@ class Card extends Phaser.GameObjects.Container {
         if (isDisabled) { this.frameImage.setTint(0x555555); this.setAlpha(0.6); } else { this.frameImage.clearTint(); this.setAlpha(1.0); }
         if (!this.isDragging && !this.scene.isReturning) { 
             this.targetX = this.baseX; 
-            if (this.scene.isHandDocked) { this.targetY = this.isHovering ? -120 : 90; } else { this.targetY = this.baseY - (this.isHovering ? 30 : 0); }
+            if (this.scene.isHandDocked) { 
+                // ★修正: 90 -> 60 (少し上に持ち上げる)
+                this.targetY = this.isHovering ? -120 : 60; 
+            } else { 
+                this.targetY = this.baseY - (this.isHovering ? 30 : 0); 
+            }
         } 
         const stiffness = this.isDragging ? 0.2 : 0.08; const damping = 0.65; 
         const ax = (this.targetX - this.physX) * stiffness; const ay = (this.targetY - this.physY) * stiffness; 
@@ -282,15 +287,13 @@ class MainScene extends Phaser.Scene {
         this.tweens.add({ targets: cursor, scale: { from: 1/window.HIGH_RES_SCALE, to: 1.1/window.HIGH_RES_SCALE }, alpha: { from: 1, to: 0.5 }, yoyo: true, repeat: -1, duration: 800 });
         container.add([shadow, sprite, cursor]); 
         
-        // ★足元情報用コンテナ
-        const infoContainer = this.add.container(0, 18); // 足元(Y=18付近)
+        const infoContainer = this.add.container(0, 18); 
         const rankText = this.add.text(0, 0, "", { fontSize: '8px', color: '#ffcc00' }).setOrigin(0.5, 0.5);
         
-        // HPバー
         const hpBg = this.add.rectangle(0, 0, 20, 4, 0x000000).setOrigin(0, 0.5);
         const hpBar = this.add.rectangle(0, 0, 20, 4, 0x00ff00).setOrigin(0, 0.5);
         this.hpGroup.add(hpBg); this.hpGroup.add(hpBar);
-        this.hpGroup.add(infoContainer); // InfoもHPGroup(最前面)へ
+        this.hpGroup.add(infoContainer);
 
         container.sprite = sprite; 
         container.cursor = cursor;
@@ -306,47 +309,32 @@ class MainScene extends Phaser.Scene {
         container.setPosition(pos.x, pos.y);
         
         if(container.hpBg && container.hpBar && container.infoContainer) {
-            // HPバーは頭上
             const barY = pos.y - 35; const barX = pos.x - 10; 
             container.hpBg.setPosition(barX, barY); container.hpBar.setPosition(barX, barY);
             const hpPct = u.hp / u.maxHp; container.hpBar.width = Math.max(0, 20 * hpPct); container.hpBar.fillColor = hpPct > 0.5 ? 0x00ff00 : 0xff0000;
 
-            // ★足元情報（階級 + スキルリボン）
             const infoY = pos.y + 18; 
             container.infoContainer.setPosition(pos.x, infoY);
-            
-            // コンテナの中身を再構築 (Graphicsでリボンを描画)
             container.infoContainer.removeAll(true);
-            
             let currentX = 0;
-            
-            // 階級表示
             if (u.rank > 0 && RANKS) {
                 const rText = this.add.text(0, 0, RANKS[Math.min(u.rank, 5)], { fontSize:'9px', color:'#eee', stroke:'#000', strokeThickness:2 }).setOrigin(0.5);
                 container.infoContainer.add(rText);
                 currentX += rText.width/2 + 4;
-            } else {
-                currentX -= 6; // 階級なしなら左詰め
-            }
+            } else { currentX -= 6; }
 
-            // スキルリボン描画
             if (u.skills && u.skills.length > 0 && window.SKILL_STYLES) {
                 const g = this.add.graphics();
                 let ox = currentX;
                 u.skills.forEach(sk => {
                     const st = window.SKILL_STYLES[sk];
                     const color = st ? parseInt(st.col.replace('#','0x')) : 0x888888;
-                    g.fillStyle(0x000000, 1);
-                    g.fillRect(ox, -2, 5, 5); // 枠
-                    g.fillStyle(color, 1);
-                    g.fillRect(ox+1, -1, 3, 3); // 中身
+                    g.fillStyle(0x000000, 1); g.fillRect(ox, -2, 5, 5); 
+                    g.fillStyle(color, 1); g.fillRect(ox+1, -1, 3, 3); 
                     ox += 6;
                 });
                 container.infoContainer.add(g);
-                
-                // 全体を中央揃えっぽく調整
-                const totalW = ox;
-                container.infoContainer.x -= totalW / 4; 
+                const totalW = ox; container.infoContainer.x -= totalW / 4; 
             }
         }
 
