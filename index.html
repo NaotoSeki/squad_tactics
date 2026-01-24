@@ -27,6 +27,7 @@
 
         .panel-header { background: #111; padding: 10px; font-weight: bold; color: var(--accent); border-bottom: 1px solid var(--border); font-size: 11px; display: flex; justify-content: space-between; }
         
+        /* 兵士情報パネル */
         #unit-info { padding: 0; background: #222; overflow-y: auto; flex: 1; }
         .soldier-header { display: flex; padding: 10px; background: #151515; border-bottom: 1px solid #333; gap: 10px; align-items: center; }
         .face-box { width: 64px; height: 64px; background: #000; border: 1px solid #555; border-radius: 4px; overflow: hidden; }
@@ -40,8 +41,8 @@
 
         /* インベントリレイアウト */
         .loadout-container { display: flex; gap: 8px; padding: 10px; background: #181818; }
-        .main-slot-area { flex: 5; display: flex; flex-direction: column; } /* 左側広く */
-        .sub-slot-area { flex: 4; display: flex; flex-direction: column; gap: 4px; } /* 右側4行 */
+        .main-slot-area { flex: 5; display: flex; flex-direction: column; }
+        .sub-slot-area { flex: 4; display: flex; flex-direction: column; gap: 4px; }
 
         .slot { 
             background: #111; border: 1px solid #444; padding: 6px; 
@@ -52,7 +53,6 @@
         .slot:active { cursor: grabbing; }
         .slot:hover { border-color: #888; background: #222; }
         
-        /* 装備中（左側） */
         .slot.main-weapon { 
             height: 100%; min-height: 140px;
             border-color: #d84; background: #2a201a; 
@@ -60,11 +60,10 @@
         }
         .slot.main-weapon::after { content: "IN HANDS"; position: absolute; top: 2px; right: 4px; font-size: 9px; color: #d84; font-weight: bold; opacity: 0.7; }
 
-        /* バックパック（右側4行） */
         .slot.bag-item { height: 32px; font-size: 10px; }
         
         .slot-name { font-size: 12px; color: #ddd; font-weight: bold; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .slot.bag-item .slot-name { font-size: 10px; } /* 小さく */
+        .slot.bag-item .slot-name { font-size: 10px; }
 
         .slot-meta { font-size: 9px; color: #888; display: flex; justify-content: space-between; }
         .ammo-bar { height: 4px; background: #333; margin-top: 4px; width: 100%; border-radius: 2px; overflow: hidden; }
@@ -81,10 +80,44 @@
         .log-entry { margin-bottom: 3px; border-bottom: 1px solid #111; }
 
         .overlay { position: absolute; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:100; display:flex; justify-content:center; align-items:center; }
-        .card-container { display: flex; gap: 15px; }
-        .card { width:140px; height:220px; background:#222; border:2px solid #555; text-align:center; padding:10px; cursor:pointer; color:#ccc; }
-        .card:hover { border-color:#d84; transform:translateY(-5px); }
         
+        /* ★修正: セットアップ画面のカードスタイル */
+        .card-container { display: flex; gap: 15px; }
+        .card { 
+            width: 140px; height: 220px; 
+            background: #222; border: 2px solid #555; 
+            padding: 10px; 
+            cursor: pointer; color: #ccc; 
+            position: relative; /* バッジ位置の基準 */
+            overflow: hidden; /* はみ出し防止 */
+            display: flex; flex-direction: column; align-items: center;
+            transition: transform 0.1s, border-color 0.1s; /* カクつき防止 */
+        }
+        .card:hover { border-color: #d84; transform: translateY(-5px); }
+        
+        /* ★追加: カード内要素のスタイル */
+        .card-badge {
+            position: absolute; top: 5px; right: 5px;
+            background: #d84; color: #000;
+            width: 24px; height: 24px; border-radius: 50%;
+            display: none; /* JSでblockに */
+            justify-content: center; align-items: center;
+            font-weight: bold; font-size: 12px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+            z-index: 10;
+        }
+        .card-img-box {
+            width: 100px; height: 100px;
+            background: #000; border: 1px solid #444;
+            margin-bottom: 10px;
+            display: flex; justify-content: center; align-items: center;
+            overflow: hidden;
+        }
+        .card-img-box img { max-width: 100%; max-height: 100%; object-fit: contain; }
+        .card-body { width: 100%; text-align: center; }
+        .card-body h3 { margin: 5px 0; font-size: 16px; color: #d84; }
+        .card-body p { margin: 0; font-size: 10px; color: #888; }
+
         #sector-counter { position:absolute; top:10px; right:20px; font-size:24px; font-weight:900; color:#d84; pointer-events:none; z-index:50; }
         #auto-toggle { position:absolute; bottom:10px; left:10px; padding:5px 10px; background:#000; border:1px solid #444; color:#888; cursor:pointer; z-index:50; font-size:11px; }
         #auto-toggle.active { color:#0f0; border-color:#0f0; }
@@ -131,7 +164,6 @@
         </div>
     </div>
     <script>
-        // ドラッグ元データ: { type: 'main'|'bag', index: number }
         function onSlotDragStart(e, type, index) {
             e.dataTransfer.setData("text/plain", JSON.stringify({type, index}));
             e.target.classList.add('dragging');
@@ -142,7 +174,6 @@
         function onSlotDragOver(e) { e.preventDefault(); e.currentTarget.classList.add('drag-over'); }
         function onSlotDragLeave(e) { e.currentTarget.classList.remove('drag-over'); }
         
-        // ドロップ先へ通知
         function onSlotDrop(e, targetType, targetIndex) {
             e.preventDefault();
             e.currentTarget.classList.remove('drag-over');
@@ -150,7 +181,6 @@
             if(data && window.gameLogic) {
                 try {
                     const src = JSON.parse(data);
-                    // 装備交換をリクエスト
                     window.gameLogic.swapEquipment(src, {type: targetType, index: targetIndex});
                 } catch(err) { console.error(err); }
             }
