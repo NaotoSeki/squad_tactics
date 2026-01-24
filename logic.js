@@ -1,4 +1,4 @@
-/** LOGIC: Fixed UI & Drag-Drop Loadout */
+/** LOGIC: Magazine Variants & Jamming Mechanics */
 class Game {
     constructor() {
         this.units=[]; this.map=[]; this.setupSlots=[]; this.state='SETUP'; 
@@ -51,28 +51,74 @@ class Game {
         });
     }
 
+    // ★兵士生成 (マガジン抽選ロジック追加)
     createSoldier(templateKey, team, q, r) {
         const t = UNIT_TEMPLATES[templateKey];
         if(!t) return null;
+
         const isPlayer = (team === 'player');
+        
+        // ステータス個体差
         const stats = { ...t.stats };
-        if (isPlayer && !t.isTank) { ['str','aim','mob','mor'].forEach(k => stats[k] = (stats[k]||0) + Math.floor(Math.random()*3)-1); }
-        let name = t.name; let rank = 0; let faceSeed = Math.floor(Math.random() * 99999);
+        if (isPlayer && !t.isTank) {
+            ['str','aim','mob','mor'].forEach(k => stats[k] = (stats[k]||0) + Math.floor(Math.random()*3)-1);
+        }
+
+        // 名前
+        let name = t.name;
+        let rank = 0;
+        let faceSeed = Math.floor(Math.random() * 99999);
         if (isPlayer && !t.isTank) {
             const first = FIRST_NAMES[Math.floor(Math.random() * FIRST_NAMES.length)];
             const last = LAST_NAMES[Math.floor(Math.random() * LAST_NAMES.length)];
             name = `${last} ${first}`; 
         }
+
+        // 装備生成ヘルパー
+        const createWpn = (key) => {
+            if(!key || !WPNS[key]) return null;
+            let w = { ...WPNS[key], code:key }; // 基本データコピー
+            
+            // ★マガジン抽選ロジック
+            if (MAG_VARIANTS && MAG_VARIANTS[key]) {
+                const vars = MAG_VARIANTS[key];
+                const choice = vars[Math.floor(Math.random() * vars.length)];
+                w.cap = choice.cap; // 装弾数上書き
+                w.jam = choice.jam; // ジャム率設定
+                w.magName = choice.name; // UI用
+                // 将来的にコスト計算もここで
+            }
+            
+            w.current = w.cap;
+            w.mags = WPNS[key].mag;
+            return w;
+        };
+
         const loadout = {};
-        if (t.main) loadout.main = { ...WPNS[t.main], current: WPNS[t.main].cap, mags: WPNS[t.main].mag };
-        if (t.sub)  loadout.sub  = { ...WPNS[t.sub],  current: WPNS[t.sub].cap,  mags: WPNS[t.sub].mag };
-        if (t.opt)  loadout.opt  = { ...WPNS[t.opt],  current: 1, mags: WPNS[t.opt].mag }; 
+        if (t.main) loadout.main = createWpn(t.main);
+        if (t.sub)  loadout.sub  = createWpn(t.sub);
+        if (t.opt)  loadout.opt  = createWpn(t.opt);
+        if (loadout.opt) loadout.opt.current = 1; // オプション品は1個単位
 
         return {
-            id: Math.random(), team: team, q: q, r: r, def: t, name: name, rank: rank, faceSeed: faceSeed, stats: stats, 
-            hp: t.hp || (80 + (stats.str||0) * 5), maxHp: t.hp || (80 + (stats.str||0) * 5),
-            ap: t.ap || Math.floor((stats.mob||0)/2) + 3, maxAp: t.ap || Math.floor((stats.mob||0)/2) + 3,
-            loadout: loadout, equipped: 'main', stance: 'stand', skills: [], sectorsSurvived: 0, deadProcessed: false, curWpn: t.main
+            id: Math.random(),
+            team: team, q: q, r: r,
+            def: t, 
+            name: name,
+            rank: rank,
+            faceSeed: faceSeed,
+            stats: stats, 
+            hp: t.hp || (80 + (stats.str||0) * 5),
+            maxHp: t.hp || (80 + (stats.str||0) * 5),
+            ap: t.ap || Math.floor((stats.mob||0)/2) + 3,
+            maxAp: t.ap || Math.floor((stats.mob||0)/2) + 3,
+            loadout: loadout,
+            equipped: 'main', 
+            stance: 'stand',
+            skills: [],
+            sectorsSurvived: 0,
+            deadProcessed: false,
+            curWpn: t.main 
         };
     }
 
@@ -90,11 +136,15 @@ class Game {
             }
         }
         Renderer.resize();
+        
         this.selectedUnit = null; this.reachableHexes = []; this.attackLine = []; this.aimTargetUnit = null; this.path = [];
         this.cardsUsed = 0; 
+        
         this.units = this.units.filter(u => u.team === 'player' && u.hp > 0);
         this.units.forEach(u => { u.q = -999; u.r = -999; });
+        
         this.generateMap(); 
+        
         if(this.units.length === 0) { 
             this.setupSlots.forEach(k => {
                 const p = this.getSafeSpawnPos('player');
@@ -102,12 +152,25 @@ class Game {
                 this.units.push(u);
             });
         } else { 
-            this.units.forEach(u => { const p = this.getSafeSpawnPos('player'); u.q = p.q; u.r = p.r; });
+            this.units.forEach(u => { 
+                const p = this.getSafeSpawnPos('player');
+                u.q = p.q; u.r = p.r;
+            });
         }
         this.spawnEnemies();
+        
+        const aiTypes = ['AGGRESSIVE', 'DEFENSIVE', 'TACTICAL'];
+        this.enemyAI = aiTypes[Math.floor(Math.random() * aiTypes.length)];
+        let aiName = "";
+        if(this.enemyAI === 'AGGRESSIVE') aiName = "突撃部隊 (Aggressive)";
+        else if(this.enemyAI === 'DEFENSIVE') aiName = "防衛部隊 (Defensive)";
+        else aiName = "遊撃部隊 (Tactical)";
+
         this.state='PLAY'; 
-        this.log(`SECTOR ${this.sector} START`);
+        this.log(`MISSION START - SECTOR ${this.sector}`);
+        this.log(`⚠ 敵軍無線傍受: ${aiName}`);
         document.getElementById('sector-counter').innerText = `SECTOR: ${this.sector.toString().padStart(2, '0')}`;
+        
         const leader = this.units.find(u => u.team === 'player');
         if(leader && leader.q !== -999) Renderer.centerOn(leader.q, leader.r);
         setTimeout(() => { if (Renderer.dealCards) Renderer.dealCards(['rifleman', 'tank_pz4', 'gunner', 'scout', 'tank_tiger']); }, 500);
@@ -143,7 +206,11 @@ class Game {
 
     clearSelection() {
         if (this.selectedUnit) {
-            this.selectedUnit = null; this.reachableHexes = []; this.attackLine = []; this.aimTargetUnit = null; this.path = [];
+            this.selectedUnit = null;
+            this.reachableHexes = [];
+            this.attackLine = [];
+            this.aimTargetUnit = null;
+            this.path = [];
             this.updateSidebar();
             if(window.Sfx) Sfx.play('click'); 
         }
@@ -202,7 +269,6 @@ class Game {
         }
     }
     
-    // --- インベントリ・アクション ---
     equipWeapon(slotKey) {
         const u = this.selectedUnit;
         if (!u || u.ap < 1 || !u.loadout[slotKey]) return;
@@ -250,6 +316,14 @@ class Game {
 
         for(let i=0; i<shots; i++) {
             if (d.hp <= 0) break;
+            
+            // ★重要: ジャム判定
+            if (w.jam && Math.random() < w.jam) {
+                this.log(`⚠ JAM!! ${w.name}が作動不良！`);
+                if(window.Sfx) Sfx.play('ricochet'); // カチッという音の代用
+                break; // 攻撃ループ中断
+            }
+
             w.current--; 
             const sPos = Renderer.hexToPx(a.q, a.r);
             const ePos = Renderer.hexToPx(d.q, d.r);
@@ -413,8 +487,6 @@ class Game {
         if(this.isProcessingTurn)return; this.isProcessingTurn=true; 
         this.selectedUnit=null; this.reachableHexes=[]; this.attackLine=[]; this.aimTargetUnit=null; this.path=[]; 
         this.state='ANIM'; 
-        
-        // ★修正: 要素の存在チェックを追加
         const eyecatch = document.getElementById('eyecatch');
         if(eyecatch) eyecatch.style.opacity=1;
         
@@ -469,15 +541,13 @@ class Game {
     showContext(mx,my){}
     getStatus(u){if(u.hp<=0)return "DEAD";const r=u.hp/u.maxHp;if(r>0.8)return "NORMAL";if(r>0.5)return "DAMAGED";return "CRITICAL";}
     
-    // ★重要: インベントリ更新 + ドラッグ＆ドロップ対応
+    // ★UI更新 (マガジン名表示追加)
     updateSidebar(){
         const ui=document.getElementById('unit-info'),u=this.selectedUnit;
         if(u){
             const w=u.loadout[u.equipped];
             const s=this.getStatus(u);
-            
-            const skillCounts = {};
-            u.skills.forEach(sk => { skillCounts[sk] = (skillCounts[sk] || 0) + 1; });
+            const skillCounts = {}; u.skills.forEach(sk => { skillCounts[sk] = (skillCounts[sk] || 0) + 1; });
             let skillHtml = "";
             for (const [sk, count] of Object.entries(skillCounts)) {
                 if (window.SKILL_STYLES && window.SKILL_STYLES[sk]) {
@@ -485,27 +555,19 @@ class Game {
                     skillHtml += `<div style="display:inline-block; background:${st.col}; color:#000; font-weight:bold; font-size:10px; padding:2px 5px; margin:2px; border-radius:3px;">${st.icon} ${st.name} x${count}</div>`;
                 }
             }
-
             const faceUrl = (Renderer.generateFaceIcon) ? Renderer.generateFaceIcon(u.faceSeed) : "";
 
-            // スロットHTML生成ヘルパー
             const makeSlot = (slotKey, isMain) => {
                 const item = u.loadout[slotKey];
                 if (!item) return `<div class="slot empty" ondragover="onSlotDragOver(event)" ondragleave="onSlotDragLeave(event)" ondrop="onSlotDrop(event, '${slotKey}')" style="opacity:0.3; text-align:center; font-size:10px; color:#555;">[EMPTY]</div>`;
-                
                 const isActive = (u.equipped === slotKey);
                 const width = (item.current / item.cap) * 100;
-                // draggable="true" を付与し、各種イベントを設定
+                // ★修正: slot-metaにマガジン名を表示
+                const magInfo = item.magName ? `<span style="color:#d84; font-size:8px;">[${item.magName}]</span>` : "";
                 return `
                 <div class="slot ${isActive?'active-weapon':''} ${isMain?'main-weapon':'sub-item'}" 
-                     draggable="true"
-                     ondragstart="onSlotDragStart(event, '${slotKey}')"
-                     ondragend="onSlotDragEnd(event)"
-                     ondragover="onSlotDragOver(event)"
-                     ondragleave="onSlotDragLeave(event)"
-                     ondrop="onSlotDrop(event, '${slotKey}')"
-                     onclick="gameLogic.equipWeapon('${slotKey}')">
-                    <div class="slot-name">${isActive?'🔫':''} ${item.name}</div>
+                     draggable="true" ondragstart="onSlotDragStart(event, '${slotKey}')" ondragend="onSlotDragEnd(event)" ondragover="onSlotDragOver(event)" ondragleave="onSlotDragLeave(event)" ondrop="onSlotDrop(event, '${slotKey}')" onclick="gameLogic.equipWeapon('${slotKey}')">
+                    <div class="slot-name">${isActive?'🔫':''} ${item.name} ${magInfo}</div>
                     <div class="slot-meta">
                         <span>DMG:${item.dmg} RNG:${item.rng}</span>
                         <span class="ammo-text">${item.current}/${item.cap}</span>
@@ -516,7 +578,7 @@ class Game {
 
             const mainSlot = makeSlot('main', true);
             const subSlot = makeSlot('sub', false);
-            const optSlot = makeSlot('opt', false); // オプション(グレネード等)
+            const optSlot = makeSlot('opt', false); 
 
             let reloadBtn = "";
             if (w && w.current < w.cap && w.mags > 0) {
@@ -537,19 +599,12 @@ class Game {
                     <div class="stat-row"><span class="stat-label">AIM</span> <span class="stat-val">${u.stats?.aim||'-'}</span></div>
                     <div class="stat-row"><span class="stat-label">STR</span> <span class="stat-val">${u.stats?.str||'-'}</span></div>
                 </div>
-                
                 <div class="inv-header" style="padding:0 10px; margin-top:10px;">LOADOUT (Drag to Swap)</div>
                 <div class="loadout-container">
-                    <div class="main-slot-area">
-                        ${mainSlot}
-                    </div>
-                    <div class="sub-slot-area">
-                        ${subSlot}
-                        ${optSlot}
-                    </div>
+                    <div class="main-slot-area">${mainSlot}</div>
+                    <div class="sub-slot-area">${subSlot}${optSlot}</div>
                 </div>
                 <div style="padding:0 10px;">${reloadBtn}</div>
-
                 <div style="margin:5px 0; padding:0 10px;">${skillHtml}</div>
                 <div style="padding:10px;">
                     <div style="font-size:10px; color:#666;">TACTICS</div>
