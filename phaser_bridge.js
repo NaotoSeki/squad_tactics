@@ -1,11 +1,9 @@
-/** * PHASER BRIDGE (Adjusted Card Docking Position) */
+/** * PHASER BRIDGE (Added Face Generator) */
 let phaserGame = null;
 
 const Renderer = {
     game: null, 
-    isMapDragging: false, 
-    isCardDragging: false,
-
+    // ... init, resize などは既存のまま ...
     init(canvasElement) {
         const config = { 
             type: Phaser.AUTO, 
@@ -26,6 +24,7 @@ const Renderer = {
         document.addEventListener('click', startAudio);
         document.addEventListener('keydown', startAudio);
     },
+    // ... 既存メソッド ...
     resize() { if(this.game) this.game.scale.resize(document.getElementById('game-view').clientWidth, document.getElementById('game-view').clientHeight); },
     hexToPx(q, r) { return { x: HEX_SIZE * 3/2 * q, y: HEX_SIZE * Math.sqrt(3) * (r + q/2) }; },
     pxToHex(mx, my) { 
@@ -55,10 +54,73 @@ const Renderer = {
     playExplosion(x, y) {
         const main = this.game.scene.getScene('MainScene');
         if (main) main.triggerExplosion(x, y);
+    },
+
+    // ★プロシージャル顔生成
+    generateFaceIcon(seed) {
+        const c = document.createElement('canvas');
+        c.width = 64; c.height = 64;
+        const ctx = c.getContext('2d');
+        
+        // 疑似乱数
+        const rnd = function() {
+            seed = (seed * 9301 + 49297) % 233280;
+            return seed / 233280;
+        };
+
+        // 背景
+        ctx.fillStyle = "#334";
+        ctx.fillRect(0,0,64,64);
+
+        // 肌色
+        const skinTones = ["#ffdbac", "#f1c27d", "#e0ac69", "#8d5524"];
+        const skin = skinTones[Math.floor(rnd() * skinTones.length)];
+        
+        // 顔輪郭
+        ctx.fillStyle = skin;
+        ctx.beginPath();
+        ctx.arc(32, 36, 18, 0, Math.PI*2);
+        ctx.fill();
+        
+        // ヘルメット
+        ctx.fillStyle = "#343";
+        ctx.beginPath();
+        ctx.arc(32, 28, 20, Math.PI, 0);
+        ctx.lineTo(54, 30);
+        ctx.lineTo(10, 30);
+        ctx.fill();
+        // ヘルメットのバンド
+        ctx.strokeStyle = "#121";
+        ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(10,28); ctx.lineTo(54,28); ctx.stroke();
+
+        // 目
+        ctx.fillStyle = "#000";
+        const eyeY = 36;
+        const eyeOff = 6 + rnd()*2;
+        ctx.fillRect(32-eyeOff-2, eyeY, 4, 2);
+        ctx.fillRect(32+eyeOff-2, eyeY, 4, 2);
+
+        // 口
+        ctx.strokeStyle = "#a76";
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        const mouthW = 4 + rnd()*6;
+        ctx.moveTo(32-mouthW/2, 48);
+        ctx.lineTo(32+mouthW/2, 48);
+        ctx.stroke();
+
+        // 汚れ
+        if (rnd() < 0.5) {
+            ctx.fillStyle = "rgba(0,0,0,0.2)";
+            ctx.fillRect(20 + rnd()*20, 30 + rnd()*20, 4, 2);
+        }
+
+        return c.toDataURL();
     }
 };
 
-// --- Card Class (Updated Dock Position) ---
+// --- Card Class (変更なし) ---
 class Card extends Phaser.GameObjects.Container {
     constructor(scene, x, y, type) {
         super(scene, x, y); this.scene = scene; this.cardType = type; this.setSize(140, 200);
@@ -85,12 +147,7 @@ class Card extends Phaser.GameObjects.Container {
         if (isDisabled) { this.frameImage.setTint(0x555555); this.setAlpha(0.6); } else { this.frameImage.clearTint(); this.setAlpha(1.0); }
         if (!this.isDragging && !this.scene.isReturning) { 
             this.targetX = this.baseX; 
-            if (this.scene.isHandDocked) { 
-                // ★修正: 90 -> 60 (少し上に持ち上げる)
-                this.targetY = this.isHovering ? -120 : 60; 
-            } else { 
-                this.targetY = this.baseY - (this.isHovering ? 30 : 0); 
-            }
+            if (this.scene.isHandDocked) { this.targetY = this.isHovering ? -120 : 60; } else { this.targetY = this.baseY - (this.isHovering ? 30 : 0); }
         } 
         const stiffness = this.isDragging ? 0.2 : 0.08; const damping = 0.65; 
         const ax = (this.targetX - this.physX) * stiffness; const ay = (this.targetY - this.physY) * stiffness; 
@@ -124,7 +181,7 @@ class Card extends Phaser.GameObjects.Container {
     returnToHand() { const hand = this.scene.handContainer; this.scene.children.remove(this); hand.add(this); this.setDepth(0); this.physX = this.x; this.physY = this.y; this.targetX = this.baseX; this.targetY = this.baseY; }
 }
 
-// --- UI SCENE ---
+// --- UI SCENE (変更なし) ---
 class UIScene extends Phaser.Scene {
     constructor() { super({ key: 'UIScene', active: false }); this.cards=[]; this.handContainer=null; this.gradientBg=null; this.uiVfxGraphics=null; this.isHandDocked = false; }
     create() {
@@ -148,9 +205,7 @@ class UIScene extends Phaser.Scene {
     arrangeHand() { const total = this.cards.length; const centerIdx = (total - 1) / 2; const spacing = 160; this.cards.forEach((card, i) => { const offset = i - centerIdx; card.baseX = offset * spacing; card.baseY = -120; }); }
 }
 
-// ---------------------------------------------------------
-//  MAIN SCENE
-// ---------------------------------------------------------
+// --- MAIN SCENE (変更なし) ---
 class MainScene extends Phaser.Scene {
     constructor() { 
         super({ key: 'MainScene' }); 
