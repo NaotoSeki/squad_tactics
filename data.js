@@ -1,13 +1,23 @@
-/** DATA: Enhanced Weaponry & Soldier Identity */
+/** DATA: Enhanced Weaponry & Soldier Identity & TERRAIN */
 const HEX_SIZE = 34; 
 const MAP_W = 24; 
 const MAP_H = 24; 
+
+// ★重要: 地形データの定義 (IDはPhaserBridgeの描画ロジックと一致)
+const TERRAIN = {
+    VOID:   { id: -1, name: "---",  cost: 99, cover: 0 },
+    DIRT:   { id: 0,  name: "荒地", cost: 1,  cover: 0 },
+    GRASS:  { id: 1,  name: "草原", cost: 1,  cover: 10 },
+    FOREST: { id: 2,  name: "森林", cost: 2,  cover: 25 },
+    TOWN:   { id: 4,  name: "廃墟", cost: 1,  cover: 40 },
+    WATER:  { id: 5,  name: "水域", cost: 99, cover: 0 }
+};
 
 const RANKS = ["Pvt", "Pfc", "Cpl", "Sgt", "SSgt", "Lt", "Cpt"];
 const FIRST_NAMES = ["John", "Mike", "Robert", "James", "William", "David", "Richard", "Joseph", "Thomas", "Charles", "Daniel", "Matthew", "Donald", "Paul", "George"];
 const LAST_NAMES = ["Smith", "Johnson", "Williams", "Jones", "Brown", "Davis", "Miller", "Wilson", "Moore", "Taylor", "Anderson", "Thomas", "Jackson", "White", "Harris"];
 
-// スキル定義（既存互換）
+// スキル定義
 const SKILLS = {
     "Precision": { name: "精密", desc: "命中+15%" },
     "Radio":     { name: "通信", desc: "支援効果UP" },
@@ -21,7 +31,7 @@ const SKILLS = {
 };
 
 // 武器データ詳細化
-// cap:装弾数, mag:初期マガジン数, ap:射撃コスト, wgt:重量(APペナルティ判定用), rld:リロードAP
+// cap:装弾数, mag:初期マガジン数, ap:射撃コスト, wgt:重量, rld:リロードAP
 const WPNS = {
     // --- Main Arms ---
     m1: { name:"M1 Garand", rng:6, acc:85, dmg:40, cap:8, mag:6, ap:2, rld:1, wgt:4, type:'bullet', burst:1, desc:"米軍主力小銃。セミオート。" },
