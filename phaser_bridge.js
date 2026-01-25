@@ -1,8 +1,7 @@
-/** * PHASER BRIDGE: Added Static Idle Animations */
+/** * PHASER BRIDGE (Updated Prone Idle Animation) */
 let phaserGame = null;
 
 const Renderer = {
-    // ... (init, resize など変更なし) ...
     game: null, 
     isMapDragging: false, 
     isCardDragging: false,
@@ -72,7 +71,7 @@ const Renderer = {
     }
 };
 
-// ... Card, UIScene クラスは変更なし (省略) ...
+// --- Card / UIScene (省略: 変更なし) ---
 class Card extends Phaser.GameObjects.Container {
     constructor(scene, x, y, type) {
         super(scene, x, y); this.scene = scene; this.cardType = type; this.setSize(140, 200);
@@ -192,16 +191,19 @@ class MainScene extends Phaser.Scene {
 
         // --- Animations ---
         this.anims.create({ key: 'anim_idle', frames: this.anims.generateFrameNumbers('us_soldier', { start: 0, end: 7 }), frameRate: 8, repeat: -1 });
-        
-        // 遷移（Transition）
         this.anims.create({ key: 'anim_crouch', frames: this.anims.generateFrameNumbers('us_soldier', { start: 8, end: 15 }), frameRate: 15, repeat: 0 });
         this.anims.create({ key: 'anim_prone', frames: this.anims.generateFrameNumbers('us_soldier', { start: 24, end: 31 }), frameRate: 15, repeat: 0 });
         
-        // ★追加: 姿勢維持（Static Idle）用の1フレームアニメ
-        // しゃがみ待機 (フレーム15)
+        // 姿勢維持（Static Idle）用の1フレームアニメ
         this.anims.create({ key: 'anim_crouch_idle', frames: this.anims.generateFrameNumbers('us_soldier', { frames: [15] }), frameRate: 1, repeat: -1 });
-        // 伏せ待機 (フレーム31)
-        this.anims.create({ key: 'anim_prone_idle', frames: this.anims.generateFrameNumbers('us_soldier', { frames: [31] }), frameRate: 1, repeat: -1 });
+        
+        // ★修正: 伏せ待機 (時折動く)
+        this.anims.create({ 
+            key: 'anim_prone_idle', 
+            frames: this.anims.generateFrameNumbers('us_soldier', { frames: [33, 33, 33, 33, 33, 33, 33, 37, 38, 37] }), 
+            frameRate: 5, 
+            repeat: -1 
+        });
 
         this.anims.create({ key: 'anim_crouch_shoot', frames: this.anims.generateFrameNumbers('us_soldier', { start: 16, end: 23 }), frameRate: 15, repeat: 0 });
         this.anims.create({ key: 'anim_prone_shoot', frames: this.anims.generateFrameNumbers('us_soldier', { start: 32, end: 39 }), frameRate: 15, repeat: 0 });
