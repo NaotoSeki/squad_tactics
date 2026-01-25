@@ -1,4 +1,4 @@
-/** * PHASER BRIDGE (Refactored: Uses UnitView) */
+/** * PHASER BRIDGE: Animation Definitions & Asset Loading */
 let phaserGame = null;
 
 const Renderer = {
@@ -13,7 +13,7 @@ const Renderer = {
             width: document.getElementById('game-view').clientWidth, 
             height: document.getElementById('game-view').clientHeight, 
             backgroundColor: '#0b0e0a', 
-            pixelArt: false, 
+            pixelArt: false, // ドット絵ならtrue推奨ですが、高解像度素材のようなのでfalse
             scene: [MainScene, UIScene], 
             fps: { target: 60 }, 
             physics: { default: 'arcade', arcade: { debug: false } }, 
@@ -49,7 +49,6 @@ const Renderer = {
         return false; 
     },
     
-    // ★修正: UnitViewへ委譲
     playAttackAnim(attacker, target) {
         const main = this.game.scene.getScene('MainScene');
         if (main && main.unitView) main.unitView.triggerAttack(attacker, target);
@@ -58,7 +57,6 @@ const Renderer = {
         const main = this.game.scene.getScene('MainScene');
         if (main) main.triggerExplosion(x, y);
     },
-    // ★Canvas顔生成(復活)
     generateFaceIcon(seed) {
         const c = document.createElement('canvas'); c.width = 64; c.height = 64; const ctx = c.getContext('2d');
         const rnd = function() { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; };
@@ -74,7 +72,7 @@ const Renderer = {
     }
 };
 
-// --- Card Class (変更なし) ---
+// --- Card / UIScene (省略: 変更なし) ---
 class Card extends Phaser.GameObjects.Container {
     constructor(scene, x, y, type) {
         super(scene, x, y); this.scene = scene; this.cardType = type; this.setSize(140, 200);
@@ -135,7 +133,6 @@ class Card extends Phaser.GameObjects.Container {
     returnToHand() { const hand = this.scene.handContainer; this.scene.children.remove(this); hand.add(this); this.setDepth(0); this.physX = this.x; this.physY = this.y; this.targetX = this.baseX; this.targetY = this.baseY; }
 }
 
-// --- UI SCENE (変更なし) ---
 class UIScene extends Phaser.Scene {
     constructor() { super({ key: 'UIScene', active: false }); this.cards=[]; this.handContainer=null; this.gradientBg=null; this.uiVfxGraphics=null; this.isHandDocked = false; }
     create() {
@@ -163,13 +160,15 @@ class MainScene extends Phaser.Scene {
         this.vfxGraphics=null; this.overlayGraphics=null; 
         this.mapGenerated=false; this.dragHighlightHex=null;
         this.crosshairGroup=null;
-        
-        // ★追加: UnitView
         this.unitView = null;
     }
     
     preload() { 
         if(window.EnvSystem) window.EnvSystem.preload(this);
+        // ★重要: 新しいスプライトシート (128x128)
+        this.load.spritesheet('us_soldier', 'asset/us-soldier-back-sheet.png', { frameWidth: 128, frameHeight: 128 });
+        
+        // 既存アセット
         this.load.spritesheet('soldier_sheet', 'asset/soldier_sheet_1.png', { frameWidth: 128, frameHeight: 128 });
         this.load.spritesheet('tank_sheet', 'asset/tank_sheet_1.png', { frameWidth: 128, frameHeight: 128 });
         this.load.spritesheet('explosion_sheet', 'asset/explosion-sheet.png', { frameWidth: 128, frameHeight: 128 });
@@ -192,13 +191,31 @@ class MainScene extends Phaser.Scene {
         if(window.EnvSystem) window.EnvSystem.clear();
         this.scene.launch('UIScene'); 
 
-        // ★UnitViewの初期化
         this.unitView = new UnitView(this, this.unitGroup, this.hpGroup);
 
-        // --- Animations ---
-        if (!this.anims.exists('soldier_idle')) { this.anims.create({ key: 'soldier_idle', frames: this.anims.generateFrameNumbers('soldier_sheet', { start: 0, end: 15 }), frameRate: 8, repeat: -1 }); }
-        if (!this.anims.exists('soldier_shoot_right')) { this.anims.create({ key: 'soldier_shoot_right', frames: this.anims.generateFrameNumbers('soldier_sheet', { start: 16, end: 23 }), frameRate: 15, repeat: 0 }); }
-        if (!this.anims.exists('soldier_shoot_left')) { this.anims.create({ key: 'soldier_shoot_left', frames: this.anims.generateFrameNumbers('soldier_sheet', { start: 24, end: 31 }), frameRate: 15, repeat: 0 }); }
+        // --- Animations (新しい定義) ---
+        // 0. 立って待機
+        this.anims.create({ key: 'anim_idle', frames: this.anims.generateFrameNumbers('us_soldier', { start: 0, end: 7 }), frameRate: 8, repeat: -1 });
+        // 1. しゃがむ (遷移)
+        this.anims.create({ key: 'anim_crouch', frames: this.anims.generateFrameNumbers('us_soldier', { start: 8, end: 15 }), frameRate: 15, repeat: 0 });
+        // 2. しゃがみ撃ち
+        this.anims.create({ key: 'anim_crouch_shoot', frames: this.anims.generateFrameNumbers('us_soldier', { start: 16, end: 23 }), frameRate: 15, repeat: 0 });
+        // 3. 伏せる (遷移)
+        this.anims.create({ key: 'anim_prone', frames: this.anims.generateFrameNumbers('us_soldier', { start: 24, end: 31 }), frameRate: 15, repeat: 0 });
+        // 4. 伏せ撃ち
+        this.anims.create({ key: 'anim_prone_shoot', frames: this.anims.generateFrameNumbers('us_soldier', { start: 32, end: 39 }), frameRate: 15, repeat: 0 });
+        // 5. 立ち撃ち
+        this.anims.create({ key: 'anim_shoot', frames: this.anims.generateFrameNumbers('us_soldier', { start: 40, end: 47 }), frameRate: 15, repeat: 0 });
+        // 6. 歩き
+        this.anims.create({ key: 'anim_walk', frames: this.anims.generateFrameNumbers('us_soldier', { start: 48, end: 55 }), frameRate: 10, repeat: -1 });
+        // 7. しゃがみ歩き
+        this.anims.create({ key: 'anim_crouch_walk', frames: this.anims.generateFrameNumbers('us_soldier', { start: 56, end: 63 }), frameRate: 8, repeat: -1 });
+        // 8. 匍匐前進
+        this.anims.create({ key: 'anim_crawl', frames: this.anims.generateFrameNumbers('us_soldier', { start: 64, end: 71 }), frameRate: 6, repeat: -1 });
+        // 9. 白兵攻撃
+        this.anims.create({ key: 'anim_melee', frames: this.anims.generateFrameNumbers('us_soldier', { start: 72, end: 79 }), frameRate: 15, repeat: 0 });
+
+        // 旧・戦車用アニメ (継続使用)
         if (!this.anims.exists('tank_idle')) { this.anims.create({ key: 'tank_idle', frames: this.anims.generateFrameNumbers('tank_sheet', { frames: [7, 6, 5, 6, 7, 5] }), frameRate: 10, repeat: -1 }); }
         if (!this.anims.exists('explosion_anim')) { this.anims.create({ key: 'explosion_anim', frames: this.anims.generateFrameNumbers('explosion_sheet', { start: 0, end: 7 }), frameRate: 20, repeat: 0, hideOnComplete: true }); }
 
@@ -223,7 +240,6 @@ class MainScene extends Phaser.Scene {
     createMap() { 
         const map = window.gameLogic.map; 
         this.hexGroup.removeAll(true); this.decorGroup.removeAll(true); this.unitGroup.removeAll(true); this.treeGroup.removeAll(true); this.hpGroup.removeAll(true);
-        // ★UnitViewのリセット
         if(this.unitView) this.unitView.visuals.clear();
 
         for(let q=0; q<MAP_W; q++) { 
@@ -245,7 +261,6 @@ class MainScene extends Phaser.Scene {
         if(window.VFX) { window.VFX.update(); this.vfxGraphics.clear(); window.VFX.draw(this.vfxGraphics); }
         if (window.gameLogic.map.length > 0 && !this.mapGenerated) { this.createMap(); this.mapGenerated = true; }
         
-        // ★修正: UnitViewの更新を呼ぶ
         if(this.unitView) this.unitView.update(time, delta);
         
         this.overlayGraphics.clear();
