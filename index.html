@@ -19,26 +19,23 @@
 
         #resizer { width: 6px; background: #222; cursor: col-resize; z-index: 30; border-left: 1px solid #000; border-right: 1px solid #333; }
         
-        /* ★修正: サイドバーの大枠はクリックを透過させる (閉じたときの透明部分が邪魔しないように) */
         #sidebar { 
             width: 340px; min-width: 280px; 
             background: var(--panel); border-left: 1px solid var(--border); 
             display: flex; flex-direction: column; z-index: 20; position: relative; 
             transition: width 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), min-width 0.3s;
-            pointer-events: none; /* 重要: ここで透過 */
+            pointer-events: none; /* 枠自体はクリック透過 */
         }
-        
-        /* ★修正: サイドバーの中身はクリックを受け付ける */
-        #sidebar > * { pointer-events: auto; }
+        #sidebar > * { pointer-events: auto; } /* 中身はクリック有効 */
 
         #sidebar.collapsed { 
             width: 0 !important; 
             min-width: 0 !important; 
             border: none; 
         }
-        #sidebar.collapsed > * { display: none; } /* 中身を消す */
+        #sidebar.collapsed > * { display: none; }
         
-        /* トグルボタンは常に表示＆クリック可能 */
+        /* 閉じた状態でもトグルボタンはクリックさせる */
         #sidebar.collapsed #sidebar-toggle { display: flex !important; left: -32px; border-right: 1px solid var(--border); pointer-events: auto; }
         
         #sidebar-toggle { 
@@ -49,7 +46,7 @@
             cursor: pointer; z-index: 40; 
             display: flex; justify-content: center; align-items: center; 
             transition: left 0.3s;
-            pointer-events: auto; /* 明示的に有効化 */
+            pointer-events: auto;
         }
         #sidebar-toggle:hover { background: #333; color: #fff; }
 
@@ -95,26 +92,28 @@
         .card-body { width: 100%; text-align: center; }
         .card-body h3 { margin: 5px 0; font-size: 16px; color: #d84; }
         .card-body p { margin: 0; font-size: 10px; color: #888; }
-        
         #sector-counter { position:absolute; top:10px; right:20px; font-size:24px; font-weight:900; color:#d84; pointer-events:none; z-index:50; }
         #auto-toggle { position:absolute; bottom:10px; left:10px; padding:5px 10px; background:#000; border:1px solid #444; color:#888; cursor:pointer; z-index:50; font-size:11px; }
         #auto-toggle.active { color:#0f0; border-color:#0f0; }
         
-        #context-menu { 
-            position:absolute; display:none; 
-            background:rgba(0,20,30,0.95); border:1px solid #0af; 
-            padding:10px; z-index:60; color:#fff; font-size:11px; 
-            box-shadow: 0 2px 10px rgba(0,0,0,0.5);
-        }
-
         #eyecatch { position: absolute; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.3); z-index: 90; display: flex; justify-content: center; align-items: center; pointer-events: none; opacity: 0; transition: opacity 0.5s; }
         #eyecatch-text { color: #d44; font-size: 40px; font-weight: 900; text-shadow: 0 0 20px #000; border: 4px solid #d44; padding: 10px 40px; background: rgba(0,0,0,0.8); transform: skewX(-10deg); }
         
+        /* ★最前面に配置 */
+        #context-menu { 
+            position:absolute; display:none; 
+            background:rgba(0,20,30,0.95); border:1px solid #0af; 
+            padding:10px; z-index:10000; /* 最強 */
+            color:#fff; font-size:11px; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+            pointer-events: auto; /* 確実にクリック可能に */
+        }
+
         #command-menu { 
             position: absolute; display: none; 
             background: rgba(10, 15, 10, 0.95); border: 1px solid #d84; 
             padding: 5px; 
-            z-index: 9999; 
+            z-index: 10000; /* 最強 */
             box-shadow: 0 0 15px rgba(0,0,0,0.8); 
             border-radius: 4px; min-width: 120px; overflow: visible; 
         }
@@ -134,10 +133,10 @@
     <div id="app">
         <div id="game-view">
             <div id="sector-counter">SECTOR: 01</div>
-            <div id="context-menu"></div>
             <div id="mode-label" class="mode-indicator">SELECT TARGET</div>
             <div id="auto-toggle" onclick="gameLogic.toggleAuto()">AUTO</div>
             <div id="eyecatch"><div id="eyecatch-text">ENEMY PHASE</div></div>
+            
             <div id="setup-screen" class="overlay">
                 <div style="text-align:center;">
                     <h2 style="color:#d84;">SQUAD RECRUITMENT</h2>
@@ -145,12 +144,14 @@
                     <button id="btn-start" style="margin-top:20px; padding:10px 30px; background:#d84; border:none; cursor:pointer; font-weight:bold; display:none;" onclick="gameLogic.startCampaign()">DEPLOY</button>
                 </div>
             </div>
+            
             <div id="gameover-screen" class="overlay" style="display:none;">
                 <div style="text-align:center; color:#f55;">
                     <h1>M.I.A.</h1><p>全滅しました</p>
                     <button onclick="location.reload()" style="padding:10px 20px; background:#300; border:1px solid #f00; color:#f00; cursor:pointer;">RESTART</button>
                 </div>
             </div>
+            
             <div id="reward-screen" class="overlay" style="display:none;">
                 <div style="text-align:center;">
                     <h2 style="color:#da4;">SECTOR CLEARED</h2>
@@ -167,6 +168,8 @@
             <div id="log-container"></div>
         </div>
     </div>
+    
+    <div id="context-menu"></div>
     
     <div id="command-menu">
         <div class="cmd-btn" id="btn-move" onclick="gameLogic.setMode('MOVE')"><i>👣</i> 移動</div>
