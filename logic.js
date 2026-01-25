@@ -1,8 +1,8 @@
-/** LOGIC: Fixed Sidebar Toggle & Improved Initial Cards */
+/** LOGIC: Toggle Selection & Face Icons on Cards */
 
 // アイコン生成ヘルパー
 function createCardIcon(type) {
-    // ※今回は使いませんが、互換性のため残します
+    // 互換性のため残存
     const c = document.createElement('canvas'); c.width = 1; c.height = 1; return c.toDataURL();
 }
 
@@ -10,7 +10,7 @@ class Game {
     constructor() {
         this.units = [];
         this.map = [];
-        this.setupSlots = [];
+        this.setupSlots = []; // 選ばれたカードの種類を格納
         this.state = 'SETUP';
         this.path = [];
         this.reachableHexes = [];
@@ -48,7 +48,6 @@ class Game {
                 const newWidth = document.body.clientWidth - e.clientX;
                 if (newWidth > 200 && newWidth < 800) {
                     sidebar.style.width = newWidth + 'px';
-                    // ドラッグ中はcollapsedクラスを外す
                     if (sidebar.classList.contains('collapsed')) this.toggleSidebar();
                     Renderer.resize();
                 }
@@ -57,59 +56,84 @@ class Game {
         }
     }
 
-    // ★修正: サイドバー開閉ロジックの強化
     toggleSidebar() {
         const sb = document.getElementById('sidebar');
         const tg = document.getElementById('sidebar-toggle');
-        
         sb.classList.toggle('collapsed');
         
         if (sb.classList.contains('collapsed')) {
-            sb.style.width = ''; // CSS優先にするためインラインスタイル削除
+            sb.style.width = ''; 
             tg.innerText = '◀';
         } else {
-            // 開くときはデフォルト幅または以前の幅に戻す（ここでは単純にクラス削除）
             tg.innerText = '▶';
         }
-        
-        // Canvasリサイズ
         setTimeout(() => Renderer.resize(), 150);
     }
 
-    // ★修正: 初期カード選択画面 (棒人間廃止、スペック表示)
+    // ★修正: 初期カード選択 (顔表示 & トグル選択)
     initSetup() {
         const box = document.getElementById('setup-cards');
-        ['rifleman', 'scout', 'gunner', 'sniper'].forEach(k => {
+        box.innerHTML = ''; // クリア
+        
+        // 選択状況のリセット
+        this.setupSlots = [];
+
+        ['rifleman', 'scout', 'gunner', 'sniper'].forEach((k, index) => {
             const t = UNIT_TEMPLATES[k];
             const d = document.createElement('div');
             d.className = 'card';
-            
-            // スペック情報の構築
-            let specs = `<div style="text-align:left; font-size:10px; line-height:1.4; color:#aaa; margin-top:10px;">`;
-            specs += `HP: <span style="color:#fff">${t.hp||100}</span> AP: <span style="color:#fff">${t.ap||4}</span><br>`;
-            
+            d.dataset.type = k; // 識別用
+
+            // 顔アイコン生成 (ランダムシード)
+            const faceSeed = Math.floor(Math.random() * 99999);
+            const faceUrl = Renderer.generateFaceIcon ? Renderer.generateFaceIcon(faceSeed) : "";
+
+            // スペック情報
+            let specs = `<div style="text-align:left; font-size:10px; line-height:1.4; color:#aaa; margin-top:5px;">`;
+            specs += `HP:<span style="color:#fff">${t.hp||100}</span> AP:<span style="color:#fff">${t.ap||4}</span><br>`;
             const mainWpn = WPNS[t.main];
             if (mainWpn) {
-                specs += `Main: <span style="color:#d84">${mainWpn.name}</span><br>`;
-                specs += `Rng:${mainWpn.rng} Dmg:${mainWpn.dmg}`;
+                specs += `<span style="color:#d84">${mainWpn.name}</span>`;
             }
             specs += `</div>`;
 
             d.innerHTML = `
-                <div class="card-badge">0</div>
-                <div class="card-body" style="padding-top:20px;">
-                    <h3 style="color:#d84; border-bottom:1px solid #444; padding-bottom:5px;">${t.name}</h3>
+                <div class="card-badge" style="display:none;">✔</div>
+                <div class="card-img-box" style="background:#111;">
+                    <img src="${faceUrl}" style="width:64px; height:64px; object-fit:cover;">
+                </div>
+                <div class="card-body">
+                    <h3 style="color:#d84; font-size:14px; margin:5px 0;">${t.name}</h3>
                     <p style="font-size:10px; color:#888;">${t.role.toUpperCase()}</p>
                     ${specs}
                 </div>
             `;
+            
             d.onclick = () => {
-                if (this.setupSlots.length < 3) {
-                    this.setupSlots.push(k);
-                    d.querySelector('.card-badge').innerText = this.setupSlots.filter(s => s === k).length;
-                    d.querySelector('.card-badge').style.display = 'flex';
-                    this.log(`> 採用: ${t.name}`);
-                    if (this.setupSlots.length === 3) document.getElementById('btn-start').style.display = 'inline-block';
+                const idx = this.setupSlots.indexOf(k);
+                
+                if (idx >= 0) {
+                    // 選択解除
+                    this.setupSlots.splice(idx, 1);
+                    d.classList.remove('selected');
+                    d.querySelector('.card-badge').style.display = 'none';
+                    d.style.borderColor = "#555";
+                } else {
+                    // 選択 (3枠未満なら)
+                    if (this.setupSlots.length < 3) {
+                        this.setupSlots.push(k);
+                        d.classList.add('selected');
+                        d.querySelector('.card-badge').style.display = 'flex';
+                        d.style.borderColor = "#d84";
+                    }
+                }
+                
+                // 開始ボタン制御
+                const btn = document.getElementById('btn-start');
+                if (this.setupSlots.length === 3) {
+                    btn.style.display = 'inline-block';
+                } else {
+                    btn.style.display = 'none';
                 }
             };
             box.appendChild(d);
