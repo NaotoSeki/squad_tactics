@@ -1,5 +1,6 @@
-/** LOGIC: Restored checkDeploy & deployUnit */
+/** LOGIC: Restored checkDeploy & deployUnit & Card Icons */
 
+// アイコン生成ヘルパー
 function createCardIcon(type) {
     const c = document.createElement('canvas');
     c.width = 100; c.height = 100;
