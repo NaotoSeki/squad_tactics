@@ -1,4 +1,4 @@
-/** PHASER VFX & ENV: Realistic Nature & Safe Colors */
+/** PHASER VFX & ENV: High-Fidelity Nature (Fixed & Enhanced) */
 
 class VFXSystem {
     constructor() {
@@ -170,42 +170,58 @@ class EnvSystem {
     }
 
     preload(scene) {
-        // ★リアルな草のテクスチャ生成
+        // ★修正: リアルな草のテクスチャ生成 (lineTo使用)
         if (!scene.textures.exists('grass_tuft')) {
             const g = scene.make.graphics({x:0, y:0, add:false});
-            // 複数の色の細い線を描いて「ふさふさ感」を出す
             const colors = [0x66aa44, 0x77bb55, 0x559933, 0x88cc66];
-            for(let i=0; i<12; i++) {
-                g.lineStyle(1 + Math.random(), colors[Math.floor(Math.random() * colors.length)], 0.8);
-                const h = 10 + Math.random() * 8;
-                const bend = (Math.random() - 0.5) * 5;
+            
+            // 複数の草の葉を描いて1つの「株」にする
+            for(let i=0; i<16; i++) { // 本数増量
+                g.lineStyle(1.5, colors[Math.floor(Math.random() * colors.length)], 0.9);
                 g.beginPath();
-                g.moveTo((Math.random()-0.5)*4, 0);
-                g.quadraticBezierTo(bend, -h/2, (Math.random()-0.5)*6, -h);
+                
+                // 根元
+                const rootX = (Math.random()-0.5)*6;
+                const rootY = 0;
+                
+                // 先端 (風になびくように少し曲げる)
+                const height = 12 + Math.random() * 8;
+                const tipX = rootX + (Math.random()-0.5) * 10;
+                const tipY = -height;
+                
+                // 中間点 (カーブ用)
+                const midX = (rootX + tipX) / 2 + (Math.random()-0.5)*2;
+                const midY = -height * 0.5;
+
+                g.moveTo(rootX, rootY);
+                g.lineTo(midX, midY);
+                g.lineTo(tipX, tipY);
                 g.strokePath();
             }
-            g.generateTexture('grass_tuft', 20, 20);
+            g.generateTexture('grass_tuft', 24, 24);
         }
         
-        // ★リアルな木のテクスチャ生成 (幹と樹冠)
+        // ★修正: リアルな木のテクスチャ生成 (幹と樹冠)
         if (!scene.textures.exists('tree_trunk')) {
             const g = scene.make.graphics({x:0, y:0, add:false});
             g.fillStyle(0x554433); g.fillRect(0, 0, 8, 16);
-            g.fillStyle(0x443322); g.fillRect(1, 1, 6, 14); // 影
+            g.fillStyle(0x332211); g.fillRect(0, 0, 3, 16); // 陰影
             g.generateTexture('tree_trunk', 8, 16);
         }
         if (!scene.textures.exists('real_tree_crown')) {
             const g = scene.make.graphics({x:0, y:0, add:false});
             // 複数の円を重ねてモコモコ感を出す
-            const colors = [0x225511, 0x336622, 0x1a440a];
-            for(let i=0; i<5; i++) {
-                g.fillStyle(colors[i%colors.length], 0.8);
-                const r = 15 + Math.random() * 10;
-                g.fillCircle(32 + (Math.random()-0.5)*20, 32 + (Math.random()-0.5)*15, r);
+            const colors = [0x225511, 0x336622, 0x1a440a, 0x2a5a1a];
+            for(let i=0; i<8; i++) { // 葉の塊を増やす
+                g.fillStyle(colors[i%colors.length], 0.9);
+                const r = 12 + Math.random() * 12;
+                const ox = 32 + (Math.random()-0.5)*24;
+                const oy = 32 + (Math.random()-0.5)*20;
+                g.fillCircle(ox, oy, r);
             }
-            // ハイライト
-            g.fillStyle(0x448833, 0.3);
-            g.fillCircle(32 - 10, 32 - 10, 12);
+            // ハイライト (上部に)
+            g.fillStyle(0x55aa44, 0.2);
+            g.fillCircle(32, 20, 15);
             
             g.generateTexture('real_tree_crown', 64, 64);
         }
@@ -216,27 +232,28 @@ class EnvSystem {
     }
 
     spawnGrass(scene, group, x, y) {
-        // ★1ヘックスに大量の草を生やす
-        const count = 12 + Math.floor(Math.random() * 6);
+        // ★1ヘックスに大量の草を生やす (密度アップ)
+        const count = 10 + Math.floor(Math.random() * 5); 
         for(let i=0; i<count; i++) {
-            // ヘックス内にランダム配置 (簡易的な円形分布)
-            const r = Math.random() * HEX_SIZE * 0.8;
+            // ヘックス内にランダム配置 (円形分布)
+            const r = Math.random() * (HEX_SIZE * 0.9); // 広範囲に
             const angle = Math.random() * Math.PI * 2;
+            // Flat Top Hexのアスペクト比に合わせて配置
             const ox = Math.cos(angle) * r;
-            const oy = Math.sin(angle) * r * 0.866; // 縦をつぶす
+            const oy = Math.sin(angle) * r * 0.866; 
 
             const grass = scene.add.image(x+ox, y+oy, 'grass_tuft');
             grass.setOrigin(0.5, 1.0);
-            grass.setScale(0.8 + Math.random() * 0.4);
+            grass.setScale(0.8 + Math.random() * 0.5);
             grass.setAlpha(0.9);
             grass.setDepth(y + oy); // 奥行きソート
             group.add(grass);
             
-            // 自然な風の揺らぎ
+            // 自然な風の揺らぎ (個別にタイミングをずらす)
             scene.tweens.add({
                 targets: grass,
-                angle: { from: -3 - Math.random()*2, to: 3 + Math.random()*2 },
-                duration: 1500 + Math.random() * 1500,
+                angle: { from: -4, to: 4 }, // 揺れ幅
+                duration: 2000 + Math.random() * 1500,
                 yoyo: true,
                 repeat: -1,
                 ease: 'Sine.easeInOut',
@@ -247,27 +264,29 @@ class EnvSystem {
 
     spawnTrees(scene, group, x, y) {
         // ★1ヘックスに複数の木を鬱蒼と生やす
-        const count = 2 + Math.floor(Math.random() * 3);
+        const count = 3 + Math.floor(Math.random() * 2); // 本数
         for(let i=0; i<count; i++) {
-            const r = Math.random() * HEX_SIZE * 0.6;
+            const r = Math.random() * (HEX_SIZE * 0.7);
             const angle = Math.random() * Math.PI * 2;
             const ox = Math.cos(angle) * r;
             const oy = Math.sin(angle) * r * 0.866;
-            const scale = 0.8 + Math.random() * 0.5;
+            const scale = 0.9 + Math.random() * 0.6; // サイズのバラつき
 
+            // 幹
             const trunk = scene.add.image(x+ox, y+oy+8*scale, 'tree_trunk').setOrigin(0.5, 1.0).setScale(scale);
             trunk.setDepth(y+oy);
             group.add(trunk);
             
+            // 葉 (幹より少し上に、手前に)
             const crown = scene.add.image(x+ox, y+oy-10*scale, 'real_tree_crown').setOrigin(0.5, 0.6).setScale(scale);
-            crown.setDepth(y+oy+1); // 幹より手前
+            crown.setDepth(y+oy+1); 
             group.add(crown);
 
             // 樹冠のゆったりした揺れ
             scene.tweens.add({
                 targets: crown,
-                angle: { from: -1, to: 1 },
-                scaleX: { from: scale, to: scale*1.02 },
+                angle: { from: -1.5, to: 1.5 },
+                scaleX: { from: scale, to: scale*1.05 },
                 duration: 2500 + Math.random() * 1000,
                 yoyo: true,
                 repeat: -1,
