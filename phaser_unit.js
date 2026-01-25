@@ -1,4 +1,4 @@
-/** * PHASER UNIT: Unit Visual Management & Animation Definitions */
+/** * PHASER UNIT: 1 Hex 4 Units & Click Selection */
 class UnitView {
     constructor(scene, unitLayer, hpLayer) {
         this.scene = scene;
@@ -6,40 +6,22 @@ class UnitView {
         this.hpLayer = hpLayer;
         this.visuals = new Map(); 
         
-        // ★初期化時にアニメーション定義を実行
         this.defineAnimations();
     }
 
-    // ★アニメーション定義をここに集約
     defineAnimations() {
         const anims = this.scene.anims;
-        if (anims.exists('anim_idle')) return; // 定義済みならスキップ
+        if (anims.exists('anim_idle')) return; 
 
-        // --- US Soldier Animations ---
         anims.create({ key: 'anim_idle', frames: anims.generateFrameNumbers('us_soldier', { start: 0, end: 7 }), frameRate: 8, repeat: -1 });
-        
-        // 遷移
         anims.create({ key: 'anim_crouch', frames: anims.generateFrameNumbers('us_soldier', { start: 8, end: 15 }), frameRate: 15, repeat: 0 });
         anims.create({ key: 'anim_prone', frames: anims.generateFrameNumbers('us_soldier', { start: 24, end: 31 }), frameRate: 15, repeat: 0 });
-        
-        // 静止待機 (Static Idle)
         anims.create({ key: 'anim_crouch_idle', frames: anims.generateFrameNumbers('us_soldier', { frames: [15] }), frameRate: 1, repeat: -1 });
-        
-        // 伏せ待機 (マズルフラッシュ回避 & 微動)
         anims.create({ 
             key: 'anim_prone_idle', 
-            frames: anims.generateFrameNumbers('us_soldier', { frames: [
-                33, 33, 33, 33, 33, // じっとしている
-                34, 33,             // 呼吸
-                33, 33, 33, 
-                38, 39, 38,         // 姿勢直し
-                33, 33
-            ]}), 
-            frameRate: 6, 
-            repeat: -1 
+            frames: anims.generateFrameNumbers('us_soldier', { frames: [33, 33, 33, 33, 33, 34, 33, 33, 33, 33, 38, 39, 38, 33, 33]}), 
+            frameRate: 6, repeat: -1 
         });
-
-        // アクション
         anims.create({ key: 'anim_crouch_shoot', frames: anims.generateFrameNumbers('us_soldier', { start: 16, end: 23 }), frameRate: 15, repeat: 0 });
         anims.create({ key: 'anim_prone_shoot', frames: anims.generateFrameNumbers('us_soldier', { start: 32, end: 39 }), frameRate: 15, repeat: 0 });
         anims.create({ key: 'anim_shoot', frames: anims.generateFrameNumbers('us_soldier', { start: 40, end: 47 }), frameRate: 15, repeat: 0 });
@@ -48,7 +30,6 @@ class UnitView {
         anims.create({ key: 'anim_crawl', frames: anims.generateFrameNumbers('us_soldier', { start: 64, end: 71 }), frameRate: 6, repeat: -1 });
         anims.create({ key: 'anim_melee', frames: anims.generateFrameNumbers('us_soldier', { start: 72, end: 79 }), frameRate: 15, repeat: 0 });
 
-        // --- Other Entities ---
         if (!anims.exists('tank_idle')) { anims.create({ key: 'tank_idle', frames: anims.generateFrameNumbers('tank_sheet', { frames: [7, 6, 5, 6, 7, 5] }), frameRate: 10, repeat: -1 }); }
         if (!anims.exists('explosion_anim')) { anims.create({ key: 'explosion_anim', frames: anims.generateFrameNumbers('explosion_sheet', { start: 0, end: 7 }), frameRate: 20, repeat: 0, hideOnComplete: true }); }
     }
@@ -57,17 +38,31 @@ class UnitView {
         if (!window.gameLogic) return;
 
         const activeIds = new Set();
+        // マップ上の全ユニットを取得し、位置重複を確認
+        const hexMap = new Map(); // "q,r" -> [unit1, unit2...]
         window.gameLogic.units.forEach(u => {
             if (u.hp <= 0) return;
+            const key = `${u.q},${u.r}`;
+            if (!hexMap.has(key)) hexMap.set(key, []);
+            hexMap.get(key).push(u);
             activeIds.add(u.id);
+        });
 
+        // 描画更新
+        window.gameLogic.units.forEach(u => {
+            if (u.hp <= 0) return;
             let visual = this.visuals.get(u.id);
             if (!visual) {
                 visual = this.createVisual(u);
                 this.visuals.set(u.id, visual);
                 this.unitLayer.add(visual);
             }
-            this.updateVisual(visual, u, delta); 
+            
+            // ★密集時のオフセット計算
+            const siblings = hexMap.get(`${u.q},${u.r}`) || [];
+            const index = siblings.indexOf(u);
+            const count = siblings.length;
+            this.updateVisual(visual, u, delta, index, count);
 
             const isSelected = (window.gameLogic.selectedUnit === u);
             if (isSelected) {
@@ -93,17 +88,30 @@ class UnitView {
 
     createVisual(u) {
         const container = this.scene.add.container(0, 0);
+        // ★個別クリックのためにサイズを設定
+        container.setSize(40, 60);
+        container.setInteractive({ useHandCursor: true });
+        
+        // ★クリックイベント
+        container.on('pointerdown', (pointer) => {
+            // 左クリックのみ
+            if (pointer.button === 0 && window.gameLogic) {
+                pointer.event.stopPropagation(); // マップドラッグなどを防ぐ
+                window.gameLogic.onUnitClick(u);
+            }
+        });
+
         const shadow = this.scene.add.ellipse(0, 8, 20, 10, 0x000000, 0.5);
         
         let sprite;
         if (u.def.name === "Rifleman" || u.def.role === "infantry" || !u.def.isTank) { 
             sprite = this.scene.add.sprite(0, -20, 'us_soldier'); 
-            sprite.setScale(0.5); 
+            sprite.setScale(0.25); // ★サイズ縮小 (密集対応)
             sprite.play('anim_idle');
             if (u.team === 'player') sprite.setTint(0xeeeeff); else sprite.setTint(0xffaaaa);
         } else if (u.def.isTank) {
             sprite = this.scene.add.sprite(0, -10, 'tank_sheet');
-            sprite.setScale(0.5);
+            sprite.setScale(0.4);
             sprite.play('tank_idle');
             if (u.team === 'player') sprite.setTint(0xccddee); else sprite.setTint(0xffaaaa);
             shadow.setPosition(-2, 2); 
@@ -112,25 +120,25 @@ class UnitView {
             sprite = this.scene.add.rectangle(0, 0, 30, 40, u.team==='player'?0x00f:0xf00);
         }
 
-        const cursor = this.scene.add.image(0, 0, 'cursor').setScale(1/window.HIGH_RES_SCALE).setAlpha(0).setVisible(false);
-        this.scene.tweens.add({ targets: cursor, scale: { from: 1/window.HIGH_RES_SCALE, to: 1.1/window.HIGH_RES_SCALE }, alpha: { from: 1, to: 0.5 }, yoyo: true, repeat: -1, duration: 800 });
+        const cursor = this.scene.add.image(0, 0, 'cursor').setScale(0.5).setAlpha(0).setVisible(false);
+        this.scene.tweens.add({ targets: cursor, scale: { from: 0.5, to: 0.6 }, alpha: { from: 1, to: 0.5 }, yoyo: true, repeat: -1, duration: 800 });
 
         container.add([shadow, sprite, cursor]);
 
+        // HP Bar
         const hpBg = this.scene.add.rectangle(0, 0, 20, 4, 0x000000).setOrigin(0, 0.5);
         const hpBar = this.scene.add.rectangle(0, 0, 20, 4, 0x00ff00).setOrigin(0, 0.5);
         const infoContainer = this.scene.add.container(0, 18);
-        const rankText = this.scene.add.text(0, 0, "", { fontSize: '8px', color: '#ffcc00' }).setOrigin(0.5, 0.5);
-
+        
         this.hpLayer.add(hpBg);
         this.hpLayer.add(hpBar);
         this.hpLayer.add(infoContainer);
 
         container.sprite = sprite;
         container.cursor = cursor;
-        container.hpBg = hpBg; container.hpBar = hpBar;
+        container.hpBg = hpBg;
+        container.hpBar = hpBar;
         container.infoContainer = infoContainer;
-        container.rankText = rankText;
         
         const pos = Renderer.hexToPx(u.q, u.r);
         container.setPosition(pos.x, pos.y);
@@ -140,97 +148,92 @@ class UnitView {
         return container;
     }
 
-    updateVisual(container, u, delta) {
+    updateVisual(visual, u, delta, index, count) {
         if(!Renderer || !Renderer.hexToPx) return;
         
-        const targetPos = Renderer.hexToPx(u.q, u.r);
-        container.targetX = targetPos.x;
-        container.targetY = targetPos.y;
+        const basePos = Renderer.hexToPx(u.q, u.r);
+        
+        // ★オフセット計算 (4隅に配置)
+        let offsetX = 0, offsetY = 0;
+        if (count > 1) {
+            const spread = 12; // 散開距離
+            if (index === 0) { offsetX = -spread; offsetY = -spread; }
+            else if (index === 1) { offsetX = spread; offsetY = -spread; }
+            else if (index === 2) { offsetX = -spread; offsetY = spread; }
+            else if (index === 3) { offsetX = spread; offsetY = spread; }
+        }
+        
+        visual.targetX = basePos.x + offsetX;
+        visual.targetY = basePos.y + offsetY;
 
-        const dx = container.targetX - container.x;
-        const dy = container.targetY - container.y;
+        // Lerp移動
+        const dx = visual.targetX - visual.x;
+        const dy = visual.targetY - visual.y;
         const dist = Math.sqrt(dx*dx + dy*dy);
         const speed = 0.06; 
         
         let isMoving = false;
-        
         if (dist > 1) {
-            container.x += dx * speed;
-            container.y += dy * speed;
+            visual.x += dx * speed;
+            visual.y += dy * speed;
             isMoving = true;
-            
-            if (Math.abs(dx) > 0.1) {
-                container.sprite.setFlipX(dx < 0);
-            }
+            if (Math.abs(dx) > 0.1) visual.sprite.setFlipX(dx < 0);
         } else {
-            container.x = container.targetX;
-            container.y = container.targetY;
+            visual.x = visual.targetX;
+            visual.y = visual.targetY;
         }
 
-        if (!u.def.isTank && container.sprite) {
-            const currentAnim = container.sprite.anims.currentAnim ? container.sprite.anims.currentAnim.key : '';
+        // Animation
+        if (!u.def.isTank && visual.sprite) {
+            const currentAnim = visual.sprite.anims.currentAnim ? visual.sprite.anims.currentAnim.key : '';
             const isAttacking = currentAnim.includes('shoot') || currentAnim.includes('melee');
             
             if (isMoving) {
                 let moveAnim = 'anim_walk';
                 if (u.stance === 'crouch') moveAnim = 'anim_crouch_walk';
                 if (u.stance === 'prone') moveAnim = 'anim_crawl';
-                
-                if (currentAnim !== moveAnim) container.sprite.play(moveAnim, true);
+                if (currentAnim !== moveAnim) visual.sprite.play(moveAnim, true);
             } else {
-                if (!isAttacking || !container.sprite.anims.isPlaying) {
+                if (!isAttacking || !visual.sprite.anims.isPlaying) {
                     let idleAnim = 'anim_idle';
                     if (u.stance === 'crouch') idleAnim = 'anim_crouch_idle'; 
                     if (u.stance === 'prone') idleAnim = 'anim_prone_idle';
-                    
-                    if (currentAnim !== idleAnim) container.sprite.play(idleAnim, true);
+                    if (currentAnim !== idleAnim) visual.sprite.play(idleAnim, true);
                 }
             }
         }
 
-        if (container.hpBg && container.hpBar && container.infoContainer) {
-            const barY = container.y - 35;
-            const barX = container.x - 10;
-            container.hpBg.setPosition(barX, barY);
-            container.hpBar.setPosition(barX, barY);
+        // HP Bar & Info
+        if (visual.hpBg && visual.hpBar && visual.infoContainer) {
+            const barY = visual.y - 25; // 縮小に合わせて調整
+            const barX = visual.x - 10;
+            visual.hpBg.setPosition(barX, barY);
+            visual.hpBar.setPosition(barX, barY);
             
             const hpPct = u.hp / u.maxHp;
-            container.hpBar.width = Math.max(0, 20 * hpPct);
-            container.hpBar.fillColor = hpPct > 0.5 ? 0x00ff00 : 0xff0000;
+            visual.hpBar.width = Math.max(0, 20 * hpPct);
+            visual.hpBar.fillColor = hpPct > 0.5 ? 0x00ff00 : 0xff0000;
 
-            const infoY = container.y + 18;
-            container.infoContainer.setPosition(container.x, infoY);
-            container.infoContainer.removeAll(true);
+            const infoY = visual.y + 12;
+            visual.infoContainer.setPosition(visual.x, infoY);
+            visual.infoContainer.removeAll(true);
 
-            let currentX = 0;
-            if (u.rank > 0 && typeof RANKS !== 'undefined') {
-                const rText = this.scene.add.text(0, 0, RANKS[Math.min(u.rank, 5)], { fontSize:'9px', color:'#eee', stroke:'#000', strokeThickness:2 }).setOrigin(0.5);
-                container.infoContainer.add(rText);
-                currentX += rText.width/2 + 4;
-            } else {
-                currentX -= 6;
-            }
-
-            if (u.skills && u.skills.length > 0 && window.SKILL_STYLES) {
-                const g = this.scene.add.graphics();
-                let ox = currentX;
-                u.skills.forEach(sk => {
-                    const st = window.SKILL_STYLES[sk];
-                    const color = st ? parseInt(st.col.replace('#','0x')) : 0x888888;
-                    g.fillStyle(0x000000, 1); g.fillRect(ox, -2, 5, 5); 
-                    g.fillStyle(color, 1); g.fillRect(ox+1, -1, 3, 3); 
-                    ox += 6;
-                });
-                container.infoContainer.add(g);
-                container.infoContainer.x -= ox / 4; 
+            // 簡易表示 (ランクと状態異常など)
+            let infoText = "";
+            if(u.loadout.hands && u.loadout.hands.isBroken) infoText += "⚠ ";
+            if(u.hp < u.maxHp*0.5) infoText += "➕ ";
+            
+            if (infoText) {
+                const txt = this.scene.add.text(0, 0, infoText, { fontSize: '10px' }).setOrigin(0.5);
+                visual.infoContainer.add(txt);
             }
         }
 
         if (window.gameLogic.selectedUnit === u) {
-            container.cursor.setVisible(true);
-            container.cursor.setAlpha(1);
+            visual.cursor.setVisible(true);
+            visual.cursor.setAlpha(1);
         } else {
-            container.cursor.setVisible(false);
+            visual.cursor.setVisible(false);
         }
     }
 
@@ -238,18 +241,15 @@ class UnitView {
         if(visual.hpBg) visual.hpBg.destroy();
         if(visual.hpBar) visual.hpBar.destroy();
         if(visual.infoContainer) visual.infoContainer.destroy();
-        if(visual.rankText) visual.rankText.destroy();
         visual.destroy();
     }
 
     triggerAttack(attacker, target) {
         const visual = this.visuals.get(attacker.id);
         if (!visual || !visual.sprite) return;
-        
         if (attacker.def.isTank) return; 
 
         let animKey = 'anim_shoot'; 
-        
         const start = Renderer.hexToPx(attacker.q, attacker.r);
         const end = Renderer.hexToPx(target.q, target.r);
         const dist = Phaser.Math.Distance.Between(start.x, start.y, end.x, end.y);
