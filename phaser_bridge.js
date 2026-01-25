@@ -200,8 +200,14 @@ class MainScene extends Phaser.Scene {
         // ★修正: 伏せ待機 (時折動く)
         this.anims.create({ 
             key: 'anim_prone_idle', 
-            frames: this.anims.generateFrameNumbers('us_soldier', { frames: [33, 33, 33, 33, 33, 33, 33, 37, 38, 37] }), 
-            frameRate: 5, 
+            frames: this.anims.generateFrameNumbers('us_soldier', { frames: [
+                33, 33, 33, 33, 33, // じっとしている
+                34, 33,             // 呼吸のような微動
+                33, 33, 33, 
+                38, 39, 38,         // わずかに姿勢を直す動き
+                33, 33
+            ]}), 
+            frameRate: 6, // 少しゆっくりめに
             repeat: -1 
         });
 
