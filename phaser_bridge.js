@@ -1,8 +1,7 @@
-/** PHASER BRIDGE: No-Overlap Hexes & High-Detail Nature */
+/** PHASER BRIDGE: Simple Tactical Card Frame */
 let phaserGame = null;
 window.HIGH_RES_SCALE = 2.0; 
 
-// ■カードアイコン生成 (変更なし)
 window.getCardTextureKey = function(scene, type) {
     const key = `card_icon_${type}`;
     if (scene.textures.exists(key)) return key;
@@ -27,7 +26,53 @@ window.getCardTextureKey = function(scene, type) {
     return key;
 };
 
-// ■UI背景 (変更なし)
+// ★修正: シンプルでタクティカルなカード枠を生成
+window.createCardFrameTexture = function(scene) {
+    if (scene.textures.exists('simple_card_frame')) return;
+    const g = scene.make.graphics({x: 0, y: 0, add: false});
+    
+    // 枠サイズ
+    const w = 140; 
+    const h = 200;
+    
+    // 外枠
+    g.lineStyle(2, 0x888888);
+    g.fillStyle(0x111111);
+    g.strokeRect(0, 0, w, h);
+    g.fillRect(0, 0, w, h);
+    
+    // コーナー装飾
+    g.lineStyle(4, 0xdd8844);
+    const len = 20;
+    g.beginPath(); g.moveTo(0, len); g.lineTo(0,0); g.lineTo(len, 0); g.strokePath(); // 左上
+    g.beginPath(); g.moveTo(w-len, 0); g.lineTo(w,0); g.lineTo(w, len); g.strokePath(); // 右上
+    g.beginPath(); g.moveTo(w, h-len); g.lineTo(w,h); g.lineTo(w-len, h); g.strokePath(); // 右下
+    g.beginPath(); g.moveTo(len, h); g.lineTo(0,h); g.lineTo(0, h-len); g.strokePath(); // 左下
+    
+    g.generateTexture('simple_card_frame', w, h);
+};
+
+window.createHexTexture = function(scene) {
+    if (scene.textures.exists('hex_base')) return;
+    const g = scene.make.graphics({x: 0, y: 0, add: false});
+    const baseSize = (typeof HEX_SIZE !== 'undefined' ? HEX_SIZE : 54); 
+    const size = baseSize * window.HIGH_RES_SCALE; 
+    const w = size * 2;
+    const h = size * Math.sqrt(3);
+    g.fillStyle(0xffffff);
+    g.beginPath();
+    for (let i = 0; i < 6; i++) {
+        const angle_deg = 60 * i; 
+        const angle_rad = Math.PI / 180 * angle_deg;
+        const px = w/2 + size * Math.cos(angle_rad);
+        const py = h/2 + size * Math.sin(angle_rad);
+        if (i === 0) g.moveTo(px, py); else g.lineTo(px, py);
+    }
+    g.closePath();
+    g.fillPath();
+    g.generateTexture('hex_base', w, h);
+};
+
 window.createGradientTexture = function(scene) {
     const key = 'ui_gradient';
     if (scene.textures.exists(key)) return;
@@ -40,35 +85,6 @@ window.createGradientTexture = function(scene) {
     ctx.fillStyle = grd;
     ctx.fillRect(0, 0, 100, 100);
     scene.textures.addCanvas(key, canvas);
-};
-
-// ■★重要修正: ヘックス画像生成 (重なりなし・Flat Top)
-window.createHexTexture = function(scene) {
-    if (scene.textures.exists('hex_base')) return;
-    const g = scene.make.graphics({x: 0, y: 0, add: false});
-    
-    const baseSize = (typeof HEX_SIZE !== 'undefined' ? HEX_SIZE : 54); 
-    // ★修正: オーバーラップ係数を削除し、ピッタリのサイズで計算
-    const size = baseSize * window.HIGH_RES_SCALE; 
-    
-    // Flat Topの外接矩形
-    const w = size * 2;
-    const h = size * Math.sqrt(3);
-    
-    g.fillStyle(0xffffff);
-    g.beginPath();
-    for (let i = 0; i < 6; i++) {
-        const angle_deg = 60 * i; // Flat Top
-        const angle_rad = Math.PI / 180 * angle_deg;
-        // 中心座標をキャンバスの中央に
-        const px = w/2 + size * Math.cos(angle_rad);
-        const py = h/2 + size * Math.sin(angle_rad);
-        if (i === 0) g.moveTo(px, py); else g.lineTo(px, py);
-    }
-    g.closePath();
-    g.fillPath();
-    
-    g.generateTexture('hex_base', w, h);
 };
 
 const Renderer = {
@@ -147,9 +163,10 @@ class Card extends Phaser.GameObjects.Container {
         this.visuals = scene.add.container(0, 0);
         const shadow = scene.add.rectangle(6, 6, 130, 190, 0x000000, 0.6);
         const contentBg = scene.add.rectangle(0, 0, 130, 190, 0x1a1a1a);
-        let frame;
-        if(scene.textures.exists('card_frame')) { frame = scene.add.image(0, 0, 'card_frame').setDisplaySize(140, 200); } 
-        else { frame = scene.add.rectangle(0,0,140,200,0x333).setStrokeStyle(2,0x888); }
+        
+        // ★修正: シンプルフレームを使用
+        let frame = scene.add.image(0, 0, 'simple_card_frame');
+        
         frame.setInteractive({ useHandCursor: true, draggable: true }); this.frameImage = frame;
         const iconKey = window.getCardTextureKey(scene, type);
         const icon = scene.add.image(0, 10, iconKey).setScale(1/window.HIGH_RES_SCALE);
@@ -237,11 +254,13 @@ class MainScene extends Phaser.Scene {
         this.load.spritesheet('soldier_sheet', 'asset/soldier_sheet_1.png', { frameWidth: 128, frameHeight: 128 });
         this.load.spritesheet('tank_sheet', 'asset/tank_sheet_1.png', { frameWidth: 128, frameHeight: 128 });
         this.load.spritesheet('explosion_sheet', 'asset/explosion-sheet.png', { frameWidth: 128, frameHeight: 128 });
-        this.load.image('card_frame', 'asset/card_frame.png');
+        // ★修正: 重たい画像を読まず、動的に作ったフレームを使う
+        // this.load.image('card_frame', 'asset/card_frame.png'); 
+        window.createCardFrameTexture(this);
     }
 
     create() {
-        window.createHexTexture(this);
+        if(!this.textures.exists('hex_base')) window.createHexTexture(this);
 
         this.cameras.main.setBackgroundColor('#0b0e0a'); 
         
@@ -289,12 +308,12 @@ class MainScene extends Phaser.Scene {
                 const hex = this.add.image(pos.x, pos.y, 'hex_base').setScale(1/window.HIGH_RES_SCALE); 
                 
                 let tint = 0x555555; 
-                if(t.id===0) tint=0x5a5245; // Dirt
-                else if(t.id===1) tint=0x425030; // Grass
-                else if(t.id===2) tint=0x222e1b; // Forest
-                else if(t.id===4) tint=0x504540; // Town
+                if(t.id===0) tint=0x5a5245; 
+                else if(t.id===1) tint=0x425030; 
+                else if(t.id===2) tint=0x222e1b; 
+                else if(t.id===4) tint=0x504540; 
                 else if(t.id===5) { 
-                    tint=0x303840; // Water
+                    tint=0x303840; 
                     if(window.EnvSystem) window.EnvSystem.registerWater(hex, pos.y, q, r, this.decorGroup); 
                 }
                 
@@ -319,7 +338,6 @@ class MainScene extends Phaser.Scene {
         if(this.unitView) this.unitView.update(time, delta);
         
         this.overlayGraphics.clear();
-        // ★修正: カーソル描画もオーバーラップなしで
         if (this.dragHighlightHex) { this.overlayGraphics.lineStyle(4, 0xffffff, 1.0); this.drawHexOutline(this.overlayGraphics, this.dragHighlightHex.q, this.dragHighlightHex.r); }
         const selected = window.gameLogic.selectedUnit;
         if(selected && window.gameLogic.reachableHexes.length > 0) { this.overlayGraphics.lineStyle(2, 0xffffff, 0.4); window.gameLogic.reachableHexes.forEach(h => this.drawHexOutline(this.overlayGraphics, h.q, h.r)); }
@@ -342,27 +360,9 @@ class MainScene extends Phaser.Scene {
         }
     }
     
-    // ★修正: カーソル描画 (オーバーラップなし)
-    drawHexOutline(g, q, r) { 
-        const c = Renderer.hexToPx(q, r); 
-        const size = HEX_SIZE * 1.0;
-        g.beginPath(); 
-        for(let i=0; i<6; i++) { 
-            const a = Math.PI/180 * (60*i);
-            g.lineTo(c.x + size * Math.cos(a), c.y + size * Math.sin(a)); 
-        } 
-        g.closePath(); 
-        g.strokePath(); 
-    }
-    
+    drawHexOutline(g, q, r) { const c = Renderer.hexToPx(q, r); g.beginPath(); for(let i=0; i<6; i++) { const a = Math.PI/180*60*i; g.lineTo(c.x+HEX_SIZE*0.9*Math.cos(a), c.y+HEX_SIZE*0.9*Math.sin(a)); } g.closePath(); g.lineWidth=0.1; g.strokePath(); }
     drawDashedHexOutline(g, q, r, timeOffset = 0) {
-        const c = Renderer.hexToPx(q, r); 
-        const size = HEX_SIZE * 1.0;
-        const pts = []; 
-        for(let i=0; i<6; i++) { 
-            const a = Math.PI/180 * (60*i);
-            pts.push({ x: c.x + size * Math.cos(a), y: c.y + size * Math.sin(a) }); 
-        }
+        const c = Renderer.hexToPx(q, r); const pts = []; for(let i=0; i<6; i++) { const a = Math.PI/180*60*i; pts.push({ x: c.x+HEX_SIZE*0.9*Math.cos(a), y: c.y+HEX_SIZE*0.9*Math.sin(a) }); }
         const dashLen = 6; const gapLen = 4; const period = dashLen + gapLen; let currentDistInPath = -timeOffset; 
         for(let i=0; i<6; i++) {
             const p1 = pts[i]; const p2 = pts[(i+1)%6]; const dist = Phaser.Math.Distance.Between(p1.x, p1.y, p2.x, p2.y); const dx = (p2.x - p1.x) / dist; const dy = (p2.y - p1.y) / dist;
