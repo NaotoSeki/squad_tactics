@@ -1,4 +1,4 @@
-/** LOGIC: With Reload Weapon */
+/** LOGIC: Fixed Menu Auto-Close Bug */
 
 function createCardIcon(type) {
     const c = document.createElement('canvas'); c.width = 1; c.height = 1; return c.toDataURL();
@@ -22,6 +22,10 @@ class Game {
         this.cardsUsed = 0;
         this.interactionMode = 'SELECT';
         this.selectedUnit = null;
+        
+        // ★追加: メニュー制御用フラグ
+        this.menuSafeLock = false;
+        
         this.initDOM();
         this.initSetup();
     }
@@ -29,6 +33,9 @@ class Game {
     initDOM() {
         Renderer.init(document.getElementById('game-view'));
         window.addEventListener('click', (e) => {
+            // ★修正: ロック中は無視 (マウスアップ時の誤爆防止)
+            if (this.menuSafeLock) return;
+
             if (!e.target.closest('#context-menu')) document.getElementById('context-menu').style.display = 'none';
             if (!e.target.closest('#command-menu') && !e.target.closest('canvas')) { this.hideActionMenu(); }
         });
@@ -141,6 +148,11 @@ class Game {
 
     showActionMenu(u) {
         const menu = document.getElementById('command-menu'); if (!menu) return;
+        
+        // ★修正: メニューを開いた瞬間はロックする (300ms)
+        this.menuSafeLock = true;
+        setTimeout(() => { this.menuSafeLock = false; }, 300);
+
         const btnMove = document.getElementById('btn-move'); const btnAttack = document.getElementById('btn-attack');
         const btnRepair = document.getElementById('btn-repair'); const btnMelee = document.getElementById('btn-melee'); const btnHeal = document.getElementById('btn-heal');
         if (u.ap <= 0) { btnMove.classList.add('disabled'); btnAttack.classList.add('disabled'); } else { btnMove.classList.remove('disabled'); btnAttack.classList.remove('disabled'); }
@@ -196,7 +208,6 @@ class Game {
     }
     toggleStance() { const u = this.selectedUnit; if (!u) return; let next = 'stand'; if (u.stance === 'stand') next = 'crouch'; else if (u.stance === 'crouch') next = 'prone'; this.setStance(next); }
 
-    // ★重要: リロード機能
     reloadWeapon() {
         const u = this.selectedUnit; if (!u) return; const w = u.hands;
         if (!w || w.isConsumable) { this.log("リロード不可"); return; }
