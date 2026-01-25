@@ -1,4 +1,4 @@
-/** PHASER VFX & ENV: Earthy Tone Grass (60FPS Smooth) & Gentle Breeze */
+/** PHASER VFX & ENV: Two Grass Variants (Tall & Wild) mixed on the same terrain */
 
 class VFXSystem {
     constructor() {
@@ -90,43 +90,43 @@ class EnvSystem {
 
     preload(scene) {
         const TEXTURE_SCALE = 4.0; 
+        const canvasW = 64 * TEXTURE_SCALE * 1.8; 
+        const canvasH = 64 * TEXTURE_SCALE;
+        const palettes = [0x4a5d23, 0x5b6e34, 0x3a4d13, 0x6c7a44, 0x554e33];
 
+        // --- Grass Type A: Tall & Straight (既存の草) ---
         if (!scene.textures.exists('hd_grass_0')) {
-            const size = 64 * TEXTURE_SCALE;
-            const canvasW = size * 1.8; 
-            const canvasH = size;
-            // ★修正: パレットを土っぽい渋い色に変更 (紫要素を排除)
-            const palettes = [0x4a5d23, 0x5b6e34, 0x3a4d13, 0x6c7a44, 0x554e33];
-            
-            const bladeDefs = [];
+            const bladeDefsA = [];
             for(let i=0; i<45; i++) {
-                bladeDefs.push({
+                bladeDefsA.push({
                     col: palettes[Math.floor(Math.random() * palettes.length)],
-                    startX: canvasW/2 + (Math.random()-0.5) * (size * 0.15),
-                    len: (size * 0.5) + Math.random() * (size * 0.5),
-                    lean: (Math.random() - 0.5) * (size * 0.9),
-                    ctrlOff: (Math.random() - 0.5) * (size * 0.2)
+                    startX: canvasW/2 + (Math.random()-0.5) * (canvasH * 0.15),
+                    len: (canvasH * 0.5) + Math.random() * (canvasH * 0.5),
+                    lean: (Math.random() - 0.5) * (canvasH * 0.9),
+                    ctrlOff: (Math.random() - 0.5) * (canvasH * 0.2)
                 });
             }
+            this.generateGrassFrames(scene, 'hd_grass', bladeDefsA, canvasW, canvasH, TEXTURE_SCALE, 0.7);
+        }
 
-            for (let frame = 0; frame < this.TOTAL_GRASS_FRAMES; frame++) {
-                const g = scene.make.graphics({x:0, y:0, add:false});
-                // 土台も暗く、土っぽく
-                g.fillStyle(0x2a331a, 0.8); g.fillEllipse(canvasW/2, canvasH, size/4, size/10);
-
-                const bendFactor = frame / (this.TOTAL_GRASS_FRAMES - 1.0); 
-
-                for(let b of bladeDefs) {
-                    g.lineStyle(1.5 * TEXTURE_SCALE, b.col, 1.0);
-                    const startX = b.startX; const startY = canvasH;
-                    const windX = bendFactor * (size * 0.7); const windY = Math.abs(windX) * 0.2; 
-                    const endX = startX + b.lean + windX; const endY = startY - b.len + windY;
-                    const ctrlX = startX + (b.lean * 0.1) + (windX * 0.5) + b.ctrlOff; const ctrlY = startY - (b.len * 0.5);
-                    const curve = new Phaser.Curves.QuadraticBezier(new Phaser.Math.Vector2(startX, startY), new Phaser.Math.Vector2(ctrlX, ctrlY), new Phaser.Math.Vector2(endX, endY));
-                    curve.draw(g);
-                }
-                g.generateTexture(`hd_grass_${frame}`, canvasW, canvasH);
+        // --- Grass Type B: Wild & Wide (新しい雑草タイプ) ---
+        if (!scene.textures.exists('hd_grass_b_0')) {
+            const bladeDefsB = [];
+            for(let i=0; i<55; i++) { // 本数多め
+                bladeDefsB.push({
+                    col: palettes[Math.floor(Math.random() * palettes.length)],
+                    // 根本を広く散らす
+                    startX: canvasW/2 + (Math.random()-0.5) * (canvasH * 0.6), 
+                    // 背は低く
+                    len: (canvasH * 0.3) + Math.random() * (canvasH * 0.3), 
+                    // 傾きを激しく（放射状に広がる）
+                    lean: (Math.random() - 0.5) * (canvasH * 1.5), 
+                    // カールを強く
+                    ctrlOff: (Math.random() - 0.5) * (canvasH * 0.5) 
+                });
             }
+            // windEffectFactorを少し下げて、低い草は風の影響を受けにくくする
+            this.generateGrassFrames(scene, 'hd_grass_b', bladeDefsB, canvasW, canvasH, TEXTURE_SCALE, 0.4);
         }
 
         if (!scene.textures.exists('hd_tree')) {
@@ -143,6 +143,28 @@ class EnvSystem {
         }
     }
 
+    // ヘルパー関数: 草のアニメーション生成
+    generateGrassFrames(scene, keyPrefix, bladeDefs, w, h, scale, windSens) {
+        for (let frame = 0; frame < this.TOTAL_GRASS_FRAMES; frame++) {
+            const g = scene.make.graphics({x:0, y:0, add:false});
+            g.fillStyle(0x2a331a, 0.8); g.fillEllipse(w/2, h, h/4, h/10);
+
+            const bendFactor = frame / (this.TOTAL_GRASS_FRAMES - 1.0); 
+
+            for(let b of bladeDefs) {
+                g.lineStyle(1.5 * scale, b.col, 1.0);
+                const startX = b.startX; const startY = h;
+                const windX = bendFactor * (h * windSens); // 風の影響度を調整
+                const windY = Math.abs(windX) * 0.2; 
+                const endX = startX + b.lean + windX; const endY = startY - b.len + windY;
+                const ctrlX = startX + (b.lean * 0.1) + (windX * 0.5) + b.ctrlOff; const ctrlY = startY - (b.len * 0.5);
+                const curve = new Phaser.Curves.QuadraticBezier(new Phaser.Math.Vector2(startX, startY), new Phaser.Math.Vector2(ctrlX, ctrlY), new Phaser.Math.Vector2(endX, endY));
+                curve.draw(g);
+            }
+            g.generateTexture(`${keyPrefix}_${frame}`, w, h);
+        }
+    }
+
     clear() { this.grassElements = []; this.treeElements = []; }
 
     spawnGrass(scene, group, x, y) {
@@ -152,15 +174,21 @@ class EnvSystem {
             const r = Math.random() * (HEX_SIZE * 1.0); const angle = Math.random() * Math.PI * 2;
             const ox = Math.cos(angle) * r; const oy = Math.sin(angle) * r * 0.866;
             
-            const grass = scene.add.sprite(x+ox, y+oy, 'hd_grass_0');
+            // ★変更: 50%の確率でタイプA(背高)かタイプB(野草)かを決定
+            const type = Math.random() > 0.5 ? 'A' : 'B';
+            const textureKey = type === 'A' ? 'hd_grass_0' : 'hd_grass_b_0';
+
+            const grass = scene.add.sprite(x+ox, y+oy, textureKey);
             grass.setOrigin(0.5, 1.0); 
-            grass.setScale((0.8 + Math.random() * 0.4) * scaleFactor); 
+            // タイプBは少し小さく、低く見せる
+            const typeScale = type === 'A' ? 1.0 : 0.85;
+            grass.setScale((0.8 + Math.random() * 0.4) * scaleFactor * typeScale); 
             grass.setDepth(y+oy);
             
+            grass.grassType = type; // タイプを保持
             grass.currentWindValue = 0; 
             grass.origX = x + ox; grass.origY = y + oy;
             
-            // ★修正: Tintを落ち着いた彩度の低いトーンに変更 (青成分を下げて黄色寄りに)
             const tintVar = Math.floor(Math.random() * 40); 
             grass.setTint(Phaser.Display.Color.GetColor(160 + tintVar, 170 + tintVar, 130 + tintVar));
             
@@ -204,15 +232,25 @@ class EnvSystem {
             const bigWave = (Math.sin(wavePhase) + 1.0) * 0.5; 
             const ripple = Math.sin(t * 2.5 + g.origY * 0.1) * 0.05;
             const gust = this.gustPower * 0.6; 
+            
             let targetWindValue = (bigWave * 0.4) + 0.1 + ripple + gust; 
             targetWindValue = Math.max(0, Math.min(1.0, targetWindValue));
+            
             const stiffness = 0.08; 
             g.currentWindValue += (targetWindValue - g.currentWindValue) * stiffness;
+            
             const maxFrames = this.TOTAL_GRASS_FRAMES - 1;
             const floatFrame = g.currentWindValue * maxFrames;
             const frameIdx = Math.floor(floatFrame);
             const remainder = floatFrame - frameIdx;
-            g.setTexture(`hd_grass_${frameIdx}`);
+            
+            // ★変更: 草タイプに応じたテクスチャプレフィックスを使用
+            const prefix = (g.grassType === 'B') ? 'hd_grass_b_' : 'hd_grass_';
+            
+            // 範囲外エラー防止のClamp
+            const safeFrame = Phaser.Math.Clamp(frameIdx, 0, maxFrames);
+            g.setTexture(`${prefix}${safeFrame}`);
+            
             g.skewX = remainder * 0.05; 
         }
 
