@@ -1,4 +1,4 @@
-/** PHASER VFX & ENV: High-Res Vector Nature & Visible Wind Waves */
+/** PHASER VFX & ENV: High-Res Vector Nature & VISIBLE STRONG WIND WAVES */
 
 class VFXSystem {
     constructor() {
@@ -24,7 +24,6 @@ class VFXSystem {
             p.y += p.vy;
             
             if (p.type === 'wind') {
-                // 風の粒子は長く残し、透明度変化で表現
                 p.alpha = Math.sin((p.life / p.maxLife) * Math.PI) * 0.3; 
             } else if (p.type === 'proj') {
                 p.progress += p.speed;
@@ -51,12 +50,11 @@ class VFXSystem {
     }
 
     triggerWindGust() {
-        // 画面を横切る白い風のライン
         for (let i = 0; i < 20; i++) {
             this.add({
                 x: -300 - Math.random() * 500,
                 y: Math.random() * 3000,
-                vx: 25 + Math.random() * 10, // 高速
+                vx: 25 + Math.random() * 10,
                 vy: 2 + Math.random() * 2,
                 life: 180,
                 color: "#eeffff",
@@ -64,7 +62,6 @@ class VFXSystem {
                 type: 'wind'
             });
         }
-        // 環境システムに風イベント通知
         if(window.EnvSystem) window.EnvSystem.onGust();
     }
 
@@ -77,7 +74,7 @@ class VFXSystem {
                 graphics.lineStyle(2, 0xffffff, p.alpha);
                 graphics.beginPath();
                 graphics.moveTo(p.x, p.y);
-                graphics.lineTo(p.x - p.vx * 15, p.y - p.vy * 15); // 非常に長い軌跡
+                graphics.lineTo(p.x - p.vx * 15, p.y - p.vy * 15); 
                 graphics.strokePath();
             } 
             else {
@@ -121,99 +118,50 @@ class VFXSystem {
     }
 }
 
-// ★環境演出システム: Vector-Quality & Heavy Wind Wave
+// ★環境演出システム: 強力な風の表現
 class EnvSystem {
     constructor() {
         this.grassElements = [];
         this.treeElements = [];
-        this.gustPower = 0; // 突風の強さ
+        this.gustPower = 0;
     }
 
     preload(scene) {
-        // ★重要: 解像度倍率。大きくするほど高精細になる
         const TEXTURE_SCALE = 4.0; 
 
-        // 1. 高精細な草 (Vector Grass Tuft)
+        // 1. 草 (Vector Grass Tuft)
         if (!scene.textures.exists('hd_grass')) {
             const size = 64 * TEXTURE_SCALE;
             const g = scene.make.graphics({x:0, y:0, add:false});
-            
-            // 色のバリエーション (深く、リアルな緑)
             const palettes = [0x2d4c1e, 0x3b5e28, 0x4a7534, 0x55803a];
-            
-            // 根元の土台 (浮遊感防止)
-            g.fillStyle(0x1a2b12, 0.8);
-            g.fillEllipse(size/2, size, size/3, size/8);
+            g.fillStyle(0x1a2b12, 0.8); g.fillEllipse(size/2, size, size/3, size/8); // 土台
 
-            // 30本以上の葉を描き込む
             for(let i=0; i<32; i++) {
                 const col = palettes[Math.floor(Math.random() * palettes.length)];
-                g.lineStyle(2 * TEXTURE_SCALE, col, 1.0); // 太く描いて縮小する
+                g.lineStyle(2 * TEXTURE_SCALE, col, 1.0);
                 g.fillStyle(col);
-
                 const startX = size/2 + (Math.random()-0.5) * (size * 0.4);
                 const startY = size;
-                
                 const height = (size * 0.4) + Math.random() * (size * 0.5);
-                const lean = (Math.random() - 0.5) * (size * 0.6); // 左右の広がり
-                
-                const endX = startX + lean;
-                const endY = startY - height;
-                
-                // 制御点
-                const ctrlX = startX + lean * 0.3;
-                const ctrlY = startY - height * 0.6;
-
-                // 葉の形状（根元が太く、先が細い）
-                const curve = new Phaser.Curves.QuadraticBezier(
-                    new Phaser.Math.Vector2(startX, startY),
-                    new Phaser.Math.Vector2(ctrlX, ctrlY),
-                    new Phaser.Math.Vector2(endX, endY)
-                );
+                const lean = (Math.random() - 0.5) * (size * 0.6);
+                const endX = startX + lean; const endY = startY - height;
+                const ctrlX = startX + lean * 0.3; const ctrlY = startY - height * 0.6;
+                const curve = new Phaser.Curves.QuadraticBezier(new Phaser.Math.Vector2(startX, startY), new Phaser.Math.Vector2(ctrlX, ctrlY), new Phaser.Math.Vector2(endX, endY));
                 curve.draw(g);
             }
             g.generateTexture('hd_grass', size, size);
         }
 
-        // 2. 高精細な針葉樹 (Sharp Vector Conifer)
+        // 2. 針葉樹 (Sharp Vector Conifer)
         if (!scene.textures.exists('hd_tree')) {
-            const w = 80 * TEXTURE_SCALE;
-            const h = 140 * TEXTURE_SCALE;
+            const w = 80 * TEXTURE_SCALE; const h = 140 * TEXTURE_SCALE;
             const g = scene.make.graphics({x:0, y:0, add:false});
-            
-            // 幹
-            g.fillStyle(0x221105);
-            g.fillRect(w/2 - (w*0.08), h*0.8, w*0.16, h*0.2);
-
-            // 葉（多層レイヤー構造）
-            const layers = 5;
-            const leafDark = 0x0f2610; // 影側
-            const leafLight = 0x1e3d1f; // 光側
-
+            g.fillStyle(0x221105); g.fillRect(w/2 - (w*0.08), h*0.8, w*0.16, h*0.2); // 幹
+            const layers = 5; const leafDark = 0x0f2610; const leafLight = 0x1e3d1f;
             for(let i=0; i<layers; i++) {
-                const progress = i / layers;
-                const lw = w * (0.8 - progress * 0.6); // 上に行くほど細く
-                const lh = h * 0.25;
-                const ly = h * 0.8 - (h * 0.7 * progress) - lh;
-
-                const cx = w/2;
-                const cy = ly + lh; // 底辺Y
-
-                // 右半分（影）
-                g.fillStyle(leafDark);
-                g.beginPath();
-                g.moveTo(cx, ly);
-                g.lineTo(cx + lw/2, cy);
-                g.lineTo(cx, cy);
-                g.fill();
-
-                // 左半分（光）
-                g.fillStyle(leafLight);
-                g.beginPath();
-                g.moveTo(cx, ly);
-                g.lineTo(cx - lw/2, cy);
-                g.lineTo(cx, cy);
-                g.fill();
+                const progress = i / layers; const lw = w * (0.8 - progress * 0.6); const lh = h * 0.25; const ly = h * 0.8 - (h * 0.7 * progress) - lh; const cx = w/2; const cy = ly + lh;
+                g.fillStyle(leafDark); g.beginPath(); g.moveTo(cx, ly); g.lineTo(cx + lw/2, cy); g.lineTo(cx, cy); g.fill();
+                g.fillStyle(leafLight); g.beginPath(); g.moveTo(cx, ly); g.lineTo(cx - lw/2, cy); g.lineTo(cx, cy); g.fill();
             }
             g.generateTexture('hd_tree', w, h);
         }
@@ -227,7 +175,7 @@ class EnvSystem {
     // --- 草の生成 ---
     spawnGrass(scene, group, x, y) {
         const count = 12;
-        const scaleFactor = 0.25; // 高精細縮小
+        const scaleFactor = 0.25; 
 
         for(let i=0; i<count; i++) {
             const r = Math.random() * (HEX_SIZE * 0.95);
@@ -252,18 +200,19 @@ class EnvSystem {
         }
     }
 
-    // --- 木の生成 ---
+    // --- 木の生成 (修正: 小さく、多く) ---
     spawnTrees(scene, group, x, y) {
-        const count = 3 + Math.floor(Math.random() * 2);
-        const scaleFactor = 0.35;
+        // ★修正: 数を増やし、サイズを小さく
+        const count = 6 + Math.floor(Math.random() * 4); // 増量
+        const scaleFactor = 0.18; // 大幅に縮小 (以前は0.35)
 
         for(let i=0; i<count; i++) {
-            const r = Math.random() * (HEX_SIZE * 0.7);
+            const r = Math.random() * (HEX_SIZE * 0.8);
             const angle = Math.random() * Math.PI * 2;
             const ox = Math.cos(angle) * r;
             const oy = Math.sin(angle) * r * 0.866;
             
-            const localScale = 0.8 + Math.random() * 0.5;
+            const localScale = 0.7 + Math.random() * 0.6;
             const finalScale = localScale * scaleFactor;
 
             const shadow = scene.add.ellipse(x+ox, y+oy+5, 40*finalScale, 15*finalScale, 0x000000, 0.5);
@@ -283,68 +232,61 @@ class EnvSystem {
     }
 
     registerWater(image, y, q, r, group) {
-        if (!image.scene) return;
-        image.scene.tweens.add({
-            targets: image,
-            alpha: { from: 0.8, to: 1.0 },
-            y: '+=3',
-            duration: 1200 + Math.random() * 1000,
-            yoyo: true,
-            repeat: -1,
-            ease: 'Sine.easeInOut'
-        });
+        // ★修正: 水面は一切動かさない (Tween削除)
     }
 
     onGust() {
         this.gustPower = 1.0; 
     }
 
-    // ★風の波及処理: 計算式を強化し、確実に動かす
+    // ★風の波及処理: 計算式を超強化し、確実に動かす
     update(time) {
-        // 時間の進行速度
-        const t = time * 0.0015; 
+        const t = time * 0.001; // 時間経過
         
-        this.gustPower *= 0.97; // 突風の減衰
+        this.gustPower *= 0.98; // 突風の減衰
         if(this.gustPower < 0.01) this.gustPower = 0;
 
-        // 1. 草の処理
+        // 1. 草の処理 (Grass Wave)
         this.grassElements = this.grassElements.filter(g => g.scene);
         for (let i = 0; i < this.grassElements.length; i++) {
             const g = this.grassElements[i];
             
-            // X座標による位相ズレ＝波の伝播
-            const xPhase = g.origX * 0.005; 
+            // 波の伝播 (左から右へ) - X座標を引き算することで右への進行波になる
+            const wavePhase = t * 1.5 - g.origX * 0.004;
             
-            // メインの大きな風のうねり（右方向への強いバイアス）
-            // sinの結果(-1~1)を 0~1 の範囲に正規化し、それを傾き量とする
-            const mainWave = (Math.sin(t * 1.5 + xPhase) + 1.0) * 0.5; // 0.0 〜 1.0
+            // メインの大きなうねり (0.0 〜 1.0)
+            const bigWave = (Math.sin(wavePhase) + 1.0) * 0.5;
             
-            // 細かいゆらぎ
-            const jitter = Math.sin(t * 4.0 + g.origY * 0.02) * 0.1;
+            // 細かい「わさわさ」した揺れ (高周波ノイズ)
+            const rustle = Math.sin(t * 12.0 + g.origY * 0.1 + g.origX * 0.05) * 0.08;
+
+            // ベースの風圧 (常に少し右に傾く)
+            const baseLoad = 0.2;
 
             // 突風効果
-            const gust = this.gustPower * 0.5;
+            const gustEffect = this.gustPower * 0.8;
 
-            // 合計傾き量（係数を大きく設定）
-            // 基本は右（風下）に傾きつつ、波によって角度が変わる
-            const totalLean = (mainWave * 0.4) + jitter + gust;
+            // 合計傾き量 (係数を劇的に大きく設定)
+            // BigWaveが強いときほど、右に大きく傾く
+            const totalLean = (bigWave * 0.9) + baseLoad + rustle + gustEffect;
             
-            g.skewX = g.baseSkew + totalLean;
+            // Skewに適用 (右方向への傾きを強調)
+            g.skewX = g.baseSkew + Math.max(0, totalLean);
         }
 
-        // 2. 木の処理
+        // 2. 木の処理 (Tree Sway)
         this.treeElements = this.treeElements.filter(tr => tr.scene);
         for (let i = 0; i < this.treeElements.length; i++) {
             const tr = this.treeElements[i];
             
-            // 木はゆっくりと、少しだけ遅れて揺れる
-            const xPhase = tr.origX * 0.003;
-            const sway = Math.sin(t * 0.8 + xPhase) * 0.08; // 振幅は小さめ
+            // 木は重いので、草より遅れて、小さく揺れる
+            const wavePhase = t * 1.5 - tr.origX * 0.004; // 草と同じ波に乗る
+            const sway = Math.sin(wavePhase) * 0.15; // 振幅は草より小さいが、明確に動くレベル
             
-            // 突風には重く反応
-            const gust = this.gustPower * 0.1;
+            const gustEffect = this.gustPower * 0.3;
 
-            tr.skewX = tr.baseSkew + sway + gust;
+            // 木は幹がしなる表現なので、中心から左右に振れる
+            tr.skewX = tr.baseSkew + sway + gustEffect;
         }
     }
 }
