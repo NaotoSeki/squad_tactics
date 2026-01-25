@@ -1,4 +1,4 @@
-/** PHASER VFX & ENV: Fluffy Fir Trees & Two Grass Types */
+/** PHASER VFX & ENV: Multi-Layered Inertia Trees & Mixed Grass */
 
 class VFXSystem {
     constructor() {
@@ -124,57 +124,82 @@ class EnvSystem {
             this.generateGrassFrames(scene, 'hd_grass_b', bladeDefsB, canvasW, canvasH, TEXTURE_SCALE, 0.4);
         }
 
-        // --- 3. Fluffy Fir Tree (New Style) ---
-        // ★修正: ふさふさのモミの木生成
-        if (!scene.textures.exists('hd_tree')) {
-            const w = 100 * TEXTURE_SCALE; const h = 160 * TEXTURE_SCALE;
+        // ★修正: 木を「幹」と「葉の層(3層)」に分けてテクスチャ生成
+        const treeW = 100 * TEXTURE_SCALE; 
+        const treeH = 170 * TEXTURE_SCALE;
+
+        // 1. 幹 (Trunk) - 下から上まで通す
+        if (!scene.textures.exists('hd_tree_trunk')) {
+            const g = scene.make.graphics({x:0, y:0, add:false});
+            g.fillStyle(0x332211); 
+            g.beginPath();
+            // 根元は太く、上に行くほど細く
+            const bW = treeW * 0.12; 
+            const tW = treeW * 0.02;
+            const cx = treeW/2;
+            g.moveTo(cx - bW/2, treeH * 0.95);
+            g.lineTo(cx + bW/2, treeH * 0.95);
+            g.lineTo(cx + tW/2, treeH * 0.1);
+            g.lineTo(cx - tW/2, treeH * 0.1);
+            g.closePath();
+            g.fill();
+            g.generateTexture('hd_tree_trunk', treeW, treeH);
+        }
+
+        // 2. 葉 (Leaves) - 3つの層(Layer)に分割して生成
+        const layers = 3;
+        const leafColors = [0x0a1f0b, 0x163318, 0x224422]; // 暗い -> 明るい
+
+        for(let l=0; l<layers; l++) {
+            const key = `hd_tree_leaves_${l}`;
+            if (scene.textures.exists(key)) continue;
+
             const g = scene.make.graphics({x:0, y:0, add:false});
             
-            // 幹
-            g.fillStyle(0x332211); g.fillRect(w/2 - (w*0.06), h*0.85, w*0.12, h*0.15);
-
-            // 葉っぱレイヤー（下から上へ）
-            const layers = 18; // 層を細かく増やす
-            const leafColors = [0x0a1f0b, 0x163318, 0x224422, 0x1a3a1a];
-
-            for(let i=0; i<layers; i++) {
-                const progress = i / layers;
-                const layerY = h * 0.85 - (h * 0.85 * progress);
-                const layerWidth = w * 0.8 * (1.0 - progress); // 上に行くほど細く
-                const layerHeight = h * 0.15;
-                const color = leafColors[i % leafColors.length];
+            // この層が担当する高さ範囲
+            // 層0(下): 0.5 ~ 0.9, 層1(中): 0.3 ~ 0.7, 層2(上): 0.1 ~ 0.4
+            const startH = 0.9 - (l * 0.25); 
+            const endH = startH - 0.4;
+            
+            // 葉の密度（放射状の枝）
+            const branches = 60 + l * 20; // 上の方ほど細かく
+            
+            for(let i=0; i<branches; i++) {
+                const progress = i / branches; // 0.0 - 1.0
+                // ランダムに高さを分散
+                const rndH = startH - (startH - endH) * Math.random();
+                const layerY = treeH * rndH;
                 
-                g.lineStyle(2 * TEXTURE_SCALE, color, 1.0);
+                // 幅: 下ほど広く
+                const widthRatio = (rndH - 0.1) / 0.8; // 0.1(top) -> 0.9(bottom)
+                const layerWidth = treeW * 0.9 * widthRatio;
                 
-                // 各層で放射状に枝/葉を描く
-                const branches = 12 + Math.floor((1.0 - progress) * 10);
-                const cx = w/2;
-                
-                for(let b=0; b<branches; b++) {
-                    // 中心から左右へ広がる
-                    const side = (b % 2 === 0) ? 1 : -1;
-                    const angleOffset = (Math.random() - 0.5) * 0.5;
-                    const length = layerWidth * (0.5 + Math.random() * 0.5);
-                    
-                    const startX = cx + (Math.random()-0.5) * (w*0.05);
-                    const startY = layerY;
-                    
-                    // 枝の制御点（少し垂れ下がる感じに）
-                    const endX = startX + (side * length);
-                    const endY = startY + (length * 0.4) + (Math.random() * layerHeight * 0.5);
-                    
-                    const ctrlX = startX + (side * length * 0.5);
-                    const ctrlY = startY - (length * 0.1); // 根元は少し上がる
+                // 色: 層ごとにベースカラーを変えつつ、ランダム性も持たせる
+                const baseCol = leafColors[l];
+                g.lineStyle(2 * TEXTURE_SCALE, baseCol, 1.0);
 
-                    const curve = new Phaser.Curves.QuadraticBezier(
-                        new Phaser.Math.Vector2(startX, startY),
-                        new Phaser.Math.Vector2(ctrlX, ctrlY),
-                        new Phaser.Math.Vector2(endX, endY)
-                    );
-                    curve.draw(g);
-                }
+                const cx = treeW/2;
+                const side = Math.random() > 0.5 ? 1 : -1;
+                const length = layerWidth * 0.5 * (0.6 + Math.random()*0.4);
+                
+                const startX = cx + (Math.random()-0.5) * (treeW*0.04);
+                const startY = layerY;
+                
+                const endX = startX + (side * length);
+                // 枝先は少し垂れる
+                const endY = startY + (length * 0.35) + Math.random() * (treeH * 0.05);
+                
+                const ctrlX = startX + (side * length * 0.4);
+                const ctrlY = startY - (length * 0.1); 
+
+                const curve = new Phaser.Curves.QuadraticBezier(
+                    new Phaser.Math.Vector2(startX, startY),
+                    new Phaser.Math.Vector2(ctrlX, ctrlY),
+                    new Phaser.Math.Vector2(endX, endY)
+                );
+                curve.draw(g);
             }
-            g.generateTexture('hd_tree', w, h);
+            g.generateTexture(key, treeW, treeH);
         }
     }
 
@@ -217,17 +242,51 @@ class EnvSystem {
         }
     }
 
+    // ★修正: 木をコンテナ化し、複数レイヤーを合成
     spawnTrees(scene, group, x, y) {
-        const count = 10 + Math.floor(Math.random() * 5); const scaleFactor = 0.18;
+        const count = 5 + Math.floor(Math.random() * 3); // 本数は少し減らす(1本がリッチなので)
+        const scaleFactor = 0.18;
+        
         for(let i=0; i<count; i++) {
-            const r = Math.random() * (HEX_SIZE * 0.9); const angle = Math.random() * Math.PI * 2;
-            const ox = Math.cos(angle) * r; const oy = Math.sin(angle) * r * 0.866;
+            const r = Math.random() * (HEX_SIZE * 0.85); 
+            const angle = Math.random() * Math.PI * 2;
+            const ox = Math.cos(angle) * r; 
+            const oy = Math.sin(angle) * r * 0.866;
             const scale = (0.7 + Math.random() * 0.6) * scaleFactor;
-            const shadow = scene.add.ellipse(x+ox, y+oy+3, 40*scale, 15*scale, 0x000000, 0.5); group.add(shadow);
-            const tree = scene.add.image(x+ox, y+oy, 'hd_tree');
-            tree.setOrigin(0.5, 0.95); tree.setScale(scale); tree.setDepth(y+oy + 20);
-            tree.currentSkew = 0; tree.baseSkew = 0; tree.origX = x + ox;
-            group.add(tree); this.treeElements.push(tree);
+
+            // 影
+            const shadow = scene.add.ellipse(x+ox, y+oy+3, 40*scale, 15*scale, 0x000000, 0.5); 
+            group.add(shadow);
+
+            // 木のコンテナ
+            const treeContainer = scene.add.container(x+ox, y+oy);
+            treeContainer.setDepth(y+oy + 20);
+            treeContainer.setScale(scale);
+
+            // 1. 幹
+            const trunk = scene.add.image(0, 0, 'hd_tree_trunk').setOrigin(0.5, 0.95);
+            treeContainer.add(trunk);
+
+            // 2. 葉 (3層)
+            const leaves = [];
+            for(let l=0; l<3; l++) {
+                const leaf = scene.add.image(0, 0, `hd_tree_leaves_${l}`).setOrigin(0.5, 0.95);
+                treeContainer.add(leaf);
+                leaves.push(leaf);
+            }
+
+            // 制御用パラメータを追加
+            treeContainer.trunk = trunk;
+            treeContainer.leaves = leaves; // [bottom, mid, top]
+            treeContainer.currentSkew = 0;
+            treeContainer.baseSkew = 0;
+            treeContainer.origX = x + ox;
+            
+            // 個別の揺れオフセット
+            treeContainer.swayOffset = Math.random() * 100;
+
+            group.add(treeContainer); 
+            this.treeElements.push(treeContainer);
         }
     }
 
@@ -246,23 +305,66 @@ class EnvSystem {
         this.grassElements = this.grassElements.filter(g => g.scene);
         for (let i = 0; i < this.grassElements.length; i++) {
             const g = this.grassElements[i];
-            const wavePhase = t * 1.0 - g.origX * 0.015; const bigWave = (Math.sin(wavePhase) + 1.0) * 0.5; const ripple = Math.sin(t * 2.5 + g.origY * 0.1) * 0.05; const gust = this.gustPower * 0.6; 
-            let targetWindValue = (bigWave * 0.4) + 0.1 + ripple + gust; targetWindValue = Math.max(0, Math.min(1.0, targetWindValue));
-            const stiffness = 0.08; g.currentWindValue += (targetWindValue - g.currentWindValue) * stiffness;
-            const maxFrames = this.TOTAL_GRASS_FRAMES - 1; const floatFrame = g.currentWindValue * maxFrames; const frameIdx = Math.floor(floatFrame); const remainder = floatFrame - frameIdx;
+            const wavePhase = t * 1.0 - g.origX * 0.015; 
+            const bigWave = (Math.sin(wavePhase) + 1.0) * 0.5; 
+            const ripple = Math.sin(t * 2.5 + g.origY * 0.1) * 0.05; 
+            const gust = this.gustPower * 0.6; 
+            let targetWindValue = (bigWave * 0.4) + 0.1 + ripple + gust; 
+            targetWindValue = Math.max(0, Math.min(1.0, targetWindValue));
+            const stiffness = 0.08; 
+            g.currentWindValue += (targetWindValue - g.currentWindValue) * stiffness;
+            const maxFrames = this.TOTAL_GRASS_FRAMES - 1; 
+            const floatFrame = g.currentWindValue * maxFrames; 
+            const frameIdx = Math.floor(floatFrame); 
             const prefix = (g.grassType === 'B') ? 'hd_grass_b_' : 'hd_grass_';
             const safeFrame = Phaser.Math.Clamp(frameIdx, 0, maxFrames);
             g.setTexture(`${prefix}${safeFrame}`);
+            const remainder = floatFrame - frameIdx;
             g.skewX = remainder * 0.05; 
         }
 
-        // 2. Tree
+        // 2. Tree (Inertia & Layered Sway)
+        // ★修正: 多層レイヤーごとの物理計算
         this.treeElements = this.treeElements.filter(tr => tr.scene);
         for (let i = 0; i < this.treeElements.length; i++) {
             const tr = this.treeElements[i];
-            const wavePhase = t * 1.0 - tr.origX * 0.015 - 0.5; const sway = Math.sin(wavePhase) * 0.05;
-            const gust = this.gustPower * 0.15; const baseLean = 0.02; const targetSkew = sway + baseLean + gust;
-            tr.currentSkew += (targetSkew - tr.currentSkew) * 0.03; tr.skewX = tr.baseSkew + tr.currentSkew; tr.angle = tr.currentSkew * 3;
+            
+            // ベースの風 (全体)
+            const wavePhase = t * 0.8 - tr.origX * 0.01 + tr.swayOffset;
+            const mainSway = Math.sin(wavePhase) * 0.04;
+            const gust = this.gustPower * 0.12;
+            const baseLean = 0.02 + gust + mainSway;
+
+            // ターゲット値へ向けてゆっくり動かす (全体の慣性)
+            tr.currentSkew += (baseLean - tr.currentSkew) * 0.05;
+            
+            // 幹: 硬い動き
+            tr.trunk.skewX = tr.currentSkew * 0.5;
+            tr.trunk.angle = tr.currentSkew * 2;
+
+            // 葉: 層ごとに遅延と振幅を変える (上ほど大きく、遅れて動く)
+            // leaves[0]: Bottom (重い)
+            // leaves[1]: Mid
+            // leaves[2]: Top (軽い、大きく揺れる)
+            if(tr.leaves) {
+                // Bottom
+                tr.leaves[0].skewX = tr.currentSkew * 0.8;
+                tr.leaves[0].x = tr.currentSkew * -5; // 根元はずらさない
+
+                // Mid
+                tr.leaves[1].skewX = tr.currentSkew * 1.2;
+                tr.leaves[1].x = tr.currentSkew * -15; // 少しずれる
+
+                // Top (鞭のようにしなる)
+                // 現在のskewと、少し前の時間の波形を合成して「遅れ」を作る
+                const delayPhase = wavePhase - 0.5; 
+                const delaySway = Math.sin(delayPhase) * 0.06;
+                const topLean = 0.02 + (gust*1.5) + delaySway;
+                
+                // Topは独自のskew値を持たせてもいいが、簡易的に倍率で表現
+                tr.leaves[2].skewX = tr.currentSkew * 1.8 + (topLean - tr.currentSkew)*0.5;
+                tr.leaves[2].x = tr.leaves[2].skewX * -25; // 大きくずれる
+            }
         }
     }
 }
