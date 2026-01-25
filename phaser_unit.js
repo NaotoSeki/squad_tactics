@@ -1,4 +1,4 @@
-/** PHASER UNIT: Fixed Shadow Position */
+/** PHASER UNIT: Removed Legacy Cursor (Fixed Black Square) */
 class UnitView {
     constructor(scene, unitLayer, hpLayer) {
         this.scene = scene;
@@ -76,7 +76,6 @@ class UnitView {
             if (pointer.button === 0 && window.gameLogic) { pointer.event.stopPropagation(); window.gameLogic.onUnitClick(u); }
         });
 
-        // ★修正: 影の位置を調整 (足元に)
         const shadow = this.scene.add.ellipse(0, 0, 20, 10, 0x000000, 0.5);
         
         let sprite;
@@ -96,10 +95,9 @@ class UnitView {
             sprite = this.scene.add.rectangle(0, 0, 30, 40, u.team==='player'?0x00f:0xf00);
         }
 
-        const cursor = this.scene.add.image(0, 0, 'cursor').setScale(0.5).setAlpha(0).setVisible(false);
-        this.scene.tweens.add({ targets: cursor, scale: { from: 0.5, to: 0.6 }, alpha: { from: 1, to: 0.5 }, yoyo: true, repeat: -1, duration: 800 });
+        // ★削除: ここにあったカーソル画像の生成コードを削除しました
 
-        container.add([shadow, sprite, cursor]);
+        container.add([shadow, sprite]);
 
         const hpBg = this.scene.add.rectangle(0, 0, 20, 4, 0x000000).setOrigin(0, 0.5);
         const hpBar = this.scene.add.rectangle(0, 0, 20, 4, 0x00ff00).setOrigin(0, 0.5);
@@ -110,7 +108,7 @@ class UnitView {
         this.hpLayer.add(infoContainer);
 
         container.sprite = sprite;
-        container.cursor = cursor;
+        // container.cursor = cursor; // 参照も削除
         container.hpBg = hpBg; container.hpBar = hpBar; container.infoContainer = infoContainer;
         
         const pos = Renderer.hexToPx(u.q, u.r);
@@ -195,12 +193,7 @@ class UnitView {
             }
         }
 
-        if (window.gameLogic.selectedUnit === u) {
-            visual.cursor.setVisible(true);
-            visual.cursor.setAlpha(1);
-        } else {
-            visual.cursor.setVisible(false);
-        }
+        // カーソルの表示切替も不要（OverlayGraphicsで描画するため）
     }
 
     destroyVisual(visual) {
