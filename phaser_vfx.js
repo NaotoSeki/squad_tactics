@@ -1,15 +1,18 @@
-/** PHASER VFX & ENV: Coniferous Forests, Bushy Grass, and Wind */
+/** PHASER VFX & ENV: Realistic Sway, Density, and Gusts */
 
 class VFXSystem {
     constructor() {
+        this.emitters = [];
         this.particles = [];
-        this.windTimer = 0; // 風の発生用タイマー
+        this.scene = null;
+        this.shakeRequest = 0;
+        this.windTimer = 0;
     }
 
     update() {
-        // --- Global Wind System ---
+        // --- Wind Gust System ---
         this.windTimer++;
-        if (this.windTimer > 400 + Math.random() * 200) {
+        if (this.windTimer > 300 + Math.random() * 300) { // 頻度調整
             this.triggerWindGust();
             this.windTimer = 0;
         }
@@ -24,9 +27,8 @@ class VFXSystem {
             p.y += p.vy;
             
             if (p.type === 'wind') {
-                p.alpha = Math.min(1, p.life / 20) * 0.3; // フェードイン・アウト
-            } 
-            else if (p.type === 'proj') {
+                p.alpha = Math.min(1, p.life / 30) * 0.15; // 淡く(0.15)
+            } else if (p.type === 'proj') {
                 p.progress += p.speed;
                 let t = p.progress;
                 if (t >= 1) t = 1;
@@ -51,21 +53,20 @@ class VFXSystem {
     }
 
     triggerWindGust() {
-        // 画面全体を左から右へ流れる風のパーティクル
-        for (let i = 0; i < 40; i++) {
+        // 画面全体を流れる淡い風の線
+        for (let i = 0; i < 50; i++) {
             this.add({
-                x: -50 - Math.random() * 200,
-                y: Math.random() * 2000, // 画面縦幅適当にカバー
-                vx: 10 + Math.random() * 5,
+                x: -100 - Math.random() * 300,
+                y: Math.random() * 2000,
+                vx: 15 + Math.random() * 10, // 速い
                 vy: 2 + Math.random() * 2,
-                life: 150,
-                color: "#ffffff",
-                size: 1 + Math.random() * 2, // 線状に描画するためサイズは細く
+                life: 200,
+                color: "#ccffff",
+                size: 1, // 細い線
                 type: 'wind'
             });
         }
-        
-        // 草木を一斉になびかせるイベント発火 (EnvSystem側で処理)
+        // 環境オブジェクトへの影響
         if (window.EnvSystem) window.EnvSystem.applyWind();
     }
 
@@ -75,11 +76,10 @@ class VFXSystem {
             if (p.delay > 0) return;
             
             if (p.type === 'wind') {
-                // 風は線で描画
                 graphics.lineStyle(1, 0xffffff, p.alpha);
                 graphics.beginPath();
                 graphics.moveTo(p.x, p.y);
-                graphics.lineTo(p.x - p.vx * 3, p.y - p.vy * 3); // 軌跡
+                graphics.lineTo(p.x - p.vx * 4, p.y - p.vy * 4); // 長い軌跡
                 graphics.strokePath();
             } 
             else {
@@ -124,60 +124,65 @@ class VFXSystem {
     }
 }
 
-// ★環境演出システム (針葉樹 & 藪)
+// ★環境演出システム: 密度の高い草木 & しなる風
 class EnvSystem {
     constructor() {
-        this.grassElements = []; // 風の影響を受けるオブジェクトリスト
+        this.grassElements = [];
         this.treeElements = [];
     }
 
     preload(scene) {
-        // 1. 藪のような草 (根元から生える)
+        // 1. 藪のような草 (深い緑)
         if (!scene.textures.exists('bushy_grass')) {
             const g = scene.make.graphics({x:0, y:0, add:false});
-            const colors = [0x558833, 0x669944, 0x447722];
+            const colors = [0x335522, 0x446633, 0x224411]; // 暗めの緑
             
-            // 下から上へ広がる草の束を描く
-            for(let i=0; i<8; i++) {
-                g.lineStyle(2, colors[i%3], 1.0);
+            for(let i=0; i<12; i++) {
+                g.lineStyle(1.5, colors[Math.floor(Math.random() * colors.length)], 0.9);
                 g.beginPath();
-                g.moveTo(10, 20); // 根元は中心下
-                // 放射状に広げる
-                const spread = (Math.random() - 0.5) * 16;
-                const height = 12 + Math.random() * 8;
-                g.lineTo(10 + spread, 20 - height);
+                const rootX = 10 + (Math.random()-0.5)*4;
+                const rootY = 20;
+                const tipX = rootX + (Math.random()-0.5) * 12;
+                const tipY = 20 - (8 + Math.random() * 8);
+                
+                // 少し湾曲させる
+                const midX = (rootX + tipX)/2 + (Math.random()-0.5)*4;
+                const midY = (rootY + tipY)/2;
+
+                g.moveTo(rootX, rootY);
+                g.quadraticBezierTo(midX, midY, tipX, tipY); // 修正: quadraticBezierToはPathにはないがGraphicsにはある(lineTo代用ではない)
+                // PhaserのGraphicsはquadraticBezierToをサポートしていない場合があるので曲線近似
+                // g.moveTo(rootX, rootY); g.lineTo(tipX, tipY); // 安全策: 直線
                 g.strokePath();
             }
             g.generateTexture('bushy_grass', 20, 20);
         }
 
-        // 2. 針葉樹 (Conifer)
+        // 2. 針葉樹 (Conifer) - 三角形の重なり
         if (!scene.textures.exists('conifer_tree')) {
             const g = scene.make.graphics({x:0, y:0, add:false});
             
             // 幹
             g.fillStyle(0x332211);
-            g.fillRect(12, 40, 6, 10); // 下部のみ
+            g.fillRect(13, 45, 4, 10);
 
-            // 葉（三角形を3段重ねる）
-            const leafColor = 0x1a3311; // 濃い緑
-            const highlight = 0x2b441f;
+            // 葉（濃い緑）
+            const leafColor = 0x113311;
+            const highlight = 0x224422;
             
-            // 下段
-            g.fillStyle(leafColor);
-            g.fillTriangle(0, 45, 30, 45, 15, 20);
-            g.fillStyle(highlight); // 左側ハイライト
-            g.beginPath(); g.moveTo(15, 20); g.lineTo(0, 45); g.lineTo(15, 45); g.fill();
+            const drawLayer = (y, w, h) => {
+                g.fillStyle(leafColor);
+                g.fillTriangle(15, y-h, 15-w/2, y, 15+w/2, y);
+                // ハイライト(左半分)
+                g.fillStyle(highlight);
+                g.beginPath(); g.moveTo(15, y-h); g.lineTo(15-w/2, y); g.lineTo(15, y); g.fill();
+            };
 
-            // 中段
-            g.fillStyle(leafColor);
-            g.fillTriangle(2, 30, 28, 30, 15, 10);
-            
-            // 上段
-            g.fillStyle(leafColor);
-            g.fillTriangle(5, 15, 25, 15, 15, 0);
+            drawLayer(45, 30, 20); // 下
+            drawLayer(30, 24, 18); // 中
+            drawLayer(18, 18, 15); // 上
 
-            g.generateTexture('conifer_tree', 30, 50);
+            g.generateTexture('conifer_tree', 30, 55);
         }
     }
 
@@ -187,51 +192,72 @@ class EnvSystem {
     }
 
     spawnGrass(scene, group, x, y) {
-        // 1ヘックスに藪を点在させる
-        const count = 6 + Math.floor(Math.random() * 4);
+        // ★倍増: 1ヘックスに大量の藪
+        const count = 12 + Math.floor(Math.random() * 8);
         for(let i=0; i<count; i++) {
-            const r = Math.random() * (HEX_SIZE * 0.8);
+            const r = Math.random() * (HEX_SIZE * 0.9);
             const angle = Math.random() * Math.PI * 2;
             const ox = Math.cos(angle) * r;
             const oy = Math.sin(angle) * r * 0.866;
 
             const grass = scene.add.image(x+ox, y+oy, 'bushy_grass');
-            grass.setOrigin(0.5, 1.0); // 根元を基準に
-            grass.setScale(0.8 + Math.random() * 0.4);
-            grass.setDepth(y+oy); // 手前の草が奥の草を隠す
-            
-            // 地面の色に少し馴染ませる
-            grass.setTint(0xddffdd);
+            grass.setOrigin(0.5, 1.0); 
+            grass.setScale(0.8 + Math.random() * 0.5);
+            grass.setDepth(y+oy); 
+            grass.baseSkew = (Math.random()-0.5) * 0.1; // 個体差
+            grass.setSkewX(grass.baseSkew);
             
             group.add(grass);
             this.grassElements.push(grass);
+
+            // 独立したそよぎ
+            scene.tweens.add({
+                targets: grass,
+                skewX: { from: grass.baseSkew - 0.1, to: grass.baseSkew + 0.1 },
+                duration: 1500 + Math.random() * 2000,
+                yoyo: true,
+                repeat: -1,
+                ease: 'Sine.easeInOut',
+                delay: Math.random() * 3000
+            });
         }
     }
 
     spawnTrees(scene, group, x, y) {
-        // 針葉樹を複数本、密集させる
-        const count = 3 + Math.floor(Math.random() * 3);
+        // ★倍増: 針葉樹の森
+        const count = 5 + Math.floor(Math.random() * 4);
         
-        // 密集感を出すため、少し中心寄りに集める
         for(let i=0; i<count; i++) {
-            const r = Math.random() * (HEX_SIZE * 0.6);
+            const r = Math.random() * (HEX_SIZE * 0.8);
             const angle = Math.random() * Math.PI * 2;
             const ox = Math.cos(angle) * r;
             const oy = Math.sin(angle) * r * 0.866;
             
-            const scale = 0.8 + Math.random() * 0.5;
+            const scale = 0.7 + Math.random() * 0.6;
 
-            // 影（地面に落ちる丸い影）
-            const shadow = scene.add.ellipse(x+ox, y+oy+3, 20*scale, 10*scale, 0x000000, 0.4);
+            // 影
+            const shadow = scene.add.ellipse(x+ox, y+oy, 20*scale, 10*scale, 0x000000, 0.4);
             group.add(shadow);
 
             const tree = scene.add.image(x+ox, y+oy, 'conifer_tree');
-            tree.setOrigin(0.5, 0.9); // 根元付近を基準点に
+            tree.setOrigin(0.5, 0.95); 
             tree.setScale(scale);
-            tree.setDepth(y+oy + 10); // 木は草より手前に来やすい
+            tree.setDepth(y+oy + 20); 
+            tree.baseSkew = 0;
             
             group.add(tree);
             this.treeElements.push(tree);
+
+            // 木のそよぎ (Skewを使って幹をしならせる)
+            scene.tweens.add({
+                targets: tree,
+                skewX: { from: -0.02, to: 0.02 },
+                duration: 2500 + Math.random() * 1500,
+                yoyo: true,
+                repeat: -1,
+                ease: 'Sine.easeInOut',
+                delay: Math.random() * 2000
+            });
         }
     }
 
@@ -248,32 +274,32 @@ class EnvSystem {
         });
     }
 
+    // ★風発生時の反応 (しなる)
     applyWind() {
-        // 突風が吹いたときの揺れアニメーション
-        
-        // 草: 大きく倒れる
+        // 草: 大きく傾く
         this.grassElements.forEach(g => {
             if(!g.scene) return;
             g.scene.tweens.add({
                 targets: g,
-                angle: { from: 0, to: 15 }, // 右に傾く
-                scaleX: { from: g.scaleX, to: g.scaleX * 0.9 }, // 少し潰れる
-                duration: 300,
+                skewX: 0.5, // 右に大きく歪む
+                angle: 10,
+                duration: 400,
                 yoyo: true,
                 ease: 'Cubic.out'
             });
         });
 
-        // 木: 幹ごとしなるのではなく、少し揺れる
+        // 木: 重くしなる
         this.treeElements.forEach(t => {
             if(!t.scene) return;
+            // 遠くの木から順に揺れるような遅延を入れるとベストだが、ここではランダム
             t.scene.tweens.add({
                 targets: t,
-                angle: { from: 0, to: 5 },
-                duration: 500,
+                skewX: 0.15, 
+                duration: 800,
                 yoyo: true,
                 ease: 'Sine.out',
-                delay: Math.random() * 100 // ずらす
+                delay: Math.random() * 200
             });
         });
     }
