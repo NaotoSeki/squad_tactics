@@ -1,11 +1,10 @@
-/** * PHASER UNIT: Fixed Property Access Error (u.hands) */
+/** PHASER UNIT: Fixed Shadow Position */
 class UnitView {
     constructor(scene, unitLayer, hpLayer) {
         this.scene = scene;
         this.unitLayer = unitLayer;
         this.hpLayer = hpLayer;
         this.visuals = new Map(); 
-        
         this.defineAnimations();
     }
 
@@ -17,11 +16,7 @@ class UnitView {
         anims.create({ key: 'anim_crouch', frames: anims.generateFrameNumbers('us_soldier', { start: 8, end: 15 }), frameRate: 15, repeat: 0 });
         anims.create({ key: 'anim_prone', frames: anims.generateFrameNumbers('us_soldier', { start: 24, end: 31 }), frameRate: 15, repeat: 0 });
         anims.create({ key: 'anim_crouch_idle', frames: anims.generateFrameNumbers('us_soldier', { frames: [15] }), frameRate: 1, repeat: -1 });
-        anims.create({ 
-            key: 'anim_prone_idle', 
-            frames: anims.generateFrameNumbers('us_soldier', { frames: [33, 33, 33, 33, 33, 34, 33, 33, 33, 33, 38, 39, 38, 33, 33]}), 
-            frameRate: 6, repeat: -1 
-        });
+        anims.create({ key: 'anim_prone_idle', frames: anims.generateFrameNumbers('us_soldier', { frames: [33, 33, 33, 33, 33, 34, 33, 33, 33, 33, 38, 39, 38, 33, 33]}), frameRate: 6, repeat: -1 });
         anims.create({ key: 'anim_crouch_shoot', frames: anims.generateFrameNumbers('us_soldier', { start: 16, end: 23 }), frameRate: 15, repeat: 0 });
         anims.create({ key: 'anim_prone_shoot', frames: anims.generateFrameNumbers('us_soldier', { start: 32, end: 39 }), frameRate: 15, repeat: 0 });
         anims.create({ key: 'anim_shoot', frames: anims.generateFrameNumbers('us_soldier', { start: 40, end: 47 }), frameRate: 15, repeat: 0 });
@@ -36,7 +31,6 @@ class UnitView {
 
     update(time, delta) {
         if (!window.gameLogic) return;
-
         const activeIds = new Set();
         const hexMap = new Map(); 
         window.gameLogic.units.forEach(u => {
@@ -55,7 +49,6 @@ class UnitView {
                 this.visuals.set(u.id, visual);
                 this.unitLayer.add(visual);
             }
-            
             const siblings = hexMap.get(`${u.q},${u.r}`) || [];
             const index = siblings.indexOf(u);
             const count = siblings.length;
@@ -63,23 +56,14 @@ class UnitView {
 
             const isSelected = (window.gameLogic.selectedUnit === u);
             if (isSelected) {
-                if (this.unitLayer.exists(visual)) {
-                    this.unitLayer.remove(visual);
-                    this.hpLayer.add(visual);
-                }
+                if (this.unitLayer.exists(visual)) { this.unitLayer.remove(visual); this.hpLayer.add(visual); }
             } else {
-                if (this.hpLayer.exists(visual)) {
-                    this.hpLayer.remove(visual);
-                    this.unitLayer.add(visual);
-                }
+                if (this.hpLayer.exists(visual)) { this.hpLayer.remove(visual); this.unitLayer.add(visual); }
             }
         });
 
         for (const [id, visual] of this.visuals) {
-            if (!activeIds.has(id)) {
-                this.destroyVisual(visual);
-                this.visuals.delete(id);
-            }
+            if (!activeIds.has(id)) { this.destroyVisual(visual); this.visuals.delete(id); }
         }
     }
 
@@ -89,13 +73,11 @@ class UnitView {
         container.setInteractive({ useHandCursor: true });
         
         container.on('pointerdown', (pointer) => {
-            if (pointer.button === 0 && window.gameLogic) {
-                pointer.event.stopPropagation(); 
-                window.gameLogic.onUnitClick(u);
-            }
+            if (pointer.button === 0 && window.gameLogic) { pointer.event.stopPropagation(); window.gameLogic.onUnitClick(u); }
         });
 
-        const shadow = this.scene.add.ellipse(0, 8, 20, 10, 0x000000, 0.5);
+        // ★修正: 影の位置を調整 (足元に)
+        const shadow = this.scene.add.ellipse(0, 0, 20, 10, 0x000000, 0.5);
         
         let sprite;
         if (u.def.name === "Rifleman" || u.def.role === "infantry" || !u.def.isTank) { 
@@ -108,7 +90,7 @@ class UnitView {
             sprite.setScale(0.4);
             sprite.play('tank_idle');
             if (u.team === 'player') sprite.setTint(0xccddee); else sprite.setTint(0xffaaaa);
-            shadow.setPosition(-2, 2); 
+            shadow.setPosition(-2, 0); 
             shadow.setSize(46, 18);
         } else {
             sprite = this.scene.add.rectangle(0, 0, 30, 40, u.team==='player'?0x00f:0xf00);
@@ -129,21 +111,17 @@ class UnitView {
 
         container.sprite = sprite;
         container.cursor = cursor;
-        container.hpBg = hpBg;
-        container.hpBar = hpBar;
-        container.infoContainer = infoContainer;
+        container.hpBg = hpBg; container.hpBar = hpBar; container.infoContainer = infoContainer;
         
         const pos = Renderer.hexToPx(u.q, u.r);
         container.setPosition(pos.x, pos.y);
-        container.targetX = pos.x;
-        container.targetY = pos.y;
+        container.targetX = pos.x; container.targetY = pos.y;
 
         return container;
     }
 
     updateVisual(visual, u, delta, index, count) {
         if(!Renderer || !Renderer.hexToPx) return;
-        
         const basePos = Renderer.hexToPx(u.q, u.r);
         
         let offsetX = 0, offsetY = 0;
@@ -208,7 +186,6 @@ class UnitView {
             visual.infoContainer.removeAll(true);
 
             let infoText = "";
-            // ★修正: u.loadout.hands -> u.hands
             if(u.hands && u.hands.isBroken) infoText += "⚠ ";
             if(u.hp < u.maxHp*0.5) infoText += "➕ ";
             
