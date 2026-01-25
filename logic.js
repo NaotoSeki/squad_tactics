@@ -1,4 +1,4 @@
-/** LOGIC: Instant Victory Check & Fixed Resize Timing (Expanded) */
+/** LOGIC: Bullet Gauges, Tank Shell Logic, Auto-Reload */
 
 function createCardIcon(type) {
     const c = document.createElement('canvas'); c.width = 1; c.height = 1; return c.toDataURL();
@@ -23,6 +23,10 @@ class Game {
         this.interactionMode = 'SELECT';
         this.selectedUnit = null;
         this.menuSafeLock = false;
+        
+        // ★追加: タンクのオートリロード設定
+        this.tankAutoReload = true; 
+
         this.initDOM();
         this.initSetup();
     }
@@ -51,9 +55,13 @@ class Game {
         const sb = document.getElementById('sidebar'); const tg = document.getElementById('sidebar-toggle');
         sb.classList.toggle('collapsed');
         if (sb.classList.contains('collapsed')) { sb.style.width = ''; tg.innerText = '◀'; } else { tg.innerText = '▶'; }
-        
-        // ★修正: CSSのtransition(0.3s)が完了した後にリサイズしないと、座標がズレる
         setTimeout(() => Renderer.resize(), 350); 
+    }
+
+    // ★追加: 戦車のオートリロード切替
+    toggleTankAutoReload() {
+        this.tankAutoReload = !this.tankAutoReload;
+        this.updateSidebar();
     }
 
     initSetup() {
@@ -80,18 +88,35 @@ class Game {
         if (isPlayer && !t.isTank) { ['str', 'aim', 'mob', 'mor'].forEach(k => stats[k] = (stats[k] || 0) + Math.floor(Math.random() * 3) - 1); }
         let name = t.name; let rank = 0; let faceSeed = Math.floor(Math.random() * 99999);
         if (isPlayer && !t.isTank) { const first = FIRST_NAMES[Math.floor(Math.random() * FIRST_NAMES.length)]; const last = LAST_NAMES[Math.floor(Math.random() * LAST_NAMES.length)]; name = `${last} ${first}`; }
+        
         const createItem = (key, isMainWpn = false) => {
             if (!key || !WPNS[key]) return null; let base = WPNS[key]; let item = { ...base, code: key, id: Math.random(), isBroken: false };
             if (base.type === 'bullet' || base.type === 'shell_fast') {
                 if (isMainWpn && typeof MAG_VARIANTS !== 'undefined' && MAG_VARIANTS[key]) { const vars = MAG_VARIANTS[key]; const choice = vars[Math.floor(Math.random() * vars.length)]; item.cap = choice.cap; item.jam = choice.jam; item.magName = choice.name; }
                 item.current = item.cap;
             } else if (base.type === 'shell' || base.area) { item.current = 1; item.isConsumable = true; }
+            
+            // ★修正: 戦車の主砲設定 (1発装填式、予備弾を持つ)
+            if (t.isTank && isMainWpn) {
+                item.current = 1; // 薬室に1発
+                item.cap = 1;     // 装填数上限1
+                item.reserve = 12; // 車内備蓄弾数 (ゲージ用)
+            }
+            
             return item;
         };
+        
         let hands = null; let bag = [];
         if (t.main) hands = createItem(t.main, true); if (t.sub) bag.push(createItem(t.sub));
         if (t.opt) { const optBase = WPNS[t.opt]; const count = optBase.mag || 1; for (let i = 0; i < count; i++) bag.push(createItem(t.opt)); }
-        if (hands && hands.mag && !hands.isConsumable) { for (let i = 0; i < hands.mag; i++) { if (bag.length >= 4) break; bag.push({ type: 'ammo', name: (hands.magName || 'Clip'), ammoFor: hands.code, cap: hands.cap, jam: hands.jam, code: 'mag' }); } }
+        
+        // 歩兵のマガジン生成 (戦車は不要)
+        if (hands && hands.mag && !hands.isConsumable && !t.isTank) { 
+            for (let i = 0; i < hands.mag; i++) { 
+                if (bag.length >= 4) break; 
+                bag.push({ type: 'ammo', name: (hands.magName || 'Clip'), ammoFor: hands.code, cap: hands.cap, jam: hands.jam, code: 'mag' }); 
+            } 
+        }
         if (!isPlayer) { if (hands) hands.current = 999; bag = []; }
         return { id: Math.random(), team: team, q: q, r: r, def: t, name: name, rank: rank, faceSeed: faceSeed, stats: stats, hp: t.hp || (80 + (stats.str || 0) * 5), maxHp: t.hp || (80 + (stats.str || 0) * 5), ap: t.ap || Math.floor((stats.mob || 0) / 2) + 3, maxAp: t.ap || Math.floor((stats.mob || 0) / 2) + 3, hands: hands, bag: bag, stance: 'stand', skills: [], sectorsSurvived: 0, deadProcessed: false, curWpn: hands ? hands.code : 'unarmed' };
     }
@@ -201,10 +226,27 @@ class Game {
     }
     toggleStance() { const u = this.selectedUnit; if (!u) return; let next = 'stand'; if (u.stance === 'stand') next = 'crouch'; else if (u.stance === 'crouch') next = 'prone'; this.setStance(next); }
 
-    reloadWeapon() {
+    // ★修正: リロードロジック (戦車対応)
+    reloadWeapon(isManual = false) {
         const u = this.selectedUnit; if (!u) return; const w = u.hands;
         if (!w || w.isConsumable) { this.log("リロード不可"); return; }
-        if (w.current >= w.cap) { this.log("弾薬満タン"); return; }
+        if (w.current >= w.cap) { this.log("装填済み"); return; }
+        
+        // 戦車の場合
+        if (u.def.isTank) {
+            if (u.ap < 1) { this.log("AP不足 (必要:1)"); return; }
+            if (w.reserve <= 0) { this.log("予備弾薬なし"); return; }
+            u.ap -= 1;
+            w.current = 1; // 1発装填
+            w.reserve -= 1;
+            this.log(`${u.name} 次弾装填完了 (残:${w.reserve})`);
+            if (window.Sfx) Sfx.play('reload');
+            this.refreshUnitState(u);
+            if (isManual) this.hideActionMenu();
+            return;
+        }
+
+        // 歩兵の場合
         const cost = w.rld || 1;
         if (u.ap < cost) { this.log(`AP不足 (必要:${cost})`); return; }
         const magIndex = u.bag.findIndex(i => i && i.type === 'ammo' && i.ammoFor === w.code);
@@ -252,7 +294,6 @@ class Game {
             d.deadProcessed = true; 
             this.log(`>> ${d.name} を撃破！`); 
             if (window.Sfx) Sfx.play('death'); 
-            // ★修正: 撃破時に即座に勝利判定
             if(this.checkWin()) return;
         }
         this.refreshUnitState(a); this.checkPhaseEnd();
@@ -262,7 +303,7 @@ class Game {
         const w = a.hands; if (!w) return;
         if (w.isBroken) { this.log("武器故障中！修理が必要"); return; }
         if (w.isConsumable && w.current <= 0) { this.log("使用済みです"); return; }
-        if (w.current <= 0) { this.log("弾切れ！リロードが必要だ！"); return; }
+        if (w.current <= 0) { this.log("弾切れ！装填が必要だ！"); return; }
         if (a.ap < w.ap) { this.log("AP不足"); return; }
         const dist = this.hexDist(a, d); if (dist > w.rng) { this.log("射程外"); return; }
         a.ap -= w.ap; this.state = 'ANIM';
@@ -307,10 +348,19 @@ class Game {
                 this.log(`>> ${d.name} を撃破！`); 
                 if (window.Sfx) Sfx.play('death'); 
                 if (window.VFX) VFX.addUnitDebris(Renderer.hexToPx(d.q, d.r).x, Renderer.hexToPx(d.q, d.r).y); 
-                // ★修正: 撃破時に即座に勝利判定
                 if(this.checkWin()) return;
             }
-            this.state = 'PLAY'; this.refreshUnitState(a); this.checkPhaseEnd();
+            this.state = 'PLAY'; 
+            
+            // ★追加: 戦車オートリロード判定
+            if(a.def.isTank && w.current === 0 && w.reserve > 0) {
+                if (this.tankAutoReload && a.ap >= 1) {
+                    this.reloadWeapon(); // 自動でリロード
+                }
+            }
+
+            this.refreshUnitState(a); 
+            this.checkPhaseEnd();
         }, 800);
     }
 
@@ -408,11 +458,53 @@ class Game {
             const w = u.hands; const s = this.getStatus(u); const skillCounts = {}; u.skills.forEach(sk => { skillCounts[sk] = (skillCounts[sk] || 0) + 1; });
             let skillHtml = ""; for (const [sk, count] of Object.entries(skillCounts)) { if (window.SKILL_STYLES && window.SKILL_STYLES[sk]) { const st = window.SKILL_STYLES[sk]; skillHtml += `<div style="display:inline-block; background:${st.col}; color:#000; font-weight:bold; font-size:10px; padding:2px 5px; margin:2px; border-radius:3px;">${st.icon} ${st.name} x${count}</div>`; } }
             const faceUrl = (Renderer.generateFaceIcon) ? Renderer.generateFaceIcon(u.faceSeed) : "";
-            const makeSlot = (item, type, index) => { if (!item) return `<div class="slot empty" ondragover="onSlotDragOver(event)" ondragleave="onSlotDragLeave(event)" ondrop="onSlotDrop(event, '${type}', ${index})"><div style="font-size:10px; color:#555;">[EMPTY]</div></div>`; const isMain = (type === 'main'); const isAmmo = (item.type === 'ammo'); const width = (item.cap > 0) ? (item.current / item.cap) * 100 : 0; return `<div class="slot ${isMain?'main-weapon':'bag-item'}" draggable="true" ondragstart="onSlotDragStart(event, '${type}', ${index})" ondragend="onSlotDragEnd(event)" ondragover="onSlotDragOver(event)" ondragleave="onSlotDragLeave(event)" ondrop="onSlotDrop(event, '${type}', ${index})"><div class="slot-name">${isMain?'🔫':''} ${item.name}</div>${!isAmmo ? `<div class="slot-meta"><span>RNG:${item.rng} DMG:${item.dmg}</span> <span class="ammo-text">${item.current}/${item.cap}</span></div>` : `<div class="slot-meta" style="color:#d84">AMMO for ${item.ammoFor}</div>`}${!isAmmo && item.cap > 0 ? `<div class="ammo-bar"><div class="ammo-fill" style="width:${width}%"></div></div>` : ''}</div>`; };
+            
+            // ★修正: 弾丸ゲージの生成ロジック
+            const makeSlot = (item, type, index) => { 
+                if (!item) return `<div class="slot empty" ondragover="onSlotDragOver(event)" ondragleave="onSlotDragLeave(event)" ondrop="onSlotDrop(event, '${type}', ${index})"><div style="font-size:10px; color:#555;">[EMPTY]</div></div>`; 
+                const isMain = (type === 'main'); const isAmmo = (item.type === 'ammo'); 
+                
+                // ゲージ表示生成
+                let gaugeHtml = "";
+                if (!isAmmo && item.cap > 0) {
+                    gaugeHtml = `<div class="ammo-gauge">`;
+                    // 戦車の場合: reserve (総弾数) を表示
+                    if (u.def.isTank && isMain) {
+                        for(let i=0; i<Math.min(20, item.reserve); i++) gaugeHtml += `<div class="shell"></div>`;
+                        if(item.reserve === 0) gaugeHtml += `<div class="shell empty"></div>`;
+                    } 
+                    // 歩兵の場合: current (マガジン残弾) を表示
+                    else {
+                        for(let i=0; i<item.current; i++) gaugeHtml += `<div class="bullet"></div>`;
+                        for(let i=item.current; i<item.cap; i++) gaugeHtml += `<div class="bullet" style="background:#333;box-shadow:none;"></div>`;
+                    }
+                    gaugeHtml += `</div>`;
+                }
+
+                // 戦車の手動リロード時の明滅クラス
+                let blinkClass = "";
+                let clickAction = "";
+                if (u.def.isTank && isMain && item.current === 0 && item.reserve > 0 && !this.tankAutoReload) {
+                    blinkClass = "blink-alert";
+                    clickAction = `onclick="gameLogic.reloadWeapon(true)"`;
+                }
+
+                return `<div class="slot ${isMain?'main-weapon':'bag-item'} ${blinkClass}" ${clickAction} draggable="true" ondragstart="onSlotDragStart(event, '${type}', ${index})" ondragend="onSlotDragEnd(event)" ondragover="onSlotDragOver(event)" ondragleave="onSlotDragLeave(event)" ondrop="onSlotDrop(event, '${type}', ${index})"><div class="slot-name">${isMain?'🔫':''} ${item.name}</div>${!isAmmo ? `<div class="slot-meta"><span>RNG:${item.rng} DMG:${item.dmg}</span> <span class="ammo-text">${u.def.isTank&&isMain ? item.reserve : item.current}/${u.def.isTank&&isMain ? '∞' : item.cap}</span></div>` : `<div class="slot-meta" style="color:#d84">AMMO for ${item.ammoFor}</div>`}${gaugeHtml}</div>`; 
+            };
+
             const mainSlot = makeSlot(u.hands, 'main', 0); let subSlots = ""; for (let i = 0; i < 4; i++) { subSlots += makeSlot(u.bag[i], 'bag', i); }
-            let canReload = false; if (w && w.current < w.cap && u.bag.some(i => i && i.type === 'ammo' && i.ammoFor === w.code)) canReload = true;
+            
+            let canReload = false; if (w && !u.def.isTank && w.current < w.cap && u.bag.some(i => i && i.type === 'ammo' && i.ammoFor === w.code)) canReload = true;
             let reloadBtn = canReload ? `<button onclick="gameLogic.reloadWeapon()" style="width:100%; background:#442; color:#dd4; border:1px solid #884; cursor:pointer; margin-top:5px;">🔃 RELOAD (${w.rld||1} AP)</button>` : "";
-            ui.innerHTML = `<div class="soldier-header"><div class="face-box"><img src="${faceUrl}" width="64" height="64"></div><div><div class="soldier-name">${u.name}</div><div class="soldier-rank">${RANKS[u.rank] || 'Pvt'}</div></div></div><div class="stat-grid"><div class="stat-row"><span class="stat-label">HP</span> <span class="stat-val">${u.hp}/${u.maxHp}</span></div><div class="stat-row"><span class="stat-label">AP</span> <span class="stat-val">${u.ap}/${u.maxAp}</span></div><div class="stat-row"><span class="stat-label">AIM</span> <span class="stat-val">${u.stats?.aim||'-'}</span></div><div class="stat-row"><span class="stat-label">STR</span> <span class="stat-val">${u.stats?.str||'-'}</span></div></div><div class="inv-header" style="padding:0 10px; margin-top:10px;">LOADOUT (Drag to Swap)</div><div class="loadout-container"><div class="main-slot-area">${mainSlot}</div><div class="sub-slot-area">${subSlots}</div></div><div style="padding:0 10px;">${reloadBtn}</div><div style="margin:5px 0; padding:0 10px;">${skillHtml}</div><div style="padding:10px;"><div style="font-size:10px; color:#666;">TACTICS</div><button class="btn-stance ${u.stance==='stand'?'active-stance':''}" onclick="gameLogic.toggleStance()">STANCE</button><button onclick="gameLogic.endTurn()" class="${this.state!=='PLAY'?'disabled':''}" style="width:100%; background:#522; border-color:#d44; margin-top:15px; padding:5px; color:#fcc;">End Turn</button></div>`;
+            
+            // ★追加: 戦車用オートリロードチェックボックス
+            let tankAutoReloadCheck = "";
+            if (u.def.isTank) {
+                tankAutoReloadCheck = `<div class="ar-check" onclick="gameLogic.toggleTankAutoReload()"><input type="checkbox" ${this.tankAutoReload ? 'checked' : ''}> AUTO RELOAD (1AP)</div>`;
+                reloadBtn = ""; // 戦車はボタンではなくスロットクリックor自動
+            }
+
+            ui.innerHTML = `<div class="soldier-header"><div class="face-box"><img src="${faceUrl}" width="64" height="64"></div><div><div class="soldier-name">${u.name}</div><div class="soldier-rank">${RANKS[u.rank] || 'Pvt'}</div></div></div><div class="stat-grid"><div class="stat-row"><span class="stat-label">HP</span> <span class="stat-val">${u.hp}/${u.maxHp}</span></div><div class="stat-row"><span class="stat-label">AP</span> <span class="stat-val">${u.ap}/${u.maxAp}</span></div><div class="stat-row"><span class="stat-label">AIM</span> <span class="stat-val">${u.stats?.aim||'-'}</span></div><div class="stat-row"><span class="stat-label">STR</span> <span class="stat-val">${u.stats?.str||'-'}</span></div></div><div class="inv-header" style="padding:0 10px; margin-top:10px;">LOADOUT (Drag to Swap)</div><div class="loadout-container"><div class="main-slot-area">${mainSlot}</div><div class="sub-slot-area">${subSlots}</div></div><div style="padding:0 10px;">${tankAutoReloadCheck}${reloadBtn}</div><div style="margin:5px 0; padding:0 10px;">${skillHtml}</div><div style="padding:10px;"><div style="font-size:10px; color:#666;">TACTICS</div><button class="btn-stance ${u.stance==='stand'?'active-stance':''}" onclick="gameLogic.toggleStance()">STANCE</button><button onclick="gameLogic.endTurn()" class="${this.state!=='PLAY'?'disabled':''}" style="width:100%; background:#522; border-color:#d44; margin-top:15px; padding:5px; color:#fcc;">End Turn</button></div>`;
             if (u.def.isTank) document.querySelectorAll('.btn-stance').forEach(b => b.classList.add('disabled'));
         } else { ui.innerHTML = `<div style="text-align:center;color:#555;margin-top:80px;">// NO SIGNAL //</div>`; }
     }
