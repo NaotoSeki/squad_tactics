@@ -1,4 +1,4 @@
-/** PHASER VFX & ENV: Lighter, Smaller Grass & 60FPS Wave */
+/** PHASER VFX & ENV: Earthy Tone Grass (60FPS Smooth) & Gentle Breeze */
 
 class VFXSystem {
     constructor() {
@@ -95,8 +95,8 @@ class EnvSystem {
             const size = 64 * TEXTURE_SCALE;
             const canvasW = size * 1.8; 
             const canvasH = size;
-            // ★修正: パレットを明るく
-            const palettes = [0x447733, 0x558844, 0x669955, 0x336633];
+            // ★修正: パレットを土っぽい渋い色に変更 (紫要素を排除)
+            const palettes = [0x4a5d23, 0x5b6e34, 0x3a4d13, 0x6c7a44, 0x554e33];
             
             const bladeDefs = [];
             for(let i=0; i<45; i++) {
@@ -111,7 +111,8 @@ class EnvSystem {
 
             for (let frame = 0; frame < this.TOTAL_GRASS_FRAMES; frame++) {
                 const g = scene.make.graphics({x:0, y:0, add:false});
-                g.fillStyle(0x1a331a, 0.8); g.fillEllipse(canvasW/2, canvasH, size/4, size/10); // 土台も少し明るく
+                // 土台も暗く、土っぽく
+                g.fillStyle(0x2a331a, 0.8); g.fillEllipse(canvasW/2, canvasH, size/4, size/10);
 
                 const bendFactor = frame / (this.TOTAL_GRASS_FRAMES - 1.0); 
 
@@ -146,7 +147,6 @@ class EnvSystem {
 
     spawnGrass(scene, group, x, y) {
         const count = 60; 
-        // ★修正: サイズ縮小 (0.10 -> 0.07)
         const scaleFactor = 0.07; 
         for(let i=0; i<count; i++) {
             const r = Math.random() * (HEX_SIZE * 1.0); const angle = Math.random() * Math.PI * 2;
@@ -160,9 +160,9 @@ class EnvSystem {
             grass.currentWindValue = 0; 
             grass.origX = x + ox; grass.origY = y + oy;
             
-            // ★修正: 色味を明るく (200~240)
+            // ★修正: Tintを落ち着いた彩度の低いトーンに変更 (青成分を下げて黄色寄りに)
             const tintVar = Math.floor(Math.random() * 40); 
-            grass.setTint(Phaser.Display.Color.GetColor(200 + tintVar, 240 + tintVar, 200 + tintVar));
+            grass.setTint(Phaser.Display.Color.GetColor(160 + tintVar, 170 + tintVar, 130 + tintVar));
             
             group.add(grass); 
             this.grassElements.push(grass);
