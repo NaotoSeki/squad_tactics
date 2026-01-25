@@ -1,4 +1,4 @@
-/** PHASER VFX & ENV: High-Res Vector Nature & VISIBLE STRONG WIND WAVES */
+/** PHASER VFX & ENV: Restoration of Sea & Forced Wind Animation */
 
 class VFXSystem {
     constructor() {
@@ -7,7 +7,7 @@ class VFXSystem {
     }
 
     update() {
-        // --- Wind Gust System (Visual Particles) ---
+        // --- Wind Gust System ---
         this.windTimer++;
         if (this.windTimer > 180 + Math.random() * 120) {
             this.triggerWindGust();
@@ -50,6 +50,7 @@ class VFXSystem {
     }
 
     triggerWindGust() {
+        // 風の視覚効果
         for (let i = 0; i < 20; i++) {
             this.add({
                 x: -300 - Math.random() * 500,
@@ -118,23 +119,24 @@ class VFXSystem {
     }
 }
 
-// ★環境演出システム: 強力な風の表現
+// ★環境演出システム: 強制駆動型ウェーブ & 海の復活
 class EnvSystem {
     constructor() {
         this.grassElements = [];
         this.treeElements = [];
         this.gustPower = 0;
+        this.waveTime = 0; // 内部管理用タイマー
     }
 
     preload(scene) {
         const TEXTURE_SCALE = 4.0; 
 
-        // 1. 草 (Vector Grass Tuft)
+        // 1. 草
         if (!scene.textures.exists('hd_grass')) {
             const size = 64 * TEXTURE_SCALE;
             const g = scene.make.graphics({x:0, y:0, add:false});
             const palettes = [0x2d4c1e, 0x3b5e28, 0x4a7534, 0x55803a];
-            g.fillStyle(0x1a2b12, 0.8); g.fillEllipse(size/2, size, size/3, size/8); // 土台
+            g.fillStyle(0x1a2b12, 0.8); g.fillEllipse(size/2, size, size/3, size/8); 
 
             for(let i=0; i<32; i++) {
                 const col = palettes[Math.floor(Math.random() * palettes.length)];
@@ -152,11 +154,11 @@ class EnvSystem {
             g.generateTexture('hd_grass', size, size);
         }
 
-        // 2. 針葉樹 (Sharp Vector Conifer)
+        // 2. 針葉樹
         if (!scene.textures.exists('hd_tree')) {
             const w = 80 * TEXTURE_SCALE; const h = 140 * TEXTURE_SCALE;
             const g = scene.make.graphics({x:0, y:0, add:false});
-            g.fillStyle(0x221105); g.fillRect(w/2 - (w*0.08), h*0.8, w*0.16, h*0.2); // 幹
+            g.fillStyle(0x221105); g.fillRect(w/2 - (w*0.08), h*0.8, w*0.16, h*0.2);
             const layers = 5; const leafDark = 0x0f2610; const leafLight = 0x1e3d1f;
             for(let i=0; i<layers; i++) {
                 const progress = i / layers; const lw = w * (0.8 - progress * 0.6); const lh = h * 0.25; const ly = h * 0.8 - (h * 0.7 * progress) - lh; const cx = w/2; const cy = ly + lh;
@@ -200,11 +202,10 @@ class EnvSystem {
         }
     }
 
-    // --- 木の生成 (修正: 小さく、多く) ---
+    // --- 木の生成 ---
     spawnTrees(scene, group, x, y) {
-        // ★修正: 数を増やし、サイズを小さく
-        const count = 6 + Math.floor(Math.random() * 4); // 増量
-        const scaleFactor = 0.18; // 大幅に縮小 (以前は0.35)
+        const count = 6 + Math.floor(Math.random() * 4);
+        const scaleFactor = 0.18;
 
         for(let i=0; i<count; i++) {
             const r = Math.random() * (HEX_SIZE * 0.8);
@@ -231,62 +232,69 @@ class EnvSystem {
         }
     }
 
+    // ★復活: 海のアニメーション (Tween)
     registerWater(image, y, q, r, group) {
-        // ★修正: 水面は一切動かさない (Tween削除)
+        if (!image.scene) return;
+        // ゆらゆらと動かす
+        image.scene.tweens.add({
+            targets: image,
+            alpha: { from: 0.85, to: 1.0 },
+            y: '+=3',
+            scaleX: { from: 1.0/window.HIGH_RES_SCALE, to: 1.02/window.HIGH_RES_SCALE },
+            duration: 1500 + Math.random() * 1000,
+            yoyo: true,
+            repeat: -1,
+            ease: 'Sine.easeInOut'
+        });
     }
 
     onGust() {
         this.gustPower = 1.0; 
     }
 
-    // ★風の波及処理: 計算式を超強化し、確実に動かす
+    // ★重要: 強制駆動型ウェーブ計算
     update(time) {
-        const t = time * 0.001; // 時間経過
+        // Phaserからのtimeが来なくても自前で時間を進める
+        // (timeがあればそれを使うが、補正して使う)
+        this.waveTime += 0.05; // 毎フレーム確実に進む
         
-        this.gustPower *= 0.98; // 突風の減衰
+        const t = this.waveTime;
+        
+        this.gustPower *= 0.97;
         if(this.gustPower < 0.01) this.gustPower = 0;
 
-        // 1. 草の処理 (Grass Wave)
+        // 1. 草 (Grass)
         this.grassElements = this.grassElements.filter(g => g.scene);
         for (let i = 0; i < this.grassElements.length; i++) {
             const g = this.grassElements[i];
             
-            // 波の伝播 (左から右へ) - X座標を引き算することで右への進行波になる
-            const wavePhase = t * 1.5 - g.origX * 0.004;
+            // 波の計算（大きく、強く）
+            const wave = Math.sin(g.origX * 0.01 - t * 0.1); 
+            const jitter = Math.sin(t * 0.3 + g.origY * 0.1) * 0.3;
             
-            // メインの大きなうねり (0.0 〜 1.0)
-            const bigWave = (Math.sin(wavePhase) + 1.0) * 0.5;
+            // 右方向への強い傾き (0〜1.0)
+            const windForce = (wave + 1.0) * 0.5; // 0.0 ~ 1.0
             
-            // 細かい「わさわさ」した揺れ (高周波ノイズ)
-            const rustle = Math.sin(t * 12.0 + g.origY * 0.1 + g.origX * 0.05) * 0.08;
-
-            // ベースの風圧 (常に少し右に傾く)
-            const baseLoad = 0.2;
-
-            // 突風効果
-            const gustEffect = this.gustPower * 0.8;
-
-            // 合計傾き量 (係数を劇的に大きく設定)
-            // BigWaveが強いときほど、右に大きく傾く
-            const totalLean = (bigWave * 0.9) + baseLoad + rustle + gustEffect;
+            // 係数を大きくして可視化 (最大 0.8ラジアン傾く)
+            const lean = (windForce * 0.6) + jitter + (this.gustPower * 0.8);
             
-            // Skewに適用 (右方向への傾きを強調)
-            g.skewX = g.baseSkew + Math.max(0, totalLean);
+            g.skewX = g.baseSkew + lean;
+            // 回転も少し加えて躍動感を出す
+            g.angle = lean * 5; 
         }
 
-        // 2. 木の処理 (Tree Sway)
+        // 2. 木 (Trees)
         this.treeElements = this.treeElements.filter(tr => tr.scene);
         for (let i = 0; i < this.treeElements.length; i++) {
             const tr = this.treeElements[i];
             
-            // 木は重いので、草より遅れて、小さく揺れる
-            const wavePhase = t * 1.5 - tr.origX * 0.004; // 草と同じ波に乗る
-            const sway = Math.sin(wavePhase) * 0.15; // 振幅は草より小さいが、明確に動くレベル
+            const wave = Math.sin(tr.origX * 0.005 - t * 0.08);
+            const lean = (wave + 1.0) * 0.5 * 0.15; // 木は硬いので控えめ
             
-            const gustEffect = this.gustPower * 0.3;
+            const gust = this.gustPower * 0.3;
 
-            // 木は幹がしなる表現なので、中心から左右に振れる
-            tr.skewX = tr.baseSkew + sway + gustEffect;
+            tr.skewX = tr.baseSkew + lean + gust;
+            tr.angle = (lean + gust) * 2;
         }
     }
 }
