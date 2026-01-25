@@ -1,8 +1,8 @@
-/** PHASER BRIDGE: Visual Fix (Flat-Top Hex & No Gaps) */
+/** PHASER BRIDGE: No-Overlap Hexes & High-Detail Nature */
 let phaserGame = null;
 window.HIGH_RES_SCALE = 2.0; 
 
-// ■カードアイコン生成
+// ■カードアイコン生成 (変更なし)
 window.getCardTextureKey = function(scene, type) {
     const key = `card_icon_${type}`;
     if (scene.textures.exists(key)) return key;
@@ -27,7 +27,7 @@ window.getCardTextureKey = function(scene, type) {
     return key;
 };
 
-// ■UI背景
+// ■UI背景 (変更なし)
 window.createGradientTexture = function(scene) {
     const key = 'ui_gradient';
     if (scene.textures.exists(key)) return;
@@ -42,33 +42,27 @@ window.createGradientTexture = function(scene) {
     scene.textures.addCanvas(key, canvas);
 };
 
-// ■★重要修正: ヘックス画像生成 (Flat Top & 隙間埋め)
+// ■★重要修正: ヘックス画像生成 (重なりなし・Flat Top)
 window.createHexTexture = function(scene) {
     if (scene.textures.exists('hex_base')) return;
     const g = scene.make.graphics({x: 0, y: 0, add: false});
     
-    // data.js の HEX_SIZE (54) は Flat Top の場合、中心から「辺」までの距離に近い扱いになるため
-    // 描画半径(外接円半径)はそれより大きく取る必要がある
-    // Flat Topの場合: 横幅 = 2 * size, 縦幅 = sqrt(3) * size
-    // グリッド間隔は 横: 3/2 * size, 縦: sqrt(3) * size
-    
     const baseSize = (typeof HEX_SIZE !== 'undefined' ? HEX_SIZE : 54); 
-    // 1.16倍程度でグリッドにフィットし、さらに1.02倍して隙間を埋める
-    const size = baseSize * window.HIGH_RES_SCALE * 1.18; 
+    // ★修正: オーバーラップ係数を削除し、ピッタリのサイズで計算
+    const size = baseSize * window.HIGH_RES_SCALE; 
     
-    // キャンバスサイズ確保
+    // Flat Topの外接矩形
     const w = size * 2;
-    const h = size * 2; 
+    const h = size * Math.sqrt(3);
     
-    // 純白で塗りつぶし (Tint用)
     g.fillStyle(0xffffff);
     g.beginPath();
     for (let i = 0; i < 6; i++) {
-        // ★ここが修正点: 60 * i (0度スタート) にすることで Flat Top (上が平ら) になる
-        const angle_deg = 60 * i; 
+        const angle_deg = 60 * i; // Flat Top
         const angle_rad = Math.PI / 180 * angle_deg;
-        const px = w/2 + size * Math.cos(angle_rad) * 0.866; // 少し縮めてアスペクト比調整が必要な場合もあるが、一旦正六角形で
-        const py = h/2 + size * Math.sin(angle_rad) * 0.866;
+        // 中心座標をキャンバスの中央に
+        const px = w/2 + size * Math.cos(angle_rad);
+        const py = h/2 + size * Math.sin(angle_rad);
         if (i === 0) g.moveTo(px, py); else g.lineTo(px, py);
     }
     g.closePath();
@@ -247,7 +241,6 @@ class MainScene extends Phaser.Scene {
     }
 
     create() {
-        // ★重要: ここでテクスチャを生成
         window.createHexTexture(this);
 
         this.cameras.main.setBackgroundColor('#0b0e0a'); 
@@ -285,7 +278,6 @@ class MainScene extends Phaser.Scene {
     centerCamera(q, r) { const p = Renderer.hexToPx(q, r); this.cameras.main.centerOn(p.x, p.y); }
     centerMap() { this.cameras.main.centerOn((MAP_W * HEX_SIZE * 1.5) / 2, (MAP_H * HEX_SIZE * 1.732) / 2); }
     
-    // ★復活: 地形IDに応じた着色ロジック & EnvSystem呼び出し
     createMap() { 
         const map = window.gameLogic.map; 
         this.hexGroup.removeAll(true); this.decorGroup.removeAll(true); this.unitGroup.removeAll(true); this.treeGroup.removeAll(true); this.hpGroup.removeAll(true);
@@ -327,7 +319,7 @@ class MainScene extends Phaser.Scene {
         if(this.unitView) this.unitView.update(time, delta);
         
         this.overlayGraphics.clear();
-        // ★修正: 選択カーソルも Flat Top に
+        // ★修正: カーソル描画もオーバーラップなしで
         if (this.dragHighlightHex) { this.overlayGraphics.lineStyle(4, 0xffffff, 1.0); this.drawHexOutline(this.overlayGraphics, this.dragHighlightHex.q, this.dragHighlightHex.r); }
         const selected = window.gameLogic.selectedUnit;
         if(selected && window.gameLogic.reachableHexes.length > 0) { this.overlayGraphics.lineStyle(2, 0xffffff, 0.4); window.gameLogic.reachableHexes.forEach(h => this.drawHexOutline(this.overlayGraphics, h.q, h.r)); }
@@ -350,13 +342,13 @@ class MainScene extends Phaser.Scene {
         }
     }
     
-    // ★修正: カーソル描画 (Flat Top)
+    // ★修正: カーソル描画 (オーバーラップなし)
     drawHexOutline(g, q, r) { 
         const c = Renderer.hexToPx(q, r); 
-        const size = HEX_SIZE * 1.05; // 少し大きめ
+        const size = HEX_SIZE * 1.0;
         g.beginPath(); 
         for(let i=0; i<6; i++) { 
-            const a = Math.PI/180 * (60*i); // 0度スタートでFlat Top
+            const a = Math.PI/180 * (60*i);
             g.lineTo(c.x + size * Math.cos(a), c.y + size * Math.sin(a)); 
         } 
         g.closePath(); 
@@ -365,7 +357,7 @@ class MainScene extends Phaser.Scene {
     
     drawDashedHexOutline(g, q, r, timeOffset = 0) {
         const c = Renderer.hexToPx(q, r); 
-        const size = HEX_SIZE * 1.05;
+        const size = HEX_SIZE * 1.0;
         const pts = []; 
         for(let i=0; i<6; i++) { 
             const a = Math.PI/180 * (60*i);
