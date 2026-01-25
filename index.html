@@ -1,198 +1,228 @@
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-    <meta charset="UTF-8">
-    <title>SQUAD TACTICS - HEROIC EDITION</title>
-    <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
-    <style>
-        :root { --bg: #0b0e0a; --panel: #1a1a1a; --text: #bbb; --accent: #d84; --border: #444; }
-        body {
-            background-color: #000; color: var(--text);
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0; height: 100vh; display: flex; overflow: hidden;
-            user-select: none;
+/** PHASER VFX & ENV: Soft Sway & Subtle Wind */
+
+class VFXSystem {
+    constructor() {
+        this.particles = [];
+        this.windTimer = 0;
+    }
+
+    update() {
+        this.windTimer++;
+        if (this.windTimer > 150 + Math.random() * 150) {
+            this.triggerWindGust();
+            this.windTimer = 0;
         }
 
-        #app { display: flex; width: 100%; height: 100%; }
-        #game-view { flex: 1; position: relative; overflow: hidden; background: var(--bg); min-width: 0; }
-        canvas { display: block; width: 100%; height: 100%; outline: none; }
-
-        #resizer { width: 6px; background: #222; cursor: col-resize; z-index: 30; border-left: 1px solid #000; border-right: 1px solid #333; }
-        
-        #sidebar { 
-            width: 340px; min-width: 280px; 
-            background: var(--panel); border-left: 1px solid var(--border); 
-            display: flex; flex-direction: column; z-index: 20; position: relative; 
-            transition: width 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), min-width 0.3s;
-        }
-        #sidebar.collapsed { 
-            width: 0 !important; 
-            min-width: 0 !important; 
-            border: none; 
-        }
-        #sidebar.collapsed > * { display: none; }
-        #sidebar.collapsed #sidebar-toggle { display: flex !important; left: -32px; border-right: 1px solid var(--border); }
-        
-        #sidebar-toggle { 
-            position: absolute; top: 0; left: -24px; 
-            width: 24px; height: 24px; 
-            background: #111; color: var(--accent); 
-            border: 1px solid var(--border); border-right: none; 
-            cursor: pointer; z-index: 40; 
-            display: flex; justify-content: center; align-items: center; 
-            transition: left 0.3s;
-        }
-        #sidebar-toggle:hover { background: #333; color: #fff; }
-
-        .panel-header { background: #111; padding: 10px; font-weight: bold; color: var(--accent); border-bottom: 1px solid var(--border); font-size: 11px; display: flex; justify-content: space-between; }
-        #unit-info { padding: 0; background: #222; overflow-y: auto; flex: 1; }
-        .soldier-header { display: flex; padding: 10px; background: #151515; border-bottom: 1px solid #333; gap: 10px; align-items: center; }
-        .face-box { width: 64px; height: 64px; background: #000; border: 1px solid #555; border-radius: 4px; overflow: hidden; }
-        .soldier-name { font-size: 14px; font-weight: bold; color: #fff; margin-bottom: 2px; }
-        .soldier-rank { font-size: 11px; color: #d84; font-family: monospace; }
-        .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; padding: 10px; font-size: 11px; background: #222; }
-        .stat-row { display: flex; justify-content: space-between; border-bottom: 1px solid #333; padding-bottom: 2px; }
-        .stat-label { color: #888; }
-        .stat-val { color: #eee; font-weight: bold; }
-        .loadout-container { display: flex; gap: 8px; padding: 10px; background: #181818; }
-        .main-slot-area { flex: 5; display: flex; flex-direction: column; }
-        .sub-slot-area { flex: 4; display: flex; flex-direction: column; gap: 4px; }
-        .slot { background: #111; border: 1px solid #444; padding: 6px; position: relative; transition: 0.1s; cursor: grab; display: flex; flex-direction: column; justify-content: center; overflow: hidden; }
-        .slot:active { cursor: grabbing; }
-        .slot:hover { border-color: #888; background: #222; }
-        .slot.main-weapon { height: 100%; min-height: 140px; border-color: #d84; background: #2a201a; box-shadow: inset 0 0 15px rgba(221, 136, 68, 0.1); }
-        .slot.main-weapon::after { content: "IN HANDS"; position: absolute; top: 2px; right: 4px; font-size: 9px; color: #d84; font-weight: bold; opacity: 0.7; }
-        .slot.bag-item { height: 32px; font-size: 10px; }
-        .slot-name { font-size: 12px; color: #ddd; font-weight: bold; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .slot.bag-item .slot-name { font-size: 10px; }
-        .slot-meta { font-size: 9px; color: #888; display: flex; justify-content: space-between; }
-        .ammo-bar { height: 4px; background: #333; margin-top: 4px; width: 100%; border-radius: 2px; overflow: hidden; }
-        .ammo-fill { height: 100%; background: #d84; transition: width 0.3s; }
-        .ammo-text { font-size: 9px; color: #aaa; text-align: right; margin-top: 2px; }
-        .slot.dragging { opacity: 0.4; border: 2px dashed #999; }
-        .slot.drag-over { border: 2px solid #fff; background: #333; transform: scale(1.02); }
-        .slot.empty { opacity: 0.2; cursor: default; }
-        .inv-header { font-size: 10px; color: #666; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
-        #log-container { height: 150px; overflow-y: auto; padding: 10px; font-family: "Lucida Console", monospace; font-size: 10px; background: #000; color: #6c6; border-top: 1px solid #444; }
-        .log-entry { margin-bottom: 3px; border-bottom: 1px solid #111; }
-        .overlay { position: absolute; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:100; display:flex; justify-content:center; align-items:center; }
-        .card-container { display: flex; gap: 15px; }
-        .card { width: 140px; height: 220px; background: #222; border: 2px solid #555; padding: 10px; cursor: pointer; color: #ccc; position: relative; overflow: hidden; display: flex; flex-direction: column; align-items: center; transition: transform 0.1s, border-color 0.1s; }
-        .card:hover { border-color: #d84; transform: translateY(-5px); }
-        .card-badge { position: absolute; top: 5px; right: 5px; background: #d84; color: #000; width: 24px; height: 24px; border-radius: 50%; display: none; justify-content: center; align-items: center; font-weight: bold; font-size: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.5); z-index: 10; }
-        .card-img-box { width: 100px; height: 100px; background: #000; border: 1px solid #444; margin-bottom: 10px; display: flex; justify-content: center; align-items: center; overflow: hidden; }
-        .card-img-box img { max-width: 100%; max-height: 100%; object-fit: contain; }
-        .card-body { width: 100%; text-align: center; }
-        .card-body h3 { margin: 5px 0; font-size: 16px; color: #d84; }
-        .card-body p { margin: 0; font-size: 10px; color: #888; }
-        #sector-counter { position:absolute; top:10px; right:20px; font-size:24px; font-weight:900; color:#d84; pointer-events:none; z-index:50; }
-        #auto-toggle { position:absolute; bottom:10px; left:10px; padding:5px 10px; background:#000; border:1px solid #444; color:#888; cursor:pointer; z-index:50; font-size:11px; }
-        #auto-toggle.active { color:#0f0; border-color:#0f0; }
-        #context-menu { position:absolute; display:none; background:rgba(0,20,30,0.9); border:1px solid #0af; padding:10px; z-index:60; color:#fff; font-size:11px; pointer-events:none; }
-        #eyecatch { position: absolute; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.3); z-index: 90; display: flex; justify-content: center; align-items: center; pointer-events: none; opacity: 0; transition: opacity 0.5s; }
-        #eyecatch-text { color: #d44; font-size: 40px; font-weight: 900; text-shadow: 0 0 20px #000; border: 4px solid #d44; padding: 10px 40px; background: rgba(0,0,0,0.8); transform: skewX(-10deg); }
-        
-        /* ★修正: メニューを最前面へ。overflowの制約を受けないbody直下に配置 */
-        #command-menu { 
-            position: absolute; display: none; 
-            background: rgba(10, 15, 10, 0.95); border: 1px solid #d84; 
-            padding: 5px; 
-            z-index: 9999; /* 最強 */
-            box-shadow: 0 0 15px rgba(0,0,0,0.8); 
-            border-radius: 4px; min-width: 120px; overflow: visible; 
-        }
-        .cmd-btn { display: block; width: 100%; box-sizing: border-box; background: #222; border: 1px solid #444; color: #ccc; padding: 6px 10px; margin-bottom: 2px; text-align: left; font-size: 11px; cursor: pointer; transition: 0.1s; }
-        .cmd-btn:hover { background: #d84; color: #000; border-color: #fca; }
-        .cmd-btn.disabled { opacity: 0.5; cursor: default; background: #111; color: #555; border-color: #333; pointer-events: none; }
-        .cmd-btn i { width: 15px; display: inline-block; text-align: center; margin-right: 5px; }
-        .cmd-group { position: relative; width: 100%; }
-        .cmd-submenu { display: none; position: absolute; left: 100%; top: 0; background: #151515; border: 1px solid #d84; width: 70px; z-index: 90; box-shadow: 2px 2px 5px rgba(0,0,0,0.5); }
-        .cmd-group:hover .cmd-submenu { display: block; }
-        .sub-btn { display: block; width: 100%; box-sizing: border-box; background: #222; color: #ccc; padding: 5px; text-align: center; font-size: 10px; cursor: pointer; border-bottom: 1px solid #333; }
-        .sub-btn:hover { background: #d84; color: #000; }
-        .mode-indicator { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.7); border: 1px solid #0f0; color: #0f0; padding: 5px 20px; font-weight: bold; font-size: 14px; display: none; z-index: 80; pointer-events: none; }
-        
-        .card.selected {
-            border-color: #d84 !important;
-            background: #2a1a10 !important;
-            transform: translateY(-5px);
-            box-shadow: 0 0 15px rgba(221, 136, 68, 0.4);
-        }
-    </style>
-</head>
-<body>
-    <div id="app">
-        <div id="game-view">
-            <div id="sector-counter">SECTOR: 01</div>
-            <div id="context-menu"></div>
+        for (let i = this.particles.length - 1; i >= 0; i--) {
+            let p = this.particles[i];
+            if (p.delay > 0) { p.delay--; continue; }
             
-            <div id="mode-label" class="mode-indicator">SELECT TARGET</div>
-            <div id="auto-toggle" onclick="gameLogic.toggleAuto()">AUTO</div>
-            <div id="eyecatch"><div id="eyecatch-text">ENEMY PHASE</div></div>
-            <div id="setup-screen" class="overlay">
-                <div style="text-align:center;">
-                    <h2 style="color:#d84;">SQUAD RECRUITMENT</h2>
-                    <div class="card-container" id="setup-cards"></div>
-                    <button id="btn-start" style="margin-top:20px; padding:10px 30px; background:#d84; border:none; cursor:pointer; font-weight:bold; display:none;" onclick="gameLogic.startCampaign()">DEPLOY</button>
-                </div>
-            </div>
-            <div id="gameover-screen" class="overlay" style="display:none;">
-                <div style="text-align:center; color:#f55;">
-                    <h1>M.I.A.</h1><p>全滅しました</p>
-                    <button onclick="location.reload()" style="padding:10px 20px; background:#300; border:1px solid #f00; color:#f00; cursor:pointer;">RESTART</button>
-                </div>
-            </div>
-            <div id="reward-screen" class="overlay" style="display:none;">
-                <div style="text-align:center;">
-                    <h2 style="color:#da4;">SECTOR CLEARED</h2>
-                    <div class="card-container" id="reward-cards"></div>
-                </div>
-            </div>
-        </div>
-        <div id="resizer"></div>
-        <div id="sidebar">
-            <div id="sidebar-toggle" onclick="gameLogic.toggleSidebar()">▶</div>
-            <div class="panel-header">SOLDIER DOSSIER</div>
-            <div id="unit-info"></div>
-            <div class="panel-header" style="border-top:1px solid #444;">BATTLE LOG</div>
-            <div id="log-container"></div>
-        </div>
-    </div>
-    
-    <div id="command-menu">
-        <div class="cmd-btn" id="btn-move" onclick="gameLogic.setMode('MOVE')"><i>👣</i> 移動</div>
-        <div class="cmd-btn" id="btn-attack" onclick="gameLogic.setMode('ATTACK')"><i>🔫</i> 射撃</div>
-        <div class="cmd-group">
-            <div class="cmd-btn"><i>🧘</i> 姿勢 ▶</div>
-            <div class="cmd-submenu">
-                <div class="sub-btn" onclick="gameLogic.setStance('stand')">立</div>
-                <div class="sub-btn" onclick="gameLogic.setStance('crouch')">屈</div>
-                <div class="sub-btn" onclick="gameLogic.setStance('prone')">伏</div>
-            </div>
-        </div>
-        <div class="cmd-btn" id="btn-repair" onclick="gameLogic.actionRepair()"><i>🔧</i> 修理</div>
-        <div class="cmd-btn" id="btn-melee" onclick="gameLogic.actionMeleeSetup()"><i>🔪</i> 白兵</div>
-        <div class="cmd-btn" id="btn-heal" onclick="gameLogic.actionHeal()"><i>💊</i> 治療</div>
-        <hr style="border:0; border-top:1px solid #444; margin:3px 0;">
-        <div class="cmd-btn" onclick="gameLogic.clearSelection()" style="text-align:center; color:#888;">CANCEL</div>
-    </div>
+            p.life--;
+            p.x += p.vx;
+            p.y += p.vy;
+            
+            if (p.type === 'wind') {
+                // ★修正: 風を非常に淡くする
+                p.alpha = Math.sin((p.life / p.maxLife) * Math.PI) * 0.08; 
+            } else if (p.type === 'proj') {
+                p.progress += p.speed;
+                let t = p.progress;
+                if (t >= 1) t = 1;
+                const dx = p.ex - p.sx; const dy = p.ey - p.sy;
+                p.x = p.sx + dx * t; p.y = p.sy + dy * t;
+                if (p.arcHeight > 0) p.y -= Math.sin(t * Math.PI) * p.arcHeight;
+                if (t >= 1) { if (typeof p.onHit === 'function') p.onHit(); p.life = 0; }
+            } else {
+                p.vy += 0.2; 
+            }
 
-    <script>
-        function onSlotDragStart(e, type, index) { e.dataTransfer.setData("text/plain", JSON.stringify({type, index})); e.target.classList.add('dragging'); }
-        function onSlotDragEnd(e) { e.target.classList.remove('dragging'); }
-        function onSlotDragOver(e) { e.preventDefault(); e.currentTarget.classList.add('drag-over'); }
-        function onSlotDragLeave(e) { e.currentTarget.classList.remove('drag-over'); }
-        function onSlotDrop(e, targetType, targetIndex) {
-            e.preventDefault(); e.currentTarget.classList.remove('drag-over');
-            const data = e.dataTransfer.getData("text/plain");
-            if(data && window.gameLogic) { try { const src = JSON.parse(data); window.gameLogic.swapEquipment(src, {type: targetType, index: targetIndex}); } catch(err) { console.error(err); } }
+            if (p.life <= 0) this.particles.splice(i, 1);
         }
-    </script>
-    <script src="data.js"></script>
-    <script src="phaser_sound.js"></script> 
-    <script src="phaser_vfx.js"></script> 
-    <script src="phaser_unit.js"></script> 
-    <script src="phaser_bridge.js"></script>
-    <script src="logic.js"></script>
-</body>
-</html>
+    }
+
+    triggerWindGust() {
+        // ★修正: 風の線を細く、色を白に近づける
+        for (let i = 0; i < 15; i++) {
+            this.add({
+                x: -300 - Math.random() * 500,
+                y: Math.random() * 3000,
+                vx: 20 + Math.random() * 10,
+                vy: 1 + Math.random() * 2,
+                life: 150,
+                color: "#ffffff", 
+                size: 1, // 細く
+                type: 'wind'
+            });
+        }
+        if(window.EnvSystem) window.EnvSystem.onGust();
+    }
+
+    draw(graphics) {
+        graphics.clear();
+        this.particles.forEach(p => {
+            if (p.delay > 0) return;
+            
+            if (p.type === 'wind') {
+                // ★修正: 線の太さを1に
+                graphics.lineStyle(1, 0xffffff, p.alpha);
+                graphics.beginPath();
+                graphics.moveTo(p.x, p.y);
+                graphics.lineTo(p.x - p.vx * 15, p.y - p.vy * 15); 
+                graphics.strokePath();
+            } 
+            else {
+                const alpha = p.life / p.maxLife;
+                graphics.fillStyle(this.hexToInt(p.color), alpha);
+                if (p.type === 'proj') graphics.fillCircle(p.x, p.y, 3);
+                else if(p.type === 'smoke') graphics.fillCircle(p.x, p.y, p.size * (2-alpha));
+                else graphics.fillRect(p.x, p.y, p.size, p.size);
+            }
+        });
+    }
+    
+    // ... (add, addExplosionなどは変更なし) ...
+    add(p) { p.life = p.life || 60; p.maxLife = p.life; p.vx = p.vx || 0; p.vy = p.vy || 0; p.delay = p.delay || 0; if (!p.color) p.color = "#ffffff"; this.particles.push(p); }
+    addExplosion(x, y, color, count) { this.shakeRequest = 5; for(let i=0; i<count; i++) { const angle = Math.random() * Math.PI * 2; const speed = Math.random() * 3 + 1; this.add({ x:x, y:y, vx:Math.cos(angle)*speed, vy:Math.sin(angle)*speed-2, color:color, size:Math.random()*4+2, life:30+Math.random()*20, type:'spark' }); } for(let i=0; i<count/2; i++) { this.add({ x:x, y:y, vx:(Math.random()-0.5), vy:-Math.random()*2, color:"#555", size:5, life:60, type:'smoke' }); } }
+    addSmoke(x, y) { this.add({ x:x, y:y, vx:(Math.random()-0.5)*0.5, vy:-0.5-Math.random()*0.5, color:"#888", size:4, life:80, type:'smoke' }); }
+    addFire(x, y) { this.add({ x:x, y:y, vx:(Math.random()-0.5), vy:-1-Math.random(), color:"#fa0", size:3, life:40, type:'spark' }); }
+    addProj(params) { params.type = 'proj'; params.life = 999; if(!params.color) params.color="#ffffaa"; this.add(params); }
+    addUnitDebris(x, y) { for(let i=0; i<8; i++) { this.add({ x:x, y:y, vx:(Math.random()-0.5)*4, vy:-Math.random()*5, color:"#422", size:3, life:100, type:'spark' }); } }
+    hexToInt(hex) { if (hex === undefined || hex === null) return 0xffffff; if (typeof hex === 'number') return hex; if (typeof hex !== 'string') return 0xffffff; return parseInt(hex.replace('#', '0x'), 16); }
+}
+
+class EnvSystem {
+    constructor() {
+        this.grassElements = [];
+        this.treeElements = [];
+        this.gustPower = 0;
+        this.waveTime = 0;
+    }
+
+    preload(scene) {
+        // ... (テクスチャ生成部分は変更なし。前回の高解像度版を使用) ...
+        const TEXTURE_SCALE = 4.0; 
+        if (!scene.textures.exists('ultra_grass')) {
+            const size = 64 * TEXTURE_SCALE;
+            const g = scene.make.graphics({x:0, y:0, add:false});
+            const palettes = [0x224411, 0x335522, 0x446633, 0x1a330a];
+            g.fillStyle(0x112205, 0.9); g.fillEllipse(size/2, size, size/4, size/10);
+            for(let i=0; i<50; i++) {
+                const col = palettes[Math.floor(Math.random() * palettes.length)];
+                g.lineStyle(1.5 * TEXTURE_SCALE, col, 1.0);
+                const startX = size/2 + (Math.random()-0.5) * (size * 0.1); const startY = size;
+                const len = (size * 0.5) + Math.random() * (size * 0.5);
+                const lean = (Math.random() - 0.5) * (size * 0.8);
+                const endX = startX + lean; const endY = startY - len;
+                const ctrlX = startX + lean * 0.1; const ctrlY = startY - len * 0.4;
+                const curve = new Phaser.Curves.QuadraticBezier(new Phaser.Math.Vector2(startX, startY), new Phaser.Math.Vector2(ctrlX, ctrlY), new Phaser.Math.Vector2(endX, endY));
+                curve.draw(g);
+            }
+            g.generateTexture('ultra_grass', size, size);
+        }
+        if (!scene.textures.exists('hd_tree')) {
+            const w = 80 * TEXTURE_SCALE; const h = 140 * TEXTURE_SCALE;
+            const g = scene.make.graphics({x:0, y:0, add:false});
+            g.fillStyle(0x221105); g.fillRect(w/2 - (w*0.08), h*0.8, w*0.16, h*0.2);
+            const layers = 6; const leafDark = 0x0f2610; const leafLight = 0x1e3d1f;
+            for(let i=0; i<layers; i++) {
+                const progress = i / layers; const lw = w * (0.8 - progress * 0.6); const lh = h * 0.22; const ly = h * 0.8 - (h * 0.75 * progress) - lh; const cx = w/2; const cy = ly + lh;
+                g.fillStyle(leafDark); g.beginPath(); g.moveTo(cx, ly); g.lineTo(cx + lw/2, cy); g.lineTo(cx, cy); g.fill();
+                g.fillStyle(leafLight); g.beginPath(); g.moveTo(cx, ly); g.lineTo(cx - lw/2, cy); g.lineTo(cx, cy); g.fill();
+            }
+            g.generateTexture('hd_tree', w, h);
+        }
+    }
+
+    clear() { this.grassElements = []; this.treeElements = []; }
+
+    spawnGrass(scene, group, x, y) {
+        const count = 60; const scaleFactor = 0.12;
+        for(let i=0; i<count; i++) {
+            const r = Math.random() * (HEX_SIZE * 1.0); const angle = Math.random() * Math.PI * 2;
+            const ox = Math.cos(angle) * r; const oy = Math.sin(angle) * r * 0.866;
+            const grass = scene.add.image(x+ox, y+oy, 'ultra_grass');
+            grass.setOrigin(0.5, 1.0); grass.setScale((0.8 + Math.random() * 0.4) * scaleFactor); grass.setDepth(y+oy);
+            grass.currentSkew = (Math.random()-0.5) * 0.1; grass.baseSkew = grass.currentSkew;
+            grass.origX = x + ox; grass.origY = y + oy;
+            const tintVar = Math.floor(Math.random() * 30); grass.setTint(Phaser.Display.Color.GetColor(180 + tintVar, 220 + tintVar, 180 + tintVar));
+            group.add(grass); this.grassElements.push(grass);
+        }
+    }
+
+    spawnTrees(scene, group, x, y) {
+        const count = 10 + Math.floor(Math.random() * 5); const scaleFactor = 0.18;
+        for(let i=0; i<count; i++) {
+            const r = Math.random() * (HEX_SIZE * 0.9); const angle = Math.random() * Math.PI * 2;
+            const ox = Math.cos(angle) * r; const oy = Math.sin(angle) * r * 0.866;
+            const scale = (0.7 + Math.random() * 0.6) * scaleFactor;
+            const shadow = scene.add.ellipse(x+ox, y+oy+3, 40*scale, 15*scale, 0x000000, 0.5); group.add(shadow);
+            const tree = scene.add.image(x+ox, y+oy, 'hd_tree');
+            tree.setOrigin(0.5, 0.95); tree.setScale(scale); tree.setDepth(y+oy + 20);
+            tree.currentSkew = 0; tree.baseSkew = 0; tree.origX = x + ox;
+            group.add(tree); this.treeElements.push(tree);
+        }
+    }
+
+    registerWater(image, y, q, r, group) {
+        if (!image.scene) return;
+        image.scene.tweens.add({ targets: image, alpha: { from: 0.85, to: 1.0 }, y: '+=3', scaleX: { from: 1.0/window.HIGH_RES_SCALE, to: 1.02/window.HIGH_RES_SCALE }, duration: 1500 + Math.random() * 1000, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+    }
+
+    onGust() { this.gustPower = 1.0; }
+
+    // ★重要: ふんわりと左右に揺れる風計算
+    update(time) {
+        this.waveTime += 0.03; // 少しゆっくりに
+        const t = this.waveTime;
+        
+        this.gustPower *= 0.97;
+        if(this.gustPower < 0.01) this.gustPower = 0;
+
+        // 1. 草 (Grass)
+        this.grassElements = this.grassElements.filter(g => g.scene);
+        for (let i = 0; i < this.grassElements.length; i++) {
+            const g = this.grassElements[i];
+            
+            // 左右に揺れる大きな波 (sin波をそのまま使う)
+            const bigSway = Math.sin(g.origX * 0.005 - t * 0.5) * 0.3; // -0.3 〜 +0.3 の範囲で揺れる
+
+            // 全体的な右方向への風圧 (常に少し右に傾く)
+            const baseWind = 0.15;
+            
+            // 細かいゆらぎ
+            const ripple = Math.sin(t * 2.0 + g.origY * 0.1) * 0.05;
+
+            // 突風 (右へ強く押す)
+            const gust = this.gustPower * 0.8;
+
+            // 目標角度 (左右の揺れ + 右へのバイアス)
+            const targetSkew = bigSway + baseWind + ripple + gust;
+
+            // 慣性処理 (ふんわりさせるため stiffness を小さく)
+            const stiffness = 0.05; 
+            g.currentSkew += (targetSkew - g.currentSkew) * stiffness;
+            
+            g.skewX = g.baseSkew + g.currentSkew;
+            
+            // ★修正: scaleYによる伸縮を廃止し、回転を加えて根本から揺れる感じを出す
+            g.angle = g.currentSkew * 8; 
+        }
+
+        // 2. 木 (Trees)
+        this.treeElements = this.treeElements.filter(tr => tr.scene);
+        for (let i = 0; i < this.treeElements.length; i++) {
+            const tr = this.treeElements[i];
+            // 木はゆっくり、左右に小さく揺れる
+            const sway = Math.sin(tr.origX * 0.003 - t * 0.3) * 0.08;
+            const gust = this.gustPower * 0.3;
+            const targetSkew = sway + 0.05 + gust; // 少し右寄り
+            
+            tr.currentSkew += (targetSkew - tr.currentSkew) * 0.02; // 非常にゆっくり追従
+            tr.skewX = tr.baseSkew + tr.currentSkew;
+            tr.angle = tr.currentSkew * 3;
+        }
+    }
+}
+
+window.VFX = new VFXSystem();
+window.EnvSystem = new EnvSystem();
