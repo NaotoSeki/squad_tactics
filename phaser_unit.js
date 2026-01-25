@@ -1,10 +1,56 @@
-/** * PHASER UNIT: Unit Visual Management (Slower & Stable Stance) */
+/** * PHASER UNIT: Unit Visual Management & Animation Definitions */
 class UnitView {
     constructor(scene, unitLayer, hpLayer) {
         this.scene = scene;
         this.unitLayer = unitLayer;
         this.hpLayer = hpLayer;
         this.visuals = new Map(); 
+        
+        // ★初期化時にアニメーション定義を実行
+        this.defineAnimations();
+    }
+
+    // ★アニメーション定義をここに集約
+    defineAnimations() {
+        const anims = this.scene.anims;
+        if (anims.exists('anim_idle')) return; // 定義済みならスキップ
+
+        // --- US Soldier Animations ---
+        anims.create({ key: 'anim_idle', frames: anims.generateFrameNumbers('us_soldier', { start: 0, end: 7 }), frameRate: 8, repeat: -1 });
+        
+        // 遷移
+        anims.create({ key: 'anim_crouch', frames: anims.generateFrameNumbers('us_soldier', { start: 8, end: 15 }), frameRate: 15, repeat: 0 });
+        anims.create({ key: 'anim_prone', frames: anims.generateFrameNumbers('us_soldier', { start: 24, end: 31 }), frameRate: 15, repeat: 0 });
+        
+        // 静止待機 (Static Idle)
+        anims.create({ key: 'anim_crouch_idle', frames: anims.generateFrameNumbers('us_soldier', { frames: [15] }), frameRate: 1, repeat: -1 });
+        
+        // 伏せ待機 (マズルフラッシュ回避 & 微動)
+        anims.create({ 
+            key: 'anim_prone_idle', 
+            frames: anims.generateFrameNumbers('us_soldier', { frames: [
+                33, 33, 33, 33, 33, // じっとしている
+                34, 33,             // 呼吸
+                33, 33, 33, 
+                38, 39, 38,         // 姿勢直し
+                33, 33
+            ]}), 
+            frameRate: 6, 
+            repeat: -1 
+        });
+
+        // アクション
+        anims.create({ key: 'anim_crouch_shoot', frames: anims.generateFrameNumbers('us_soldier', { start: 16, end: 23 }), frameRate: 15, repeat: 0 });
+        anims.create({ key: 'anim_prone_shoot', frames: anims.generateFrameNumbers('us_soldier', { start: 32, end: 39 }), frameRate: 15, repeat: 0 });
+        anims.create({ key: 'anim_shoot', frames: anims.generateFrameNumbers('us_soldier', { start: 40, end: 47 }), frameRate: 15, repeat: 0 });
+        anims.create({ key: 'anim_walk', frames: anims.generateFrameNumbers('us_soldier', { start: 48, end: 55 }), frameRate: 10, repeat: -1 });
+        anims.create({ key: 'anim_crouch_walk', frames: anims.generateFrameNumbers('us_soldier', { start: 56, end: 63 }), frameRate: 8, repeat: -1 });
+        anims.create({ key: 'anim_crawl', frames: anims.generateFrameNumbers('us_soldier', { start: 64, end: 71 }), frameRate: 6, repeat: -1 });
+        anims.create({ key: 'anim_melee', frames: anims.generateFrameNumbers('us_soldier', { start: 72, end: 79 }), frameRate: 15, repeat: 0 });
+
+        // --- Other Entities ---
+        if (!anims.exists('tank_idle')) { anims.create({ key: 'tank_idle', frames: anims.generateFrameNumbers('tank_sheet', { frames: [7, 6, 5, 6, 7, 5] }), frameRate: 10, repeat: -1 }); }
+        if (!anims.exists('explosion_anim')) { anims.create({ key: 'explosion_anim', frames: anims.generateFrameNumbers('explosion_sheet', { start: 0, end: 7 }), frameRate: 20, repeat: 0, hideOnComplete: true }); }
     }
 
     update(time, delta) {
@@ -101,7 +147,6 @@ class UnitView {
         container.targetX = targetPos.x;
         container.targetY = targetPos.y;
 
-        // ★速度変更: 0.15 -> 0.06 (ゆっくり)
         const dx = container.targetX - container.x;
         const dy = container.targetY - container.y;
         const dist = Math.sqrt(dx*dx + dy*dy);
@@ -115,7 +160,6 @@ class UnitView {
             isMoving = true;
             
             if (Math.abs(dx) > 0.1) {
-                // 向き反転 (移動方向へ)
                 container.sprite.setFlipX(dx < 0);
             }
         } else {
@@ -123,7 +167,6 @@ class UnitView {
             container.y = container.targetY;
         }
 
-        // ★アニメーション管理: 姿勢維持のために静止画(idle)を使用
         if (!u.def.isTank && container.sprite) {
             const currentAnim = container.sprite.anims.currentAnim ? container.sprite.anims.currentAnim.key : '';
             const isAttacking = currentAnim.includes('shoot') || currentAnim.includes('melee');
@@ -137,7 +180,6 @@ class UnitView {
             } else {
                 if (!isAttacking || !container.sprite.anims.isPlaying) {
                     let idleAnim = 'anim_idle';
-                    // ★修正: 遷移アニメ(anim_crouch)ではなく、静止アニメ(anim_crouch_idle)を使用
                     if (u.stance === 'crouch') idleAnim = 'anim_crouch_idle'; 
                     if (u.stance === 'prone') idleAnim = 'anim_prone_idle';
                     
@@ -224,7 +266,6 @@ class UnitView {
 
         visual.sprite.play(animKey);
         visual.sprite.once('animationcomplete', () => {
-            // アニメ終わったら、★静止アニメに戻る
             if(visual.sprite) {
                 let idleAnim = 'anim_idle';
                 if (attacker.stance === 'crouch') idleAnim = 'anim_crouch_idle';
