@@ -1,62 +1,89 @@
-/** PHASER BRIDGE: Simple Tactical Card Frame */
+/** PHASER BRIDGE: Visual Improvements (Tint, Cursor, Cards) */
 let phaserGame = null;
 window.HIGH_RES_SCALE = 2.0; 
 
+// ■カード表示: スペック表示対応
 window.getCardTextureKey = function(scene, type) {
-    const key = `card_icon_${type}`;
+    const key = `card_texture_${type}`;
     if (scene.textures.exists(key)) return key;
-    const g = scene.make.graphics({x: 0, y: 0, add: false});
-    g.fillStyle(0x1a1a1a); g.fillRect(0, 0, 100, 100);
-    g.lineStyle(4, 0xdd8844);
-    if (type.includes('tank')) {
-        g.fillStyle(0xdd8844); g.fillRect(20, 40, 60, 30);
-        g.fillCircle(50, 40, 15);
-        g.lineStyle(6, 0xdd8844); g.beginPath(); g.moveTo(65, 35); g.lineTo(95, 30); g.strokePath();
-    } else if (type === 'heal') {
-        g.fillStyle(0x44ff88); g.fillRect(40, 20, 20, 60); g.fillRect(20, 40, 60, 20);
-    } else {
-        g.fillStyle(0xdd8844); g.fillCircle(50, 30, 15);
-        g.lineStyle(4, 0xdd8844);
-        g.beginPath(); g.moveTo(50, 45); g.lineTo(50, 80); g.strokePath();
-        g.beginPath(); g.moveTo(20, 55); g.lineTo(80, 55); g.strokePath();
-        g.beginPath(); g.moveTo(50, 80); g.lineTo(30, 95); g.strokePath();
-        g.beginPath(); g.moveTo(50, 80); g.lineTo(70, 95); g.strokePath();
-    }
-    g.generateTexture(key, 100, 100);
+    
+    // データ参照
+    const template = window.UNIT_TEMPLATES[type] || { name: type, role: 'unknown', hp: 100, ap: 4 };
+    
+    // コンテナではなく、ここで1枚絵のテクスチャを作ってしまう
+    const canvas = document.createElement('canvas');
+    canvas.width = 140 * 2; // 高解像度
+    canvas.height = 200 * 2;
+    const ctx = canvas.getContext('2d');
+    ctx.scale(2, 2);
+    
+    // 背景
+    ctx.fillStyle = "#1a1a1a";
+    ctx.fillRect(0, 0, 140, 200);
+    
+    // 枠
+    ctx.strokeStyle = "#888";
+    ctx.lineWidth = 2;
+    ctx.strokeRect(0, 0, 140, 200);
+    
+    // 顔 (簡易生成)
+    ctx.fillStyle = "#111";
+    ctx.fillRect(20, 20, 100, 100);
+    
+    // 顔グラフィック (簡易描画)
+    ctx.fillStyle = "#334";
+    ctx.fillRect(20, 20, 100, 100);
+    const rnd = function(s) { return Math.abs(Math.sin(s * 12.9898) * 43758.5453) % 1; };
+    const seed = type.length * 123;
+    const skinTones = ["#ffdbac", "#f1c27d", "#e0ac69"];
+    ctx.fillStyle = skinTones[Math.floor(rnd(seed) * skinTones.length)];
+    ctx.beginPath(); ctx.arc(70, 70, 30, 0, Math.PI*2); ctx.fill(); // 顔
+    ctx.fillStyle = "#343"; 
+    ctx.beginPath(); ctx.arc(70, 60, 32, Math.PI, 0); ctx.lineTo(102, 60); ctx.lineTo(38, 60); ctx.fill(); // ヘルメット
+    
+    // テキスト
+    ctx.fillStyle = "#d84";
+    ctx.font = "bold 14px sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText(template.name, 70, 140);
+    
+    ctx.fillStyle = "#888";
+    ctx.font = "10px sans-serif";
+    ctx.fillText(template.role.toUpperCase(), 70, 155);
+    
+    ctx.fillStyle = "#ccc";
+    ctx.font = "11px monospace";
+    ctx.fillText(`HP:${template.hp||100} AP:${template.ap||4}`, 70, 175);
+    
+    // Phaserに登録
+    scene.textures.addCanvas(key, canvas);
     return key;
 };
 
-// ★修正: シンプルでタクティカルなカード枠を生成
-window.createCardFrameTexture = function(scene) {
-    if (scene.textures.exists('simple_card_frame')) return;
-    const g = scene.make.graphics({x: 0, y: 0, add: false});
-    
-    // 枠サイズ
-    const w = 140; 
-    const h = 200;
-    
-    // 外枠
-    g.lineStyle(2, 0x888888);
-    g.fillStyle(0x111111);
-    g.strokeRect(0, 0, w, h);
-    g.fillRect(0, 0, w, h);
-    
-    // コーナー装飾
-    g.lineStyle(4, 0xdd8844);
-    const len = 20;
-    g.beginPath(); g.moveTo(0, len); g.lineTo(0,0); g.lineTo(len, 0); g.strokePath(); // 左上
-    g.beginPath(); g.moveTo(w-len, 0); g.lineTo(w,0); g.lineTo(w, len); g.strokePath(); // 右上
-    g.beginPath(); g.moveTo(w, h-len); g.lineTo(w,h); g.lineTo(w-len, h); g.strokePath(); // 右下
-    g.beginPath(); g.moveTo(len, h); g.lineTo(0,h); g.lineTo(0, h-len); g.strokePath(); // 左下
-    
-    g.generateTexture('simple_card_frame', w, h);
+// ■シンプルフレーム (削除: getCardTextureKey内で描画するため)
+// window.createCardFrameTexture ... (不要)
+
+// ■UI背景
+window.createGradientTexture = function(scene) {
+    const key = 'ui_gradient';
+    if (scene.textures.exists(key)) return;
+    const canvas = document.createElement('canvas');
+    canvas.width = 100; canvas.height = 100;
+    const ctx = canvas.getContext('2d');
+    const grd = ctx.createLinearGradient(0, 0, 0, 100);
+    grd.addColorStop(0, 'rgba(0,0,0,0)');
+    grd.addColorStop(1, 'rgba(0,0,0,0.9)');
+    ctx.fillStyle = grd;
+    ctx.fillRect(0, 0, 100, 100);
+    scene.textures.addCanvas(key, canvas);
 };
 
+// ■ヘックス画像生成 (Flat Top)
 window.createHexTexture = function(scene) {
     if (scene.textures.exists('hex_base')) return;
     const g = scene.make.graphics({x: 0, y: 0, add: false});
     const baseSize = (typeof HEX_SIZE !== 'undefined' ? HEX_SIZE : 54); 
-    const size = baseSize * window.HIGH_RES_SCALE; 
+    const size = baseSize * window.HIGH_RES_SCALE; // オーバーラップなし
     const w = size * 2;
     const h = size * Math.sqrt(3);
     g.fillStyle(0xffffff);
@@ -71,20 +98,6 @@ window.createHexTexture = function(scene) {
     g.closePath();
     g.fillPath();
     g.generateTexture('hex_base', w, h);
-};
-
-window.createGradientTexture = function(scene) {
-    const key = 'ui_gradient';
-    if (scene.textures.exists(key)) return;
-    const canvas = document.createElement('canvas');
-    canvas.width = 100; canvas.height = 100;
-    const ctx = canvas.getContext('2d');
-    const grd = ctx.createLinearGradient(0, 0, 0, 100);
-    grd.addColorStop(0, 'rgba(0,0,0,0)');
-    grd.addColorStop(1, 'rgba(0,0,0,0.9)');
-    ctx.fillStyle = grd;
-    ctx.fillRect(0, 0, 100, 100);
-    scene.textures.addCanvas(key, canvas);
 };
 
 const Renderer = {
@@ -157,25 +170,23 @@ const Renderer = {
     }
 };
 
+// --- Card ---
 class Card extends Phaser.GameObjects.Container {
     constructor(scene, x, y, type) {
         super(scene, x, y); this.scene = scene; this.cardType = type; this.setSize(140, 200);
-        this.visuals = scene.add.container(0, 0);
-        const shadow = scene.add.rectangle(6, 6, 130, 190, 0x000000, 0.6);
-        const contentBg = scene.add.rectangle(0, 0, 130, 190, 0x1a1a1a);
         
-        // ★修正: シンプルフレームを使用
-        let frame = scene.add.image(0, 0, 'simple_card_frame');
+        // ★修正: 新しいリッチなカード画像を生成して表示
+        const texKey = window.getCardTextureKey(scene, type);
+        this.frameImage = scene.add.image(0, 0, texKey).setDisplaySize(140, 200);
+        this.frameImage.setInteractive({ useHandCursor: true, draggable: true });
         
-        frame.setInteractive({ useHandCursor: true, draggable: true }); this.frameImage = frame;
-        const iconKey = window.getCardTextureKey(scene, type);
-        const icon = scene.add.image(0, 10, iconKey).setScale(1/window.HIGH_RES_SCALE);
-        if(type === 'aerial') icon.setDisplaySize(120, 80);
-        const text = scene.add.text(0, -80, type.toUpperCase(), { fontSize: '16px', color: '#d84', fontStyle: 'bold' }).setOrigin(0.5);
-        const desc = scene.add.text(0, 70, "DRAG TO DEPLOY", { fontSize: '10px', color: '#888' }).setOrigin(0.5);
-        this.visuals.add([shadow, contentBg, icon, text, desc, frame]); this.add(this.visuals); 
+        // 影
+        const shadow = scene.add.rectangle(6, 6, 130, 190, 0x000000, 0.5);
+        this.add(shadow);
+        this.add(this.frameImage);
+        
         this.setScrollFactor(0); this.baseX = x; this.baseY = y; this.physX = x; this.physY = y; this.velocityX = 0; this.velocityY = 0; this.velocityAngle = 0; this.targetX = x; this.targetY = y; this.dragOffsetX = 0; this.dragOffsetY = 0;
-        frame.on('pointerover', this.onHover, this); frame.on('pointerout', this.onHoverOut, this); frame.on('dragstart', this.onDragStart, this); frame.on('drag', this.onDrag, this); frame.on('dragend', this.onDragEnd, this);
+        this.frameImage.on('pointerover', this.onHover, this); this.frameImage.on('pointerout', this.onHoverOut, this); this.frameImage.on('dragstart', this.onDragStart, this); this.frameImage.on('drag', this.onDrag, this); this.frameImage.on('dragend', this.onDragEnd, this);
         scene.add.existing(this);
     }
     updatePhysics() { 
@@ -210,10 +221,11 @@ class Card extends Phaser.GameObjects.Container {
     }
     burnAndConsume(hex) {
         this.updatePhysics = () => {}; this.frameImage.setTint(0x552222);
-        const maskShape = this.scene.make.graphics(); maskShape.fillStyle(0xffffff); maskShape.fillRect(-70, -100, 140, 200); 
-        this.visuals.setMask(maskShape.createGeometryMask());
-        const burnProgress = { val: 0 }; 
-        this.scene.tweens.add({ targets: burnProgress, val: 1, duration: 200, ease: 'Linear', onUpdate: () => { if(!this.scene || !maskShape.scene) return; maskShape.clear(); maskShape.fillStyle(0xffffff); maskShape.fillRect(-70, -100, 140, 200 * (1 - burnProgress.val)); maskShape.x = this.x; maskShape.y = this.y + (200 * burnProgress.val); const rad = Phaser.Math.DegToRad(this.angle); const cos = Math.cos(rad); const sin = Math.sin(rad); for(let i=0; i<8; i++) { const randX = (Math.random() - 0.5) * 140; const wx = this.x + (randX * cos - sin); const wy = this.y + (randX * sin + cos); if(window.UIVFX) { window.UIVFX.addFire(wx, wy); if(Math.random()<0.3) window.UIVFX.addSmoke(wx, wy); } } this.x += (Math.random()-0.5) * 4; this.y += (Math.random()-0.5) * 4; }, onComplete: () => { if (this.visuals) this.visuals.clearMask(true); if (maskShape) maskShape.destroy(); this.scene.removeCard(this); const type = this.cardType; this.destroy(); try { if (type === 'aerial') { const main = phaserGame.scene.getScene('MainScene'); if (main) main.triggerBombardment(hex); } else if(window.gameLogic) { window.gameLogic.deployUnit(hex, type); } } catch(e) { console.error("Logic Error:", e); } } });
+        // マスクアニメーションなどは省略し、フェードアウト
+        this.scene.tweens.add({ targets: this, alpha: 0, scale: 0.5, duration: 200, onComplete: () => { 
+            this.scene.removeCard(this); const type = this.cardType; this.destroy(); 
+            try { if (type === 'aerial') { const main = phaserGame.scene.getScene('MainScene'); if (main) main.triggerBombardment(hex); } else if(window.gameLogic) { window.gameLogic.deployUnit(hex, type); } } catch(e) { console.error("Logic Error:", e); } 
+        }});
     }
     returnToHand() { const hand = this.scene.handContainer; this.scene.children.remove(this); hand.add(this); this.setDepth(0); this.physX = this.x; this.physY = this.y; this.targetX = this.baseX; this.targetY = this.baseY; }
 }
@@ -254,9 +266,7 @@ class MainScene extends Phaser.Scene {
         this.load.spritesheet('soldier_sheet', 'asset/soldier_sheet_1.png', { frameWidth: 128, frameHeight: 128 });
         this.load.spritesheet('tank_sheet', 'asset/tank_sheet_1.png', { frameWidth: 128, frameHeight: 128 });
         this.load.spritesheet('explosion_sheet', 'asset/explosion-sheet.png', { frameWidth: 128, frameHeight: 128 });
-        // ★修正: 重たい画像を読まず、動的に作ったフレームを使う
-        // this.load.image('card_frame', 'asset/card_frame.png'); 
-        window.createCardFrameTexture(this);
+        this.load.image('card_frame', 'asset/card_frame.png');
     }
 
     create() {
@@ -308,12 +318,12 @@ class MainScene extends Phaser.Scene {
                 const hex = this.add.image(pos.x, pos.y, 'hex_base').setScale(1/window.HIGH_RES_SCALE); 
                 
                 let tint = 0x555555; 
-                if(t.id===0) tint=0x5a5245; 
-                else if(t.id===1) tint=0x425030; 
-                else if(t.id===2) tint=0x222e1b; 
-                else if(t.id===4) tint=0x504540; 
+                if(t.id===0) tint=0x5a5245; // Dirt
+                else if(t.id===1) tint=0x335522; // ★修正: 草色と馴染む深緑
+                else if(t.id===2) tint=0x112211; // Forest: Very Dark Green
+                else if(t.id===4) tint=0x504540; // Town
                 else if(t.id===5) { 
-                    tint=0x303840; 
+                    tint=0x303840; // Water
                     if(window.EnvSystem) window.EnvSystem.registerWater(hex, pos.y, q, r, this.decorGroup); 
                 }
                 
@@ -338,16 +348,30 @@ class MainScene extends Phaser.Scene {
         if(this.unitView) this.unitView.update(time, delta);
         
         this.overlayGraphics.clear();
-        if (this.dragHighlightHex) { this.overlayGraphics.lineStyle(4, 0xffffff, 1.0); this.drawHexOutline(this.overlayGraphics, this.dragHighlightHex.q, this.dragHighlightHex.r); }
+        
+        // ★修正: 選択カーソル (カッコ型)
+        if (this.dragHighlightHex) { this.overlayGraphics.lineStyle(3, 0xffffff, 0.8); this.drawBracketCursor(this.overlayGraphics, this.dragHighlightHex.q, this.dragHighlightHex.r); }
+        
         const selected = window.gameLogic.selectedUnit;
-        if(selected && window.gameLogic.reachableHexes.length > 0) { this.overlayGraphics.lineStyle(2, 0xffffff, 0.4); window.gameLogic.reachableHexes.forEach(h => this.drawHexOutline(this.overlayGraphics, h.q, h.r)); }
+        if(selected) {
+            // 選択中のユニットには強調カーソル
+            this.overlayGraphics.lineStyle(2, 0x00ff00, 1.0); 
+            this.drawBracketCursor(this.overlayGraphics, selected.q, selected.r, true);
+            
+            // 移動可能範囲
+            if(window.gameLogic.reachableHexes.length > 0) { 
+                this.overlayGraphics.lineStyle(1, 0xffffff, 0.3); 
+                window.gameLogic.reachableHexes.forEach(h => this.drawHexOutline(this.overlayGraphics, h.q, h.r)); 
+            }
+        }
+        
         if(selected && window.gameLogic.attackLine && window.gameLogic.attackLine.length > 0) {
             this.overlayGraphics.lineStyle(3, 0xff2222, 0.8);
             const targetUnit = window.gameLogic.aimTargetUnit;
             window.gameLogic.attackLine.forEach(h => { let offset = (targetUnit && targetUnit.q === h.q && targetUnit.r === h.r) ? time * 0.05 : 0; this.drawDashedHexOutline(this.overlayGraphics, h.q, h.r, offset); });
         }
         const hover = window.gameLogic.hoverHex;
-        if(selected && hover && window.gameLogic.reachableHexes.some(h => h.q === hover.q && h.r === hover.r)) { this.overlayGraphics.lineStyle(4, 0xffffff, 1.0); this.drawHexOutline(this.overlayGraphics, hover.q, hover.r); }
+        if(selected && hover && window.gameLogic.reachableHexes.some(h => h.q === hover.q && h.r === hover.r)) { this.overlayGraphics.lineStyle(3, 0xffffff, 0.8); this.drawHexOutline(this.overlayGraphics, hover.q, hover.r); }
         const path = window.gameLogic.path;
         if(path.length > 0 && selected) { 
             this.overlayGraphics.lineStyle(3, 0xffffff, 0.5); this.overlayGraphics.beginPath(); const s = Renderer.hexToPx(selected.q, selected.r); this.overlayGraphics.moveTo(s.x, s.y); path.forEach(p => { const px = Renderer.hexToPx(p.q, p.r); this.overlayGraphics.lineTo(px.x, px.y); }); this.overlayGraphics.strokePath(); 
@@ -360,46 +384,50 @@ class MainScene extends Phaser.Scene {
         }
     }
     
-    drawHexOutline(g, q, r) { 
-        const c = Renderer.hexToPx(q, r); 
-        const size = HEX_SIZE * 1.0; 
+    // シンプル六角形
+    drawHexOutline(g, q, r) { const c = Renderer.hexToPx(q, r); g.beginPath(); for(let i=0; i<6; i++) { const a = Math.PI/180*60*i; g.lineTo(c.x+HEX_SIZE*0.9*Math.cos(a), c.y+HEX_SIZE*0.9*Math.sin(a)); } g.closePath(); g.strokePath(); }
+    
+    // ★追加: カッコ型カーソル [ ]
+    drawBracketCursor(g, q, r, isActive=false) {
+        const c = Renderer.hexToPx(q, r);
+        const size = HEX_SIZE * 0.9;
         
-        // 通常の六角形ではなく、スタイリッシュなブラケット型にする
-        const corners = [];
-        for(let i=0; i<6; i++) { 
-            const a = Math.PI/180 * (60*i); 
-            corners.push({ x: c.x + size * Math.cos(a), y: c.y + size * Math.sin(a) });
-        }
+        // 4隅（右上、右下、左下、左上）のような位置にある頂点を強調
+        // Flat Top: 0, 60, 120, 180, 240, 300
+        // 左上(240-300の間), 右上(0-60の間)... というよりは、頂点そのものを描画して間引く
+        
+        const indices = [0, 1, 3, 4]; // 左右の頂点付近を描画
+        
+        indices.forEach(i => {
+            const a = Math.PI/180 * (60*i);
+            const x = c.x + size * Math.cos(a);
+            const y = c.y + size * Math.sin(a);
+            
+            // 角を描く（短い2本の線）
+            const armLen = 15;
+            
+            // 前の頂点へのベクトル
+            const aPrev = Math.PI/180 * (60 * ((i+5)%6));
+            const xPrev = c.x + size * Math.cos(aPrev);
+            const yPrev = c.y + size * Math.sin(aPrev);
+            const dx1 = xPrev - x; const dy1 = yPrev - y;
+            const len1 = Math.sqrt(dx1*dx1 + dy1*dy1);
+            
+            // 次の頂点へのベクトル
+            const aNext = Math.PI/180 * (60 * ((i+1)%6));
+            const xNext = c.x + size * Math.cos(aNext);
+            const yNext = c.y + size * Math.sin(aNext);
+            const dx2 = xNext - x; const dy2 = yNext - y;
+            const len2 = Math.sqrt(dx2*dx2 + dy2*dy2);
 
-        // 角だけ描画して、間を空ける
-        const gapRatio = 0.3; // 辺のどれくらいを空白にするか
-        
-        for(let i=0; i<6; i++) {
-            const p1 = corners[i];
-            const p2 = corners[(i+1)%6];
-            
-            const dx = p2.x - p1.x;
-            const dy = p2.y - p1.y;
-            
-            // 角の近くだけ描く
             g.beginPath();
-            g.moveTo(p1.x, p1.y);
-            g.lineTo(p1.x + dx * (0.5 - gapRatio/2), p1.y + dy * (0.5 - gapRatio/2));
+            g.moveTo(x + dx1/len1 * armLen, y + dy1/len1 * armLen);
+            g.lineTo(x, y);
+            g.lineTo(x + dx2/len2 * armLen, y + dy2/len2 * armLen);
             g.strokePath();
-            
-            g.beginPath();
-            g.moveTo(p2.x - dx * (0.5 - gapRatio/2), p2.y - dy * (0.5 - gapRatio/2));
-            g.lineTo(p2.x, p2.y);
-            g.strokePath();
-        }
-        
-        // 内側にうっすら六角形
-        g.lineStyle(1, 0xffffff, 0.1);
-        g.beginPath();
-        for(let i=0; i<6; i++) g.lineTo(corners[i].x, corners[i].y);
-        g.closePath();
-        g.strokePath();
+        });
     }
+
     drawDashedHexOutline(g, q, r, timeOffset = 0) {
         const c = Renderer.hexToPx(q, r); const pts = []; for(let i=0; i<6; i++) { const a = Math.PI/180*60*i; pts.push({ x: c.x+HEX_SIZE*0.9*Math.cos(a), y: c.y+HEX_SIZE*0.9*Math.sin(a) }); }
         const dashLen = 6; const gapLen = 4; const period = dashLen + gapLen; let currentDistInPath = -timeOffset; 
