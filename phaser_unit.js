@@ -1,4 +1,4 @@
-/** * PHASER UNIT: 1 Hex 4 Units & Click Selection */
+/** * PHASER UNIT: Fixed Property Access Error (u.hands) */
 class UnitView {
     constructor(scene, unitLayer, hpLayer) {
         this.scene = scene;
@@ -38,8 +38,7 @@ class UnitView {
         if (!window.gameLogic) return;
 
         const activeIds = new Set();
-        // マップ上の全ユニットを取得し、位置重複を確認
-        const hexMap = new Map(); // "q,r" -> [unit1, unit2...]
+        const hexMap = new Map(); 
         window.gameLogic.units.forEach(u => {
             if (u.hp <= 0) return;
             const key = `${u.q},${u.r}`;
@@ -48,7 +47,6 @@ class UnitView {
             activeIds.add(u.id);
         });
 
-        // 描画更新
         window.gameLogic.units.forEach(u => {
             if (u.hp <= 0) return;
             let visual = this.visuals.get(u.id);
@@ -58,7 +56,6 @@ class UnitView {
                 this.unitLayer.add(visual);
             }
             
-            // ★密集時のオフセット計算
             const siblings = hexMap.get(`${u.q},${u.r}`) || [];
             const index = siblings.indexOf(u);
             const count = siblings.length;
@@ -88,15 +85,12 @@ class UnitView {
 
     createVisual(u) {
         const container = this.scene.add.container(0, 0);
-        // ★個別クリックのためにサイズを設定
         container.setSize(40, 60);
         container.setInteractive({ useHandCursor: true });
         
-        // ★クリックイベント
         container.on('pointerdown', (pointer) => {
-            // 左クリックのみ
             if (pointer.button === 0 && window.gameLogic) {
-                pointer.event.stopPropagation(); // マップドラッグなどを防ぐ
+                pointer.event.stopPropagation(); 
                 window.gameLogic.onUnitClick(u);
             }
         });
@@ -106,7 +100,7 @@ class UnitView {
         let sprite;
         if (u.def.name === "Rifleman" || u.def.role === "infantry" || !u.def.isTank) { 
             sprite = this.scene.add.sprite(0, -20, 'us_soldier'); 
-            sprite.setScale(0.25); // ★サイズ縮小 (密集対応)
+            sprite.setScale(0.25); 
             sprite.play('anim_idle');
             if (u.team === 'player') sprite.setTint(0xeeeeff); else sprite.setTint(0xffaaaa);
         } else if (u.def.isTank) {
@@ -125,7 +119,6 @@ class UnitView {
 
         container.add([shadow, sprite, cursor]);
 
-        // HP Bar
         const hpBg = this.scene.add.rectangle(0, 0, 20, 4, 0x000000).setOrigin(0, 0.5);
         const hpBar = this.scene.add.rectangle(0, 0, 20, 4, 0x00ff00).setOrigin(0, 0.5);
         const infoContainer = this.scene.add.container(0, 18);
@@ -153,10 +146,9 @@ class UnitView {
         
         const basePos = Renderer.hexToPx(u.q, u.r);
         
-        // ★オフセット計算 (4隅に配置)
         let offsetX = 0, offsetY = 0;
         if (count > 1) {
-            const spread = 12; // 散開距離
+            const spread = 12; 
             if (index === 0) { offsetX = -spread; offsetY = -spread; }
             else if (index === 1) { offsetX = spread; offsetY = -spread; }
             else if (index === 2) { offsetX = -spread; offsetY = spread; }
@@ -166,7 +158,6 @@ class UnitView {
         visual.targetX = basePos.x + offsetX;
         visual.targetY = basePos.y + offsetY;
 
-        // Lerp移動
         const dx = visual.targetX - visual.x;
         const dy = visual.targetY - visual.y;
         const dist = Math.sqrt(dx*dx + dy*dy);
@@ -183,7 +174,6 @@ class UnitView {
             visual.y = visual.targetY;
         }
 
-        // Animation
         if (!u.def.isTank && visual.sprite) {
             const currentAnim = visual.sprite.anims.currentAnim ? visual.sprite.anims.currentAnim.key : '';
             const isAttacking = currentAnim.includes('shoot') || currentAnim.includes('melee');
@@ -203,9 +193,8 @@ class UnitView {
             }
         }
 
-        // HP Bar & Info
         if (visual.hpBg && visual.hpBar && visual.infoContainer) {
-            const barY = visual.y - 25; // 縮小に合わせて調整
+            const barY = visual.y - 25; 
             const barX = visual.x - 10;
             visual.hpBg.setPosition(barX, barY);
             visual.hpBar.setPosition(barX, barY);
@@ -218,9 +207,9 @@ class UnitView {
             visual.infoContainer.setPosition(visual.x, infoY);
             visual.infoContainer.removeAll(true);
 
-            // 簡易表示 (ランクと状態異常など)
             let infoText = "";
-            if(u.loadout.hands && u.loadout.hands.isBroken) infoText += "⚠ ";
+            // ★修正: u.loadout.hands -> u.hands
+            if(u.hands && u.hands.isBroken) infoText += "⚠ ";
             if(u.hp < u.maxHp*0.5) infoText += "➕ ";
             
             if (infoText) {
