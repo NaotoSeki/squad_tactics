@@ -1,4 +1,4 @@
-/** PHASER UNIT: UnitView Restored & HP Bar Tweaked */
+/** PHASER UNIT: Grounded Shadows & Lower HP Bar */
 
 class UnitView {
     constructor(scene, unitLayer, hpLayer) {
@@ -77,7 +77,8 @@ class UnitView {
             if (pointer.button === 0 && window.gameLogic) { pointer.event.stopPropagation(); window.gameLogic.onUnitClick(u); }
         });
 
-        const shadow = this.scene.add.ellipse(0, 0, 20, 10, 0x000000, 0.5);
+        // ★修正: 影の位置を少し下げて足元に合わせる (Y: 5)
+        const shadow = this.scene.add.ellipse(0, 5, 20, 10, 0x000000, 0.5);
         
         let sprite;
         if (u.def.name === "Rifleman" || u.def.role === "infantry" || !u.def.isTank) { 
@@ -90,7 +91,8 @@ class UnitView {
             sprite.setScale(0.4);
             sprite.play('tank_idle');
             if (u.team === 'player') sprite.setTint(0xccddee); else sprite.setTint(0xffaaaa);
-            shadow.setPosition(-2, 0); 
+            // ★修正: 戦車の影も位置調整
+            shadow.setPosition(-2, 8); 
             shadow.setSize(46, 18);
         } else {
             sprite = this.scene.add.rectangle(0, 0, 30, 40, u.team==='player'?0x00f:0xf00);
@@ -98,7 +100,6 @@ class UnitView {
 
         container.add([shadow, sprite]);
 
-        // ★修正: HPバーを細く (高さ 2)
         const hpBg = this.scene.add.rectangle(0, 0, 20, 2, 0x000000).setOrigin(0, 0.5);
         const hpBar = this.scene.add.rectangle(0, 0, 20, 2, 0x00ff00).setOrigin(0, 0.5);
         const infoContainer = this.scene.add.container(0, 18);
@@ -169,8 +170,8 @@ class UnitView {
         }
 
         if (visual.hpBg && visual.hpBar && visual.infoContainer) {
-            // ★修正: HPバーの位置を頭上へ (-55px)
-            const barY = visual.y - 55; 
+            // ★修正: HPバーの位置を少し下げる (-55 -> -45)
+            const barY = visual.y - 45; 
             const barX = visual.x - 10;
             visual.hpBg.setPosition(barX, barY);
             visual.hpBar.setPosition(barX, barY);
