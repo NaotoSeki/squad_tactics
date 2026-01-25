@@ -1,4 +1,4 @@
-/** PHASER VFX & ENV: Organic Wind Propagation & No-Clipping Grass */
+/** PHASER VFX & ENV: Ultra-Smooth Inertia Nature & Sea */
 
 class VFXSystem {
     constructor() {
@@ -96,10 +96,9 @@ class EnvSystem {
         const TEXTURE_SCALE = 4.0; 
 
         // 1. 草のアニメーションフレーム生成
-        // ★修正: キャンバス幅を拡張してクリッピングを防ぐ
         if (!scene.textures.exists('hd_grass_0')) {
             const baseSize = 64 * TEXTURE_SCALE;
-            const canvasW = baseSize * 1.8; // 幅を広めに確保
+            const canvasW = baseSize * 1.8; 
             const canvasH = baseSize;
             const palettes = [0x224411, 0x335522, 0x446633, 0x1a330a];
             
@@ -107,7 +106,6 @@ class EnvSystem {
             for(let i=0; i<45; i++) {
                 bladeDefs.push({
                     col: palettes[Math.floor(Math.random() * palettes.length)],
-                    // 開始位置を中心付近に
                     startX: canvasW/2 + (Math.random()-0.5) * (baseSize * 0.15),
                     len: (baseSize * 0.5) + Math.random() * (baseSize * 0.5),
                     lean: (Math.random() - 0.5) * (baseSize * 0.9),
@@ -118,7 +116,6 @@ class EnvSystem {
             // 16段階生成
             for (let frame = 0; frame < 16; frame++) {
                 const g = scene.make.graphics({x:0, y:0, add:false});
-                // 土台
                 g.fillStyle(0x112205, 0.9); 
                 g.fillEllipse(canvasW/2, canvasH, baseSize/4, baseSize/10);
 
@@ -128,8 +125,6 @@ class EnvSystem {
                     g.lineStyle(1.5 * TEXTURE_SCALE, b.col, 1.0);
                     const startX = b.startX;
                     const startY = canvasH;
-                    
-                    // しなり具合 (右へ大きく)
                     const windX = bendFactor * (baseSize * 0.8); 
                     const windY = Math.abs(windX) * 0.25; 
 
@@ -178,6 +173,9 @@ class EnvSystem {
             grass.setScale((0.8 + Math.random() * 0.4) * scaleFactor); 
             grass.setDepth(y+oy);
             
+            // ★重要: 現在の風の状態を保持する変数を追加
+            grass.currentWindValue = 0;
+
             grass.origX = x + ox; grass.origY = y + oy;
             const tintVar = Math.floor(Math.random() * 30); 
             grass.setTint(Phaser.Display.Color.GetColor(180 + tintVar, 220 + tintVar, 180 + tintVar));
@@ -218,6 +216,7 @@ class EnvSystem {
 
     onGust() { this.gustPower = 1.0; }
 
+    // ★重要: 慣性(Lerp)を導入してカクつきを完全撤廃
     update(time) {
         this.waveTime += 0.04; 
         const t = this.waveTime;
@@ -225,29 +224,28 @@ class EnvSystem {
         this.gustPower *= 0.97;
         if(this.gustPower < 0.01) this.gustPower = 0;
 
-        // 1. 草の処理 (Grass Wave: 伝播する波)
+        // 1. 草の処理 (Grass Wave)
         this.grassElements = this.grassElements.filter(g => g.scene);
         for (let i = 0; i < this.grassElements.length; i++) {
             const g = this.grassElements[i];
             
-            // ★重要: X座標に応じた波の伝播 (係数を大きくして波長を短く＝画面内に複数の波が見えるように)
-            // t * speed - x * frequency
+            // ① 目標となる風の強さを計算
             const wavePhase = t * 1.2 - g.origX * 0.015; 
-            
-            // うねり (0.0 〜 1.0)
             const bigWave = (Math.sin(wavePhase) + 1.0) * 0.5;
-            
-            // ゆらぎ (座標依存)
             const ripple = Math.sin(t * 3.0 + g.origY * 0.1) * 0.1;
             const gust = this.gustPower * 0.8;
 
-            // 風力計算
-            let windValue = (bigWave * 0.7) + 0.1 + ripple + gust;
-            windValue = Math.max(0, Math.min(1.0, windValue));
+            let targetWindValue = (bigWave * 0.7) + 0.1 + ripple + gust;
+            targetWindValue = Math.max(0, Math.min(1.0, targetWindValue));
 
-            // フレーム補間
+            // ★重要: 慣性処理 (現在値を目標値に少しずつ近づける)
+            // stiffnessが小さいほどゆっくり追従し、滑らかになる
+            const stiffness = 0.1;
+            g.currentWindValue += (targetWindValue - g.currentWindValue) * stiffness;
+
+            // ② 滑らかになった現在値を使ってフレーム選択と補間を行う
             const maxFrames = 15;
-            const floatFrame = windValue * maxFrames;
+            const floatFrame = g.currentWindValue * maxFrames;
             const frameIdx = Math.floor(floatFrame);
             const remainder = floatFrame - frameIdx;
 
@@ -257,29 +255,22 @@ class EnvSystem {
             g.skewX = remainder * 0.15; 
         }
 
-        // 2. 木の処理 (Tree Sway: 確実に動かす)
+        // 2. 木の処理 (Tree Sway)
         this.treeElements = this.treeElements.filter(tr => tr.scene);
         for (let i = 0; i < this.treeElements.length; i++) {
             const tr = this.treeElements[i];
             
-            // 草と同じ波に乗せるが、少し遅らせる
             const wavePhase = t * 1.2 - tr.origX * 0.015 - 0.5; 
-            
-            // 木は振幅を確保
-            const sway = Math.sin(wavePhase) * 0.15; // ±0.15ラジアン
-            
+            const sway = Math.sin(wavePhase) * 0.15; 
             const gust = this.gustPower * 0.25;
-            
-            // 右への風圧 (常に少し右へ)
             const baseLean = 0.05;
 
             const targetSkew = sway + baseLean + gust;
             
-            // 慣性ありで追従
+            // 木も慣性ありで追従
             tr.currentSkew += (targetSkew - tr.currentSkew) * 0.05; 
             
             tr.skewX = tr.baseSkew + tr.currentSkew;
-            // 根元もしなる
             tr.angle = tr.currentSkew * 5;
         }
     }
