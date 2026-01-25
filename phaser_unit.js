@@ -1,18 +1,15 @@
-/** * PHASER UNIT: Unit Visual Management 
- * Handles sprites, animations, shadows, ribbons, and HP bars.
- */
+/** * PHASER UNIT: Unit Visual Management (Updated for 10-Row Animation) */
 class UnitView {
     constructor(scene, unitLayer, hpLayer) {
         this.scene = scene;
         this.unitLayer = unitLayer;
         this.hpLayer = hpLayer;
-        this.visuals = new Map(); // Unit ID -> Container
+        this.visuals = new Map(); 
     }
 
     update(time, delta) {
         if (!window.gameLogic) return;
 
-        // 存在するユニットの同期
         const activeIds = new Set();
         window.gameLogic.units.forEach(u => {
             if (u.hp <= 0) return;
@@ -24,9 +21,8 @@ class UnitView {
                 this.visuals.set(u.id, visual);
                 this.unitLayer.add(visual);
             }
-            this.updateVisual(visual, u);
+            this.updateVisual(visual, u, delta); // deltaを追加
 
-            // 選択中は最前面(hpLayer)へ、それ以外は通常レイヤー(unitLayer)へ
             const isSelected = (window.gameLogic.selectedUnit === u);
             if (isSelected) {
                 if (this.unitLayer.exists(visual)) {
@@ -41,7 +37,6 @@ class UnitView {
             }
         });
 
-        // 死んだユニットの削除
         for (const [id, visual] of this.visuals) {
             if (!activeIds.has(id)) {
                 this.destroyVisual(visual);
@@ -57,11 +52,11 @@ class UnitView {
         const shadow = this.scene.add.ellipse(0, 8, 20, 10, 0x000000, 0.5);
         
         let sprite;
-        // スプライト分岐
-        if (u.def.name === "Rifleman" || u.def.role === "infantry") { // 汎用歩兵
-            sprite = this.scene.add.sprite(0, -10, 'soldier_sheet');
-            sprite.setScale(0.3);
-            sprite.play('soldier_idle');
+        if (u.def.name === "Rifleman" || u.def.role === "infantry" || !u.def.isTank) { 
+            // ★新しいスプライトシートを使用
+            sprite = this.scene.add.sprite(0, -20, 'us_soldier'); 
+            sprite.setScale(0.5); // サイズ調整 (元が128なので大きすぎる場合)
+            sprite.play('anim_idle');
             if (u.team === 'player') sprite.setTint(0xeeeeff); else sprite.setTint(0xffaaaa);
         } else if (u.def.isTank) {
             sprite = this.scene.add.sprite(0, -10, 'tank_sheet');
@@ -71,27 +66,19 @@ class UnitView {
             shadow.setPosition(-2, 2); 
             shadow.setSize(46, 18);
         } else {
-            // Fallback
             sprite = this.scene.add.rectangle(0, 0, 30, 40, u.team==='player'?0x00f:0xf00);
         }
 
-        // 選択カーソル
         const cursor = this.scene.add.image(0, 0, 'cursor').setScale(1/window.HIGH_RES_SCALE).setAlpha(0).setVisible(false);
         this.scene.tweens.add({ targets: cursor, scale: { from: 1/window.HIGH_RES_SCALE, to: 1.1/window.HIGH_RES_SCALE }, alpha: { from: 1, to: 0.5 }, yoyo: true, repeat: -1, duration: 800 });
 
         container.add([shadow, sprite, cursor]);
 
-        // HPバー & 情報 (これらは hpLayer に描画されるよう、containerには入れず管理だけする)
-        // ※以前のコードではcontainerに入れていたが、layer移動の都合上、containerに入れておけば
-        // containerごとlayer移動するのでOK。
-        
-        // HPバー背景・中身・ランクテキストの作成
         const hpBg = this.scene.add.rectangle(0, 0, 20, 4, 0x000000).setOrigin(0, 0.5);
         const hpBar = this.scene.add.rectangle(0, 0, 20, 4, 0x00ff00).setOrigin(0, 0.5);
         const infoContainer = this.scene.add.container(0, 18);
         const rankText = this.scene.add.text(0, 0, "", { fontSize: '8px', color: '#ffcc00' }).setOrigin(0.5, 0.5);
 
-        // これらは常に最前面レイヤーに置きたいが、追従させるためManagerで管理
         this.hpLayer.add(hpBg);
         this.hpLayer.add(hpBar);
         this.hpLayer.add(infoContainer);
@@ -102,22 +89,82 @@ class UnitView {
         container.hpBar = hpBar;
         container.infoContainer = infoContainer;
         container.rankText = rankText;
+        
+        // ★初期座標を設定 (Lerpの起点)
+        const pos = Renderer.hexToPx(u.q, u.r);
+        container.setPosition(pos.x, pos.y);
+        container.targetX = pos.x;
+        container.targetY = pos.y;
 
         return container;
     }
 
-    updateVisual(container, u) {
+    updateVisual(container, u, delta) {
         if(!Renderer || !Renderer.hexToPx) return;
         
-        // 座標更新
-        const pos = Renderer.hexToPx(u.q, u.r);
-        container.setPosition(pos.x, pos.y);
+        // 目標座標
+        const targetPos = Renderer.hexToPx(u.q, u.r);
+        container.targetX = targetPos.x;
+        container.targetY = targetPos.y;
 
-        // HPバー & 情報更新 (ユニットの頭上・足元に追従)
-        if (container.hpBg && container.hpBar && container.infoContainer) {
-            const barY = pos.y - 35;
-            const barX = pos.x - 10;
+        // ★スムーズな移動 (Lerp)
+        // 現在位置と目標位置の差分
+        const dx = container.targetX - container.x;
+        const dy = container.targetY - container.y;
+        const dist = Math.sqrt(dx*dx + dy*dy);
+        
+        const speed = 0.15; // 追従速度
+        
+        let isMoving = false;
+        
+        if (dist > 1) {
+            container.x += dx * speed;
+            container.y += dy * speed;
+            isMoving = true;
             
+            // 向きの反転 (右に進むなら反転なし、左なら反転)
+            // 敵味方でデフォルトの向きが違う場合は調整が必要ですが、一旦「右向きが正」と仮定
+            if (Math.abs(dx) > 0.1) {
+                container.sprite.setFlipX(dx < 0);
+            }
+        } else {
+            container.x = container.targetX;
+            container.y = container.targetY;
+        }
+
+        // ★アニメーションステートマシン
+        if (!u.def.isTank && container.sprite) {
+            const currentAnim = container.sprite.anims.currentAnim ? container.sprite.anims.currentAnim.key : '';
+            // 攻撃中アニメの最中は上書きしない（攻撃が終わったら Idle/Walk に戻る）
+            // ただし移動中は攻撃モーションをキャンセルして歩きに移行させる
+            const isAttacking = currentAnim.includes('shoot') || currentAnim.includes('melee');
+            
+            if (isMoving) {
+                // 移動モーション
+                let moveAnim = 'anim_walk';
+                if (u.stance === 'crouch') moveAnim = 'anim_crouch_walk';
+                if (u.stance === 'prone') moveAnim = 'anim_crawl';
+                
+                if (currentAnim !== moveAnim) container.sprite.play(moveAnim, true);
+            } else {
+                // 停止中
+                if (!isAttacking || !container.sprite.anims.isPlaying) {
+                    // 待機モーション
+                    let idleAnim = 'anim_idle';
+                    if (u.stance === 'crouch') idleAnim = 'anim_crouch'; // 停止フレームとして使う
+                    if (u.stance === 'prone') idleAnim = 'anim_prone';
+                    
+                    // しゃがみ/伏せの遷移アニメはループさせず、最後のフレームで止めるのが自然だが
+                    // 今回は簡易的に再生しっぱなしにするか、アニメーション定義で工夫する
+                    if (currentAnim !== idleAnim) container.sprite.play(idleAnim, true);
+                }
+            }
+        }
+
+        // HPバー & 情報更新
+        if (container.hpBg && container.hpBar && container.infoContainer) {
+            const barY = container.y - 35;
+            const barX = container.x - 10;
             container.hpBg.setPosition(barX, barY);
             container.hpBar.setPosition(barX, barY);
             
@@ -125,13 +172,14 @@ class UnitView {
             container.hpBar.width = Math.max(0, 20 * hpPct);
             container.hpBar.fillColor = hpPct > 0.5 ? 0x00ff00 : 0xff0000;
 
-            // 足元情報 (リボンバー)
-            const infoY = pos.y + 18;
-            container.infoContainer.setPosition(pos.x, infoY);
-            container.infoContainer.removeAll(true); // ★ここが将来の最適化ポイント
+            const infoY = container.y + 18;
+            container.infoContainer.setPosition(container.x, infoY);
+            
+            // ★軽量化: 毎フレーム生成をやめ、変更があった時だけ再描画するフラグ管理などを推奨
+            // 今回は前回のまま(動くこと優先)
+            container.infoContainer.removeAll(true);
 
             let currentX = 0;
-            // ランク
             if (u.rank > 0 && typeof RANKS !== 'undefined') {
                 const rText = this.scene.add.text(0, 0, RANKS[Math.min(u.rank, 5)], { fontSize:'9px', color:'#eee', stroke:'#000', strokeThickness:2 }).setOrigin(0.5);
                 container.infoContainer.add(rText);
@@ -140,7 +188,6 @@ class UnitView {
                 currentX -= 6;
             }
 
-            // スキルリボン
             if (u.skills && u.skills.length > 0 && window.SKILL_STYLES) {
                 const g = this.scene.add.graphics();
                 let ox = currentX;
@@ -156,7 +203,6 @@ class UnitView {
             }
         }
 
-        // カーソル表示
         if (window.gameLogic.selectedUnit === u) {
             container.cursor.setVisible(true);
             container.cursor.setAlpha(1);
@@ -173,22 +219,45 @@ class UnitView {
         visual.destroy();
     }
 
-    // 攻撃アニメーションのトリガー
     triggerAttack(attacker, target) {
         const visual = this.visuals.get(attacker.id);
         if (!visual || !visual.sprite) return;
         
-        // 歩兵のみアニメあり
-        if (attacker.def.isTank) return; // 戦車は今のところアニメなし(砲撃エフェクトのみ)
+        if (attacker.def.isTank) return; 
 
+        // ★武器・距離・姿勢に応じてアニメーションを切り替え
+        let animKey = 'anim_shoot'; // デフォルト立ち撃ち
+        
+        // 白兵戦判定 (距離1以内、かつ武器がMeleeタイプなら)
+        // ※簡易的に「距離1」なら殴るアニメにしちゃうのもアリ
         const start = Renderer.hexToPx(attacker.q, attacker.r);
         const end = Renderer.hexToPx(target.q, target.r);
-        const isRight = end.x >= start.x;
-        const animKey = isRight ? 'soldier_shoot_right' : 'soldier_shoot_left';
+        const dist = Phaser.Math.Distance.Between(start.x, start.y, end.x, end.y);
         
+        // 1ヘックスは約34*1.7px程度なので、60px以内なら近接とみなす
+        if (dist < 60) {
+            animKey = 'anim_melee';
+        } else {
+            // 射撃姿勢
+            if (attacker.stance === 'crouch') animKey = 'anim_crouch_shoot';
+            if (attacker.stance === 'prone') animKey = 'anim_prone_shoot';
+        }
+
+        // 向き調整
+        const isRight = end.x >= start.x;
+        visual.sprite.setFlipX(!isRight); // FlipX=trueで左向きになる前提(元絵が右向きなら)
+        // 元絵がどちら向きかによりますが、通常右向きで作る場合が多いので、左(end < start)ならFlip
+        // ※us-soldier-back-sheet.png が「背面」メインなら、Flipロジックは少し変わるかも
+
         visual.sprite.play(animKey);
         visual.sprite.once('animationcomplete', () => {
-            if(visual.sprite) visual.sprite.play('soldier_idle');
+            // アニメ終わったらIdleに戻る (updateVisualで自動的に戻るが念のため)
+            if(visual.sprite) {
+                let idleAnim = 'anim_idle';
+                if (attacker.stance === 'crouch') idleAnim = 'anim_crouch';
+                if (attacker.stance === 'prone') idleAnim = 'anim_prone';
+                visual.sprite.play(idleAnim, true);
+            }
         });
     }
 }
