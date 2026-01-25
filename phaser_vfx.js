@@ -1,4 +1,4 @@
-/** PHASER VFX & ENV: Safe Bezier Grass & Dense Nature */
+/** PHASER VFX & ENV: Realistic Sway, Density, and Gusts (Fixed Skew) */
 
 class VFXSystem {
     constructor() {
@@ -12,7 +12,7 @@ class VFXSystem {
     update() {
         // --- Wind Gust System ---
         this.windTimer++;
-        if (this.windTimer > 300 + Math.random() * 300) {
+        if (this.windTimer > 300 + Math.random() * 300) { // 頻度調整
             this.triggerWindGust();
             this.windTimer = 0;
         }
@@ -27,7 +27,7 @@ class VFXSystem {
             p.y += p.vy;
             
             if (p.type === 'wind') {
-                p.alpha = Math.min(1, p.life / 30) * 0.1; // さらに淡く(0.1)
+                p.alpha = Math.min(1, p.life / 30) * 0.15; // 淡く
             } else if (p.type === 'proj') {
                 p.progress += p.speed;
                 let t = p.progress;
@@ -53,19 +53,20 @@ class VFXSystem {
     }
 
     triggerWindGust() {
-        // 画面全体を流れる非常に淡い風
-        for (let i = 0; i < 60; i++) {
+        // 画面全体を流れる淡い風の線
+        for (let i = 0; i < 50; i++) {
             this.add({
-                x: -100 - Math.random() * 400,
+                x: -100 - Math.random() * 300,
                 y: Math.random() * 2000,
-                vx: 12 + Math.random() * 8, 
+                vx: 15 + Math.random() * 10, // 速い
                 vy: 2 + Math.random() * 2,
-                life: 250,
-                color: "#ddffff",
-                size: 1, 
+                life: 200,
+                color: "#ccffff",
+                size: 1, // 細い線
                 type: 'wind'
             });
         }
+        // 環境オブジェクトへの影響
         if (window.EnvSystem) window.EnvSystem.applyWind();
     }
 
@@ -78,7 +79,7 @@ class VFXSystem {
                 graphics.lineStyle(1, 0xffffff, p.alpha);
                 graphics.beginPath();
                 graphics.moveTo(p.x, p.y);
-                graphics.lineTo(p.x - p.vx * 6, p.y - p.vy * 6); // 軌跡長め
+                graphics.lineTo(p.x - p.vx * 4, p.y - p.vy * 4); // 長い軌跡
                 graphics.strokePath();
             } 
             else {
@@ -123,7 +124,7 @@ class VFXSystem {
     }
 }
 
-// ★環境演出システム: 安全な描画メソッドを使用
+// ★環境演出システム: 密度の高い草木 & しなる風
 class EnvSystem {
     constructor() {
         this.grassElements = [];
@@ -136,54 +137,40 @@ class EnvSystem {
             const g = scene.make.graphics({x:0, y:0, add:false});
             const colors = [0x335522, 0x446633, 0x224411]; 
             
-            for(let i=0; i<16; i++) { // 本数多め
+            for(let i=0; i<12; i++) {
                 g.lineStyle(1.5, colors[Math.floor(Math.random() * colors.length)], 0.9);
                 
-                const rootX = 12 + (Math.random()-0.5)*6;
-                const rootY = 24;
-                const tipX = rootX + (Math.random()-0.5) * 14;
-                const tipY = 24 - (10 + Math.random() * 10);
+                const rootX = 10 + (Math.random()-0.5)*4;
+                const rootY = 20;
+                const tipX = rootX + (Math.random()-0.5) * 12;
+                const tipY = 20 - (8 + Math.random() * 8);
                 
                 // 制御点 (少し曲げる)
-                const midX = (rootX + tipX)/2 + (Math.random()-0.5)*6;
+                const midX = (rootX + tipX)/2 + (Math.random()-0.5)*4;
                 const midY = (rootY + tipY)/2;
 
-                // ★修正: Phaser.Curves.QuadraticBezier を使用して点を取得し描画
+                // Phaser.Curves.QuadraticBezier を使用して描画
                 const curve = new Phaser.Curves.QuadraticBezier(
                     new Phaser.Math.Vector2(rootX, rootY),
                     new Phaser.Math.Vector2(midX, midY),
                     new Phaser.Math.Vector2(tipX, tipY)
                 );
-                
-                const points = curve.getPoints(4); // 4分割で十分滑らか
+                const points = curve.getPoints(4);
                 g.strokePoints(points);
             }
-            g.generateTexture('bushy_grass', 24, 24);
+            g.generateTexture('bushy_grass', 20, 20);
         }
 
         // 2. 針葉樹 (Conifer)
         if (!scene.textures.exists('conifer_tree')) {
             const g = scene.make.graphics({x:0, y:0, add:false});
-            
-            // 幹
-            g.fillStyle(0x332211);
-            g.fillRect(13, 45, 4, 10);
-
-            // 葉（濃い緑）
-            const leafColor = 0x113311;
-            const highlight = 0x224422;
-            
+            g.fillStyle(0x332211); g.fillRect(13, 45, 4, 10);
+            const leafColor = 0x113311; const highlight = 0x224422;
             const drawLayer = (y, w, h) => {
-                g.fillStyle(leafColor);
-                g.fillTriangle(15, y-h, 15-w/2, y, 15+w/2, y);
-                g.fillStyle(highlight); 
-                g.beginPath(); g.moveTo(15, y-h); g.lineTo(15-w/2, y); g.lineTo(15, y); g.fill();
+                g.fillStyle(leafColor); g.fillTriangle(15, y-h, 15-w/2, y, 15+w/2, y);
+                g.fillStyle(highlight); g.beginPath(); g.moveTo(15, y-h); g.lineTo(15-w/2, y); g.lineTo(15, y); g.fill();
             };
-
-            drawLayer(45, 30, 20); // 下
-            drawLayer(30, 24, 18); // 中
-            drawLayer(18, 18, 15); // 上
-
+            drawLayer(45, 30, 20); drawLayer(30, 24, 18); drawLayer(18, 18, 15);
             g.generateTexture('conifer_tree', 30, 55);
         }
     }
@@ -195,9 +182,9 @@ class EnvSystem {
 
     spawnGrass(scene, group, x, y) {
         // ★倍増: 1ヘックスに大量の藪
-        const count = 15 + Math.floor(Math.random() * 8);
+        const count = 12 + Math.floor(Math.random() * 8);
         for(let i=0; i<count; i++) {
-            const r = Math.random() * (HEX_SIZE * 0.95);
+            const r = Math.random() * (HEX_SIZE * 0.9);
             const angle = Math.random() * Math.PI * 2;
             const ox = Math.cos(angle) * r;
             const oy = Math.sin(angle) * r * 0.866;
@@ -206,12 +193,14 @@ class EnvSystem {
             grass.setOrigin(0.5, 1.0); 
             grass.setScale(0.8 + Math.random() * 0.5);
             grass.setDepth(y+oy); 
-            grass.baseSkew = (Math.random()-0.5) * 0.1;
-            grass.setSkewX(grass.baseSkew);
+            grass.baseSkew = (Math.random()-0.5) * 0.1; // 個体差
+            
+            // ★修正: setSkewX ではなくプロパティに代入
+            grass.skewX = grass.baseSkew;
             
             // 地面色に馴染ませる
             grass.setTint(0xaaddaa);
-
+            
             group.add(grass);
             this.grassElements.push(grass);
 
@@ -230,16 +219,17 @@ class EnvSystem {
 
     spawnTrees(scene, group, x, y) {
         // ★倍増: 針葉樹の森
-        const count = 6 + Math.floor(Math.random() * 4);
+        const count = 5 + Math.floor(Math.random() * 4);
         
         for(let i=0; i<count; i++) {
-            const r = Math.random() * (HEX_SIZE * 0.85);
+            const r = Math.random() * (HEX_SIZE * 0.8);
             const angle = Math.random() * Math.PI * 2;
             const ox = Math.cos(angle) * r;
             const oy = Math.sin(angle) * r * 0.866;
             
             const scale = 0.7 + Math.random() * 0.6;
 
+            // 影
             const shadow = scene.add.ellipse(x+ox, y+oy, 20*scale, 10*scale, 0x000000, 0.4);
             group.add(shadow);
 
@@ -252,11 +242,11 @@ class EnvSystem {
             group.add(tree);
             this.treeElements.push(tree);
 
-            // 木のそよぎ
+            // 木のそよぎ (Skewを使って幹をしならせる)
             scene.tweens.add({
                 targets: tree,
-                skewX: { from: -0.03, to: 0.03 },
-                duration: 3000 + Math.random() * 1500,
+                skewX: { from: -0.02, to: 0.02 },
+                duration: 2500 + Math.random() * 1500,
                 yoyo: true,
                 repeat: -1,
                 ease: 'Sine.easeInOut',
@@ -278,14 +268,15 @@ class EnvSystem {
         });
     }
 
+    // ★風発生時の反応 (しなる)
     applyWind() {
         // 草: 大きく傾く
         this.grassElements.forEach(g => {
             if(!g.scene) return;
             g.scene.tweens.add({
                 targets: g,
-                skewX: 0.6, 
-                angle: 12,
+                skewX: 0.5, // 右に大きく歪む
+                angle: 10,
                 duration: 400,
                 yoyo: true,
                 ease: 'Cubic.out'
@@ -295,10 +286,11 @@ class EnvSystem {
         // 木: 重くしなる
         this.treeElements.forEach(t => {
             if(!t.scene) return;
+            // 遠くの木から順に揺れるような遅延を入れるとベストだが、ここではランダム
             t.scene.tweens.add({
                 targets: t,
-                skewX: 0.2, 
-                duration: 900,
+                skewX: 0.15, 
+                duration: 800,
                 yoyo: true,
                 ease: 'Sine.out',
                 delay: Math.random() * 200
