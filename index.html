@@ -19,26 +19,17 @@
 
         #resizer { width: 6px; background: #222; cursor: col-resize; z-index: 30; border-left: 1px solid #000; border-right: 1px solid #333; }
         
-        /* サイドバー設定 */
         #sidebar { 
             width: 340px; min-width: 280px; 
             background: var(--panel); border-left: 1px solid var(--border); 
             display: flex; flex-direction: column; z-index: 20; position: relative; 
             transition: width 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), min-width 0.3s;
-            pointer-events: none; /* 大枠はクリック透過 */
+            pointer-events: none; 
         }
-        #sidebar > * { pointer-events: auto; } /* 中身はクリック有効 */
+        #sidebar > * { pointer-events: auto; }
 
-        /* ★修正: 閉じたとき、親自体は隠さず、中身を隠す (トグルボタンを生かすため) */
-        #sidebar.collapsed { 
-            width: 0 !important; 
-            min-width: 0 !important; 
-            border: none; 
-        }
-        /* 中身のパネル要素を隠す */
-        #sidebar.collapsed > *:not(#sidebar-toggle) { 
-            display: none; 
-        }
+        #sidebar.collapsed { width: 0 !important; min-width: 0 !important; border: none; }
+        #sidebar.collapsed > *:not(#sidebar-toggle) { display: none; }
         
         #sidebar-toggle { 
             position: absolute; top: 0; left: -24px; 
@@ -48,7 +39,7 @@
             cursor: pointer; z-index: 40; 
             display: flex; justify-content: center; align-items: center; 
             transition: left 0.3s;
-            pointer-events: auto; /* ここはクリック必須 */
+            pointer-events: auto; 
         }
         #sidebar-toggle:hover { background: #333; color: #fff; }
 
@@ -65,6 +56,7 @@
         .loadout-container { display: flex; gap: 8px; padding: 10px; background: #181818; }
         .main-slot-area { flex: 5; display: flex; flex-direction: column; }
         .sub-slot-area { flex: 4; display: flex; flex-direction: column; gap: 4px; }
+        
         .slot { background: #111; border: 1px solid #444; padding: 6px; position: relative; transition: 0.1s; cursor: grab; display: flex; flex-direction: column; justify-content: center; overflow: hidden; }
         .slot:active { cursor: grabbing; }
         .slot:hover { border-color: #888; background: #222; }
@@ -74,9 +66,17 @@
         .slot-name { font-size: 12px; color: #ddd; font-weight: bold; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .slot.bag-item .slot-name { font-size: 10px; }
         .slot-meta { font-size: 9px; color: #888; display: flex; justify-content: space-between; }
-        .ammo-bar { height: 4px; background: #333; margin-top: 4px; width: 100%; border-radius: 2px; overflow: hidden; }
-        .ammo-fill { height: 100%; background: #d84; transition: width 0.3s; }
-        .ammo-text { font-size: 9px; color: #aaa; text-align: right; margin-top: 2px; }
+        
+        /* ★修正: 弾薬ゲージ (Bullet Gauge) */
+        .ammo-gauge { display: flex; gap: 2px; margin-top: 4px; flex-wrap: wrap; }
+        .bullet { width: 3px; height: 8px; background: #d84; border-radius: 1px; box-shadow: 0 0 2px #d84; }
+        .shell { width: 6px; height: 12px; background: #da4; border: 1px solid #000; border-radius: 2px 2px 0 0; }
+        .shell.empty { background: #333; border-color: #444; }
+        
+        /* ★修正: 明滅アラート (リロード待ち) */
+        @keyframes blinkRed { 0% { border-color: #f00; background: #311; } 50% { border-color: #800; background: #100; } 100% { border-color: #f00; background: #311; } }
+        .slot.blink-alert { animation: blinkRed 1s infinite; cursor: pointer; }
+        
         .slot.dragging { opacity: 0.4; border: 2px dashed #999; }
         .slot.drag-over { border: 2px solid #fff; background: #333; transform: scale(1.02); }
         .slot.empty { opacity: 0.2; cursor: default; }
@@ -112,8 +112,7 @@
         #command-menu { 
             position: absolute; display: none; 
             background: rgba(10, 15, 10, 0.95); border: 1px solid #d84; 
-            padding: 5px; 
-            z-index: 10000; 
+            padding: 5px; z-index: 10000; 
             box-shadow: 0 0 15px rgba(0,0,0,0.8); 
             border-radius: 4px; min-width: 120px; overflow: visible; 
         }
@@ -127,6 +126,11 @@
         .sub-btn { display: block; width: 100%; box-sizing: border-box; background: #222; color: #ccc; padding: 5px; text-align: center; font-size: 10px; cursor: pointer; border-bottom: 1px solid #333; }
         .sub-btn:hover { background: #d84; color: #000; }
         .mode-indicator { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.7); border: 1px solid #0f0; color: #0f0; padding: 5px 20px; font-weight: bold; font-size: 14px; display: none; z-index: 80; pointer-events: none; }
+        
+        /* Auto Reload Toggle Style */
+        .ar-check { display: flex; align-items: center; font-size: 10px; color: #888; margin-top: 5px; cursor: pointer; }
+        .ar-check input { margin-right: 5px; }
+        .ar-check:hover { color: #fff; }
     </style>
 </head>
 <body>
