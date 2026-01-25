@@ -1,7 +1,8 @@
-/** * PHASER BRIDGE: Animation Definitions & Asset Loading */
+/** * PHASER BRIDGE: Added Static Idle Animations */
 let phaserGame = null;
 
 const Renderer = {
+    // ... (init, resize など変更なし) ...
     game: null, 
     isMapDragging: false, 
     isCardDragging: false,
@@ -13,7 +14,7 @@ const Renderer = {
             width: document.getElementById('game-view').clientWidth, 
             height: document.getElementById('game-view').clientHeight, 
             backgroundColor: '#0b0e0a', 
-            pixelArt: false, // ドット絵ならtrue推奨ですが、高解像度素材のようなのでfalse
+            pixelArt: false, 
             scene: [MainScene, UIScene], 
             fps: { target: 60 }, 
             physics: { default: 'arcade', arcade: { debug: false } }, 
@@ -48,7 +49,6 @@ const Renderer = {
         for (let card of ui.cards) { const dx = Math.abs(x - card.x); const dy = Math.abs(y - card.y); if (dx < 70 && dy < 100) return true; } 
         return false; 
     },
-    
     playAttackAnim(attacker, target) {
         const main = this.game.scene.getScene('MainScene');
         if (main && main.unitView) main.unitView.triggerAttack(attacker, target);
@@ -72,7 +72,7 @@ const Renderer = {
     }
 };
 
-// --- Card / UIScene (省略: 変更なし) ---
+// ... Card, UIScene クラスは変更なし (省略) ...
 class Card extends Phaser.GameObjects.Container {
     constructor(scene, x, y, type) {
         super(scene, x, y); this.scene = scene; this.cardType = type; this.setSize(140, 200);
@@ -165,10 +165,7 @@ class MainScene extends Phaser.Scene {
     
     preload() { 
         if(window.EnvSystem) window.EnvSystem.preload(this);
-        // ★重要: 新しいスプライトシート (128x128)
         this.load.spritesheet('us_soldier', 'asset/us-soldier-back-sheet.png', { frameWidth: 128, frameHeight: 128 });
-        
-        // 既存アセット
         this.load.spritesheet('soldier_sheet', 'asset/soldier_sheet_1.png', { frameWidth: 128, frameHeight: 128 });
         this.load.spritesheet('tank_sheet', 'asset/tank_sheet_1.png', { frameWidth: 128, frameHeight: 128 });
         this.load.spritesheet('explosion_sheet', 'asset/explosion-sheet.png', { frameWidth: 128, frameHeight: 128 });
@@ -193,29 +190,27 @@ class MainScene extends Phaser.Scene {
 
         this.unitView = new UnitView(this, this.unitGroup, this.hpGroup);
 
-        // --- Animations (新しい定義) ---
-        // 0. 立って待機
+        // --- Animations ---
         this.anims.create({ key: 'anim_idle', frames: this.anims.generateFrameNumbers('us_soldier', { start: 0, end: 7 }), frameRate: 8, repeat: -1 });
-        // 1. しゃがむ (遷移)
+        
+        // 遷移（Transition）
         this.anims.create({ key: 'anim_crouch', frames: this.anims.generateFrameNumbers('us_soldier', { start: 8, end: 15 }), frameRate: 15, repeat: 0 });
-        // 2. しゃがみ撃ち
-        this.anims.create({ key: 'anim_crouch_shoot', frames: this.anims.generateFrameNumbers('us_soldier', { start: 16, end: 23 }), frameRate: 15, repeat: 0 });
-        // 3. 伏せる (遷移)
         this.anims.create({ key: 'anim_prone', frames: this.anims.generateFrameNumbers('us_soldier', { start: 24, end: 31 }), frameRate: 15, repeat: 0 });
-        // 4. 伏せ撃ち
+        
+        // ★追加: 姿勢維持（Static Idle）用の1フレームアニメ
+        // しゃがみ待機 (フレーム15)
+        this.anims.create({ key: 'anim_crouch_idle', frames: this.anims.generateFrameNumbers('us_soldier', { frames: [15] }), frameRate: 1, repeat: -1 });
+        // 伏せ待機 (フレーム31)
+        this.anims.create({ key: 'anim_prone_idle', frames: this.anims.generateFrameNumbers('us_soldier', { frames: [31] }), frameRate: 1, repeat: -1 });
+
+        this.anims.create({ key: 'anim_crouch_shoot', frames: this.anims.generateFrameNumbers('us_soldier', { start: 16, end: 23 }), frameRate: 15, repeat: 0 });
         this.anims.create({ key: 'anim_prone_shoot', frames: this.anims.generateFrameNumbers('us_soldier', { start: 32, end: 39 }), frameRate: 15, repeat: 0 });
-        // 5. 立ち撃ち
         this.anims.create({ key: 'anim_shoot', frames: this.anims.generateFrameNumbers('us_soldier', { start: 40, end: 47 }), frameRate: 15, repeat: 0 });
-        // 6. 歩き
         this.anims.create({ key: 'anim_walk', frames: this.anims.generateFrameNumbers('us_soldier', { start: 48, end: 55 }), frameRate: 10, repeat: -1 });
-        // 7. しゃがみ歩き
         this.anims.create({ key: 'anim_crouch_walk', frames: this.anims.generateFrameNumbers('us_soldier', { start: 56, end: 63 }), frameRate: 8, repeat: -1 });
-        // 8. 匍匐前進
         this.anims.create({ key: 'anim_crawl', frames: this.anims.generateFrameNumbers('us_soldier', { start: 64, end: 71 }), frameRate: 6, repeat: -1 });
-        // 9. 白兵攻撃
         this.anims.create({ key: 'anim_melee', frames: this.anims.generateFrameNumbers('us_soldier', { start: 72, end: 79 }), frameRate: 15, repeat: 0 });
 
-        // 旧・戦車用アニメ (継続使用)
         if (!this.anims.exists('tank_idle')) { this.anims.create({ key: 'tank_idle', frames: this.anims.generateFrameNumbers('tank_sheet', { frames: [7, 6, 5, 6, 7, 5] }), frameRate: 10, repeat: -1 }); }
         if (!this.anims.exists('explosion_anim')) { this.anims.create({ key: 'explosion_anim', frames: this.anims.generateFrameNumbers('explosion_sheet', { start: 0, end: 7 }), frameRate: 20, repeat: 0, hideOnComplete: true }); }
 
