@@ -1,5 +1,65 @@
-/** * PHASER BRIDGE: Refactored (Animations Moved to UnitView) */
+/** PHASER BRIDGE: Fixed Missing Helpers (getCardTextureKey, etc.) */
 let phaserGame = null;
+window.HIGH_RES_SCALE = 2.0; // 高解像度対応スケール
+
+// ★追加: テクスチャキー取得・生成ヘルパー
+window.getCardTextureKey = function(scene, type) {
+    const key = `card_icon_${type}`;
+    if (scene.textures.exists(key)) return key;
+
+    // テクスチャがない場合、PhaserのGraphicsで動的に生成
+    const g = scene.make.graphics({x: 0, y: 0, add: false});
+    
+    // 背景
+    g.fillStyle(0x1a1a1a);
+    g.fillRect(0, 0, 100, 100);
+    g.lineStyle(4, 0xdd8844);
+    
+    if (type.includes('tank')) {
+        // 戦車アイコン
+        g.fillStyle(0xdd8844);
+        g.fillRect(20, 40, 60, 30); // 車体
+        g.fillStyle(0xdd8844);
+        g.fillCircle(50, 40, 15);   // 砲塔
+        g.lineStyle(6, 0xdd8844);
+        g.beginPath(); g.moveTo(65, 35); g.lineTo(95, 30); g.strokePath(); // 砲身
+    } else if (type === 'heal') {
+        // 回復アイコン
+        g.fillStyle(0x44ff88);
+        g.fillRect(40, 20, 20, 60);
+        g.fillRect(20, 40, 60, 20);
+    } else {
+        // 歩兵アイコン (デフォルト)
+        g.fillStyle(0xdd8844);
+        g.fillCircle(50, 30, 15); // 頭
+        g.lineStyle(4, 0xdd8844);
+        g.beginPath(); g.moveTo(50, 45); g.lineTo(50, 80); g.strokePath(); // 胴体
+        g.beginPath(); g.moveTo(20, 55); g.lineTo(80, 55); g.strokePath(); // 腕
+        g.beginPath(); g.moveTo(50, 80); g.lineTo(30, 95); g.strokePath(); // 足
+        g.beginPath(); g.moveTo(50, 80); g.lineTo(70, 95); g.strokePath();
+    }
+    
+    g.generateTexture(key, 100, 100);
+    return key;
+};
+
+// ★追加: UI背景用グラデーション生成
+window.createGradientTexture = function(scene) {
+    const key = 'ui_gradient';
+    if (scene.textures.exists(key)) return;
+    
+    const canvas = document.createElement('canvas');
+    canvas.width = 100; canvas.height = 100;
+    const ctx = canvas.getContext('2d');
+    const grd = ctx.createLinearGradient(0, 0, 0, 100);
+    grd.addColorStop(0, 'rgba(0,0,0,0)');
+    grd.addColorStop(1, 'rgba(0,0,0,0.9)');
+    ctx.fillStyle = grd;
+    ctx.fillRect(0, 0, 100, 100);
+    
+    scene.textures.addCanvas(key, canvas);
+};
+
 
 const Renderer = {
     game: null, 
@@ -71,7 +131,6 @@ const Renderer = {
     }
 };
 
-// --- Card / UIScene (省略: 変更なし) ---
 class Card extends Phaser.GameObjects.Container {
     constructor(scene, x, y, type) {
         super(scene, x, y); this.scene = scene; this.cardType = type; this.setSize(140, 200);
@@ -82,9 +141,12 @@ class Card extends Phaser.GameObjects.Container {
         if(scene.textures.exists('card_frame')) { frame = scene.add.image(0, 0, 'card_frame').setDisplaySize(140, 200); } 
         else { frame = scene.add.rectangle(0,0,140,200,0x333).setStrokeStyle(2,0x888); }
         frame.setInteractive({ useHandCursor: true, draggable: true }); this.frameImage = frame;
+        
+        // ★修正: ここでヘルパー関数を使用
         const iconKey = window.getCardTextureKey(scene, type);
         const icon = scene.add.image(0, 10, iconKey).setScale(1/window.HIGH_RES_SCALE);
         if(type === 'aerial') icon.setDisplaySize(120, 80);
+        
         const text = scene.add.text(0, -80, type.toUpperCase(), { fontSize: '16px', color: '#d84', fontStyle: 'bold' }).setOrigin(0.5);
         const desc = scene.add.text(0, 70, "DRAG TO DEPLOY", { fontSize: '10px', color: '#888' }).setOrigin(0.5);
         this.visuals.add([shadow, contentBg, icon, text, desc, frame]); this.add(this.visuals); 
@@ -187,7 +249,6 @@ class MainScene extends Phaser.Scene {
         if(window.EnvSystem) window.EnvSystem.clear();
         this.scene.launch('UIScene'); 
 
-        // ★修正: ここでUnitViewを初期化 (アニメーション定義はUnitView内で行われる)
         this.unitView = new UnitView(this, this.unitGroup, this.hpGroup);
 
         this.input.on('wheel', (pointer, gameObjects, deltaX, deltaY, deltaZ) => { let newZoom = this.cameras.main.zoom; if (deltaY > 0) newZoom -= 0.5; else if (deltaY < 0) newZoom += 0.5; newZoom = Phaser.Math.Clamp(newZoom, 0.25, 4.0); this.tweens.add({ targets: this.cameras.main, zoom: newZoom, duration: 150, ease: 'Cubic.out' }); });
