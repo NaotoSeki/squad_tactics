@@ -1,3 +1,5 @@
+/** PHASER VFX & ENV: Particles, Explosions, and Swaying Nature */
+
 class VFXSystem {
     constructor() {
         this.emitters = [];
@@ -7,7 +9,7 @@ class VFXSystem {
     }
 
     update() {
-        // Particles
+        // Particles Update
         for (let i = this.particles.length - 1; i >= 0; i--) {
             let p = this.particles[i];
             if (p.delay > 0) { p.delay--; continue; }
@@ -34,11 +36,10 @@ class VFXSystem {
                 }
 
                 if (t >= 1) {
-                    // ★修正: 関数が存在するかチェックしてから実行
                     if (typeof p.onHit === 'function') {
                         p.onHit();
                     }
-                    p.life = 0; // Kill
+                    p.life = 0; 
                 }
             } else {
                 // Normal particle physics
@@ -71,7 +72,6 @@ class VFXSystem {
     }
 
     add(p) {
-        // Defaults
         p.life = p.life || 60;
         p.maxLife = p.life;
         p.vx = p.vx || 0;
@@ -95,7 +95,6 @@ class VFXSystem {
                 type: 'spark'
             });
         }
-        // Smoke
         for(let i=0; i<count/2; i++) {
             this.add({
                 x: x, y: y,
@@ -134,7 +133,6 @@ class VFXSystem {
     }
 
     addProj(params) {
-        // params: sx, sy, ex, ey, type, speed, arcHeight, onHit
         params.type = 'proj';
         params.life = 999; 
         this.add(params);
@@ -154,20 +152,101 @@ class VFXSystem {
         }
     }
 
-    addBombardment(scene, x, y, hex) {
-        // Aerial bombardment effect (multiple explosions)
-        scene.time.delayedCall(0, () => this.addExplosion(x, y, "#f80", 15));
-        scene.time.delayedCall(150, () => this.addExplosion(x+10, y+10, "#f40", 10));
-        scene.time.delayedCall(300, () => this.addExplosion(x-10, y-5, "#fa0", 12));
-        
-        // Logic callback to deal damage? Ideally passed from logic, but here purely visual.
-        // Logic handles damage separately.
-    }
-
     hexToInt(hex) {
         if(typeof hex === 'number') return hex;
         return parseInt(hex.replace('#', '0x'), 16);
     }
 }
 
+// ★追加: 環境演出システム (EnvSystem)
+class EnvSystem {
+    constructor() {
+        this.elements = [];
+    }
+
+    preload(scene) {
+        // 環境用テクスチャ生成
+        if (!scene.textures.exists('grass_blade')) {
+            const g = scene.make.graphics({x:0, y:0, add:false});
+            g.fillStyle(0x66aa44);
+            g.beginPath();
+            g.moveTo(0, 10); g.lineTo(2, 0); g.lineTo(4, 10);
+            g.fillPath();
+            g.generateTexture('grass_blade', 4, 10);
+        }
+        if (!scene.textures.exists('tree_crown')) {
+            const g = scene.make.graphics({x:0, y:0, add:false});
+            g.fillStyle(0x336622);
+            g.fillCircle(15, 15, 15);
+            g.generateTexture('tree_crown', 30, 30);
+        }
+    }
+
+    clear() {
+        this.elements = [];
+    }
+
+    spawnGrass(scene, group, x, y) {
+        // 草を数本生やす
+        for(let i=0; i<3; i++) {
+            const ox = (Math.random()-0.5)*30;
+            const oy = (Math.random()-0.5)*30;
+            const grass = scene.add.image(x+ox, y+oy, 'grass_blade');
+            grass.setOrigin(0.5, 1.0);
+            grass.setAlpha(0.8);
+            group.add(grass);
+            
+            // 揺れアニメーション
+            scene.tweens.add({
+                targets: grass,
+                angle: { from: -5, to: 5 },
+                duration: 1000 + Math.random() * 1000,
+                yoyo: true,
+                repeat: -1,
+                ease: 'Sine.easeInOut',
+                delay: Math.random() * 1000
+            });
+        }
+    }
+
+    spawnTrees(scene, group, x, y) {
+        // 木を生やす
+        const trunk = scene.add.rectangle(x, y+5, 6, 12, 0x443322);
+        group.add(trunk);
+        
+        const crown = scene.add.image(x, y-5, 'tree_crown');
+        crown.setAlpha(0.9);
+        group.add(crown);
+
+        // 木の揺れ
+        scene.tweens.add({
+            targets: crown,
+            scaleX: { from: 1.0, to: 1.05 },
+            scaleY: { from: 1.0, to: 0.95 },
+            duration: 2000 + Math.random() * 500,
+            yoyo: true,
+            repeat: -1,
+            ease: 'Sine.easeInOut'
+        });
+    }
+
+    registerWater(image, y, q, r, group) {
+        // 水面のキラキラ
+        if (!image.scene) return;
+        image.scene.tweens.add({
+            targets: image,
+            alpha: { from: 0.8, to: 1.0 },
+            duration: 1500 + Math.random() * 1000,
+            yoyo: true,
+            repeat: -1,
+            ease: 'Sine.easeInOut'
+        });
+    }
+
+    update(time) {
+        // 風などのグローバル影響があればここで計算
+    }
+}
+
 window.VFX = new VFXSystem();
+window.EnvSystem = new EnvSystem();
