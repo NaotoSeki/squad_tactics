@@ -1,4 +1,4 @@
-/** PHASER VFX & ENV: Particles, Explosions, and Swaying Nature */
+/** PHASER VFX & ENV: Fixed Projectile Color Crash */
 
 class VFXSystem {
     constructor() {
@@ -57,6 +57,8 @@ class VFXSystem {
         this.particles.forEach(p => {
             if (p.delay > 0) return;
             const alpha = p.life / p.maxLife;
+            
+            // ★修正: 色変換を安全に行う
             graphics.fillStyle(this.hexToInt(p.color), alpha);
             
             if (p.type === 'proj') {
@@ -77,6 +79,8 @@ class VFXSystem {
         p.vx = p.vx || 0;
         p.vy = p.vy || 0;
         p.delay = p.delay || 0;
+        // デフォルト色がない場合は白
+        if (!p.color) p.color = "#ffffff";
         this.particles.push(p);
     }
 
@@ -134,7 +138,9 @@ class VFXSystem {
 
     addProj(params) {
         params.type = 'proj';
-        params.life = 999; 
+        params.life = 999;
+        // ★修正: 弾丸のデフォルト色を設定 (黄色っぽい色)
+        if (!params.color) params.color = "#ffffaa"; 
         this.add(params);
     }
 
@@ -152,13 +158,17 @@ class VFXSystem {
         }
     }
 
+    // ★修正: 安全な色変換 (undefined対策)
     hexToInt(hex) {
-        if(typeof hex === 'number') return hex;
+        if (hex === undefined || hex === null) return 0xffffff; // デフォルト白
+        if (typeof hex === 'number') return hex;
+        // 文字列でない場合のエラー回避
+        if (typeof hex !== 'string') return 0xffffff;
         return parseInt(hex.replace('#', '0x'), 16);
     }
 }
 
-// ★追加: 環境演出システム (EnvSystem)
+// 環境演出システム (EnvSystem)
 class EnvSystem {
     constructor() {
         this.elements = [];
