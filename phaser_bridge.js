@@ -1,8 +1,8 @@
-/** PHASER BRIDGE: Visual Rollback (Beautiful Terrain Restored) */
+/** PHASER BRIDGE: Visual Fix (Correct Hex Scaling & Terrain) */
 let phaserGame = null;
 window.HIGH_RES_SCALE = 2.0; 
 
-// カードアイコン生成 (変更なし)
+// ■カードアイコン生成
 window.getCardTextureKey = function(scene, type) {
     const key = `card_icon_${type}`;
     if (scene.textures.exists(key)) return key;
@@ -27,34 +27,7 @@ window.getCardTextureKey = function(scene, type) {
     return key;
 };
 
-// ★修正: 地形テクスチャ (枠線を消し、Tintが映える純白ベースに)
-window.createHexTexture = function(scene) {
-    if (scene.textures.exists('hex_base')) return;
-    const g = scene.make.graphics({x: 0, y: 0, add: false});
-    // 少し大きめに作って重なりを持たせることで隙間を消す
-    const size = 62; // 60 -> 62
-    const w = size * Math.sqrt(3);
-    const h = size * 2;
-    
-    g.fillStyle(0xffffff); // 純白
-    g.beginPath();
-    for (let i = 0; i < 6; i++) {
-        const angle_deg = 60 * i - 30;
-        const angle_rad = Math.PI / 180 * angle_deg;
-        const px = w/2 + size * Math.cos(angle_rad);
-        const py = h/2 + size * Math.sin(angle_rad);
-        if (i === 0) g.moveTo(px, py); else g.lineTo(px, py);
-    }
-    g.closePath();
-    g.fillPath();
-    
-    // 枠線は描かない、または非常に薄く
-    // g.lineStyle(1, 0x444444, 0.3);
-    // g.strokePath();
-    
-    g.generateTexture('hex_base', w, h);
-};
-
+// ■UI背景
 window.createGradientTexture = function(scene) {
     const key = 'ui_gradient';
     if (scene.textures.exists(key)) return;
@@ -67,6 +40,39 @@ window.createGradientTexture = function(scene) {
     ctx.fillStyle = grd;
     ctx.fillRect(0, 0, 100, 100);
     scene.textures.addCanvas(key, canvas);
+};
+
+// ■★修正: ヘックス画像生成 (サイズ自動計算)
+window.createHexTexture = function(scene) {
+    if (scene.textures.exists('hex_base')) return;
+    const g = scene.make.graphics({x: 0, y: 0, add: false});
+    
+    // ★修正: data.jsのHEX_SIZEに合わせて生成サイズを決定
+    // HEX_SIZEは「中心から辺までの距離」ではなく「配置間隔の基準」なので、
+    // 描画半径は HEX_SIZE * HIGH_RES_SCALE 程度必要
+    const baseSize = (typeof HEX_SIZE !== 'undefined' ? HEX_SIZE : 60); 
+    const size = baseSize * window.HIGH_RES_SCALE * 1.02; // 1.02は隙間埋め用オーバーラップ
+    
+    const w = size * Math.sqrt(3);
+    const h = size * 2;
+    
+    g.fillStyle(0xffffff); // Tint用に白
+    g.beginPath();
+    for (let i = 0; i < 6; i++) {
+        const angle_deg = 60 * i - 30;
+        const angle_rad = Math.PI / 180 * angle_deg;
+        const px = w/2 + size * Math.cos(angle_rad);
+        const py = h/2 + size * Math.sin(angle_rad);
+        if (i === 0) g.moveTo(px, py); else g.lineTo(px, py);
+    }
+    g.closePath();
+    g.fillPath();
+    
+    // 境界線をうっすら描く（好みで調整）
+    // g.lineStyle(2, 0x888888, 0.3);
+    // g.strokePath();
+    
+    g.generateTexture('hex_base', w, h);
 };
 
 const Renderer = {
@@ -149,11 +155,9 @@ class Card extends Phaser.GameObjects.Container {
         if(scene.textures.exists('card_frame')) { frame = scene.add.image(0, 0, 'card_frame').setDisplaySize(140, 200); } 
         else { frame = scene.add.rectangle(0,0,140,200,0x333).setStrokeStyle(2,0x888); }
         frame.setInteractive({ useHandCursor: true, draggable: true }); this.frameImage = frame;
-        
         const iconKey = window.getCardTextureKey(scene, type);
         const icon = scene.add.image(0, 10, iconKey).setScale(1/window.HIGH_RES_SCALE);
         if(type === 'aerial') icon.setDisplaySize(120, 80);
-        
         const text = scene.add.text(0, -80, type.toUpperCase(), { fontSize: '16px', color: '#d84', fontStyle: 'bold' }).setOrigin(0.5);
         const desc = scene.add.text(0, 70, "DRAG TO DEPLOY", { fontSize: '10px', color: '#888' }).setOrigin(0.5);
         this.visuals.add([shadow, contentBg, icon, text, desc, frame]); this.add(this.visuals); 
@@ -241,7 +245,8 @@ class MainScene extends Phaser.Scene {
     }
 
     create() {
-        if(!this.textures.exists('hex_base')) window.createHexTexture(this);
+        // ★重要: ここでテクスチャを生成
+        window.createHexTexture(this);
 
         this.cameras.main.setBackgroundColor('#0b0e0a'); 
         
@@ -278,6 +283,7 @@ class MainScene extends Phaser.Scene {
     centerCamera(q, r) { const p = Renderer.hexToPx(q, r); this.cameras.main.centerOn(p.x, p.y); }
     centerMap() { this.cameras.main.centerOn((MAP_W * HEX_SIZE * 1.5) / 2, (MAP_H * HEX_SIZE * 1.732) / 2); }
     
+    // ★マップ生成ロジック (Tint復活)
     createMap() { 
         const map = window.gameLogic.map; 
         this.hexGroup.removeAll(true); this.decorGroup.removeAll(true); this.unitGroup.removeAll(true); this.treeGroup.removeAll(true); this.hpGroup.removeAll(true);
@@ -288,14 +294,14 @@ class MainScene extends Phaser.Scene {
                 const t = map[q][r]; if(t.id===-1)continue; const pos = Renderer.hexToPx(q, r); 
                 const hex = this.add.image(pos.x, pos.y, 'hex_base').setScale(1/window.HIGH_RES_SCALE); 
                 
-                // ★復活した美しいカラーパレット & EnvSystem
+                // ★修正: 色分けロジックの復活
                 let tint = 0x555555; 
-                if(t.id===0) tint=0x5a5245; // Dirt: Brown
-                else if(t.id===1) tint=0x425030; // Grass: Green
-                else if(t.id===2) tint=0x222e1b; // Forest: Dark Green
-                else if(t.id===4) tint=0x504540; // Town: Grey
+                if(t.id===0) tint=0x5a5245; // Dirt
+                else if(t.id===1) tint=0x425030; // Grass
+                else if(t.id===2) tint=0x222e1b; // Forest
+                else if(t.id===4) tint=0x504540; // Town
                 else if(t.id===5) { 
-                    tint=0x303840; // Water: Blue
+                    tint=0x303840; // Water
                     if(window.EnvSystem) window.EnvSystem.registerWater(hex, pos.y, q, r, this.decorGroup); 
                 }
                 
