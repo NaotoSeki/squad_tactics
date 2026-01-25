@@ -87,6 +87,12 @@
         .card-body { width: 100%; text-align: center; }
         .card-body h3 { margin: 5px 0; font-size: 16px; color: #d84; }
         .card-body p { margin: 0; font-size: 10px; color: #888; }
+        .card.selected {
+            border-color: #d84 !important;
+            background: #2a1a10 !important;
+            transform: translateY(-5px);
+            box-shadow: 0 0 15px rgba(221, 136, 68, 0.4);
+        }
         #sector-counter { position:absolute; top:10px; right:20px; font-size:24px; font-weight:900; color:#d84; pointer-events:none; z-index:50; }
         #auto-toggle { position:absolute; bottom:10px; left:10px; padding:5px 10px; background:#000; border:1px solid #444; color:#888; cursor:pointer; z-index:50; font-size:11px; }
         #auto-toggle.active { color:#0f0; border-color:#0f0; }
@@ -179,3 +185,4 @@
     <script src="logic.js"></script>
 </body>
 </html>
+
