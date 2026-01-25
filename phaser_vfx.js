@@ -226,13 +226,10 @@ class EnvSystem {
 
     // --- 草の生成 ---
     spawnGrass(scene, group, x, y) {
-        // 密度: 1ヘックスに8株 (1株が大きくリッチなので数は控えめでOK)
-        // 拡大縮小で密度感を出す
         const count = 12;
-        const scaleFactor = 0.25; // 4倍で作って0.25倍で表示 = 高精細
+        const scaleFactor = 0.25; // 高精細縮小
 
         for(let i=0; i<count; i++) {
-            // ランダム配置
             const r = Math.random() * (HEX_SIZE * 0.95);
             const angle = Math.random() * Math.PI * 2;
             const ox = Math.cos(angle) * r;
@@ -240,21 +237,15 @@ class EnvSystem {
 
             const grass = scene.add.image(x+ox, y+oy, 'hd_grass');
             grass.setOrigin(0.5, 1.0); 
-            // サイズにばらつきを持たせる
             grass.setScale((0.8 + Math.random() * 0.6) * scaleFactor); 
             grass.setDepth(y+oy); 
             
-            // 初期設定
-            grass.baseSkew = (Math.random()-0.5) * 0.2; // 生え方のクセ
-            grass.origX = x + ox; // 波の計算用
+            grass.baseSkew = (Math.random()-0.5) * 0.2;
+            grass.origX = x + ox; 
             grass.origY = y + oy;
             
-            // 色味を少しランダムに変えて単調さを防ぐ
             const tintVar = Math.floor(Math.random() * 40);
-            const rVal = 200 + tintVar;
-            const gVal = 255;
-            const bVal = 200 + tintVar;
-            grass.setTint(Phaser.Display.Color.GetColor(rVal, gVal, bVal));
+            grass.setTint(Phaser.Display.Color.GetColor(200 + tintVar, 255, 200 + tintVar));
 
             group.add(grass);
             this.grassElements.push(grass);
@@ -264,7 +255,7 @@ class EnvSystem {
     // --- 木の生成 ---
     spawnTrees(scene, group, x, y) {
         const count = 3 + Math.floor(Math.random() * 2);
-        const scaleFactor = 0.35; // 高解像度縮小
+        const scaleFactor = 0.35;
 
         for(let i=0; i<count; i++) {
             const r = Math.random() * (HEX_SIZE * 0.7);
@@ -275,14 +266,13 @@ class EnvSystem {
             const localScale = 0.8 + Math.random() * 0.5;
             const finalScale = localScale * scaleFactor;
 
-            // 落ち影
             const shadow = scene.add.ellipse(x+ox, y+oy+5, 40*finalScale, 15*finalScale, 0x000000, 0.5);
             group.add(shadow);
 
             const tree = scene.add.image(x+ox, y+oy, 'hd_tree');
             tree.setOrigin(0.5, 0.95); 
             tree.setScale(finalScale);
-            tree.setDepth(y+oy + 20); // 草より手前
+            tree.setDepth(y+oy + 20); 
             
             tree.baseSkew = 0;
             tree.origX = x + ox;
@@ -306,63 +296,55 @@ class EnvSystem {
     }
 
     onGust() {
-        // 突風発生フラグ
         this.gustPower = 1.0; 
     }
 
-    // ★風の波及処理: 本気のWave計算
+    // ★風の波及処理: 計算式を強化し、確実に動かす
     update(time) {
-        const t = time * 0.002; // 時間
+        // 時間の進行速度
+        const t = time * 0.0015; 
         
-        // 突風の減衰
-        this.gustPower *= 0.98;
+        this.gustPower *= 0.97; // 突風の減衰
         if(this.gustPower < 0.01) this.gustPower = 0;
 
-        // 1. 草の処理 (Grass Wave)
-        // 破棄されたオブジェクトのクリーンアップ
+        // 1. 草の処理
         this.grassElements = this.grassElements.filter(g => g.scene);
-        
         for (let i = 0; i < this.grassElements.length; i++) {
             const g = this.grassElements[i];
             
-            // X座標による位相ズレ（これが波に見える正体）
-            // freq: 周波数 (波の細かさ), speed: 速度
-            const xPhase = g.origX * 0.008; 
+            // X座標による位相ズレ＝波の伝播
+            const xPhase = g.origX * 0.005; 
             
-            // 基本のそよぎ (常に動いている)
-            const baseSway = Math.sin(t + xPhase) * 0.15; 
+            // メインの大きな風のうねり（右方向への強いバイアス）
+            // sinの結果(-1~1)を 0~1 の範囲に正規化し、それを傾き量とする
+            const mainWave = (Math.sin(t * 1.5 + xPhase) + 1.0) * 0.5; // 0.0 〜 1.0
             
-            // 風のうねり (大きくゆっくりした波)
-            const hugeWave = Math.sin(t * 0.5 + g.origX * 0.002) * 0.1;
+            // 細かいゆらぎ
+            const jitter = Math.sin(t * 4.0 + g.origY * 0.02) * 0.1;
 
-            // 突風の影響 (Gust)
-            // 突風は右方向へ一気に傾ける
-            const gustEffect = this.gustPower * 0.8;
+            // 突風効果
+            const gust = this.gustPower * 0.5;
 
-            // ノイズ的な揺らぎ
-            const jitter = Math.sin(t * 5 + g.origY) * 0.05;
-
-            // 合成: 基本傾き + そよぎ + うねり + 突風
-            // 風は基本的に右(プラス方向)に吹くものとする
-            const totalSkew = g.baseSkew + Math.abs(baseSway + hugeWave) + gustEffect + jitter;
+            // 合計傾き量（係数を大きく設定）
+            // 基本は右（風下）に傾きつつ、波によって角度が変わる
+            const totalLean = (mainWave * 0.4) + jitter + gust;
             
-            g.skewX = totalSkew;
+            g.skewX = g.baseSkew + totalLean;
         }
 
-        // 2. 木の処理 (Tree Sway)
+        // 2. 木の処理
         this.treeElements = this.treeElements.filter(tr => tr.scene);
-        
         for (let i = 0; i < this.treeElements.length; i++) {
             const tr = this.treeElements[i];
             
-            // 木は硬いので動きは小さいが、遅れて動く
-            const xPhase = tr.origX * 0.005;
-            const sway = Math.sin(t * 0.8 + xPhase) * 0.05;
+            // 木はゆっくりと、少しだけ遅れて揺れる
+            const xPhase = tr.origX * 0.003;
+            const sway = Math.sin(t * 0.8 + xPhase) * 0.08; // 振幅は小さめ
             
-            // 突風には遅れて反応する
-            const gustEffect = this.gustPower * 0.15;
+            // 突風には重く反応
+            const gust = this.gustPower * 0.1;
 
-            tr.skewX = tr.baseSkew + sway + gustEffect;
+            tr.skewX = tr.baseSkew + sway + gust;
         }
     }
 }
