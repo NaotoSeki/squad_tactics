@@ -1,4 +1,4 @@
-/** LOGIC: 4-Stack Limit, Action Menu & New Commands */
+/** LOGIC: 4-Stack Limit, Action Menu & New Commands (FULL VERSION) */
 class Game {
     constructor() {
         this.units=[]; this.map=[]; this.setupSlots=[]; this.state='SETUP'; 
@@ -10,8 +10,8 @@ class Game {
         this.enemyAI = 'AGGRESSIVE'; 
         this.cardsUsed = 0; 
         
-        // ★インタラクションモード管理
-        this.interactionMode = 'SELECT'; // SELECT, MOVE, ATTACK, REPAIR, HEAL, MELEE
+        // インタラクションモード管理
+        this.interactionMode = 'SELECT'; 
         this.selectedUnit = null;
         
         this.initDOM(); this.initSetup();
@@ -54,7 +54,7 @@ class Game {
                 if(this.setupSlots.length<3) {
                     this.setupSlots.push(k);
                     d.querySelector('.card-badge').innerText = this.setupSlots.filter(s=>s===k).length;
-                    d.querySelector('.card-badge').style.display = 'flex'; // block->flex
+                    d.querySelector('.card-badge').style.display = 'flex';
                     this.log(`> 採用: ${t.name}`);
                     if(this.setupSlots.length===3) document.getElementById('btn-start').style.display='inline-block';
                 }
@@ -77,7 +77,7 @@ class Game {
         const createItem = (key, isMainWpn = false) => {
             if(!key || !WPNS[key]) return null;
             let base = WPNS[key];
-            let item = { ...base, code: key, id: Math.random(), isBroken: false }; // isBroken追加
+            let item = { ...base, code: key, id: Math.random(), isBroken: false }; 
             if (base.type === 'bullet' || base.type === 'shell_fast') {
                 if (isMainWpn && typeof MAG_VARIANTS !== 'undefined' && MAG_VARIANTS[key]) {
                     const vars = MAG_VARIANTS[key];
@@ -106,9 +106,12 @@ class Game {
         };
     }
 
-    // ★重要: 同一ヘックスのユニット取得
     getUnitsInHex(q, r) {
         return this.units.filter(u => u.q === q && u.r === r && u.hp > 0);
+    }
+    
+    getUnitInHex(q, r) { // alias
+        return this.units.find(u => u.q === q && u.r === r && u.hp > 0);
     }
 
     startCampaign() {
@@ -148,7 +151,6 @@ class Game {
             const r = Math.floor(Math.random()*MAP_H);
             if (team==='player' && r < cy) continue;
             if (team==='enemy' && r >= cy) continue;
-            // ★修正: 4体未満ならOK
             if (this.isValidHex(q,r) && this.getUnitsInHex(q,r).length < 4 && this.map[q][r].id !== -1 && this.map[q][r].id !== 5) {
                 return {q, r};
             }
@@ -156,13 +158,10 @@ class Game {
         return {q:0, r:0};
     }
 
-    // --- ★インタラクション & コマンドメニュー ---
-    
-    // ユニットクリック（Phaserから呼ばれる）
+    // --- ★インタラクション ---
     onUnitClick(u) {
         if (this.state !== 'PLAY') return;
         if (u.team !== 'player') {
-            // 敵をクリックした場合: 攻撃モードなら攻撃実行
             if (this.interactionMode === 'ATTACK' && this.selectedUnit) {
                 this.actionAttack(this.selectedUnit, u);
                 this.setMode('SELECT');
@@ -173,22 +172,11 @@ class Game {
                 this.setMode('SELECT');
                 return;
             }
-            // それ以外は無視（または敵情報表示？）
             return;
         }
 
-        // 味方をクリック -> 選択
         this.selectedUnit = u;
-        this.refreshUnitState(u);
-        
-        // メニュー表示
-        const pxPos = Renderer.hexToPx(u.q, u.r);
-        // スクリーン座標に変換（簡易計算。本来はCameraのMatrix計算が必要だが、HTML座標系で近似）
-        // ※Phaserのイベントポインタ位置を使うのが確実だが、ここではユニット位置から出す
-        // 一旦、画面中央付近に出すのではなく、クリックした場所に出したいが…
-        // 面倒なので「最後にクリックした場所」をPhaser側で保持してもらうのがいいが、
-        // ここでは「最後にクリックされたユニット」に対してメニューを出す。
-        
+        this.refreshUnitState(u); // ★これが必要
         this.showActionMenu(u);
         if(window.Sfx) Sfx.play('click');
     }
@@ -197,34 +185,24 @@ class Game {
         const menu = document.getElementById('command-menu');
         if (!menu) return;
 
-        // 各ボタンの有効無効判定
         const btnRepair = document.getElementById('btn-repair');
         const btnMelee = document.getElementById('btn-melee');
         const btnHeal = document.getElementById('btn-heal');
 
-        // 修理: 武器が壊れているか
         if (u.hands && u.hands.isBroken) btnRepair.classList.remove('disabled'); else btnRepair.classList.add('disabled');
 
-        // 白兵: 同一ヘックスに敵がいるか
         const neighbors = this.getUnitsInHex(u.q, u.r);
         const hasEnemy = neighbors.some(n => n.team !== u.team);
         if (hasEnemy) btnMelee.classList.remove('disabled'); else btnMelee.classList.add('disabled');
 
-        // 治療: 同一ヘックスに傷ついた味方がいるか (自分含む？含むことにする)
         const hasWounded = neighbors.some(n => n.team === u.team && n.hp < n.maxHp);
         if (hasWounded) btnHeal.classList.remove('disabled'); else btnHeal.classList.add('disabled');
 
-        // 表示位置調整 (マウス位置が取れないので、Canvas上のユニット位置をDOM座標に変換…は手間なので、固定位置 or 前回のクリック位置)
-        // 簡易的に画面中央に出す、あるいはCSSで制御するが、ここでは暫定的にマウスカーソル追従はできないため
-        // メニューを「右サイドバーの横」あたりに出すか、前回クリック位置を保存しておく
-        
-        // ★PhaserのInputPluginからアクティブポインタを取得
         if (Renderer.game) {
             const pointer = Renderer.game.input.activePointer;
             menu.style.left = (pointer.x + 20) + 'px';
             menu.style.top = (pointer.y - 50) + 'px';
         }
-        
         menu.style.display = 'block';
     }
 
@@ -244,39 +222,31 @@ class Game {
         } else {
             indicator.style.display = 'block';
             indicator.innerText = mode + " MODE";
-            // モードに応じたガイド表示
             if (mode === 'MOVE') {
                 this.calcReachableHexes(this.selectedUnit);
             } else if (mode === 'ATTACK') {
-                // 射程範囲表示などをしたいが、既存のhoverロジックで対応
-                this.reachableHexes = []; // 移動範囲は消す
+                this.reachableHexes = [];
             }
         }
     }
 
-    // ヘックスクリック（移動などの座標指定）
     handleClick(p) {
         if (this.interactionMode === 'SELECT') {
-            // 何もしない（ユニットクリックはonUnitClickで処理済み）
-            // 地面クリックで選択解除
-            const u = this.getUnitInHex(p.q, p.r); // ヘックス内の誰か
-            if (!u) this.clearSelection();
+            const u = this.getUnitInHex(p.q, p.r);
+            if (!u) this.clearSelection(); // ★これが必要
         } 
         else if (this.interactionMode === 'MOVE') {
             if (this.isValidHex(p.q, p.r) && this.path.length > 0) {
-                // パスの終点がクリック地点か確認
                 const last = this.path[this.path.length-1];
                 if (last.q === p.q && last.r === p.r) {
                     this.actionMove(this.selectedUnit, this.path);
                     this.setMode('SELECT');
                 }
             } else {
-                // 移動キャンセル
                 this.setMode('SELECT');
             }
         }
         else if (this.interactionMode === 'ATTACK' || this.interactionMode === 'MELEE') {
-            // ターゲット選択待ち (onUnitClickで処理されるが、地面をクリックしたらキャンセル)
             const u = this.getUnitInHex(p.q, p.r);
             if (!u) this.setMode('SELECT');
         }
@@ -287,9 +257,7 @@ class Game {
         const u = this.selectedUnit;
         if (u) {
             if (this.interactionMode === 'MOVE') {
-                // 移動パス計算
                 const isReachable = this.reachableHexes.some(h => h.q === p.q && h.r === p.r);
-                // ★修正: 4体制限チェック
                 const targetUnits = this.getUnitsInHex(p.q, p.r);
                 if (isReachable && targetUnits.length < 4) {
                     this.path = this.findPath(u, p.q, p.r);
@@ -297,14 +265,37 @@ class Game {
                     this.path = [];
                 }
             } else if (this.interactionMode === 'ATTACK') {
-                // 射線計算
                 this.calcAttackLine(u, p.q, p.r);
             }
         }
     }
 
-    // --- アクション実装 ---
+    // ★重要: これらが漏れていた
+    refreshUnitState(u) {
+        if (!u || u.hp <= 0) {
+            this.selectedUnit = null; 
+            this.reachableHexes = []; 
+            this.attackLine = []; 
+            this.aimTargetUnit = null;
+        } else {
+            // モードによっては移動範囲を出さないなど制御してもいいが、基本はリセット
+            // this.calcReachableHexes(u); // MOVEモードになったら計算するのでここでは不要かもだが、念のため
+        }
+        this.updateSidebar();
+    }
 
+    clearSelection() {
+        this.selectedUnit = null;
+        this.reachableHexes = [];
+        this.attackLine = [];
+        this.aimTargetUnit = null;
+        this.path = [];
+        this.setMode('SELECT'); // モードも戻す
+        this.hideActionMenu();
+        this.updateSidebar();
+    }
+
+    // --- Actions ---
     toggleStance() {
         const u = this.selectedUnit;
         if (!u || u.ap < 1 || u.def.isTank) return;
@@ -321,77 +312,48 @@ class Game {
         const u = this.selectedUnit;
         if (!u || u.ap < 2) { this.log("AP不足 (必要:2)"); return; }
         if (!u.hands || !u.hands.isBroken) { this.log("修理不要"); return; }
-        
-        u.ap -= 2;
-        u.hands.isBroken = false;
+        u.ap -= 2; u.hands.isBroken = false;
         this.log(`${u.name} 武器修理完了`);
-        if(window.Sfx) Sfx.play('reload'); // カチャカチャ音
-        this.refreshUnitState(u);
-        this.hideActionMenu();
+        if(window.Sfx) Sfx.play('reload');
+        this.refreshUnitState(u); this.hideActionMenu();
     }
 
     actionHeal() {
         const u = this.selectedUnit;
         if (!u || u.ap < 2) { this.log("AP不足 (必要:2)"); return; }
-        
-        // 同ヘックスの傷ついた味方を探す
         const targets = this.getUnitsInHex(u.q, u.r).filter(t => t.team === u.team && t.hp < t.maxHp);
         if (targets.length === 0) { this.log("治療対象なし"); return; }
-        
-        // 最も傷ついている者を治療
         targets.sort((a,b) => (a.hp/a.maxHp) - (b.hp/b.maxHp));
         const target = targets[0];
-        
-        u.ap -= 2;
-        const healAmount = 30;
+        u.ap -= 2; const healAmount = 30;
         target.hp = Math.min(target.maxHp, target.hp + healAmount);
-        
         this.log(`${u.name} が ${target.name} を治療 (+${healAmount})`);
         if(window.VFX) { const p = Renderer.hexToPx(u.q, u.r); window.VFX.add({x:p.x, y:p.y-20, vx:0, vy:-1, life:30, maxLife:30, color:"#0f0", size:4, type:'spark'}); }
-        
-        this.refreshUnitState(u);
-        this.hideActionMenu();
+        this.refreshUnitState(u); this.hideActionMenu();
     }
 
     async actionMelee(a, d) {
         if (!a || a.ap < 2) { this.log("AP不足"); return; }
-        if (a.q !== d.q || a.r !== d.r) { this.log("射程外(同一ヘックスのみ)"); return; }
-        
-        a.ap -= 2;
-        this.log(`${a.name} 白兵攻撃 vs ${d.name}`);
-        
-        // アニメーション
+        if (a.q !== d.q || a.r !== d.r) { this.log("射程外"); return; }
+        a.ap -= 2; this.log(`${a.name} 白兵攻撃 vs ${d.name}`);
         if (Renderer.playAttackAnim) Renderer.playAttackAnim(a, d);
         await new Promise(r => setTimeout(r, 300));
-
-        // 命中判定 (白兵は命中高い)
-        // 武器があればそのダメージ、なければ素手(10)
         let dmg = 15 + (a.stats.str * 2);
-        if (a.hands && a.hands.type === 'melee') dmg = a.hands.dmg; // ナイフ等
-        
-        // 反撃判定 (CQCスキルなど)
-        if (d.skills.includes('CQC')) {
-            this.log(`>> ${d.name} カウンター！`);
-            a.hp -= 10;
-        }
-
+        if (a.hands && a.hands.type === 'melee') dmg = a.hands.dmg;
+        if (d.skills.includes('CQC')) { this.log(`>> ${d.name} カウンター！`); a.hp -= 10; }
         d.hp -= dmg;
         if(window.Sfx) Sfx.play('hit');
-        
         if (d.hp <= 0 && !d.deadProcessed) {
-            d.deadProcessed = true;
-            this.log(`>> ${d.name} を撃破！`);
+            d.deadProcessed = true; this.log(`>> ${d.name} を撃破！`);
             if(window.Sfx) Sfx.play('death');
         }
-        
-        this.refreshUnitState(a);
-        this.checkPhaseEnd();
+        this.refreshUnitState(a); this.checkPhaseEnd();
     }
 
     async actionAttack(a, d) {
         const w = a.hands; 
         if (!w) return;
-        if (w.isBroken) { this.log("武器故障中！修理が必要"); return; } // ★チェック追加
+        if (w.isBroken) { this.log("武器故障中！修理が必要"); return; }
         if (w.isConsumable && w.current <= 0) { this.log("使用済みです"); return; }
         if (w.current <= 0) { this.log("弾切れ！リロードが必要だ！"); return; }
         if (a.ap < w.ap) { this.log("AP不足"); return; }
@@ -412,27 +374,17 @@ class Game {
 
         for(let i=0; i<shots; i++) {
             if (d.hp <= 0) break;
-            
-            // ★ジャム判定 & 故障処理
             if (!w.isConsumable && w.jam && Math.random() < w.jam) {
-                this.log(`⚠ JAM!! ${w.name}が故障！`);
-                w.isBroken = true; // ★故障フラグ
-                if(window.Sfx) Sfx.play('ricochet'); 
-                break; 
+                this.log(`⚠ JAM!! ${w.name}が故障！`); w.isBroken = true; if(window.Sfx) Sfx.play('ricochet'); break; 
             }
-
             w.current--; 
-            const sPos = Renderer.hexToPx(a.q, a.r);
-            const ePos = Renderer.hexToPx(d.q, d.r);
+            const sPos = Renderer.hexToPx(a.q, a.r); const ePos = Renderer.hexToPx(d.q, d.r);
             const spread = (100 - w.acc) * 0.5;
-            const tx = ePos.x + (Math.random()-0.5) * spread;
-            const ty = ePos.y + (Math.random()-0.5) * spread;
-
+            const tx = ePos.x + (Math.random()-0.5) * spread; const ty = ePos.y + (Math.random()-0.5) * spread;
             if(window.Sfx) Sfx.play(w.type === 'shell' || w.type === 'shell_fast' ? 'cannon' : 'shot');
-
             const flightTime = w.type.includes('shell') ? dist * 100 : dist * 50;
             if(window.VFX) VFX.addProj({ x: sPos.x, y: sPos.y, sx: sPos.x, sy: sPos.y, ex: tx, ey: ty, type: w.type, speed: 0.1, progress: 0, arcHeight: (w.type.includes('shell')?100:0), onHit: null });
-
+            
             setTimeout(() => {
                 if (d.hp <= 0) return; 
                 const isHit = (Math.random() * 100) < hitChance;
@@ -448,38 +400,37 @@ class Game {
                         if(window.VFX) VFX.add({x:tx, y:ty, vx:0, vy:-5, life:10, maxLife:10, color:"#fff", size:2, type:'spark'});
                         if(i===0) this.log(">> 装甲により無効化！");
                     }
-                } else {
-                    if(window.VFX) VFX.add({x:tx, y:ty, vx:0, vy:0, life:10, maxLife:10, color:"#aaa", size:2, type:'smoke'});
-                }
+                } else { if(window.VFX) VFX.add({x:tx, y:ty, vx:0, vy:0, life:10, maxLife:10, color:"#aaa", size:2, type:'smoke'}); }
             }, flightTime);
             await new Promise(r => setTimeout(r, 100)); 
         }
         
-        if (w.isConsumable && w.current <= 0) {
-            a.hands = null; 
-            this.log(`${w.name} を消費しました`);
-        }
-
+        if (w.isConsumable && w.current <= 0) { a.hands = null; this.log(`${w.name} を消費しました`); }
         setTimeout(() => {
             if (d.hp <= 0 && !d.deadProcessed) {
-                d.deadProcessed = true;
-                this.log(`>> ${d.name} を撃破！`);
-                if(window.Sfx) Sfx.play('death');
-                if(window.VFX) VFX.addUnitDebris(Renderer.hexToPx(d.q, d.r).x, Renderer.hexToPx(d.q, d.r).y);
+                d.deadProcessed = true; this.log(`>> ${d.name} を撃破！`);
+                if(window.Sfx) Sfx.play('death'); if(window.VFX) VFX.addUnitDebris(Renderer.hexToPx(d.q, d.r).x, Renderer.hexToPx(d.q, d.r).y);
             }
-            this.state = 'PLAY';
-            this.refreshUnitState(a); 
-            this.checkPhaseEnd();
+            this.state = 'PLAY'; this.refreshUnitState(a); this.checkPhaseEnd();
         }, 800);
     }
 
-    // ★修正: 4体制限
     checkDeploy(targetHex) {
         if(!this.isValidHex(targetHex.q, targetHex.r) || this.map[targetHex.q][targetHex.r].id === -1) { this.log("配置不可: 進入不可能な地形です"); return false; }
         if(this.map[targetHex.q][targetHex.r].id === 5) { this.log("配置不可: 水上には配置できません"); return false; }
         if (this.getUnitsInHex(targetHex.q, targetHex.r).length >= 4) { this.log("配置不可: 混雑しています"); return false; }
         if (this.cardsUsed >= 2) { this.log("配置不可: 指揮コスト上限(2/2)に達しています"); return false; }
         return true;
+    }
+    deployUnit(targetHex, cardType) {
+        if(!this.checkDeploy(targetHex)) return;
+        const u = this.createSoldier(cardType, 'player', targetHex.q, targetHex.r);
+        if(u) {
+            this.units.push(u); this.cardsUsed++; 
+            this.log(`増援到着: ${u.name} (残コスト:${2-this.cardsUsed})`);
+            if(window.VFX) { const pos = Renderer.hexToPx(targetHex.q, targetHex.r); window.VFX.addSmoke(pos.x, pos.y); }
+            this.updateSidebar();
+        }
     }
 
     calcReachableHexes(u) {
@@ -488,7 +439,6 @@ class Game {
         while(frontier.length > 0) {
             let current = frontier.shift();
             this.getNeighbors(current.q, current.r).forEach(n => {
-                // ★修正: ユニットがいても4体未満なら通れる
                 if(this.getUnitsInHex(n.q, n.r).length >= 4 || this.map[n.q][n.r].cost >= 99) return;
                 let newCost = current.cost + this.map[n.q][n.r].cost;
                 if(newCost <= u.ap) {
@@ -501,48 +451,21 @@ class Game {
         }
     }
 
-    // 既存ヘルパー (getUnitは代表1体を返す互換性のため残すが、getUnitsInHex推奨)
-    getUnit(q,r){return this.units.find(u=>u.q===q&&u.r===r&&u.hp>0);}
-    getUnitInHex(q,r){return this.getUnit(q,r);} // Alias
-    
-    // ... その他メソッド (generateMap, spawnEnemies, actionMove, endTurn, etc.) ...
-    // これらは変更なしだが、moveUnit内のチェックなどは calcReachableHexes で担保されている前提
-    
-    // 省略部分は既存のまま (generateMap, spawnEnemies, toggleAuto, runAuto, checkReactionFire, swapWeapon, checkPhaseEnd, setStance, endTurn, healSurvivors, promoteSurvivors, checkWin, checkLose, isValidHex, hexDist, getNeighbors, findPath, log, updateSidebar, axialToCube, cubeToAxial, cubeRound)
     generateMap() { 
         this.map = [];
         for(let q=0; q<MAP_W; q++){ this.map[q] = []; for(let r=0; r<MAP_H; r++){ this.map[q][r] = TERRAIN.VOID; } }
         const cx = Math.floor(MAP_W/2), cy = Math.floor(MAP_H/2);
         let walkers = [{q:cx, r:cy}]; 
-        const paintBrush = (cq, cr) => {
-            const brush = [{q:cq, r:cr}, ...this.getNeighbors(cq, cr)];
-            brush.forEach(h => { if(this.isValidHex(h.q, h.r)) this.map[h.q][h.r] = TERRAIN.GRASS; });
-        };
+        const paintBrush = (cq, cr) => { const brush = [{q:cq, r:cr}, ...this.getNeighbors(cq, cr)]; brush.forEach(h => { if(this.isValidHex(h.q, h.r)) this.map[h.q][h.r] = TERRAIN.GRASS; }); };
         for(let i=0; i<140; i++) {
             const wIdx = Math.floor(Math.random() * walkers.length); const w = walkers[wIdx]; paintBrush(w.q, w.r);
             const neighbors = [[1,0],[1,-1],[0,-1],[-1,0],[-1,1],[0,1]]; const dir = neighbors[Math.floor(Math.random() * 6)];
             const next = { q: w.q + dir[0], r: w.r + dir[1] };
             if(Math.random() < 0.05 && walkers.length < 5) walkers.push(next); else walkers[wIdx] = next;
         }
-        for(let i=0; i<3; i++) {
-            for(let q=1; q<MAP_W-1; q++){ for(let r=1; r<MAP_H-1; r++){
-                if(this.map[q][r].id === -1) { const ln = this.getNeighbors(q, r).filter(n => this.map[n.q][n.r].id !== -1).length; if(ln >= 4) this.map[q][r] = TERRAIN.GRASS; }
-            }}
-        }
-        for(let loop=0; loop<2; loop++) {
-            const wC = [];
-            for(let q=0; q<MAP_W; q++){ for(let r=0; r<MAP_H; r++){ if(this.map[q][r].id === -1) { const hn = this.getNeighbors(q, r).some(n => this.map[n.q][n.r].id !== -1); if(hn) wC.push({q, r}); } }}
-            wC.forEach(w => { this.map[w.q][w.r] = TERRAIN.WATER; });
-        }
-        for(let q=0; q<MAP_W; q++){ for(let r=0; r<MAP_H; r++){
-            const tId = this.map[q][r].id;
-            if(tId !== -1 && tId !== 5) {
-                const n = Math.sin(q*0.4) + Math.cos(r*0.4) + Math.random()*0.4; 
-                let t = TERRAIN.GRASS; if(n > 1.1) t = TERRAIN.FOREST; else if(n < -0.9) t = TERRAIN.DIRT; 
-                if(t !== TERRAIN.WATER && Math.random() < 0.05) t = TERRAIN.TOWN; 
-                this.map[q][r] = t;
-            }
-        }}
+        for(let i=0; i<3; i++) { for(let q=1; q<MAP_W-1; q++){ for(let r=1; r<MAP_H-1; r++){ if(this.map[q][r].id === -1) { const ln = this.getNeighbors(q, r).filter(n => this.map[n.q][n.r].id !== -1).length; if(ln >= 4) this.map[q][r] = TERRAIN.GRASS; }}}}
+        for(let loop=0; loop<2; loop++) { const wC = []; for(let q=0; q<MAP_W; q++){ for(let r=0; r<MAP_H; r++){ if(this.map[q][r].id === -1) { const hn = this.getNeighbors(q, r).some(n => this.map[n.q][n.r].id !== -1); if(hn) wC.push({q, r}); } }} wC.forEach(w => { this.map[w.q][w.r] = TERRAIN.WATER; }); }
+        for(let q=0; q<MAP_W; q++){ for(let r=0; r<MAP_H; r++){ const tId = this.map[q][r].id; if(tId !== -1 && tId !== 5) { const n = Math.sin(q*0.4) + Math.cos(r*0.4) + Math.random()*0.4; let t = TERRAIN.GRASS; if(n > 1.1) t = TERRAIN.FOREST; else if(n < -0.9) t = TERRAIN.DIRT; if(t !== TERRAIN.WATER && Math.random() < 0.05) t = TERRAIN.TOWN; this.map[q][r] = t; }}}
     }
     spawnEnemies(){ 
         const c=4+Math.floor(this.sector*0.7);
@@ -550,26 +473,14 @@ class Game {
             let k='rifleman'; const r=Math.random(); 
             if(r<0.1 + this.sector*0.1) k='tank_pz4'; else if(r<0.4) k='gunner'; else if(r<0.6) k='sniper'; 
             const e=this.createSoldier(k, 'enemy', 0, 0); 
-            if(e){
-                const p = this.getSafeSpawnPos('enemy');
-                e.q = p.q; e.r = p.r;
-                this.units.push(e);
-            }
+            if(e){ const p = this.getSafeSpawnPos('enemy'); e.q = p.q; e.r = p.r; this.units.push(e); }
         }
     }
     toggleAuto(){ this.isAuto=!this.isAuto; document.getElementById('auto-toggle').classList.toggle('active'); this.log(`AUTO: ${this.isAuto?"ON":"OFF"}`); }
-    runAuto(){ /* 省略 */ }
-
+    runAuto(){}
     async actionMove(u,p){ 
-        this.state='ANIM'; 
-        // this.selectedUnit=null; // 移動後も選択解除しないほうが連続操作しやすいかも？一旦解除
-        this.path=[]; this.reachableHexes=[]; this.attackLine=[]; this.aimTargetUnit=null;
-        for(let s of p){ 
-            // 敵がいたら止まる？ 今回は混在OKなので素通り
-            u.ap-=this.map[s.q][s.r].cost; u.q=s.q; u.r=s.r; 
-            if(window.Sfx)Sfx.play('move'); 
-            await new Promise(r=>setTimeout(r,180)); 
-        } 
+        this.state='ANIM'; this.path=[]; this.reachableHexes=[]; this.attackLine=[]; this.aimTargetUnit=null;
+        for(let s of p){ u.ap-=this.map[s.q][s.r].cost; u.q=s.q; u.r=s.r; if(window.Sfx)Sfx.play('move'); await new Promise(r=>setTimeout(r,180)); } 
         this.checkReactionFire(u); 
         this.state='PLAY'; 
         this.refreshUnitState(u); // 選択継続
@@ -583,11 +494,9 @@ class Game {
             if(u.hp<=0&&!u.deadProcessed){u.deadProcessed=true;this.log(`${u.name} 撃破`);if(window.Sfx)Sfx.play('death');} 
         }); 
     }
-    swapWeapon(){ /* 使用しない */ } 
-
+    swapWeapon(){}
     checkPhaseEnd(){if(this.units.filter(u=>u.team==='player'&&u.hp>0&&u.ap>0).length===0&&this.state==='PLAY')this.endTurn();}
     setStance(s){if(this.selectedUnit&&this.selectedUnit.ap>=1&&!this.selectedUnit.def.isTank){this.selectedUnit.ap--;this.selectedUnit.stance=s;this.refreshUnitState(this.selectedUnit);this.checkPhaseEnd();}}
-    
     endTurn(){
         if(this.isProcessingTurn)return; this.isProcessingTurn=true; 
         this.selectedUnit=null; this.reachableHexes=[]; this.attackLine=[]; this.aimTargetUnit=null; this.path=[]; 
@@ -595,13 +504,10 @@ class Game {
         this.state='ANIM'; 
         const eyecatch = document.getElementById('eyecatch');
         if(eyecatch) eyecatch.style.opacity=1;
-        
         this.units.filter(u=>u.team==='player'&&u.hp>0&&u.skills.includes("Mechanic")).forEach(u=>{const c=u.skills.filter(s=>s==="Mechanic").length; if(u.hp<u.maxHp){u.hp=Math.min(u.maxHp,u.hp+c*20);this.log(`${u.name} 修理`);}});
-        
         setTimeout(async()=>{
             if(eyecatch) eyecatch.style.opacity=0; 
             const es=this.units.filter(u=>u.team==='enemy'&&u.hp>0); 
-            
             for(let e of es){
                 const ps=this.units.filter(u=>u.team==='player'&&u.hp>0); 
                 if(ps.length===0){this.checkLose();break;} 
@@ -611,18 +517,14 @@ class Game {
                 const w = e.hands; 
                 if(!w) continue;
                 const distToTarget = this.hexDist(e, target); 
-                if (distToTarget <= w.rng && e.ap >= w.ap) { 
-                    await this.actionAttack(e, target); 
-                } else { 
+                if (distToTarget <= w.rng && e.ap >= w.ap) { await this.actionAttack(e, target); } else { 
                     const p = this.findPath(e, target.q, target.r);
                     if(p.length > 0) {
                         const next = p[0]; 
                         if(this.map[next.q][next.r].cost <= e.ap) {
                             e.q = next.q; e.r = next.r; e.ap -= this.map[next.q][next.r].cost;
                             await new Promise(r=>setTimeout(r,200));
-                            if(this.hexDist(e, target) <= w.rng && e.ap >= w.ap) {
-                                await this.actionAttack(e, target);
-                            }
+                            if(this.hexDist(e, target) <= w.rng && e.ap >= w.ap) { await this.actionAttack(e, target); }
                         }
                     }
                 } 
@@ -632,18 +534,27 @@ class Game {
             this.state='PLAY'; this.isProcessingTurn=false;
         }, 1200);
     }
-    
     healSurvivors(){this.units.filter(u=>u.team==='player'&&u.hp>0).forEach(u=>{const t=Math.floor(u.maxHp*0.8);if(u.hp<t)u.hp=t;});this.log("治療完了");}
     promoteSurvivors(){this.units.filter(u=>u.team==='player'&&u.hp>0).forEach(u=>{u.sectorsSurvived++; if(u.sectorsSurvived===5){u.skills.push("Hero");u.maxAp++;this.log("英雄昇格");} u.rank=Math.min(5,(u.rank||0)+1); u.maxHp+=30; u.hp+=30; if(u.skills.length<8&&Math.random()<0.7){const k=Object.keys(SKILLS).filter(z=>z!=="Hero"); u.skills.push(k[Math.floor(Math.random()*k.length)]); this.log("スキル習得");} });}
     checkWin(){if(this.units.filter(u=>u.team==='enemy'&&u.hp>0).length===0){if(window.Sfx)Sfx.play('win'); document.getElementById('reward-screen').style.display='flex'; this.promoteSurvivors(); const b=document.getElementById('reward-cards'); b.innerHTML=''; [{k:'rifleman',t:'新兵'},{k:'tank_pz4',t:'戦車'},{k:'heal',t:'医療'}].forEach(o=>{const d=document.createElement('div');d.className='card';d.innerHTML=`<div class="card-img-box"><img src="${createCardIcon(o.k==='heal'?'heal':'infantry')}"></div><div class="card-body"><h3>${o.t}</h3><p>補給</p></div>`;d.onclick=()=>{if(o.k==='heal')this.healSurvivors();else this.spawnAtSafeGround('player',o.k);this.sector++;document.getElementById('reward-screen').style.display='none';this.startCampaign();};b.appendChild(d);}); return true;} return false;}
     checkLose(){if(this.units.filter(u=>u.team==='player'&&u.hp>0).length===0)document.getElementById('gameover-screen').style.display='flex';}
+    getUnit(q,r){return this.units.find(u=>u.q===q&&u.r===r&&u.hp>0);}
     isValidHex(q,r){return q>=0&&q<MAP_W&&r>=0&&r<MAP_H;}
     hexDist(a,b){return (Math.abs(a.q-b.q)+Math.abs(a.q+a.r-b.q-b.r)+Math.abs(a.r-b.r))/2;}
     getNeighbors(q,r){return [[1,0],[1,-1],[0,-1],[-1,0],[-1,1],[0,1]].map(d=>({q:q+d[0],r:r+d[1]})).filter(h=>this.isValidHex(h.q,h.r));}
     findPath(u,tq,tr){let f=[{q:u.q,r:u.r}],cf={},cs={}; cf[`${u.q},${u.r}`]=null; cs[`${u.q},${u.r}`]=0; while(f.length>0){let c=f.shift();if(c.q===tq&&c.r===tr)break; this.getNeighbors(c.q,c.r).forEach(n=>{if(this.getUnitsInHex(n.q,n.r).length>=4 && (n.q!==tq||n.r!==tr))return; const cost=this.map[n.q][n.r].cost; if(cost>=99)return; const nc=cs[`${c.q},${c.r}`]+cost; if(nc<=u.ap){const k=`${n.q},${n.r}`;if(!(k in cs)||nc<cs[k]){cs[k]=nc;f.push(n);cf[k]=c;}}});} let p=[],c={q:tq,r:tr}; if(!cf[`${tq},${tr}`])return[]; while(c){if(c.q===u.q&&c.r===u.r)break;p.push(c);c=cf[`${c.q},${c.r}`];} return p.reverse();}
     log(m){const c=document.getElementById('log-container'); if(c){ const d=document.createElement('div');d.className='log-entry';d.innerText=`> ${m}`;c.appendChild(d);c.scrollTop=c.scrollHeight; }}
+    showContext(mx,my){}
+    getStatus(u){if(u.hp<=0)return "DEAD";const r=u.hp/u.maxHp;if(r>0.8)return "NORMAL";if(r>0.5)return "DAMAGED";return "CRITICAL";}
+    axialToCube(q, r) { return { x: q, y: r, z: -q-r }; }
+    cubeToAxial(c) { return { q: c.x, r: c.y }; }
+    cubeRound(c) {
+        let rx = Math.round(c.x), ry = Math.round(c.y), rz = Math.round(c.z);
+        const x_diff = Math.abs(rx - c.x), y_diff = Math.abs(ry - c.y), z_diff = Math.abs(rz - c.z);
+        if (x_diff > y_diff && x_diff > z_diff) rx = -ry - rz; else if (y_diff > z_diff) ry = -rx - rz; else rz = -rx - ry;
+        return { x: rx, y: ry, z: rz };
+    }
     
-    // updateSidebar (変更なし)
     updateSidebar(){
         const ui=document.getElementById('unit-info'),u=this.selectedUnit;
         if(u){
