@@ -1,4 +1,4 @@
-/** PHASER VFX & ENV: Morphing Grass Animation & Visible Wind */
+/** PHASER VFX & ENV: Smooth Morphing Nature & Sea */
 
 class VFXSystem {
     constructor() {
@@ -22,7 +22,7 @@ class VFXSystem {
             p.y += p.vy;
             
             if (p.type === 'wind') {
-                p.alpha = Math.sin((p.life / p.maxLife) * Math.PI) * 0.05; // 極めて淡く
+                p.alpha = Math.sin((p.life / p.maxLife) * Math.PI) * 0.05; 
             } else if (p.type === 'proj') {
                 p.progress += p.speed;
                 let t = p.progress;
@@ -59,15 +59,13 @@ class VFXSystem {
         graphics.clear();
         this.particles.forEach(p => {
             if (p.delay > 0) return;
-            
             if (p.type === 'wind') {
                 graphics.lineStyle(1, 0xffffff, p.alpha);
                 graphics.beginPath();
                 graphics.moveTo(p.x, p.y);
                 graphics.lineTo(p.x - p.vx * 15, p.y - p.vy * 15); 
                 graphics.strokePath();
-            } 
-            else {
+            } else {
                 const alpha = p.life / p.maxLife;
                 graphics.fillStyle(this.hexToInt(p.color), alpha);
                 if (p.type === 'proj') graphics.fillCircle(p.x, p.y, 3);
@@ -97,55 +95,43 @@ class EnvSystem {
     preload(scene) {
         const TEXTURE_SCALE = 4.0; 
 
-        // ★重要: 草のアニメーションフレーム生成 (morphing)
-        // hd_grass_0 (直立) 〜 hd_grass_7 (最大に右へしなる)
+        // ★修正: コマ数を倍増 (16コマ) して滑らかさを確保
         if (!scene.textures.exists('hd_grass_0')) {
             const size = 64 * TEXTURE_SCALE;
             const palettes = [0x224411, 0x335522, 0x446633, 0x1a330a];
             
-            // 葉の定義を固定して、制御点だけ動かす
             const bladeDefs = [];
-            for(let i=0; i<30; i++) {
+            for(let i=0; i<40; i++) { // 葉の密度
                 bladeDefs.push({
                     col: palettes[Math.floor(Math.random() * palettes.length)],
                     startX: size/2 + (Math.random()-0.5) * (size * 0.1),
                     len: (size * 0.5) + Math.random() * (size * 0.5),
-                    lean: (Math.random() - 0.5) * (size * 0.8), // 初期の広がり
+                    lean: (Math.random() - 0.5) * (size * 0.8),
                     ctrlOff: (Math.random() - 0.5) * (size * 0.2)
                 });
             }
 
-            // 8段階の曲がり具合を生成
-            for (let frame = 0; frame < 8; frame++) {
+            // 16段階生成 (0〜15)
+            for (let frame = 0; frame < 16; frame++) {
                 const g = scene.make.graphics({x:0, y:0, add:false});
-                // 土台
                 g.fillStyle(0x112205, 0.9); g.fillEllipse(size/2, size, size/4, size/10);
 
-                // 曲がり係数 (0.0 〜 1.0)
-                const bendFactor = frame / 7.0; 
+                const bendFactor = frame / 15.0; 
 
                 for(let b of bladeDefs) {
                     g.lineStyle(1.5 * TEXTURE_SCALE, b.col, 1.0);
-                    
                     const startX = b.startX;
                     const startY = size;
-                    
-                    // 風の影響で先端が右へ移動し、少し下がる
-                    const windX = bendFactor * (size * 0.6); 
-                    const windY = Math.abs(windX) * 0.3; // 曲がると背が低くなる
+                    // しなり具合
+                    const windX = bendFactor * (size * 0.7); 
+                    const windY = Math.abs(windX) * 0.2; 
 
                     const endX = startX + b.lean + windX;
                     const endY = startY - b.len + windY;
-                    
-                    // 制御点も移動して曲線を作る
                     const ctrlX = startX + (b.lean * 0.1) + (windX * 0.5) + b.ctrlOff;
                     const ctrlY = startY - (b.len * 0.5);
 
-                    const curve = new Phaser.Curves.QuadraticBezier(
-                        new Phaser.Math.Vector2(startX, startY),
-                        new Phaser.Math.Vector2(ctrlX, ctrlY),
-                        new Phaser.Math.Vector2(endX, endY)
-                    );
+                    const curve = new Phaser.Curves.QuadraticBezier(new Phaser.Math.Vector2(startX, startY), new Phaser.Math.Vector2(ctrlX, ctrlY), new Phaser.Math.Vector2(endX, endY));
                     curve.draw(g);
                 }
                 g.generateTexture(`hd_grass_${frame}`, size, size);
@@ -169,15 +155,13 @@ class EnvSystem {
     clear() { this.grassElements = []; this.treeElements = []; }
 
     spawnGrass(scene, group, x, y) {
-        const count = 60; const scaleFactor = 0.12;
+        const count = 60; const scaleFactor = 0.10; // さらに少し小さくしてシャープに
         for(let i=0; i<count; i++) {
             const r = Math.random() * (HEX_SIZE * 1.0); const angle = Math.random() * Math.PI * 2;
             const ox = Math.cos(angle) * r; const oy = Math.sin(angle) * r * 0.866;
             
-            // ★修正: Spriteとして生成 (テクスチャ切り替え用)
             const grass = scene.add.sprite(x+ox, y+oy, 'hd_grass_0');
             grass.setOrigin(0.5, 1.0); grass.setScale((0.8 + Math.random() * 0.4) * scaleFactor); grass.setDepth(y+oy);
-            
             grass.origX = x + ox; grass.origY = y + oy;
             const tintVar = Math.floor(Math.random() * 30); grass.setTint(Phaser.Display.Color.GetColor(180 + tintVar, 220 + tintVar, 180 + tintVar));
             group.add(grass); this.grassElements.push(grass);
@@ -205,45 +189,51 @@ class EnvSystem {
 
     onGust() { this.gustPower = 1.0; }
 
-    // ★重要: アニメーションフレームによる「しなり」表現
+    // ★重要: 滑らか補間ロジック
     update(time) {
-        this.waveTime += 0.04; 
+        this.waveTime += 0.03; 
         const t = this.waveTime;
         
         this.gustPower *= 0.97;
         if(this.gustPower < 0.01) this.gustPower = 0;
 
-        // 1. 草 (Grass) - Frame Animation
+        // 1. 草
         this.grassElements = this.grassElements.filter(g => g.scene);
         for (let i = 0; i < this.grassElements.length; i++) {
             const g = this.grassElements[i];
             
-            // 波の計算 (0.0 〜 1.0 の範囲を狙う)
-            // 右への進行波
-            const wave = Math.sin(g.origX * 0.008 - t * 0.8); 
-            // -1~1 を 0~1 に正規化しつつ、ベースの傾き(0.2)を加算
-            let windFactor = (wave + 1.0) * 0.3 + 0.1;
+            // 風の計算
+            const bigSway = Math.sin(g.origX * 0.005 - t * 0.5) * 0.2; 
+            const ripple = Math.sin(t * 2.0 + g.origY * 0.1) * 0.05;
+            const gust = this.gustPower * 0.8;
             
-            // 突風
-            windFactor += this.gustPower * 0.8;
+            // 0.0〜1.0 に正規化された「風力」 (0.5が直立)
+            // 右へ大きく傾くようにオフセット
+            let windValue = (bigSway + ripple + gust) + 0.3; 
             
-            // 細かいゆらぎ
-            windFactor += Math.sin(t * 3.0 + g.origY * 0.1) * 0.1;
+            // クランプ
+            windValue = Math.max(0, Math.min(1.0, windValue));
 
-            // クランプ (0 〜 1.0) -> フレーム番号 (0 〜 7)
-            const frameIdx = Phaser.Math.Clamp(Math.floor(windFactor * 7), 0, 7);
-            
-            // テクスチャ切り替え
+            // ★滑らか処理: 16段階のフレーム選択 + 端数を使った微調整
+            const maxFrames = 15;
+            const floatFrame = windValue * maxFrames;
+            const frameIdx = Math.floor(floatFrame);
+            const remainder = floatFrame - frameIdx; // 0.0 〜 0.99
+
             g.setTexture(`hd_grass_${frameIdx}`);
+            
+            // 端数分だけ少し傾けて、コマ落ち感を消す (補間)
+            g.skewX = remainder * 0.1; 
         }
 
-        // 2. 木 (Trees) - Skew Animation (木は回転/歪みで表現)
+        // 2. 木
         this.treeElements = this.treeElements.filter(tr => tr.scene);
         for (let i = 0; i < this.treeElements.length; i++) {
             const tr = this.treeElements[i];
             const sway = Math.sin(tr.origX * 0.003 - t * 0.3) * 0.08;
             const gust = this.gustPower * 0.3;
             const targetSkew = sway + 0.05 + gust; 
+            
             tr.currentSkew += (targetSkew - tr.currentSkew) * 0.02; 
             tr.skewX = tr.baseSkew + tr.currentSkew;
             tr.angle = tr.currentSkew * 3;
