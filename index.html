@@ -19,12 +19,14 @@
 
         #resizer { width: 6px; background: #222; cursor: col-resize; z-index: 30; border-left: 1px solid #000; border-right: 1px solid #333; }
         
+        /* サイドバー開閉のアニメーションと設定 */
         #sidebar { 
             width: 340px; min-width: 280px; 
             background: var(--panel); border-left: 1px solid var(--border); 
             display: flex; flex-direction: column; z-index: 20; position: relative; 
             transition: width 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), min-width 0.3s;
         }
+        /* 完全に閉じるための設定 */
         #sidebar.collapsed { 
             width: 0 !important; 
             min-width: 0 !important; 
@@ -79,34 +81,44 @@
         .card-container { display: flex; gap: 15px; }
         .card { width: 140px; height: 220px; background: #222; border: 2px solid #555; padding: 10px; cursor: pointer; color: #ccc; position: relative; overflow: hidden; display: flex; flex-direction: column; align-items: center; transition: transform 0.1s, border-color 0.1s; }
         .card:hover { border-color: #d84; transform: translateY(-5px); }
-        .card.selected { border-color: #d84 !important; background: #2a1a10 !important; transform: translateY(-5px); box-shadow: 0 0 15px rgba(221, 136, 68, 0.4); }
+        
+        /* 選択されたカードの強調表示 */
+        .card.selected { 
+            border-color: #d84 !important; 
+            background: #2a1a10 !important; 
+            transform: translateY(-5px); 
+            box-shadow: 0 0 15px rgba(221, 136, 68, 0.4); 
+        }
+        
         .card-badge { position: absolute; top: 5px; right: 5px; background: #d84; color: #000; width: 24px; height: 24px; border-radius: 50%; display: none; justify-content: center; align-items: center; font-weight: bold; font-size: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.5); z-index: 10; }
         .card-img-box { width: 100px; height: 100px; background: #000; border: 1px solid #444; margin-bottom: 10px; display: flex; justify-content: center; align-items: center; overflow: hidden; }
         .card-img-box img { max-width: 100%; max-height: 100%; object-fit: contain; }
         .card-body { width: 100%; text-align: center; }
         .card-body h3 { margin: 5px 0; font-size: 16px; color: #d84; }
         .card-body p { margin: 0; font-size: 10px; color: #888; }
+        
         #sector-counter { position:absolute; top:10px; right:20px; font-size:24px; font-weight:900; color:#d84; pointer-events:none; z-index:50; }
         #auto-toggle { position:absolute; bottom:10px; left:10px; padding:5px 10px; background:#000; border:1px solid #444; color:#888; cursor:pointer; z-index:50; font-size:11px; }
         #auto-toggle.active { color:#0f0; border-color:#0f0; }
         
-        /* ★修正: pointer-events: none を削除し、クリック可能に */
+        /* コンテキストメニュー */
         #context-menu { 
             position:absolute; display:none; 
             background:rgba(0,20,30,0.95); border:1px solid #0af; 
             padding:10px; z-index:60; color:#fff; font-size:11px; 
             box-shadow: 0 2px 10px rgba(0,0,0,0.5);
-            /* pointer-events: none;  <-- これを削除 */
+            /* pointer-events: noneを削除しました */
         }
 
         #eyecatch { position: absolute; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.3); z-index: 90; display: flex; justify-content: center; align-items: center; pointer-events: none; opacity: 0; transition: opacity 0.5s; }
         #eyecatch-text { color: #d44; font-size: 40px; font-weight: 900; text-shadow: 0 0 20px #000; border: 4px solid #d44; padding: 10px 40px; background: rgba(0,0,0,0.8); transform: skewX(-10deg); }
         
+        /* コマンドメニュー (最前面) */
         #command-menu { 
             position: absolute; display: none; 
             background: rgba(10, 15, 10, 0.95); border: 1px solid #d84; 
             padding: 5px; 
-            z-index: 9999; 
+            z-index: 9999; /* 最強 */
             box-shadow: 0 0 15px rgba(0,0,0,0.8); 
             border-radius: 4px; min-width: 120px; overflow: visible; 
         }
@@ -122,3 +134,86 @@
         .mode-indicator { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.7); border: 1px solid #0f0; color: #0f0; padding: 5px 20px; font-weight: bold; font-size: 14px; display: none; z-index: 80; pointer-events: none; }
     </style>
 </head>
+<body>
+    <div id="app">
+        <div id="game-view">
+            <div id="sector-counter">SECTOR: 01</div>
+            
+            <div id="context-menu"></div>
+            
+            <div id="mode-label" class="mode-indicator">SELECT TARGET</div>
+            <div id="auto-toggle" onclick="gameLogic.toggleAuto()">AUTO</div>
+            <div id="eyecatch"><div id="eyecatch-text">ENEMY PHASE</div></div>
+            
+            <div id="setup-screen" class="overlay">
+                <div style="text-align:center;">
+                    <h2 style="color:#d84;">SQUAD RECRUITMENT</h2>
+                    <div class="card-container" id="setup-cards"></div>
+                    <button id="btn-start" style="margin-top:20px; padding:10px 30px; background:#d84; border:none; cursor:pointer; font-weight:bold; display:none;" onclick="gameLogic.startCampaign()">DEPLOY</button>
+                </div>
+            </div>
+            
+            <div id="gameover-screen" class="overlay" style="display:none;">
+                <div style="text-align:center; color:#f55;">
+                    <h1>M.I.A.</h1><p>全滅しました</p>
+                    <button onclick="location.reload()" style="padding:10px 20px; background:#300; border:1px solid #f00; color:#f00; cursor:pointer;">RESTART</button>
+                </div>
+            </div>
+            
+            <div id="reward-screen" class="overlay" style="display:none;">
+                <div style="text-align:center;">
+                    <h2 style="color:#da4;">SECTOR CLEARED</h2>
+                    <div class="card-container" id="reward-cards"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div id="resizer"></div>
+        
+        <div id="sidebar">
+            <div id="sidebar-toggle" onclick="gameLogic.toggleSidebar()">▶</div>
+            <div class="panel-header">SOLDIER DOSSIER</div>
+            <div id="unit-info"></div>
+            <div class="panel-header" style="border-top:1px solid #444;">BATTLE LOG</div>
+            <div id="log-container"></div>
+        </div>
+    </div>
+    
+    <div id="command-menu">
+        <div class="cmd-btn" id="btn-move" onclick="gameLogic.setMode('MOVE')"><i>👣</i> 移動</div>
+        <div class="cmd-btn" id="btn-attack" onclick="gameLogic.setMode('ATTACK')"><i>🔫</i> 射撃</div>
+        <div class="cmd-group">
+            <div class="cmd-btn"><i>🧘</i> 姿勢 ▶</div>
+            <div class="cmd-submenu">
+                <div class="sub-btn" onclick="gameLogic.setStance('stand')">立</div>
+                <div class="sub-btn" onclick="gameLogic.setStance('crouch')">屈</div>
+                <div class="sub-btn" onclick="gameLogic.setStance('prone')">伏</div>
+            </div>
+        </div>
+        <div class="cmd-btn" id="btn-repair" onclick="gameLogic.actionRepair()"><i>🔧</i> 修理</div>
+        <div class="cmd-btn" id="btn-melee" onclick="gameLogic.actionMeleeSetup()"><i>🔪</i> 白兵</div>
+        <div class="cmd-btn" id="btn-heal" onclick="gameLogic.actionHeal()"><i>💊</i> 治療</div>
+        <hr style="border:0; border-top:1px solid #444; margin:3px 0;">
+        <div class="cmd-btn" onclick="gameLogic.clearSelection()" style="text-align:center; color:#888;">CANCEL</div>
+    </div>
+
+    <script>
+        function onSlotDragStart(e, type, index) { e.dataTransfer.setData("text/plain", JSON.stringify({type, index})); e.target.classList.add('dragging'); }
+        function onSlotDragEnd(e) { e.target.classList.remove('dragging'); }
+        function onSlotDragOver(e) { e.preventDefault(); e.currentTarget.classList.add('drag-over'); }
+        function onSlotDragLeave(e) { e.currentTarget.classList.remove('drag-over'); }
+        function onSlotDrop(e, targetType, targetIndex) {
+            e.preventDefault(); e.currentTarget.classList.remove('drag-over');
+            const data = e.dataTransfer.getData("text/plain");
+            if(data && window.gameLogic) { try { const src = JSON.parse(data); window.gameLogic.swapEquipment(src, {type: targetType, index: targetIndex}); } catch(err) { console.error(err); } }
+        }
+    </script>
+    
+    <script src="data.js"></script>
+    <script src="phaser_sound.js"></script> 
+    <script src="phaser_vfx.js"></script> 
+    <script src="phaser_unit.js"></script> 
+    <script src="phaser_bridge.js"></script>
+    <script src="logic.js"></script>
+</body>
+</html>
