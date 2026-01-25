@@ -1,145 +1,234 @@
-/** PHASER UNIT: Soldier & Tank Renderer (HP Bar Position Fix) */
+/** PHASER UNIT: UnitView Restored & HP Bar Tweaked */
 
-class Unit extends Phaser.GameObjects.Container {
-    constructor(scene, data) {
-        super(scene, 0, 0);
-        scene.add.existing(this);
-        this.dataRaw = data;
-        this.setDepth(100);
+class UnitView {
+    constructor(scene, unitLayer, hpLayer) {
+        this.scene = scene;
+        this.unitLayer = unitLayer;
+        this.hpLayer = hpLayer;
+        this.visuals = new Map(); 
+        this.defineAnimations();
+    }
 
-        this.shadow = scene.add.ellipse(0, 5, 40, 20, 0x000000, 0.4);
-        this.add(this.shadow);
+    defineAnimations() {
+        const anims = this.scene.anims;
+        if (anims.exists('anim_idle')) return; 
 
-        this.sprite = scene.add.container(0, 0);
-        this.add(this.sprite);
+        anims.create({ key: 'anim_idle', frames: anims.generateFrameNumbers('us_soldier', { start: 0, end: 7 }), frameRate: 8, repeat: -1 });
+        anims.create({ key: 'anim_crouch', frames: anims.generateFrameNumbers('us_soldier', { start: 8, end: 15 }), frameRate: 15, repeat: 0 });
+        anims.create({ key: 'anim_prone', frames: anims.generateFrameNumbers('us_soldier', { start: 24, end: 31 }), frameRate: 15, repeat: 0 });
+        anims.create({ key: 'anim_crouch_idle', frames: anims.generateFrameNumbers('us_soldier', { frames: [15] }), frameRate: 1, repeat: -1 });
+        anims.create({ key: 'anim_prone_idle', frames: anims.generateFrameNumbers('us_soldier', { frames: [33, 33, 33, 33, 33, 34, 33, 33, 33, 33, 38, 39, 38, 33, 33]}), frameRate: 6, repeat: -1 });
+        anims.create({ key: 'anim_crouch_shoot', frames: anims.generateFrameNumbers('us_soldier', { start: 16, end: 23 }), frameRate: 15, repeat: 0 });
+        anims.create({ key: 'anim_prone_shoot', frames: anims.generateFrameNumbers('us_soldier', { start: 32, end: 39 }), frameRate: 15, repeat: 0 });
+        anims.create({ key: 'anim_shoot', frames: anims.generateFrameNumbers('us_soldier', { start: 40, end: 47 }), frameRate: 15, repeat: 0 });
+        anims.create({ key: 'anim_walk', frames: anims.generateFrameNumbers('us_soldier', { start: 48, end: 55 }), frameRate: 10, repeat: -1 });
+        anims.create({ key: 'anim_crouch_walk', frames: anims.generateFrameNumbers('us_soldier', { start: 56, end: 63 }), frameRate: 8, repeat: -1 });
+        anims.create({ key: 'anim_crawl', frames: anims.generateFrameNumbers('us_soldier', { start: 64, end: 71 }), frameRate: 6, repeat: -1 });
+        anims.create({ key: 'anim_melee', frames: anims.generateFrameNumbers('us_soldier', { start: 72, end: 79 }), frameRate: 15, repeat: 0 });
 
-        if (data.def.isTank) {
-            this.drawTank(scene, data.team);
-        } else {
-            this.drawSoldier(scene, data.team, data.def.role);
-        }
+        if (!anims.exists('tank_idle')) { anims.create({ key: 'tank_idle', frames: anims.generateFrameNumbers('tank_sheet', { frames: [7, 6, 5, 6, 7, 5] }), frameRate: 10, repeat: -1 }); }
+        if (!anims.exists('explosion_anim')) { anims.create({ key: 'explosion_anim', frames: anims.generateFrameNumbers('explosion_sheet', { start: 0, end: 7 }), frameRate: 20, repeat: 0, hideOnComplete: true }); }
+    }
 
-        // HP Bar
-        this.hpBar = scene.add.graphics();
-        this.add(this.hpBar);
-        
-        // Selection indicator
-        this.selectionCircle = scene.add.graphics();
-        this.selectionCircle.lineStyle(2, 0xffff00, 0.8);
-        this.selectionCircle.strokeCircle(0, 0, 30);
-        this.selectionCircle.visible = false;
-        this.add(this.selectionCircle);
-
-        // Interaction
-        this.sprite.setInteractive(new Phaser.Geom.Rectangle(-30, -60, 60, 70), Phaser.Geom.Rectangle.Contains);
-        this.sprite.on('pointerdown', () => {
-            if (window.gameLogic && data.hp > 0) window.gameLogic.onUnitClick(this.dataRaw);
+    update(time, delta) {
+        if (!window.gameLogic) return;
+        const activeIds = new Set();
+        const hexMap = new Map(); 
+        window.gameLogic.units.forEach(u => {
+            if (u.hp <= 0) return;
+            const key = `${u.q},${u.r}`;
+            if (!hexMap.has(key)) hexMap.set(key, []);
+            hexMap.get(key).push(u);
+            activeIds.add(u.id);
         });
-        // Right click handling
-        this.sprite.on('pointerup', (pointer) => {
-             if (pointer.rightButtonDown() && window.gameLogic) {
-                 window.gameLogic.showContext(pointer.event.clientX, pointer.event.clientY);
-             }
+
+        window.gameLogic.units.forEach(u => {
+            if (u.hp <= 0) return;
+            let visual = this.visuals.get(u.id);
+            if (!visual) {
+                visual = this.createVisual(u);
+                this.visuals.set(u.id, visual);
+                this.unitLayer.add(visual);
+            }
+            const siblings = hexMap.get(`${u.q},${u.r}`) || [];
+            const index = siblings.indexOf(u);
+            const count = siblings.length;
+            this.updateVisual(visual, u, delta, index, count);
+
+            const isSelected = (window.gameLogic.selectedUnit === u);
+            if (isSelected) {
+                if (this.unitLayer.exists(visual)) { this.unitLayer.remove(visual); this.hpLayer.add(visual); }
+            } else {
+                if (this.hpLayer.exists(visual)) { this.hpLayer.remove(visual); this.unitLayer.add(visual); }
+            }
         });
 
-        this.update(data);
+        for (const [id, visual] of this.visuals) {
+            if (!activeIds.has(id)) { this.destroyVisual(visual); this.visuals.delete(id); }
+        }
     }
 
-    drawSoldier(scene, team, role) {
-        const color = team === 'player' ? 0x5588ff : 0xff5555;
-        const skinColor = 0xffccaa;
-
-        // Body
-        const body = scene.add.rectangle(0, -25, 16, 24, color);
-        // Head
-        const head = scene.add.circle(0, -45, 10, skinColor);
-        // Helmet
-        const helmet = scene.add.arc(0, -47, 11, 180, 360, false, 0x334433);
+    createVisual(u) {
+        const container = this.scene.add.container(0, 0);
+        container.setSize(40, 60);
+        container.setInteractive({ useHandCursor: true });
         
-        this.sprite.add([body, head, helmet]);
+        container.on('pointerdown', (pointer) => {
+            if (pointer.button === 0 && window.gameLogic) { pointer.event.stopPropagation(); window.gameLogic.onUnitClick(u); }
+        });
 
-        // Role Specific Attachments
-        if (role === 'scout') {
-            // Binoculars
-            this.sprite.add(scene.add.rectangle(5, -43, 6, 4, 0x111111));
-        } else if (role === 'gunner') {
-            // Machine Gun
-            this.sprite.add(scene.add.rectangle(8, -25, 20, 6, 0x222222));
-        } else if (role === 'sniper') {
-             // Ghillie suit effect
-             const ghillie = scene.add.graphics();
-             ghillie.fillStyle(0x224411, 0.8);
-             for(let i=0; i<5; i++) ghillie.fillCircle((Math.random()-0.5)*15, -30 + Math.random()*20, 5);
-             this.sprite.add(ghillie);
-             // Rifle
-             this.sprite.add(scene.add.rectangle(5, -28, 25, 3, 0x111111));
+        const shadow = this.scene.add.ellipse(0, 0, 20, 10, 0x000000, 0.5);
+        
+        let sprite;
+        if (u.def.name === "Rifleman" || u.def.role === "infantry" || !u.def.isTank) { 
+            sprite = this.scene.add.sprite(0, -20, 'us_soldier'); 
+            sprite.setScale(0.25); 
+            sprite.play('anim_idle');
+            if (u.team === 'player') sprite.setTint(0xeeeeff); else sprite.setTint(0xffaaaa);
+        } else if (u.def.isTank) {
+            sprite = this.scene.add.sprite(0, -10, 'tank_sheet');
+            sprite.setScale(0.4);
+            sprite.play('tank_idle');
+            if (u.team === 'player') sprite.setTint(0xccddee); else sprite.setTint(0xffaaaa);
+            shadow.setPosition(-2, 0); 
+            shadow.setSize(46, 18);
         } else {
-            // Rifleman weapon
-            this.sprite.add(scene.add.rectangle(8, -25, 18, 4, 0x222222));
-        }
-    }
-
-    drawTank(scene, team) {
-        const color = team === 'player' ? 0x4466cc : 0xcc4444;
-        const hull = scene.add.rectangle(0, -15, 50, 30, color);
-        const turret = scene.add.rectangle(0, -30, 30, 20, color);
-        const barrel = scene.add.rectangle(25, -30, 20, 6, 0x222222);
-        const tracks = scene.add.rectangle(0, -5, 55, 40, 0x222222);
-        this.sprite.add([tracks, hull, turret, barrel]);
-        this.shadow.setScale(1.5);
-    }
-
-    update(data) {
-        this.dataRaw = data;
-        if (data.q !== -999) {
-            const pos = Renderer.hexToPx(data.q, data.r);
-            this.setPosition(pos.x, pos.y);
-            this.visible = true;
-        } else {
-            this.visible = false;
+            sprite = this.scene.add.rectangle(0, 0, 30, 40, u.team==='player'?0x00f:0xf00);
         }
 
-        if (data.hp <= 0) {
-            this.sprite.setRotation(Math.PI / 2);
-            this.sprite.setAlpha(0.5);
-            this.hpBar.visible = false;
-            this.shadow.visible = false;
-        } else {
-            this.sprite.setRotation(0);
-            this.sprite.setAlpha(1.0);
-            this.hpBar.visible = true;
-            this.shadow.visible = true;
+        container.add([shadow, sprite]);
+
+        // ★修正: HPバーを細く (高さ 2)
+        const hpBg = this.scene.add.rectangle(0, 0, 20, 2, 0x000000).setOrigin(0, 0.5);
+        const hpBar = this.scene.add.rectangle(0, 0, 20, 2, 0x00ff00).setOrigin(0, 0.5);
+        const infoContainer = this.scene.add.container(0, 18);
+        
+        this.hpLayer.add(hpBg);
+        this.hpLayer.add(hpBar);
+        this.hpLayer.add(infoContainer);
+
+        container.sprite = sprite;
+        container.hpBg = hpBg; container.hpBar = hpBar; container.infoContainer = infoContainer;
+        
+        const pos = Renderer.hexToPx(u.q, u.r);
+        container.setPosition(pos.x, pos.y);
+        container.targetX = pos.x; container.targetY = pos.y;
+
+        return container;
+    }
+
+    updateVisual(visual, u, delta, index, count) {
+        if(!Renderer || !Renderer.hexToPx) return;
+        const basePos = Renderer.hexToPx(u.q, u.r);
+        
+        let offsetX = 0, offsetY = 0;
+        if (count > 1) {
+            const spread = 12; 
+            if (index === 0) { offsetX = -spread; offsetY = -spread; }
+            else if (index === 1) { offsetX = spread; offsetY = -spread; }
+            else if (index === 2) { offsetX = -spread; offsetY = spread; }
+            else if (index === 3) { offsetX = spread; offsetY = spread; }
         }
         
-        if(window.gameLogic && window.gameLogic.selectedUnit === data) {
-             this.selectionCircle.visible = true;
+        visual.targetX = basePos.x + offsetX;
+        visual.targetY = basePos.y + offsetY;
+
+        const dx = visual.targetX - visual.x;
+        const dy = visual.targetY - visual.y;
+        const dist = Math.sqrt(dx*dx + dy*dy);
+        const speed = 0.06; 
+        
+        let isMoving = false;
+        if (dist > 1) {
+            visual.x += dx * speed;
+            visual.y += dy * speed;
+            isMoving = true;
+            if (Math.abs(dx) > 0.1) visual.sprite.setFlipX(dx < 0);
         } else {
-             this.selectionCircle.visible = false;
+            visual.x = visual.targetX;
+            visual.y = visual.targetY;
         }
 
-        this.draw(data);
+        if (!u.def.isTank && visual.sprite) {
+            const currentAnim = visual.sprite.anims.currentAnim ? visual.sprite.anims.currentAnim.key : '';
+            const isAttacking = currentAnim.includes('shoot') || currentAnim.includes('melee');
+            
+            if (isMoving) {
+                let moveAnim = 'anim_walk';
+                if (u.stance === 'crouch') moveAnim = 'anim_crouch_walk';
+                if (u.stance === 'prone') moveAnim = 'anim_crawl';
+                if (currentAnim !== moveAnim) visual.sprite.play(moveAnim, true);
+            } else {
+                if (!isAttacking || !visual.sprite.anims.isPlaying) {
+                    let idleAnim = 'anim_idle';
+                    if (u.stance === 'crouch') idleAnim = 'anim_crouch_idle'; 
+                    if (u.stance === 'prone') idleAnim = 'anim_prone_idle';
+                    if (currentAnim !== idleAnim) visual.sprite.play(idleAnim, true);
+                }
+            }
+        }
+
+        if (visual.hpBg && visual.hpBar && visual.infoContainer) {
+            // ★修正: HPバーの位置を頭上へ (-55px)
+            const barY = visual.y - 55; 
+            const barX = visual.x - 10;
+            visual.hpBg.setPosition(barX, barY);
+            visual.hpBar.setPosition(barX, barY);
+            
+            const hpPct = u.hp / u.maxHp;
+            visual.hpBar.width = Math.max(0, 20 * hpPct);
+            visual.hpBar.fillColor = hpPct > 0.5 ? 0x00ff00 : 0xff0000;
+
+            const infoY = visual.y + 12;
+            visual.infoContainer.setPosition(visual.x, infoY);
+            visual.infoContainer.removeAll(true);
+
+            let infoText = "";
+            if(u.hands && u.hands.isBroken) infoText += "⚠ ";
+            if(u.hp < u.maxHp*0.5) infoText += "➕ ";
+            
+            if (infoText) {
+                const txt = this.scene.add.text(0, 0, infoText, { fontSize: '10px' }).setOrigin(0.5);
+                visual.infoContainer.add(txt);
+            }
+        }
     }
 
-    draw(data) {
-        this.hpBar.clear();
-        if (data.hp <= 0) return;
+    destroyVisual(visual) {
+        if(visual.hpBg) visual.hpBg.destroy();
+        if(visual.hpBar) visual.hpBar.destroy();
+        if(visual.infoContainer) visual.infoContainer.destroy();
+        visual.destroy();
+    }
 
-        const healthRatio = data.hp / data.maxHp;
-        const x = 0;
-        // ★修正: HPバーの位置を頭上へ (y - 60), 高さを細く (2)
-        const y = -60; 
-        const width = 24;
-        const height = 2;
+    triggerAttack(attacker, target) {
+        const visual = this.visuals.get(attacker.id);
+        if (!visual || !visual.sprite) return;
+        if (attacker.def.isTank) return; 
 
-        // Background
-        this.hpBar.fillStyle(0x000000, 0.6);
-        this.hpBar.fillRect(x - width/2, y, width, height);
+        let animKey = 'anim_shoot'; 
+        const start = Renderer.hexToPx(attacker.q, attacker.r);
+        const end = Renderer.hexToPx(target.q, target.r);
+        const dist = Phaser.Math.Distance.Between(start.x, start.y, end.x, end.y);
+        
+        if (dist < 60) {
+            animKey = 'anim_melee';
+        } else {
+            if (attacker.stance === 'crouch') animKey = 'anim_crouch_shoot';
+            if (attacker.stance === 'prone') animKey = 'anim_prone_shoot';
+        }
 
-        // Fill
-        if (healthRatio > 0.5) this.hpBar.fillStyle(0x44ff44, 1.0);
-        else if (healthRatio > 0.25) this.hpBar.fillStyle(0xffff44, 1.0);
-        else this.hpBar.fillStyle(0xff4444, 1.0);
+        const isRight = end.x >= start.x;
+        visual.sprite.setFlipX(!isRight);
 
-        this.hpBar.fillRect(x - width/2, y, Math.max(0, width * healthRatio), height);
+        visual.sprite.play(animKey);
+        visual.sprite.once('animationcomplete', () => {
+            if(visual.sprite) {
+                let idleAnim = 'anim_idle';
+                if (attacker.stance === 'crouch') idleAnim = 'anim_crouch_idle';
+                if (attacker.stance === 'prone') idleAnim = 'anim_prone_idle';
+                visual.sprite.play(idleAnim, true);
+            }
+        });
     }
 }
