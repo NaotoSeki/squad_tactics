@@ -1,72 +1,108 @@
-/** LOGIC: Restored checkDeploy & deployUnit & Card Icons */
+/** LOGIC: Fixed Sidebar Toggle & Improved Initial Cards */
 
 // アイコン生成ヘルパー
 function createCardIcon(type) {
-    const c = document.createElement('canvas');
-    c.width = 100; c.height = 100;
-    const ctx = c.getContext('2d');
-    ctx.fillStyle = "#1a1a1a"; ctx.fillRect(0,0,100,100);
-    ctx.lineWidth = 4; ctx.strokeStyle = "#d84"; ctx.lineCap = "round"; ctx.lineJoin = "round";
-    if (type === 'infantry') {
-        ctx.fillStyle = "#d84"; ctx.beginPath(); ctx.arc(50, 30, 15, 0, Math.PI*2); ctx.fill(); 
-        ctx.beginPath(); ctx.moveTo(50, 45); ctx.lineTo(50, 80); ctx.stroke();
-        ctx.beginPath(); ctx.moveTo(20, 55); ctx.lineTo(80, 55); ctx.stroke();
-        ctx.beginPath(); ctx.moveTo(50, 80); ctx.lineTo(30, 95); ctx.stroke();
-        ctx.beginPath(); ctx.moveTo(50, 80); ctx.lineTo(70, 95); ctx.stroke();
-    } else if (type === 'tank') {
-        ctx.fillStyle = "#d84"; ctx.fillRect(20, 40, 60, 30);
-        ctx.beginPath(); ctx.arc(50, 40, 15, Math.PI, 0); ctx.fill();
-        ctx.lineWidth = 6; ctx.beginPath(); ctx.moveTo(65, 35); ctx.lineTo(95, 30); ctx.stroke();
-        ctx.lineWidth = 4; ctx.strokeRect(15, 65, 70, 15); 
-    } else if (type === 'heal') {
-        ctx.fillStyle = "#4f8"; ctx.fillRect(40, 20, 20, 60); ctx.fillRect(20, 40, 60, 20);
-        ctx.strokeStyle = "#fff"; ctx.lineWidth = 2; ctx.strokeRect(40, 20, 20, 60); ctx.strokeRect(20, 40, 60, 20);
-    }
-    return c.toDataURL();
+    // ※今回は使いませんが、互換性のため残します
+    const c = document.createElement('canvas'); c.width = 1; c.height = 1; return c.toDataURL();
 }
 
 class Game {
     constructor() {
-        this.units = []; this.map = []; this.setupSlots = []; this.state = 'SETUP';
-        this.path = []; this.reachableHexes = []; this.attackLine = [];
-        this.aimTargetUnit = null; this.hoverHex = null;
-        this.isAuto = false; this.isProcessingTurn = false; this.sector = 1;
-        this.enemyAI = 'AGGRESSIVE'; this.cardsUsed = 0;
-        this.interactionMode = 'SELECT'; this.selectedUnit = null;
-        this.initDOM(); this.initSetup();
+        this.units = [];
+        this.map = [];
+        this.setupSlots = [];
+        this.state = 'SETUP';
+        this.path = [];
+        this.reachableHexes = [];
+        this.attackLine = [];
+        this.aimTargetUnit = null;
+        this.hoverHex = null;
+        this.isAuto = false;
+        this.isProcessingTurn = false;
+        this.sector = 1;
+        this.enemyAI = 'AGGRESSIVE';
+        this.cardsUsed = 0;
+
+        this.interactionMode = 'SELECT';
+        this.selectedUnit = null;
+
+        this.initDOM();
+        this.initSetup();
     }
 
     initDOM() {
         Renderer.init(document.getElementById('game-view'));
         window.addEventListener('click', (e) => {
             if (!e.target.closest('#context-menu')) document.getElementById('context-menu').style.display = 'none';
-            if (!e.target.closest('#command-menu') && !e.target.closest('canvas')) { this.hideActionMenu(); }
+            if (!e.target.closest('#command-menu') && !e.target.closest('canvas')) {
+                this.hideActionMenu();
+            }
         });
-        const resizer = document.getElementById('resizer'); const sidebar = document.getElementById('sidebar');
+        const resizer = document.getElementById('resizer');
+        const sidebar = document.getElementById('sidebar');
         let isResizing = false;
         if (resizer) {
             resizer.addEventListener('mousedown', (e) => { isResizing = true; document.body.style.cursor = 'col-resize'; resizer.classList.add('active'); });
             window.addEventListener('mousemove', (e) => {
                 if (!isResizing) return;
                 const newWidth = document.body.clientWidth - e.clientX;
-                if (newWidth > 200 && newWidth < 800) { sidebar.style.width = newWidth + 'px'; if (sidebar.classList.contains('collapsed')) this.toggleSidebar(); Renderer.resize(); }
+                if (newWidth > 200 && newWidth < 800) {
+                    sidebar.style.width = newWidth + 'px';
+                    // ドラッグ中はcollapsedクラスを外す
+                    if (sidebar.classList.contains('collapsed')) this.toggleSidebar();
+                    Renderer.resize();
+                }
             });
             window.addEventListener('mouseup', () => { if (isResizing) { isResizing = false; document.body.style.cursor = ''; resizer.classList.remove('active'); Renderer.resize(); } });
         }
     }
 
+    // ★修正: サイドバー開閉ロジックの強化
     toggleSidebar() {
-        const sb = document.getElementById('sidebar'); const tg = document.getElementById('sidebar-toggle');
-        sb.classList.toggle('collapsed'); tg.innerText = sb.classList.contains('collapsed') ? '◀' : '▶';
-        if (sb.classList.contains('collapsed')) { sb.style.width = ''; }
+        const sb = document.getElementById('sidebar');
+        const tg = document.getElementById('sidebar-toggle');
+        
+        sb.classList.toggle('collapsed');
+        
+        if (sb.classList.contains('collapsed')) {
+            sb.style.width = ''; // CSS優先にするためインラインスタイル削除
+            tg.innerText = '◀';
+        } else {
+            // 開くときはデフォルト幅または以前の幅に戻す（ここでは単純にクラス削除）
+            tg.innerText = '▶';
+        }
+        
+        // Canvasリサイズ
         setTimeout(() => Renderer.resize(), 150);
     }
 
+    // ★修正: 初期カード選択画面 (棒人間廃止、スペック表示)
     initSetup() {
         const box = document.getElementById('setup-cards');
         ['rifleman', 'scout', 'gunner', 'sniper'].forEach(k => {
-            const t = UNIT_TEMPLATES[k]; const d = document.createElement('div'); d.className = 'card';
-            d.innerHTML = `<div class="card-badge">0</div><div class="card-img-box"><img src="${createCardIcon('infantry')}"></div><div class="card-body"><h3 style="color:#d84">${t.name}</h3><p style="font-size:10px">${t.role}</p></div>`;
+            const t = UNIT_TEMPLATES[k];
+            const d = document.createElement('div');
+            d.className = 'card';
+            
+            // スペック情報の構築
+            let specs = `<div style="text-align:left; font-size:10px; line-height:1.4; color:#aaa; margin-top:10px;">`;
+            specs += `HP: <span style="color:#fff">${t.hp||100}</span> AP: <span style="color:#fff">${t.ap||4}</span><br>`;
+            
+            const mainWpn = WPNS[t.main];
+            if (mainWpn) {
+                specs += `Main: <span style="color:#d84">${mainWpn.name}</span><br>`;
+                specs += `Rng:${mainWpn.rng} Dmg:${mainWpn.dmg}`;
+            }
+            specs += `</div>`;
+
+            d.innerHTML = `
+                <div class="card-badge">0</div>
+                <div class="card-body" style="padding-top:20px;">
+                    <h3 style="color:#d84; border-bottom:1px solid #444; padding-bottom:5px;">${t.name}</h3>
+                    <p style="font-size:10px; color:#888;">${t.role.toUpperCase()}</p>
+                    ${specs}
+                </div>
+            `;
             d.onclick = () => {
                 if (this.setupSlots.length < 3) {
                     this.setupSlots.push(k);
@@ -162,7 +198,6 @@ class Game {
         return { q: 0, r: 0 };
     }
 
-    // ★重要: 復活した checkDeploy と deployUnit
     checkDeploy(targetHex) {
         if(!this.isValidHex(targetHex.q, targetHex.r) || this.map[targetHex.q][targetHex.r].id === -1) { this.log("配置不可: 進入不可能な地形です"); return false; }
         if(this.map[targetHex.q][targetHex.r].id === 5) { this.log("配置不可: 水上には配置できません"); return false; }
@@ -181,7 +216,6 @@ class Game {
         }
     }
 
-    // --- インタラクション ---
     onUnitClick(u) {
         if (this.state !== 'PLAY') return;
         if (this.interactionMode === 'MOVE') { this.handleClick({ q: u.q, r: u.r }); return; }
