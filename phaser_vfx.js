@@ -1,4 +1,4 @@
-/** PHASER VFX & ENV: Ultra-Smooth Inertia Nature & Sea */
+/** PHASER VFX & ENV: 30-Frame Smooth Grass & Detailed Organic Trees */
 
 class VFXSystem {
     constructor() {
@@ -7,12 +7,14 @@ class VFXSystem {
     }
 
     update() {
+        // --- Wind Gust System (Visual Particles) ---
         this.windTimer++;
-        if (this.windTimer > 150 + Math.random() * 150) {
+        if (this.windTimer > 200 + Math.random() * 200) {
             this.triggerWindGust();
             this.windTimer = 0;
         }
 
+        // --- Particles Physics ---
         for (let i = this.particles.length - 1; i >= 0; i--) {
             let p = this.particles[i];
             if (p.delay > 0) { p.delay--; continue; }
@@ -22,15 +24,24 @@ class VFXSystem {
             p.y += p.vy;
             
             if (p.type === 'wind') {
-                p.alpha = Math.sin((p.life / p.maxLife) * Math.PI) * 0.05; 
+                // 風の粒子: さらに淡く、穏やかに
+                p.alpha = Math.sin((p.life / p.maxLife) * Math.PI) * 0.04; 
             } else if (p.type === 'proj') {
                 p.progress += p.speed;
                 let t = p.progress;
                 if (t >= 1) t = 1;
-                const dx = p.ex - p.sx; const dy = p.ey - p.sy;
-                p.x = p.sx + dx * t; p.y = p.sy + dy * t;
+                
+                const dx = p.ex - p.sx;
+                const dy = p.ey - p.sy;
+                p.x = p.sx + dx * t;
+                p.y = p.sy + dy * t;
+                
                 if (p.arcHeight > 0) p.y -= Math.sin(t * Math.PI) * p.arcHeight;
-                if (t >= 1) { if (typeof p.onHit === 'function') p.onHit(); p.life = 0; }
+
+                if (t >= 1) {
+                    if (typeof p.onHit === 'function') p.onHit();
+                    p.life = 0; 
+                }
             } else {
                 p.vy += 0.2; 
             }
@@ -40,13 +51,14 @@ class VFXSystem {
     }
 
     triggerWindGust() {
-        for (let i = 0; i < 15; i++) {
+        // 風の線も少しゆっくりに
+        for (let i = 0; i < 12; i++) {
             this.add({
                 x: -300 - Math.random() * 500,
                 y: Math.random() * 3000,
-                vx: 20 + Math.random() * 10,
-                vy: 1 + Math.random() * 2,
-                life: 150,
+                vx: 15 + Math.random() * 8, // 速度低下
+                vy: 1 + Math.random() * 1,
+                life: 200,
                 color: "#ffffff", 
                 size: 1, 
                 type: 'wind'
@@ -84,76 +96,114 @@ class VFXSystem {
     hexToInt(hex) { if (hex === undefined || hex === null) return 0xffffff; if (typeof hex === 'number') return hex; if (typeof hex !== 'string') return 0xffffff; return parseInt(hex.replace('#', '0x'), 16); }
 }
 
+// ★環境演出システム: 30FPS Animation & Detailed Trees
 class EnvSystem {
     constructor() {
         this.grassElements = [];
         this.treeElements = [];
         this.gustPower = 0;
         this.waveTime = 0;
+        // 定数: アニメーションフレーム数
+        this.TOTAL_GRASS_FRAMES = 30; 
     }
 
     preload(scene) {
         const TEXTURE_SCALE = 4.0; 
 
-        // 1. 草のアニメーションフレーム生成
+        // 1. 草 (30段階の超滑らかアニメーション生成)
         if (!scene.textures.exists('hd_grass_0')) {
-            const baseSize = 64 * TEXTURE_SCALE;
-            const canvasW = baseSize * 1.8; 
-            const canvasH = baseSize;
+            const size = 64 * TEXTURE_SCALE;
+            const canvasW = size * 1.8; 
+            const canvasH = size;
             const palettes = [0x224411, 0x335522, 0x446633, 0x1a330a];
             
+            // 葉の定義を固定
             const bladeDefs = [];
             for(let i=0; i<45; i++) {
                 bladeDefs.push({
                     col: palettes[Math.floor(Math.random() * palettes.length)],
-                    startX: canvasW/2 + (Math.random()-0.5) * (baseSize * 0.15),
-                    len: (baseSize * 0.5) + Math.random() * (baseSize * 0.5),
-                    lean: (Math.random() - 0.5) * (baseSize * 0.9),
-                    ctrlOff: (Math.random() - 0.5) * (baseSize * 0.2)
+                    startX: canvasW/2 + (Math.random()-0.5) * (size * 0.15),
+                    len: (size * 0.5) + Math.random() * (size * 0.5),
+                    lean: (Math.random() - 0.5) * (size * 0.9),
+                    ctrlOff: (Math.random() - 0.5) * (size * 0.2)
                 });
             }
 
-            // 16段階生成
-            for (let frame = 0; frame < 16; frame++) {
+            // 0 〜 29 のフレームを生成
+            for (let frame = 0; frame < this.TOTAL_GRASS_FRAMES; frame++) {
                 const g = scene.make.graphics({x:0, y:0, add:false});
-                g.fillStyle(0x112205, 0.9); 
-                g.fillEllipse(canvasW/2, canvasH, baseSize/4, baseSize/10);
+                g.fillStyle(0x112205, 0.9); g.fillEllipse(canvasW/2, canvasH, size/4, size/10);
 
-                const bendFactor = frame / 15.0; 
+                const bendFactor = frame / (this.TOTAL_GRASS_FRAMES - 1.0); 
 
                 for(let b of bladeDefs) {
                     g.lineStyle(1.5 * TEXTURE_SCALE, b.col, 1.0);
                     const startX = b.startX;
                     const startY = canvasH;
-                    const windX = bendFactor * (baseSize * 0.8); 
-                    const windY = Math.abs(windX) * 0.25; 
+                    
+                    // 風の影響 (穏やかに)
+                    const windX = bendFactor * (size * 0.7); 
+                    const windY = Math.abs(windX) * 0.2; 
 
                     const endX = startX + b.lean + windX;
                     const endY = startY - b.len + windY;
                     const ctrlX = startX + (b.lean * 0.1) + (windX * 0.5) + b.ctrlOff;
                     const ctrlY = startY - (b.len * 0.5);
 
-                    const curve = new Phaser.Curves.QuadraticBezier(
-                        new Phaser.Math.Vector2(startX, startY),
-                        new Phaser.Math.Vector2(ctrlX, ctrlY),
-                        new Phaser.Math.Vector2(endX, endY)
-                    );
+                    const curve = new Phaser.Curves.QuadraticBezier(new Phaser.Math.Vector2(startX, startY), new Phaser.Math.Vector2(ctrlX, ctrlY), new Phaser.Math.Vector2(endX, endY));
                     curve.draw(g);
                 }
                 g.generateTexture(`hd_grass_${frame}`, canvasW, canvasH);
             }
         }
 
-        // 2. 針葉樹
+        // 2. 針葉樹 (詳細ディテール版)
         if (!scene.textures.exists('hd_tree')) {
-            const w = 80 * TEXTURE_SCALE; const h = 140 * TEXTURE_SCALE;
+            const w = 90 * TEXTURE_SCALE; 
+            const h = 160 * TEXTURE_SCALE;
             const g = scene.make.graphics({x:0, y:0, add:false});
-            g.fillStyle(0x221105); g.fillRect(w/2 - (w*0.08), h*0.8, w*0.16, h*0.2);
-            const layers = 6; const leafDark = 0x0f2610; const leafLight = 0x1e3d1f;
+            
+            // 幹 (少し太く、色を調整)
+            g.fillStyle(0x332211); 
+            g.fillRect(w/2 - (w*0.06), h*0.85, w*0.12, h*0.15);
+
+            // 葉の層 (ギザギザ感を出すために、三角形ではなく多角形で描く)
+            const layers = 8; // 層を増やす
+            const leafDark = 0x0a1f0b; // 深い影
+            const leafMid = 0x163318;  // 中間
+            const leafLight = 0x224422; // ハイライト
+
             for(let i=0; i<layers; i++) {
-                const progress = i / layers; const lw = w * (0.8 - progress * 0.6); const lh = h * 0.22; const ly = h * 0.8 - (h * 0.75 * progress) - lh; const cx = w/2; const cy = ly + lh;
-                g.fillStyle(leafDark); g.beginPath(); g.moveTo(cx, ly); g.lineTo(cx + lw/2, cy); g.lineTo(cx, cy); g.fill();
-                g.fillStyle(leafLight); g.beginPath(); g.moveTo(cx, ly); g.lineTo(cx - lw/2, cy); g.lineTo(cx, cy); g.fill();
+                const progress = i / layers;
+                const layerW = w * (0.85 - progress * 0.7); // 下は広く、上は狭く
+                const layerH = h * 0.2;
+                const layerY = h * 0.85 - (h * 0.8 * progress) - layerH * 0.5;
+                const cx = w/2;
+
+                // ギザギザの枝を描画する関数
+                const drawJaggedLayer = (color, offsetX) => {
+                    g.fillStyle(color);
+                    g.beginPath();
+                    g.moveTo(cx, layerY - layerH * 0.5); // 頂点
+                    
+                    // 左側のギザギザ
+                    g.lineTo(cx - layerW * 0.3 + offsetX, layerY + layerH * 0.2);
+                    g.lineTo(cx - layerW * 0.5 + offsetX, layerY + layerH * 0.8); // 端
+                    g.lineTo(cx - layerW * 0.2 + offsetX, layerY + layerH * 0.6); // 戻り
+                    
+                    // 右側のギザギザ
+                    g.lineTo(cx + layerW * 0.2 + offsetX, layerY + layerH * 0.6); 
+                    g.lineTo(cx + layerW * 0.5 + offsetX, layerY + layerH * 0.8); // 端
+                    g.lineTo(cx + layerW * 0.3 + offsetX, layerY + layerH * 0.2);
+                    
+                    g.closePath();
+                    g.fill();
+                };
+
+                // 影、中間、ハイライトを重ねて立体感を出す
+                drawJaggedLayer(leafDark, 0);
+                drawJaggedLayer(leafMid, -w*0.02); // 少しずらす
+                drawJaggedLayer(leafLight, w*0.01);
             }
             g.generateTexture('hd_tree', w, h);
         }
@@ -162,8 +212,7 @@ class EnvSystem {
     clear() { this.grassElements = []; this.treeElements = []; }
 
     spawnGrass(scene, group, x, y) {
-        const count = 50; 
-        const scaleFactor = 0.10; 
+        const count = 60; const scaleFactor = 0.10; 
         for(let i=0; i<count; i++) {
             const r = Math.random() * (HEX_SIZE * 1.0); const angle = Math.random() * Math.PI * 2;
             const ox = Math.cos(angle) * r; const oy = Math.sin(angle) * r * 0.866;
@@ -173,10 +222,10 @@ class EnvSystem {
             grass.setScale((0.8 + Math.random() * 0.4) * scaleFactor); 
             grass.setDepth(y+oy);
             
-            // ★重要: 現在の風の状態を保持する変数を追加
-            grass.currentWindValue = 0;
-
+            // 物理ステータス
+            grass.currentWindValue = 0; 
             grass.origX = x + ox; grass.origY = y + oy;
+            
             const tintVar = Math.floor(Math.random() * 30); 
             grass.setTint(Phaser.Display.Color.GetColor(180 + tintVar, 220 + tintVar, 180 + tintVar));
             
@@ -187,11 +236,11 @@ class EnvSystem {
 
     spawnTrees(scene, group, x, y) {
         const count = 8 + Math.floor(Math.random() * 4); 
-        const scaleFactor = 0.18;
+        const scaleFactor = 0.17; // 少し小さく
         for(let i=0; i<count; i++) {
-            const r = Math.random() * (HEX_SIZE * 0.9); const angle = Math.random() * Math.PI * 2;
+            const r = Math.random() * (HEX_SIZE * 0.85); const angle = Math.random() * Math.PI * 2;
             const ox = Math.cos(angle) * r; const oy = Math.sin(angle) * r * 0.866;
-            const scale = (0.7 + Math.random() * 0.6) * scaleFactor;
+            const scale = (0.7 + Math.random() * 0.5) * scaleFactor;
             const shadow = scene.add.ellipse(x+ox, y+oy+3, 40*scale, 15*scale, 0x000000, 0.5); group.add(shadow);
             
             const tree = scene.add.image(x+ox, y+oy, 'hd_tree');
@@ -202,7 +251,6 @@ class EnvSystem {
             tree.currentSkew = 0; 
             tree.baseSkew = 0; 
             tree.origX = x + ox; 
-            tree.origY = y + oy;
             
             group.add(tree); 
             this.treeElements.push(tree);
@@ -216,62 +264,69 @@ class EnvSystem {
 
     onGust() { this.gustPower = 1.0; }
 
-    // ★重要: 慣性(Lerp)を導入してカクつきを完全撤廃
     update(time) {
-        this.waveTime += 0.04; 
+        // 風の進行速度（少しゆっくりに）
+        this.waveTime += 0.025; 
         const t = this.waveTime;
         
-        this.gustPower *= 0.97;
+        this.gustPower *= 0.98; // 減衰をゆっくりに
         if(this.gustPower < 0.01) this.gustPower = 0;
 
-        // 1. 草の処理 (Grass Wave)
+        // 1. 草の処理 (30 Frame Interpolation)
         this.grassElements = this.grassElements.filter(g => g.scene);
         for (let i = 0; i < this.grassElements.length; i++) {
             const g = this.grassElements[i];
             
-            // ① 目標となる風の強さを計算
-            const wavePhase = t * 1.2 - g.origX * 0.015; 
-            const bigWave = (Math.sin(wavePhase) + 1.0) * 0.5;
-            const ripple = Math.sin(t * 3.0 + g.origY * 0.1) * 0.1;
-            const gust = this.gustPower * 0.8;
+            // 風の波 (振幅を控えめに)
+            const wavePhase = t * 1.0 - g.origX * 0.015; 
+            const bigWave = (Math.sin(wavePhase) + 1.0) * 0.5; // 0.0 ~ 1.0
+            
+            const ripple = Math.sin(t * 2.5 + g.origY * 0.1) * 0.05;
+            const gust = this.gustPower * 0.6; // 突風も少し控えめに
 
-            let targetWindValue = (bigWave * 0.7) + 0.1 + ripple + gust;
+            // 目標値 (0.0〜1.0)
+            // base: 0.2 (少し右) + wave影響: 0.4
+            let targetWindValue = 0.2 + (bigWave * 0.4) + ripple + gust;
             targetWindValue = Math.max(0, Math.min(1.0, targetWindValue));
 
-            // ★重要: 慣性処理 (現在値を目標値に少しずつ近づける)
-            // stiffnessが小さいほどゆっくり追従し、滑らかになる
-            const stiffness = 0.1;
+            // 慣性処理 (Stiffnessを下げて、よりフワッと)
+            const stiffness = 0.08; 
             g.currentWindValue += (targetWindValue - g.currentWindValue) * stiffness;
 
-            // ② 滑らかになった現在値を使ってフレーム選択と補間を行う
-            const maxFrames = 15;
+            // フレーム選択 (30段階)
+            const maxFrames = this.TOTAL_GRASS_FRAMES - 1;
             const floatFrame = g.currentWindValue * maxFrames;
             const frameIdx = Math.floor(floatFrame);
             const remainder = floatFrame - frameIdx;
 
-            g.setTexture(`hd_grass_${frameIdx}`);
+            // テクスチャ設定
+            // 範囲外アクセス防止
+            const safeFrame = Phaser.Math.Clamp(frameIdx, 0, maxFrames);
+            g.setTexture(`hd_grass_${safeFrame}`);
             
-            // 端数分で滑らかに傾ける
-            g.skewX = remainder * 0.15; 
+            // 端数補間 (Skewで微調整)
+            g.skewX = remainder * 0.1; 
         }
 
-        // 2. 木の処理 (Tree Sway)
+        // 2. 木の処理 (Slow & Heavy Sway)
         this.treeElements = this.treeElements.filter(tr => tr.scene);
         for (let i = 0; i < this.treeElements.length; i++) {
             const tr = this.treeElements[i];
             
-            const wavePhase = t * 1.2 - tr.origX * 0.015 - 0.5; 
-            const sway = Math.sin(wavePhase) * 0.15; 
-            const gust = this.gustPower * 0.25;
-            const baseLean = 0.05;
+            // 木はよりゆっくり、かつ振幅を小さく
+            const wavePhase = t * 1.0 - tr.origX * 0.015 - 0.5; 
+            const sway = Math.sin(wavePhase) * 0.08; // 揺れ幅小
+            
+            const gust = this.gustPower * 0.2;
+            const baseLean = 0.03;
 
             const targetSkew = sway + baseLean + gust;
             
-            // 木も慣性ありで追従
-            tr.currentSkew += (targetSkew - tr.currentSkew) * 0.05; 
+            // 慣性強め (重さを表現)
+            tr.currentSkew += (targetSkew - tr.currentSkew) * 0.03; 
             
             tr.skewX = tr.baseSkew + tr.currentSkew;
-            tr.angle = tr.currentSkew * 5;
+            tr.angle = tr.currentSkew * 4;
         }
     }
 }
