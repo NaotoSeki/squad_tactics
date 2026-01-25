@@ -360,7 +360,46 @@ class MainScene extends Phaser.Scene {
         }
     }
     
-    drawHexOutline(g, q, r) { const c = Renderer.hexToPx(q, r); g.beginPath(); for(let i=0; i<6; i++) { const a = Math.PI/180*60*i; g.lineTo(c.x+HEX_SIZE*0.9*Math.cos(a), c.y+HEX_SIZE*0.9*Math.sin(a)); } g.closePath(); g.lineWidth=0.1; g.strokePath(); }
+    drawHexOutline(g, q, r) { 
+        const c = Renderer.hexToPx(q, r); 
+        const size = HEX_SIZE * 1.0; 
+        
+        // 通常の六角形ではなく、スタイリッシュなブラケット型にする
+        const corners = [];
+        for(let i=0; i<6; i++) { 
+            const a = Math.PI/180 * (60*i); 
+            corners.push({ x: c.x + size * Math.cos(a), y: c.y + size * Math.sin(a) });
+        }
+
+        // 角だけ描画して、間を空ける
+        const gapRatio = 0.3; // 辺のどれくらいを空白にするか
+        
+        for(let i=0; i<6; i++) {
+            const p1 = corners[i];
+            const p2 = corners[(i+1)%6];
+            
+            const dx = p2.x - p1.x;
+            const dy = p2.y - p1.y;
+            
+            // 角の近くだけ描く
+            g.beginPath();
+            g.moveTo(p1.x, p1.y);
+            g.lineTo(p1.x + dx * (0.5 - gapRatio/2), p1.y + dy * (0.5 - gapRatio/2));
+            g.strokePath();
+            
+            g.beginPath();
+            g.moveTo(p2.x - dx * (0.5 - gapRatio/2), p2.y - dy * (0.5 - gapRatio/2));
+            g.lineTo(p2.x, p2.y);
+            g.strokePath();
+        }
+        
+        // 内側にうっすら六角形
+        g.lineStyle(1, 0xffffff, 0.1);
+        g.beginPath();
+        for(let i=0; i<6; i++) g.lineTo(corners[i].x, corners[i].y);
+        g.closePath();
+        g.strokePath();
+    }
     drawDashedHexOutline(g, q, r, timeOffset = 0) {
         const c = Renderer.hexToPx(q, r); const pts = []; for(let i=0; i<6; i++) { const a = Math.PI/180*60*i; pts.push({ x: c.x+HEX_SIZE*0.9*Math.cos(a), y: c.y+HEX_SIZE*0.9*Math.sin(a) }); }
         const dashLen = 6; const gapLen = 4; const period = dashLen + gapLen; let currentDistInPath = -timeOffset; 
