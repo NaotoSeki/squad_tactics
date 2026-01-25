@@ -19,23 +19,27 @@
 
         #resizer { width: 6px; background: #222; cursor: col-resize; z-index: 30; border-left: 1px solid #000; border-right: 1px solid #333; }
         
+        /* サイドバー設定 */
         #sidebar { 
             width: 340px; min-width: 280px; 
             background: var(--panel); border-left: 1px solid var(--border); 
             display: flex; flex-direction: column; z-index: 20; position: relative; 
             transition: width 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), min-width 0.3s;
+            pointer-events: none; /* 大枠はクリック透過 */
         }
+        #sidebar > * { pointer-events: auto; } /* 中身はクリック有効 */
 
-        /* ★修正: 閉じているときは visibility: hidden で存在自体を消す (クリック判定も消える) */
+        /* ★修正: 閉じたとき、親自体は隠さず、中身を隠す (トグルボタンを生かすため) */
         #sidebar.collapsed { 
             width: 0 !important; 
             min-width: 0 !important; 
             border: none; 
-            visibility: hidden; 
         }
-        #sidebar.collapsed > * { display: none; }
+        /* 中身のパネル要素を隠す */
+        #sidebar.collapsed > *:not(#sidebar-toggle) { 
+            display: none; 
+        }
         
-        /* ★修正: トグルボタンだけは常に見えるようにする */
         #sidebar-toggle { 
             position: absolute; top: 0; left: -24px; 
             width: 24px; height: 24px; 
@@ -44,7 +48,7 @@
             cursor: pointer; z-index: 40; 
             display: flex; justify-content: center; align-items: center; 
             transition: left 0.3s;
-            visibility: visible; /* 親がhiddenでもここは表示 */
+            pointer-events: auto; /* ここはクリック必須 */
         }
         #sidebar-toggle:hover { background: #333; color: #fff; }
 
@@ -97,8 +101,7 @@
         #context-menu { 
             position:absolute; display:none; 
             background:rgba(0,20,30,0.95); border:1px solid #0af; 
-            padding:10px; z-index:10000; 
-            color:#fff; font-size:11px; 
+            padding:10px; z-index:10000; color:#fff; font-size:11px; 
             box-shadow: 0 2px 10px rgba(0,0,0,0.5);
             pointer-events: auto;
         }
