@@ -1,7 +1,14 @@
 /** DATA: Enhanced Weaponry & Soldier Identity & TERRAIN */
-const HEX_SIZE = 34; 
-const MAP_W = 24; 
-const MAP_H = 24; 
+const HEX_SIZE = 54; // ★拡大 (34 -> 54) 4人配置のためスペース確保
+const MAP_W = 20;    // サイズ拡大に伴い、マップのマス数は少し減らす
+const MAP_H = 20; 
+
+// ★追加: 顔写真アセットのリスト (ダミー)
+const FACE_ASSETS = [
+    "phaser_logo.png", 
+    "card_frame.png",  
+    "cursor.png"       
+];
 
 const TERRAIN = {
     VOID:   { id: -1, name: "---",  cost: 99, cover: 0 },
@@ -59,10 +66,9 @@ const UNIT_TEMPLATES = {
     tank_tiger: { name:"Tiger I", role:"tank", main:"kwk88", sub:"mg42", opt:null, hp:1200, ap:4, isTank:true, isBoss:true }
 };
 
-// ★追加: マガジンバリエーション定義
 const MAG_VARIANTS = {
     thompson: [
         { name: "20rd Box", code: "45ACP20T", cap: 20, cost: 28, jam: 0.0 },
-        { name: "30rd Box", code: "45ACP30T", cap: 30, cost: 54, jam: 0.008 } // 0.8% JAM chance per shot
+        { name: "30rd Box", code: "45ACP30T", cap: 30, cost: 54, jam: 0.008 } 
     ]
 };
