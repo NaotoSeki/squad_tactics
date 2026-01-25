@@ -1,53 +1,59 @@
-/** PHASER BRIDGE: Fixed Missing Helpers (getCardTextureKey, etc.) */
+/** PHASER BRIDGE: Fixed Map Texture & Card Icons */
 let phaserGame = null;
-window.HIGH_RES_SCALE = 2.0; // 高解像度対応スケール
+window.HIGH_RES_SCALE = 2.0; 
 
-// ★追加: テクスチャキー取得・生成ヘルパー
+// テクスチャ生成ヘルパー: カードアイコン
 window.getCardTextureKey = function(scene, type) {
     const key = `card_icon_${type}`;
     if (scene.textures.exists(key)) return key;
-
-    // テクスチャがない場合、PhaserのGraphicsで動的に生成
     const g = scene.make.graphics({x: 0, y: 0, add: false});
-    
-    // 背景
-    g.fillStyle(0x1a1a1a);
-    g.fillRect(0, 0, 100, 100);
+    g.fillStyle(0x1a1a1a); g.fillRect(0, 0, 100, 100);
     g.lineStyle(4, 0xdd8844);
-    
     if (type.includes('tank')) {
-        // 戦車アイコン
-        g.fillStyle(0xdd8844);
-        g.fillRect(20, 40, 60, 30); // 車体
-        g.fillStyle(0xdd8844);
-        g.fillCircle(50, 40, 15);   // 砲塔
-        g.lineStyle(6, 0xdd8844);
-        g.beginPath(); g.moveTo(65, 35); g.lineTo(95, 30); g.strokePath(); // 砲身
+        g.fillStyle(0xdd8844); g.fillRect(20, 40, 60, 30);
+        g.fillCircle(50, 40, 15);
+        g.lineStyle(6, 0xdd8844); g.beginPath(); g.moveTo(65, 35); g.lineTo(95, 30); g.strokePath();
     } else if (type === 'heal') {
-        // 回復アイコン
-        g.fillStyle(0x44ff88);
-        g.fillRect(40, 20, 20, 60);
-        g.fillRect(20, 40, 60, 20);
+        g.fillStyle(0x44ff88); g.fillRect(40, 20, 20, 60); g.fillRect(20, 40, 60, 20);
     } else {
-        // 歩兵アイコン (デフォルト)
-        g.fillStyle(0xdd8844);
-        g.fillCircle(50, 30, 15); // 頭
+        g.fillStyle(0xdd8844); g.fillCircle(50, 30, 15);
         g.lineStyle(4, 0xdd8844);
-        g.beginPath(); g.moveTo(50, 45); g.lineTo(50, 80); g.strokePath(); // 胴体
-        g.beginPath(); g.moveTo(20, 55); g.lineTo(80, 55); g.strokePath(); // 腕
-        g.beginPath(); g.moveTo(50, 80); g.lineTo(30, 95); g.strokePath(); // 足
+        g.beginPath(); g.moveTo(50, 45); g.lineTo(50, 80); g.strokePath();
+        g.beginPath(); g.moveTo(20, 55); g.lineTo(80, 55); g.strokePath();
+        g.beginPath(); g.moveTo(50, 80); g.lineTo(30, 95); g.strokePath();
         g.beginPath(); g.moveTo(50, 80); g.lineTo(70, 95); g.strokePath();
     }
-    
     g.generateTexture(key, 100, 100);
     return key;
 };
 
-// ★追加: UI背景用グラデーション生成
+// ★追加: テクスチャ生成ヘルパー: ヘックスマップ
+window.createHexTexture = function(scene) {
+    if (scene.textures.exists('hex_base')) return;
+    const g = scene.make.graphics({x: 0, y: 0, add: false});
+    // 6角形を描画 (Pointy Topped)
+    const size = 60; // 解像度用
+    const w = size * Math.sqrt(3);
+    const h = size * 2;
+    g.fillStyle(0xffffff);
+    g.beginPath();
+    for (let i = 0; i < 6; i++) {
+        const angle_deg = 60 * i - 30;
+        const angle_rad = Math.PI / 180 * angle_deg;
+        const px = w/2 + size * Math.cos(angle_rad) * 0.95;
+        const py = h/2 + size * Math.sin(angle_rad) * 0.95;
+        if (i === 0) g.moveTo(px, py); else g.lineTo(px, py);
+    }
+    g.closePath();
+    g.fillPath();
+    g.lineStyle(4, 0xcccccc);
+    g.strokePath();
+    g.generateTexture('hex_base', w, h);
+};
+
 window.createGradientTexture = function(scene) {
     const key = 'ui_gradient';
     if (scene.textures.exists(key)) return;
-    
     const canvas = document.createElement('canvas');
     canvas.width = 100; canvas.height = 100;
     const ctx = canvas.getContext('2d');
@@ -56,10 +62,8 @@ window.createGradientTexture = function(scene) {
     grd.addColorStop(1, 'rgba(0,0,0,0.9)');
     ctx.fillStyle = grd;
     ctx.fillRect(0, 0, 100, 100);
-    
     scene.textures.addCanvas(key, canvas);
 };
-
 
 const Renderer = {
     game: null, 
@@ -141,12 +145,9 @@ class Card extends Phaser.GameObjects.Container {
         if(scene.textures.exists('card_frame')) { frame = scene.add.image(0, 0, 'card_frame').setDisplaySize(140, 200); } 
         else { frame = scene.add.rectangle(0,0,140,200,0x333).setStrokeStyle(2,0x888); }
         frame.setInteractive({ useHandCursor: true, draggable: true }); this.frameImage = frame;
-        
-        // ★修正: ここでヘルパー関数を使用
         const iconKey = window.getCardTextureKey(scene, type);
         const icon = scene.add.image(0, 10, iconKey).setScale(1/window.HIGH_RES_SCALE);
         if(type === 'aerial') icon.setDisplaySize(120, 80);
-        
         const text = scene.add.text(0, -80, type.toUpperCase(), { fontSize: '16px', color: '#d84', fontStyle: 'bold' }).setOrigin(0.5);
         const desc = scene.add.text(0, 70, "DRAG TO DEPLOY", { fontSize: '10px', color: '#888' }).setOrigin(0.5);
         this.visuals.add([shadow, contentBg, icon, text, desc, frame]); this.add(this.visuals); 
@@ -231,9 +232,13 @@ class MainScene extends Phaser.Scene {
         this.load.spritesheet('tank_sheet', 'asset/tank_sheet_1.png', { frameWidth: 128, frameHeight: 128 });
         this.load.spritesheet('explosion_sheet', 'asset/explosion-sheet.png', { frameWidth: 128, frameHeight: 128 });
         this.load.image('card_frame', 'asset/card_frame.png');
+        // hex_baseは動的生成するのでロード不要
     }
 
     create() {
+        // ★重要: マップテクスチャ生成
+        if(!this.textures.exists('hex_base')) window.createHexTexture(this);
+
         this.cameras.main.setBackgroundColor('#0b0e0a'); 
         
         this.hexGroup = this.add.layer(); this.hexGroup.setDepth(0);
