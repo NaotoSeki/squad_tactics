@@ -1,4 +1,4 @@
-/** LOGIC: Complete Game Logic (Fixed JIT Reload, Win Check, Map Gen) */
+/** LOGIC: Complete Game Logic (Fixed Reward Error) */
 
 function createCardIcon(type) {
     const c = document.createElement('canvas'); c.width = 1; c.height = 1; return c.toDataURL();
@@ -23,8 +23,6 @@ class Game {
         this.interactionMode = 'SELECT';
         this.selectedUnit = null;
         this.menuSafeLock = false;
-        
-        // 戦車のオートリロード設定 (デフォルトON)
         this.tankAutoReload = true; 
 
         this.initDOM();
@@ -95,7 +93,6 @@ class Game {
                 item.current = item.cap;
             } else if (base.type === 'shell' || base.area) { item.current = 1; item.isConsumable = true; }
             
-            // 戦車の主砲設定
             if (t.isTank && isMainWpn) {
                 item.current = 1; 
                 item.cap = 1;     
@@ -128,12 +125,10 @@ class Game {
         Renderer.resize(); this.selectedUnit = null; this.reachableHexes = []; this.attackLine = []; this.aimTargetUnit = null; this.path = []; this.cardsUsed = 0;
         this.units = this.units.filter(u => u.team === 'player' && u.hp > 0); this.units.forEach(u => { u.q = -999; u.r = -999; });
         
-        // ★ここが復活しました
         this.generateMap();
         
         if (this.units.length === 0) { this.setupSlots.forEach(k => { const p = this.getSafeSpawnPos('player'); const u = this.createSoldier(k, 'player', p.q, p.r); this.units.push(u); }); } else { this.units.forEach(u => { const p = this.getSafeSpawnPos('player'); u.q = p.q; u.r = p.r; }); }
         
-        // ★ここも復活
         this.spawnEnemies(); 
         
         this.state = 'PLAY'; this.log(`SECTOR ${this.sector} START`);
@@ -146,6 +141,21 @@ class Game {
         const cy = Math.floor(MAP_H / 2);
         for (let i = 0; i < 100; i++) { const q = Math.floor(Math.random() * MAP_W); const r = Math.floor(Math.random() * MAP_H); if (team === 'player' && r < cy) continue; if (team === 'enemy' && r >= cy) continue; if (this.isValidHex(q, r) && this.getUnitsInHex(q, r).length < 4 && this.map[q][r].id !== -1 && this.map[q][r].id !== 5) { return { q, r }; } }
         return { q: 0, r: 0 };
+    }
+
+    // ★追加: 報酬受け取り時の増援配置用関数
+    spawnAtSafeGround(team, type) {
+        const p = this.getSafeSpawnPos(team);
+        // createSoldierの引数は (templateKey, team, q, r)
+        const u = this.createSoldier(type, team, p.q, p.r);
+        if (u) {
+            // startCampaignで再配置されるため、ここではリストに追加するだけでOK
+            // ただし視覚的フィードバックのため仮配置しておく
+            u.q = p.q; 
+            u.r = p.r;
+            this.units.push(u);
+            this.log(`増援合流: ${u.name}`);
+        }
     }
 
     checkDeploy(targetHex) {
@@ -388,23 +398,6 @@ class Game {
         }, 800);
     }
 
-    calcAttackLine(u, targetQ, targetR) {
-        this.attackLine = []; this.aimTargetUnit = null; if (!u || u.ap < 2) return; const w = u.hands; if (!w) return;
-        const range = w.rng; const dist = this.hexDist(u, { q: targetQ, r: targetR }); if (dist === 0) return;
-        const drawLen = Math.min(dist, range); const start = this.axialToCube(u.q, u.r); const end = this.axialToCube(targetQ, targetR);
-        for (let i = 1; i <= drawLen; i++) {
-            const t = i / dist;
-            const lerpCube = { x: start.x + (end.x - start.x) * t, y: start.y + (end.y - start.y) * t, z: start.z + (end.z - start.z) * t };
-            const roundCube = this.cubeRound(lerpCube); const hex = this.cubeToAxial(roundCube);
-            if (this.isValidHex(hex.q, hex.r)) { this.attackLine.push({ q: hex.q, r: hex.r }); } else { break; }
-        }
-        if (this.attackLine.length > 0) {
-            const lastHex = this.attackLine[this.attackLine.length - 1];
-            if (lastHex.q === targetQ && lastHex.r === targetR) { const target = this.getUnitInHex(lastHex.q, lastHex.r); if (target && target.team !== u.team) { this.aimTargetUnit = target; } }
-        }
-    }
-
-    // --- Map Generation & Helper Functions (Included) ---
     generateMap() {
         this.map = []; for (let q = 0; q < MAP_W; q++) { this.map[q] = []; for (let r = 0; r < MAP_H; r++) { this.map[q][r] = TERRAIN.VOID; } }
         const cx = Math.floor(MAP_W / 2), cy = Math.floor(MAP_H / 2); let walkers = [{ q: cx, r: cy }];
