@@ -1,8 +1,8 @@
-/** PHASER BRIDGE: Fixed Map Texture & Card Icons */
+/** PHASER BRIDGE: Visual Rollback (Beautiful Terrain Restored) */
 let phaserGame = null;
 window.HIGH_RES_SCALE = 2.0; 
 
-// テクスチャ生成ヘルパー: カードアイコン
+// カードアイコン生成 (変更なし)
 window.getCardTextureKey = function(scene, type) {
     const key = `card_icon_${type}`;
     if (scene.textures.exists(key)) return key;
@@ -27,27 +27,31 @@ window.getCardTextureKey = function(scene, type) {
     return key;
 };
 
-// ★追加: テクスチャ生成ヘルパー: ヘックスマップ
+// ★修正: 地形テクスチャ (枠線を消し、Tintが映える純白ベースに)
 window.createHexTexture = function(scene) {
     if (scene.textures.exists('hex_base')) return;
     const g = scene.make.graphics({x: 0, y: 0, add: false});
-    // 6角形を描画 (Pointy Topped)
-    const size = 60; // 解像度用
+    // 少し大きめに作って重なりを持たせることで隙間を消す
+    const size = 62; // 60 -> 62
     const w = size * Math.sqrt(3);
     const h = size * 2;
-    g.fillStyle(0xffffff);
+    
+    g.fillStyle(0xffffff); // 純白
     g.beginPath();
     for (let i = 0; i < 6; i++) {
         const angle_deg = 60 * i - 30;
         const angle_rad = Math.PI / 180 * angle_deg;
-        const px = w/2 + size * Math.cos(angle_rad) * 0.95;
-        const py = h/2 + size * Math.sin(angle_rad) * 0.95;
+        const px = w/2 + size * Math.cos(angle_rad);
+        const py = h/2 + size * Math.sin(angle_rad);
         if (i === 0) g.moveTo(px, py); else g.lineTo(px, py);
     }
     g.closePath();
     g.fillPath();
-    g.lineStyle(4, 0xcccccc);
-    g.strokePath();
+    
+    // 枠線は描かない、または非常に薄く
+    // g.lineStyle(1, 0x444444, 0.3);
+    // g.strokePath();
+    
     g.generateTexture('hex_base', w, h);
 };
 
@@ -145,9 +149,11 @@ class Card extends Phaser.GameObjects.Container {
         if(scene.textures.exists('card_frame')) { frame = scene.add.image(0, 0, 'card_frame').setDisplaySize(140, 200); } 
         else { frame = scene.add.rectangle(0,0,140,200,0x333).setStrokeStyle(2,0x888); }
         frame.setInteractive({ useHandCursor: true, draggable: true }); this.frameImage = frame;
+        
         const iconKey = window.getCardTextureKey(scene, type);
         const icon = scene.add.image(0, 10, iconKey).setScale(1/window.HIGH_RES_SCALE);
         if(type === 'aerial') icon.setDisplaySize(120, 80);
+        
         const text = scene.add.text(0, -80, type.toUpperCase(), { fontSize: '16px', color: '#d84', fontStyle: 'bold' }).setOrigin(0.5);
         const desc = scene.add.text(0, 70, "DRAG TO DEPLOY", { fontSize: '10px', color: '#888' }).setOrigin(0.5);
         this.visuals.add([shadow, contentBg, icon, text, desc, frame]); this.add(this.visuals); 
@@ -232,11 +238,9 @@ class MainScene extends Phaser.Scene {
         this.load.spritesheet('tank_sheet', 'asset/tank_sheet_1.png', { frameWidth: 128, frameHeight: 128 });
         this.load.spritesheet('explosion_sheet', 'asset/explosion-sheet.png', { frameWidth: 128, frameHeight: 128 });
         this.load.image('card_frame', 'asset/card_frame.png');
-        // hex_baseは動的生成するのでロード不要
     }
 
     create() {
-        // ★重要: マップテクスチャ生成
         if(!this.textures.exists('hex_base')) window.createHexTexture(this);
 
         this.cameras.main.setBackgroundColor('#0b0e0a'); 
@@ -283,8 +287,23 @@ class MainScene extends Phaser.Scene {
             for(let r=0; r<MAP_H; r++) { 
                 const t = map[q][r]; if(t.id===-1)continue; const pos = Renderer.hexToPx(q, r); 
                 const hex = this.add.image(pos.x, pos.y, 'hex_base').setScale(1/window.HIGH_RES_SCALE); 
-                let tint = 0x555555; if(t.id===0)tint=0x5a5245; else if(t.id===1)tint=0x425030; else if(t.id===2)tint=0x222e1b; else if(t.id===4)tint=0x504540; else if(t.id===5) { tint=0x303840; if(window.EnvSystem) window.EnvSystem.registerWater(hex, pos.y, q, r, this.decorGroup); }
-                if(window.EnvSystem) { if(t.id === 1) window.EnvSystem.spawnGrass(this, this.decorGroup, pos.x, pos.y); if(t.id === 2) window.EnvSystem.spawnTrees(this, this.treeGroup, pos.x, pos.y); }
+                
+                // ★復活した美しいカラーパレット & EnvSystem
+                let tint = 0x555555; 
+                if(t.id===0) tint=0x5a5245; // Dirt: Brown
+                else if(t.id===1) tint=0x425030; // Grass: Green
+                else if(t.id===2) tint=0x222e1b; // Forest: Dark Green
+                else if(t.id===4) tint=0x504540; // Town: Grey
+                else if(t.id===5) { 
+                    tint=0x303840; // Water: Blue
+                    if(window.EnvSystem) window.EnvSystem.registerWater(hex, pos.y, q, r, this.decorGroup); 
+                }
+                
+                if(window.EnvSystem) { 
+                    if(t.id === 1) window.EnvSystem.spawnGrass(this, this.decorGroup, pos.x, pos.y); 
+                    if(t.id === 2) window.EnvSystem.spawnTrees(this, this.treeGroup, pos.x, pos.y); 
+                }
+                
                 hex.setTint(tint); this.hexGroup.add(hex); 
             } 
         } 
