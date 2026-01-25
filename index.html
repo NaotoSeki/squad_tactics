@@ -19,7 +19,6 @@
 
         #resizer { width: 6px; background: #222; cursor: col-resize; z-index: 30; border-left: 1px solid #000; border-right: 1px solid #333; }
         
-        /* ★修正: collapsed時にmin-widthを0にする */
         #sidebar { 
             width: 340px; min-width: 280px; 
             background: var(--panel); border-left: 1px solid var(--border); 
@@ -45,7 +44,6 @@
         }
         #sidebar-toggle:hover { background: #333; color: #fff; }
 
-        /* (以下のスタイルは変更なし) */
         .panel-header { background: #111; padding: 10px; font-weight: bold; color: var(--accent); border-bottom: 1px solid var(--border); font-size: 11px; display: flex; justify-content: space-between; }
         #unit-info { padding: 0; background: #222; overflow-y: auto; flex: 1; }
         .soldier-header { display: flex; padding: 10px; background: #151515; border-bottom: 1px solid #333; gap: 10px; align-items: center; }
@@ -87,19 +85,22 @@
         .card-body { width: 100%; text-align: center; }
         .card-body h3 { margin: 5px 0; font-size: 16px; color: #d84; }
         .card-body p { margin: 0; font-size: 10px; color: #888; }
-        .card.selected {
-            border-color: #d84 !important;
-            background: #2a1a10 !important;
-            transform: translateY(-5px);
-            box-shadow: 0 0 15px rgba(221, 136, 68, 0.4);
-        }
         #sector-counter { position:absolute; top:10px; right:20px; font-size:24px; font-weight:900; color:#d84; pointer-events:none; z-index:50; }
         #auto-toggle { position:absolute; bottom:10px; left:10px; padding:5px 10px; background:#000; border:1px solid #444; color:#888; cursor:pointer; z-index:50; font-size:11px; }
         #auto-toggle.active { color:#0f0; border-color:#0f0; }
         #context-menu { position:absolute; display:none; background:rgba(0,20,30,0.9); border:1px solid #0af; padding:10px; z-index:60; color:#fff; font-size:11px; pointer-events:none; }
         #eyecatch { position: absolute; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.3); z-index: 90; display: flex; justify-content: center; align-items: center; pointer-events: none; opacity: 0; transition: opacity 0.5s; }
         #eyecatch-text { color: #d44; font-size: 40px; font-weight: 900; text-shadow: 0 0 20px #000; border: 4px solid #d44; padding: 10px 40px; background: rgba(0,0,0,0.8); transform: skewX(-10deg); }
-        #command-menu { position: absolute; display: none; background: rgba(10, 15, 10, 0.95); border: 1px solid #d84; padding: 5px; z-index: 80; box-shadow: 0 0 10px rgba(0,0,0,0.8); border-radius: 4px; min-width: 120px; overflow: visible; }
+        
+        /* ★修正: メニューを最前面へ。overflowの制約を受けないbody直下に配置 */
+        #command-menu { 
+            position: absolute; display: none; 
+            background: rgba(10, 15, 10, 0.95); border: 1px solid #d84; 
+            padding: 5px; 
+            z-index: 9999; /* 最強 */
+            box-shadow: 0 0 15px rgba(0,0,0,0.8); 
+            border-radius: 4px; min-width: 120px; overflow: visible; 
+        }
         .cmd-btn { display: block; width: 100%; box-sizing: border-box; background: #222; border: 1px solid #444; color: #ccc; padding: 6px 10px; margin-bottom: 2px; text-align: left; font-size: 11px; cursor: pointer; transition: 0.1s; }
         .cmd-btn:hover { background: #d84; color: #000; border-color: #fca; }
         .cmd-btn.disabled { opacity: 0.5; cursor: default; background: #111; color: #555; border-color: #333; pointer-events: none; }
@@ -110,6 +111,13 @@
         .sub-btn { display: block; width: 100%; box-sizing: border-box; background: #222; color: #ccc; padding: 5px; text-align: center; font-size: 10px; cursor: pointer; border-bottom: 1px solid #333; }
         .sub-btn:hover { background: #d84; color: #000; }
         .mode-indicator { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.7); border: 1px solid #0f0; color: #0f0; padding: 5px 20px; font-weight: bold; font-size: 14px; display: none; z-index: 80; pointer-events: none; }
+        
+        .card.selected {
+            border-color: #d84 !important;
+            background: #2a1a10 !important;
+            transform: translateY(-5px);
+            box-shadow: 0 0 15px rgba(221, 136, 68, 0.4);
+        }
     </style>
 </head>
 <body>
@@ -117,23 +125,7 @@
         <div id="game-view">
             <div id="sector-counter">SECTOR: 01</div>
             <div id="context-menu"></div>
-            <div id="command-menu">
-                <div class="cmd-btn" id="btn-move" onclick="gameLogic.setMode('MOVE')"><i>👣</i> 移動</div>
-                <div class="cmd-btn" id="btn-attack" onclick="gameLogic.setMode('ATTACK')"><i>🔫</i> 射撃</div>
-                <div class="cmd-group">
-                    <div class="cmd-btn"><i>🧘</i> 姿勢 ▶</div>
-                    <div class="cmd-submenu">
-                        <div class="sub-btn" onclick="gameLogic.setStance('stand')">立</div>
-                        <div class="sub-btn" onclick="gameLogic.setStance('crouch')">屈</div>
-                        <div class="sub-btn" onclick="gameLogic.setStance('prone')">伏</div>
-                    </div>
-                </div>
-                <div class="cmd-btn" id="btn-repair" onclick="gameLogic.actionRepair()"><i>🔧</i> 修理</div>
-                <div class="cmd-btn" id="btn-melee" onclick="gameLogic.actionMeleeSetup()"><i>🔪</i> 白兵</div>
-                <div class="cmd-btn" id="btn-heal" onclick="gameLogic.actionHeal()"><i>💊</i> 治療</div>
-                <hr style="border:0; border-top:1px solid #444; margin:3px 0;">
-                <div class="cmd-btn" onclick="gameLogic.clearSelection()" style="text-align:center; color:#888;">CANCEL</div>
-            </div>
+            
             <div id="mode-label" class="mode-indicator">SELECT TARGET</div>
             <div id="auto-toggle" onclick="gameLogic.toggleAuto()">AUTO</div>
             <div id="eyecatch"><div id="eyecatch-text">ENEMY PHASE</div></div>
@@ -166,6 +158,25 @@
             <div id="log-container"></div>
         </div>
     </div>
+    
+    <div id="command-menu">
+        <div class="cmd-btn" id="btn-move" onclick="gameLogic.setMode('MOVE')"><i>👣</i> 移動</div>
+        <div class="cmd-btn" id="btn-attack" onclick="gameLogic.setMode('ATTACK')"><i>🔫</i> 射撃</div>
+        <div class="cmd-group">
+            <div class="cmd-btn"><i>🧘</i> 姿勢 ▶</div>
+            <div class="cmd-submenu">
+                <div class="sub-btn" onclick="gameLogic.setStance('stand')">立</div>
+                <div class="sub-btn" onclick="gameLogic.setStance('crouch')">屈</div>
+                <div class="sub-btn" onclick="gameLogic.setStance('prone')">伏</div>
+            </div>
+        </div>
+        <div class="cmd-btn" id="btn-repair" onclick="gameLogic.actionRepair()"><i>🔧</i> 修理</div>
+        <div class="cmd-btn" id="btn-melee" onclick="gameLogic.actionMeleeSetup()"><i>🔪</i> 白兵</div>
+        <div class="cmd-btn" id="btn-heal" onclick="gameLogic.actionHeal()"><i>💊</i> 治療</div>
+        <hr style="border:0; border-top:1px solid #444; margin:3px 0;">
+        <div class="cmd-btn" onclick="gameLogic.clearSelection()" style="text-align:center; color:#888;">CANCEL</div>
+    </div>
+
     <script>
         function onSlotDragStart(e, type, index) { e.dataTransfer.setData("text/plain", JSON.stringify({type, index})); e.target.classList.add('dragging'); }
         function onSlotDragEnd(e) { e.target.classList.remove('dragging'); }
@@ -185,4 +196,3 @@
     <script src="logic.js"></script>
 </body>
 </html>
-
