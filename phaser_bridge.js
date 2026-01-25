@@ -1,4 +1,4 @@
-/** PHASER BRIDGE: Visual Fix (Correct Hex Scaling & Terrain) */
+/** PHASER BRIDGE: Visual Restoration (No Gaps, Full Nature) */
 let phaserGame = null;
 window.HIGH_RES_SCALE = 2.0; 
 
@@ -42,35 +42,32 @@ window.createGradientTexture = function(scene) {
     scene.textures.addCanvas(key, canvas);
 };
 
-// ■★修正: ヘックス画像生成 (サイズ自動計算)
+// ■★重要修正: ヘックス画像生成 (隙間対策 & マットな質感)
 window.createHexTexture = function(scene) {
     if (scene.textures.exists('hex_base')) return;
     const g = scene.make.graphics({x: 0, y: 0, add: false});
     
-    // ★修正: data.jsのHEX_SIZEに合わせて生成サイズを決定
-    // HEX_SIZEは「中心から辺までの距離」ではなく「配置間隔の基準」なので、
-    // 描画半径は HEX_SIZE * HIGH_RES_SCALE 程度必要
-    const baseSize = (typeof HEX_SIZE !== 'undefined' ? HEX_SIZE : 60); 
-    const size = baseSize * window.HIGH_RES_SCALE * 1.02; // 1.02は隙間埋め用オーバーラップ
+    // data.js の HEX_SIZE (54) を基準に、高解像度化(x2) し、さらに隙間埋め用に(x1.05)する
+    const baseSize = (typeof HEX_SIZE !== 'undefined' ? HEX_SIZE : 54); 
+    const size = baseSize * window.HIGH_RES_SCALE * 1.05; 
     
     const w = size * Math.sqrt(3);
     const h = size * 2;
     
-    g.fillStyle(0xffffff); // Tint用に白
+    // 純白で塗りつぶし (Tintが綺麗に乗るように)
+    g.fillStyle(0xffffff);
     g.beginPath();
     for (let i = 0; i < 6; i++) {
         const angle_deg = 60 * i - 30;
         const angle_rad = Math.PI / 180 * angle_deg;
-        const px = w/2 + size * Math.cos(angle_rad);
+        const px = w/2 + size * Math.cos(angle_rad); // 半径いっぱいまで使う
         const py = h/2 + size * Math.sin(angle_rad);
         if (i === 0) g.moveTo(px, py); else g.lineTo(px, py);
     }
     g.closePath();
     g.fillPath();
     
-    // 境界線をうっすら描く（好みで調整）
-    // g.lineStyle(2, 0x888888, 0.3);
-    // g.strokePath();
+    // 枠線は描かない（地形のつながりを重視）
     
     g.generateTexture('hex_base', w, h);
 };
@@ -283,7 +280,7 @@ class MainScene extends Phaser.Scene {
     centerCamera(q, r) { const p = Renderer.hexToPx(q, r); this.cameras.main.centerOn(p.x, p.y); }
     centerMap() { this.cameras.main.centerOn((MAP_W * HEX_SIZE * 1.5) / 2, (MAP_H * HEX_SIZE * 1.732) / 2); }
     
-    // ★マップ生成ロジック (Tint復活)
+    // ★復活: 地形IDに応じた着色ロジック & EnvSystem呼び出し
     createMap() { 
         const map = window.gameLogic.map; 
         this.hexGroup.removeAll(true); this.decorGroup.removeAll(true); this.unitGroup.removeAll(true); this.treeGroup.removeAll(true); this.hpGroup.removeAll(true);
@@ -294,7 +291,6 @@ class MainScene extends Phaser.Scene {
                 const t = map[q][r]; if(t.id===-1)continue; const pos = Renderer.hexToPx(q, r); 
                 const hex = this.add.image(pos.x, pos.y, 'hex_base').setScale(1/window.HIGH_RES_SCALE); 
                 
-                // ★修正: 色分けロジックの復活
                 let tint = 0x555555; 
                 if(t.id===0) tint=0x5a5245; // Dirt
                 else if(t.id===1) tint=0x425030; // Grass
@@ -326,6 +322,7 @@ class MainScene extends Phaser.Scene {
         if(this.unitView) this.unitView.update(time, delta);
         
         this.overlayGraphics.clear();
+        // ★修正: 選択カーソルもHEX_SIZEに合わせて描画
         if (this.dragHighlightHex) { this.overlayGraphics.lineStyle(4, 0xffffff, 1.0); this.drawHexOutline(this.overlayGraphics, this.dragHighlightHex.q, this.dragHighlightHex.r); }
         const selected = window.gameLogic.selectedUnit;
         if(selected && window.gameLogic.reachableHexes.length > 0) { this.overlayGraphics.lineStyle(2, 0xffffff, 0.4); window.gameLogic.reachableHexes.forEach(h => this.drawHexOutline(this.overlayGraphics, h.q, h.r)); }
@@ -348,9 +345,28 @@ class MainScene extends Phaser.Scene {
         }
     }
     
-    drawHexOutline(g, q, r) { const c = Renderer.hexToPx(q, r); g.beginPath(); for(let i=0; i<6; i++) { const a = Math.PI/180*60*i; g.lineTo(c.x+HEX_SIZE*0.9*Math.cos(a), c.y+HEX_SIZE*0.9*Math.sin(a)); } g.closePath(); g.lineWidth=0.1; g.strokePath(); }
+    // ★修正: カーソルもHEX_SIZEを基準に描画
+    drawHexOutline(g, q, r) { 
+        const c = Renderer.hexToPx(q, r); 
+        // 54(HEX_SIZE) * 1.0 (サイズ調整)
+        const size = HEX_SIZE * 1.0; 
+        g.beginPath(); 
+        for(let i=0; i<6; i++) { 
+            const a = Math.PI/180 * (60*i - 30); // Pointy Top補正
+            g.lineTo(c.x + size * Math.cos(a), c.y + size * Math.sin(a)); 
+        } 
+        g.closePath(); 
+        g.strokePath(); 
+    }
+    
     drawDashedHexOutline(g, q, r, timeOffset = 0) {
-        const c = Renderer.hexToPx(q, r); const pts = []; for(let i=0; i<6; i++) { const a = Math.PI/180*60*i; pts.push({ x: c.x+HEX_SIZE*0.9*Math.cos(a), y: c.y+HEX_SIZE*0.9*Math.sin(a) }); }
+        const c = Renderer.hexToPx(q, r); 
+        const size = HEX_SIZE * 1.0;
+        const pts = []; 
+        for(let i=0; i<6; i++) { 
+            const a = Math.PI/180 * (60*i - 30);
+            pts.push({ x: c.x + size * Math.cos(a), y: c.y + size * Math.sin(a) }); 
+        }
         const dashLen = 6; const gapLen = 4; const period = dashLen + gapLen; let currentDistInPath = -timeOffset; 
         for(let i=0; i<6; i++) {
             const p1 = pts[i]; const p2 = pts[(i+1)%6]; const dist = Phaser.Math.Distance.Between(p1.x, p1.y, p2.x, p2.y); const dx = (p2.x - p1.x) / dist; const dy = (p2.y - p1.y) / dist;
