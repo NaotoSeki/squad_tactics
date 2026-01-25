@@ -1,81 +1,8 @@
-/** PHASER BRIDGE: Visual Fix (Correct Hex Scaling & Terrain) */
+/** * PHASER BRIDGE: Added Static Idle Animations */
 let phaserGame = null;
-window.HIGH_RES_SCALE = 2.0; 
-
-// ■カードアイコン生成
-window.getCardTextureKey = function(scene, type) {
-    const key = `card_icon_${type}`;
-    if (scene.textures.exists(key)) return key;
-    const g = scene.make.graphics({x: 0, y: 0, add: false});
-    g.fillStyle(0x1a1a1a); g.fillRect(0, 0, 100, 100);
-    g.lineStyle(4, 0xdd8844);
-    if (type.includes('tank')) {
-        g.fillStyle(0xdd8844); g.fillRect(20, 40, 60, 30);
-        g.fillCircle(50, 40, 15);
-        g.lineStyle(6, 0xdd8844); g.beginPath(); g.moveTo(65, 35); g.lineTo(95, 30); g.strokePath();
-    } else if (type === 'heal') {
-        g.fillStyle(0x44ff88); g.fillRect(40, 20, 20, 60); g.fillRect(20, 40, 60, 20);
-    } else {
-        g.fillStyle(0xdd8844); g.fillCircle(50, 30, 15);
-        g.lineStyle(4, 0xdd8844);
-        g.beginPath(); g.moveTo(50, 45); g.lineTo(50, 80); g.strokePath();
-        g.beginPath(); g.moveTo(20, 55); g.lineTo(80, 55); g.strokePath();
-        g.beginPath(); g.moveTo(50, 80); g.lineTo(30, 95); g.strokePath();
-        g.beginPath(); g.moveTo(50, 80); g.lineTo(70, 95); g.strokePath();
-    }
-    g.generateTexture(key, 100, 100);
-    return key;
-};
-
-// ■UI背景
-window.createGradientTexture = function(scene) {
-    const key = 'ui_gradient';
-    if (scene.textures.exists(key)) return;
-    const canvas = document.createElement('canvas');
-    canvas.width = 100; canvas.height = 100;
-    const ctx = canvas.getContext('2d');
-    const grd = ctx.createLinearGradient(0, 0, 0, 100);
-    grd.addColorStop(0, 'rgba(0,0,0,0)');
-    grd.addColorStop(1, 'rgba(0,0,0,0.9)');
-    ctx.fillStyle = grd;
-    ctx.fillRect(0, 0, 100, 100);
-    scene.textures.addCanvas(key, canvas);
-};
-
-// ■★修正: ヘックス画像生成 (サイズ自動計算)
-window.createHexTexture = function(scene) {
-    if (scene.textures.exists('hex_base')) return;
-    const g = scene.make.graphics({x: 0, y: 0, add: false});
-    
-    // ★修正: data.jsのHEX_SIZEに合わせて生成サイズを決定
-    // HEX_SIZEは「中心から辺までの距離」ではなく「配置間隔の基準」なので、
-    // 描画半径は HEX_SIZE * HIGH_RES_SCALE 程度必要
-    const baseSize = (typeof HEX_SIZE !== 'undefined' ? HEX_SIZE : 60); 
-    const size = baseSize * window.HIGH_RES_SCALE * 1.02; // 1.02は隙間埋め用オーバーラップ
-    
-    const w = size * Math.sqrt(3);
-    const h = size * 2;
-    
-    g.fillStyle(0xffffff); // Tint用に白
-    g.beginPath();
-    for (let i = 0; i < 6; i++) {
-        const angle_deg = 60 * i - 30;
-        const angle_rad = Math.PI / 180 * angle_deg;
-        const px = w/2 + size * Math.cos(angle_rad);
-        const py = h/2 + size * Math.sin(angle_rad);
-        if (i === 0) g.moveTo(px, py); else g.lineTo(px, py);
-    }
-    g.closePath();
-    g.fillPath();
-    
-    // 境界線をうっすら描く（好みで調整）
-    // g.lineStyle(2, 0x888888, 0.3);
-    // g.strokePath();
-    
-    g.generateTexture('hex_base', w, h);
-};
 
 const Renderer = {
+    // ... (init, resize など変更なし) ...
     game: null, 
     isMapDragging: false, 
     isCardDragging: false,
@@ -145,6 +72,7 @@ const Renderer = {
     }
 };
 
+// ... Card, UIScene クラスは変更なし (省略) ...
 class Card extends Phaser.GameObjects.Container {
     constructor(scene, x, y, type) {
         super(scene, x, y); this.scene = scene; this.cardType = type; this.setSize(140, 200);
@@ -245,9 +173,6 @@ class MainScene extends Phaser.Scene {
     }
 
     create() {
-        // ★重要: ここでテクスチャを生成
-        window.createHexTexture(this);
-
         this.cameras.main.setBackgroundColor('#0b0e0a'); 
         
         this.hexGroup = this.add.layer(); this.hexGroup.setDepth(0);
@@ -264,6 +189,30 @@ class MainScene extends Phaser.Scene {
         this.scene.launch('UIScene'); 
 
         this.unitView = new UnitView(this, this.unitGroup, this.hpGroup);
+
+        // --- Animations ---
+        this.anims.create({ key: 'anim_idle', frames: this.anims.generateFrameNumbers('us_soldier', { start: 0, end: 7 }), frameRate: 8, repeat: -1 });
+        
+        // 遷移（Transition）
+        this.anims.create({ key: 'anim_crouch', frames: this.anims.generateFrameNumbers('us_soldier', { start: 8, end: 15 }), frameRate: 15, repeat: 0 });
+        this.anims.create({ key: 'anim_prone', frames: this.anims.generateFrameNumbers('us_soldier', { start: 24, end: 31 }), frameRate: 15, repeat: 0 });
+        
+        // ★追加: 姿勢維持（Static Idle）用の1フレームアニメ
+        // しゃがみ待機 (フレーム15)
+        this.anims.create({ key: 'anim_crouch_idle', frames: this.anims.generateFrameNumbers('us_soldier', { frames: [15] }), frameRate: 1, repeat: -1 });
+        // 伏せ待機 (フレーム31)
+        this.anims.create({ key: 'anim_prone_idle', frames: this.anims.generateFrameNumbers('us_soldier', { frames: [31] }), frameRate: 1, repeat: -1 });
+
+        this.anims.create({ key: 'anim_crouch_shoot', frames: this.anims.generateFrameNumbers('us_soldier', { start: 16, end: 23 }), frameRate: 15, repeat: 0 });
+        this.anims.create({ key: 'anim_prone_shoot', frames: this.anims.generateFrameNumbers('us_soldier', { start: 32, end: 39 }), frameRate: 15, repeat: 0 });
+        this.anims.create({ key: 'anim_shoot', frames: this.anims.generateFrameNumbers('us_soldier', { start: 40, end: 47 }), frameRate: 15, repeat: 0 });
+        this.anims.create({ key: 'anim_walk', frames: this.anims.generateFrameNumbers('us_soldier', { start: 48, end: 55 }), frameRate: 10, repeat: -1 });
+        this.anims.create({ key: 'anim_crouch_walk', frames: this.anims.generateFrameNumbers('us_soldier', { start: 56, end: 63 }), frameRate: 8, repeat: -1 });
+        this.anims.create({ key: 'anim_crawl', frames: this.anims.generateFrameNumbers('us_soldier', { start: 64, end: 71 }), frameRate: 6, repeat: -1 });
+        this.anims.create({ key: 'anim_melee', frames: this.anims.generateFrameNumbers('us_soldier', { start: 72, end: 79 }), frameRate: 15, repeat: 0 });
+
+        if (!this.anims.exists('tank_idle')) { this.anims.create({ key: 'tank_idle', frames: this.anims.generateFrameNumbers('tank_sheet', { frames: [7, 6, 5, 6, 7, 5] }), frameRate: 10, repeat: -1 }); }
+        if (!this.anims.exists('explosion_anim')) { this.anims.create({ key: 'explosion_anim', frames: this.anims.generateFrameNumbers('explosion_sheet', { start: 0, end: 7 }), frameRate: 20, repeat: 0, hideOnComplete: true }); }
 
         this.input.on('wheel', (pointer, gameObjects, deltaX, deltaY, deltaZ) => { let newZoom = this.cameras.main.zoom; if (deltaY > 0) newZoom -= 0.5; else if (deltaY < 0) newZoom += 0.5; newZoom = Phaser.Math.Clamp(newZoom, 0.25, 4.0); this.tweens.add({ targets: this.cameras.main, zoom: newZoom, duration: 150, ease: 'Cubic.out' }); });
         this.input.on('pointerdown', (p) => { if (Renderer.isCardDragging || Renderer.checkUIHover(p.x, p.y)) return; if(p.button === 0) { Renderer.isMapDragging = true; if(window.gameLogic) window.gameLogic.handleClick(Renderer.pxToHex(p.x, p.y)); } else if(p.button === 2) { if(window.gameLogic) window.gameLogic.showContext(p.x, p.y); } });
@@ -283,7 +232,6 @@ class MainScene extends Phaser.Scene {
     centerCamera(q, r) { const p = Renderer.hexToPx(q, r); this.cameras.main.centerOn(p.x, p.y); }
     centerMap() { this.cameras.main.centerOn((MAP_W * HEX_SIZE * 1.5) / 2, (MAP_H * HEX_SIZE * 1.732) / 2); }
     
-    // ★マップ生成ロジック (Tint復活)
     createMap() { 
         const map = window.gameLogic.map; 
         this.hexGroup.removeAll(true); this.decorGroup.removeAll(true); this.unitGroup.removeAll(true); this.treeGroup.removeAll(true); this.hpGroup.removeAll(true);
@@ -293,23 +241,8 @@ class MainScene extends Phaser.Scene {
             for(let r=0; r<MAP_H; r++) { 
                 const t = map[q][r]; if(t.id===-1)continue; const pos = Renderer.hexToPx(q, r); 
                 const hex = this.add.image(pos.x, pos.y, 'hex_base').setScale(1/window.HIGH_RES_SCALE); 
-                
-                // ★修正: 色分けロジックの復活
-                let tint = 0x555555; 
-                if(t.id===0) tint=0x5a5245; // Dirt
-                else if(t.id===1) tint=0x425030; // Grass
-                else if(t.id===2) tint=0x222e1b; // Forest
-                else if(t.id===4) tint=0x504540; // Town
-                else if(t.id===5) { 
-                    tint=0x303840; // Water
-                    if(window.EnvSystem) window.EnvSystem.registerWater(hex, pos.y, q, r, this.decorGroup); 
-                }
-                
-                if(window.EnvSystem) { 
-                    if(t.id === 1) window.EnvSystem.spawnGrass(this, this.decorGroup, pos.x, pos.y); 
-                    if(t.id === 2) window.EnvSystem.spawnTrees(this, this.treeGroup, pos.x, pos.y); 
-                }
-                
+                let tint = 0x555555; if(t.id===0)tint=0x5a5245; else if(t.id===1)tint=0x425030; else if(t.id===2)tint=0x222e1b; else if(t.id===4)tint=0x504540; else if(t.id===5) { tint=0x303840; if(window.EnvSystem) window.EnvSystem.registerWater(hex, pos.y, q, r, this.decorGroup); }
+                if(window.EnvSystem) { if(t.id === 1) window.EnvSystem.spawnGrass(this, this.decorGroup, pos.x, pos.y); if(t.id === 2) window.EnvSystem.spawnTrees(this, this.treeGroup, pos.x, pos.y); }
                 hex.setTint(tint); this.hexGroup.add(hex); 
             } 
         } 
