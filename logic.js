@@ -1,4 +1,4 @@
-/** LOGIC: Final Polish (Stance AP, Menu Disabled State) */
+/** LOGIC: Fixed Sidebar, Added Melee Setup/Logic & VFX Patch */
 class Game {
     constructor() {
         this.units = [];
@@ -60,11 +60,17 @@ class Game {
         }
     }
 
+    // ★修正: サイドバー折り畳み時に幅指定をクリアしてCSSを有効にする
     toggleSidebar() {
         const sb = document.getElementById('sidebar');
         const tg = document.getElementById('sidebar-toggle');
         sb.classList.toggle('collapsed');
         tg.innerText = sb.classList.contains('collapsed') ? '◀' : '▶';
+        
+        if (sb.classList.contains('collapsed')) {
+            sb.style.width = ''; // 幅指定を削除 (CSSの !important を効かせる)
+        }
+        
         setTimeout(() => Renderer.resize(), 150);
     }
 
@@ -244,7 +250,6 @@ class Game {
         const btnMelee = document.getElementById('btn-melee');
         const btnHeal = document.getElementById('btn-heal');
 
-        // ★APがないときは移動・射撃を禁止
         if (u.ap <= 0) {
             btnMove.classList.add('disabled');
             btnAttack.classList.add('disabled');
@@ -383,11 +388,10 @@ class Game {
     }
 
     // --- Actions ---
-    // ★修正: 姿勢変更ルール (伏せ->他 は AP1、それ以外は0)
     setStance(s) {
         const u = this.selectedUnit;
         if (!u || u.def.isTank) return;
-        if (u.stance === s) return; // 同じなら何もしない
+        if (u.stance === s) return; 
 
         let cost = 0;
         if (u.stance === 'prone' && (s === 'stand' || s === 'crouch')) {
@@ -406,7 +410,6 @@ class Game {
         if (window.Sfx) Sfx.play('click');
     }
 
-    // 以前のボタン用トグル（一応残すが、メニューからsetStance呼ぶのが基本）
     toggleStance() {
         const u = this.selectedUnit;
         if (!u) return;
@@ -440,21 +443,60 @@ class Game {
         this.refreshUnitState(u); this.hideActionMenu();
     }
 
+    // ★追加: HTMLから呼ばれる白兵準備
+    actionMeleeSetup() {
+        this.setMode('MELEE');
+    }
+
+    // ★修正: 白兵攻撃ロジック
     async actionMelee(a, d) {
         if (!a || a.ap < 2) { this.log("AP不足"); return; }
         if (a.q !== d.q || a.r !== d.r) { this.log("射程外"); return; }
-        a.ap -= 2; this.log(`${a.name} 白兵攻撃 vs ${d.name}`);
+        
+        a.ap -= 2;
+        
+        // ★最強の近接武器を探す
+        let bestWeapon = null;
+        let bestDmg = 0;
+        
+        // 手持ちチェック
+        if (a.hands && a.hands.type === 'melee') {
+            bestWeapon = a.hands;
+            bestDmg = a.hands.dmg;
+        }
+        
+        // バッグチェック (持ち替えなしで使用)
+        a.bag.forEach(item => {
+            if (item && item.type === 'melee' && item.dmg > bestDmg) {
+                bestWeapon = item;
+                bestDmg = item.dmg;
+            }
+        });
+        
+        const wpnName = bestWeapon ? bestWeapon.name : "銃床";
+        this.log(`${a.name} 白兵攻撃(${wpnName}) vs ${d.name}`);
+        
         if (Renderer.playAttackAnim) Renderer.playAttackAnim(a, d);
         await new Promise(r => setTimeout(r, 300));
-        let dmg = 15 + (a.stats.str * 2);
-        if (a.hands && a.hands.type === 'melee') dmg = a.hands.dmg;
-        if (d.skills.includes('CQC')) { this.log(`>> ${d.name} カウンター！`); a.hp -= 10; }
-        d.hp -= dmg;
-        if (window.Sfx) Sfx.play('hit');
+        
+        // ダメージ計算 (基礎:10 + STR補正 + 武器)
+        let totalDmg = 10 + (a.stats.str * 3);
+        if (bestWeapon) totalDmg += bestWeapon.dmg;
+        
+        // カウンター判定
+        if (d.skills.includes('CQC')) { 
+            this.log(`>> ${d.name} カウンター！`); 
+            a.hp -= 15; // カウンターダメージ
+        }
+        
+        d.hp -= totalDmg;
+        if(window.Sfx) Sfx.play('hit');
+        
         if (d.hp <= 0 && !d.deadProcessed) {
             d.deadProcessed = true; this.log(`>> ${d.name} を撃破！`);
-            if (window.Sfx) Sfx.play('death');
+            if(window.Sfx) Sfx.play('death');
         }
+        
         this.refreshUnitState(a); this.checkPhaseEnd();
     }
 
@@ -491,7 +533,9 @@ class Game {
             const tx = ePos.x + (Math.random() - 0.5) * spread; const ty = ePos.y + (Math.random() - 0.5) * spread;
             if (window.Sfx) Sfx.play(w.type === 'shell' || w.type === 'shell_fast' ? 'cannon' : 'shot');
             const flightTime = w.type.includes('shell') ? dist * 100 : dist * 50;
-            if (window.VFX) VFX.addProj({ x: sPos.x, y: sPos.y, sx: sPos.x, sy: sPos.y, ex: tx, ey: ty, type: w.type, speed: 0.1, progress: 0, arcHeight: (w.type.includes('shell') ? 100 : 0), onHit: null });
+            
+            // ★修正: onHitはnullでOK (VFX側で修正済だが念のため)
+            if (window.VFX) VFX.addProj({ x: sPos.x, y: sPos.y, sx: sPos.x, sy: sPos.y, ex: tx, ey: ty, type: w.type, speed: 0.1, progress: 0, arcHeight: (w.type.includes('shell') ? 100 : 0), onHit: () => {} });
 
             setTimeout(() => {
                 if (d.hp <= 0) return;
@@ -556,6 +600,7 @@ class Game {
         }
     }
 
+    // --- その他ヘルパー ---
     generateMap() {
         this.map = [];
         for (let q = 0; q < MAP_W; q++) { this.map[q] = []; for (let r = 0; r < MAP_H; r++) { this.map[q][r] = TERRAIN.VOID; } }
