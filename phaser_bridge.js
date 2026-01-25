@@ -1,4 +1,4 @@
-/** * PHASER BRIDGE (Updated Prone Idle Animation) */
+/** * PHASER BRIDGE: Refactored (Animations Moved to UnitView) */
 let phaserGame = null;
 
 const Renderer = {
@@ -187,40 +187,8 @@ class MainScene extends Phaser.Scene {
         if(window.EnvSystem) window.EnvSystem.clear();
         this.scene.launch('UIScene'); 
 
+        // ★修正: ここでUnitViewを初期化 (アニメーション定義はUnitView内で行われる)
         this.unitView = new UnitView(this, this.unitGroup, this.hpGroup);
-
-        // --- Animations ---
-        this.anims.create({ key: 'anim_idle', frames: this.anims.generateFrameNumbers('us_soldier', { start: 0, end: 7 }), frameRate: 8, repeat: -1 });
-        this.anims.create({ key: 'anim_crouch', frames: this.anims.generateFrameNumbers('us_soldier', { start: 8, end: 15 }), frameRate: 15, repeat: 0 });
-        this.anims.create({ key: 'anim_prone', frames: this.anims.generateFrameNumbers('us_soldier', { start: 24, end: 31 }), frameRate: 15, repeat: 0 });
-        
-        // 姿勢維持（Static Idle）用の1フレームアニメ
-        this.anims.create({ key: 'anim_crouch_idle', frames: this.anims.generateFrameNumbers('us_soldier', { frames: [15] }), frameRate: 1, repeat: -1 });
-        
-        // ★修正: 伏せ待機 (時折動く)
-        this.anims.create({ 
-            key: 'anim_prone_idle', 
-            frames: this.anims.generateFrameNumbers('us_soldier', { frames: [
-                33, 33, 33, 33, 33, // じっとしている
-                34, 33,             // 呼吸のような微動
-                33, 33, 33, 
-                38, 39, 38,         // わずかに姿勢を直す動き
-                33, 33
-            ]}), 
-            frameRate: 6, // 少しゆっくりめに
-            repeat: -1 
-        });
-
-        this.anims.create({ key: 'anim_crouch_shoot', frames: this.anims.generateFrameNumbers('us_soldier', { start: 16, end: 23 }), frameRate: 15, repeat: 0 });
-        this.anims.create({ key: 'anim_prone_shoot', frames: this.anims.generateFrameNumbers('us_soldier', { start: 32, end: 39 }), frameRate: 15, repeat: 0 });
-        this.anims.create({ key: 'anim_shoot', frames: this.anims.generateFrameNumbers('us_soldier', { start: 40, end: 47 }), frameRate: 15, repeat: 0 });
-        this.anims.create({ key: 'anim_walk', frames: this.anims.generateFrameNumbers('us_soldier', { start: 48, end: 55 }), frameRate: 10, repeat: -1 });
-        this.anims.create({ key: 'anim_crouch_walk', frames: this.anims.generateFrameNumbers('us_soldier', { start: 56, end: 63 }), frameRate: 8, repeat: -1 });
-        this.anims.create({ key: 'anim_crawl', frames: this.anims.generateFrameNumbers('us_soldier', { start: 64, end: 71 }), frameRate: 6, repeat: -1 });
-        this.anims.create({ key: 'anim_melee', frames: this.anims.generateFrameNumbers('us_soldier', { start: 72, end: 79 }), frameRate: 15, repeat: 0 });
-
-        if (!this.anims.exists('tank_idle')) { this.anims.create({ key: 'tank_idle', frames: this.anims.generateFrameNumbers('tank_sheet', { frames: [7, 6, 5, 6, 7, 5] }), frameRate: 10, repeat: -1 }); }
-        if (!this.anims.exists('explosion_anim')) { this.anims.create({ key: 'explosion_anim', frames: this.anims.generateFrameNumbers('explosion_sheet', { start: 0, end: 7 }), frameRate: 20, repeat: 0, hideOnComplete: true }); }
 
         this.input.on('wheel', (pointer, gameObjects, deltaX, deltaY, deltaZ) => { let newZoom = this.cameras.main.zoom; if (deltaY > 0) newZoom -= 0.5; else if (deltaY < 0) newZoom += 0.5; newZoom = Phaser.Math.Clamp(newZoom, 0.25, 4.0); this.tweens.add({ targets: this.cameras.main, zoom: newZoom, duration: 150, ease: 'Cubic.out' }); });
         this.input.on('pointerdown', (p) => { if (Renderer.isCardDragging || Renderer.checkUIHover(p.x, p.y)) return; if(p.button === 0) { Renderer.isMapDragging = true; if(window.gameLogic) window.gameLogic.handleClick(Renderer.pxToHex(p.x, p.y)); } else if(p.button === 2) { if(window.gameLogic) window.gameLogic.showContext(p.x, p.y); } });
