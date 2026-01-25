@@ -1,4 +1,46 @@
-/** LOGIC: Fixed Sidebar, Added Melee Setup/Logic & VFX Patch */
+/** LOGIC: Fixed createCardIcon & Duplicate Methods */
+
+// ★追加: アイコン生成ヘルパー
+function createCardIcon(type) {
+    const c = document.createElement('canvas');
+    c.width = 100; c.height = 100;
+    const ctx = c.getContext('2d');
+    
+    // 背景
+    ctx.fillStyle = "#1a1a1a";
+    ctx.fillRect(0,0,100,100);
+    ctx.lineWidth = 4;
+    ctx.strokeStyle = "#d84";
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+
+    if (type === 'infantry') {
+        ctx.fillStyle = "#d84";
+        ctx.beginPath(); ctx.arc(50, 30, 15, 0, Math.PI*2); ctx.fill(); 
+        ctx.beginPath(); ctx.moveTo(50, 45); ctx.lineTo(50, 80); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(20, 55); ctx.lineTo(80, 55); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(50, 80); ctx.lineTo(30, 95); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(50, 80); ctx.lineTo(70, 95); ctx.stroke();
+    } else if (type === 'tank') {
+        ctx.fillStyle = "#d84";
+        ctx.fillRect(20, 40, 60, 30);
+        ctx.beginPath(); ctx.arc(50, 40, 15, Math.PI, 0); ctx.fill();
+        ctx.lineWidth = 6;
+        ctx.beginPath(); ctx.moveTo(65, 35); ctx.lineTo(95, 30); ctx.stroke();
+        ctx.lineWidth = 4;
+        ctx.strokeRect(15, 65, 70, 15); 
+    } else if (type === 'heal') {
+        ctx.fillStyle = "#4f8";
+        ctx.fillRect(40, 20, 20, 60);
+        ctx.fillRect(20, 40, 60, 20);
+        ctx.strokeStyle = "#fff";
+        ctx.lineWidth = 2;
+        ctx.strokeRect(40, 20, 20, 60);
+        ctx.strokeRect(20, 40, 60, 20);
+    }
+    return c.toDataURL();
+}
+
 class Game {
     constructor() {
         this.units = [];
@@ -35,11 +77,7 @@ class Game {
         const sidebar = document.getElementById('sidebar');
         let isResizing = false;
         if (resizer) {
-            resizer.addEventListener('mousedown', (e) => {
-                isResizing = true;
-                document.body.style.cursor = 'col-resize';
-                resizer.classList.add('active');
-            });
+            resizer.addEventListener('mousedown', (e) => { isResizing = true; document.body.style.cursor = 'col-resize'; resizer.classList.add('active'); });
             window.addEventListener('mousemove', (e) => {
                 if (!isResizing) return;
                 const newWidth = document.body.clientWidth - e.clientX;
@@ -49,28 +87,16 @@ class Game {
                     Renderer.resize();
                 }
             });
-            window.addEventListener('mouseup', () => {
-                if (isResizing) {
-                    isResizing = false;
-                    document.body.style.cursor = '';
-                    resizer.classList.remove('active');
-                    Renderer.resize();
-                }
-            });
+            window.addEventListener('mouseup', () => { if (isResizing) { isResizing = false; document.body.style.cursor = ''; resizer.classList.remove('active'); Renderer.resize(); } });
         }
     }
 
-    // ★修正: サイドバー折り畳み時に幅指定をクリアしてCSSを有効にする
     toggleSidebar() {
         const sb = document.getElementById('sidebar');
         const tg = document.getElementById('sidebar-toggle');
         sb.classList.toggle('collapsed');
         tg.innerText = sb.classList.contains('collapsed') ? '◀' : '▶';
-        
-        if (sb.classList.contains('collapsed')) {
-            sb.style.width = ''; // 幅指定を削除 (CSSの !important を効かせる)
-        }
-        
+        if (sb.classList.contains('collapsed')) { sb.style.width = ''; }
         setTimeout(() => Renderer.resize(), 150);
     }
 
@@ -99,12 +125,8 @@ class Game {
         if (!t) return null;
         const isPlayer = (team === 'player');
         const stats = { ...t.stats };
-        if (isPlayer && !t.isTank) {
-            ['str', 'aim', 'mob', 'mor'].forEach(k => stats[k] = (stats[k] || 0) + Math.floor(Math.random() * 3) - 1);
-        }
-        let name = t.name;
-        let rank = 0;
-        let faceSeed = Math.floor(Math.random() * 99999);
+        if (isPlayer && !t.isTank) { ['str', 'aim', 'mob', 'mor'].forEach(k => stats[k] = (stats[k] || 0) + Math.floor(Math.random() * 3) - 1); }
+        let name = t.name; let rank = 0; let faceSeed = Math.floor(Math.random() * 99999);
         if (isPlayer && !t.isTank) {
             const first = FIRST_NAMES[Math.floor(Math.random() * FIRST_NAMES.length)];
             const last = LAST_NAMES[Math.floor(Math.random() * LAST_NAMES.length)];
@@ -118,43 +140,22 @@ class Game {
                 if (isMainWpn && typeof MAG_VARIANTS !== 'undefined' && MAG_VARIANTS[key]) {
                     const vars = MAG_VARIANTS[key];
                     const choice = vars[Math.floor(Math.random() * vars.length)];
-                    item.cap = choice.cap;
-                    item.jam = choice.jam;
-                    item.magName = choice.name;
+                    item.cap = choice.cap; item.jam = choice.jam; item.magName = choice.name;
                 }
                 item.current = item.cap;
             } else if (base.type === 'shell' || base.area) {
-                item.current = 1;
-                item.isConsumable = true;
+                item.current = 1; item.isConsumable = true;
             }
             return item;
         };
-        let hands = null;
-        let bag = [];
+        let hands = null; let bag = [];
         if (t.main) hands = createItem(t.main, true);
         if (t.sub) bag.push(createItem(t.sub));
-        if (t.opt) {
-            const optBase = WPNS[t.opt];
-            const count = optBase.mag || 1;
-            for (let i = 0; i < count; i++) bag.push(createItem(t.opt));
-        }
+        if (t.opt) { const optBase = WPNS[t.opt]; const count = optBase.mag || 1; for (let i = 0; i < count; i++) bag.push(createItem(t.opt)); }
         if (hands && hands.mag && !hands.isConsumable) {
-            for (let i = 0; i < hands.mag; i++) {
-                if (bag.length >= 4) break;
-                bag.push({
-                    type: 'ammo',
-                    name: (hands.magName || 'Clip'),
-                    ammoFor: hands.code,
-                    cap: hands.cap,
-                    jam: hands.jam,
-                    code: 'mag'
-                });
-            }
+            for (let i = 0; i < hands.mag; i++) { if (bag.length >= 4) break; bag.push({ type: 'ammo', name: (hands.magName || 'Clip'), ammoFor: hands.code, cap: hands.cap, jam: hands.jam, code: 'mag' }); }
         }
-        if (!isPlayer) {
-            if (hands) hands.current = 999;
-            bag = [];
-        }
+        if (!isPlayer) { if (hands) hands.current = 999; bag = []; }
         return {
             id: Math.random(), team: team, q: q, r: r, def: t, name: name, rank: rank, faceSeed: faceSeed, stats: stats,
             hp: t.hp || (80 + (stats.str || 0) * 5), maxHp: t.hp || (80 + (stats.str || 0) * 5),
@@ -258,17 +259,14 @@ class Game {
             btnAttack.classList.remove('disabled');
         }
 
-        if (u.hands && u.hands.isBroken) btnRepair.classList.remove('disabled');
-        else btnRepair.classList.add('disabled');
+        if (u.hands && u.hands.isBroken) btnRepair.classList.remove('disabled'); else btnRepair.classList.add('disabled');
 
         const neighbors = this.getUnitsInHex(u.q, u.r);
         const hasEnemy = neighbors.some(n => n.team !== u.team);
-        if (hasEnemy) btnMelee.classList.remove('disabled');
-        else btnMelee.classList.add('disabled');
+        if (hasEnemy) btnMelee.classList.remove('disabled'); else btnMelee.classList.add('disabled');
 
         const hasWounded = neighbors.some(n => n.team === u.team && n.hp < n.maxHp);
-        if (hasWounded) btnHeal.classList.remove('disabled');
-        else btnHeal.classList.add('disabled');
+        if (hasWounded) btnHeal.classList.remove('disabled'); else btnHeal.classList.add('disabled');
 
         if (Renderer.game) {
             const pointer = Renderer.game.input.activePointer;
@@ -312,7 +310,6 @@ class Game {
             let current = frontier.shift();
             this.getNeighbors(current.q, current.r).forEach(n => {
                 if (this.getUnitsInHex(n.q, n.r).length >= 4) return;
-                
                 const cost = this.map[n.q][n.r].cost;
                 if (cost >= 99) return;
                 
@@ -377,17 +374,14 @@ class Game {
     }
 
     clearSelection() {
-        this.selectedUnit = null;
-        this.reachableHexes = [];
-        this.attackLine = [];
-        this.aimTargetUnit = null;
-        this.path = [];
+        this.selectedUnit = null; this.reachableHexes = []; this.attackLine = []; this.aimTargetUnit = null; this.path = [];
         this.setMode('SELECT');
         this.hideActionMenu();
         this.updateSidebar();
     }
 
     // --- Actions ---
+    // ★姿勢変更ルール (APコスト)
     setStance(s) {
         const u = this.selectedUnit;
         if (!u || u.def.isTank) return;
@@ -443,35 +437,18 @@ class Game {
         this.refreshUnitState(u); this.hideActionMenu();
     }
 
-    // ★追加: HTMLから呼ばれる白兵準備
     actionMeleeSetup() {
         this.setMode('MELEE');
     }
 
-    // ★修正: 白兵攻撃ロジック
     async actionMelee(a, d) {
         if (!a || a.ap < 2) { this.log("AP不足"); return; }
         if (a.q !== d.q || a.r !== d.r) { this.log("射程外"); return; }
         
         a.ap -= 2;
-        
-        // ★最強の近接武器を探す
-        let bestWeapon = null;
-        let bestDmg = 0;
-        
-        // 手持ちチェック
-        if (a.hands && a.hands.type === 'melee') {
-            bestWeapon = a.hands;
-            bestDmg = a.hands.dmg;
-        }
-        
-        // バッグチェック (持ち替えなしで使用)
-        a.bag.forEach(item => {
-            if (item && item.type === 'melee' && item.dmg > bestDmg) {
-                bestWeapon = item;
-                bestDmg = item.dmg;
-            }
-        });
+        let bestWeapon = null; let bestDmg = 0;
+        if (a.hands && a.hands.type === 'melee') { bestWeapon = a.hands; bestDmg = a.hands.dmg; }
+        a.bag.forEach(item => { if (item && item.type === 'melee' && item.dmg > bestDmg) { bestWeapon = item; bestDmg = item.dmg; } });
         
         const wpnName = bestWeapon ? bestWeapon.name : "銃床";
         this.log(`${a.name} 白兵攻撃(${wpnName}) vs ${d.name}`);
@@ -479,15 +456,9 @@ class Game {
         if (Renderer.playAttackAnim) Renderer.playAttackAnim(a, d);
         await new Promise(r => setTimeout(r, 300));
         
-        // ダメージ計算 (基礎:10 + STR補正 + 武器)
         let totalDmg = 10 + (a.stats.str * 3);
         if (bestWeapon) totalDmg += bestWeapon.dmg;
-        
-        // カウンター判定
-        if (d.skills.includes('CQC')) { 
-            this.log(`>> ${d.name} カウンター！`); 
-            a.hp -= 15; // カウンターダメージ
-        }
+        if (d.skills.includes('CQC')) { this.log(`>> ${d.name} カウンター！`); a.hp -= 15; }
         
         d.hp -= totalDmg;
         if(window.Sfx) Sfx.play('hit');
@@ -496,7 +467,6 @@ class Game {
             d.deadProcessed = true; this.log(`>> ${d.name} を撃破！`);
             if(window.Sfx) Sfx.play('death');
         }
-        
         this.refreshUnitState(a); this.checkPhaseEnd();
     }
 
@@ -534,7 +504,6 @@ class Game {
             if (window.Sfx) Sfx.play(w.type === 'shell' || w.type === 'shell_fast' ? 'cannon' : 'shot');
             const flightTime = w.type.includes('shell') ? dist * 100 : dist * 50;
             
-            // ★修正: onHitはnullでOK (VFX側で修正済だが念のため)
             if (window.VFX) VFX.addProj({ x: sPos.x, y: sPos.y, sx: sPos.x, sy: sPos.y, ex: tx, ey: ty, type: w.type, speed: 0.1, progress: 0, arcHeight: (w.type.includes('shell') ? 100 : 0), onHit: () => {} });
 
             setTimeout(() => {
@@ -600,7 +569,7 @@ class Game {
         }
     }
 
-    // --- その他ヘルパー ---
+    // --- その他ヘルパー (省略なし) ---
     generateMap() {
         this.map = [];
         for (let q = 0; q < MAP_W; q++) { this.map[q] = []; for (let r = 0; r < MAP_H; r++) { this.map[q][r] = TERRAIN.VOID; } }
