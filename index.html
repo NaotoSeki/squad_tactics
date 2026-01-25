@@ -19,21 +19,27 @@
 
         #resizer { width: 6px; background: #222; cursor: col-resize; z-index: 30; border-left: 1px solid #000; border-right: 1px solid #333; }
         
-        /* サイドバー開閉のアニメーションと設定 */
+        /* ★修正: サイドバーの大枠はクリックを透過させる (閉じたときの透明部分が邪魔しないように) */
         #sidebar { 
             width: 340px; min-width: 280px; 
             background: var(--panel); border-left: 1px solid var(--border); 
             display: flex; flex-direction: column; z-index: 20; position: relative; 
             transition: width 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), min-width 0.3s;
+            pointer-events: none; /* 重要: ここで透過 */
         }
-        /* 完全に閉じるための設定 */
+        
+        /* ★修正: サイドバーの中身はクリックを受け付ける */
+        #sidebar > * { pointer-events: auto; }
+
         #sidebar.collapsed { 
             width: 0 !important; 
             min-width: 0 !important; 
             border: none; 
         }
-        #sidebar.collapsed > * { display: none; }
-        #sidebar.collapsed #sidebar-toggle { display: flex !important; left: -32px; border-right: 1px solid var(--border); }
+        #sidebar.collapsed > * { display: none; } /* 中身を消す */
+        
+        /* トグルボタンは常に表示＆クリック可能 */
+        #sidebar.collapsed #sidebar-toggle { display: flex !important; left: -32px; border-right: 1px solid var(--border); pointer-events: auto; }
         
         #sidebar-toggle { 
             position: absolute; top: 0; left: -24px; 
@@ -43,6 +49,7 @@
             cursor: pointer; z-index: 40; 
             display: flex; justify-content: center; align-items: center; 
             transition: left 0.3s;
+            pointer-events: auto; /* 明示的に有効化 */
         }
         #sidebar-toggle:hover { background: #333; color: #fff; }
 
@@ -81,15 +88,7 @@
         .card-container { display: flex; gap: 15px; }
         .card { width: 140px; height: 220px; background: #222; border: 2px solid #555; padding: 10px; cursor: pointer; color: #ccc; position: relative; overflow: hidden; display: flex; flex-direction: column; align-items: center; transition: transform 0.1s, border-color 0.1s; }
         .card:hover { border-color: #d84; transform: translateY(-5px); }
-        
-        /* 選択されたカードの強調表示 */
-        .card.selected { 
-            border-color: #d84 !important; 
-            background: #2a1a10 !important; 
-            transform: translateY(-5px); 
-            box-shadow: 0 0 15px rgba(221, 136, 68, 0.4); 
-        }
-        
+        .card.selected { border-color: #d84 !important; background: #2a1a10 !important; transform: translateY(-5px); box-shadow: 0 0 15px rgba(221, 136, 68, 0.4); }
         .card-badge { position: absolute; top: 5px; right: 5px; background: #d84; color: #000; width: 24px; height: 24px; border-radius: 50%; display: none; justify-content: center; align-items: center; font-weight: bold; font-size: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.5); z-index: 10; }
         .card-img-box { width: 100px; height: 100px; background: #000; border: 1px solid #444; margin-bottom: 10px; display: flex; justify-content: center; align-items: center; overflow: hidden; }
         .card-img-box img { max-width: 100%; max-height: 100%; object-fit: contain; }
@@ -101,24 +100,21 @@
         #auto-toggle { position:absolute; bottom:10px; left:10px; padding:5px 10px; background:#000; border:1px solid #444; color:#888; cursor:pointer; z-index:50; font-size:11px; }
         #auto-toggle.active { color:#0f0; border-color:#0f0; }
         
-        /* コンテキストメニュー */
         #context-menu { 
             position:absolute; display:none; 
             background:rgba(0,20,30,0.95); border:1px solid #0af; 
             padding:10px; z-index:60; color:#fff; font-size:11px; 
             box-shadow: 0 2px 10px rgba(0,0,0,0.5);
-            /* pointer-events: noneを削除しました */
         }
 
         #eyecatch { position: absolute; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.3); z-index: 90; display: flex; justify-content: center; align-items: center; pointer-events: none; opacity: 0; transition: opacity 0.5s; }
         #eyecatch-text { color: #d44; font-size: 40px; font-weight: 900; text-shadow: 0 0 20px #000; border: 4px solid #d44; padding: 10px 40px; background: rgba(0,0,0,0.8); transform: skewX(-10deg); }
         
-        /* コマンドメニュー (最前面) */
         #command-menu { 
             position: absolute; display: none; 
             background: rgba(10, 15, 10, 0.95); border: 1px solid #d84; 
             padding: 5px; 
-            z-index: 9999; /* 最強 */
+            z-index: 9999; 
             box-shadow: 0 0 15px rgba(0,0,0,0.8); 
             border-radius: 4px; min-width: 120px; overflow: visible; 
         }
@@ -138,13 +134,10 @@
     <div id="app">
         <div id="game-view">
             <div id="sector-counter">SECTOR: 01</div>
-            
             <div id="context-menu"></div>
-            
             <div id="mode-label" class="mode-indicator">SELECT TARGET</div>
             <div id="auto-toggle" onclick="gameLogic.toggleAuto()">AUTO</div>
             <div id="eyecatch"><div id="eyecatch-text">ENEMY PHASE</div></div>
-            
             <div id="setup-screen" class="overlay">
                 <div style="text-align:center;">
                     <h2 style="color:#d84;">SQUAD RECRUITMENT</h2>
@@ -152,14 +145,12 @@
                     <button id="btn-start" style="margin-top:20px; padding:10px 30px; background:#d84; border:none; cursor:pointer; font-weight:bold; display:none;" onclick="gameLogic.startCampaign()">DEPLOY</button>
                 </div>
             </div>
-            
             <div id="gameover-screen" class="overlay" style="display:none;">
                 <div style="text-align:center; color:#f55;">
                     <h1>M.I.A.</h1><p>全滅しました</p>
                     <button onclick="location.reload()" style="padding:10px 20px; background:#300; border:1px solid #f00; color:#f00; cursor:pointer;">RESTART</button>
                 </div>
             </div>
-            
             <div id="reward-screen" class="overlay" style="display:none;">
                 <div style="text-align:center;">
                     <h2 style="color:#da4;">SECTOR CLEARED</h2>
@@ -167,9 +158,7 @@
                 </div>
             </div>
         </div>
-        
         <div id="resizer"></div>
-        
         <div id="sidebar">
             <div id="sidebar-toggle" onclick="gameLogic.toggleSidebar()">▶</div>
             <div class="panel-header">SOLDIER DOSSIER</div>
@@ -208,7 +197,6 @@
             if(data && window.gameLogic) { try { const src = JSON.parse(data); window.gameLogic.swapEquipment(src, {type: targetType, index: targetIndex}); } catch(err) { console.error(err); } }
         }
     </script>
-    
     <script src="data.js"></script>
     <script src="phaser_sound.js"></script> 
     <script src="phaser_vfx.js"></script> 
