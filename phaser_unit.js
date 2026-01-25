@@ -1,4 +1,4 @@
-/** PHASER UNIT: Purple Enemies & Adjusted UI */
+/** PHASER UNIT: Grounded Shadows (Tighter fit) & Lower HP Bar */
 
 class UnitView {
     constructor(scene, unitLayer, hpLayer) {
@@ -77,23 +77,22 @@ class UnitView {
             if (pointer.button === 0 && window.gameLogic) { pointer.event.stopPropagation(); window.gameLogic.onUnitClick(u); }
         });
 
-        // 影（足元）
-        const shadow = this.scene.add.ellipse(0, 5, 20, 10, 0x000000, 0.5);
+        // ★修正: 影の位置をY:-4に設定し、歩兵の足元に密着させる
+        const shadow = this.scene.add.ellipse(0, -4, 20, 10, 0x000000, 0.5);
         
         let sprite;
         if (u.def.name === "Rifleman" || u.def.role === "infantry" || !u.def.isTank) { 
             sprite = this.scene.add.sprite(0, -20, 'us_soldier'); 
             sprite.setScale(0.25); 
             sprite.play('anim_idle');
-            // ★修正: 敵の色を紫に変更
             if (u.team === 'player') sprite.setTint(0xeeeeff); else sprite.setTint(0x9955ff);
         } else if (u.def.isTank) {
             sprite = this.scene.add.sprite(0, -10, 'tank_sheet');
             sprite.setScale(0.4);
             sprite.play('tank_idle');
-            // ★修正: 敵戦車も紫に
             if (u.team === 'player') sprite.setTint(0xccddee); else sprite.setTint(0x9955ff);
-            shadow.setPosition(-2, 8); 
+            // ★修正: 戦車の影もY:2に設定し、履帯の下に密着させる
+            shadow.setPosition(-2, 2); 
             shadow.setSize(46, 18);
         } else {
             sprite = this.scene.add.rectangle(0, 0, 30, 40, u.team==='player'?0x00f:0xf00);
@@ -101,7 +100,6 @@ class UnitView {
 
         container.add([shadow, sprite]);
 
-        // HPバー (細く)
         const hpBg = this.scene.add.rectangle(0, 0, 20, 2, 0x000000).setOrigin(0, 0.5);
         const hpBar = this.scene.add.rectangle(0, 0, 20, 2, 0x00ff00).setOrigin(0, 0.5);
         const infoContainer = this.scene.add.container(0, 18);
@@ -172,7 +170,6 @@ class UnitView {
         }
 
         if (visual.hpBg && visual.hpBar && visual.infoContainer) {
-            // HPバー位置 (頭上低め)
             const barY = visual.y - 45; 
             const barX = visual.x - 10;
             visual.hpBg.setPosition(barX, barY);
