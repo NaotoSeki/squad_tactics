@@ -1,4 +1,4 @@
-/** LOGIC: Fixed calcReachableHexes & Stance Menu Support */
+/** LOGIC: Final Polish (Stance AP, Menu Disabled State) */
 class Game {
     constructor() {
         this.units = [];
@@ -16,7 +16,6 @@ class Game {
         this.enemyAI = 'AGGRESSIVE';
         this.cardsUsed = 0;
 
-        // インタラクションモード
         this.interactionMode = 'SELECT';
         this.selectedUnit = null;
 
@@ -24,12 +23,10 @@ class Game {
         this.initSetup();
     }
 
-    // --- 初期化 & DOM ---
     initDOM() {
         Renderer.init(document.getElementById('game-view'));
         window.addEventListener('click', (e) => {
             if (!e.target.closest('#context-menu')) document.getElementById('context-menu').style.display = 'none';
-            // コマンドメニュー外、かつキャンバス外なら閉じる
             if (!e.target.closest('#command-menu') && !e.target.closest('canvas')) {
                 this.hideActionMenu();
             }
@@ -38,7 +35,11 @@ class Game {
         const sidebar = document.getElementById('sidebar');
         let isResizing = false;
         if (resizer) {
-            resizer.addEventListener('mousedown', (e) => { isResizing = true; document.body.style.cursor = 'col-resize'; resizer.classList.add('active'); });
+            resizer.addEventListener('mousedown', (e) => {
+                isResizing = true;
+                document.body.style.cursor = 'col-resize';
+                resizer.classList.add('active');
+            });
             window.addEventListener('mousemove', (e) => {
                 if (!isResizing) return;
                 const newWidth = document.body.clientWidth - e.clientX;
@@ -48,7 +49,14 @@ class Game {
                     Renderer.resize();
                 }
             });
-            window.addEventListener('mouseup', () => { if (isResizing) { isResizing = false; document.body.style.cursor = ''; resizer.classList.remove('active'); Renderer.resize(); } });
+            window.addEventListener('mouseup', () => {
+                if (isResizing) {
+                    isResizing = false;
+                    document.body.style.cursor = '';
+                    resizer.classList.remove('active');
+                    Renderer.resize();
+                }
+            });
         }
     }
 
@@ -80,13 +88,14 @@ class Game {
         });
     }
 
-    // --- ユニット生成 ---
     createSoldier(templateKey, team, q, r) {
         const t = UNIT_TEMPLATES[templateKey];
         if (!t) return null;
         const isPlayer = (team === 'player');
         const stats = { ...t.stats };
-        if (isPlayer && !t.isTank) { ['str', 'aim', 'mob', 'mor'].forEach(k => stats[k] = (stats[k] || 0) + Math.floor(Math.random() * 3) - 1); }
+        if (isPlayer && !t.isTank) {
+            ['str', 'aim', 'mob', 'mor'].forEach(k => stats[k] = (stats[k] || 0) + Math.floor(Math.random() * 3) - 1);
+        }
         let name = t.name;
         let rank = 0;
         let faceSeed = Math.floor(Math.random() * 99999);
@@ -103,22 +112,43 @@ class Game {
                 if (isMainWpn && typeof MAG_VARIANTS !== 'undefined' && MAG_VARIANTS[key]) {
                     const vars = MAG_VARIANTS[key];
                     const choice = vars[Math.floor(Math.random() * vars.length)];
-                    item.cap = choice.cap; item.jam = choice.jam; item.magName = choice.name;
+                    item.cap = choice.cap;
+                    item.jam = choice.jam;
+                    item.magName = choice.name;
                 }
                 item.current = item.cap;
             } else if (base.type === 'shell' || base.area) {
-                item.current = 1; item.isConsumable = true;
+                item.current = 1;
+                item.isConsumable = true;
             }
             return item;
         };
-        let hands = null; let bag = [];
+        let hands = null;
+        let bag = [];
         if (t.main) hands = createItem(t.main, true);
         if (t.sub) bag.push(createItem(t.sub));
-        if (t.opt) { const optBase = WPNS[t.opt]; const count = optBase.mag || 1; for (let i = 0; i < count; i++) bag.push(createItem(t.opt)); }
-        if (hands && hands.mag && !hands.isConsumable) {
-            for (let i = 0; i < hands.mag; i++) { if (bag.length >= 4) break; bag.push({ type: 'ammo', name: (hands.magName || 'Clip'), ammoFor: hands.code, cap: hands.cap, jam: hands.jam, code: 'mag' }); }
+        if (t.opt) {
+            const optBase = WPNS[t.opt];
+            const count = optBase.mag || 1;
+            for (let i = 0; i < count; i++) bag.push(createItem(t.opt));
         }
-        if (!isPlayer) { if (hands) hands.current = 999; bag = []; }
+        if (hands && hands.mag && !hands.isConsumable) {
+            for (let i = 0; i < hands.mag; i++) {
+                if (bag.length >= 4) break;
+                bag.push({
+                    type: 'ammo',
+                    name: (hands.magName || 'Clip'),
+                    ammoFor: hands.code,
+                    cap: hands.cap,
+                    jam: hands.jam,
+                    code: 'mag'
+                });
+            }
+        }
+        if (!isPlayer) {
+            if (hands) hands.current = 999;
+            bag = [];
+        }
         return {
             id: Math.random(), team: team, q: q, r: r, def: t, name: name, rank: rank, faceSeed: faceSeed, stats: stats,
             hp: t.hp || (80 + (stats.str || 0) * 5), maxHp: t.hp || (80 + (stats.str || 0) * 5),
@@ -131,7 +161,6 @@ class Game {
     getUnitInHex(q, r) { return this.units.find(u => u.q === q && u.r === r && u.hp > 0); }
     getUnit(q, r) { return this.getUnitInHex(q, r); }
 
-    // --- ゲーム進行 ---
     startCampaign() {
         document.getElementById('setup-screen').style.display = 'none';
         if (typeof Renderer !== 'undefined' && Renderer.game) {
@@ -176,17 +205,15 @@ class Game {
         return { q: 0, r: 0 };
     }
 
-    // --- ★インタラクション (修正版) ---
+    // --- インタラクション ---
     onUnitClick(u) {
         if (this.state !== 'PLAY') return;
 
-        // 移動モード中は「そのマスをクリックした」とみなす
         if (this.interactionMode === 'MOVE') {
             this.handleClick({ q: u.q, r: u.r });
             return;
         }
 
-        // 敵クリックのハンドリング
         if (u.team !== 'player') {
             if (this.interactionMode === 'ATTACK' && this.selectedUnit) {
                 this.actionAttack(this.selectedUnit, u);
@@ -201,7 +228,6 @@ class Game {
             return;
         }
 
-        // 味方クリック: 選択＆メニュー表示
         this.selectedUnit = u;
         this.refreshUnitState(u);
         this.showActionMenu(u);
@@ -212,11 +238,21 @@ class Game {
         const menu = document.getElementById('command-menu');
         if (!menu) return;
 
+        const btnMove = document.getElementById('btn-move');
+        const btnAttack = document.getElementById('btn-attack');
         const btnRepair = document.getElementById('btn-repair');
         const btnMelee = document.getElementById('btn-melee');
         const btnHeal = document.getElementById('btn-heal');
 
-        // 各ボタンの有効/無効化
+        // ★APがないときは移動・射撃を禁止
+        if (u.ap <= 0) {
+            btnMove.classList.add('disabled');
+            btnAttack.classList.add('disabled');
+        } else {
+            btnMove.classList.remove('disabled');
+            btnAttack.classList.remove('disabled');
+        }
+
         if (u.hands && u.hands.isBroken) btnRepair.classList.remove('disabled');
         else btnRepair.classList.add('disabled');
 
@@ -242,7 +278,6 @@ class Game {
         if (menu) menu.style.display = 'none';
     }
 
-    // ★重要: ここで calcReachableHexes を呼ぶ
     setMode(mode) {
         this.interactionMode = mode;
         this.hideActionMenu();
@@ -256,14 +291,13 @@ class Game {
             indicator.style.display = 'block';
             indicator.innerText = mode + " MODE";
             if (mode === 'MOVE') {
-                this.calcReachableHexes(this.selectedUnit); // ★これが呼べるようになる
+                this.calcReachableHexes(this.selectedUnit);
             } else if (mode === 'ATTACK') {
                 this.reachableHexes = [];
             }
         }
     }
 
-    // ★重要: 復活した calcReachableHexes
     calcReachableHexes(u) {
         this.reachableHexes = []; if (!u) return;
         let frontier = [{ q: u.q, r: u.r, cost: 0 }], costSoFar = new Map();
@@ -272,13 +306,12 @@ class Game {
         while (frontier.length > 0) {
             let current = frontier.shift();
             this.getNeighbors(current.q, current.r).forEach(n => {
-                // ユニット重複チェック(4体制限)
                 if (this.getUnitsInHex(n.q, n.r).length >= 4) return;
                 
                 const cost = this.map[n.q][n.r].cost;
                 if (cost >= 99) return;
                 
-                const newCost = costSoFar.get(`${current.q},${current.r}`) + cost; // 直前のコスト取得を修正
+                const newCost = costSoFar.get(`${current.q},${current.r}`) + cost; 
                 
                 if (newCost <= u.ap) {
                     const key = `${n.q},${n.r}`;
@@ -339,23 +372,48 @@ class Game {
     }
 
     clearSelection() {
-        this.selectedUnit = null; this.reachableHexes = []; this.attackLine = []; this.aimTargetUnit = null; this.path = [];
+        this.selectedUnit = null;
+        this.reachableHexes = [];
+        this.attackLine = [];
+        this.aimTargetUnit = null;
+        this.path = [];
         this.setMode('SELECT');
         this.hideActionMenu();
         this.updateSidebar();
     }
 
     // --- Actions ---
-    // ★UIから呼ぶための姿勢設定メソッド
+    // ★修正: 姿勢変更ルール (伏せ->他 は AP1、それ以外は0)
     setStance(s) {
         const u = this.selectedUnit;
-        if (!u || u.ap < 1 || u.def.isTank) return;
-        if (u.stance === s) return; // 同じなら消費しない
-        u.ap -= 1;
+        if (!u || u.def.isTank) return;
+        if (u.stance === s) return; // 同じなら何もしない
+
+        let cost = 0;
+        if (u.stance === 'prone' && (s === 'stand' || s === 'crouch')) {
+            cost = 1;
+        }
+
+        if (u.ap < cost) {
+            this.log(`AP不足 (必要:${cost})`);
+            return;
+        }
+
+        u.ap -= cost;
         u.stance = s;
         this.refreshUnitState(u);
         this.hideActionMenu();
         if (window.Sfx) Sfx.play('click');
+    }
+
+    // 以前のボタン用トグル（一応残すが、メニューからsetStance呼ぶのが基本）
+    toggleStance() {
+        const u = this.selectedUnit;
+        if (!u) return;
+        let next = 'stand';
+        if (u.stance === 'stand') next = 'crouch';
+        else if (u.stance === 'crouch') next = 'prone';
+        this.setStance(next);
     }
 
     actionRepair() {
@@ -498,7 +556,6 @@ class Game {
         }
     }
 
-    // --- その他ヘルパー ---
     generateMap() {
         this.map = [];
         for (let q = 0; q < MAP_W; q++) { this.map[q] = []; for (let r = 0; r < MAP_H; r++) { this.map[q][r] = TERRAIN.VOID; } }
@@ -542,7 +599,7 @@ class Game {
     }
     swapWeapon() { }
     checkPhaseEnd() { if (this.units.filter(u => u.team === 'player' && u.hp > 0 && u.ap > 0).length === 0 && this.state === 'PLAY') this.endTurn(); }
-    setStance(s) { if (this.selectedUnit && this.selectedUnit.ap >= 1 && !this.selectedUnit.def.isTank) { this.selectedUnit.ap--; this.selectedUnit.stance = s; this.refreshUnitState(this.selectedUnit); this.checkPhaseEnd(); } }
+    
     endTurn() {
         if (this.isProcessingTurn) return; this.isProcessingTurn = true;
         this.selectedUnit = null; this.reachableHexes = []; this.attackLine = []; this.aimTargetUnit = null; this.path = []; this.hideActionMenu();
@@ -587,7 +644,8 @@ class Game {
         if (u) {
             const w = u.hands;
             const s = this.getStatus(u);
-            const skillCounts = {}; u.skills.forEach(sk => { skillCounts[sk] = (skillCounts[sk] || 0) + 1; });
+            const skillCounts = {};
+            u.skills.forEach(sk => { skillCounts[sk] = (skillCounts[sk] || 0) + 1; });
             let skillHtml = "";
             for (const [sk, count] of Object.entries(skillCounts)) { if (window.SKILL_STYLES && window.SKILL_STYLES[sk]) { const st = window.SKILL_STYLES[sk]; skillHtml += `<div style="display:inline-block; background:${st.col}; color:#000; font-weight:bold; font-size:10px; padding:2px 5px; margin:2px; border-radius:3px;">${st.icon} ${st.name} x${count}</div>`; } }
             const faceUrl = (Renderer.generateFaceIcon) ? Renderer.generateFaceIcon(u.faceSeed) : "";
