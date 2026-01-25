@@ -1,47 +1,47 @@
-/** PHASER BRIDGE: Visual Improvements (Tint, Cursor, Cards) */
+/** PHASER BRIDGE: Fixed Data Access & Cool Bracket Cursor */
 let phaserGame = null;
 window.HIGH_RES_SCALE = 2.0; 
 
-// ■カード表示: スペック表示対応
+// ■カードアイコン生成: スペック表示対応 (エラー修正版)
 window.getCardTextureKey = function(scene, type) {
     const key = `card_texture_${type}`;
     if (scene.textures.exists(key)) return key;
     
-    // データ参照
-    const template = window.UNIT_TEMPLATES[type] || { name: type, role: 'unknown', hp: 100, ap: 4 };
+    // ★修正: window.UNIT_TEMPLATES ではなく UNIT_TEMPLATES を参照し、存在チェックを行う
+    let template = { name: type, role: 'unknown', hp: 100, ap: 4, main: 'rifle' };
+    if (typeof UNIT_TEMPLATES !== 'undefined' && UNIT_TEMPLATES[type]) {
+        template = UNIT_TEMPLATES[type];
+    }
     
-    // コンテナではなく、ここで1枚絵のテクスチャを作ってしまう
     const canvas = document.createElement('canvas');
-    canvas.width = 140 * 2; // 高解像度
+    canvas.width = 140 * 2; 
     canvas.height = 200 * 2;
     const ctx = canvas.getContext('2d');
     ctx.scale(2, 2);
     
-    // 背景
+    // 背景 (ダークグレー)
     ctx.fillStyle = "#1a1a1a";
     ctx.fillRect(0, 0, 140, 200);
     
-    // 枠
-    ctx.strokeStyle = "#888";
+    // 枠線
+    ctx.strokeStyle = "#555";
     ctx.lineWidth = 2;
     ctx.strokeRect(0, 0, 140, 200);
     
-    // 顔 (簡易生成)
-    ctx.fillStyle = "#111";
+    // 顔枠
+    ctx.fillStyle = "#000";
     ctx.fillRect(20, 20, 100, 100);
     
-    // 顔グラフィック (簡易描画)
-    ctx.fillStyle = "#334";
-    ctx.fillRect(20, 20, 100, 100);
+    // 顔グラフィック (簡易生成)
+    const seed = type.length * 999;
     const rnd = function(s) { return Math.abs(Math.sin(s * 12.9898) * 43758.5453) % 1; };
-    const seed = type.length * 123;
     const skinTones = ["#ffdbac", "#f1c27d", "#e0ac69"];
     ctx.fillStyle = skinTones[Math.floor(rnd(seed) * skinTones.length)];
-    ctx.beginPath(); ctx.arc(70, 70, 30, 0, Math.PI*2); ctx.fill(); // 顔
+    ctx.beginPath(); ctx.arc(70, 70, 30, 0, Math.PI*2); ctx.fill(); 
     ctx.fillStyle = "#343"; 
     ctx.beginPath(); ctx.arc(70, 60, 32, Math.PI, 0); ctx.lineTo(102, 60); ctx.lineTo(38, 60); ctx.fill(); // ヘルメット
     
-    // テキスト
+    // テキスト情報
     ctx.fillStyle = "#d84";
     ctx.font = "bold 14px sans-serif";
     ctx.textAlign = "center";
@@ -49,19 +49,24 @@ window.getCardTextureKey = function(scene, type) {
     
     ctx.fillStyle = "#888";
     ctx.font = "10px sans-serif";
-    ctx.fillText(template.role.toUpperCase(), 70, 155);
+    ctx.fillText(template.role ? template.role.toUpperCase() : "UNIT", 70, 155);
     
+    // 武器名取得 (WPNSが参照できる場合)
+    let wpnName = template.main || "-";
+    if (typeof WPNS !== 'undefined' && WPNS[template.main]) {
+        wpnName = WPNS[template.main].name;
+    }
+
     ctx.fillStyle = "#ccc";
     ctx.font = "11px monospace";
     ctx.fillText(`HP:${template.hp||100} AP:${template.ap||4}`, 70, 175);
+    ctx.fillStyle = "#d84";
+    ctx.font = "10px sans-serif";
+    ctx.fillText(wpnName, 70, 190);
     
-    // Phaserに登録
     scene.textures.addCanvas(key, canvas);
     return key;
 };
-
-// ■シンプルフレーム (削除: getCardTextureKey内で描画するため)
-// window.createCardFrameTexture ... (不要)
 
 // ■UI背景
 window.createGradientTexture = function(scene) {
@@ -78,12 +83,12 @@ window.createGradientTexture = function(scene) {
     scene.textures.addCanvas(key, canvas);
 };
 
-// ■ヘックス画像生成 (Flat Top)
+// ■ヘックス画像生成 (Flat Top, 隙間なし)
 window.createHexTexture = function(scene) {
     if (scene.textures.exists('hex_base')) return;
     const g = scene.make.graphics({x: 0, y: 0, add: false});
     const baseSize = (typeof HEX_SIZE !== 'undefined' ? HEX_SIZE : 54); 
-    const size = baseSize * window.HIGH_RES_SCALE; // オーバーラップなし
+    const size = baseSize * window.HIGH_RES_SCALE * 1.02; // 若干オーバーラップ
     const w = size * 2;
     const h = size * Math.sqrt(3);
     g.fillStyle(0xffffff);
@@ -170,7 +175,6 @@ const Renderer = {
     }
 };
 
-// --- Card ---
 class Card extends Phaser.GameObjects.Container {
     constructor(scene, x, y, type) {
         super(scene, x, y); this.scene = scene; this.cardType = type; this.setSize(140, 200);
@@ -180,7 +184,6 @@ class Card extends Phaser.GameObjects.Container {
         this.frameImage = scene.add.image(0, 0, texKey).setDisplaySize(140, 200);
         this.frameImage.setInteractive({ useHandCursor: true, draggable: true });
         
-        // 影
         const shadow = scene.add.rectangle(6, 6, 130, 190, 0x000000, 0.5);
         this.add(shadow);
         this.add(this.frameImage);
@@ -221,7 +224,6 @@ class Card extends Phaser.GameObjects.Container {
     }
     burnAndConsume(hex) {
         this.updatePhysics = () => {}; this.frameImage.setTint(0x552222);
-        // マスクアニメーションなどは省略し、フェードアウト
         this.scene.tweens.add({ targets: this, alpha: 0, scale: 0.5, duration: 200, onComplete: () => { 
             this.scene.removeCard(this); const type = this.cardType; this.destroy(); 
             try { if (type === 'aerial') { const main = phaserGame.scene.getScene('MainScene'); if (main) main.triggerBombardment(hex); } else if(window.gameLogic) { window.gameLogic.deployUnit(hex, type); } } catch(e) { console.error("Logic Error:", e); } 
@@ -266,11 +268,11 @@ class MainScene extends Phaser.Scene {
         this.load.spritesheet('soldier_sheet', 'asset/soldier_sheet_1.png', { frameWidth: 128, frameHeight: 128 });
         this.load.spritesheet('tank_sheet', 'asset/tank_sheet_1.png', { frameWidth: 128, frameHeight: 128 });
         this.load.spritesheet('explosion_sheet', 'asset/explosion-sheet.png', { frameWidth: 128, frameHeight: 128 });
-        this.load.image('card_frame', 'asset/card_frame.png');
+        // this.load.image('card_frame', 'asset/card_frame.png');
     }
 
     create() {
-        if(!this.textures.exists('hex_base')) window.createHexTexture(this);
+        window.createHexTexture(this);
 
         this.cameras.main.setBackgroundColor('#0b0e0a'); 
         
@@ -354,11 +356,9 @@ class MainScene extends Phaser.Scene {
         
         const selected = window.gameLogic.selectedUnit;
         if(selected) {
-            // 選択中のユニットには強調カーソル
             this.overlayGraphics.lineStyle(2, 0x00ff00, 1.0); 
             this.drawBracketCursor(this.overlayGraphics, selected.q, selected.r, true);
             
-            // 移動可能範囲
             if(window.gameLogic.reachableHexes.length > 0) { 
                 this.overlayGraphics.lineStyle(1, 0xffffff, 0.3); 
                 window.gameLogic.reachableHexes.forEach(h => this.drawHexOutline(this.overlayGraphics, h.q, h.r)); 
@@ -384,42 +384,29 @@ class MainScene extends Phaser.Scene {
         }
     }
     
-    // シンプル六角形
+    // シンプル六角形 (移動範囲用)
     drawHexOutline(g, q, r) { const c = Renderer.hexToPx(q, r); g.beginPath(); for(let i=0; i<6; i++) { const a = Math.PI/180*60*i; g.lineTo(c.x+HEX_SIZE*0.9*Math.cos(a), c.y+HEX_SIZE*0.9*Math.sin(a)); } g.closePath(); g.strokePath(); }
     
     // ★追加: カッコ型カーソル [ ]
     drawBracketCursor(g, q, r, isActive=false) {
         const c = Renderer.hexToPx(q, r);
         const size = HEX_SIZE * 0.9;
-        
-        // 4隅（右上、右下、左下、左上）のような位置にある頂点を強調
-        // Flat Top: 0, 60, 120, 180, 240, 300
-        // 左上(240-300の間), 右上(0-60の間)... というよりは、頂点そのものを描画して間引く
-        
-        const indices = [0, 1, 3, 4]; // 左右の頂点付近を描画
-        
+        const indices = [0, 1, 3, 4]; // 左右の頂点を描画
         indices.forEach(i => {
             const a = Math.PI/180 * (60*i);
             const x = c.x + size * Math.cos(a);
             const y = c.y + size * Math.sin(a);
-            
-            // 角を描く（短い2本の線）
             const armLen = 15;
-            
-            // 前の頂点へのベクトル
             const aPrev = Math.PI/180 * (60 * ((i+5)%6));
             const xPrev = c.x + size * Math.cos(aPrev);
             const yPrev = c.y + size * Math.sin(aPrev);
             const dx1 = xPrev - x; const dy1 = yPrev - y;
             const len1 = Math.sqrt(dx1*dx1 + dy1*dy1);
-            
-            // 次の頂点へのベクトル
             const aNext = Math.PI/180 * (60 * ((i+1)%6));
             const xNext = c.x + size * Math.cos(aNext);
             const yNext = c.y + size * Math.sin(aNext);
             const dx2 = xNext - x; const dy2 = yNext - y;
             const len2 = Math.sqrt(dx2*dx2 + dy2*dy2);
-
             g.beginPath();
             g.moveTo(x + dx1/len1 * armLen, y + dy1/len1 * armLen);
             g.lineTo(x, y);
