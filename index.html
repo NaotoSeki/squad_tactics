@@ -5,59 +5,35 @@
     <title>SQUAD TACTICS - HEROIC EDITION</title>
     <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
     <style>
-        /* (既存のスタイルは維持しつつ、以下を追加) */
+        /* (既存スタイルはそのまま維持... 長いので変更点のみ抜粋) */
         :root { --bg: #0b0e0a; --panel: #1a1a1a; --text: #bbb; --accent: #d84; --border: #444; }
-        body {
-            background-color: #000; color: var(--text);
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0; height: 100vh; display: flex; overflow: hidden;
-            user-select: none;
-        }
-
+        body { background-color: #000; color: var(--text); font-family: 'Segoe UI', sans-serif; margin: 0; height: 100vh; display: flex; overflow: hidden; user-select: none; }
         #app { display: flex; width: 100%; height: 100%; }
         #game-view { flex: 1; position: relative; overflow: hidden; background: var(--bg); min-width: 0; }
         canvas { display: block; width: 100%; height: 100%; outline: none; }
-
         #resizer { width: 6px; background: #222; cursor: col-resize; z-index: 30; border-left: 1px solid #000; border-right: 1px solid #333; }
         #sidebar { width: 340px; min-width: 280px; background: var(--panel); border-left: 1px solid var(--border); display: flex; flex-direction: column; z-index: 20; position: relative; }
         #sidebar.collapsed { width: 0 !important; border: none; }
         #sidebar.collapsed > * { display: none; }
         #sidebar.collapsed #sidebar-toggle { display: flex; left: -24px; }
-        
         #sidebar-toggle { position: absolute; top: 0; left: -24px; width: 24px; height: 24px; background: #111; color: var(--accent); border: 1px solid var(--border); border-right: none; cursor: pointer; z-index: 40; display: flex; justify-content: center; align-items: center; }
-
         .panel-header { background: #111; padding: 10px; font-weight: bold; color: var(--accent); border-bottom: 1px solid var(--border); font-size: 11px; display: flex; justify-content: space-between; }
-        
         #unit-info { padding: 0; background: #222; overflow-y: auto; flex: 1; }
         .soldier-header { display: flex; padding: 10px; background: #151515; border-bottom: 1px solid #333; gap: 10px; align-items: center; }
         .face-box { width: 64px; height: 64px; background: #000; border: 1px solid #555; border-radius: 4px; overflow: hidden; }
         .soldier-name { font-size: 14px; font-weight: bold; color: #fff; margin-bottom: 2px; }
         .soldier-rank { font-size: 11px; color: #d84; font-family: monospace; }
-        
         .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; padding: 10px; font-size: 11px; background: #222; }
         .stat-row { display: flex; justify-content: space-between; border-bottom: 1px solid #333; padding-bottom: 2px; }
         .stat-label { color: #888; }
         .stat-val { color: #eee; font-weight: bold; }
-
-        /* Inventory Styles */
         .loadout-container { display: flex; gap: 8px; padding: 10px; background: #181818; }
         .main-slot-area { flex: 5; display: flex; flex-direction: column; }
         .sub-slot-area { flex: 4; display: flex; flex-direction: column; gap: 4px; }
-
-        .slot { 
-            background: #111; border: 1px solid #444; padding: 6px; 
-            position: relative; transition: 0.1s; cursor: grab;
-            display: flex; flex-direction: column; justify-content: center;
-            overflow: hidden;
-        }
+        .slot { background: #111; border: 1px solid #444; padding: 6px; position: relative; transition: 0.1s; cursor: grab; display: flex; flex-direction: column; justify-content: center; overflow: hidden; }
         .slot:active { cursor: grabbing; }
         .slot:hover { border-color: #888; background: #222; }
-        
-        .slot.main-weapon { 
-            height: 100%; min-height: 140px;
-            border-color: #d84; background: #2a201a; 
-            box-shadow: inset 0 0 15px rgba(221, 136, 68, 0.1);
-        }
+        .slot.main-weapon { height: 100%; min-height: 140px; border-color: #d84; background: #2a201a; box-shadow: inset 0 0 15px rgba(221, 136, 68, 0.1); }
         .slot.main-weapon::after { content: "IN HANDS"; position: absolute; top: 2px; right: 4px; font-size: 9px; color: #d84; font-weight: bold; opacity: 0.7; }
         .slot.bag-item { height: 32px; font-size: 10px; }
         .slot-name { font-size: 12px; color: #ddd; font-weight: bold; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -70,46 +46,26 @@
         .slot.drag-over { border: 2px solid #fff; background: #333; transform: scale(1.02); }
         .slot.empty { opacity: 0.2; cursor: default; }
         .inv-header { font-size: 10px; color: #666; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
-
         #log-container { height: 150px; overflow-y: auto; padding: 10px; font-family: "Lucida Console", monospace; font-size: 10px; background: #000; color: #6c6; border-top: 1px solid #444; }
         .log-entry { margin-bottom: 3px; border-bottom: 1px solid #111; }
-
-        /* Card Styles */
         .overlay { position: absolute; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:100; display:flex; justify-content:center; align-items:center; }
         .card-container { display: flex; gap: 15px; }
-        .card { 
-            width: 140px; height: 220px; 
-            background: #222; border: 2px solid #555; 
-            padding: 10px; cursor: pointer; color: #ccc; 
-            position: relative; overflow: hidden; 
-            display: flex; flex-direction: column; align-items: center;
-            transition: transform 0.1s, border-color 0.1s;
-        }
+        .card { width: 140px; height: 220px; background: #222; border: 2px solid #555; padding: 10px; cursor: pointer; color: #ccc; position: relative; overflow: hidden; display: flex; flex-direction: column; align-items: center; transition: transform 0.1s, border-color 0.1s; }
         .card:hover { border-color: #d84; transform: translateY(-5px); }
-        .card-badge {
-            position: absolute; top: 5px; right: 5px;
-            background: #d84; color: #000; width: 24px; height: 24px; border-radius: 50%;
-            display: none; justify-content: center; align-items: center;
-            font-weight: bold; font-size: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.5); z-index: 10;
-        }
-        .card-img-box {
-            width: 100px; height: 100px; background: #000; border: 1px solid #444; margin-bottom: 10px;
-            display: flex; justify-content: center; align-items: center; overflow: hidden;
-        }
+        .card-badge { position: absolute; top: 5px; right: 5px; background: #d84; color: #000; width: 24px; height: 24px; border-radius: 50%; display: none; justify-content: center; align-items: center; font-weight: bold; font-size: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.5); z-index: 10; }
+        .card-img-box { width: 100px; height: 100px; background: #000; border: 1px solid #444; margin-bottom: 10px; display: flex; justify-content: center; align-items: center; overflow: hidden; }
         .card-img-box img { max-width: 100%; max-height: 100%; object-fit: contain; }
         .card-body { width: 100%; text-align: center; }
         .card-body h3 { margin: 5px 0; font-size: 16px; color: #d84; }
         .card-body p { margin: 0; font-size: 10px; color: #888; }
-
         #sector-counter { position:absolute; top:10px; right:20px; font-size:24px; font-weight:900; color:#d84; pointer-events:none; z-index:50; }
         #auto-toggle { position:absolute; bottom:10px; left:10px; padding:5px 10px; background:#000; border:1px solid #444; color:#888; cursor:pointer; z-index:50; font-size:11px; }
         #auto-toggle.active { color:#0f0; border-color:#0f0; }
         #context-menu { position:absolute; display:none; background:rgba(0,20,30,0.9); border:1px solid #0af; padding:10px; z-index:60; color:#fff; font-size:11px; pointer-events:none; }
-
         #eyecatch { position: absolute; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.3); z-index: 90; display: flex; justify-content: center; align-items: center; pointer-events: none; opacity: 0; transition: opacity 0.5s; }
         #eyecatch-text { color: #d44; font-size: 40px; font-weight: 900; text-shadow: 0 0 20px #000; border: 4px solid #d44; padding: 10px 40px; background: rgba(0,0,0,0.8); transform: skewX(-10deg); }
 
-        /* ★新設: ユニットコマンドメニュー */
+        /* ★コマンドメニュー (修正済) */
         #command-menu {
             position: absolute; display: none;
             background: rgba(10, 15, 10, 0.95);
@@ -118,20 +74,40 @@
             z-index: 80;
             box-shadow: 0 0 10px rgba(0,0,0,0.8);
             border-radius: 4px;
-            min-width: 100px;
+            min-width: 120px;
+            overflow: visible; /* サブメニュー表示用 */
         }
         .cmd-btn {
-            display: block; width: 100%;
+            display: block; width: 100%; box-sizing: border-box;
             background: #222; border: 1px solid #444;
             color: #ccc; padding: 6px 10px;
             margin-bottom: 2px;
             text-align: left; font-size: 11px;
-            cursor: pointer;
-            transition: 0.1s;
+            cursor: pointer; transition: 0.1s;
         }
         .cmd-btn:hover { background: #d84; color: #000; border-color: #fca; }
         .cmd-btn.disabled { opacity: 0.5; cursor: default; background: #111; color: #555; border-color: #333; pointer-events: none; }
         .cmd-btn i { width: 15px; display: inline-block; text-align: center; margin-right: 5px; }
+        
+        /* ★サブメニュー用コンテナ */
+        .cmd-group { position: relative; width: 100%; }
+        .cmd-submenu {
+            display: none; position: absolute;
+            left: 100%; top: 0;
+            background: #151515; border: 1px solid #d84;
+            width: 70px; z-index: 90;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.5);
+        }
+        .cmd-group:hover .cmd-submenu { display: block; }
+        
+        .sub-btn {
+            display: block; width: 100%; box-sizing: border-box;
+            background: #222; color: #ccc;
+            padding: 5px; text-align: center;
+            font-size: 10px; cursor: pointer;
+            border-bottom: 1px solid #333;
+        }
+        .sub-btn:hover { background: #d84; color: #000; }
         
         .mode-indicator {
             position: absolute; top: 10px; left: 50%; transform: translateX(-50%);
@@ -146,13 +122,24 @@
         <div id="game-view">
             <div id="sector-counter">SECTOR: 01</div>
             <div id="context-menu"></div>
+            
             <div id="command-menu">
                 <div class="cmd-btn" onclick="gameLogic.setMode('MOVE')"><i>👣</i> 移動</div>
                 <div class="cmd-btn" onclick="gameLogic.setMode('ATTACK')"><i>🔫</i> 射撃</div>
-                <div class="cmd-btn" onclick="gameLogic.toggleStance()"><i>🧘</i> 姿勢切替</div>
+                
+                <div class="cmd-group">
+                    <div class="cmd-btn"><i>🧘</i> 姿勢 ▶</div>
+                    <div class="cmd-submenu">
+                        <div class="sub-btn" onclick="gameLogic.setStance('stand')">立</div>
+                        <div class="sub-btn" onclick="gameLogic.setStance('crouch')">屈</div>
+                        <div class="sub-btn" onclick="gameLogic.setStance('prone')">伏</div>
+                    </div>
+                </div>
+
                 <div class="cmd-btn" id="btn-repair" onclick="gameLogic.actionRepair()"><i>🔧</i> 修理</div>
-                <div class="cmd-btn" id="btn-melee" onclick="gameLogic.setMode('MELEE')"><i>🔪</i> 白兵</div>
+                <div class="cmd-btn" id="btn-melee" onclick="gameLogic.actionMeleeSetup()"><i>🔪</i> 白兵</div>
                 <div class="cmd-btn" id="btn-heal" onclick="gameLogic.actionHeal()"><i>💊</i> 治療</div>
+                
                 <hr style="border:0; border-top:1px solid #444; margin:3px 0;">
                 <div class="cmd-btn" onclick="gameLogic.clearSelection()" style="text-align:center; color:#888;">CANCEL</div>
             </div>
@@ -192,24 +179,14 @@
         </div>
     </div>
     <script>
-        // ドラッグドロップ用 (既存のまま)
-        function onSlotDragStart(e, type, index) {
-            e.dataTransfer.setData("text/plain", JSON.stringify({type, index}));
-            e.target.classList.add('dragging');
-        }
+        function onSlotDragStart(e, type, index) { e.dataTransfer.setData("text/plain", JSON.stringify({type, index})); e.target.classList.add('dragging'); }
         function onSlotDragEnd(e) { e.target.classList.remove('dragging'); }
         function onSlotDragOver(e) { e.preventDefault(); e.currentTarget.classList.add('drag-over'); }
         function onSlotDragLeave(e) { e.currentTarget.classList.remove('drag-over'); }
         function onSlotDrop(e, targetType, targetIndex) {
-            e.preventDefault();
-            e.currentTarget.classList.remove('drag-over');
+            e.preventDefault(); e.currentTarget.classList.remove('drag-over');
             const data = e.dataTransfer.getData("text/plain");
-            if(data && window.gameLogic) {
-                try {
-                    const src = JSON.parse(data);
-                    window.gameLogic.swapEquipment(src, {type: targetType, index: targetIndex});
-                } catch(err) { console.error(err); }
-            }
+            if(data && window.gameLogic) { try { const src = JSON.parse(data); window.gameLogic.swapEquipment(src, {type: targetType, index: targetIndex}); } catch(err) { console.error(err); } }
         }
     </script>
     <script src="data.js"></script>
