@@ -1,4 +1,4 @@
-/** PHASER UNIT: Grounded Shadows (Tighter fit) & Lower HP Bar */
+/** PHASER UNIT: Grounded Shadows & Glow Selection */
 
 class UnitView {
     constructor(scene, unitLayer, hpLayer) {
@@ -58,8 +58,17 @@ class UnitView {
             const isSelected = (window.gameLogic.selectedUnit === u);
             if (isSelected) {
                 if (this.unitLayer.exists(visual)) { this.unitLayer.remove(visual); this.hpLayer.add(visual); }
+                // ★追加: 選択時にGlow FXを適用
+                if (!visual.glowFx && visual.sprite) {
+                    visual.glowFx = visual.sprite.postFX.addGlow(0xffff00, 2, 0, false, 0.1, 12);
+                }
             } else {
                 if (this.hpLayer.exists(visual)) { this.hpLayer.remove(visual); this.unitLayer.add(visual); }
+                // ★追加: 非選択時にGlow FXを削除
+                if (visual.glowFx && visual.sprite) {
+                    visual.sprite.postFX.remove(visual.glowFx);
+                    visual.glowFx = null;
+                }
             }
         });
 
@@ -77,7 +86,6 @@ class UnitView {
             if (pointer.button === 0 && window.gameLogic) { pointer.event.stopPropagation(); window.gameLogic.onUnitClick(u); }
         });
 
-        // ★修正: 影の位置をY:-4に設定し、歩兵の足元に密着させる
         const shadow = this.scene.add.ellipse(0, -4, 20, 10, 0x000000, 0.5);
         
         let sprite;
@@ -91,7 +99,6 @@ class UnitView {
             sprite.setScale(0.4);
             sprite.play('tank_idle');
             if (u.team === 'player') sprite.setTint(0xccddee); else sprite.setTint(0x9955ff);
-            // ★修正: 戦車の影もY:2に設定し、履帯の下に密着させる
             shadow.setPosition(-2, 2); 
             shadow.setSize(46, 18);
         } else {
@@ -110,6 +117,8 @@ class UnitView {
 
         container.sprite = sprite;
         container.hpBg = hpBg; container.hpBar = hpBar; container.infoContainer = infoContainer;
+        // Glow管理用
+        container.glowFx = null;
         
         const pos = Renderer.hexToPx(u.q, u.r);
         container.setPosition(pos.x, pos.y);
