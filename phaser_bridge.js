@@ -137,7 +137,7 @@ class MainScene extends Phaser.Scene {
         this.load.spritesheet('us_soldier', 'asset/us-soldier-back-sheet.png', { frameWidth: 128, frameHeight: 128 });
         this.load.spritesheet('soldier_sheet', 'asset/soldier_sheet_1.png', { frameWidth: 128, frameHeight: 128 });
         this.load.spritesheet('tank_sheet', 'asset/tank_sheet_1.png', { frameWidth: 128, frameHeight: 128 });
-        this.load.spritesheet('explosion_sheet', 'asset/explosion-sheet.png', { frameWidth: 64, frameHeight: 64 });
+        this.load.spritesheet('explosion_sheet', 'asset/explosion-sheet_1.png', { frameWidth: 64, frameHeight: 64 });
     }
     create() {
         window.createHexTexture(this); this.cameras.main.setBackgroundColor('#0b0e0a'); 
