@@ -170,7 +170,7 @@ class MainScene extends Phaser.Scene {
         this.input.mouse.disableContextMenu();
         this.input.keyboard.on('keydown-ESC', () => { if(window.gameLogic && window.gameLogic.clearSelection) { window.gameLogic.clearSelection(); } });
     }
-    triggerExplosion(x, y) { const explosion = this.add.sprite(x, y, 'explosion_sheet_1'); explosion.setDepth(100); explosion.setScale(1.5); explosion.play('explosion_anim'); explosion.once('animationcomplete', () => { explosion.destroy(); }); }
+    triggerExplosion(x, y) { const explosion = this.add.sprite(x, y, 'explosion_sheet'); explosion.setDepth(100); explosion.setScale(1.5); explosion.play('explosion_anim'); explosion.once('animationcomplete', () => { explosion.destroy(); }); }
     centerCamera(q, r) { const p = Renderer.hexToPx(q, r); this.cameras.main.centerOn(p.x, p.y); }
     centerMap() { this.cameras.main.centerOn((MAP_W * HEX_SIZE * 1.5) / 2, (MAP_H * HEX_SIZE * 1.732) / 2); }
     createMap() { 
