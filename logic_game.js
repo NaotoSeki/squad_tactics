@@ -1,4 +1,4 @@
-/** LOGIC GAME: Smart Auto-Reload (Reload Only if AP Low) */
+/** LOGIC GAME: Fire Mode Toggle & Dynamic Accuracy Drop */
 
 function createCardIcon(type) {
     const c = document.createElement('canvas'); c.width = 1; c.height = 1; return c.toDataURL();
@@ -94,6 +94,24 @@ class Game {
         this.updateSidebar();
         if(window.Sfx) Sfx.play('click');
         this.log(`${u.name} 装備変更`);
+    }
+
+    // ★追加: 射撃モード切替 (SMGの2発/5発切り替えなど)
+    toggleFireMode() {
+        const u = this.selectedUnit;
+        if (!u || !u.hands || !u.hands.modes) return;
+        
+        const modes = u.hands.modes; // [2, 5] など
+        const currentBurst = u.hands.burst;
+        
+        // 次のモードを探す
+        let nextIndex = modes.indexOf(currentBurst) + 1;
+        if (nextIndex >= modes.length) nextIndex = 0;
+        
+        u.hands.burst = modes[nextIndex];
+        
+        if (window.Sfx) Sfx.play('click');
+        this.updateSidebar();
     }
 
     createSoldier(templateKey, team, q, r) {
@@ -383,7 +401,6 @@ class Game {
         if (w.isBroken) { this.log("武器故障中！修理が必要"); return; }
         if (w.isConsumable && w.current <= 0) { this.log("使用済みです"); return; }
         
-        // ★修正: リロードコストのみチェック
         if (!a.def.isTank && w.current <= 0) {
             const magIndex = a.bag.findIndex(i => i && i.type === 'ammo' && i.ammoFor === w.code);
             if (magIndex !== -1) {
@@ -397,7 +414,6 @@ class Game {
                     this.refreshUnitState(a);
                     await new Promise(r => setTimeout(r, 600)); 
                     
-                    // リロード後に攻撃コストがなければ中断
                     if(a.ap < w.ap) {
                         this.log("AP不足により攻撃中止");
                         return;
@@ -412,7 +428,6 @@ class Game {
             }
         }
         
-        // 戦車も同様に
         if (a.def.isTank && w.current <= 0 && this.tankAutoReload) {
             if (w.reserve > 0) {
                 const reloadCost = 1; 
@@ -444,9 +459,14 @@ class Game {
         const dist = this.hexDist(a, d); if (dist > w.rng) { this.log("射程外"); return; }
         a.ap -= w.ap; this.state = 'ANIM';
         if (typeof Renderer !== 'undefined' && Renderer.playAttackAnim) Renderer.playAttackAnim(a, d);
-        let hitChance = (a.stats?.aim || 0) * 2 + w.acc - (dist * 5) - this.map[d.q][d.r].cover;
+        
+        // ★修正: acc_dropを使用した命中計算
+        const drop = w.acc_drop || 5; // デフォルト5
+        let hitChance = (a.stats?.aim || 0) * 2 + w.acc - (dist * drop) - this.map[d.q][d.r].cover;
+        
         if (d.stance === 'prone') hitChance -= 20; if (d.stance === 'crouch') hitChance -= 10;
         let dmgMod = 1.0 + (a.stats?.str || 0) * 0.05;
+        
         const shots = w.isConsumable ? 1 : Math.min(w.burst || 1, w.current);
         this.log(`${a.name} 攻撃開始 (${w.name})`);
         
