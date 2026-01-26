@@ -1,4 +1,4 @@
-/** LOGIC GAME: Right-Click Cancel & Continuous Fire */
+/** LOGIC GAME: Friendly Fire Warning & Mode Safety Fixes */
 
 function createCardIcon(type) {
     const c = document.createElement('canvas'); c.width = 1; c.height = 1; return c.toDataURL();
@@ -37,7 +37,6 @@ class Game {
         if(typeof Renderer !== 'undefined') Renderer.init(document.getElementById('game-view'));
     }
 
-    // Proxy for UI actions
     toggleSidebar() { this.ui.toggleSidebar(); }
     toggleTankAutoReload() { this.tankAutoReload = !this.tankAutoReload; this.updateSidebar(); }
     log(m) { this.ui.log(m); }
@@ -60,18 +59,15 @@ class Game {
         });
     }
 
-    // ★追加: 右クリック処理 (キャンセル機能)
+    // 右クリック処理 (キャンセル機能)
     handleRightClick(mx, my) {
         if (this.interactionMode === 'MOVE' || this.interactionMode === 'ATTACK' || this.interactionMode === 'MELEE') {
-            // モードキャンセル -> Unit選択状態に戻す
             this.setMode('SELECT'); 
             if (this.selectedUnit) {
-                // メニューを再表示して操作しやすくする
                 this.ui.showActionMenu(this.selectedUnit, mx, my);
                 if(window.Sfx) Sfx.play('click');
             }
         } else {
-            // 通常のコンテキストメニュー (ターン終了など)
             this.showContext(mx, my);
         }
     }
@@ -158,11 +154,22 @@ class Game {
     onUnitClick(u) {
         if (this.state !== 'PLAY') return;
         if (this.interactionMode === 'MOVE') { this.handleClick({ q: u.q, r: u.r }); return; }
+        
+        // 敵クリック時の挙動
         if (u.team !== 'player') {
-            if (this.interactionMode === 'ATTACK' && this.selectedUnit) { this.actionAttack(this.selectedUnit, u); return; } // モード解除しない
+            if (this.interactionMode === 'ATTACK' && this.selectedUnit) { this.actionAttack(this.selectedUnit, u); return; }
             if (this.interactionMode === 'MELEE' && this.selectedUnit) { this.actionMelee(this.selectedUnit, u); this.setMode('SELECT'); return; }
+            // モードなしで敵をクリック -> 何もしない (選択できない)
             return;
         }
+
+        // 味方クリック時の挙動
+        // ★修正: 攻撃モード中に味方をクリックした場合のセーフティ
+        if (this.interactionMode === 'ATTACK' && this.selectedUnit) {
+            this.handleClick({ q: u.q, r: u.r }); // handleClick内で味方撃ち判定を行う
+            return;
+        }
+
         this.selectedUnit = u; this.refreshUnitState(u); 
         if (typeof Renderer !== 'undefined' && Renderer.game) { 
             const pointer = Renderer.game.input.activePointer; 
@@ -193,18 +200,49 @@ class Game {
     }
 
     handleClick(p) {
-        if (this.interactionMode === 'SELECT') { const u = this.getUnitInHex(p.q, p.r); if (!u) this.clearSelection(); } 
-        else if (this.interactionMode === 'MOVE') { if (this.isValidHex(p.q, p.r) && this.path.length > 0) { const last = this.path[this.path.length - 1]; if (last.q === p.q && last.r === p.r) { this.actionMove(this.selectedUnit, this.path); this.setMode('SELECT'); } } else { this.setMode('SELECT'); } } 
+        if (this.interactionMode === 'SELECT') { 
+            const u = this.getUnitInHex(p.q, p.r); 
+            if (!u) this.clearSelection(); 
+        } 
+        else if (this.interactionMode === 'MOVE') { 
+            if (this.isValidHex(p.q, p.r) && this.path.length > 0) { 
+                const last = this.path[this.path.length - 1]; 
+                if (last.q === p.q && last.r === p.r) { 
+                    this.actionMove(this.selectedUnit, this.path); 
+                    this.setMode('SELECT'); 
+                } 
+            } else { 
+                this.setMode('SELECT'); 
+            } 
+        } 
         else if (this.interactionMode === 'ATTACK' || this.interactionMode === 'MELEE') { 
             const u = this.getUnitInHex(p.q, p.r); 
+            
             if (!u) {
-                // 何もないところをクリックしたらモード解除するか？現状は維持（連続射撃のため）
-                // ただし、誤操作防止のため、右クリックキャンセルを推奨
-            } else if (this.interactionMode === 'ATTACK') {
-                // ★修正: 攻撃してもモードを即時解除しない
-                this.actionAttack(this.selectedUnit, u);
-            } else {
+                // 空クリックでモード解除
                 this.setMode('SELECT'); 
+            } else if (this.interactionMode === 'ATTACK') {
+                // ★修正: 味方への攻撃警告
+                if (this.selectedUnit && u.team === this.selectedUnit.team) {
+                    if (window.confirm(`【警告】\n味方ユニットへの発砲は重大な軍規違反です。\n攻撃を実行しますか？`)) {
+                        this.actionAttack(this.selectedUnit, u);
+                    } else {
+                        // キャンセル時はそのユニットを選択状態に切り替える
+                        this.setMode('SELECT');
+                        this.onUnitClick(u);
+                    }
+                } else {
+                    this.actionAttack(this.selectedUnit, u);
+                }
+            } else {
+                // MELEE (白兵) は味方にはできない
+                if(this.selectedUnit && u.team === this.selectedUnit.team) {
+                    this.setMode('SELECT');
+                    this.onUnitClick(u);
+                } else {
+                    this.actionMelee(this.selectedUnit, u);
+                    this.setMode('SELECT');
+                }
             }
         }
     }
@@ -297,6 +335,7 @@ class Game {
     }
 
     async actionAttack(a, d) {
+        if (!a) return; // 安全策
         const w = a.hands; if (!w) return;
         if (w.isBroken) { this.log("武器故障中！修理が必要"); return; }
         if (w.isConsumable && w.current <= 0) { this.log("使用済みです"); return; }
@@ -403,16 +442,14 @@ class Game {
 
             this.refreshUnitState(a); 
             
-            // ★追加: 連続射撃判定
+            // 連続射撃判定
             const cost = w ? w.ap : 0;
-            // 撃てる条件: AP足りてる && (弾ある OR (戦車自動装填あり))
             const canShootAgain = (a.ap >= cost) && (w.current > 0 || (a.def.isTank && w.reserve > 0 && this.tankAutoReload && a.ap >= cost + 1));
             
             if (canShootAgain) {
-                // モード継続 (何もしない)
                 this.log("射撃可能: 目標選択中...");
             } else {
-                this.setMode('SELECT'); // 撃てないなら解除
+                this.setMode('SELECT');
                 this.checkPhaseEnd();
             }
         }, 800);
@@ -479,7 +516,16 @@ class Game {
     
     endTurn() {
         if (this.isProcessingTurn) return; this.isProcessingTurn = true;
-        this.selectedUnit = null; this.reachableHexes = []; this.attackLine = []; this.aimTargetUnit = null; this.path = []; this.hideActionMenu();
+        
+        // ★修正: モードを確実にリセット
+        this.setMode('SELECT'); 
+        this.selectedUnit = null; 
+        this.reachableHexes = []; 
+        this.attackLine = []; 
+        this.aimTargetUnit = null; 
+        this.path = []; 
+        this.hideActionMenu();
+        
         this.state = 'ANIM'; const eyecatch = document.getElementById('eyecatch'); if (eyecatch) eyecatch.style.opacity = 1;
         
         this.units.filter(u => u.team === 'player' && u.hp > 0 && u.skills.includes("Mechanic")).forEach(u => { const c = u.skills.filter(s => s === "Mechanic").length; if (u.hp < u.maxHp) { u.hp = Math.min(u.maxHp, u.hp + c * 20); this.log(`${u.name} 修理`); } });
