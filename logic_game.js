@@ -1,4 +1,4 @@
-/** LOGIC GAME: In-Game Friendly Fire Modal & Map Centering */
+/** LOGIC GAME: Infantry Auto-Reload & Safety Fixes */
 
 function createCardIcon(type) {
     const c = document.createElement('canvas'); c.width = 1; c.height = 1; return c.toDataURL();
@@ -118,7 +118,6 @@ class Game {
         this.state = 'PLAY'; this.log(`SECTOR ${this.sector} START`);
         document.getElementById('sector-counter').innerText = `SECTOR: ${this.sector.toString().padStart(2, '0')}`;
         
-        // ★修正: リーダー位置ではなく、マップ全体の中央を映す
         if (typeof Renderer !== 'undefined') Renderer.centerMap();
         
         setTimeout(() => { if (typeof Renderer !== 'undefined' && Renderer.dealCards) Renderer.dealCards(['rifleman', 'tank_pz4', 'gunner', 'scout', 'tank_tiger']); }, 500);
@@ -205,11 +204,10 @@ class Game {
             if (!u) {
                 this.setMode('SELECT'); 
             } else if (this.interactionMode === 'ATTACK') {
-                // ★修正: ブラウザアラートではなくゲーム内モーダルを使用
                 if (this.selectedUnit && u.team === this.selectedUnit.team) {
                     this.ui.showFriendlyFireWarning(
-                        () => { this.actionAttack(this.selectedUnit, u); }, // OK時の処理
-                        () => { this.setMode('SELECT'); this.onUnitClick(u); } // キャンセル時の処理
+                        () => { this.actionAttack(this.selectedUnit, u); }, 
+                        () => { this.setMode('SELECT'); this.onUnitClick(u); }
                     );
                 } else {
                     this.actionAttack(this.selectedUnit, u);
@@ -314,10 +312,41 @@ class Game {
     }
 
     async actionAttack(a, d) {
+        if (!a) return; 
         const w = a.hands; if (!w) return;
         if (w.isBroken) { this.log("武器故障中！修理が必要"); return; }
         if (w.isConsumable && w.current <= 0) { this.log("使用済みです"); return; }
         
+        // ★追加: 歩兵の自動リロード (Infantry Auto Reload)
+        if (!a.def.isTank && w.current <= 0) {
+            // 予備マガジンがあるか？
+            const magIndex = a.bag.findIndex(i => i && i.type === 'ammo' && i.ammoFor === w.code);
+            if (magIndex !== -1) {
+                const reloadCost = w.rld || 1;
+                // APが「リロードコスト + 攻撃コスト」分あるか？
+                if (a.ap >= reloadCost + w.ap) {
+                    this.log(`${a.name} 自動リロード`);
+                    if (window.Sfx) Sfx.play('reload');
+                    
+                    // リロード実行
+                    a.bag[magIndex] = null;
+                    a.ap -= reloadCost;
+                    w.current = w.cap;
+                    this.refreshUnitState(a);
+                    
+                    // カチャッ！という一瞬の間を入れる
+                    await new Promise(r => setTimeout(r, 600));
+                } else {
+                    this.log(`AP不足で装填＆攻撃不可 (必要:${reloadCost + w.ap})`);
+                    return;
+                }
+            } else {
+                this.log("弾切れ！予備弾薬なし");
+                return;
+            }
+        }
+        
+        // 戦車のJIT Auto Reload
         if (a.def.isTank && w.current <= 0 && this.tankAutoReload) {
             if (w.reserve > 0) {
                 const totalCost = w.ap + 1; 
@@ -448,7 +477,7 @@ class Game {
     checkPhaseEnd() { if (this.units.filter(u => u.team === 'player' && u.hp > 0 && u.ap > 0).length === 0 && this.state === 'PLAY') this.endTurn(); }
     endTurn() {
         if (this.isProcessingTurn) return; this.isProcessingTurn = true;
-        this.selectedUnit = null; this.reachableHexes = []; this.attackLine = []; this.aimTargetUnit = null; this.path = []; this.hideActionMenu();
+        this.setMode('SELECT'); this.selectedUnit = null; this.reachableHexes = []; this.attackLine = []; this.aimTargetUnit = null; this.path = []; this.hideActionMenu();
         this.state = 'ANIM'; const eyecatch = document.getElementById('eyecatch'); if (eyecatch) eyecatch.style.opacity = 1;
         this.units.filter(u => u.team === 'player' && u.hp > 0 && u.skills.includes("Mechanic")).forEach(u => { const c = u.skills.filter(s => s === "Mechanic").length; if (u.hp < u.maxHp) { u.hp = Math.min(u.maxHp, u.hp + c * 20); this.log(`${u.name} 修理`); } });
         setTimeout(async () => {
