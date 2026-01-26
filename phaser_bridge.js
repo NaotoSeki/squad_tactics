@@ -1,7 +1,8 @@
-/** PHASER BRIDGE: Enhanced UI Hover Check, Card Drop Highlight & Transparency Fix */
+/** PHASER BRIDGE: Strict UI Hover Check (Using Client Coordinates) */
 let phaserGame = null;
 window.HIGH_RES_SCALE = 2.0; 
 
+// ... (getCardTextureKey, createGradientTexture, createHexTexture は変更なし) ...
 window.getCardTextureKey = function(scene, type) {
     const key = `card_texture_${type}`;
     if (scene.textures.exists(key)) return key;
@@ -60,22 +61,34 @@ const Renderer = {
     centerMap() { const main = this.game.scene.getScene('MainScene'); if (main && main.centerMap) main.centerMap(); },
     dealCards(types) { let ui = this.game.scene.getScene('UIScene'); if(!ui || !ui.sys) ui = this.game.scene.scenes.find(s => s.scene.key === 'UIScene'); if(ui) ui.dealStart(types); },
     dealCard(type) { const ui = this.game.scene.getScene('UIScene'); if(ui) ui.addCardToHand(type); },
-    checkUIHover(x, y) { 
+    
+    // ★修正: ポインターイベントの生のクライアント座標を受け取って厳密に判定
+    checkUIHover(x, y, pointerEvent) { 
         if (this.isCardDragging) return true;
+        
+        // 1. Phaser UI (Cards) Check
         const ui = this.game.scene.getScene('UIScene'); 
         if (ui) {
             for (let card of ui.cards) { const dx = Math.abs(x - card.x); const dy = Math.abs(y - card.y); if (dx < 70 && dy < 100) return true; } 
         }
+
+        // 2. DOM Elements Check (Using Client Coordinates if available)
+        const checkX = (pointerEvent && pointerEvent.clientX !== undefined) ? pointerEvent.clientX : x;
+        const checkY = (pointerEvent && pointerEvent.clientY !== undefined) ? pointerEvent.clientY : y;
+
         const menus = ['context-menu', 'command-menu', 'warning-modal'];
         for (let id of menus) {
             const el = document.getElementById(id);
-            if (el && el.offsetParent !== null) {
+            if (el && el.offsetParent !== null) { // offsetParent!=null checks visibility
                 const rect = el.getBoundingClientRect();
-                if (x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) return true;
+                if (checkX >= rect.left && checkX <= rect.right && checkY >= rect.top && checkY <= rect.bottom) {
+                    return true;
+                }
             }
         }
         return false; 
     },
+    
     playAttackAnim(attacker, target) { const main = this.game.scene.getScene('MainScene'); if (main && main.unitView) main.unitView.triggerAttack(attacker, target); },
     playExplosion(x, y) { const main = this.game.scene.getScene('MainScene'); if (main) main.triggerExplosion(x, y); },
     generateFaceIcon(seed) { const c = document.createElement('canvas'); c.width = 64; c.height = 64; const ctx = c.getContext('2d'); const rnd = function() { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; }; ctx.fillStyle = "#334"; ctx.fillRect(0,0,64,64); const skinTones = ["#ffdbac", "#f1c27d", "#e0ac69", "#8d5524"]; ctx.fillStyle = skinTones[Math.floor(rnd() * skinTones.length)]; ctx.beginPath(); ctx.arc(32, 36, 18, 0, Math.PI*2); ctx.fill(); ctx.fillStyle = "#343"; ctx.beginPath(); ctx.arc(32, 28, 20, Math.PI, 0); ctx.lineTo(54, 30); ctx.lineTo(10, 30); ctx.fill(); ctx.strokeStyle = "#121"; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(10,28); ctx.lineTo(54,28); ctx.stroke(); ctx.fillStyle = "#000"; const eyeY = 36; const eyeOff = 6 + rnd()*2; ctx.fillRect(32-eyeOff-2, eyeY, 4, 2); ctx.fillRect(32+eyeOff-2, eyeY, 4, 2); ctx.strokeStyle = "#a76"; ctx.lineWidth = 1; ctx.beginPath(); const mouthW = 4 + rnd()*6; ctx.moveTo(32-mouthW/2, 48); ctx.lineTo(32+mouthW/2, 48); ctx.stroke(); if (rnd() < 0.5) { ctx.fillStyle = "rgba(0,0,0,0.2)"; ctx.fillRect(20 + rnd()*20, 30 + rnd()*20, 4, 2); } return c.toDataURL(); }
@@ -94,12 +107,12 @@ class Card extends Phaser.GameObjects.Container {
     }
     updatePhysics() { 
         if (!this.scene || !this.frameImage) return; 
-        const isDisabled = (window.gameLogic && window.gameLogic.cardsUsed >= 2);
         
-        // ★修正: ドラッグ中は不透明度を維持する (上書きしない)
+        // ドラッグ中は半透明を維持
         if (this.isDragging) {
-            this.setAlpha(0.6); // ドラッグ中は常に半透明
+            this.setAlpha(0.6); 
         } else {
+            const isDisabled = (window.gameLogic && window.gameLogic.cardsUsed >= 2);
             if (isDisabled) { 
                 this.frameImage.setTint(0x555555); 
                 this.setAlpha(0.6); 
@@ -177,8 +190,9 @@ class MainScene extends Phaser.Scene {
         this.unitView = new UnitView(this, this.unitGroup, this.hpGroup);
         this.input.on('wheel', (pointer, gameObjects, deltaX, deltaY, deltaZ) => { let newZoom = this.cameras.main.zoom; if (deltaY > 0) newZoom -= 0.5; else if (deltaY < 0) newZoom += 0.5; newZoom = Phaser.Math.Clamp(newZoom, 0.25, 4.0); this.tweens.add({ targets: this.cameras.main, zoom: newZoom, duration: 150, ease: 'Cubic.out' }); });
         
+        // ★修正: ポインターイベントの生のDOMイベントオブジェクト(p.event)を渡す
         this.input.on('pointerdown', (p) => { 
-            if (Renderer.isCardDragging || Renderer.checkUIHover(p.x, p.y)) return; 
+            if (Renderer.isCardDragging || Renderer.checkUIHover(p.x, p.y, p.event)) return; 
             if(p.button === 0) { 
                 Renderer.isMapDragging = true; 
                 if(window.gameLogic) window.gameLogic.handleClick(Renderer.pxToHex(p.x, p.y)); 
