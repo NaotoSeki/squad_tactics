@@ -1,4 +1,4 @@
-/** LOGIC GAME: Fire Mode Toggle & Dynamic Accuracy Drop */
+/** LOGIC GAME: Double Attack Bug Fix & Input Guard */
 
 function createCardIcon(type) {
     const c = document.createElement('canvas'); c.width = 1; c.height = 1; return c.toDataURL();
@@ -96,15 +96,13 @@ class Game {
         this.log(`${u.name} 装備変更`);
     }
 
-    // ★追加: 射撃モード切替 (SMGの2発/5発切り替えなど)
     toggleFireMode() {
         const u = this.selectedUnit;
         if (!u || !u.hands || !u.hands.modes) return;
         
-        const modes = u.hands.modes; // [2, 5] など
+        const modes = u.hands.modes; 
         const currentBurst = u.hands.burst;
         
-        // 次のモードを探す
         let nextIndex = modes.indexOf(currentBurst) + 1;
         if (nextIndex >= modes.length) nextIndex = 0;
         
@@ -242,6 +240,9 @@ class Game {
     }
 
     handleClick(p) {
+        // ★修正: 二重呼び出しガード。PLAY状態以外(ANIM中など)は入力を受け付けない
+        if (this.state !== 'PLAY') return;
+
         if (this.interactionMode === 'SELECT') { const u = this.getUnitInHex(p.q, p.r); if (!u) this.clearSelection(); } 
         else if (this.interactionMode === 'MOVE') { if (this.isValidHex(p.q, p.r) && this.path.length > 0) { const last = this.path[this.path.length - 1]; if (last.q === p.q && last.r === p.r) { 
             this.actionMove(this.selectedUnit, this.path); 
@@ -396,7 +397,10 @@ class Game {
     }
 
     async actionAttack(a, d) {
+        // ★修正: 実行ガード
+        if (this.state !== 'PLAY') return;
         if (!a) return; 
+        
         const w = a.hands; if (!w) return;
         if (w.isBroken) { this.log("武器故障中！修理が必要"); return; }
         if (w.isConsumable && w.current <= 0) { this.log("使用済みです"); return; }
@@ -460,8 +464,7 @@ class Game {
         a.ap -= w.ap; this.state = 'ANIM';
         if (typeof Renderer !== 'undefined' && Renderer.playAttackAnim) Renderer.playAttackAnim(a, d);
         
-        // ★修正: acc_dropを使用した命中計算
-        const drop = w.acc_drop || 5; // デフォルト5
+        const drop = w.acc_drop || 5; 
         let hitChance = (a.stats?.aim || 0) * 2 + w.acc - (dist * drop) - this.map[d.q][d.r].cover;
         
         if (d.stance === 'prone') hitChance -= 20; if (d.stance === 'crouch') hitChance -= 10;
