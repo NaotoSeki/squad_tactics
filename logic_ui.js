@@ -86,8 +86,14 @@ class UIManager {
 
         const setEnabled = (btn, enabled) => { if(enabled) btn.classList.remove('disabled'); else btn.classList.add('disabled'); };
         
-        setEnabled(btnMove, u.ap > 0);
-        setEnabled(btnAttack, u.ap > 0);
+        // ★修正: AP判定を厳密化
+        // 移動: AP1以上あればOK (地形コストによるが最低1)
+        setEnabled(btnMove, u.ap >= 1);
+        
+        // 攻撃: 武器の消費AP以上あればOK (武器がない場合は無効)
+        const weaponCost = u.hands ? u.hands.ap : 99;
+        setEnabled(btnAttack, u.ap >= weaponCost);
+        
         setEnabled(btnRepair, u.hands && u.hands.isBroken);
         
         const neighbors = this.game.getUnitsInHex(u.q, u.r);
