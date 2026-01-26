@@ -1,45 +1,60 @@
-# SQUAD TACTICS: HEROES OF THE SECTOR
+# SQUAD TACTICS - HEROIC EDITION
 
-ターン制のヘックスベース・タクティカル・シミュレーションゲーム。
-プレイヤーは部隊を指揮し、過酷なセクターを突破し続けることを目指します。
+A high-fidelity turn-based tactical strategy game built with **Phaser 3.60**.
+Experience squad-level combat with organic environmental simulation and deep weapon mechanics.
 
-## 🎮 ゲーム概要
-- **ジャンル**: Hex-based Strategy
-- **最新バージョン**: v2.1 (Armor & Perk Stacking Update)
-- **開発状況**: Sector 15 到達確認済み（高難易度バランス）
+## 🌟 Key Features
 
-## 🛠 現在の主要システム（仕様定義）
+### 🎨 High-End Environmental Simulation
+* **Procedural Vegetation**: 
+    * 60FPS smooth vector-morphed grass with wind propagation waves.
+    * Two distinct grass variants (Tall & Wild) for organic terrain texturing.
+* **Dynamic Forestry**:
+    * Multi-layered fir trees with independent branch inertia simulation.
+    * Trees react to wind gusts and sway naturally with "whipping" motion.
+* **Atmosphere**:
+    * Particle-based weather effects (Wind lines, debris).
+    * Dynamic lighting/glow effects on unit selection.
 
-### 1. ユニットシステム
-プレイヤーは以下のユニットから最大3枠を選択して出撃します。
-- **Rifle Squad**: 汎用歩兵。AP4。手榴弾による範囲攻撃が可能。
-- **MG Team**: 重火器。AP3。MG42による圧倒的な連射数（12連射）を誇る。
-- **Sniper**: 狙撃手。AP4。超長距離からの高精度・高威力射撃が可能。HPは低い。
-- **Panzer IV**: 中戦車。AP5。高耐久・高威力。近接防御射撃を保有。
-- **Assault Mortar**: 突撃臼砲。AP3。広範囲爆破の380mmロケットを放つ。
+### ⚔️ Deep Tactical Gameplay
+* **Hex-Grid Combat**: Classic turn-based movement and combat on a procedurally generated map.
+* **Advanced Ballistics & Ammo**:
+    * **Infantry**: Magazine management system (Reload consumes AP).
+    * **Tanks**: "Just-In-Time" shell loading system with Auto/Manual reload toggle.
+    * Visual bullet gauges showing exact remaining rounds.
+* **Unit Classes**:
+    * **Infantry**: Rifleman, Scout, Gunner, Sniper (with specific loadouts).
+    * **Armor**: Panzer IV, Tiger I (Heavy armor, limited AP, devastating firepower).
+* **RPG Elements**: Unit promotions, skill acquisition (Hero, CQC, Mechanic), and sector progression.
 
-### 2. Perk（戦技）システム [v2.1 実装]
-セクタークリアごとにユニットはPerkを習得します。**同じPerkの重ね掛けが可能**です。
-- **精密 (Precision)**: 射撃命中率 +15% / 重複可
-- **無線 (Radio)**: 隣接する味方への支援効果 +15% / 重複可
-- **隠密 (Ambush)**: 被命中率 -15% / 重複可
-- **弾薬 (AmmoBox)**: 射撃連射数 UP / 重複可
-- **強装 (HighPower)**: 与ダメージ +20% / 重複可
-- **修理 (Mechanic)**: ターン開始時HP回復 / 重複可
-- **装甲 (Armor)**: 被ダメージを固定値（-10）カット / 重複可
-- **英雄 (Hero)**: 5セクター生存で昇格。AP +1。
+### 💻 Technical Highlights
+* **Tech Stack**: HTML5, JavaScript (ES6+), Phaser 3.60.
+* **Responsive UI**: Collapsible sidebar with CSS transitions and DOM-based overlay menus.
+* **Performance**: Optimized particle pooling and vector graphics rendering.
 
-### 3. 戦闘ロジック
-- **支援攻撃**: 攻撃対象の隣接ヘックスに味方がいる場合、命中・ダメージにボーナス。
-- **姿勢 (Stance)**: 立、屈、伏の3段階。姿勢が低いほど回避・防御が上がるが、移動力や攻撃コストに影響（歩兵のみ）。
-- **地形効果**: 森林や廃墟は高いカバー（防御）効果を提供。
+## 🎮 Controls
 
-## 🚀 開発ロードマップ（予定）
-- [ ] デグレ防止のためのコード分割（JSファイルの外部化）
-- [ ] Sector毎のボス戦車（Tiger等）の実装
-- [ ] 地形破壊要素の追加
-- [ ] 視界（Fog of War）システムの検討
+* **Left Click**: Select Unit / Move / Attack
+* **Right Click**: Context Menu (Unit Info / End Turn)
+* **Drag & Drop**: Deploy units from cards / Swap equipment in loadout
+* **UI Toggles**:
+    * **Sidebar**: Toggle unit dossier panel.
+    * **Auto Reload**: Toggle automatic shell loading for tanks (1AP cost).
 
-## 📝 開発者ノート
-Sector 10付近から敵の火力が急上昇するため、序盤で「装甲」や「修理」を重ね掛けできるかが攻略の鍵。
-AIによるコード修正時は、Perkの累積計算ロジック（`getSkillCount`）を破壊しないよう注意すること。
+## 🚀 How to Run
+
+1.  Clone the repository.
+2.  Open `index.html` in a modern web browser.
+    * *Note: Due to local file security policies in some browsers, it is recommended to run a local server (e.g., VS Code Live Server).*
+
+## 📜 Recent Updates (Heroic Update)
+
+* **Visual Overhaul**: Implemented "Fluffy" tree rendering algorithm and grounded shadows.
+* **UI Update**: Moved HP bars to overhead position (slim design) and added glow selection effects.
+* **Logic Fixes**: 
+    * Implemented JIT (Just-In-Time) reloading logic to prevent soft-locks.
+    * Instant victory condition check upon last enemy elimination.
+    * Fixed sidebar coordinate desync issues.
+
+---
+*Developed by Naoto Seki & Gemini AI*
