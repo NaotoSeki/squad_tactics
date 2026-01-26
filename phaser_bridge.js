@@ -1,8 +1,7 @@
-/** PHASER BRIDGE: Enhanced UI Hover Check & Card Drop Highlight (Complete) */
+/** PHASER BRIDGE: Enhanced UI Hover Check, Card Drop Highlight & Transparency Fix */
 let phaserGame = null;
 window.HIGH_RES_SCALE = 2.0; 
 
-// ... (getCardTextureKey, createGradientTexture, createHexTexture は変更なし) ...
 window.getCardTextureKey = function(scene, type) {
     const key = `card_texture_${type}`;
     if (scene.textures.exists(key)) return key;
@@ -96,7 +95,20 @@ class Card extends Phaser.GameObjects.Container {
     updatePhysics() { 
         if (!this.scene || !this.frameImage) return; 
         const isDisabled = (window.gameLogic && window.gameLogic.cardsUsed >= 2);
-        if (isDisabled) { this.frameImage.setTint(0x555555); this.setAlpha(0.6); } else { this.frameImage.clearTint(); this.setAlpha(1.0); }
+        
+        // ★修正: ドラッグ中は不透明度を維持する (上書きしない)
+        if (this.isDragging) {
+            this.setAlpha(0.6); // ドラッグ中は常に半透明
+        } else {
+            if (isDisabled) { 
+                this.frameImage.setTint(0x555555); 
+                this.setAlpha(0.6); 
+            } else { 
+                this.frameImage.clearTint(); 
+                this.setAlpha(1.0); 
+            }
+        }
+
         if (!this.isDragging && !this.scene.isReturning) { this.targetX = this.baseX; if (this.scene.isHandDocked) { this.targetY = this.isHovering ? -120 : 60; } else { this.targetY = this.baseY - (this.isHovering ? 30 : 0); } } 
         const stiffness = this.isDragging ? 0.2 : 0.08; const damping = 0.65; const ax = (this.targetX - this.physX) * stiffness; const ay = (this.targetY - this.physY) * stiffness; this.velocityX += ax; this.velocityY += ay; this.velocityX *= damping; this.velocityY *= damping; this.physX += this.velocityX; this.physY += this.velocityY; this.setPosition(this.physX, this.physY); let staticAngle = 0; if (this.isDragging) staticAngle = -this.dragOffsetX * 0.4; const targetDynamicAngle = -this.velocityX * 1.5; const totalTargetAngle = staticAngle + targetDynamicAngle; const angleForce = (totalTargetAngle - this.angle) * 0.12; this.velocityAngle += angleForce; this.velocityAngle *= 0.85; this.angle += this.velocityAngle; this.angle = Phaser.Math.Clamp(this.angle, -50, 50); 
     }
@@ -107,7 +119,7 @@ class Card extends Phaser.GameObjects.Container {
         if(window.gameLogic && window.gameLogic.cardsUsed >= 2) return; 
         this.isDragging = true; 
         Renderer.isCardDragging = true; 
-        this.setAlpha(0.6); // ★修正: ドラッグ中は半透明
+        this.setAlpha(0.6); 
         this.setScale(1.1); 
         const hand = this.parentContainer; 
         const worldPos = hand.getLocalTransformMatrix().transformPoint(this.x, this.y); 
@@ -185,9 +197,7 @@ class MainScene extends Phaser.Scene {
     centerMap() { this.cameras.main.centerOn((MAP_W * HEX_SIZE * 1.5) / 2, (MAP_H * HEX_SIZE * 1.732) / 2); }
     createMap() { 
         const map = window.gameLogic.map; this.hexGroup.removeAll(true); this.decorGroup.removeAll(true); this.unitGroup.removeAll(true); this.treeGroup.removeAll(true); this.hpGroup.removeAll(true); 
-        // ★修正: Visualを完全にクリアする
         if(this.unitView) this.unitView.clear();
-        
         for(let q=0; q<MAP_W; q++) { 
             for(let r=0; r<MAP_H; r++) { 
                 const t = map[q][r]; if(t.id===-1)continue; const pos = Renderer.hexToPx(q, r); 
@@ -208,26 +218,16 @@ class MainScene extends Phaser.Scene {
         if(this.unitView) this.unitView.update(time, delta);
         this.overlayGraphics.clear();
         
-        // ★追加: カードドラッグ時のドロップハイライト
         if (this.dragHighlightHex) {
             const h = this.dragHighlightHex;
-            
-            // 配置可能かチェックして色を変える
             let isValid = false;
             if (window.gameLogic) {
-                isValid = window.gameLogic.isValidHex(h.q, h.r) && 
-                          window.gameLogic.map[h.q][h.r].id !== -1 && 
-                          window.gameLogic.getUnitsInHex(h.q, h.r).length < 4;
+                isValid = window.gameLogic.isValidHex(h.q, h.r) && window.gameLogic.map[h.q][h.r].id !== -1 && window.gameLogic.getUnitsInHex(h.q, h.r).length < 4;
             }
-            
             const color = isValid ? 0x00ffff : 0xff0000;
             this.overlayGraphics.lineStyle(3, color, 0.8);
             this.drawHexOutline(this.overlayGraphics, h.q, h.r);
-            
-            if(isValid) {
-                this.overlayGraphics.fillStyle(color, 0.2);
-                this.overlayGraphics.fillPath();
-            }
+            if(isValid) { this.overlayGraphics.fillStyle(color, 0.2); this.overlayGraphics.fillPath(); }
         }
         
         const selected = window.gameLogic.selectedUnit;
