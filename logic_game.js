@@ -1,12 +1,9 @@
-/** LOGIC: Refactored & Modularized (Game) */
+/** LOGIC GAME: Realistic Ballistics & JIT Reload */
 
 function createCardIcon(type) {
     const c = document.createElement('canvas'); c.width = 1; c.height = 1; return c.toDataURL();
 }
 
-// ==========================================
-// 3. GAME (Core Logic & State)
-// ==========================================
 class Game {
     constructor() {
         this.units = [];
@@ -40,7 +37,6 @@ class Game {
         Renderer.init(document.getElementById('game-view'));
     }
 
-    // Proxy for UI actions
     toggleSidebar() { this.ui.toggleSidebar(); }
     toggleTankAutoReload() { this.tankAutoReload = !this.tankAutoReload; this.updateSidebar(); }
     log(m) { this.ui.log(m); }
@@ -150,7 +146,6 @@ class Game {
             return;
         }
         this.selectedUnit = u; this.refreshUnitState(u); 
-        // UI Call
         if (Renderer.game) { 
             const pointer = Renderer.game.input.activePointer; 
             this.ui.showActionMenu(u, pointer.x, pointer.y);
@@ -158,7 +153,7 @@ class Game {
         if (window.Sfx) Sfx.play('click');
     }
 
-    showActionMenu(u) { /* Forwarder for compatibility if needed */ } // UI handles this now
+    showActionMenu(u) { }
     hideActionMenu() { this.ui.hideActionMenu(); }
 
     setMode(mode) {
@@ -280,7 +275,7 @@ class Game {
         // JIT (Just-In-Time) Auto Reload
         if (a.def.isTank && w.current <= 0 && this.tankAutoReload) {
             if (w.reserve > 0) {
-                const totalCost = w.ap + 1; // 攻撃+装填コスト
+                const totalCost = w.ap + 1; 
                 if (a.ap >= totalCost) {
                     a.ap -= 1; w.reserve--; w.current = 1;
                     this.log(`${a.name} 自動装填完了`);
@@ -301,21 +296,48 @@ class Game {
         
         const dist = this.hexDist(a, d); if (dist > w.rng) { this.log("射程外"); return; }
         a.ap -= w.ap; this.state = 'ANIM';
+        
         if (Renderer.playAttackAnim) Renderer.playAttackAnim(a, d);
+        
         let hitChance = (a.stats?.aim || 0) * 2 + w.acc - (dist * 5) - this.map[d.q][d.r].cover;
         if (d.stance === 'prone') hitChance -= 20; if (d.stance === 'crouch') hitChance -= 10;
         let dmgMod = 1.0 + (a.stats?.str || 0) * 0.05;
+        
         const shots = w.isConsumable ? 1 : Math.min(w.burst || 1, w.current);
         this.log(`${a.name} 攻撃開始 (${w.name})`);
+        
+        // ★修正: 弾速の大幅向上と曳光弾(Tracer)設定
         for (let i = 0; i < shots; i++) {
             if (d.hp <= 0) break;
             if (!w.isConsumable && w.jam && Math.random() < w.jam) { this.log(`⚠ JAM!! ${w.name}が故障！`); w.isBroken = true; if (window.Sfx) Sfx.play('ricochet'); break; }
             w.current--;
+            
             const sPos = Renderer.hexToPx(a.q, a.r); const ePos = Renderer.hexToPx(d.q, d.r);
-            const spread = (100 - w.acc) * 0.5; const tx = ePos.x + (Math.random() - 0.5) * spread; const ty = ePos.y + (Math.random() - 0.5) * spread;
+            const spread = (100 - w.acc) * 0.5; 
+            const tx = ePos.x + (Math.random() - 0.5) * spread; 
+            const ty = ePos.y + (Math.random() - 0.5) * spread;
+            
             if (window.Sfx) Sfx.play(w.type === 'shell' || w.type === 'shell_fast' ? 'cannon' : 'shot');
-            const flightTime = w.type.includes('shell') ? dist * 100 : dist * 50;
-            if (window.VFX) VFX.addProj({ x: sPos.x, y: sPos.y, sx: sPos.x, sy: sPos.y, ex: tx, ey: ty, type: w.type, speed: 0.1, progress: 0, arcHeight: (w.type.includes('shell') ? 100 : 0), onHit: () => { } });
+            
+            // ★高速化: 飛行時間を短縮
+            const isShell = w.type.includes('shell');
+            const flightTime = isShell ? 100 : dist * 30; // 戦車砲はほぼ着弾同時、銃弾も高速
+            
+            // ★曳光弾判定: 戦車砲は常時、銃弾は3発に1発
+            const isTracer = isShell || (i === 0 || i % 3 === 0);
+
+            if (window.VFX) {
+                VFX.addProj({ 
+                    x: sPos.x, y: sPos.y, sx: sPos.x, sy: sPos.y, ex: tx, ey: ty, 
+                    type: w.type, 
+                    speed: isShell ? 0.9 : 0.6, // 1フレームあたりの進捗率 (1.0で即着)
+                    progress: 0, 
+                    arcHeight: isShell ? 10 : 0, // 射角を浅く (低空)
+                    isTracer: isTracer, // 描画側に渡すフラグ
+                    onHit: () => { } 
+                });
+            }
+
             setTimeout(() => {
                 if (d.hp <= 0) return;
                 const isHit = (Math.random() * 100) < hitChance;
@@ -333,9 +355,13 @@ class Game {
                     }
                 } else { if (window.VFX) VFX.add({ x: tx, y: ty, vx: 0, vy: 0, life: 10, maxLife: 10, color: "#aaa", size: 2, type: 'smoke' }); }
             }, flightTime);
-            await new Promise(r => setTimeout(r, 100));
+            
+            // 次の弾までの間隔も短縮
+            await new Promise(r => setTimeout(r, isShell ? 200 : 60));
         }
+        
         if (w.isConsumable && w.current <= 0) { a.hands = null; this.log(`${w.name} を消費しました`); }
+        
         setTimeout(() => {
             if (d.hp <= 0 && !d.deadProcessed) { 
                 d.deadProcessed = true; 
@@ -346,7 +372,6 @@ class Game {
             }
             this.state = 'PLAY'; 
             
-            // Post-Attack Auto Reload (補充)
             if(a.def.isTank && w.current === 0 && w.reserve > 0) {
                 if (this.tankAutoReload && a.ap >= 1) {
                     this.reloadWeapon(); 
@@ -374,72 +399,6 @@ class Game {
         }
     }
 
-    generateMap() {
-        this.map = []; for (let q = 0; q < MAP_W; q++) { this.map[q] = []; for (let r = 0; r < MAP_H; r++) { this.map[q][r] = TERRAIN.VOID; } }
-        const cx = Math.floor(MAP_W / 2), cy = Math.floor(MAP_H / 2); let walkers = [{ q: cx, r: cy }];
-        const paintBrush = (cq, cr) => { const brush = [{ q: cq, r: cr }, ...this.getNeighbors(cq, cr)]; brush.forEach(h => { if (this.isValidHex(h.q, h.r)) this.map[h.q][h.r] = TERRAIN.GRASS; }); };
-        for (let i = 0; i < 140; i++) {
-            const wIdx = Math.floor(Math.random() * walkers.length); const w = walkers[wIdx]; paintBrush(w.q, w.r);
-            const neighbors = [[1, 0], [1, -1], [0, -1], [-1, 0], [-1, 1], [0, 1]]; const dir = neighbors[Math.floor(Math.random() * 6)];
-            const next = { q: w.q + dir[0], r: w.r + dir[1] };
-            if (Math.random() < 0.05 && walkers.length < 5) walkers.push(next); else walkers[wIdx] = next;
-        }
-        for (let i = 0; i < 3; i++) { for (let q = 1; q < MAP_W - 1; q++) { for (let r = 1; r < MAP_H - 1; r++) { if (this.map[q][r].id === -1) { const ln = this.getNeighbors(q, r).filter(n => this.map[n.q][n.r].id !== -1).length; if (ln >= 4) this.map[q][r] = TERRAIN.GRASS; } } } }
-        for (let loop = 0; loop < 2; loop++) { const wC = []; for (let q = 0; q < MAP_W; q++) { for (let r = 0; r < MAP_H; r++) { if (this.map[q][r].id === -1) { const hn = this.getNeighbors(q, r).some(n => this.map[n.q][n.r].id !== -1); if (hn) wC.push({ q, r }); } } } wC.forEach(w => { this.map[w.q][w.r] = TERRAIN.WATER; }); }
-        for (let q = 0; q < MAP_W; q++) { for (let r = 0; r < MAP_H; r++) { const tId = this.map[q][r].id; if (tId !== -1 && tId !== 5) { const n = Math.sin(q * 0.4) + Math.cos(r * 0.4) + Math.random() * 0.4; let t = TERRAIN.GRASS; if (n > 1.1) t = TERRAIN.FOREST; else if (n < -0.9) t = TERRAIN.DIRT; if (t !== TERRAIN.WATER && Math.random() < 0.05) t = TERRAIN.TOWN; this.map[q][r] = t; } } }
-    }
-    spawnEnemies() {
-        const c = 4 + Math.floor(this.sector * 0.7);
-        for (let i = 0; i < c; i++) {
-            let k = 'rifleman'; const r = Math.random(); if (r < 0.1 + this.sector * 0.1) k = 'tank_pz4'; else if (r < 0.4) k = 'gunner'; else if (r < 0.6) k = 'sniper';
-            const e = this.createSoldier(k, 'enemy', 0, 0); if (e) { const p = this.getSafeSpawnPos('enemy'); e.q = p.q; e.r = p.r; this.units.push(e); }
-        }
-    }
-    toggleAuto() { this.isAuto = !this.isAuto; document.getElementById('auto-toggle').classList.toggle('active'); this.log(`AUTO: ${this.isAuto ? "ON" : "OFF"}`); }
-    runAuto() { }
-    async actionMove(u, p) {
-        this.state = 'ANIM'; this.path = []; this.reachableHexes = []; this.attackLine = []; this.aimTargetUnit = null;
-        for (let s of p) { u.ap -= this.map[s.q][s.r].cost; u.q = s.q; u.r = s.r; if (window.Sfx) Sfx.play('move'); await new Promise(r => setTimeout(r, 180)); }
-        this.checkReactionFire(u); this.state = 'PLAY'; this.refreshUnitState(u); this.checkPhaseEnd();
-    }
-    checkReactionFire(u) {
-        this.units.filter(e => e.team !== u.team && e.hp > 0 && e.def.isTank && this.hexDist(u, e) <= 1).forEach(t => {
-            this.log(`!! 防御射撃: ${t.name}->${u.name}`); u.hp -= 15; if (window.VFX) VFX.addExplosion(Renderer.hexToPx(u.q, u.r).x, Renderer.hexToPx(u.q, u.r).y, "#fa0", 5);
-            if (window.Sfx) Sfx.play('mg'); if (u.hp <= 0 && !u.deadProcessed) { u.deadProcessed = true; this.log(`${u.name} 撃破`); if (window.Sfx) Sfx.play('death'); }
-        });
-    }
-    swapWeapon() { }
-    checkPhaseEnd() { if (this.units.filter(u => u.team === 'player' && u.hp > 0 && u.ap > 0).length === 0 && this.state === 'PLAY') this.endTurn(); }
-    endTurn() {
-        if (this.isProcessingTurn) return; this.isProcessingTurn = true;
-        this.selectedUnit = null; this.reachableHexes = []; this.attackLine = []; this.aimTargetUnit = null; this.path = []; this.hideActionMenu();
-        this.state = 'ANIM'; const eyecatch = document.getElementById('eyecatch'); if (eyecatch) eyecatch.style.opacity = 1;
-        
-        // Player Recovery
-        this.units.filter(u => u.team === 'player' && u.hp > 0 && u.skills.includes("Mechanic")).forEach(u => { const c = u.skills.filter(s => s === "Mechanic").length; if (u.hp < u.maxHp) { u.hp = Math.min(u.maxHp, u.hp + c * 20); this.log(`${u.name} 修理`); } });
-        
-        setTimeout(async () => {
-            if (eyecatch) eyecatch.style.opacity = 0; 
-            
-            // Delegate AI
-            await this.ai.executeTurn(this.units);
-
-            // New Turn Prep
-            this.units.forEach(u => { if (u.team === 'player') u.ap = u.maxAp; }); 
-            this.log("-- PLAYER PHASE --"); 
-            this.state = 'PLAY'; 
-            this.isProcessingTurn = false;
-        }, 1200);
-    }
-    healSurvivors() { this.units.filter(u => u.team === 'player' && u.hp > 0).forEach(u => { const t = Math.floor(u.maxHp * 0.8); if (u.hp < t) u.hp = t; }); this.log("治療完了"); }
-    promoteSurvivors() { this.units.filter(u => u.team === 'player' && u.hp > 0).forEach(u => { u.sectorsSurvived++; if (u.sectorsSurvived === 5) { u.skills.push("Hero"); u.maxAp++; this.log("英雄昇格"); } u.rank = Math.min(5, (u.rank || 0) + 1); u.maxHp += 30; u.hp += 30; if (u.skills.length < 8 && Math.random() < 0.7) { const k = Object.keys(SKILLS).filter(z => z !== "Hero"); u.skills.push(k[Math.floor(Math.random() * k.length)]); this.log("スキル習得"); } }); }
-    checkWin() { if (this.units.filter(u => u.team === 'enemy' && u.hp > 0).length === 0) { if (window.Sfx) Sfx.play('win'); document.getElementById('reward-screen').style.display = 'flex'; this.promoteSurvivors(); const b = document.getElementById('reward-cards'); b.innerHTML = ''; [{ k: 'rifleman', t: '新兵' }, { k: 'tank_pz4', t: '戦車' }, { k: 'heal', t: '医療' }].forEach(o => { const d = document.createElement('div'); d.className = 'card'; d.innerHTML = `<div class="card-img-box"><img src="${createCardIcon(o.k === 'heal' ? 'heal' : 'infantry')}"></div><div class="card-body"><h3>${o.t}</h3><p>補給</p></div>`; d.onclick = () => { if (o.k === 'heal') this.healSurvivors(); else this.spawnAtSafeGround('player', o.k); this.sector++; document.getElementById('reward-screen').style.display = 'none'; this.startCampaign(); }; b.appendChild(d); }); return true; } return false; }
-    checkLose() { if (this.units.filter(u => u.team === 'player' && u.hp > 0).length === 0) document.getElementById('gameover-screen').style.display = 'flex'; }
-    isValidHex(q, r) { return q >= 0 && q < MAP_W && r >= 0 && r < MAP_H; }
-    hexDist(a, b) { return (Math.abs(a.q - b.q) + Math.abs(a.q + a.r - b.q - b.r) + Math.abs(a.r - b.r)) / 2; }
-    getNeighbors(q, r) { return [[1, 0], [1, -1], [0, -1], [-1, 0], [-1, 1], [0, 1]].map(d => ({ q: q + d[0], r: r + d[1] })).filter(h => this.isValidHex(h.q, h.r)); }
-    findPath(u, tq, tr) { let f = [{ q: u.q, r: u.r }], cf = {}, cs = {}; cf[`${u.q},${u.r}`] = null; cs[`${u.q},${u.r}`] = 0; while (f.length > 0) { let c = f.shift(); if (c.q === tq && c.r === tr) break; this.getNeighbors(c.q, c.r).forEach(n => { if (this.getUnitsInHex(n.q, n.r).length >= 4 && (n.q !== tq || n.r !== tr)) return; const cost = this.map[n.q][n.r].cost; if (cost >= 99) return; const nc = cs[`${c.q},${c.r}`] + cost; if (nc <= u.ap) { const k = `${n.q},${n.r}`; if (!(k in cs) || nc < cs[k]) { cs[k] = nc; f.push(n); cf[k] = c; } } }); } let p = [], c = { q: tq, r: tr }; if (!cf[`${tq},${tr}`]) return []; while (c) { if (c.q === u.q && c.r === u.r) break; p.push(c); c = cf[`${c.q},${c.r}`]; } return p.reverse(); }
-    
     // UI Callbacks
     showContext(mx, my) { this.ui.showContext(mx, my, Renderer.pxToHex(mx, my)); }
     updateSidebar() { this.ui.updateSidebar(this.selectedUnit, this.state, this.tankAutoReload); }
