@@ -153,7 +153,18 @@ class MainScene extends Phaser.Scene {
         this.scene.launch('UIScene'); 
         this.unitView = new UnitView(this, this.unitGroup, this.hpGroup);
         this.input.on('wheel', (pointer, gameObjects, deltaX, deltaY, deltaZ) => { let newZoom = this.cameras.main.zoom; if (deltaY > 0) newZoom -= 0.5; else if (deltaY < 0) newZoom += 0.5; newZoom = Phaser.Math.Clamp(newZoom, 0.25, 4.0); this.tweens.add({ targets: this.cameras.main, zoom: newZoom, duration: 150, ease: 'Cubic.out' }); });
-        this.input.on('pointerdown', (p) => { if (Renderer.isCardDragging || Renderer.checkUIHover(p.x, p.y)) return; if(p.button === 0) { Renderer.isMapDragging = true; if(window.gameLogic) window.gameLogic.handleClick(Renderer.pxToHex(p.x, p.y)); } else if(p.button === 2) { if(window.gameLogic) window.gameLogic.showContext(p.x, p.y); } });
+        
+        // ★修正: 右クリック (button 2) で handleRightClick を呼ぶ
+        this.input.on('pointerdown', (p) => { 
+            if (Renderer.isCardDragging || Renderer.checkUIHover(p.x, p.y)) return; 
+            if(p.button === 0) { 
+                Renderer.isMapDragging = true; 
+                if(window.gameLogic) window.gameLogic.handleClick(Renderer.pxToHex(p.x, p.y)); 
+            } else if(p.button === 2) { 
+                if(window.gameLogic) window.gameLogic.handleRightClick(p.x, p.y); 
+            } 
+        });
+        
         this.input.on('pointerup', () => { Renderer.isMapDragging = false; });
         this.input.on('pointermove', (p) => { if (Renderer.isCardDragging) return; if (p.isDown && Renderer.isMapDragging) { const zoom = this.cameras.main.zoom; this.cameras.main.scrollX -= (p.x - p.prevPosition.x) / zoom; this.cameras.main.scrollY -= (p.y - p.prevPosition.y) / zoom; } if(!Renderer.isMapDragging && window.gameLogic) window.gameLogic.handleHover(Renderer.pxToHex(p.x, p.y)); }); 
         this.input.mouse.disableContextMenu();
