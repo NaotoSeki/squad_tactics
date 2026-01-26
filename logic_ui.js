@@ -1,4 +1,4 @@
-/** LOGIC UI: DOM & Display Logic */
+/** LOGIC UI: DOM & Display Logic (Fixed & Modernized) */
 
 class UIManager {
     constructor(game) {
@@ -91,39 +91,34 @@ class UIManager {
         if (h !== "") { m.innerHTML = h; m.style.display = 'block'; m.style.left = (mx + 10) + 'px'; m.style.top = (my + 10) + 'px'; }
     }
 
-    // ★追加: 警告モーダルの表示
     showFriendlyFireWarning(onConfirm, onCancel) {
         const modal = document.getElementById('warning-modal');
         const okBtn = document.getElementById('warn-ok');
         const cancelBtn = document.getElementById('warn-cancel');
         if(!modal || !okBtn || !cancelBtn) return;
-
         modal.style.display = 'block';
-        
-        // イベントハンドラを一時的に上書き（古いのを削除するためcloneNodeを使う手もあるが、シンプルに）
         okBtn.onclick = () => { modal.style.display = 'none'; if(onConfirm) onConfirm(); };
         cancelBtn.onclick = () => { modal.style.display = 'none'; if(onCancel) onCancel(); };
     }
 
-   updateSidebar(u, state, tankAutoReload) {
+    updateSidebar(u, state, tankAutoReload) {
         const ui = document.getElementById('unit-info');
         if (!u || u.hp <= 0) { ui.innerHTML = `<div style="text-align:center;color:#555;margin-top:80px;">// NO SIGNAL //</div>`; return; }
         const w = u.hands; const faceUrl = (Renderer.generateFaceIcon) ? Renderer.generateFaceIcon(u.faceSeed) : "";
         
-        // ★修正: SKILL_STYLESの存在チェックとモダンな表示
         const skillCounts = {}; u.skills.forEach(sk => { skillCounts[sk] = (skillCounts[sk] || 0) + 1; });
         let skillHtml = ""; 
         if (typeof SKILL_STYLES !== 'undefined') {
             for (const [sk, count] of Object.entries(skillCounts)) { 
                 if (SKILL_STYLES[sk]) { 
                     const st = SKILL_STYLES[sk]; 
-                    // バッジ風デザイン: 影付き、角丸、少し大きく
                     skillHtml += `<div style="display:inline-block; background:${st.col}; color:#fff; font-weight:bold; font-size:10px; padding:3px 6px; margin:2px; border-radius:4px; box-shadow:0 1px 3px rgba(0,0,0,0.5); text-shadow:0 1px 1px rgba(0,0,0,0.8); border:1px solid rgba(255,255,255,0.2);">
                         ${st.icon} ${st.name}${count > 1 ? ' x'+count : ''}
                     </div>`; 
                 } 
             }
         }
+
         const makeSlot = (item, type, index) => { 
             if (!item) return `<div class="slot empty" ondragover="onSlotDragOver(event)" ondragleave="onSlotDragLeave(event)" ondrop="onSlotDrop(event, '${type}', ${index})"><div style="font-size:10px; color:#555;">[EMPTY]</div></div>`; 
             const isMain = (type === 'main'); const isAmmo = (item.type === 'ammo'); 
