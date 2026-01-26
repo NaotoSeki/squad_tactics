@@ -200,7 +200,7 @@ class UnitView {
             }
         }
 
-        if (visual.hpBg && visual.hpBar && visual.infoContainer) {
+            if (visual.hpBg && visual.hpBar && visual.infoContainer) {
             const barY = visual.container.y - 45; 
             const barX = visual.container.x - 10;
             visual.hpBg.setPosition(barX, barY);
@@ -214,6 +214,7 @@ class UnitView {
             visual.infoContainer.setPosition(visual.container.x, infoY);
             visual.infoContainer.removeAll(true);
 
+            // ★追加: 状態異常などのテキスト
             let infoText = "";
             if(u.hands && u.hands.isBroken) infoText += "⚠ ";
             if(u.hp < u.maxHp*0.5) infoText += "➕ ";
@@ -221,6 +222,46 @@ class UnitView {
             if (infoText) {
                 const txt = this.scene.add.text(0, 0, infoText, { fontSize: '10px' }).setOrigin(0.5);
                 visual.infoContainer.add(txt);
+            }
+
+            // ★追加: 頭上の極小スキル徽章 (SKILL_STYLES使用)
+            if (typeof SKILL_STYLES !== 'undefined' && u.skills.length > 0) {
+                // スキルの種類ごとにアイコンを表示 (重複はまとめないで並べるか、種類だけにするか)
+                // ここでは「種類」を並べる (極小なので数は少ないほうがいい)
+                const uniqueSkills = [...new Set(u.skills)];
+                let iconX = -((uniqueSkills.length - 1) * 6) / 2; // 中央揃え
+                
+                uniqueSkills.forEach(sk => {
+                    if (SKILL_STYLES[sk]) {
+                        const st = SKILL_STYLES[sk];
+                        // グラフィックスで小さな四角を描くか、テキストでアイコンを描くか
+                        // テキスト(絵文字)で描くのが一番きれい
+                        const badge = this.scene.add.text(iconX, -58, st.icon, { 
+                            fontSize: '9px', 
+                            fontFamily: 'Segoe UI Emoji' // 絵文字用
+                        }).setOrigin(0.5);
+                        // 背景もつけると視認性が上がる
+                        const bg = this.scene.add.rectangle(iconX, -58, 8, 8, parseInt(st.col.replace('#','0x')), 0.8);
+                        
+                        // HPバーよりさらに上に表示するために、hpLayerに追加
+                        // ただしinfoContainerは下にあるので、hpLayer直下に追加して位置調整
+                        // ここでは簡易的にhpLayerに追加し、updateのたびに消して作り直すのは重いので
+                        // visualに専用コンテナを持たせるのがベストだが、今回はinfoContainerを流用せず
+                        // visual.skillContainer を新設するアプローチをとる
+                        
+                        if(!visual.skillContainer) {
+                            visual.skillContainer = this.scene.add.container(0, 0);
+                            this.hpLayer.add(visual.skillContainer);
+                        }
+                        visual.skillContainer.add([bg, badge]);
+                        iconX += 9;
+                    }
+                });
+                if(visual.skillContainer) {
+                    visual.skillContainer.setPosition(visual.container.x, visual.container.y);
+                }
+            } else {
+                if(visual.skillContainer) visual.skillContainer.removeAll(true);
             }
         }
     }
@@ -230,6 +271,7 @@ class UnitView {
         if(visual.hpBg) visual.hpBg.destroy();
         if(visual.hpBar) visual.hpBar.destroy();
         if(visual.infoContainer) visual.infoContainer.destroy();
+        if(visual.skillContainer) visual.skillContainer.destroy(); // 追加
     }
 
     triggerAttack(attacker, target) {
