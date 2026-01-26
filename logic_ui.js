@@ -1,6 +1,5 @@
-// ==========================================
-// 1. UI MANAGER (DOM & Display Logic)
-// ==========================================
+/** LOGIC UI: DOM & Display Logic */
+
 class UIManager {
     constructor(game) {
         this.game = game;
@@ -19,28 +18,52 @@ class UIManager {
         // Sidebar Resizer
         const resizer = document.getElementById('resizer');
         const sidebar = document.getElementById('sidebar');
+        const app = document.getElementById('app');
+
         let isResizing = false;
         if (resizer) {
-            resizer.addEventListener('mousedown', () => { isResizing = true; document.body.style.cursor = 'col-resize'; resizer.classList.add('active'); });
+            resizer.addEventListener('mousedown', () => { 
+                isResizing = true; 
+                document.body.style.cursor = 'col-resize'; 
+                resizer.classList.add('active'); 
+            });
             window.addEventListener('mousemove', (e) => {
                 if (!isResizing) return;
                 const newWidth = document.body.clientWidth - e.clientX;
+                // サイドバー幅を変更。リサイザーもCSSで追従するが、JSでも位置を更新
                 if (newWidth > 200 && newWidth < 800) { 
-                    sidebar.style.width = newWidth + 'px'; 
+                    sidebar.style.width = newWidth + 'px';
+                    resizer.style.right = newWidth + 'px'; 
+                    // 閉じていた場合は強制的に開く処理
                     if (sidebar.classList.contains('collapsed')) this.toggleSidebar(); 
-                    if(typeof Renderer !== 'undefined') Renderer.resize(); 
+                    // ★重要: ここで Renderer.resize() を呼ばないことで画面伸縮を防ぐ
                 }
             });
-            window.addEventListener('mouseup', () => { if (isResizing) { isResizing = false; document.body.style.cursor = ''; resizer.classList.remove('active'); if(typeof Renderer !== 'undefined') Renderer.resize(); } });
+            window.addEventListener('mouseup', () => { 
+                if (isResizing) { 
+                    isResizing = false; 
+                    document.body.style.cursor = ''; 
+                    resizer.classList.remove('active'); 
+                } 
+            });
         }
     }
 
     toggleSidebar() {
         const sb = document.getElementById('sidebar');
         const tg = document.getElementById('sidebar-toggle');
+        const app = document.getElementById('app');
+        
         sb.classList.toggle('collapsed');
-        if (sb.classList.contains('collapsed')) { sb.style.width = ''; tg.innerText = '◀'; } else { tg.innerText = '▶'; }
-        setTimeout(() => { if(typeof Renderer !== 'undefined') Renderer.resize(); }, 350);
+        // CSSクラスを切り替えてリサイザーの位置も制御
+        app.classList.toggle('sidebar-closed');
+
+        if (sb.classList.contains('collapsed')) { 
+            sb.style.width = ''; 
+            tg.innerText = '◀'; 
+        } else { 
+            tg.innerText = '▶'; 
+        }
     }
 
     log(m) {
@@ -61,7 +84,6 @@ class UIManager {
         const btnMelee = document.getElementById('btn-melee'); 
         const btnHeal = document.getElementById('btn-heal');
 
-        // Button State Logic
         const setEnabled = (btn, enabled) => { if(enabled) btn.classList.remove('disabled'); else btn.classList.add('disabled'); };
         
         setEnabled(btnMove, u.ap > 0);
@@ -114,7 +136,6 @@ class UIManager {
         const w = u.hands;
         const faceUrl = (Renderer.generateFaceIcon) ? Renderer.generateFaceIcon(u.faceSeed) : "";
         
-        // Skill Badges
         const skillCounts = {}; u.skills.forEach(sk => { skillCounts[sk] = (skillCounts[sk] || 0) + 1; });
         let skillHtml = ""; 
         for (const [sk, count] of Object.entries(skillCounts)) { 
@@ -124,7 +145,6 @@ class UIManager {
             } 
         }
 
-        // Inventory Slots HTML Generator
         const makeSlot = (item, type, index) => { 
             if (!item) return `<div class="slot empty" ondragover="onSlotDragOver(event)" ondragleave="onSlotDragLeave(event)" ondrop="onSlotDrop(event, '${type}', ${index})"><div style="font-size:10px; color:#555;">[EMPTY]</div></div>`; 
             const isMain = (type === 'main'); 
