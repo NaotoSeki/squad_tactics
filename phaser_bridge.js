@@ -1,4 +1,4 @@
-/** PHASER BRIDGE: Fixed Data Access & Cool Bracket Cursor (Selection Removed) */
+/** PHASER BRIDGE: Input, Rendering, & Scene Management (Complete) */
 let phaserGame = null;
 window.HIGH_RES_SCALE = 2.0; 
 
@@ -86,55 +86,27 @@ class Card extends Phaser.GameObjects.Container {
     onHover() { if(Renderer.isMapDragging || Renderer.isCardDragging) return; this.isHovering = true; this.parentContainer.bringToTop(this); }
     onHoverOut() { this.isHovering = false; }
     onDragStart(pointer) { if(Renderer.isMapDragging) return; if(window.gameLogic && window.gameLogic.cardsUsed >= 2) return; this.isDragging = true; Renderer.isCardDragging = true; this.setAlpha(0.9); this.setScale(1.1); const hand = this.parentContainer; const worldPos = hand.getLocalTransformMatrix().transformPoint(this.x, this.y); hand.remove(this); this.scene.add.existing(this); this.physX = worldPos.x; this.physY = worldPos.y; this.targetX = this.physX; this.targetY = this.physY; this.setDepth(9999); this.dragOffsetX = this.physX - pointer.x; this.dragOffsetY = this.physY - pointer.y; }
+    onDrag(pointer) { if(!this.isDragging) return; this.targetX = pointer.x + this.dragOffsetX; this.targetY = pointer.y + this.dragOffsetY; const main = this.scene.game.scene.getScene('MainScene'); if (this.y < this.scene.scale.height * 0.65) main.dragHighlightHex = Renderer.pxToHex(pointer.x, pointer.y); else main.dragHighlightHex = null; }
+    onDragEnd(pointer) { if(!this.isDragging) return; this.isDragging = false; Renderer.isCardDragging = false; this.setAlpha(1.0); this.setScale(1.0); const main = this.scene.game.scene.getScene('MainScene'); main.dragHighlightHex = null; const dropZoneY = this.scene.scale.height * 0.65; if (this.y < dropZoneY) { const hex = Renderer.pxToHex(pointer.x, pointer.y); let canDeploy = false; if (window.gameLogic) { if (this.cardType === 'aerial') { if (window.gameLogic.isValidHex(hex.q, hex.r)) canDeploy = true; else window.gameLogic.log("配置不可: マップ範囲外です"); } else { canDeploy = window.gameLogic.checkDeploy(hex); } } if (canDeploy) this.burnAndConsume(hex); else this.returnToHand(); } else { this.returnToHand(); } }
+    
     burnAndConsume(hex) { 
         this.updatePhysics = () => {}; 
-        this.frameImage.setTint(0x552222); // 赤黒く焦げる
-        
-        // 燃焼パーティクル放出 (200msかけてループ)
+        this.frameImage.setTint(0x552222); 
         const burnEvent = this.scene.time.addEvent({
-            delay: 15,
-            repeat: 12,
+            delay: 15, repeat: 12,
             callback: () => {
                 if(window.VFX) {
                     const rx = this.x + (Math.random()-0.5) * 100;
                     const ry = this.y + (Math.random()-0.5) * 140;
-                    // メイン画面のVFXシステムを使うため、座標変換が必要だが
-                    // 今回は簡易的にUIScene上に描画できないため、擬似的にMainSceneに飛ばすか、
-                    // もしくはUI用VFXが必要。
-                    // 以前は window.VFX がグローバルだったのでそのまま呼ぶとメイン画面の左上に飛んでしまう可能性がある。
-                    // ★修正: window.UIVFX (UIScene用) があればそちらを使うが、
-                    // 現状ないので window.VFX を使いつつ、カメラのscrollを考慮して座標を渡す裏技を使う
-                    // ただしカードはUIScene(Scroll固定)なので、VFX(Scrollあり)と座標系が違う。
-                    // ここはシンプルに「カードが消える」瞬間の音と色変えに集中し、
-                    // 完全にリッチにするならUIScene用VFXSystemが必要になる。
-                    // 今回は既存コードの範囲で動くよう、Tween完了時に MainScene 側で着地エフェクトを出す方針にする。
                 }
             }
         });
-
-        // 実際の消滅処理
         this.scene.tweens.add({ 
-            targets: this, 
-            alpha: 0, 
-            scale: 0.8, 
-            duration: 300, 
-            onUpdate: (tween) => {
-                // 燃えているように揺らす
-                this.x = this.physX + (Math.random()-0.5) * 5;
-            },
+            targets: this, alpha: 0, scale: 0.8, duration: 300, 
+            onUpdate: (tween) => { this.x = this.physX + (Math.random()-0.5) * 5; },
             onComplete: () => { 
-                this.scene.removeCard(this); 
-                const type = this.cardType; 
-                this.destroy(); 
-                try { 
-                    // 配置実行 (ここで着地エフェクトが出るのでOK)
-                    if (type === 'aerial') { 
-                        const main = phaserGame.scene.getScene('MainScene'); 
-                        if (main) main.triggerBombardment(hex); 
-                    } else if(window.gameLogic) { 
-                        window.gameLogic.deployUnit(hex, type); 
-                    } 
-                } catch(e) { console.error("Logic Error:", e); } 
+                this.scene.removeCard(this); const type = this.cardType; this.destroy(); 
+                try { if (type === 'aerial') { const main = phaserGame.scene.getScene('MainScene'); if (main) main.triggerBombardment(hex); } else if(window.gameLogic) { window.gameLogic.deployUnit(hex, type); } } catch(e) { console.error("Logic Error:", e); } 
             }
         }); 
     }
@@ -165,7 +137,7 @@ class MainScene extends Phaser.Scene {
         this.load.spritesheet('us_soldier', 'asset/us-soldier-back-sheet.png', { frameWidth: 128, frameHeight: 128 });
         this.load.spritesheet('soldier_sheet', 'asset/soldier_sheet_1.png', { frameWidth: 128, frameHeight: 128 });
         this.load.spritesheet('tank_sheet', 'asset/tank_sheet_1.png', { frameWidth: 128, frameHeight: 128 });
-        this.load.spritesheet('explosion_sheet', 'asset/explosion_sheet_1.png', { frameWidth: 64, frameHeight: 64 });
+        this.load.spritesheet('explosion_sheet', 'asset/explosion-sheet.png', { frameWidth: 64, frameHeight: 64 });
     }
     create() {
         window.createHexTexture(this); this.cameras.main.setBackgroundColor('#0b0e0a'); 
@@ -211,12 +183,9 @@ class MainScene extends Phaser.Scene {
         if (window.gameLogic.map.length > 0 && !this.mapGenerated) { this.createMap(); this.mapGenerated = true; }
         if(this.unitView) this.unitView.update(time, delta);
         this.overlayGraphics.clear();
-        if (this.dragHighlightHex) { this.overlayGraphics.lineStyle(3, 0xffffff, 0.8); this.drawBracketCursor(this.overlayGraphics, this.dragHighlightHex.q, this.dragHighlightHex.r); }
         
-        // ★修正: ユニット選択時の「カッコカーソル描画」を廃止 (移動範囲のみ表示)
         const selected = window.gameLogic.selectedUnit;
         if(selected) {
-            // Bracket Cursor削除
             if(window.gameLogic.reachableHexes.length > 0) { 
                 this.overlayGraphics.lineStyle(1, 0xffffff, 0.3); 
                 window.gameLogic.reachableHexes.forEach(h => this.drawHexOutline(this.overlayGraphics, h.q, h.r)); 
@@ -238,10 +207,6 @@ class MainScene extends Phaser.Scene {
         if (window.gameLogic.aimTargetUnit) { const u = window.gameLogic.aimTargetUnit; const pos = Renderer.hexToPx(u.q, u.r); this.drawCrosshair(this.crosshairGroup, pos.x, pos.y, time); }
     }
     drawHexOutline(g, q, r) { const c = Renderer.hexToPx(q, r); g.beginPath(); for(let i=0; i<6; i++) { const a = Math.PI/180*60*i; g.lineTo(c.x+HEX_SIZE*0.9*Math.cos(a), c.y+HEX_SIZE*0.9*Math.sin(a)); } g.closePath(); g.strokePath(); }
-    drawBracketCursor(g, q, r, isActive=false) {
-        const c = Renderer.hexToPx(q, r); const size = HEX_SIZE * 0.9; const indices = [0, 1, 3, 4]; 
-        indices.forEach(i => { const a = Math.PI/180 * (60*i); const x = c.x + size * Math.cos(a); const y = c.y + size * Math.sin(a); const armLen = 15; const aPrev = Math.PI/180 * (60 * ((i+5)%6)); const xPrev = c.x + size * Math.cos(aPrev); const yPrev = c.y + size * Math.sin(aPrev); const dx1 = xPrev - x; const dy1 = yPrev - y; const len1 = Math.sqrt(dx1*dx1 + dy1*dy1); const aNext = Math.PI/180 * (60 * ((i+1)%6)); const xNext = c.x + size * Math.cos(aNext); const yNext = c.y + size * Math.sin(aNext); const dx2 = xNext - x; const dy2 = yNext - y; const len2 = Math.sqrt(dx2*dx2 + dy2*dy2); g.beginPath(); g.moveTo(x + dx1/len1 * armLen, y + dy1/len1 * armLen); g.lineTo(x, y); g.lineTo(x + dx2/len2 * armLen, y + dy2/len2 * armLen); g.strokePath(); });
-    }
     drawDashedHexOutline(g, q, r, timeOffset = 0) {
         const c = Renderer.hexToPx(q, r); const pts = []; for(let i=0; i<6; i++) { const a = Math.PI/180*60*i; pts.push({ x: c.x+HEX_SIZE*0.9*Math.cos(a), y: c.y+HEX_SIZE*0.9*Math.sin(a) }); }
         const dashLen = 6; const gapLen = 4; const period = dashLen + gapLen; let currentDistInPath = -timeOffset; 
