@@ -1,4 +1,4 @@
-/** PHASER VFX & ENV: Multi-Layered Natural Trees & Mixed Grass (With Culling) */
+/** PHASER VFX & ENV: Fixed Missing Trees (Added origY) */
 
 class VFXSystem {
     constructor() {
@@ -284,6 +284,8 @@ class EnvSystem {
             treeContainer.currentSkew = 0;
             treeContainer.baseSkew = 0;
             treeContainer.origX = x + ox;
+            // ★追加: これがないとカリングで消えてしまう！
+            treeContainer.origY = y + oy;
             treeContainer.swayOffset = Math.random() * 100;
 
             group.add(treeContainer); 
@@ -302,13 +304,11 @@ class EnvSystem {
         this.waveTime += 0.02; const t = this.waveTime;
         this.gustPower *= 0.98; if(this.gustPower < 0.01) this.gustPower = 0;
 
-        // ★追加: カリング用カメラ情報取得
         const mainScene = this.grassElements[0]?.scene;
         let cam = null;
         let bounds = null;
         if (mainScene) {
             cam = mainScene.cameras.main;
-            // 画面より少し広めに判定領域を取る (パッピング防止)
             bounds = new Phaser.Geom.Rectangle(
                 cam.worldView.x - 100, 
                 cam.worldView.y - 100, 
@@ -322,7 +322,6 @@ class EnvSystem {
         for (let i = 0; i < this.grassElements.length; i++) {
             const g = this.grassElements[i];
             
-            // ★カリング: 画面外ならスキップ
             if (bounds && !bounds.contains(g.origX, g.origY)) {
                 g.visible = false;
                 continue;
@@ -352,7 +351,6 @@ class EnvSystem {
         for (let i = 0; i < this.treeElements.length; i++) {
             const tr = this.treeElements[i];
 
-            // ★カリング: 木も同様にチェック
             if (bounds && !bounds.contains(tr.origX, tr.origY)) {
                 tr.visible = false;
                 continue;
