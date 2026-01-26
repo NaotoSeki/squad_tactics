@@ -1,4 +1,4 @@
-/** LOGIC GAME: Coaxial MG Consumption & Real-time Ammo Gauge */
+/** LOGIC GAME: Smart Auto-Reload (Reload Only if AP Low) */
 
 function createCardIcon(type) {
     const c = document.createElement('canvas'); c.width = 1; c.height = 1; return c.toDataURL();
@@ -323,18 +323,15 @@ class Game {
         let wpnName = "銃床";
         let bonusDmg = 0;
 
-        // ★修正: 戦車同軸機銃の実装 (弾薬消費 & 掃射)
         if (a.def.isTank) {
             wpnName = "同軸機銃";
-            // サブ武器（通常はMG42）を探す
             const subWpn = a.bag.find(i => i && i.type === 'bullet'); 
             if (subWpn) {
                 if (subWpn.current > 0) {
-                    const consume = Math.min(subWpn.current, 5); // 5発掃射
+                    const consume = Math.min(subWpn.current, 5); 
                     subWpn.current -= consume;
                     bonusDmg = 35; 
                     this.log(`${a.name} 機銃掃射 (弾消費:${consume})`);
-                    // ★ここでもUI更新して減った弾を見せる
                     this.updateSidebar();
                 } else {
                     wpnName = "轢き逃げ";
@@ -386,12 +383,12 @@ class Game {
         if (w.isBroken) { this.log("武器故障中！修理が必要"); return; }
         if (w.isConsumable && w.current <= 0) { this.log("使用済みです"); return; }
         
-        // 歩兵自動リロード
+        // ★修正: リロードコストのみチェック
         if (!a.def.isTank && w.current <= 0) {
             const magIndex = a.bag.findIndex(i => i && i.type === 'ammo' && i.ammoFor === w.code);
             if (magIndex !== -1) {
                 const reloadCost = w.rld || 1;
-                if (a.ap >= reloadCost + w.ap) {
+                if (a.ap >= reloadCost) {
                     this.log(`${a.name} 自動リロード`);
                     if (window.Sfx) Sfx.play('reload');
                     a.bag[magIndex] = null;
@@ -399,8 +396,14 @@ class Game {
                     w.current = w.cap;
                     this.refreshUnitState(a);
                     await new Promise(r => setTimeout(r, 600)); 
+                    
+                    // リロード後に攻撃コストがなければ中断
+                    if(a.ap < w.ap) {
+                        this.log("AP不足により攻撃中止");
+                        return;
+                    }
                 } else {
-                    this.log(`AP不足で装填＆攻撃不可 (必要:${reloadCost + w.ap})`);
+                    this.log(`AP不足でリロード不可 (必要:${reloadCost})`);
                     return;
                 }
             } else {
@@ -409,17 +412,24 @@ class Game {
             }
         }
         
-        // 戦車自動装填
+        // 戦車も同様に
         if (a.def.isTank && w.current <= 0 && this.tankAutoReload) {
             if (w.reserve > 0) {
-                const totalCost = w.ap + 1; 
-                if (a.ap >= totalCost) {
-                    a.ap -= 1; w.reserve--; w.current = 1;
+                const reloadCost = 1; 
+                if (a.ap >= reloadCost) {
+                    a.ap -= reloadCost; 
+                    w.reserve--; 
+                    w.current = 1;
                     this.log(`${a.name} 自動装填完了`);
                     if (window.Sfx) Sfx.play('reload');
                     this.refreshUnitState(a);
+                    
+                    if(a.ap < w.ap) {
+                        this.log("AP不足により攻撃中止");
+                        return;
+                    }
                 } else {
-                    this.log(`AP不足で自動装填不可 (必要:${totalCost})`);
+                    this.log(`AP不足で自動装填不可 (必要:${reloadCost})`);
                     return;
                 }
             } else {
@@ -445,7 +455,6 @@ class Game {
             if (!w.isConsumable && w.jam && Math.random() < w.jam) { this.log(`⚠ JAM!! ${w.name}が故障！`); w.isBroken = true; if (window.Sfx) Sfx.play('ricochet'); break; }
             w.current--;
             
-            // ★追加: リアルタイムでUI更新 (弾丸ゲージを減らす)
             this.updateSidebar();
             
             const sPos = Renderer.hexToPx(a.q, a.r); const ePos = Renderer.hexToPx(d.q, d.r);
