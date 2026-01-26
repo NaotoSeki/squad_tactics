@@ -1,4 +1,4 @@
-/** PHASER UNIT: Visuals, Animations, Skill Badges (Complete) */
+/** PHASER UNIT: Visuals & Robust Update Loop */
 
 class UnitView {
     constructor(scene, unitLayer, hpLayer) {
@@ -38,7 +38,6 @@ class UnitView {
         }
     }
 
-    // ★修正: 必須メソッド。これがないと画面が真っ暗になる。
     clear() {
         this.visuals.forEach(v => {
             if (v.container) v.container.destroy();
@@ -52,51 +51,69 @@ class UnitView {
 
     update(time, delta) {
         if (!window.gameLogic) return;
-        const activeIds = new Set();
-        const hexMap = new Map(); 
-        window.gameLogic.units.forEach(u => {
-            if (u.hp <= 0) return;
-            const key = `${u.q},${u.r}`;
-            if (!hexMap.has(key)) hexMap.set(key, []);
-            hexMap.get(key).push(u);
-            activeIds.add(u.id);
-        });
+        
+        try {
+            const activeIds = new Set();
+            const hexMap = new Map(); 
+            
+            // 1. 生存ユニットのリストアップ
+            window.gameLogic.units.forEach(u => {
+                if (u.hp <= 0) return;
+                const key = `${u.q},${u.r}`;
+                if (!hexMap.has(key)) hexMap.set(key, []);
+                hexMap.get(key).push(u);
+                activeIds.add(u.id);
+            });
 
-        window.gameLogic.units.forEach(u => {
-            if (u.hp <= 0) return;
-            let visual = this.visuals.get(u.id);
-            if (!visual) {
-                this.createVisual(u);
-                visual = this.visuals.get(u.id);
-                this.unitLayer.add(visual.container); 
-            }
-            if (visual && (!visual.container || !visual.container.scene)) {
-                this.visuals.delete(u.id);
-                return;
-            }
+            // 2. ユニットの表示更新 (ここでのエラーが全体を止めないようにする)
+            window.gameLogic.units.forEach(u => {
+                if (u.hp <= 0) return;
+                
+                try {
+                    let visual = this.visuals.get(u.id);
+                    if (!visual) {
+                        this.createVisual(u);
+                        visual = this.visuals.get(u.id);
+                        if(visual && visual.container) this.unitLayer.add(visual.container); 
+                    }
+                    
+                    if (visual && (!visual.container || !visual.container.scene)) {
+                        this.visuals.delete(u.id);
+                        return;
+                    }
 
-            const siblings = hexMap.get(`${u.q},${u.r}`) || [];
-            const index = siblings.indexOf(u);
-            const count = siblings.length;
-            this.updateVisual(visual, u, delta, index, count);
+                    const siblings = hexMap.get(`${u.q},${u.r}`) || [];
+                    const index = siblings.indexOf(u);
+                    const count = siblings.length;
+                    this.updateVisual(visual, u, delta, index, count);
 
-            const isSelected = (window.gameLogic.selectedUnit === u);
-            if (isSelected) {
-                if (this.unitLayer.exists(visual.container)) { this.unitLayer.remove(visual.container); this.hpLayer.add(visual.container); }
-                if (!visual.glowFx && visual.sprite) {
-                    visual.glowFx = visual.sprite.postFX.addGlow(0xffff00, 2, 0, false, 0.1, 12);
+                    const isSelected = (window.gameLogic.selectedUnit === u);
+                    if (isSelected) {
+                        if (this.unitLayer.exists(visual.container)) { this.unitLayer.remove(visual.container); this.hpLayer.add(visual.container); }
+                        if (!visual.glowFx && visual.sprite) {
+                            visual.glowFx = visual.sprite.postFX.addGlow(0xffff00, 2, 0, false, 0.1, 12);
+                        }
+                    } else {
+                        if (this.hpLayer.exists(visual.container)) { this.hpLayer.remove(visual.container); this.unitLayer.add(visual.container); }
+                        if (visual.glowFx && visual.sprite) {
+                            visual.sprite.postFX.remove(visual.glowFx);
+                            visual.glowFx = null;
+                        }
+                    }
+                } catch(err) {
+                    console.error("Unit Update Error:", err);
                 }
-            } else {
-                if (this.hpLayer.exists(visual.container)) { this.hpLayer.remove(visual.container); this.unitLayer.add(visual.container); }
-                if (visual.glowFx && visual.sprite) {
-                    visual.sprite.postFX.remove(visual.glowFx);
-                    visual.glowFx = null;
+            });
+
+            // 3. 死んだユニットのクリーンアップ (ここは絶対に実行される)
+            for (const [id, visual] of this.visuals) {
+                if (!activeIds.has(id)) { 
+                    this.destroyVisual(visual); 
+                    this.visuals.delete(id); 
                 }
             }
-        });
-
-        for (const [id, visual] of this.visuals) {
-            if (!activeIds.has(id)) { this.destroyVisual(visual); this.visuals.delete(id); }
+        } catch(e) {
+            console.error("UnitView Main Loop Error:", e);
         }
     }
 
@@ -222,18 +239,14 @@ class UnitView {
                 visual.infoContainer.add(txt);
             }
 
-            // ★追加: スキル徽章表示 (Unit Badge)
             if (typeof SKILL_STYLES !== 'undefined' && u.skills.length > 0) {
-                // 重複排除して表示
                 const uniqueSkills = [...new Set(u.skills)];
                 let iconX = -((uniqueSkills.length - 1) * 6) / 2;
                 
-                // 毎回コンテナを作り直すのは重いので、なければ作る
                 if(!visual.skillContainer) {
                     visual.skillContainer = this.scene.add.container(0, 0);
                     this.hpLayer.add(visual.skillContainer);
                 }
-                // 中身はリフレッシュ
                 visual.skillContainer.removeAll(true);
                 
                 uniqueSkills.forEach(sk => {
