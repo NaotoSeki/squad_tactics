@@ -1,4 +1,17 @@
-/** LOGIC (Enemy AI Personalities, AP Check, Elastic Aim) */
+/** LOGIC (Skill Themes & Colored Sidebar Badges) */
+
+// ★スキルごとのテーマカラーとアイコン定義
+window.SKILL_STYLES = {
+    "Precision": { col: "#ff5555", icon: "⌖", name: "精密" }, // 赤: 攻撃
+    "HighPower": { col: "#ffaa00", icon: "⚡", name: "火力" }, // 橙: 威力
+    "Armor":     { col: "#4488ff", icon: "🛡", name: "装甲" }, // 青: 防御
+    "Mechanic":  { col: "#44cc44", icon: "✚", name: "修理" }, // 緑: 回復
+    "Radio":     { col: "#ffee44", icon: "📶", name: "通信" }, // 黄: 補助
+    "Ambush":    { col: "#cc44cc", icon: "☾", name: "奇襲" }, // 紫: 特殊
+    "AmmoBox":   { col: "#885522", icon: "▧", name: "弾薬" }, // 茶: リソース
+    "Hero":      { col: "#ffffff", icon: "★", name: "英雄" }  // 白/金: 特別
+};
+
 class Game {
     constructor() {
         this.units=[]; this.map=[]; this.setupSlots=[]; this.state='SETUP'; 
@@ -7,7 +20,8 @@ class Game {
         this.aimTargetUnit = null; 
         this.hoverHex=null;
         this.isAuto=false; this.isProcessingTurn = false; this.sector = 1;
-        this.enemyAI = 'AGGRESSIVE'; // デフォルト
+        this.enemyAI = 'AGGRESSIVE'; 
+        this.cardsUsed = 0; 
         this.initDOM(); this.initSetup();
     }
     
@@ -53,11 +67,20 @@ class Game {
         document.getElementById('setup-screen').style.display='none'; 
         if (typeof Renderer !== 'undefined' && Renderer.game) {
             const mainScene = Renderer.game.scene.getScene('MainScene');
-            if (mainScene) { mainScene.mapGenerated = false; if(mainScene.hexGroup) mainScene.hexGroup.clear(true, true); if(window.EnvSystem) window.EnvSystem.clear(); }
+            if (mainScene) { 
+                mainScene.mapGenerated = false; 
+                if(mainScene.hexGroup) {
+                    if (typeof mainScene.hexGroup.removeAll === 'function') { mainScene.hexGroup.removeAll(); } 
+                    else if (typeof mainScene.hexGroup.clear === 'function') { mainScene.hexGroup.clear(true, true); }
+                }
+                if(window.EnvSystem) window.EnvSystem.clear(); 
+            }
         }
         Renderer.resize();
         
         this.selectedUnit = null; this.reachableHexes = []; this.attackLine = []; this.aimTargetUnit = null; this.path = [];
+        this.cardsUsed = 0; 
+        
         this.units = this.units.filter(u => u.team === 'player' && u.hp > 0);
         this.units.forEach(u => { u.q = -999; u.r = -999; });
         
@@ -66,7 +89,6 @@ class Game {
         else { this.units.forEach(u => this.spawnAtSafeGround('player', null, u)); }
         this.spawnEnemies();
         
-        // ★敵AI性格の決定
         const aiTypes = ['AGGRESSIVE', 'DEFENSIVE', 'TACTICAL'];
         this.enemyAI = aiTypes[Math.floor(Math.random() * aiTypes.length)];
         let aiName = "";
@@ -96,6 +118,18 @@ class Game {
             }
         }
         this.updateSidebar();
+    }
+
+    clearSelection() {
+        if (this.selectedUnit) {
+            this.selectedUnit = null;
+            this.reachableHexes = [];
+            this.attackLine = [];
+            this.aimTargetUnit = null;
+            this.path = [];
+            this.updateSidebar();
+            if(window.Sfx) Sfx.play('click'); 
+        }
     }
 
     calcAttackLine(u, targetQ, targetR) {
@@ -145,12 +179,9 @@ class Game {
         } else if(this.selectedUnit) {
             if(u && u.team==='enemy') this.actionAttack(this.selectedUnit, u);
             else if(!u && isValid && this.path.length > 0) this.actionMove(this.selectedUnit, this.path);
-            else { this.selectedUnit = null; this.reachableHexes = []; this.attackLine = []; this.aimTargetUnit = null; this.path = []; this.updateSidebar(); }
+            else { this.clearSelection(); } 
         }
     }
-    
-    // ... (spawnAtSafeGround, checkDeploy, deployUnit, calcReachableHexes, generateMap, spawnEnemies, spawnUnit, toggleAuto, runAuto, actionMove, checkReactionFire, swapWeapon, actionAttack, checkPhaseEnd, setStance) ...
-    // ※これらは前回と同じなので省略しませんが、実装時はクラス内に含めてください
     spawnAtSafeGround(team, type, existingUnit=null) { 
         const cy = Math.floor(MAP_H/2); const candidates = [];
         for(let q=0; q<MAP_W; q++) { for(let r=0; r<MAP_H; r++) { const t = this.map[q][r]; if(t.id !== -1 && t.id !== 5 && t.cost < 99 && !this.getUnit(q, r)) { candidates.push({q, r}); } } }
@@ -165,12 +196,14 @@ class Game {
         if(this.map[targetHex.q][targetHex.r].id === 5) { this.log("配置不可: 水上には配置できません"); return false; }
         const existing = this.units.find(u => u.q === targetHex.q && u.r === targetHex.r && u.hp > 0);
         if (existing) { this.log("配置不可: ユニットが既に存在します"); return false; }
+        if (this.cardsUsed >= 2) { this.log("配置不可: 指揮コスト上限(2/2)に達しています"); return false; }
         return true;
     }
     deployUnit(targetHex, cardType) {
         if(!this.checkDeploy(targetHex)) return;
         this.spawnUnit('player', cardType, targetHex.q, targetHex.r);
-        this.log(`増援到着: ${UNITS[cardType].name}`);
+        this.cardsUsed++; 
+        this.log(`増援到着: ${UNITS[cardType].name} (残コスト:${2-this.cardsUsed})`);
         if(window.VFX) { const pos = Renderer.hexToPx(targetHex.q, targetHex.r); window.VFX.addSmoke(pos.x, pos.y); }
         this.updateSidebar();
     }
@@ -254,15 +287,25 @@ class Game {
     async actionAttack(a,d){ 
         if(a.ap<2){this.log("AP不足");return;} const w=WPNS[a.curWpn]; if(this.hexDist(a,d)>w.rng){this.log("射程外");return;} 
         a.ap-=2; this.state='ANIM'; 
+        if (typeof Renderer !== 'undefined' && Renderer.playAttackAnim) { Renderer.playAttackAnim(a, d); }
         const gsc=(u,k)=>u.skills.filter(s=>s===k).length; let b=this.getNeighbors(a.q,a.r).filter(n=>this.getUnit(n.q,n.r)?.team===a.team).length*10; if(a.skills.includes("Radio"))b+=15*gsc(a,"Radio");
         let ac=(a.rank||0)*8+gsc(a,"Precision")*15, dm=1.0+gsc(a,"HighPower")*0.2; this.log(`${a.def.name} 攻撃`);
         let bu=w.burst||1; bu+=gsc(a,"AmmoBox")*(w.name==='MG42'?3:1); const pt=w.type, isR=pt==='rocket', isS=pt.includes('shell');
         for(let i=0;i<bu;i++){ if(d.hp<=0&&!isR)break; if(window.Sfx)Sfx.play(isR?'rocket':(isS?'cannon':(bu>1?'mg':'shot')));
             const s=Renderer.hexToPx(a.q,a.r), e=Renderer.hexToPx(d.q,d.r), ex=e.x+(Math.random()-0.5)*10, ey=e.y+(Math.random()-0.5)*10;
             const pr={x:s.x,y:s.y,sx:s.x,sy:s.y,ex:ex,ey:ey,type:pt,progress:0,speed:isR?0.02:(pt==='shell_fast'?0.1:0.05),arcHeight:isR?250:(isS?(pt==='shell_fast'?40:120):0),onHit:()=>{
-                if(isR){ if(window.VFX)VFX.addExplosion(ex,ey,"#fa0",50); if(window.Sfx)Sfx.play('boom'); [{q:d.q,r:d.r},...this.getNeighbors(d.q,d.r)].forEach(l=>{const v=this.getUnit(l.q,l.r);if(v){const dg=w.dmg*dm;v.hp-=dg;this.log(`>>爆風:${v.def.name}(-${Math.floor(dg)})`);if(v.hp<=0&&!v.deadProcessed){v.deadProcessed=true;this.log(`${v.def.name} 爆散`);if(window.VFX)VFX.addUnitDebris(Renderer.hexToPx(v.q,v.r).x,Renderer.hexToPx(v.q,v.r).y);}}}); }
+                if(isR){ 
+                    if(typeof Renderer!=='undefined'&&Renderer.playExplosion) Renderer.playExplosion(ex, ey);
+                    if(window.VFX)VFX.addExplosion(ex,ey,"#fa0",50); 
+                    if(window.Sfx)Sfx.play('boom'); 
+                    [{q:d.q,r:d.r},...this.getNeighbors(d.q,d.r)].forEach(l=>{const v=this.getUnit(l.q,l.r);if(v){const dg=w.dmg*dm;v.hp-=dg;this.log(`>>爆風:${v.def.name}(-${Math.floor(dg)})`);if(v.hp<=0&&!v.deadProcessed){v.deadProcessed=true;this.log(`${v.def.name} 爆散`);if(window.VFX)VFX.addUnitDebris(Renderer.hexToPx(v.q,v.r).x,Renderer.hexToPx(v.q,v.r).y);}}}); 
+                }
                 else{ if(d.hp<=0)return; let h=w.acc-this.map[d.q][d.r].cover+ac; if(d.stance==='prone')h-=25; if(d.skills?.includes("Ambush"))h-=gsc(d,"Ambush")*15;
-                    if(Math.random()*100<h){ let dg=Math.floor(w.dmg*(1+b/100)*(0.8+Math.random()*0.4)*dm); if(d.stance==='prone')dg=Math.floor(dg*0.6); const al=gsc(d,"Armor"); if(al>0){const rd=al*10; dg=Math.max(1,dg-rd); if(i===0)this.log(`>>装甲防御(-${rd})`);} d.hp-=dg; if(window.VFX)VFX.addExplosion(ex,ey,"#f55",5); if(window.Sfx)Sfx.play(isS?'boom':'shot'); }
+                    if(Math.random()*100<h){ 
+                        let dg=Math.floor(w.dmg*(1+b/100)*(0.8+Math.random()*0.4)*dm); if(d.stance==='prone')dg=Math.floor(dg*0.6); const al=gsc(d,"Armor"); if(al>0){const rd=al*10; dg=Math.max(1,dg-rd); if(i===0)this.log(`>>装甲防御(-${rd})`);} d.hp-=dg; 
+                        if(isS && typeof Renderer!=='undefined'&&Renderer.playExplosion) Renderer.playExplosion(ex, ey);
+                        if(window.VFX)VFX.addExplosion(ex,ey,"#f55",5); if(window.Sfx)Sfx.play(isS?'boom':'shot'); 
+                    }
                     else{ if(window.Sfx)Sfx.play('ricochet'); if(window.VFX)VFX.add({x:ex,y:ey,vx:(Math.random()-0.5)*5,vy:-5,life:5,maxLife:5,color:"#fff",size:2,type:'spark'}); }
                 }
             }}; if(!isS&&!isR){const dx=ex-s.x,dy=ey-s.y,ag=Math.atan2(dy,dx); pr.vx=Math.cos(ag)*25; pr.vy=Math.sin(ag)*25; pr.life=Math.sqrt(dx*dx+dy*dy)/25;} if(window.VFX)VFX.addProj(pr); await new Promise(r=>setTimeout(r,isR?800:(isS?200:40)));
@@ -271,151 +314,12 @@ class Game {
     }
     checkPhaseEnd(){if(this.units.filter(u=>u.team==='player'&&u.hp>0&&u.ap>0).length===0&&this.state==='PLAY')this.endTurn();}
     setStance(s){if(this.selectedUnit&&this.selectedUnit.ap>=1&&!this.selectedUnit.def.isTank){this.selectedUnit.ap--;this.selectedUnit.stance=s;this.refreshUnitState(this.selectedUnit);this.checkPhaseEnd();}}
-
-    // ★重要: 敵AIの性格分岐ロジック
     endTurn(){
         if(this.isProcessingTurn)return; this.isProcessingTurn=true; 
         this.selectedUnit=null; this.reachableHexes=[]; this.attackLine=[]; this.aimTargetUnit=null; this.path=[]; 
         this.state='ANIM'; document.getElementById('eyecatch').style.opacity=1;
-        
-        // プレイヤー修理
-        this.units.filter(u=>u.team==='player'&&u.hp>0&&u.skills.includes("Mechanic")).forEach(u=>{
-            const c=u.skills.filter(s=>s==="Mechanic").length; if(u.hp<u.maxHp){u.hp=Math.min(u.maxHp,u.hp+c*20);this.log(`${u.def.name} 修理`);}
-        });
-
-        setTimeout(async()=>{
-            document.getElementById('eyecatch').style.opacity=0; 
-            const es=this.units.filter(u=>u.team==='enemy'&&u.hp>0);
-            const aiType = this.enemyAI || 'AGGRESSIVE';
-
-            for(let e of es){
-                // プレイヤーターゲット検索
-                const ps=this.units.filter(u=>u.team==='player'&&u.hp>0);
-                if(ps.length===0){this.checkLose();break;}
-                
-                // ターゲット決定ロジック
-                let target = ps[0];
-                let minDist = 999;
-                
-                if (aiType === 'TACTICAL') {
-                    // TACTICAL: HPが低い味方を優先して狙う
-                    let minHp = 9999;
-                    ps.forEach(p => { if(p.hp < minHp){ minHp = p.hp; target = p; } });
-                } else {
-                    // AGGRESSIVE / DEFENSIVE: 一番近い味方を狙う
-                    ps.forEach(p => { const d = this.hexDist(e, p); if(d < minDist){ minDist = d; target = p; } });
-                }
-
-                e.ap = e.maxAp;
-                const distToTarget = this.hexDist(e, target);
-                const w = WPNS[e.curWpn];
-
-                // -----------------------------------------------------
-                // TYPE 1: AGGRESSIVE (ガンガン近づく)
-                // -----------------------------------------------------
-                if (aiType === 'AGGRESSIVE') {
-                    // 射程内で攻撃可能なら攻撃
-                    if (distToTarget <= w.rng && e.ap >= 2) {
-                        await this.actionAttack(e, target);
-                    } else {
-                        // 移動 (2回までダッシュする可能性あり)
-                        for(let m=0; m<2; m++) {
-                            if(e.ap <= 0) break;
-                            const nextQ = e.q + (target.q > e.q ? 1 : -1); // 簡易的な方向
-                            // 本当はA*使うべきだが簡易的にX軸寄せ
-                            const n1 = {q:e.q + (target.q > e.q ? 1 : (target.q < e.q ? -1 : 0)), r:e.r};
-                            const n2 = {q:e.q, r:e.r + (target.r > e.r ? 1 : (target.r < e.r ? -1 : 0))};
-                            let moveHex = null;
-                            
-                            // 単純に近づく
-                            if(this.isValidHex(n1.q, n1.r) && this.map[n1.q][n1.r].cost < 99 && !this.getUnit(n1.q, n1.r)) moveHex = n1;
-                            else if(this.isValidHex(n2.q, n2.r) && this.map[n2.q][n2.r].cost < 99 && !this.getUnit(n2.q, n2.r)) moveHex = n2;
-
-                            if(moveHex) {
-                                e.q = moveHex.q; e.r = moveHex.r; e.ap--;
-                                await new Promise(r=>setTimeout(r,200));
-                                // 近づいて射程に入ったら攻撃して終了
-                                if(this.hexDist(e, target) <= w.rng && e.ap >= 2) {
-                                    await this.actionAttack(e, target);
-                                    break;
-                                }
-                            } else {
-                                break;
-                            }
-                        }
-                    }
-                }
-                
-                // -----------------------------------------------------
-                // TYPE 2: DEFENSIVE (動かない)
-                // -----------------------------------------------------
-                else if (aiType === 'DEFENSIVE') {
-                    const myCover = this.map[e.q][e.r].cover || 0;
-                    
-                    // 射程内なら攻撃
-                    if (distToTarget <= w.rng && e.ap >= 2) {
-                        await this.actionAttack(e, target);
-                    }
-                    
-                    // まだAPがある場合
-                    if (e.ap >= 1) {
-                        // 遮蔽がないなら、隣の遮蔽があるマスへ1歩だけ逃げる
-                        if (myCover === 0) {
-                            const neighbors = this.getNeighbors(e.q, e.r);
-                            const bestCover = neighbors.filter(n => this.map[n.q][n.r].cost < 99 && !this.getUnit(n.q, n.r))
-                                                       .sort((a,b) => (this.map[b.q][b.r].cover||0) - (this.map[a.q][a.r].cover||0))[0];
-                            if(bestCover) {
-                                e.q = bestCover.q; e.r = bestCover.r; e.ap--;
-                                await new Promise(r=>setTimeout(r,200));
-                            }
-                        }
-                        
-                        // それでもAPが余ってたら伏せる (戦車以外)
-                        if (e.ap >= 1 && !e.def.isTank) {
-                            e.stance = 'prone';
-                            this.log(`${e.def.name} 伏せ警戒`);
-                            e.ap = 0; // ターン終了
-                        }
-                    }
-                }
-
-                // -----------------------------------------------------
-                // TYPE 3: TACTICAL (攪乱・横移動)
-                // -----------------------------------------------------
-                else {
-                    // 50%でランダムな隣接マスへ移動 (Wobble)
-                    if (e.ap >= 1 && Math.random() < 0.5) {
-                        const neighbors = this.getNeighbors(e.q, e.r).filter(n => this.map[n.q][n.r].cost < 99 && !this.getUnit(n.q, n.r));
-                        if(neighbors.length > 0) {
-                            const moveHex = neighbors[Math.floor(Math.random() * neighbors.length)];
-                            e.q = moveHex.q; e.r = moveHex.r; e.ap--;
-                            await new Promise(r=>setTimeout(r,200));
-                        }
-                    }
-
-                    // 攻撃
-                    if (this.hexDist(e, target) <= w.rng && e.ap >= 2) {
-                        await this.actionAttack(e, target);
-                    } else if (e.ap >= 1) {
-                        // 射程外なら近づく (Aggressiveと同じロジックを1回だけ)
-                        const n1 = {q:e.q + (target.q > e.q ? 1 : (target.q < e.q ? -1 : 0)), r:e.r};
-                        if(this.isValidHex(n1.q, n1.r) && this.map[n1.q][n1.r].cost < 99 && !this.getUnit(n1.q, n1.r)) {
-                            e.q = n1.q; e.r = n1.r; e.ap--;
-                            await new Promise(r=>setTimeout(r,200));
-                        }
-                    }
-                    
-                    // 最後は屈む
-                    if (e.ap >= 1 && !e.def.isTank) e.stance = 'crouch';
-                }
-            } 
-            
-            // ターン終了処理
-            this.units.forEach(u=>{if(u.team==='player')u.ap=u.maxAp;}); 
-            this.log("-- PLAYER PHASE --"); 
-            this.state='PLAY'; 
-            this.isProcessingTurn=false;
-        }, 1200);
+        this.units.filter(u=>u.team==='player'&&u.hp>0&&u.skills.includes("Mechanic")).forEach(u=>{const c=u.skills.filter(s=>s==="Mechanic").length; if(u.hp<u.maxHp){u.hp=Math.min(u.maxHp,u.hp+c*20);this.log(`${u.def.name} 修理`);}});
+        setTimeout(async()=>{document.getElementById('eyecatch').style.opacity=0; const es=this.units.filter(u=>u.team==='enemy'&&u.hp>0); const aiType = this.enemyAI || 'AGGRESSIVE'; for(let e of es){const ps=this.units.filter(u=>u.team==='player'&&u.hp>0); if(ps.length===0){this.checkLose();break;} let target = ps[0]; let minDist = 999; if (aiType === 'TACTICAL') { let minHp = 9999; ps.forEach(p => { if(p.hp < minHp){ minHp = p.hp; target = p; } }); } else { ps.forEach(p => { const d = this.hexDist(e, p); if(d < minDist){ minDist = d; target = p; } }); } e.ap = e.maxAp; const distToTarget = this.hexDist(e, target); const w = WPNS[e.curWpn]; if (aiType === 'AGGRESSIVE') { if (distToTarget <= w.rng && e.ap >= 2) { await this.actionAttack(e, target); } else { for(let m=0; m<2; m++) { if(e.ap <= 0) break; const n1 = {q:e.q + (target.q > e.q ? 1 : (target.q < e.q ? -1 : 0)), r:e.r}; const n2 = {q:e.q, r:e.r + (target.r > e.r ? 1 : (target.r < e.r ? -1 : 0))}; let moveHex = null; if(this.isValidHex(n1.q, n1.r) && this.map[n1.q][n1.r].cost < 99 && !this.getUnit(n1.q, n1.r)) moveHex = n1; else if(this.isValidHex(n2.q, n2.r) && this.map[n2.q][n2.r].cost < 99 && !this.getUnit(n2.q, n2.r)) moveHex = n2; if(moveHex) { e.q = moveHex.q; e.r = moveHex.r; e.ap--; await new Promise(r=>setTimeout(r,200)); if(this.hexDist(e, target) <= w.rng && e.ap >= 2) { await this.actionAttack(e, target); break; } } else { break; } } } } else if (aiType === 'DEFENSIVE') { const myCover = this.map[e.q][e.r].cover || 0; if (distToTarget <= w.rng && e.ap >= 2) { await this.actionAttack(e, target); } if (e.ap >= 1) { if (myCover === 0) { const neighbors = this.getNeighbors(e.q, e.r); const bestCover = neighbors.filter(n => this.map[n.q][n.r].cost < 99 && !this.getUnit(n.q, n.r)).sort((a,b) => (this.map[b.q][b.r].cover||0) - (this.map[a.q][a.r].cover||0))[0]; if(bestCover) { e.q = bestCover.q; e.r = bestCover.r; e.ap--; await new Promise(r=>setTimeout(r,200)); } } if (e.ap >= 1 && !e.def.isTank) { e.stance = 'prone'; this.log(`${e.def.name} 伏せ警戒`); e.ap = 0; } } } else { if (e.ap >= 1 && Math.random() < 0.5) { const neighbors = this.getNeighbors(e.q, e.r).filter(n => this.map[n.q][n.r].cost < 99 && !this.getUnit(n.q, n.r)); if(neighbors.length > 0) { const moveHex = neighbors[Math.floor(Math.random() * neighbors.length)]; e.q = moveHex.q; e.r = moveHex.r; e.ap--; await new Promise(r=>setTimeout(r,200)); } } if (this.hexDist(e, target) <= w.rng && e.ap >= 2) { await this.actionAttack(e, target); } else if (e.ap >= 1) { const n1 = {q:e.q + (target.q > e.q ? 1 : (target.q < e.q ? -1 : 0)), r:e.r}; if(this.isValidHex(n1.q, n1.r) && this.map[n1.q][n1.r].cost < 99 && !this.getUnit(n1.q, n1.r)) { e.q = n1.q; e.r = n1.r; e.ap--; await new Promise(r=>setTimeout(r,200)); } } if (e.ap >= 1 && !e.def.isTank) e.stance = 'crouch'; } } this.units.forEach(u=>{if(u.team==='player')u.ap=u.maxAp;}); this.log("-- PLAYER PHASE --"); this.state='PLAY'; this.isProcessingTurn=false;}, 1200);
     }
     healSurvivors(){this.units.filter(u=>u.team==='player'&&u.hp>0).forEach(u=>{const t=Math.floor(u.maxHp*0.8);if(u.hp<t)u.hp=t;});this.log("治療完了");}
     promoteSurvivors(){this.units.filter(u=>u.team==='player'&&u.hp>0).forEach(u=>{u.sectorsSurvived++; if(u.sectorsSurvived===5){u.skills.push("Hero");u.maxAp++;this.log("英雄昇格");} u.rank=Math.min(5,(u.rank||0)+1); u.maxHp+=30; u.hp+=30; if(u.skills.length<8&&Math.random()<0.7){const k=Object.keys(SKILLS).filter(z=>z!=="Hero"); u.skills.push(k[Math.floor(Math.random()*k.length)]); this.log("スキル習得");} });}
@@ -429,6 +333,44 @@ class Game {
     log(m){const c=document.getElementById('log-container'),d=document.createElement('div');d.className='log-entry';d.innerText=`> ${m}`;c.appendChild(d);c.scrollTop=c.scrollHeight;}
     showContext(mx,my){const p=Renderer.pxToHex(mx,my),m=document.getElementById('context-menu'),u=this.getUnit(p.q,p.r),t=this.isValidHex(p.q,p.r)?this.map[p.q][p.r]:null; let h=""; if(u)h+=`<div style="color:#0af;font-weight:bold">${u.def.name}</div>HP:${u.hp}<br>AP:${u.ap}`;else if(t)h+=`${t.name}<br>C:${t.cost} D:${t.cover}%`; m.style.pointerEvents='auto'; h+=`<button onclick="gameLogic.endTurn();document.getElementById('context-menu').style.display='none';" style="margin-top:10px;border-color:#d44;background:#311;">TURN END</button>`; m.innerHTML=h; m.style.display='block'; m.style.left=(mx+5)+'px'; m.style.top=(my+5)+'px';}
     getStatus(u){if(u.hp<=0)return "DEAD";const r=u.hp/u.maxHp;if(r>0.8)return "NORMAL";if(r>0.5)return "DAMAGED";return "CRITICAL";}
-    updateSidebar(){const ui=document.getElementById('unit-info'),u=this.selectedUnit;if(u){const w=WPNS[u.curWpn],s=this.getStatus(u); ui.innerHTML=`<h2 style="color:#d84;margin:0 0 5px 0;">${u.def.name}</h2><div style="font-size:10px;color:#888;">STATUS:<span style="color:${u.hp/u.maxHp<0.3?'#f55':'#5f5'}">${s}</span></div>HP:${u.hp}/${u.maxHp} AP:${u.ap}/${u.maxAp}<br><div id="btn-weapon" onclick="gameLogic.swapWeapon()"><div><small>Main:</small> ${w.name}</div><div class="ap-cost">SWAP(1)</div></div><div>Rng:${w.rng} Dmg:${w.dmg}</div><div style="margin-top:15px;"><button class="btn-stance ${u.stance==='stand'?'active-stance':''}" onclick="gameLogic.setStance('stand')">立</button><button class="btn-stance ${u.stance==='crouch'?'active-stance':''}" onclick="gameLogic.setStance('crouch')">屈</button><button class="btn-stance ${u.stance==='prone'?'active-stance':''}" onclick="gameLogic.setStance('prone')">伏</button></div><button onclick="gameLogic.endTurn()" class="${this.state!=='PLAY'?'disabled':''}" style="background:#522;border-color:#d44;margin-top:20px;">TURN END</button>`; if(u.def.isTank)document.querySelectorAll('.btn-stance').forEach(b=>b.classList.add('disabled'));}else ui.innerHTML=`<div style="text-align:center;color:#555;margin-top:80px;">// NO SIGNAL //</div>`;}
+    
+    // ★重要: スキルバッジ生成ロジックを追加
+    updateSidebar(){
+        const ui=document.getElementById('unit-info'),u=this.selectedUnit;
+        if(u){
+            const w=WPNS[u.curWpn], s=this.getStatus(u);
+            
+            // スキル集計
+            const skillCounts = {};
+            u.skills.forEach(sk => { skillCounts[sk] = (skillCounts[sk] || 0) + 1; });
+            let skillHtml = "";
+            for (const [sk, count] of Object.entries(skillCounts)) {
+                if (window.SKILL_STYLES && window.SKILL_STYLES[sk]) {
+                    const st = window.SKILL_STYLES[sk];
+                    skillHtml += `<div style="display:inline-block; background:${st.col}; color:#000; font-weight:bold; font-size:10px; padding:2px 5px; margin:2px; border-radius:3px; text-shadow:none;">${st.icon} ${st.name} x${count}</div>`;
+                }
+            }
+
+            ui.innerHTML=`
+                <h2 style="color:#d84;margin:0 0 5px 0;">${u.def.name}</h2>
+                <div style="font-size:10px;color:#888;">STATUS:<span style="color:${u.hp/u.maxHp<0.3?'#f55':'#5f5'}">${s}</span></div>
+                HP:${u.hp}/${u.maxHp} AP:${u.ap}/${u.maxAp}<br>
+                <div style="margin:5px 0;">${skillHtml}</div>
+                <div id="btn-weapon" onclick="gameLogic.swapWeapon()">
+                    <div><small>Main:</small> ${w.name}</div><div class="ap-cost">SWAP(1)</div>
+                </div>
+                <div>Rng:${w.rng} Dmg:${w.dmg}</div>
+                <div style="margin-top:15px;">
+                    <button class="btn-stance ${u.stance==='stand'?'active-stance':''}" onclick="gameLogic.setStance('stand')">立</button>
+                    <button class="btn-stance ${u.stance==='crouch'?'active-stance':''}" onclick="gameLogic.setStance('crouch')">屈</button>
+                    <button class="btn-stance ${u.stance==='prone'?'active-stance':''}" onclick="gameLogic.setStance('prone')">伏</button>
+                </div>
+                <button onclick="gameLogic.endTurn()" class="${this.state!=='PLAY'?'disabled':''}" style="background:#522;border-color:#d44;margin-top:20px;">TURN END</button>
+            `;
+            if(u.def.isTank) document.querySelectorAll('.btn-stance').forEach(b=>b.classList.add('disabled'));
+        } else {
+            ui.innerHTML=`<div style="text-align:center;color:#555;margin-top:80px;">// NO SIGNAL //</div>`;
+        }
+    }
 }
 window.gameLogic = new Game();
