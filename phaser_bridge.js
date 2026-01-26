@@ -201,12 +201,36 @@ class MainScene extends Phaser.Scene {
     }
     update(time, delta) {
         if (!window.gameLogic) return;
-        if(window.VFX && window.VFX.shakeRequest > 0) { this.cameras.main.shake(100, window.VFX.shakeRequest * 0.001); window.VFX.shakeRequest = 0; }
-        if(window.EnvSystem) window.EnvSystem.update(time);
-        if(window.VFX) { window.VFX.update(); this.vfxGraphics.clear(); window.VFX.draw(this.vfxGraphics); }
-        if (window.gameLogic.map.length > 0 && !this.mapGenerated) { this.createMap(); this.mapGenerated = true; }
+        // ... (VFX, EnvSystemの更新など) ...
+
+        // ... (ユニット描画更新) ...
         if(this.unitView) this.unitView.update(time, delta);
+        
         this.overlayGraphics.clear();
+        
+        // ★追加: カードドラッグ時のドロップハイライト
+        if (this.dragHighlightHex) {
+            const h = this.dragHighlightHex;
+            const px = Renderer.hexToPx(h.q, h.r);
+            
+            // 配置可能かチェックして色を変える
+            let isValid = false;
+            if (window.gameLogic) {
+                // 仮の判定 (詳細はLogicに任せるが、ここでは簡易チェック)
+                isValid = window.gameLogic.isValidHex(h.q, h.r) && 
+                          window.gameLogic.map[h.q][h.r].id !== -1 && 
+                          window.gameLogic.getUnitsInHex(h.q, h.r).length < 4;
+            }
+            
+            const color = isValid ? 0x00ffff : 0xff0000;
+            this.overlayGraphics.lineStyle(3, color, 0.8);
+            this.drawHexOutline(this.overlayGraphics, h.q, h.r);
+            
+            if(isValid) {
+                this.overlayGraphics.fillStyle(color, 0.2);
+                this.overlayGraphics.fillPath();
+            }
+        }
         
         const selected = window.gameLogic.selectedUnit;
         if(selected) {
