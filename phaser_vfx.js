@@ -1,4 +1,4 @@
-/** PHASER VFX & ENV: Fix for graphics.translate Error */
+/** PHASER VFX & ENV: Spark Only (No Debris/Rects) */
 
 class VFXSystem {
     constructor() {
@@ -21,7 +21,6 @@ class VFXSystem {
             p.life--;
             p.x += p.vx; p.y += p.vy;
             
-            // 物理挙動
             if (p.type === 'wind') {
                 p.alpha = Math.sin((p.life / p.maxLife) * Math.PI) * 0.03; 
             } else if (p.type === 'proj') {
@@ -29,21 +28,15 @@ class VFXSystem {
                 const dx = p.ex - p.sx; const dy = p.ey - p.sy;
                 p.x = p.sx + dx * t; p.y = p.sy + dy * t;
                 if (p.arcHeight > 0) p.y -= Math.sin(t * Math.PI) * p.arcHeight;
-                
                 if(t < 1) {
                     p.prevX = p.sx + dx * (t - p.speed*0.5);
                     p.prevY = p.sy + dy * (t - p.speed*0.5);
                     if (p.arcHeight > 0) p.prevY -= Math.sin((t-p.speed*0.5) * Math.PI) * p.arcHeight;
                 }
                 if (t >= 1) { if (typeof p.onHit === 'function') p.onHit(); p.life = 0; }
-            } else if (p.type === 'debris' || p.type === 'shell_case') {
-                p.vy += 0.25; 
-                p.angle = (p.angle || 0) + p.vAng; 
-                if (p.life < 10) p.alpha = p.life / 10;
             } else if (p.type === 'smoke') {
                 p.vx *= 0.95; p.vy *= 0.95; 
                 p.y -= 0.2; 
-                p.angle = (p.angle || 0) + p.vAng;
             } else if (p.type === 'spark') {
                 p.vy += 0.1;
             }
@@ -87,7 +80,6 @@ class VFXSystem {
             // Spark (火花) - 線として描画
             else if (p.type === 'spark') {
                 const alpha = (p.alpha !== undefined) ? p.alpha : (p.life / p.maxLife);
-                // 速度ベクトルから角度を計算して後ろに伸ばす
                 const len = Math.max(p.size, Math.sqrt(p.vx*p.vx + p.vy*p.vy) * 1.5);
                 const angle = Math.atan2(p.vy, p.vx);
                 const tailX = p.x - Math.cos(angle) * len;
@@ -99,74 +91,27 @@ class VFXSystem {
                 graphics.lineTo(tailX, tailY);
                 graphics.strokePath();
             }
-            // 破片・煙 (Debris, Smoke) - 回転する矩形
+            // 煙など (単純なRectで描画、回転なし)
             else {
                 const alpha = (p.alpha !== undefined) ? p.alpha : (p.life / p.maxLife);
                 graphics.fillStyle(this.hexToInt(p.color), alpha);
-                
-                if (p.angle) {
-                    // 自前で回転座標計算
-                    this.drawRotatedRect(graphics, p.x, p.y, p.size, p.size, p.angle);
-                } else {
-                    graphics.fillRect(p.x - p.size/2, p.y - p.size/2, p.size, p.size);
-                }
+                graphics.fillRect(p.x - p.size/2, p.y - p.size/2, p.size, p.size);
             }
         });
-    }
-
-    // ヘルパー: 回転した矩形を描画
-    drawRotatedRect(g, x, y, w, h, angle) {
-        const cos = Math.cos(angle);
-        const sin = Math.sin(angle);
-        const hw = w * 0.5;
-        const hh = h * 0.5;
-        
-        // 4頂点の計算
-        const x1 = x - hw * cos + hh * sin;
-        const y1 = y - hw * sin - hh * cos;
-        const x2 = x + hw * cos + hh * sin;
-        const y2 = y + hw * sin - hh * cos;
-        const x3 = x + hw * cos - hh * sin;
-        const y3 = y + hw * sin + hh * cos;
-        const x4 = x - hw * cos - hh * sin;
-        const y4 = y - hw * sin + hh * cos;
-
-        g.beginPath();
-        g.moveTo(x1, y1);
-        g.lineTo(x2, y2);
-        g.lineTo(x3, y3);
-        g.lineTo(x4, y4);
-        g.closePath();
-        g.fillPath();
     }
     
     add(p) { 
         p.life = p.life || 60; p.maxLife = p.life; 
         p.vx = p.vx || 0; p.vy = p.vy || 0; 
         p.delay = p.delay || 0; 
-        p.angle = Math.random() * Math.PI * 2; 
-        p.vAng = (Math.random() - 0.5) * 0.2; 
         if (!p.color) p.color = "#ffffff"; 
         this.particles.push(p); 
     }
     
+    // ★変更: Debris(破片)を削除し、Sparkのみ発生させる
     addExplosion(x, y, color, count) { 
         this.shakeRequest = 4; 
-        for(let i=0; i<count; i++) { 
-            const angle = -Math.PI/2 + (Math.random()-0.5) * 2.0; 
-            const speed = Math.random() * 6 + 3; 
-            this.add({ 
-                x:x, y:y, 
-                vx:Math.cos(angle)*speed, 
-                vy:Math.sin(angle)*speed, 
-                color: (Math.random()>0.5) ? "#554433" : "#333333", 
-                size: Math.random()*3+2, 
-                life: 40+Math.random()*20, 
-                type:'debris',
-                vAng: (Math.random()-0.5)*0.5
-            }); 
-        } 
-        for(let i=0; i<count; i++) {
+        for(let i=0; i<count*2; i++) {
             const angle = Math.random() * Math.PI * 2;
             const speed = Math.random() * 8 + 4;
             this.add({
@@ -189,8 +134,7 @@ class VFXSystem {
             color: (Math.random()>0.5) ? "#666666" : "#444444", 
             size: 6 + Math.random()*4, 
             life: 60+Math.random()*30, 
-            type:'smoke',
-            vAng: (Math.random()-0.5)*0.1
+            type:'smoke'
         }); 
     }
     
@@ -202,8 +146,7 @@ class VFXSystem {
             color: (Math.random()>0.3) ? "#ff4400" : "#ffff00", 
             size: 4 + Math.random()*3, 
             life: 30+Math.random()*20, 
-            type:'smoke', 
-            vAng: (Math.random()-0.5)*0.2
+            type:'smoke'
         }); 
     }
     
