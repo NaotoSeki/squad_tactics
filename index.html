@@ -13,24 +13,42 @@
             user-select: none;
         }
 
-        #app { display: flex; width: 100%; height: 100%; }
-        #game-view { flex: 1; position: relative; overflow: hidden; background: var(--bg); min-width: 0; }
+        /* ★変更: flexをやめて相対配置コンテナへ */
+        #app { display: block; width: 100%; height: 100%; position: relative; } 
+        
+        /* ★変更: ゲーム画面は常に全画面固定 (サイドバーの下に潜り込む) */
+        #game-view { 
+            width: 100%; height: 100%; 
+            position: absolute; top: 0; left: 0; 
+            background: var(--bg); z-index: 1; 
+        }
         canvas { display: block; width: 100%; height: 100%; outline: none; }
 
-        #resizer { width: 6px; background: #222; cursor: col-resize; z-index: 30; border-left: 1px solid #000; border-right: 1px solid #333; }
-        
-        #sidebar { 
-            width: 340px; min-width: 280px; 
-            background: var(--panel); border-left: 1px solid var(--border); 
-            display: flex; flex-direction: column; z-index: 20; position: relative; 
-            transition: width 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), min-width 0.3s;
-            pointer-events: none; 
+        /* ★変更: リサイザーは絶対配置でサイドバーに追従 */
+        #resizer { 
+            position: absolute; top: 0; right: 340px; bottom: 0;
+            width: 6px; background: #222; cursor: col-resize; 
+            z-index: 30; border-left: 1px solid #000; border-right: 1px solid #333; 
+            transition: right 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
         }
-        #sidebar > * { pointer-events: auto; }
+        
+        /* ★変更: サイドバーを右端に絶対配置 (浮動) */
+        #sidebar { 
+            position: absolute; top: 0; right: 0; bottom: 0;
+            width: 340px; min-width: 0; 
+            background: var(--panel); border-left: 1px solid var(--border); 
+            display: flex; flex-direction: column; z-index: 20; 
+            transition: width 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            pointer-events: auto; 
+        }
 
-        #sidebar.collapsed { width: 0 !important; min-width: 0 !important; border: none; }
+        /* 閉じたときのスタイル */
+        #sidebar.collapsed { width: 0 !important; border: none; }
         #sidebar.collapsed > *:not(#sidebar-toggle) { display: none; }
         
+        /* アプリ全体にクラスを付与してリサイザー位置を制御 */
+        #app.sidebar-closed #resizer { right: 0 !important; }
+
         #sidebar-toggle { 
             position: absolute; top: 0; left: -24px; 
             width: 24px; height: 24px; 
@@ -56,7 +74,6 @@
         .loadout-container { display: flex; gap: 8px; padding: 10px; background: #181818; }
         .main-slot-area { flex: 5; display: flex; flex-direction: column; }
         .sub-slot-area { flex: 4; display: flex; flex-direction: column; gap: 4px; }
-        
         .slot { background: #111; border: 1px solid #444; padding: 6px; position: relative; transition: 0.1s; cursor: grab; display: flex; flex-direction: column; justify-content: center; overflow: hidden; }
         .slot:active { cursor: grabbing; }
         .slot:hover { border-color: #888; background: #222; }
@@ -66,17 +83,12 @@
         .slot-name { font-size: 12px; color: #ddd; font-weight: bold; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .slot.bag-item .slot-name { font-size: 10px; }
         .slot-meta { font-size: 9px; color: #888; display: flex; justify-content: space-between; }
-        
-        /* ★修正: 弾薬ゲージ (Bullet Gauge) */
         .ammo-gauge { display: flex; gap: 2px; margin-top: 4px; flex-wrap: wrap; }
         .bullet { width: 3px; height: 8px; background: #d84; border-radius: 1px; box-shadow: 0 0 2px #d84; }
         .shell { width: 6px; height: 12px; background: #da4; border: 1px solid #000; border-radius: 2px 2px 0 0; }
         .shell.empty { background: #333; border-color: #444; }
-        
-        /* ★修正: 明滅アラート (リロード待ち) */
         @keyframes blinkRed { 0% { border-color: #f00; background: #311; } 50% { border-color: #800; background: #100; } 100% { border-color: #f00; background: #311; } }
         .slot.blink-alert { animation: blinkRed 1s infinite; cursor: pointer; }
-        
         .slot.dragging { opacity: 0.4; border: 2px dashed #999; }
         .slot.drag-over { border: 2px solid #fff; background: #333; transform: scale(1.02); }
         .slot.empty { opacity: 0.2; cursor: default; }
@@ -97,25 +109,10 @@
         #sector-counter { position:absolute; top:10px; right:20px; font-size:24px; font-weight:900; color:#d84; pointer-events:none; z-index:50; }
         #auto-toggle { position:absolute; bottom:10px; left:10px; padding:5px 10px; background:#000; border:1px solid #444; color:#888; cursor:pointer; z-index:50; font-size:11px; }
         #auto-toggle.active { color:#0f0; border-color:#0f0; }
-        
-        #context-menu { 
-            position:absolute; display:none; 
-            background:rgba(0,20,30,0.95); border:1px solid #0af; 
-            padding:10px; z-index:10000; color:#fff; font-size:11px; 
-            box-shadow: 0 2px 10px rgba(0,0,0,0.5);
-            pointer-events: auto;
-        }
-
+        #context-menu { position:absolute; display:none; background:rgba(0,20,30,0.95); border:1px solid #0af; padding:10px; z-index:10000; color:#fff; font-size:11px; box-shadow: 0 2px 10px rgba(0,0,0,0.5); pointer-events: auto; }
         #eyecatch { position: absolute; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.3); z-index: 90; display: flex; justify-content: center; align-items: center; pointer-events: none; opacity: 0; transition: opacity 0.5s; }
         #eyecatch-text { color: #d44; font-size: 40px; font-weight: 900; text-shadow: 0 0 20px #000; border: 4px solid #d44; padding: 10px 40px; background: rgba(0,0,0,0.8); transform: skewX(-10deg); }
-        
-        #command-menu { 
-            position: absolute; display: none; 
-            background: rgba(10, 15, 10, 0.95); border: 1px solid #d84; 
-            padding: 5px; z-index: 10000; 
-            box-shadow: 0 0 15px rgba(0,0,0,0.8); 
-            border-radius: 4px; min-width: 120px; overflow: visible; 
-        }
+        #command-menu { position: absolute; display: none; background: rgba(10, 15, 10, 0.95); border: 1px solid #d84; padding: 5px; z-index: 10000; box-shadow: 0 0 15px rgba(0,0,0,0.8); border-radius: 4px; min-width: 120px; overflow: visible; }
         .cmd-btn { display: block; width: 100%; box-sizing: border-box; background: #222; border: 1px solid #444; color: #ccc; padding: 6px 10px; margin-bottom: 2px; text-align: left; font-size: 11px; cursor: pointer; transition: 0.1s; }
         .cmd-btn:hover { background: #d84; color: #000; border-color: #fca; }
         .cmd-btn.disabled { opacity: 0.5; cursor: default; background: #111; color: #555; border-color: #333; pointer-events: none; }
@@ -126,8 +123,6 @@
         .sub-btn { display: block; width: 100%; box-sizing: border-box; background: #222; color: #ccc; padding: 5px; text-align: center; font-size: 10px; cursor: pointer; border-bottom: 1px solid #333; }
         .sub-btn:hover { background: #d84; color: #000; }
         .mode-indicator { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.7); border: 1px solid #0f0; color: #0f0; padding: 5px 20px; font-weight: bold; font-size: 14px; display: none; z-index: 80; pointer-events: none; }
-        
-        /* Auto Reload Toggle Style */
         .ar-check { display: flex; align-items: center; font-size: 10px; color: #888; margin-top: 5px; cursor: pointer; }
         .ar-check input { margin-right: 5px; }
         .ar-check:hover { color: #fff; }
@@ -148,14 +143,12 @@
                     <button id="btn-start" style="margin-top:20px; padding:10px 30px; background:#d84; border:none; cursor:pointer; font-weight:bold; display:none;" onclick="gameLogic.startCampaign()">DEPLOY</button>
                 </div>
             </div>
-            
             <div id="gameover-screen" class="overlay" style="display:none;">
                 <div style="text-align:center; color:#f55;">
                     <h1>M.I.A.</h1><p>全滅しました</p>
                     <button onclick="location.reload()" style="padding:10px 20px; background:#300; border:1px solid #f00; color:#f00; cursor:pointer;">RESTART</button>
                 </div>
             </div>
-            
             <div id="reward-screen" class="overlay" style="display:none;">
                 <div style="text-align:center;">
                     <h2 style="color:#da4;">SECTOR CLEARED</h2>
@@ -174,7 +167,6 @@
     </div>
     
     <div id="context-menu"></div>
-    
     <div id="command-menu">
         <div class="cmd-btn" id="btn-move" onclick="gameLogic.setMode('MOVE')"><i>👣</i> 移動</div>
         <div class="cmd-btn" id="btn-attack" onclick="gameLogic.setMode('ATTACK')"><i>🔫</i> 射撃</div>
@@ -209,9 +201,9 @@
     <script src="phaser_vfx.js"></script> 
     <script src="phaser_unit.js"></script> 
     <script src="phaser_bridge.js"></script>
+    
     <script src="logic_ui.js"></script>
     <script src="logic_ai.js"></script>
     <script src="logic_game.js"></script>
 </body>
 </html>
-
