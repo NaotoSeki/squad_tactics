@@ -1,251 +1,164 @@
-/** PHASER UNIT: Grounded Shadows & Glow Selection */
+/** PHASER UNIT: UnitView & Animation Controller */
 
 class UnitView {
-    constructor(scene, unitLayer, hpLayer) {
+    constructor(scene, unitGroup, hpGroup) {
         this.scene = scene;
-        this.unitLayer = unitLayer;
-        this.hpLayer = hpLayer;
-        this.visuals = new Map(); 
+        this.unitGroup = unitGroup;
+        this.hpGroup = hpGroup;
+        this.visuals = new Map(); // key: unit.id, val: { container, sprite, hpBar, ... }
         this.defineAnimations();
     }
 
     defineAnimations() {
         const anims = this.scene.anims;
-        if (anims.exists('anim_idle')) return; 
-
-        anims.create({ key: 'anim_idle', frames: anims.generateFrameNumbers('us_soldier', { start: 0, end: 7 }), frameRate: 8, repeat: -1 });
-        anims.create({ key: 'anim_crouch', frames: anims.generateFrameNumbers('us_soldier', { start: 8, end: 15 }), frameRate: 15, repeat: 0 });
-        anims.create({ key: 'anim_prone', frames: anims.generateFrameNumbers('us_soldier', { start: 24, end: 31 }), frameRate: 15, repeat: 0 });
-        anims.create({ key: 'anim_crouch_idle', frames: anims.generateFrameNumbers('us_soldier', { frames: [15] }), frameRate: 1, repeat: -1 });
-        anims.create({ key: 'anim_prone_idle', frames: anims.generateFrameNumbers('us_soldier', { frames: [33, 33, 33, 33, 33, 34, 33, 33, 33, 33, 38, 39, 38, 33, 33]}), frameRate: 6, repeat: -1 });
-        anims.create({ key: 'anim_crouch_shoot', frames: anims.generateFrameNumbers('us_soldier', { start: 16, end: 23 }), frameRate: 15, repeat: 0 });
-        anims.create({ key: 'anim_prone_shoot', frames: anims.generateFrameNumbers('us_soldier', { start: 32, end: 39 }), frameRate: 15, repeat: 0 });
-        anims.create({ key: 'anim_shoot', frames: anims.generateFrameNumbers('us_soldier', { start: 40, end: 47 }), frameRate: 15, repeat: 0 });
-        anims.create({ key: 'anim_walk', frames: anims.generateFrameNumbers('us_soldier', { start: 48, end: 55 }), frameRate: 10, repeat: -1 });
-        anims.create({ key: 'anim_crouch_walk', frames: anims.generateFrameNumbers('us_soldier', { start: 56, end: 63 }), frameRate: 8, repeat: -1 });
-        anims.create({ key: 'anim_crawl', frames: anims.generateFrameNumbers('us_soldier', { start: 64, end: 71 }), frameRate: 6, repeat: -1 });
-        anims.create({ key: 'anim_melee', frames: anims.generateFrameNumbers('us_soldier', { start: 72, end: 79 }), frameRate: 15, repeat: 0 });
-
+        if (!anims.exists('soldier_idle')) { anims.create({ key: 'soldier_idle', frames: anims.generateFrameNumbers('soldier_sheet', { start: 0, end: 3 }), frameRate: 5, repeat: -1 }); }
+        if (!anims.exists('soldier_move')) { anims.create({ key: 'soldier_move', frames: anims.generateFrameNumbers('soldier_sheet', { start: 4, end: 7 }), frameRate: 8, repeat: -1 }); }
+        if (!anims.exists('soldier_shoot')) { anims.create({ key: 'soldier_shoot', frames: anims.generateFrameNumbers('soldier_sheet', { start: 8, end: 9 }), frameRate: 10, repeat: 0 }); }
+        if (!anims.exists('us_idle')) { anims.create({ key: 'us_idle', frames: anims.generateFrameNumbers('us_soldier', { start: 0, end: 3 }), frameRate: 5, repeat: -1 }); }
+        if (!anims.exists('us_move')) { anims.create({ key: 'us_move', frames: anims.generateFrameNumbers('us_soldier', { start: 4, end: 7 }), frameRate: 8, repeat: -1 }); }
+        if (!anims.exists('us_shoot')) { anims.create({ key: 'us_shoot', frames: anims.generateFrameNumbers('us_soldier', { start: 8, end: 9 }), frameRate: 10, repeat: 0 }); }
         if (!anims.exists('tank_idle')) { anims.create({ key: 'tank_idle', frames: anims.generateFrameNumbers('tank_sheet', { frames: [7, 6, 5, 6, 7, 5] }), frameRate: 10, repeat: -1 }); }
+        
         if (!anims.exists('explosion_anim')) { 
             anims.create({ 
                 key: 'explosion_anim', 
                 frames: anims.generateFrameNumbers('explosion_sheet', { start: 0, end: 15 }), 
-                frameRate: 60, // 枚数が増えたので少し速くして滑らかに
+                frameRate: 60,
                 repeat: 0, 
                 hideOnComplete: true 
             }); 
         }
     }
 
+    // ★追加: ユニット表示を全消去するメソッド
+    clear() {
+        this.visuals.forEach(v => {
+            if (v.container) v.container.destroy();
+            if (v.hpBar) v.hpBar.destroy();
+        });
+        this.visuals.clear();
+    }
+
     update(time, delta) {
         if (!window.gameLogic) return;
+        const logicUnits = window.gameLogic.units;
         const activeIds = new Set();
-        const hexMap = new Map(); 
-        window.gameLogic.units.forEach(u => {
-            if (u.hp <= 0) return;
-            const key = `${u.q},${u.r}`;
-            if (!hexMap.has(key)) hexMap.set(key, []);
-            hexMap.get(key).push(u);
+
+        logicUnits.forEach(u => {
+            if (u.hp <= 0) return; 
             activeIds.add(u.id);
-        });
-
-        window.gameLogic.units.forEach(u => {
-            if (u.hp <= 0) return;
-            let visual = this.visuals.get(u.id);
-            if (!visual) {
-                visual = this.createVisual(u);
-                this.visuals.set(u.id, visual);
-                this.unitLayer.add(visual);
+            
+            if (!this.visuals.has(u.id)) {
+                this.createUnit(u);
             }
-            const siblings = hexMap.get(`${u.q},${u.r}`) || [];
-            const index = siblings.indexOf(u);
-            const count = siblings.length;
-            this.updateVisual(visual, u, delta, index, count);
-
-            const isSelected = (window.gameLogic.selectedUnit === u);
-            if (isSelected) {
-                if (this.unitLayer.exists(visual)) { this.unitLayer.remove(visual); this.hpLayer.add(visual); }
-                // ★追加: 選択時にGlow FXを適用
-                if (!visual.glowFx && visual.sprite) {
-                    visual.glowFx = visual.sprite.postFX.addGlow(0xffff00, 2, 0, false, 0.1, 12);
+            
+            const vis = this.visuals.get(u.id);
+            const targetPos = Renderer.hexToPx(u.q, u.r);
+            
+            // Move Animation Interpolation
+            const dist = Phaser.Math.Distance.Between(vis.container.x, vis.container.y, targetPos.x, targetPos.y);
+            if (dist > 2) {
+                const speed = 0.15;
+                vis.container.x += (targetPos.x - vis.container.x) * speed;
+                vis.container.y += (targetPos.y - vis.container.y) * speed;
+                
+                if (u.def.isTank) {
+                    // Tank logic (no flip, just anim)
+                } else {
+                    if (targetPos.x < vis.container.x) vis.sprite.setFlipX(true);
+                    else vis.sprite.setFlipX(false);
+                    const animKey = (u.team === 'player') ? 'us_move' : 'soldier_move';
+                    if (vis.sprite.anims.currentAnim?.key !== animKey) vis.sprite.play(animKey, true);
                 }
+                vis.container.setDepth(vis.container.y); 
             } else {
-                if (this.hpLayer.exists(visual)) { this.hpLayer.remove(visual); this.unitLayer.add(visual); }
-                // ★追加: 非選択時にGlow FXを削除
-                if (visual.glowFx && visual.sprite) {
-                    visual.sprite.postFX.remove(visual.glowFx);
-                    visual.glowFx = null;
+                vis.container.x = targetPos.x; vis.container.y = targetPos.y;
+                if (!vis.isAttacking) {
+                    if(u.def.isTank) {
+                        if (vis.sprite.anims.currentAnim?.key !== 'tank_idle') vis.sprite.play('tank_idle', true);
+                    } else {
+                        const animKey = (u.team === 'player') ? 'us_idle' : 'soldier_idle';
+                        if (vis.sprite.anims.currentAnim?.key !== animKey) vis.sprite.play(animKey, true);
+                    }
+                }
+                vis.container.setDepth(vis.container.y);
+            }
+
+            // Glow Effect for Selection
+            if (window.gameLogic.selectedUnit && window.gameLogic.selectedUnit.id === u.id) {
+                vis.sprite.setTint(0xffffaa);
+            } else {
+                vis.sprite.clearTint();
+            }
+
+            // Update HP Bar (Slim, Overhead)
+            if (vis.hpBar) {
+                vis.hpBar.clear();
+                vis.hpBar.setPosition(vis.container.x - 16, vis.container.y - 50); 
+                vis.hpBar.setDepth(9000); 
+                
+                const hpPct = u.hp / u.maxHp;
+                vis.hpBar.fillStyle(0x000000, 0.8);
+                vis.hpBar.fillRect(0, 0, 32, 4);
+                
+                const color = (u.team === 'player') ? 0x4488ff : 0xff4444;
+                vis.hpBar.fillStyle(color, 1.0);
+                vis.hpBar.fillRect(1, 1, 30 * hpPct, 2);
+                
+                // Ammo Indicators (Small dots below HP)
+                if(!u.def.isTank && u.hands && u.hands.cap > 0) {
+                    const ammoPct = u.hands.current / u.hands.cap;
+                    const dotColor = (ammoPct < 0.3) ? 0xff4400 : 0xffee00;
+                    vis.hpBar.fillStyle(dotColor, 0.8);
+                    const w = 30 * ammoPct;
+                    vis.hpBar.fillRect(1, 6, w, 1);
                 }
             }
         });
 
-        for (const [id, visual] of this.visuals) {
-            if (!activeIds.has(id)) { this.destroyVisual(visual); this.visuals.delete(id); }
-        }
+        // Remove dead units
+        this.visuals.forEach((v, id) => {
+            if (!activeIds.has(id)) {
+                v.container.destroy();
+                if(v.hpBar) v.hpBar.destroy();
+                this.visuals.delete(id);
+            }
+        });
     }
 
-    createVisual(u) {
-        const container = this.scene.add.container(0, 0);
-        container.setSize(40, 60);
-        container.setInteractive({ useHandCursor: true });
-        
-        container.on('pointerdown', (pointer) => {
-            if (pointer.button === 0 && window.gameLogic) { pointer.event.stopPropagation(); window.gameLogic.onUnitClick(u); }
-        });
-
-        const shadow = this.scene.add.ellipse(0, -4, 20, 10, 0x000000, 0.5);
-        
-        let sprite;
-        if (u.def.name === "Rifleman" || u.def.role === "infantry" || !u.def.isTank) { 
-            sprite = this.scene.add.sprite(0, -20, 'us_soldier'); 
-            sprite.setScale(0.25); 
-            sprite.play('anim_idle');
-            if (u.team === 'player') sprite.setTint(0xeeeeff); else sprite.setTint(0x9955ff);
-        } else if (u.def.isTank) {
-            sprite = this.scene.add.sprite(0, -10, 'tank_sheet');
-            sprite.setScale(0.4);
-            sprite.play('tank_idle');
-            if (u.team === 'player') sprite.setTint(0xccddee); else sprite.setTint(0x9955ff);
-            shadow.setPosition(-2, 2); 
-            shadow.setSize(46, 18);
-        } else {
-            sprite = this.scene.add.rectangle(0, 0, 30, 40, u.team==='player'?0x00f:0xf00);
-        }
-
-        container.add([shadow, sprite]);
-
-        const hpBg = this.scene.add.rectangle(0, 0, 20, 2, 0x000000).setOrigin(0, 0.5);
-        const hpBar = this.scene.add.rectangle(0, 0, 20, 2, 0x00ff00).setOrigin(0, 0.5);
-        const infoContainer = this.scene.add.container(0, 18);
-        
-        this.hpLayer.add(hpBg);
-        this.hpLayer.add(hpBar);
-        this.hpLayer.add(infoContainer);
-
-        container.sprite = sprite;
-        container.hpBg = hpBg; container.hpBar = hpBar; container.infoContainer = infoContainer;
-        // Glow管理用
-        container.glowFx = null;
-        
+    createUnit(u) {
         const pos = Renderer.hexToPx(u.q, u.r);
-        container.setPosition(pos.x, pos.y);
-        container.targetX = pos.x; container.targetY = pos.y;
-
-        return container;
-    }
-
-    updateVisual(visual, u, delta, index, count) {
-        if(!Renderer || !Renderer.hexToPx) return;
-        const basePos = Renderer.hexToPx(u.q, u.r);
+        const container = this.scene.add.container(pos.x, pos.y);
         
-        let offsetX = 0, offsetY = 0;
-        if (count > 1) {
-            const spread = 12; 
-            if (index === 0) { offsetX = -spread; offsetY = -spread; }
-            else if (index === 1) { offsetX = spread; offsetY = -spread; }
-            else if (index === 2) { offsetX = -spread; offsetY = spread; }
-            else if (index === 3) { offsetX = spread; offsetY = spread; }
-        }
+        let spriteKey = 'soldier_sheet';
+        if (u.team === 'player') spriteKey = 'us_soldier';
+        if (u.def.isTank) spriteKey = 'tank_sheet';
+
+        const sprite = this.scene.add.sprite(0, -10, spriteKey);
+        sprite.setScale(0.8);
+        container.add(sprite);
         
-        visual.targetX = basePos.x + offsetX;
-        visual.targetY = basePos.y + offsetY;
-
-        const dx = visual.targetX - visual.x;
-        const dy = visual.targetY - visual.y;
-        const dist = Math.sqrt(dx*dx + dy*dy);
-        const speed = 0.06; 
+        this.unitGroup.add(container);
         
-        let isMoving = false;
-        if (dist > 1) {
-            visual.x += dx * speed;
-            visual.y += dy * speed;
-            isMoving = true;
-            if (Math.abs(dx) > 0.1) visual.sprite.setFlipX(dx < 0);
-        } else {
-            visual.x = visual.targetX;
-            visual.y = visual.targetY;
-        }
+        const hpBar = this.scene.add.graphics();
+        this.hpGroup.add(hpBar);
 
-        if (!u.def.isTank && visual.sprite) {
-            const currentAnim = visual.sprite.anims.currentAnim ? visual.sprite.anims.currentAnim.key : '';
-            const isAttacking = currentAnim.includes('shoot') || currentAnim.includes('melee');
-            
-            if (isMoving) {
-                let moveAnim = 'anim_walk';
-                if (u.stance === 'crouch') moveAnim = 'anim_crouch_walk';
-                if (u.stance === 'prone') moveAnim = 'anim_crawl';
-                if (currentAnim !== moveAnim) visual.sprite.play(moveAnim, true);
-            } else {
-                if (!isAttacking || !visual.sprite.anims.isPlaying) {
-                    let idleAnim = 'anim_idle';
-                    if (u.stance === 'crouch') idleAnim = 'anim_crouch_idle'; 
-                    if (u.stance === 'prone') idleAnim = 'anim_prone_idle';
-                    if (currentAnim !== idleAnim) visual.sprite.play(idleAnim, true);
-                }
-            }
-        }
-
-        if (visual.hpBg && visual.hpBar && visual.infoContainer) {
-            const barY = visual.y - 45; 
-            const barX = visual.x - 10;
-            visual.hpBg.setPosition(barX, barY);
-            visual.hpBar.setPosition(barX, barY);
-            
-            const hpPct = u.hp / u.maxHp;
-            visual.hpBar.width = Math.max(0, 20 * hpPct);
-            visual.hpBar.fillColor = hpPct > 0.5 ? 0x00ff00 : 0xff0000;
-
-            const infoY = visual.y + 12;
-            visual.infoContainer.setPosition(visual.x, infoY);
-            visual.infoContainer.removeAll(true);
-
-            let infoText = "";
-            if(u.hands && u.hands.isBroken) infoText += "⚠ ";
-            if(u.hp < u.maxHp*0.5) infoText += "➕ ";
-            
-            if (infoText) {
-                const txt = this.scene.add.text(0, 0, infoText, { fontSize: '10px' }).setOrigin(0.5);
-                visual.infoContainer.add(txt);
-            }
-        }
-    }
-
-    destroyVisual(visual) {
-        if(visual.hpBg) visual.hpBg.destroy();
-        if(visual.hpBar) visual.hpBar.destroy();
-        if(visual.infoContainer) visual.infoContainer.destroy();
-        visual.destroy();
+        this.visuals.set(u.id, { container, sprite, hpBar, isAttacking: false });
     }
 
     triggerAttack(attacker, target) {
-        const visual = this.visuals.get(attacker.id);
-        if (!visual || !visual.sprite) return;
-        if (attacker.def.isTank) return; 
-
-        let animKey = 'anim_shoot'; 
-        const start = Renderer.hexToPx(attacker.q, attacker.r);
-        const end = Renderer.hexToPx(target.q, target.r);
-        const dist = Phaser.Math.Distance.Between(start.x, start.y, end.x, end.y);
-        
-        if (dist < 60) {
-            animKey = 'anim_melee';
-        } else {
-            if (attacker.stance === 'crouch') animKey = 'anim_crouch_shoot';
-            if (attacker.stance === 'prone') animKey = 'anim_prone_shoot';
+        const vis = this.visuals.get(attacker.id);
+        if (vis && !attacker.def.isTank) {
+            vis.isAttacking = true;
+            const animKey = (attacker.team === 'player') ? 'us_shoot' : 'soldier_shoot';
+            vis.sprite.play(animKey);
+            vis.sprite.once('animationcomplete', () => {
+                vis.isAttacking = false;
+            });
+            // Face target
+            const tPos = Renderer.hexToPx(target.q, target.r);
+            if (tPos.x < vis.container.x) vis.sprite.setFlipX(true);
+            else vis.sprite.setFlipX(false);
         }
-
-        const isRight = end.x >= start.x;
-        visual.sprite.setFlipX(!isRight);
-
-        visual.sprite.play(animKey);
-        visual.sprite.once('animationcomplete', () => {
-            if(visual.sprite) {
-                let idleAnim = 'anim_idle';
-                if (attacker.stance === 'crouch') idleAnim = 'anim_crouch_idle';
-                if (attacker.stance === 'prone') idleAnim = 'anim_prone_idle';
-                visual.sprite.play(idleAnim, true);
-            }
-        });
     }
 }
