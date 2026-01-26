@@ -1,13 +1,7 @@
-/** DATA: Enhanced Weaponry & Soldier Identity & TERRAIN (AP Cost Standardized) */
+/** DATA: Enhanced Weaponry, Soldier Identity & Skills (Fixed SKILL_STYLES) */
 const HEX_SIZE = 54; 
 const MAP_W = 20;    
 const MAP_H = 20; 
-
-const FACE_ASSETS = [
-    "phaser_logo.png", 
-    "card_frame.png",  
-    "cursor.png"       
-];
 
 const TERRAIN = {
     VOID:   { id: -1, name: "---",  cost: 99, cover: 0 },
@@ -22,6 +16,7 @@ const RANKS = ["Pvt", "Pfc", "Cpl", "Sgt", "SSgt", "Lt", "Cpt"];
 const FIRST_NAMES = ["John", "Mike", "Robert", "James", "William", "David", "Richard", "Joseph", "Thomas", "Charles", "Daniel", "Matthew", "Donald", "Paul", "George"];
 const LAST_NAMES = ["Smith", "Johnson", "Williams", "Jones", "Brown", "Davis", "Miller", "Wilson", "Moore", "Taylor", "Anderson", "Thomas", "Jackson", "White", "Harris"];
 
+// ★修正: SKILL_STYLESを復活・定義
 const SKILLS = {
     "Precision": { name: "精密", desc: "命中+15%" },
     "Radio":     { name: "通信", desc: "支援効果UP" },
@@ -34,26 +29,33 @@ const SKILLS = {
     "CQC":       { name: "白兵", desc: "近接反撃" }
 };
 
-// ★修正: 全武器のAPコストを2に統一
+const SKILL_STYLES = {
+    "Precision": { col: "#2a6", icon: "🎯", name: "AIM" },
+    "Radio":     { col: "#36c", icon: "📡", name: "COM" },
+    "Ambush":    { col: "#556", icon: "👻", name: "HIDE" },
+    "AmmoBox":   { col: "#b82", icon: "📦", name: "AMMO" },
+    "HighPower": { col: "#c44", icon: "💥", name: "POW" },
+    "Mechanic":  { col: "#883", icon: "🔧", name: "MECH" },
+    "Armor":     { col: "#667", icon: "🛡", name: "ARM" },
+    "Hero":      { col: "#da2", icon: "★", name: "HERO" },
+    "CQC":       { col: "#a34", icon: "🔪", name: "CQC" }
+};
+
 const WPNS = {
-    // --- Main Arms ---
     m1: { name:"M1 Garand", rng:6, acc:85, dmg:40, cap:8, mag:6, ap:2, rld:1, wgt:4, type:'bullet', burst:1, desc:"米軍主力小銃。セミオート。" },
     thompson: { name:"M1A1 SMG", rng:4, acc:60, dmg:25, cap:30, mag:4, ap:2, rld:1, wgt:5, type:'bullet', burst:5, desc:"近距離制圧用短機関銃。" },
-    bar: { name:"M1918 BAR", rng:7, acc:55, dmg:45, cap:20, mag:5, ap:2, rld:2, wgt:9, type:'bullet', burst:3, desc:"分隊支援火器。重いが強力。" }, // ap:3 -> 2
-    k98_scope: { name:"K98 (Scoped)", rng:9, acc:95, dmg:90, cap:5, mag:5, ap:2, rld:2, wgt:5, type:'bullet', burst:1, desc:"精密狙撃銃。" }, // ap:3 -> 2
+    bar: { name:"M1918 BAR", rng:7, acc:55, dmg:45, cap:20, mag:5, ap:2, rld:2, wgt:9, type:'bullet', burst:3, desc:"分隊支援火器。重いが強力。" },
+    k98_scope: { name:"K98 (Scoped)", rng:9, acc:95, dmg:90, cap:5, mag:5, ap:2, rld:2, wgt:5, type:'bullet', burst:1, desc:"精密狙撃銃。" },
     
-    // --- Side Arms ---
-    m1911: { name:"Colt M1911", rng:3, acc:70, dmg:30, cap:7, mag:3, ap:2, rld:1, wgt:1, type:'bullet', burst:1, desc:"信頼性の高い45口径拳銃。" }, // ap:1 -> 2
-    luger: { name:"Luger P08", rng:3, acc:75, dmg:25, cap:8, mag:2, ap:2, rld:1, wgt:1, type:'bullet', burst:1, desc:"敵将校の拳銃。" }, // ap:1 -> 2
-    knife: { name:"Combat Knife", rng:1, acc:90, dmg:35, cap:0, mag:0, ap:1, rld:0, wgt:0, type:'melee', burst:1, desc:"白兵戦用ナイフ。" }, // ナイフは1のまま(例外)
+    m1911: { name:"Colt M1911", rng:3, acc:70, dmg:30, cap:7, mag:3, ap:2, rld:1, wgt:1, type:'bullet', burst:1, desc:"信頼性の高い45口径拳銃。" },
+    luger: { name:"Luger P08", rng:3, acc:75, dmg:25, cap:8, mag:2, ap:2, rld:1, wgt:1, type:'bullet', burst:1, desc:"敵将校の拳銃。" },
+    knife: { name:"Combat Knife", rng:1, acc:90, dmg:35, cap:0, mag:0, ap:1, rld:0, wgt:0, type:'melee', burst:1, desc:"白兵戦用ナイフ。" },
 
-    // --- Explosives ---
-    nade: { name:"Mk2 Grenade", rng:4, acc:60, dmg:80, cap:1, mag:2, ap:2, rld:0, wgt:1, type:'shell', area:true, desc:"破片手榴弾。使い捨て。" }, // ap:3 -> 2
+    nade: { name:"Mk2 Grenade", rng:4, acc:60, dmg:80, cap:1, mag:2, ap:2, rld:0, wgt:1, type:'shell', area:true, desc:"破片手榴弾。使い捨て。" },
     
-    // --- Heavy / Vehicle ---
-    mg42: { name:"MG42", rng:8, acc:45, dmg:25, cap:50, mag:99, ap:2, rld:3, wgt:12, type:'bullet', burst:10, desc:"ヒトラーの電動ノコギリ。" }, // ap:3 -> 2
-    kwk: { name:"75mm KwK", rng:8, acc:70, dmg:150, cap:1, mag:99, ap:2, rld:2, wgt:0, type:'shell_fast', burst:1, desc:"IV号戦車主砲。" }, // ap:3 -> 2
-    kwk88: { name:"88mm KwK36", rng:10, acc:85, dmg:250, cap:1, mag:99, ap:2, rld:2, wgt:0, type:'shell_fast', burst:1, desc:"Tiger I 主砲。必殺。" } // ap:3 -> 2
+    mg42: { name:"MG42", rng:8, acc:45, dmg:25, cap:50, mag:99, ap:2, rld:3, wgt:12, type:'bullet', burst:10, desc:"ヒトラーの電動ノコギリ。" },
+    kwk: { name:"75mm KwK", rng:8, acc:70, dmg:150, cap:1, mag:99, ap:2, rld:2, wgt:0, type:'shell_fast', burst:1, desc:"IV号戦車主砲。" },
+    kwk88: { name:"88mm KwK36", rng:10, acc:85, dmg:250, cap:1, mag:99, ap:2, rld:2, wgt:0, type:'shell_fast', burst:1, desc:"Tiger I 主砲。必殺。" }
 };
 
 const UNIT_TEMPLATES = {
@@ -67,8 +69,5 @@ const UNIT_TEMPLATES = {
 };
 
 const MAG_VARIANTS = {
-    thompson: [
-        { name: "20rd Box", code: "45ACP20T", cap: 20, cost: 28, jam: 0.0 },
-        { name: "30rd Box", code: "45ACP30T", cap: 30, cost: 54, jam: 0.008 } 
-    ]
+    thompson: [ { name: "20rd Box", code: "45ACP20T", cap: 20, cost: 28, jam: 0.0 }, { name: "30rd Box", code: "45ACP30T", cap: 30, cost: 54, jam: 0.008 } ]
 };
