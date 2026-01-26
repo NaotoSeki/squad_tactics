@@ -1,4 +1,4 @@
-/** LOGIC GAME: Fix Zombie Bug (Safe Stats Handling) */
+/** LOGIC GAME: Coaxial MG Consumption & Real-time Ammo Gauge */
 
 function createCardIcon(type) {
     const c = document.createElement('canvas'); c.width = 1; c.height = 1; return c.toDataURL();
@@ -71,7 +71,6 @@ class Game {
         }
     }
 
-    // ★追加: 装備入れ替えロジック
     swapEquipment(src, tgt) {
         const u = this.selectedUnit;
         if(!u) return;
@@ -101,7 +100,6 @@ class Game {
         const t = UNIT_TEMPLATES[templateKey]; if (!t) return null;
         const isPlayer = (team === 'player'); 
         
-        // ★修正: statsがない場合(戦車など)の安全策
         const stats = t.stats ? { ...t.stats } : { str:0, aim:0, mob:0, mor:0 };
         
         if (isPlayer && !t.isTank) { ['str', 'aim', 'mob', 'mor'].forEach(k => stats[k] = (stats[k] || 0) + Math.floor(Math.random() * 3) - 1); }
@@ -321,20 +319,55 @@ class Game {
     async actionMelee(a, d) {
         if (!a || a.ap < 2) { this.log("AP不足"); return; }
         if (a.q !== d.q || a.r !== d.r) { this.log("射程外"); return; }
+        
+        let wpnName = "銃床";
+        let bonusDmg = 0;
+
+        // ★修正: 戦車同軸機銃の実装 (弾薬消費 & 掃射)
+        if (a.def.isTank) {
+            wpnName = "同軸機銃";
+            // サブ武器（通常はMG42）を探す
+            const subWpn = a.bag.find(i => i && i.type === 'bullet'); 
+            if (subWpn) {
+                if (subWpn.current > 0) {
+                    const consume = Math.min(subWpn.current, 5); // 5発掃射
+                    subWpn.current -= consume;
+                    bonusDmg = 35; 
+                    this.log(`${a.name} 機銃掃射 (弾消費:${consume})`);
+                    // ★ここでもUI更新して減った弾を見せる
+                    this.updateSidebar();
+                } else {
+                    wpnName = "轢き逃げ";
+                    bonusDmg = 10; 
+                    this.log(`${a.name} 弾切れ！履帯で攻撃`);
+                }
+            } else {
+                wpnName = "体当たり";
+                bonusDmg = 15;
+            }
+        } else {
+            let bestWeapon = null;
+            if (a.hands && a.hands.type === 'melee') { bestWeapon = a.hands; }
+            a.bag.forEach(item => { 
+                if (item && item.type === 'melee') {
+                    if (!bestWeapon || item.dmg > bestWeapon.dmg) bestWeapon = item;
+                } 
+            });
+            if (bestWeapon) {
+                wpnName = bestWeapon.name;
+                bonusDmg = bestWeapon.dmg;
+            }
+        }
+        
         a.ap -= 2;
-        let bestWeapon = null; let bestDmg = 0;
-        if (a.hands && a.hands.type === 'melee') { bestWeapon = a.hands; bestDmg = a.hands.dmg; }
-        a.bag.forEach(item => { if (item && item.type === 'melee' && item.dmg > bestDmg) { bestWeapon = item; bestDmg = item.dmg; } });
-        const wpnName = bestWeapon ? bestWeapon.name : "銃床";
+
         this.log(`${a.name} 白兵攻撃(${wpnName}) vs ${d.name}`);
         if (typeof Renderer !== 'undefined' && Renderer.playAttackAnim) Renderer.playAttackAnim(a, d);
         await new Promise(r => setTimeout(r, 300));
         
-        // ★修正: 筋力(str)がない場合(戦車など)は0として計算し、NaNを防ぐ
         let strVal = (a.stats && a.stats.str) ? a.stats.str : 0;
-        let totalDmg = 10 + (strVal * 3);
+        let totalDmg = 10 + (strVal * 3) + bonusDmg;
         
-        if (bestWeapon) totalDmg += bestWeapon.dmg;
         if (d.skills.includes('CQC')) { this.log(`>> ${d.name} カウンター！`); a.hp -= 15; }
         d.hp -= totalDmg;
         if (window.Sfx) Sfx.play('hit');
@@ -353,6 +386,7 @@ class Game {
         if (w.isBroken) { this.log("武器故障中！修理が必要"); return; }
         if (w.isConsumable && w.current <= 0) { this.log("使用済みです"); return; }
         
+        // 歩兵自動リロード
         if (!a.def.isTank && w.current <= 0) {
             const magIndex = a.bag.findIndex(i => i && i.type === 'ammo' && i.ammoFor === w.code);
             if (magIndex !== -1) {
@@ -375,6 +409,7 @@ class Game {
             }
         }
         
+        // 戦車自動装填
         if (a.def.isTank && w.current <= 0 && this.tankAutoReload) {
             if (w.reserve > 0) {
                 const totalCost = w.ap + 1; 
@@ -404,10 +439,15 @@ class Game {
         let dmgMod = 1.0 + (a.stats?.str || 0) * 0.05;
         const shots = w.isConsumable ? 1 : Math.min(w.burst || 1, w.current);
         this.log(`${a.name} 攻撃開始 (${w.name})`);
+        
         for (let i = 0; i < shots; i++) {
             if (d.hp <= 0) break;
             if (!w.isConsumable && w.jam && Math.random() < w.jam) { this.log(`⚠ JAM!! ${w.name}が故障！`); w.isBroken = true; if (window.Sfx) Sfx.play('ricochet'); break; }
             w.current--;
+            
+            // ★追加: リアルタイムでUI更新 (弾丸ゲージを減らす)
+            this.updateSidebar();
+            
             const sPos = Renderer.hexToPx(a.q, a.r); const ePos = Renderer.hexToPx(d.q, d.r);
             const spread = (100 - w.acc) * 0.5; const tx = ePos.x + (Math.random() - 0.5) * spread; const ty = ePos.y + (Math.random() - 0.5) * spread;
             if (window.Sfx) Sfx.play(w.type === 'shell' || w.type === 'shell_fast' ? 'cannon' : 'shot');
@@ -434,7 +474,9 @@ class Game {
             }, flightTime);
             await new Promise(r => setTimeout(r, isShell ? 200 : 60));
         }
+        
         if (w.isConsumable && w.current <= 0) { a.hands = null; this.log(`${w.name} を消費しました`); }
+        
         setTimeout(() => {
             if (d.hp <= 0 && !d.deadProcessed) { 
                 d.deadProcessed = true; 
