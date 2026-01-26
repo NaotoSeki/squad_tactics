@@ -1,4 +1,4 @@
-/** LOGIC UI: DOM & Display Logic (Fire Mode Toggle Button) */
+/** LOGIC UI: Right-Click Cancel on Modal */
 
 class UIManager {
     constructor(game) {
@@ -109,8 +109,16 @@ class UIManager {
         const cancelBtn = document.getElementById('warn-cancel');
         if(!modal || !okBtn || !cancelBtn) return;
         modal.style.display = 'block';
+        
         okBtn.onclick = () => { modal.style.display = 'none'; if(onConfirm) onConfirm(); };
         cancelBtn.onclick = () => { modal.style.display = 'none'; if(onCancel) onCancel(); };
+        
+        // ★追加: モードル上での右クリックもキャンセル扱いにする
+        modal.oncontextmenu = (e) => { 
+            e.preventDefault(); 
+            cancelBtn.click(); 
+            return false; 
+        };
     }
 
     updateSidebar(u, state, tankAutoReload) {
@@ -135,34 +143,12 @@ class UIManager {
             if (!item) return `<div class="slot empty" ondragover="onSlotDragOver(event)" ondragleave="onSlotDragLeave(event)" ondrop="onSlotDrop(event, '${type}', ${index})"><div style="font-size:10px; color:#555;">[EMPTY]</div></div>`; 
             const isMain = (type === 'main'); 
             const isAmmo = (item.type === 'ammo'); 
-            
-            let gaugeHtml = ""; 
-            if (!isAmmo && item.cap > 0) { 
-                gaugeHtml = `<div class="ammo-gauge">`; 
-                const maxDisplay = 20; 
-                if (u.def.isTank && isMain) { 
-                    for(let i=0; i<Math.min(maxDisplay, item.reserve); i++) gaugeHtml += `<div class="shell"></div>`; 
-                    if(item.reserve === 0) gaugeHtml += `<div class="shell empty"></div>`; 
-                } else { 
-                    for(let i=0; i<item.current; i++) gaugeHtml += `<div class="bullet"></div>`; 
-                    for(let i=item.current; i<item.cap; i++) gaugeHtml += `<div class="bullet" style="background:#333;box-shadow:none;"></div>`; 
-                } 
-                gaugeHtml += `</div>`; 
-            }
-            
-            // ★追加: 射撃モード切替ボタン
+            let gaugeHtml = ""; if (!isAmmo && item.cap > 0) { gaugeHtml = `<div class="ammo-gauge">`; const maxDisplay = 20; if (u.def.isTank && isMain) { for(let i=0; i<Math.min(maxDisplay, item.reserve); i++) gaugeHtml += `<div class="shell"></div>`; if(item.reserve === 0) gaugeHtml += `<div class="shell empty"></div>`; } else { for(let i=0; i<item.current; i++) gaugeHtml += `<div class="bullet"></div>`; for(let i=item.current; i<item.cap; i++) gaugeHtml += `<div class="bullet" style="background:#333;box-shadow:none;"></div>`; } gaugeHtml += `</div>`; }
             let toggleBtn = "";
             if (isMain && item.modes && item.modes.length > 1) {
                 toggleBtn = `<span class="mode-toggle" onclick="gameLogic.toggleFireMode()" style="cursor:pointer; background:#444; padding:1px 4px; border-radius:3px; margin-left:5px; font-size:10px; color:#fff; border:1px solid #888;">x${item.burst}</span>`;
             }
-
-            let blinkClass = ""; 
-            let clickAction = ""; 
-            if (u.def.isTank && isMain && item.current === 0 && item.reserve > 0 && !tankAutoReload) { 
-                blinkClass = "blink-alert"; 
-                clickAction = `onclick="gameLogic.reloadWeapon(true)"`; 
-            }
-            
+            let blinkClass = ""; let clickAction = ""; if (u.def.isTank && isMain && item.current === 0 && item.reserve > 0 && !tankAutoReload) { blinkClass = "blink-alert"; clickAction = `onclick="gameLogic.reloadWeapon(true)"`; }
             return `<div class="slot ${isMain?'main-weapon':'bag-item'} ${blinkClass}" ${clickAction} draggable="true" ondragstart="onSlotDragStart(event, '${type}', ${index})" ondragend="onSlotDragEnd(event)" ondragover="onSlotDragOver(event)" ondragleave="onSlotDragLeave(event)" ondrop="onSlotDrop(event, '${type}', ${index})"><div class="slot-name">${isMain?'🔫':''} ${item.name}${toggleBtn}</div>${!isAmmo ? `<div class="slot-meta"><span>RNG:${item.rng} DMG:${item.dmg}</span> <span class="ammo-text">${u.def.isTank&&isMain ? item.reserve : item.current}/${u.def.isTank&&isMain ? '∞' : item.cap}</span></div>` : `<div class="slot-meta" style="color:#d84">AMMO for ${item.ammoFor}</div>`}${gaugeHtml}</div>`; 
         };
         const mainSlot = makeSlot(u.hands, 'main', 0); let subSlots = ""; for (let i = 0; i < 4; i++) { subSlots += makeSlot(u.bag[i], 'bag', i); }
