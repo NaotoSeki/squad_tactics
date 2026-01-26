@@ -1,12 +1,8 @@
-/** LOGIC: Refactored & Modularized (Game, UIManager, EnemyAI) */
+/** LOGIC: Refactored & Modularized (Game) */
 
 function createCardIcon(type) {
     const c = document.createElement('canvas'); c.width = 1; c.height = 1; return c.toDataURL();
 }
-
-
-
-
 
 // ==========================================
 // 3. GAME (Core Logic & State)
