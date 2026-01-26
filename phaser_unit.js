@@ -1,4 +1,4 @@
-/** PHASER UNIT: Grounded Shadows & Glow Selection (Fixed Visual Cleanup) */
+/** PHASER UNIT: Visuals, Animations, Skill Badges (Complete) */
 
 class UnitView {
     constructor(scene, unitLayer, hpLayer) {
@@ -38,13 +38,14 @@ class UnitView {
         }
     }
 
-    // ★追加: ユニット表示を全削除し、リストをクリアする
+    // ★修正: 必須メソッド。これがないと画面が真っ暗になる。
     clear() {
         this.visuals.forEach(v => {
             if (v.container) v.container.destroy();
             if (v.hpBg) v.hpBg.destroy();
             if (v.hpBar) v.hpBar.destroy();
             if (v.infoContainer) v.infoContainer.destroy();
+            if (v.skillContainer) v.skillContainer.destroy();
         });
         this.visuals.clear();
     }
@@ -66,11 +67,9 @@ class UnitView {
             let visual = this.visuals.get(u.id);
             if (!visual) {
                 this.createVisual(u);
-                // createVisual内でvisualsにsetされるので再取得
                 visual = this.visuals.get(u.id);
-                this.unitLayer.add(visual.container); // containerそのものをadd
+                this.unitLayer.add(visual.container); 
             }
-            // ★安全策: コンテナが何らかの理由で死んでいたら削除して再作成させる
             if (visual && (!visual.container || !visual.container.scene)) {
                 this.visuals.delete(u.id);
                 return;
@@ -115,7 +114,7 @@ class UnitView {
         let sprite;
         if (u.def.name === "Rifleman" || u.def.role === "infantry" || !u.def.isTank) { 
             sprite = this.scene.add.sprite(0, -20, 'us_soldier'); 
-            sprite.setScale(0.25); // ★絶対死守: 0.25固定
+            sprite.setScale(0.25); 
             sprite.play('anim_idle');
             if (u.team === 'player') sprite.setTint(0xeeeeff); else sprite.setTint(0x9955ff);
         } else if (u.def.isTank) {
@@ -200,7 +199,7 @@ class UnitView {
             }
         }
 
-            if (visual.hpBg && visual.hpBar && visual.infoContainer) {
+        if (visual.hpBg && visual.hpBar && visual.infoContainer) {
             const barY = visual.container.y - 45; 
             const barX = visual.container.x - 10;
             visual.hpBg.setPosition(barX, barY);
@@ -214,7 +213,6 @@ class UnitView {
             visual.infoContainer.setPosition(visual.container.x, infoY);
             visual.infoContainer.removeAll(true);
 
-            // ★追加: 状態異常などのテキスト
             let infoText = "";
             if(u.hands && u.hands.isBroken) infoText += "⚠ ";
             if(u.hp < u.maxHp*0.5) infoText += "➕ ";
@@ -224,42 +222,32 @@ class UnitView {
                 visual.infoContainer.add(txt);
             }
 
-            // ★追加: 頭上の極小スキル徽章 (SKILL_STYLES使用)
+            // ★追加: スキル徽章表示 (Unit Badge)
             if (typeof SKILL_STYLES !== 'undefined' && u.skills.length > 0) {
-                // スキルの種類ごとにアイコンを表示 (重複はまとめないで並べるか、種類だけにするか)
-                // ここでは「種類」を並べる (極小なので数は少ないほうがいい)
+                // 重複排除して表示
                 const uniqueSkills = [...new Set(u.skills)];
-                let iconX = -((uniqueSkills.length - 1) * 6) / 2; // 中央揃え
+                let iconX = -((uniqueSkills.length - 1) * 6) / 2;
+                
+                // 毎回コンテナを作り直すのは重いので、なければ作る
+                if(!visual.skillContainer) {
+                    visual.skillContainer = this.scene.add.container(0, 0);
+                    this.hpLayer.add(visual.skillContainer);
+                }
+                // 中身はリフレッシュ
+                visual.skillContainer.removeAll(true);
                 
                 uniqueSkills.forEach(sk => {
                     if (SKILL_STYLES[sk]) {
                         const st = SKILL_STYLES[sk];
-                        // グラフィックスで小さな四角を描くか、テキストでアイコンを描くか
-                        // テキスト(絵文字)で描くのが一番きれい
-                        const badge = this.scene.add.text(iconX, -58, st.icon, { 
-                            fontSize: '9px', 
-                            fontFamily: 'Segoe UI Emoji' // 絵文字用
-                        }).setOrigin(0.5);
-                        // 背景もつけると視認性が上がる
                         const bg = this.scene.add.rectangle(iconX, -58, 8, 8, parseInt(st.col.replace('#','0x')), 0.8);
-                        
-                        // HPバーよりさらに上に表示するために、hpLayerに追加
-                        // ただしinfoContainerは下にあるので、hpLayer直下に追加して位置調整
-                        // ここでは簡易的にhpLayerに追加し、updateのたびに消して作り直すのは重いので
-                        // visualに専用コンテナを持たせるのがベストだが、今回はinfoContainerを流用せず
-                        // visual.skillContainer を新設するアプローチをとる
-                        
-                        if(!visual.skillContainer) {
-                            visual.skillContainer = this.scene.add.container(0, 0);
-                            this.hpLayer.add(visual.skillContainer);
-                        }
+                        const badge = this.scene.add.text(iconX, -58, st.icon, { 
+                            fontSize: '9px', fontFamily: 'Segoe UI Emoji' 
+                        }).setOrigin(0.5);
                         visual.skillContainer.add([bg, badge]);
                         iconX += 9;
                     }
                 });
-                if(visual.skillContainer) {
-                    visual.skillContainer.setPosition(visual.container.x, visual.container.y);
-                }
+                visual.skillContainer.setPosition(visual.container.x, visual.container.y);
             } else {
                 if(visual.skillContainer) visual.skillContainer.removeAll(true);
             }
@@ -271,7 +259,7 @@ class UnitView {
         if(visual.hpBg) visual.hpBg.destroy();
         if(visual.hpBar) visual.hpBar.destroy();
         if(visual.infoContainer) visual.infoContainer.destroy();
-        if(visual.skillContainer) visual.skillContainer.destroy(); // 追加
+        if(visual.skillContainer) visual.skillContainer.destroy();
     }
 
     triggerAttack(attacker, target) {
