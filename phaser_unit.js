@@ -27,7 +27,15 @@ class UnitView {
         anims.create({ key: 'anim_melee', frames: anims.generateFrameNumbers('us_soldier', { start: 72, end: 79 }), frameRate: 15, repeat: 0 });
 
         if (!anims.exists('tank_idle')) { anims.create({ key: 'tank_idle', frames: anims.generateFrameNumbers('tank_sheet', { frames: [7, 6, 5, 6, 7, 5] }), frameRate: 10, repeat: -1 }); }
-        if (!anims.exists('explosion_anim')) { anims.create({ key: 'explosion_anim', frames: anims.generateFrameNumbers('explosion_sheet', { start: 0, end: 7 }), frameRate: 20, repeat: 0, hideOnComplete: true }); }
+        if (!anims.exists('explosion_anim')) { 
+            anims.create({ 
+                key: 'explosion_anim', 
+                frames: anims.generateFrameNumbers('explosion_sheet', { start: 0, end: 15 }), 
+                frameRate: 30, // 枚数が増えたので少し速くして滑らかに
+                repeat: 0, 
+                hideOnComplete: true 
+            }); 
+        }
     }
 
     update(time, delta) {
