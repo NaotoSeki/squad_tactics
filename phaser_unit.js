@@ -31,7 +31,7 @@ class UnitView {
             anims.create({ 
                 key: 'explosion_anim', 
                 frames: anims.generateFrameNumbers('explosion_sheet', { start: 0, end: 15 }), 
-                frameRate: 30, // 枚数が増えたので少し速くして滑らかに
+                frameRate: 60, // 枚数が増えたので少し速くして滑らかに
                 repeat: 0, 
                 hideOnComplete: true 
             }); 
