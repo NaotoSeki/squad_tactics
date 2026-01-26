@@ -102,7 +102,23 @@ class Card extends Phaser.GameObjects.Container {
     }
     onHover() { if(!this.parentContainer || Renderer.isMapDragging || Renderer.isCardDragging) return; this.isHovering = true; this.parentContainer.bringToTop(this); }
     onHoverOut() { this.isHovering = false; }
-    onDragStart(pointer) { if(Renderer.isMapDragging) return; if(window.gameLogic && window.gameLogic.cardsUsed >= 2) return; this.isDragging = true; Renderer.isCardDragging = true; this.setAlpha(0.9); this.setScale(1.1); const hand = this.parentContainer; const worldPos = hand.getLocalTransformMatrix().transformPoint(this.x, this.y); hand.remove(this); this.scene.add.existing(this); this.physX = worldPos.x; this.physY = worldPos.y; this.targetX = this.physX; this.targetY = this.physY; this.setDepth(9999); this.dragOffsetX = this.physX - pointer.x; this.dragOffsetY = this.physY - pointer.y; }
+    onDragStart(pointer) { 
+        if(Renderer.isMapDragging) return; 
+        if(window.gameLogic && window.gameLogic.cardsUsed >= 2) return; 
+        this.isDragging = true; 
+        Renderer.isCardDragging = true; 
+        this.setAlpha(0.6); // ★修正: ドラッグ中は半透明に
+        this.setScale(1.1); 
+        const hand = this.parentContainer; 
+        const worldPos = hand.getLocalTransformMatrix().transformPoint(this.x, this.y); 
+        hand.remove(this); 
+        this.scene.add.existing(this); 
+        this.physX = worldPos.x; this.physY = worldPos.y; 
+        this.targetX = this.physX; this.targetY = this.physY; 
+        this.setDepth(9999); 
+        this.dragOffsetX = this.physX - pointer.x; 
+        this.dragOffsetY = this.physY - pointer.y; 
+    }
     onDrag(pointer) { if(!this.isDragging) return; this.targetX = pointer.x + this.dragOffsetX; this.targetY = pointer.y + this.dragOffsetY; const main = this.scene.game.scene.getScene('MainScene'); if (this.y < this.scene.scale.height * 0.65) main.dragHighlightHex = Renderer.pxToHex(pointer.x, pointer.y); else main.dragHighlightHex = null; }
     onDragEnd(pointer) { if(!this.isDragging) return; this.isDragging = false; Renderer.isCardDragging = false; this.setAlpha(1.0); this.setScale(1.0); const main = this.scene.game.scene.getScene('MainScene'); main.dragHighlightHex = null; const dropZoneY = this.scene.scale.height * 0.65; if (this.y < dropZoneY) { const hex = Renderer.pxToHex(pointer.x, pointer.y); let canDeploy = false; if (window.gameLogic) { if (this.cardType === 'aerial') { if (window.gameLogic.isValidHex(hex.q, hex.r)) canDeploy = true; else window.gameLogic.log("配置不可: マップ範囲外です"); } else { canDeploy = window.gameLogic.checkDeploy(hex); } } if (canDeploy) this.burnAndConsume(hex); else this.returnToHand(); } else { this.returnToHand(); } }
     burnAndConsume(hex) { this.updatePhysics = () => {}; this.frameImage.setTint(0x552222); this.frameImage.disableInteractive(); this.scene.tweens.add({ targets: this, alpha: 0, scale: 0.5, duration: 200, onComplete: () => { this.scene.removeCard(this); const type = this.cardType; this.destroy(); try { if (type === 'aerial') { const main = phaserGame.scene.getScene('MainScene'); if (main) main.triggerBombardment(hex); } else if(window.gameLogic) { window.gameLogic.deployUnit(hex, type); } } catch(e) { console.error("Logic Error:", e); } }}); }
