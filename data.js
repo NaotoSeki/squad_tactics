@@ -1,4 +1,4 @@
-/** DATA: Enhanced Weaponry, Soldier Identity & Skills (Fixed SKILL_STYLES) */
+/** DATA: Enhanced Weaponry, Soldier Identity & Skills (Complete) */
 const HEX_SIZE = 54; 
 const MAP_W = 20;    
 const MAP_H = 20; 
@@ -16,7 +16,6 @@ const RANKS = ["Pvt", "Pfc", "Cpl", "Sgt", "SSgt", "Lt", "Cpt"];
 const FIRST_NAMES = ["John", "Mike", "Robert", "James", "William", "David", "Richard", "Joseph", "Thomas", "Charles", "Daniel", "Matthew", "Donald", "Paul", "George"];
 const LAST_NAMES = ["Smith", "Johnson", "Williams", "Jones", "Brown", "Davis", "Miller", "Wilson", "Moore", "Taylor", "Anderson", "Thomas", "Jackson", "White", "Harris"];
 
-// ★修正: SKILL_STYLESを復活・定義
 const SKILLS = {
     "Precision": { name: "精密", desc: "命中+15%" },
     "Radio":     { name: "通信", desc: "支援効果UP" },
