@@ -1,4 +1,4 @@
-/** LOGIC GAME: Added swapEquipment & Robust Melee Logic */
+/** LOGIC GAME: Fix Zombie Bug (Safe Stats Handling) */
 
 function createCardIcon(type) {
     const c = document.createElement('canvas'); c.width = 1; c.height = 1; return c.toDataURL();
@@ -76,14 +76,11 @@ class Game {
         const u = this.selectedUnit;
         if(!u) return;
         
-        // ヘルパー: 場所定義からアイテムへの参照を取得
         const getItem = (loc) => {
             if(loc.type === 'main') return u.hands;
             if(loc.type === 'bag') return u.bag[loc.index];
             return null;
         };
-        
-        // ヘルパー: アイテムをセット
         const setItem = (loc, item) => {
             if(loc.type === 'main') u.hands = item;
             if(loc.type === 'bag') u.bag[loc.index] = item;
@@ -92,7 +89,6 @@ class Game {
         const item1 = getItem(src);
         const item2 = getItem(tgt);
 
-        // 単純に入れ替え
         setItem(src, item2);
         setItem(tgt, item1);
         
@@ -103,7 +99,11 @@ class Game {
 
     createSoldier(templateKey, team, q, r) {
         const t = UNIT_TEMPLATES[templateKey]; if (!t) return null;
-        const isPlayer = (team === 'player'); const stats = { ...t.stats };
+        const isPlayer = (team === 'player'); 
+        
+        // ★修正: statsがない場合(戦車など)の安全策
+        const stats = t.stats ? { ...t.stats } : { str:0, aim:0, mob:0, mor:0 };
+        
         if (isPlayer && !t.isTank) { ['str', 'aim', 'mob', 'mor'].forEach(k => stats[k] = (stats[k] || 0) + Math.floor(Math.random() * 3) - 1); }
         let name = t.name; let rank = 0; let faceSeed = Math.floor(Math.random() * 99999);
         if (isPlayer && !t.isTank) { const first = FIRST_NAMES[Math.floor(Math.random() * FIRST_NAMES.length)]; const last = LAST_NAMES[Math.floor(Math.random() * LAST_NAMES.length)]; name = `${last} ${first}`; }
@@ -329,7 +329,11 @@ class Game {
         this.log(`${a.name} 白兵攻撃(${wpnName}) vs ${d.name}`);
         if (typeof Renderer !== 'undefined' && Renderer.playAttackAnim) Renderer.playAttackAnim(a, d);
         await new Promise(r => setTimeout(r, 300));
-        let totalDmg = 10 + (a.stats.str * 3);
+        
+        // ★修正: 筋力(str)がない場合(戦車など)は0として計算し、NaNを防ぐ
+        let strVal = (a.stats && a.stats.str) ? a.stats.str : 0;
+        let totalDmg = 10 + (strVal * 3);
+        
         if (bestWeapon) totalDmg += bestWeapon.dmg;
         if (d.skills.includes('CQC')) { this.log(`>> ${d.name} カウンター！`); a.hp -= 15; }
         d.hp -= totalDmg;
