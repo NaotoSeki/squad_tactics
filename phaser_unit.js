@@ -1,4 +1,4 @@
-/** PHASER UNIT: Grounded Shadows & Glow Selection */
+/** PHASER UNIT: Grounded Shadows & Glow Selection (Fixed Visual Cleanup) */
 
 class UnitView {
     constructor(scene, unitLayer, hpLayer) {
@@ -31,11 +31,22 @@ class UnitView {
             anims.create({ 
                 key: 'explosion_anim', 
                 frames: anims.generateFrameNumbers('explosion_sheet', { start: 0, end: 15 }), 
-                frameRate: 60, // 枚数が増えたので少し速くして滑らかに
+                frameRate: 60, 
                 repeat: 0, 
                 hideOnComplete: true 
             }); 
         }
+    }
+
+    // ★追加: ユニット表示を全削除し、リストをクリアする
+    clear() {
+        this.visuals.forEach(v => {
+            if (v.container) v.container.destroy();
+            if (v.hpBg) v.hpBg.destroy();
+            if (v.hpBar) v.hpBar.destroy();
+            if (v.infoContainer) v.infoContainer.destroy();
+        });
+        this.visuals.clear();
     }
 
     update(time, delta) {
@@ -54,10 +65,17 @@ class UnitView {
             if (u.hp <= 0) return;
             let visual = this.visuals.get(u.id);
             if (!visual) {
-                visual = this.createVisual(u);
-                this.visuals.set(u.id, visual);
-                this.unitLayer.add(visual);
+                this.createVisual(u);
+                // createVisual内でvisualsにsetされるので再取得
+                visual = this.visuals.get(u.id);
+                this.unitLayer.add(visual.container); // containerそのものをadd
             }
+            // ★安全策: コンテナが何らかの理由で死んでいたら削除して再作成させる
+            if (visual && (!visual.container || !visual.container.scene)) {
+                this.visuals.delete(u.id);
+                return;
+            }
+
             const siblings = hexMap.get(`${u.q},${u.r}`) || [];
             const index = siblings.indexOf(u);
             const count = siblings.length;
@@ -65,14 +83,12 @@ class UnitView {
 
             const isSelected = (window.gameLogic.selectedUnit === u);
             if (isSelected) {
-                if (this.unitLayer.exists(visual)) { this.unitLayer.remove(visual); this.hpLayer.add(visual); }
-                // ★追加: 選択時にGlow FXを適用
+                if (this.unitLayer.exists(visual.container)) { this.unitLayer.remove(visual.container); this.hpLayer.add(visual.container); }
                 if (!visual.glowFx && visual.sprite) {
                     visual.glowFx = visual.sprite.postFX.addGlow(0xffff00, 2, 0, false, 0.1, 12);
                 }
             } else {
-                if (this.hpLayer.exists(visual)) { this.hpLayer.remove(visual); this.unitLayer.add(visual); }
-                // ★追加: 非選択時にGlow FXを削除
+                if (this.hpLayer.exists(visual.container)) { this.hpLayer.remove(visual.container); this.unitLayer.add(visual.container); }
                 if (visual.glowFx && visual.sprite) {
                     visual.sprite.postFX.remove(visual.glowFx);
                     visual.glowFx = null;
@@ -99,7 +115,7 @@ class UnitView {
         let sprite;
         if (u.def.name === "Rifleman" || u.def.role === "infantry" || !u.def.isTank) { 
             sprite = this.scene.add.sprite(0, -20, 'us_soldier'); 
-            sprite.setScale(0.25); 
+            sprite.setScale(0.25); // ★絶対死守: 0.25固定
             sprite.play('anim_idle');
             if (u.team === 'player') sprite.setTint(0xeeeeff); else sprite.setTint(0x9955ff);
         } else if (u.def.isTank) {
@@ -123,16 +139,14 @@ class UnitView {
         this.hpLayer.add(hpBar);
         this.hpLayer.add(infoContainer);
 
-        container.sprite = sprite;
-        container.hpBg = hpBg; container.hpBar = hpBar; container.infoContainer = infoContainer;
-        // Glow管理用
-        container.glowFx = null;
+        const visual = { container, sprite, hpBg, hpBar, infoContainer, glowFx: null };
+        this.visuals.set(u.id, visual);
         
         const pos = Renderer.hexToPx(u.q, u.r);
         container.setPosition(pos.x, pos.y);
         container.targetX = pos.x; container.targetY = pos.y;
 
-        return container;
+        return visual;
     }
 
     updateVisual(visual, u, delta, index, count) {
@@ -151,20 +165,20 @@ class UnitView {
         visual.targetX = basePos.x + offsetX;
         visual.targetY = basePos.y + offsetY;
 
-        const dx = visual.targetX - visual.x;
-        const dy = visual.targetY - visual.y;
+        const dx = visual.targetX - visual.container.x;
+        const dy = visual.targetY - visual.container.y;
         const dist = Math.sqrt(dx*dx + dy*dy);
         const speed = 0.06; 
         
         let isMoving = false;
         if (dist > 1) {
-            visual.x += dx * speed;
-            visual.y += dy * speed;
+            visual.container.x += dx * speed;
+            visual.container.y += dy * speed;
             isMoving = true;
             if (Math.abs(dx) > 0.1) visual.sprite.setFlipX(dx < 0);
         } else {
-            visual.x = visual.targetX;
-            visual.y = visual.targetY;
+            visual.container.x = visual.targetX;
+            visual.container.y = visual.targetY;
         }
 
         if (!u.def.isTank && visual.sprite) {
@@ -187,8 +201,8 @@ class UnitView {
         }
 
         if (visual.hpBg && visual.hpBar && visual.infoContainer) {
-            const barY = visual.y - 45; 
-            const barX = visual.x - 10;
+            const barY = visual.container.y - 45; 
+            const barX = visual.container.x - 10;
             visual.hpBg.setPosition(barX, barY);
             visual.hpBar.setPosition(barX, barY);
             
@@ -196,8 +210,8 @@ class UnitView {
             visual.hpBar.width = Math.max(0, 20 * hpPct);
             visual.hpBar.fillColor = hpPct > 0.5 ? 0x00ff00 : 0xff0000;
 
-            const infoY = visual.y + 12;
-            visual.infoContainer.setPosition(visual.x, infoY);
+            const infoY = visual.container.y + 12;
+            visual.infoContainer.setPosition(visual.container.x, infoY);
             visual.infoContainer.removeAll(true);
 
             let infoText = "";
@@ -212,10 +226,10 @@ class UnitView {
     }
 
     destroyVisual(visual) {
+        if(visual.container) visual.container.destroy();
         if(visual.hpBg) visual.hpBg.destroy();
         if(visual.hpBar) visual.hpBar.destroy();
         if(visual.infoContainer) visual.infoContainer.destroy();
-        visual.destroy();
     }
 
     triggerAttack(attacker, target) {
