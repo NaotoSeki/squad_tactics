@@ -1,4 +1,4 @@
-/** LOGIC GAME: Double Attack Bug Fix & Input Guard */
+/** LOGIC GAME: AI Attack Fix, Auto-Reload, Equipment Swap */
 
 function createCardIcon(type) {
     const c = document.createElement('canvas'); c.width = 1; c.height = 1; return c.toDataURL();
@@ -240,8 +240,7 @@ class Game {
     }
 
     handleClick(p) {
-        // ★修正: 二重呼び出しガード。PLAY状態以外(ANIM中など)は入力を受け付けない
-        if (this.state !== 'PLAY') return;
+        if (this.state !== 'PLAY') return; // ★二重呼び出しガード
 
         if (this.interactionMode === 'SELECT') { const u = this.getUnitInHex(p.q, p.r); if (!u) this.clearSelection(); } 
         else if (this.interactionMode === 'MOVE') { if (this.isValidHex(p.q, p.r) && this.path.length > 0) { const last = this.path[this.path.length - 1]; if (last.q === p.q && last.r === p.r) { 
@@ -397,9 +396,9 @@ class Game {
     }
 
     async actionAttack(a, d) {
-        // ★修正: 実行ガード
-        if (this.state !== 'PLAY') return;
         if (!a) return; 
+        // ★修正: プレイヤー操作時のみPLAY状態チェックを強制。AI(Enemy)はANIM中でも許可。
+        if (a.team === 'player' && this.state !== 'PLAY') return;
         
         const w = a.hands; if (!w) return;
         if (w.isBroken) { this.log("武器故障中！修理が必要"); return; }
