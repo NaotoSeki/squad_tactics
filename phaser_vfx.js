@@ -1,4 +1,4 @@
-/** PHASER VFX & ENV: Realistic Debris & Fire (No Circles) */
+/** PHASER VFX & ENV: Fix for graphics.translate Error */
 
 class VFXSystem {
     constructor() {
@@ -21,7 +21,7 @@ class VFXSystem {
             p.life--;
             p.x += p.vx; p.y += p.vy;
             
-            // 物理挙動の差別化
+            // 物理挙動
             if (p.type === 'wind') {
                 p.alpha = Math.sin((p.life / p.maxLife) * Math.PI) * 0.03; 
             } else if (p.type === 'proj') {
@@ -37,12 +37,12 @@ class VFXSystem {
                 }
                 if (t >= 1) { if (typeof p.onHit === 'function') p.onHit(); p.life = 0; }
             } else if (p.type === 'debris' || p.type === 'shell_case') {
-                p.vy += 0.25; // 重力
-                p.angle = (p.angle || 0) + p.vAng; // 回転
+                p.vy += 0.25; 
+                p.angle = (p.angle || 0) + p.vAng; 
                 if (p.life < 10) p.alpha = p.life / 10;
             } else if (p.type === 'smoke') {
-                p.vx *= 0.95; p.vy *= 0.95; // 減速
-                p.y -= 0.2; // 浮力
+                p.vx *= 0.95; p.vy *= 0.95; 
+                p.y -= 0.2; 
                 p.angle = (p.angle || 0) + p.vAng;
             } else if (p.type === 'spark') {
                 p.vy += 0.1;
@@ -68,7 +68,7 @@ class VFXSystem {
         this.particles.forEach(p => {
             if (p.delay > 0) return;
             
-            // ★変更: 弾丸の軌跡 (Line)
+            // 弾丸 (Line Tracer)
             if (p.type === 'proj') {
                 if(p.isTracer) {
                     const alpha = Math.min(1.0, p.life * 0.2);
@@ -79,70 +79,93 @@ class VFXSystem {
                     graphics.beginPath(); graphics.moveTo(p.prevX + (p.x-p.prevX)*0.6, p.prevY + (p.y-p.prevY)*0.6); graphics.lineTo(p.x, p.y); graphics.strokePath();
                 }
             }
-            // 風の線
+            // 風
             else if (p.type === 'wind') {
                 graphics.lineStyle(1, 0xffffff, p.alpha);
                 graphics.beginPath(); graphics.moveTo(p.x, p.y); graphics.lineTo(p.x - p.vx * 20, p.y - p.vy * 20); graphics.strokePath();
             }
-            // ★変更: 破片・煙・火花 (Rect/Rotated Rect) - 丸は使わない
+            // Spark (火花) - 線として描画
+            else if (p.type === 'spark') {
+                const alpha = (p.alpha !== undefined) ? p.alpha : (p.life / p.maxLife);
+                // 速度ベクトルから角度を計算して後ろに伸ばす
+                const len = Math.max(p.size, Math.sqrt(p.vx*p.vx + p.vy*p.vy) * 1.5);
+                const angle = Math.atan2(p.vy, p.vx);
+                const tailX = p.x - Math.cos(angle) * len;
+                const tailY = p.y - Math.sin(angle) * len;
+
+                graphics.lineStyle(Math.max(1, p.size), this.hexToInt(p.color), alpha);
+                graphics.beginPath();
+                graphics.moveTo(p.x, p.y);
+                graphics.lineTo(tailX, tailY);
+                graphics.strokePath();
+            }
+            // 破片・煙 (Debris, Smoke) - 回転する矩形
             else {
                 const alpha = (p.alpha !== undefined) ? p.alpha : (p.life / p.maxLife);
                 graphics.fillStyle(this.hexToInt(p.color), alpha);
                 
-                // 回転を考慮した矩形描画
                 if (p.angle) {
-                    graphics.save();
-                    graphics.translate(p.x, p.y);
-                    graphics.rotate(p.angle);
-                    graphics.fillRect(-p.size/2, -p.size/2, p.size, p.size);
-                    graphics.restore();
+                    // 自前で回転座標計算
+                    this.drawRotatedRect(graphics, p.x, p.y, p.size, p.size, p.angle);
                 } else {
-                    // Sparkなどは線っぽく引き伸ばす
-                    if(p.type === 'spark') {
-                        const len = Math.max(p.size, Math.sqrt(p.vx*p.vx + p.vy*p.vy) * 2);
-                        const angle = Math.atan2(p.vy, p.vx);
-                        graphics.save();
-                        graphics.translate(p.x, p.y);
-                        graphics.rotate(angle);
-                        graphics.fillRect(0, -1, len, 2);
-                        graphics.restore();
-                    } else {
-                        graphics.fillRect(p.x - p.size/2, p.y - p.size/2, p.size, p.size);
-                    }
+                    graphics.fillRect(p.x - p.size/2, p.y - p.size/2, p.size, p.size);
                 }
             }
         });
+    }
+
+    // ヘルパー: 回転した矩形を描画
+    drawRotatedRect(g, x, y, w, h, angle) {
+        const cos = Math.cos(angle);
+        const sin = Math.sin(angle);
+        const hw = w * 0.5;
+        const hh = h * 0.5;
+        
+        // 4頂点の計算
+        const x1 = x - hw * cos + hh * sin;
+        const y1 = y - hw * sin - hh * cos;
+        const x2 = x + hw * cos + hh * sin;
+        const y2 = y + hw * sin - hh * cos;
+        const x3 = x + hw * cos - hh * sin;
+        const y3 = y + hw * sin + hh * cos;
+        const x4 = x - hw * cos - hh * sin;
+        const y4 = y - hw * sin + hh * cos;
+
+        g.beginPath();
+        g.moveTo(x1, y1);
+        g.lineTo(x2, y2);
+        g.lineTo(x3, y3);
+        g.lineTo(x4, y4);
+        g.closePath();
+        g.fillPath();
     }
     
     add(p) { 
         p.life = p.life || 60; p.maxLife = p.life; 
         p.vx = p.vx || 0; p.vy = p.vy || 0; 
         p.delay = p.delay || 0; 
-        p.angle = Math.random() * Math.PI * 2; // 初期回転
-        p.vAng = (Math.random() - 0.5) * 0.2; // 回転速度
+        p.angle = Math.random() * Math.PI * 2; 
+        p.vAng = (Math.random() - 0.5) * 0.2; 
         if (!p.color) p.color = "#ffffff"; 
         this.particles.push(p); 
     }
     
-    // ★変更: 着弾時のエフェクト (土煙と火花)
     addExplosion(x, y, color, count) { 
         this.shakeRequest = 4; 
-        // 1. 飛び散る破片 (Debris) - 重力あり
         for(let i=0; i<count; i++) { 
-            const angle = -Math.PI/2 + (Math.random()-0.5) * 2.0; // 上方向へ扇状に
+            const angle = -Math.PI/2 + (Math.random()-0.5) * 2.0; 
             const speed = Math.random() * 6 + 3; 
             this.add({ 
                 x:x, y:y, 
                 vx:Math.cos(angle)*speed, 
                 vy:Math.sin(angle)*speed, 
-                color: (Math.random()>0.5) ? "#554433" : "#333333", // 土色と黒
+                color: (Math.random()>0.5) ? "#554433" : "#333333", 
                 size: Math.random()*3+2, 
                 life: 40+Math.random()*20, 
                 type:'debris',
                 vAng: (Math.random()-0.5)*0.5
             }); 
         } 
-        // 2. 鋭い火花 (Spark)
         for(let i=0; i<count; i++) {
             const angle = Math.random() * Math.PI * 2;
             const speed = Math.random() * 8 + 4;
@@ -150,7 +173,7 @@ class VFXSystem {
                 x:x, y:y-5,
                 vx:Math.cos(angle)*speed,
                 vy:Math.sin(angle)*speed,
-                color: (Math.random()>0.5) ? "#ffaa00" : "#ffffff", // オレンジと白
+                color: (Math.random()>0.5) ? "#ffaa00" : "#ffffff", 
                 size: 2,
                 life: 10+Math.random()*15,
                 type:'spark'
@@ -158,7 +181,6 @@ class VFXSystem {
         }
     }
     
-    // ★変更: 煙は不規則なグレーの回転体
     addSmoke(x, y) { 
         this.add({ 
             x:x, y:y, 
@@ -172,7 +194,6 @@ class VFXSystem {
         }); 
     }
     
-    // カード燃焼用の激しい炎
     addFire(x, y) { 
         this.add({ 
             x:x, y:y, 
@@ -181,7 +202,7 @@ class VFXSystem {
             color: (Math.random()>0.3) ? "#ff4400" : "#ffff00", 
             size: 4 + Math.random()*3, 
             life: 30+Math.random()*20, 
-            type:'smoke', // 挙動は煙と同じで良い（浮力あり）
+            type:'smoke', 
             vAng: (Math.random()-0.5)*0.2
         }); 
     }
@@ -193,11 +214,10 @@ class VFXSystem {
         this.add(params); 
     }
     
-    addUnitDebris(x, y) { /* 削除済みだが互換性のため空関数として残す */ }
+    addUnitDebris(x, y) { }
     hexToInt(hex) { if (hex === undefined || hex === null) return 0xffffff; if (typeof hex === 'number') return hex; if (typeof hex !== 'string') return 0xffffff; return parseInt(hex.replace('#', '0x'), 16); }
 }
 
-// ... (EnvSystemは変更なし) ...
 class EnvSystem {
     constructor() { this.grassElements = []; this.treeElements = []; this.gustPower = 0; this.waveTime = 0; this.TOTAL_GRASS_FRAMES = 60; }
     preload(scene) {
