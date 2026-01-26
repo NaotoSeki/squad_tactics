@@ -1,4 +1,4 @@
-/** PHASER VFX & ENV: Fixed Missing Trees (Added origY) */
+/** PHASER VFX & ENV: Cinematic Tracers & No Simple Shapes */
 
 class VFXSystem {
     constructor() {
@@ -16,6 +16,10 @@ class VFXSystem {
         for (let i = this.particles.length - 1; i >= 0; i--) {
             let p = this.particles[i];
             if (p.delay > 0) { p.delay--; continue; }
+            
+            // 保存用: 直前の座標
+            p.prevX = p.x; p.prevY = p.y;
+
             p.life--;
             p.x += p.vx; p.y += p.vy;
             
@@ -26,6 +30,14 @@ class VFXSystem {
                 const dx = p.ex - p.sx; const dy = p.ey - p.sy;
                 p.x = p.sx + dx * t; p.y = p.sy + dy * t;
                 if (p.arcHeight > 0) p.y -= Math.sin(t * Math.PI) * p.arcHeight;
+                
+                // 弾速が速いので、prevXがジャンプしないように補間
+                if(t < 1) {
+                    p.prevX = p.sx + dx * (t - p.speed*0.5);
+                    p.prevY = p.sy + dy * (t - p.speed*0.5);
+                    if (p.arcHeight > 0) p.prevY -= Math.sin((t-p.speed*0.5) * Math.PI) * p.arcHeight;
+                }
+
                 if (t >= 1) { if (typeof p.onHit === 'function') p.onHit(); p.life = 0; }
             } else {
                 p.vy += 0.2; 
@@ -54,27 +66,78 @@ class VFXSystem {
         graphics.clear();
         this.particles.forEach(p => {
             if (p.delay > 0) return;
-            if (p.type === 'wind') {
+            
+            // ★変更: 弾丸の描画 (単純な円ではなく、光の筋)
+            if (p.type === 'proj') {
+                if(p.isTracer) {
+                    const alpha = Math.min(1.0, p.life * 0.2);
+                    // 曳光弾: コア（白）＋グロー（黄色/オレンジ）
+                    const color = (p.type === 'shell_fast') ? 0xffaa55 : 0xffffaa;
+                    
+                    // 光の尾
+                    graphics.lineStyle(2, color, alpha);
+                    graphics.beginPath();
+                    graphics.moveTo(p.prevX, p.prevY);
+                    graphics.lineTo(p.x, p.y);
+                    graphics.strokePath();
+
+                    // コア
+                    graphics.lineStyle(1, 0xffffff, alpha + 0.2);
+                    graphics.beginPath();
+                    graphics.moveTo(p.prevX + (p.x-p.prevX)*0.5, p.prevY + (p.y-p.prevY)*0.5);
+                    graphics.lineTo(p.x, p.y);
+                    graphics.strokePath();
+                }
+            }
+            else if (p.type === 'wind') {
                 graphics.lineStyle(1, 0xffffff, p.alpha);
                 graphics.beginPath();
                 graphics.moveTo(p.x, p.y);
                 graphics.lineTo(p.x - p.vx * 15, p.y - p.vy * 15); 
                 graphics.strokePath();
             } else {
+                // スパーク (破片)
                 const alpha = p.life / p.maxLife;
                 graphics.fillStyle(this.hexToInt(p.color), alpha);
-                if (p.type === 'proj') graphics.fillCircle(p.x, p.y, 3);
-                else if(p.type === 'smoke') graphics.fillCircle(p.x, p.y, p.size * (2-alpha));
+                if(p.type === 'smoke') graphics.fillCircle(p.x, p.y, p.size * (2-alpha));
                 else graphics.fillRect(p.x, p.y, p.size, p.size);
             }
         });
     }
     
     add(p) { p.life = p.life || 60; p.maxLife = p.life; p.vx = p.vx || 0; p.vy = p.vy || 0; p.delay = p.delay || 0; if (!p.color) p.color = "#ffffff"; this.particles.push(p); }
-    addExplosion(x, y, color, count) { this.shakeRequest = 5; for(let i=0; i<count; i++) { const angle = Math.random() * Math.PI * 2; const speed = Math.random() * 3 + 1; this.add({ x:x, y:y, vx:Math.cos(angle)*speed, vy:Math.sin(angle)*speed-2, color:color, size:Math.random()*4+2, life:30+Math.random()*20, type:'spark' }); } for(let i=0; i<count/2; i++) { this.add({ x:x, y:y, vx:(Math.random()-0.5), vy:-Math.random()*2, color:"#555", size:5, life:60, type:'smoke' }); } }
+    
+    // ★変更: 煙の円(Smoke Circle)を排除、鋭い破片(Spark)のみに
+    addExplosion(x, y, color, count) { 
+        this.shakeRequest = 5; 
+        for(let i=0; i<count*2; i++) { 
+            const angle = Math.random() * Math.PI * 2; 
+            const speed = Math.random() * 5 + 2; 
+            // 飛び散る破片
+            this.add({ 
+                x:x, y:y, 
+                vx:Math.cos(angle)*speed, 
+                vy:Math.sin(angle)*speed-3, 
+                color:color, 
+                size:Math.random()*3+1, 
+                life:20+Math.random()*15, 
+                type:'spark' 
+            }); 
+        } 
+        // 煙は削除（スプライトアニメに任せる）
+    }
+    
     addSmoke(x, y) { this.add({ x:x, y:y, vx:(Math.random()-0.5)*0.5, vy:-0.5-Math.random()*0.5, color:"#888", size:4, life:80, type:'smoke' }); }
     addFire(x, y) { this.add({ x:x, y:y, vx:(Math.random()-0.5), vy:-1-Math.random(), color:"#fa0", size:3, life:40, type:'spark' }); }
-    addProj(params) { params.type = 'proj'; params.life = 999; if(!params.color) params.color="#ffffaa"; this.add(params); }
+    
+    // ★変更: 弾丸追加時に isTracer フラグを受け取る
+    addProj(params) { 
+        params.type = 'proj'; 
+        params.life = 999; 
+        if(!params.color) params.color="#ffffaa"; 
+        this.add(params); 
+    }
+    
     addUnitDebris(x, y) { for(let i=0; i<8; i++) { this.add({ x:x, y:y, vx:(Math.random()-0.5)*4, vy:-Math.random()*5, color:"#422", size:3, life:100, type:'spark' }); } }
     hexToInt(hex) { if (hex === undefined || hex === null) return 0xffffff; if (typeof hex === 'number') return hex; if (typeof hex !== 'string') return 0xffffff; return parseInt(hex.replace('#', '0x'), 16); }
 }
@@ -94,7 +157,6 @@ class EnvSystem {
         const canvasH = 64 * TEXTURE_SCALE;
         const palettes = [0x4a5d23, 0x5b6e34, 0x3a4d13, 0x6c7a44, 0x554e33];
 
-        // --- Grass Type A ---
         if (!scene.textures.exists('hd_grass_0')) {
             const bladeDefsA = [];
             for(let i=0; i<45; i++) {
@@ -109,7 +171,6 @@ class EnvSystem {
             this.generateGrassFrames(scene, 'hd_grass', bladeDefsA, canvasW, canvasH, TEXTURE_SCALE, 0.7);
         }
 
-        // --- Grass Type B ---
         if (!scene.textures.exists('hd_grass_b_0')) {
             const bladeDefsB = [];
             for(let i=0; i<55; i++) { 
@@ -124,11 +185,9 @@ class EnvSystem {
             this.generateGrassFrames(scene, 'hd_grass_b', bladeDefsB, canvasW, canvasH, TEXTURE_SCALE, 0.4);
         }
 
-        // --- 3. Organic Fluffy Fir Tree ---
         const treeW = 100 * TEXTURE_SCALE; 
         const treeH = 170 * TEXTURE_SCALE;
 
-        // 1. 幹 (Trunk)
         if (!scene.textures.exists('hd_tree_trunk')) {
             const g = scene.make.graphics({x:0, y:0, add:false});
             g.fillStyle(0x332211); 
@@ -145,7 +204,6 @@ class EnvSystem {
             g.generateTexture('hd_tree_trunk', treeW, treeH);
         }
 
-        // 2. 葉 (Leaves)
         const layers = 3;
         const baseColors = [
             { r: 10, g: 31, b: 11 }, // Dark
@@ -158,7 +216,6 @@ class EnvSystem {
             if (scene.textures.exists(key)) continue;
 
             const g = scene.make.graphics({x:0, y:0, add:false});
-            
             const startH = 0.9 - (l * 0.25); 
             const endH = startH - 0.4;
             const branches = 80 + l * 30; 
@@ -284,7 +341,6 @@ class EnvSystem {
             treeContainer.currentSkew = 0;
             treeContainer.baseSkew = 0;
             treeContainer.origX = x + ox;
-            // ★追加: これがないとカリングで消えてしまう！
             treeContainer.origY = y + oy;
             treeContainer.swayOffset = Math.random() * 100;
 
