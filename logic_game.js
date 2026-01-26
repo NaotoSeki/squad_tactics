@@ -1,4 +1,4 @@
-/** LOGIC GAME: AI Attack Fix, Auto-Reload, Equipment Swap */
+/** LOGIC GAME: Right-Click Cancel for Warnings */
 
 function createCardIcon(type) {
     const c = document.createElement('canvas'); c.width = 1; c.height = 1; return c.toDataURL();
@@ -60,6 +60,14 @@ class Game {
     }
 
     handleRightClick(mx, my) {
+        // ★追加: 警告モーダルが表示中なら、右クリックでキャンセルボタンを押す
+        const warnModal = document.getElementById('warning-modal');
+        if (warnModal && warnModal.style.display === 'block') {
+            const cancelBtn = document.getElementById('warn-cancel');
+            if (cancelBtn) cancelBtn.click();
+            return;
+        }
+
         if (this.interactionMode === 'MOVE' || this.interactionMode === 'ATTACK' || this.interactionMode === 'MELEE') {
             this.setMode('SELECT'); 
             if (this.selectedUnit) {
@@ -240,7 +248,7 @@ class Game {
     }
 
     handleClick(p) {
-        if (this.state !== 'PLAY') return; // ★二重呼び出しガード
+        if (this.state !== 'PLAY') return; 
 
         if (this.interactionMode === 'SELECT') { const u = this.getUnitInHex(p.q, p.r); if (!u) this.clearSelection(); } 
         else if (this.interactionMode === 'MOVE') { if (this.isValidHex(p.q, p.r) && this.path.length > 0) { const last = this.path[this.path.length - 1]; if (last.q === p.q && last.r === p.r) { 
@@ -397,7 +405,6 @@ class Game {
 
     async actionAttack(a, d) {
         if (!a) return; 
-        // ★修正: プレイヤー操作時のみPLAY状態チェックを強制。AI(Enemy)はANIM中でも許可。
         if (a.team === 'player' && this.state !== 'PLAY') return;
         
         const w = a.hands; if (!w) return;
