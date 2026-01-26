@@ -1,4 +1,4 @@
-/** LOGIC GAME: Infantry Auto-Reload & Map Centering */
+/** LOGIC GAME: Added swapEquipment & Robust Melee Logic */
 
 function createCardIcon(type) {
     const c = document.createElement('canvas'); c.width = 1; c.height = 1; return c.toDataURL();
@@ -69,6 +69,36 @@ class Game {
         } else {
             this.showContext(mx, my);
         }
+    }
+
+    // ★追加: 装備入れ替えロジック
+    swapEquipment(src, tgt) {
+        const u = this.selectedUnit;
+        if(!u) return;
+        
+        // ヘルパー: 場所定義からアイテムへの参照を取得
+        const getItem = (loc) => {
+            if(loc.type === 'main') return u.hands;
+            if(loc.type === 'bag') return u.bag[loc.index];
+            return null;
+        };
+        
+        // ヘルパー: アイテムをセット
+        const setItem = (loc, item) => {
+            if(loc.type === 'main') u.hands = item;
+            if(loc.type === 'bag') u.bag[loc.index] = item;
+        };
+
+        const item1 = getItem(src);
+        const item2 = getItem(tgt);
+
+        // 単純に入れ替え
+        setItem(src, item2);
+        setItem(tgt, item1);
+        
+        this.updateSidebar();
+        if(window.Sfx) Sfx.play('click');
+        this.log(`${u.name} 装備変更`);
     }
 
     createSoldier(templateKey, team, q, r) {
@@ -207,10 +237,6 @@ class Game {
                 this.setMode('SELECT'); 
             } else if (this.interactionMode === 'ATTACK') {
                 if (this.selectedUnit && u.team === this.selectedUnit.team) {
-                    // Friendly Fire Check handled by logic_ui.js -> handleClick callback
-                    // But here we need to alert. Since logic_ui isn't imported here as 'ui', we assume showActionMenu is handled.
-                    // Actually, the previous implementation of handleClick used confirm(). 
-                    // To use the custom modal, we need to access ui.
                     this.ui.showFriendlyFireWarning(
                         () => { this.actionAttack(this.selectedUnit, u); }, 
                         () => { this.setMode('SELECT'); this.onUnitClick(u); }
@@ -323,12 +349,10 @@ class Game {
         if (w.isBroken) { this.log("武器故障中！修理が必要"); return; }
         if (w.isConsumable && w.current <= 0) { this.log("使用済みです"); return; }
         
-        // ★追加: 歩兵の自動リロード
         if (!a.def.isTank && w.current <= 0) {
             const magIndex = a.bag.findIndex(i => i && i.type === 'ammo' && i.ammoFor === w.code);
             if (magIndex !== -1) {
                 const reloadCost = w.rld || 1;
-                // APが「リロード代 + 攻撃代」あるか？
                 if (a.ap >= reloadCost + w.ap) {
                     this.log(`${a.name} 自動リロード`);
                     if (window.Sfx) Sfx.play('reload');
@@ -336,7 +360,7 @@ class Game {
                     a.ap -= reloadCost;
                     w.current = w.cap;
                     this.refreshUnitState(a);
-                    await new Promise(r => setTimeout(r, 600)); // "カチャッ"の間
+                    await new Promise(r => setTimeout(r, 600)); 
                 } else {
                     this.log(`AP不足で装填＆攻撃不可 (必要:${reloadCost + w.ap})`);
                     return;
