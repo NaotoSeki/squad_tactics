@@ -1,4 +1,4 @@
-/** LOGIC GAME: Core Game Loop & Rules (Complete) */
+/** LOGIC GAME: Removed Delayed Debris Effect */
 
 function createCardIcon(type) {
     const c = document.createElement('canvas'); c.width = 1; c.height = 1; return c.toDataURL();
@@ -102,7 +102,6 @@ class Game {
         this.selectedUnit = null; this.reachableHexes = []; this.attackLine = []; this.aimTargetUnit = null; this.path = []; this.cardsUsed = 0;
         this.units = this.units.filter(u => u.team === 'player' && u.hp > 0); this.units.forEach(u => { u.q = -999; u.r = -999; });
         
-        // ここでエラーが出ていた箇所
         this.generateMap();
         
         if (this.units.length === 0) { this.setupSlots.forEach(k => { const p = this.getSafeSpawnPos('player'); const u = this.createSoldier(k, 'player', p.q, p.r); this.units.push(u); }); } else { this.units.forEach(u => { const p = this.getSafeSpawnPos('player'); u.q = p.q; u.r = p.r; }); }
@@ -369,7 +368,7 @@ class Game {
                 d.deadProcessed = true; 
                 this.log(`>> ${d.name} を撃破！`); 
                 if (window.Sfx) Sfx.play('death'); 
-                if (window.VFX) VFX.addUnitDebris(Renderer.hexToPx(d.q, d.r).x, Renderer.hexToPx(d.q, d.r).y); 
+                // ★削除済み: VFX.addUnitDebris(...)
                 if(this.checkWin()) return;
             }
             this.state = 'PLAY'; 
@@ -400,8 +399,6 @@ class Game {
             if (lastHex.q === targetQ && lastHex.r === targetR) { const target = this.getUnitInHex(lastHex.q, lastHex.r); if (target && target.team !== u.team) { this.aimTargetUnit = target; } }
         }
     }
-
-    // --- Missing Methods Added Below ---
 
     generateMap() {
         this.map = []; for (let q = 0; q < MAP_W; q++) { this.map[q] = []; for (let r = 0; r < MAP_H; r++) { this.map[q][r] = TERRAIN.VOID; } }
