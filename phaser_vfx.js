@@ -1,4 +1,4 @@
-/** PHASER VFX & ENV: Multi-Layered Natural Trees & Mixed Grass */
+/** PHASER VFX & ENV: Multi-Layered Natural Trees & Mixed Grass (With Culling) */
 
 class VFXSystem {
     constructor() {
@@ -124,7 +124,7 @@ class EnvSystem {
             this.generateGrassFrames(scene, 'hd_grass_b', bladeDefsB, canvasW, canvasH, TEXTURE_SCALE, 0.4);
         }
 
-        // --- 3. Organic Fluffy Fir Tree (New Style) ---
+        // --- 3. Organic Fluffy Fir Tree ---
         const treeW = 100 * TEXTURE_SCALE; 
         const treeH = 170 * TEXTURE_SCALE;
 
@@ -145,13 +145,12 @@ class EnvSystem {
             g.generateTexture('hd_tree_trunk', treeW, treeH);
         }
 
-        // 2. 葉 (Leaves) - カラーバリエーションと有機的な形状
+        // 2. 葉 (Leaves)
         const layers = 3;
-        // ベースカラー定義 (RGB)
         const baseColors = [
-            { r: 10, g: 31, b: 11 }, // Dark (Bottom)
+            { r: 10, g: 31, b: 11 }, // Dark
             { r: 22, g: 51, b: 24 }, // Mid
-            { r: 34, g: 68, b: 34 }  // Light (Top)
+            { r: 34, g: 68, b: 34 }  // Light
         ];
 
         for(let l=0; l<layers; l++) {
@@ -162,7 +161,7 @@ class EnvSystem {
             
             const startH = 0.9 - (l * 0.25); 
             const endH = startH - 0.4;
-            const branches = 80 + l * 30; // 本数を増やす
+            const branches = 80 + l * 30; 
             const baseCol = baseColors[l];
 
             for(let i=0; i<branches; i++) {
@@ -172,12 +171,9 @@ class EnvSystem {
                 const widthRatio = (rndH - 0.1) / 0.8; 
                 const layerWidth = treeW * 0.95 * widthRatio;
                 
-                // ★色ゆらぎ: ベースカラーからRGB値をランダムに少しずらす
                 const rVar = Math.floor((Math.random() - 0.5) * 20);
-                const gVar = Math.floor((Math.random() - 0.5) * 30); // 緑成分は大きく振る
+                const gVar = Math.floor((Math.random() - 0.5) * 30);
                 const bVar = Math.floor((Math.random() - 0.5) * 20);
-                
-                // 上層に行くほど明るい色が混ざる確率を上げる
                 const highlight = (Math.random() < (0.1 + l * 0.2)) ? 20 : 0;
 
                 const r = Phaser.Math.Clamp(baseCol.r + rVar + highlight, 0, 255);
@@ -185,25 +181,20 @@ class EnvSystem {
                 const b = Phaser.Math.Clamp(baseCol.b + bVar + highlight, 0, 255);
                 const color = Phaser.Display.Color.GetColor(r, gVal, b);
 
-                // 線幅にも変化をつける (根元は太く、先は細く見せるために2回描くなど)
                 g.lineStyle((2.0 + Math.random()) * TEXTURE_SCALE, color, 0.9);
 
                 const cx = treeW/2;
                 const side = Math.random() > 0.5 ? 1 : -1;
                 const length = layerWidth * 0.5 * (0.5 + Math.random()*0.6);
                 
-                const startX = cx + (Math.random()-0.5) * (treeW*0.08); // 幹から少し離れることも
+                const startX = cx + (Math.random()-0.5) * (treeW*0.08);
                 const startY = layerY + (Math.random()-0.5) * (treeH*0.02);
-                
-                // 枝先の位置（ランダム性を高めてカクカク感を消す）
                 const endX = startX + (side * length);
-                // 垂れ下がり具合もランダムに
                 const droop = (length * 0.3) + Math.random() * (treeH * 0.08);
                 const endY = startY + droop;
                 
-                // 制御点（有機的なカーブを作る）
                 const ctrlX = startX + (side * length * 0.3) + (Math.random()-0.5)*10;
-                const ctrlY = startY - (length * 0.15) + (Math.random()-0.5)*10; // 少し持ち上げてから垂らす
+                const ctrlY = startY - (length * 0.15) + (Math.random()-0.5)*10; 
 
                 const curve = new Phaser.Curves.QuadraticBezier(
                     new Phaser.Math.Vector2(startX, startY),
@@ -212,7 +203,6 @@ class EnvSystem {
                 );
                 curve.draw(g);
 
-                // ★ハイライト: 枝の上に細く明るい線を重ねて立体感を出す
                 if (Math.random() < 0.3) {
                     g.lineStyle(1.0 * TEXTURE_SCALE, Phaser.Display.Color.GetColor(r+20, gVal+20, b+10), 0.6);
                     curve.draw(g);
@@ -312,10 +302,33 @@ class EnvSystem {
         this.waveTime += 0.02; const t = this.waveTime;
         this.gustPower *= 0.98; if(this.gustPower < 0.01) this.gustPower = 0;
 
+        // ★追加: カリング用カメラ情報取得
+        const mainScene = this.grassElements[0]?.scene;
+        let cam = null;
+        let bounds = null;
+        if (mainScene) {
+            cam = mainScene.cameras.main;
+            // 画面より少し広めに判定領域を取る (パッピング防止)
+            bounds = new Phaser.Geom.Rectangle(
+                cam.worldView.x - 100, 
+                cam.worldView.y - 100, 
+                cam.worldView.width + 200, 
+                cam.worldView.height + 200
+            );
+        }
+
         // 1. Grass
         this.grassElements = this.grassElements.filter(g => g.scene);
         for (let i = 0; i < this.grassElements.length; i++) {
             const g = this.grassElements[i];
+            
+            // ★カリング: 画面外ならスキップ
+            if (bounds && !bounds.contains(g.origX, g.origY)) {
+                g.visible = false;
+                continue;
+            }
+            g.visible = true;
+
             const wavePhase = t * 1.0 - g.origX * 0.015; 
             const bigWave = (Math.sin(wavePhase) + 1.0) * 0.5; 
             const ripple = Math.sin(t * 2.5 + g.origY * 0.1) * 0.05; 
@@ -338,6 +351,14 @@ class EnvSystem {
         this.treeElements = this.treeElements.filter(tr => tr.scene);
         for (let i = 0; i < this.treeElements.length; i++) {
             const tr = this.treeElements[i];
+
+            // ★カリング: 木も同様にチェック
+            if (bounds && !bounds.contains(tr.origX, tr.origY)) {
+                tr.visible = false;
+                continue;
+            }
+            tr.visible = true;
+
             const wavePhase = t * 0.8 - tr.origX * 0.01 + tr.swayOffset;
             const mainSway = Math.sin(wavePhase) * 0.04;
             const gust = this.gustPower * 0.12;
