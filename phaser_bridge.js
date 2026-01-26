@@ -1,8 +1,8 @@
-/** PHASER BRIDGE: Enhanced UI Hover Check & Cleanup */
+/** PHASER BRIDGE: Enhanced UI Hover Check & Card Drop Highlight (Complete) */
 let phaserGame = null;
 window.HIGH_RES_SCALE = 2.0; 
 
-// ... (getCardTextureKey, createGradientTexture, createHexTexture, Renderer, Card, UIScene クラスは変更なし) ...
+// ... (getCardTextureKey, createGradientTexture, createHexTexture は変更なし) ...
 window.getCardTextureKey = function(scene, type) {
     const key = `card_texture_${type}`;
     if (scene.textures.exists(key)) return key;
@@ -107,7 +107,7 @@ class Card extends Phaser.GameObjects.Container {
         if(window.gameLogic && window.gameLogic.cardsUsed >= 2) return; 
         this.isDragging = true; 
         Renderer.isCardDragging = true; 
-        this.setAlpha(0.6); // ★修正: ドラッグ中は半透明に
+        this.setAlpha(0.6); // ★修正: ドラッグ中は半透明
         this.setScale(1.1); 
         const hand = this.parentContainer; 
         const worldPos = hand.getLocalTransformMatrix().transformPoint(this.x, this.y); 
@@ -201,22 +201,20 @@ class MainScene extends Phaser.Scene {
     }
     update(time, delta) {
         if (!window.gameLogic) return;
-        // ... (VFX, EnvSystemの更新など) ...
-
-        // ... (ユニット描画更新) ...
+        if(window.VFX && window.VFX.shakeRequest > 0) { this.cameras.main.shake(100, window.VFX.shakeRequest * 0.001); window.VFX.shakeRequest = 0; }
+        if(window.EnvSystem) window.EnvSystem.update(time);
+        if(window.VFX) { window.VFX.update(); this.vfxGraphics.clear(); window.VFX.draw(this.vfxGraphics); }
+        if (window.gameLogic.map.length > 0 && !this.mapGenerated) { this.createMap(); this.mapGenerated = true; }
         if(this.unitView) this.unitView.update(time, delta);
-        
         this.overlayGraphics.clear();
         
         // ★追加: カードドラッグ時のドロップハイライト
         if (this.dragHighlightHex) {
             const h = this.dragHighlightHex;
-            const px = Renderer.hexToPx(h.q, h.r);
             
             // 配置可能かチェックして色を変える
             let isValid = false;
             if (window.gameLogic) {
-                // 仮の判定 (詳細はLogicに任せるが、ここでは簡易チェック)
                 isValid = window.gameLogic.isValidHex(h.q, h.r) && 
                           window.gameLogic.map[h.q][h.r].id !== -1 && 
                           window.gameLogic.getUnitsInHex(h.q, h.r).length < 4;
