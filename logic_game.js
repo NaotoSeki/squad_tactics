@@ -1,4 +1,4 @@
-/** LOGIC GAME: High-Quality Map Gen & Interaction Fix */
+/** LOGIC GAME: High-Quality Map Gen & Correct Interaction Logic */
 
 function createCardIcon(type) {
     const c = document.createElement('canvas'); c.width = 1; c.height = 1; return c.toDataURL();
@@ -41,19 +41,20 @@ class Game {
         this.setupSlots = [];
         this.ui.renderSetupCards(this.setupSlots, (k, domEl) => {
             const idx = this.setupSlots.indexOf(k);
-            if (idx >= 0) { this.setupSlots.splice(idx, 1); domEl.classList.remove('selected'); domEl.querySelector('.card-badge').style.display = 'none'; domEl.style.borderColor = "#555"; }
-            else { if (this.setupSlots.length < 3) { this.setupSlots.push(k); domEl.classList.add('selected'); domEl.querySelector('.card-badge').style.display = 'flex'; domEl.style.borderColor = "#d84"; } }
+            if (idx >= 0) { 
+                this.setupSlots.splice(idx, 1); 
+                domEl.classList.remove('selected'); domEl.querySelector('.card-badge').style.display = 'none'; domEl.style.borderColor = "#555"; 
+            } else { 
+                if (this.setupSlots.length < 3) { 
+                    this.setupSlots.push(k); 
+                    domEl.classList.add('selected'); domEl.querySelector('.card-badge').style.display = 'flex'; domEl.style.borderColor = "#d84"; 
+                } 
+            }
             const btn = document.getElementById('btn-start'); if (this.setupSlots.length === 3) { btn.style.display = 'inline-block'; } else { btn.style.display = 'none'; }
         });
     }
 
     handleRightClick(mx, my, hex) {
-        const warnModal = document.getElementById('warning-modal');
-        if (warnModal && warnModal.style.display === 'block') {
-            const cancelBtn = document.getElementById('warn-cancel');
-            if (cancelBtn) cancelBtn.click();
-            return;
-        }
         if (this.interactionMode !== 'SELECT') {
             this.setMode('SELECT'); 
             if (this.selectedUnit && this.selectedUnit.team === 'player') {
@@ -126,18 +127,21 @@ class Game {
     }
 
     getSafeSpawnPos(team) {
-        const cy = Math.floor(MAP_H / 2);
-        for (let i = 0; i < 100; i++) { const q = Math.floor(Math.random() * MAP_W); const r = Math.floor(MAP_H / 2 + (team==='player'?2:-2) + Math.floor(Math.random()*4-2)); if (this.isValidHex(q, r) && this.getUnitsInHex(q, r).length < 4 && this.map[q][r].id !== -1 && this.map[q][r].id !== 5) { return { q, r }; } }
+        for (let i = 0; i < 100; i++) { 
+            const q = Math.floor(Math.random() * MAP_W); 
+            const r = Math.floor(MAP_H / 2 + (team==='player'?2:-2) + Math.floor(Math.random()*4-2)); 
+            if (this.isValidHex(q, r) && this.getUnitsInHex(q, r).length < 4 && this.map[q][r].id !== -1 && this.map[q][r].id !== 5) { return { q, r }; } 
+        }
         return { q: Math.floor(MAP_W/2), r: Math.floor(MAP_H/2) };
     }
 
     spawnAtSafeGround(team, type) { const p = this.getSafeSpawnPos(team); const u = this.createSoldier(type, team, p.q, p.r); if (u) { this.units.push(u); this.log(`増援合流: ${u.name}`); } }
 
     checkDeploy(targetHex) {
-        if(!this.isValidHex(targetHex.q, targetHex.r) || this.map[targetHex.q][targetHex.r].id === -1) { this.log("配置不可: マップ外です"); return false; }
-        if(this.map[targetHex.q][targetHex.r].id === 5) { this.log("配置不可: 水上です"); return false; }
+        if(!this.isValidHex(targetHex.q, targetHex.r) || this.map[targetHex.q][targetHex.r].id === -1) { this.log("配置不可: マップ範囲外です"); return false; }
+        if(this.map[targetHex.q][targetHex.r].id === 5) { this.log("配置不可: 水上には配置できません"); return false; }
         if (this.getUnitsInHex(targetHex.q, targetHex.r).length >= 4) { this.log("配置不可: 混雑しています"); return false; }
-        if (this.cardsUsed >= 2) { this.log("配置不可: コスト上限です"); return false; }
+        if (this.cardsUsed >= 2) { this.log("配置不可: 指揮コスト上限(2/2)に達しています"); return false; }
         return true;
     }
     deployUnit(targetHex, cardType) {
@@ -154,14 +158,12 @@ class Game {
             if (typeof Renderer !== 'undefined' && Renderer.game) { const pointer = Renderer.game.input.activePointer; this.ui.showActionMenu(u, pointer.x, pointer.y); }
             if (window.Sfx) Sfx.play('click');
         } else {
-            // 敵をクリックした場合は情報のみ表示（操作メニューは出さない）
             if (this.interactionMode === 'ATTACK' && this.selectedUnit && this.selectedUnit.team === 'player') { this.actionAttack(this.selectedUnit, u); return; }
             if (this.interactionMode === 'MELEE' && this.selectedUnit && this.selectedUnit.team === 'player') { this.actionMelee(this.selectedUnit, u); this.setMode('SELECT'); return; }
             this.selectedUnit = u; this.refreshUnitState(u); this.hideActionMenu();
         }
     }
 
-    showActionMenu(u) { }
     hideActionMenu() { this.ui.hideActionMenu(); }
 
     setMode(mode) {
@@ -236,7 +238,11 @@ class Game {
         a.ap -= 2; if (typeof Renderer !== 'undefined' && Renderer.playAttackAnim) Renderer.playAttackAnim(a, d);
         await new Promise(r => setTimeout(r, 300));
         d.hp -= (10 + (a.stats?.str || 0) * 3 + bonusDmg); if (window.Sfx) Sfx.play('hit');
-        if (d.hp <= 0 && !d.deadProcessed) { d.deadProcessed = true; if (window.Sfx) Sfx.play('death'); if (window.VFX) { const p = Renderer.hexToPx(d.q, d.r); VFX.addUnitDebris(p.x, p.y); } if(this.checkWin()) return; }
+        if (d.hp <= 0 && !d.deadProcessed) { 
+            d.deadProcessed = true; if (window.Sfx) Sfx.play('death'); 
+            if (window.VFX) { const p = Renderer.hexToPx(d.q, d.r); VFX.addUnitDebris(p.x, p.y); }
+            if(this.checkWin()) return; 
+        }
         this.refreshUnitState(a); this.checkPhaseEnd();
     }
 
@@ -259,7 +265,8 @@ class Game {
             await new Promise(r => setTimeout(r, isShell ? 200 : 60));
         }
         if (w.isConsumable && w.current <= 0) a.hands = null;
-        setTimeout(() => { if (d.hp <= 0 && !d.deadProcessed) { d.deadProcessed = true; if (window.Sfx) Sfx.play('death'); if (window.VFX) { const p = Renderer.hexToPx(d.q, d.r); VFX.addUnitDebris(p.x, p.y); } if(this.checkWin()) return; }
+        setTimeout(() => { 
+            if (d.hp <= 0 && !d.deadProcessed) { d.deadProcessed = true; if (window.Sfx) Sfx.play('death'); if (window.VFX) { const p = Renderer.hexToPx(d.q, d.r); VFX.addUnitDebris(p.x, p.y); } if(this.checkWin()) return; }
             this.state = 'PLAY'; if(a.def.isTank && w && w.current === 0 && w.reserve > 0 && this.tankAutoReload && a.ap >= 1) this.reloadWeapon();
             this.refreshUnitState(a); if (!(a.ap >= (w?w.ap:0))) { this.setMode('SELECT'); this.checkPhaseEnd(); }
         }, 800);
@@ -276,7 +283,6 @@ class Game {
         if (this.attackLine.length > 0) { const last = this.attackLine[this.attackLine.length - 1]; if (last.q === targetQ && last.r === targetR) this.aimTargetUnit = this.getUnitInHex(last.q, last.r); }
     }
 
-    // ★以前の高品質なアルゴリズムを復旧
     generateMap() {
         this.map = []; for (let q = 0; q < MAP_W; q++) { this.map[q] = []; for (let r = 0; r < MAP_H; r++) { this.map[q][r] = TERRAIN.VOID; } }
         const cx = Math.floor(MAP_W / 2), cy = Math.floor(MAP_H / 2);
@@ -288,11 +294,8 @@ class Game {
             const next = { q: w.q + dir[0], r: w.r + dir[1] };
             if (Math.random() < 0.05 && walkers.length < 5) walkers.push(next); else walkers[wIdx] = next;
         }
-        // スムージング（穴埋め）
         for (let i = 0; i < 3; i++) { for (let q = 1; q < MAP_W - 1; q++) { for (let r = 1; r < MAP_H - 1; r++) { if (this.map[q][r].id === -1) { if (this.getNeighbors(q, r).filter(n => this.map[n.q][n.r].id !== -1).length >= 4) this.map[q][r] = TERRAIN.GRASS; } } } }
-        // 水域生成
         for (let loop = 0; loop < 2; loop++) { const wC = []; for (let q = 0; q < MAP_W; q++) { for (let r = 0; r < MAP_H; r++) { if (this.map[q][r].id === -1 && this.getNeighbors(q, r).some(n => this.map[n.q][n.r].id !== -1)) wC.push({ q, r }); } } wC.forEach(w => { this.map[w.q][w.r] = TERRAIN.WATER; }); }
-        // バイオーム適用
         for (let q = 0; q < MAP_W; q++) { for (let r = 0; r < MAP_H; r++) { if (this.map[q][r].id !== -1 && this.map[q][r].id !== 5) { const n = Math.sin(q * 0.4) + Math.cos(r * 0.4) + Math.random() * 0.4; if (n > 1.1) this.map[q][r] = TERRAIN.FOREST; else if (n < -0.9) this.map[q][r] = TERRAIN.DIRT; if (Math.random() < 0.05) this.map[q][r] = TERRAIN.TOWN; } } }
     }
 
