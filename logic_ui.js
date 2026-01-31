@@ -1,4 +1,4 @@
-/** LOGIC UI: Robust Interface Management */
+/** LOGIC UI: Robust Interface Management (Defensive showContext) */
 
 class UIManager {
     constructor(game) {
@@ -15,7 +15,6 @@ class UIManager {
         });
 
         const stopPropagation = (e) => { e.stopPropagation(); };
-        // 警告モーダルをリストから除外
         const menuIds = ['context-menu', 'command-menu', 'setup-screen', 'reward-screen', 'gameover-screen'];
         menuIds.forEach(id => {
             const el = document.getElementById(id);
@@ -90,8 +89,11 @@ class UIManager {
 
     hideActionMenu() { const menu = document.getElementById('command-menu'); if (menu) menu.style.display = 'none'; }
 
+    // ★修正: hexがundefinedの場合の防衛策を追加
     showContext(mx, my, hex) {
         const m = document.getElementById('context-menu'); if (!m) return;
+        if (!hex || typeof hex.q === 'undefined') { m.style.display = 'none'; return; }
+
         const u = this.game.getUnitInHex(hex.q, hex.r);
         const t = this.game.isValidHex(hex.q, hex.r) ? this.game.map[hex.q][hex.r] : null;
         let h = "";
@@ -115,22 +117,16 @@ class UIManager {
             for (const [sk, count] of Object.entries(skillCounts)) { 
                 if (SKILL_STYLES[sk]) { 
                     const st = SKILL_STYLES[sk]; 
-                    skillHtml += `<div style="display:inline-block; background:${st.col}; color:#fff; font-weight:bold; font-size:10px; padding:3px 6px; margin:2px; border-radius:4px; box-shadow:0 1px 3px rgba(0,0,0,0.5); text-shadow:0 1px 1px rgba(0,0,0,0.8); border:1px solid rgba(255,255,255,0.2);">
-                        ${st.icon} ${st.name}${count > 1 ? ' x'+count : ''}
-                    </div>`; 
+                    skillHtml += `<div style="display:inline-block; background:${st.col}; color:#fff; font-weight:bold; font-size:10px; padding:3px 6px; margin:2px; border-radius:4px; box-shadow:0 1px 3px rgba(0,0,0,0.5); text-shadow:0 1px 1px rgba(0,0,0,0.8); border:1px solid rgba(255,255,255,0.2);">${st.icon} ${st.name}${count > 1 ? ' x'+count : ''}</div>`; 
                 } 
             }
         }
 
         const makeSlot = (item, type, index) => { 
             if (!item) return `<div class="slot empty" ondragover="onSlotDragOver(event)" ondragleave="onSlotDragLeave(event)" ondrop="onSlotDrop(event, '${type}', ${index})"><div style="font-size:10px; color:#555;">[EMPTY]</div></div>`; 
-            const isMain = (type === 'main'); 
-            const isAmmo = (item.type === 'ammo'); 
+            const isMain = (type === 'main'); const isAmmo = (item.type === 'ammo'); 
             let gaugeHtml = ""; if (!isAmmo && item.cap > 0) { gaugeHtml = `<div class="ammo-gauge">`; const maxDisplay = 20; if (u.def.isTank && isMain) { for(let i=0; i<Math.min(maxDisplay, item.reserve); i++) gaugeHtml += `<div class="shell"></div>`; if(item.reserve === 0) gaugeHtml += `<div class="shell empty"></div>`; } else { for(let i=0; i<item.current; i++) gaugeHtml += `<div class="bullet"></div>`; for(let i=item.current; i<item.cap; i++) gaugeHtml += `<div class="bullet" style="background:#333;box-shadow:none;"></div>`; } gaugeHtml += `</div>`; }
-            let toggleBtn = "";
-            if (isMain && item.modes && item.modes.length > 1) {
-                toggleBtn = `<span class="mode-toggle" onclick="gameLogic.toggleFireMode()" style="cursor:pointer; background:#444; padding:1px 4px; border-radius:3px; margin-left:5px; font-size:10px; color:#fff; border:1px solid #888;">x${item.burst}</span>`;
-            }
+            let toggleBtn = ""; if (isMain && item.modes && item.modes.length > 1) { toggleBtn = `<span class="mode-toggle" onclick="gameLogic.toggleFireMode()" style="cursor:pointer; background:#444; padding:1px 4px; border-radius:3px; margin-left:5px; font-size:10px; color:#fff; border:1px solid #888;">x${item.burst}</span>`; }
             let blinkClass = ""; let clickAction = ""; if (u.def.isTank && isMain && item.current === 0 && item.reserve > 0 && !tankAutoReload) { blinkClass = "blink-alert"; clickAction = `onclick="gameLogic.reloadWeapon(true)"`; }
             return `<div class="slot ${isMain?'main-weapon':'bag-item'} ${blinkClass}" ${clickAction} draggable="true" ondragstart="onSlotDragStart(event, '${type}', ${index})" ondragend="onSlotDragEnd(event)" ondragover="onSlotDragOver(event)" ondragleave="onSlotDragLeave(event)" ondrop="onSlotDrop(event, '${type}', ${index})"><div class="slot-name">${isMain?'🔫':''} ${item.name}${toggleBtn}</div>${!isAmmo ? `<div class="slot-meta"><span>RNG:${item.rng} DMG:${item.dmg}</span> <span class="ammo-text">${u.def.isTank&&isMain ? item.reserve : item.current}/${u.def.isTank&&isMain ? '∞' : item.cap}</span></div>` : `<div class="slot-meta" style="color:#d84">AMMO for ${item.ammoFor}</div>`}${gaugeHtml}</div>`; 
         };
