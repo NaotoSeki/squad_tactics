@@ -1,4 +1,4 @@
-/** LOGIC GAME: Main Gameplay Systems (Fixed JIT Reload & Removed Ally Warning) */
+/** LOGIC GAME: Main Gameplay Systems (Fixed Right Click Crash & Re-added Death VFX) */
 
 function createCardIcon(type) {
     const c = document.createElement('canvas'); c.width = 1; c.height = 1; return c.toDataURL();
@@ -58,8 +58,8 @@ class Game {
         });
     }
 
-    handleRightClick(mx, my) {
-        // ★修正: 警告モーダル判定を除去し、シンプルなキャンセル挙動に
+    // ★修正: hexパラメータを受け取るようにし、showContextへ正しく渡す
+    handleRightClick(mx, my, hex) {
         if (this.interactionMode === 'MOVE' || this.interactionMode === 'ATTACK' || this.interactionMode === 'MELEE') {
             this.setMode('SELECT'); 
             if (this.selectedUnit) {
@@ -67,7 +67,7 @@ class Game {
                 if(window.Sfx) Sfx.play('click');
             }
         } else {
-            this.showContext(mx, my);
+            this.showContext(mx, my, hex); 
         }
     }
 
@@ -160,8 +160,6 @@ class Game {
 
     onUnitClick(u) {
         if (this.state !== 'PLAY') return;
-
-        // ★修正: 味方クリック時は常に選択切り替え（警告なし）
         if (u.team === 'player') {
             if (this.interactionMode !== 'SELECT') this.setMode('SELECT');
             this.selectedUnit = u; this.refreshUnitState(u); 
@@ -172,12 +170,8 @@ class Game {
             if (window.Sfx) Sfx.play('click');
             return;
         }
-
-        // 敵クリック時の処理
         if (this.interactionMode === 'ATTACK' && this.selectedUnit) { this.actionAttack(this.selectedUnit, u); return; }
         if (this.interactionMode === 'MELEE' && this.selectedUnit) { this.actionMelee(this.selectedUnit, u); this.setMode('SELECT'); return; }
-        
-        // 敵ユニットのステータス閲覧
         this.selectedUnit = u; this.refreshUnitState(u); this.hideActionMenu();
     }
 
@@ -206,7 +200,6 @@ class Game {
     handleClick(p) {
         if (this.state !== 'PLAY') return; 
         const u = this.getUnitInHex(p.q, p.r);
-
         if (this.interactionMode === 'SELECT') { if (!u) this.clearSelection(); } 
         else if (this.interactionMode === 'MOVE') { 
             if (this.isValidHex(p.q, p.r) && this.path.length > 0) { 
@@ -216,8 +209,8 @@ class Game {
         } 
         else if (this.interactionMode === 'ATTACK' || this.interactionMode === 'MELEE') { 
             if (!u) { this.setMode('SELECT'); } 
-            else if (u.team === this.selectedUnit.team) { this.onUnitClick(u); } // 味方なら選択切り替え
-            else { // 敵なら攻撃
+            else if (u.team === this.selectedUnit.team) { this.onUnitClick(u); } 
+            else { 
                 if (this.interactionMode === 'ATTACK') this.actionAttack(this.selectedUnit, u);
                 else { this.actionMelee(this.selectedUnit, u); this.setMode('SELECT'); }
             }
@@ -275,15 +268,20 @@ class Game {
         await new Promise(r => setTimeout(r, 300));
         d.hp -= (10 + (a.stats?.str || 0) * 3 + bonusDmg);
         if (window.Sfx) Sfx.play('hit');
-        if (d.hp <= 0 && !d.deadProcessed) { d.deadProcessed = true; this.log(`>> ${d.name} を撃破！`); if (window.Sfx) Sfx.play('death'); if(this.checkWin()) return; }
+        // ★修正: 撃破時エフェクト復活
+        if (d.hp <= 0 && !d.deadProcessed) { 
+            d.deadProcessed = true; 
+            this.log(`>> ${d.name} を撃破！`); 
+            if (window.Sfx) Sfx.play('death'); 
+            if (window.VFX) { const p = Renderer.hexToPx(d.q, d.r); VFX.addUnitDebris(p.x, p.y); }
+            if(this.checkWin()) return; 
+        }
         this.refreshUnitState(a); this.checkPhaseEnd();
     }
 
     async actionAttack(a, d) {
         if (!a || (a.team === 'player' && this.state !== 'PLAY')) return;
         const w = a.hands; if (!w || w.isBroken || (w.isConsumable && w.current <= 0)) return;
-        
-        // JITリロード（自動）
         if (!a.def.isTank && w.current <= 0) {
             const magIdx = a.bag.findIndex(i => i && i.type === 'ammo' && i.ammoFor === w.code);
             if (magIdx !== -1 && a.ap >= (w.rld || 1)) { a.ap -= (w.rld || 1); a.bag[magIdx] = null; w.current = w.cap; if (window.Sfx) Sfx.play('reload'); this.refreshUnitState(a); await new Promise(r => setTimeout(r, 600)); } else return;
@@ -291,11 +289,9 @@ class Game {
         if (a.def.isTank && w.current <= 0 && this.tankAutoReload) {
             if (w.reserve > 0 && a.ap >= 1) { a.ap -= 1; w.reserve--; w.current = 1; if (window.Sfx) Sfx.play('reload'); this.refreshUnitState(a); } else return;
         }
-
         if (w.current <= 0 || a.ap < w.ap || this.hexDist(a, d) > w.rng) return;
         a.ap -= w.ap; this.state = 'ANIM';
         if (typeof Renderer !== 'undefined' && Renderer.playAttackAnim) Renderer.playAttackAnim(a, d);
-        
         const shots = w.isConsumable ? 1 : Math.min(w.burst || 1, w.current);
         this.log(`${a.name} 攻撃開始 (${w.name})`);
         for (let i = 0; i < shots; i++) {
@@ -320,7 +316,14 @@ class Game {
         }
         if (w.isConsumable && w.current <= 0) a.hands = null;
         setTimeout(() => {
-            if (d.hp <= 0 && !d.deadProcessed) { d.deadProcessed = true; this.log(`>> ${d.name} を撃破！`); if (window.Sfx) Sfx.play('death'); if(this.checkWin()) return; }
+            // ★修正: 撃破時エフェクト復活
+            if (d.hp <= 0 && !d.deadProcessed) { 
+                d.deadProcessed = true; 
+                this.log(`>> ${d.name} を撃破！`); 
+                if (window.Sfx) Sfx.play('death'); 
+                if (window.VFX) { const p = Renderer.hexToPx(d.q, d.r); VFX.addUnitDebris(p.x, p.y); }
+                if(this.checkWin()) return; 
+            }
             this.state = 'PLAY'; 
             if(a.def.isTank && w && w.current === 0 && w.reserve > 0 && this.tankAutoReload && a.ap >= 1) this.reloadWeapon();
             this.refreshUnitState(a); 
@@ -340,7 +343,7 @@ class Game {
     }
 
     generateMap() {
-        this.map = []; for (let q = 0; q < MAP_W; q++) { this.map[q] = []; for (let r = 0; r < MAP_H; r++) this.map[q][r] = TERRAIN.VOID; }
+        this.map = []; for (let q = 0; q < MAP_W; q++) { this.map[q] = []; for (let r = 0; r < MAP_H; r++) { this.map[q][r] = TERRAIN.VOID; } }
         let walkers = [{ q: Math.floor(MAP_W/2), r: Math.floor(MAP_H/2) }];
         for (let i = 0; i < 140; i++) {
             const w = walkers[Math.floor(Math.random() * walkers.length)];
