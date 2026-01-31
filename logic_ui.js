@@ -1,4 +1,4 @@
-/** LOGIC UI: Right-Click Cancel on Modal */
+/** LOGIC UI: Robust Interface Management */
 
 class UIManager {
     constructor(game) {
@@ -15,7 +15,8 @@ class UIManager {
         });
 
         const stopPropagation = (e) => { e.stopPropagation(); };
-        const menuIds = ['context-menu', 'command-menu', 'warning-modal', 'setup-screen', 'reward-screen', 'gameover-screen'];
+        // 警告モーダルをリストから除外
+        const menuIds = ['context-menu', 'command-menu', 'setup-screen', 'reward-screen', 'gameover-screen'];
         menuIds.forEach(id => {
             const el = document.getElementById(id);
             if (el) {
@@ -101,24 +102,6 @@ class UIManager {
         }
         h += `<hr style="border:0;border-top:1px solid #444;margin:5px 0;"><button onclick="gameLogic.endTurn();document.getElementById('context-menu').style.display='none';" style="width:100%;cursor:pointer;background:#522;color:#fcc;border:1px solid #d44;padding:3px;">TURN END</button>`;
         if (h !== "") { m.innerHTML = h; m.style.display = 'block'; m.style.left = (mx + 10) + 'px'; m.style.top = (my + 10) + 'px'; }
-    }
-
-    showFriendlyFireWarning(onConfirm, onCancel) {
-        const modal = document.getElementById('warning-modal');
-        const okBtn = document.getElementById('warn-ok');
-        const cancelBtn = document.getElementById('warn-cancel');
-        if(!modal || !okBtn || !cancelBtn) return;
-        modal.style.display = 'block';
-        
-        okBtn.onclick = () => { modal.style.display = 'none'; if(onConfirm) onConfirm(); };
-        cancelBtn.onclick = () => { modal.style.display = 'none'; if(onCancel) onCancel(); };
-        
-        // ★追加: モードル上での右クリックもキャンセル扱いにする
-        modal.oncontextmenu = (e) => { 
-            e.preventDefault(); 
-            cancelBtn.click(); 
-            return false; 
-        };
     }
 
     updateSidebar(u, state, tankAutoReload) {
