@@ -1,4 +1,4 @@
-/** PHASER UNIT: Grounded Shadows & Glow Selection */
+/** PHASER UNIT: Visuals & Robust Update Loop */
 
 class UnitView {
     constructor(scene, unitLayer, hpLayer) {
@@ -27,53 +27,93 @@ class UnitView {
         anims.create({ key: 'anim_melee', frames: anims.generateFrameNumbers('us_soldier', { start: 72, end: 79 }), frameRate: 15, repeat: 0 });
 
         if (!anims.exists('tank_idle')) { anims.create({ key: 'tank_idle', frames: anims.generateFrameNumbers('tank_sheet', { frames: [7, 6, 5, 6, 7, 5] }), frameRate: 10, repeat: -1 }); }
-        if (!anims.exists('explosion_anim')) { anims.create({ key: 'explosion_anim', frames: anims.generateFrameNumbers('explosion_sheet', { start: 0, end: 7 }), frameRate: 20, repeat: 0, hideOnComplete: true }); }
+        if (!anims.exists('explosion_anim')) { 
+            anims.create({ 
+                key: 'explosion_anim', 
+                frames: anims.generateFrameNumbers('explosion_sheet', { start: 0, end: 15 }), 
+                frameRate: 60, 
+                repeat: 0, 
+                hideOnComplete: true 
+            }); 
+        }
+    }
+
+    clear() {
+        this.visuals.forEach(v => {
+            if (v.container) v.container.destroy();
+            if (v.hpBg) v.hpBg.destroy();
+            if (v.hpBar) v.hpBar.destroy();
+            if (v.infoContainer) v.infoContainer.destroy();
+            if (v.skillContainer) v.skillContainer.destroy();
+        });
+        this.visuals.clear();
     }
 
     update(time, delta) {
         if (!window.gameLogic) return;
-        const activeIds = new Set();
-        const hexMap = new Map(); 
-        window.gameLogic.units.forEach(u => {
-            if (u.hp <= 0) return;
-            const key = `${u.q},${u.r}`;
-            if (!hexMap.has(key)) hexMap.set(key, []);
-            hexMap.get(key).push(u);
-            activeIds.add(u.id);
-        });
+        
+        try {
+            const activeIds = new Set();
+            const hexMap = new Map(); 
+            
+            // 1. 生存ユニットのリストアップ
+            window.gameLogic.units.forEach(u => {
+                if (u.hp <= 0) return;
+                const key = `${u.q},${u.r}`;
+                if (!hexMap.has(key)) hexMap.set(key, []);
+                hexMap.get(key).push(u);
+                activeIds.add(u.id);
+            });
 
-        window.gameLogic.units.forEach(u => {
-            if (u.hp <= 0) return;
-            let visual = this.visuals.get(u.id);
-            if (!visual) {
-                visual = this.createVisual(u);
-                this.visuals.set(u.id, visual);
-                this.unitLayer.add(visual);
-            }
-            const siblings = hexMap.get(`${u.q},${u.r}`) || [];
-            const index = siblings.indexOf(u);
-            const count = siblings.length;
-            this.updateVisual(visual, u, delta, index, count);
+            // 2. ユニットの表示更新 (ここでのエラーが全体を止めないようにする)
+            window.gameLogic.units.forEach(u => {
+                if (u.hp <= 0) return;
+                
+                try {
+                    let visual = this.visuals.get(u.id);
+                    if (!visual) {
+                        this.createVisual(u);
+                        visual = this.visuals.get(u.id);
+                        if(visual && visual.container) this.unitLayer.add(visual.container); 
+                    }
+                    
+                    if (visual && (!visual.container || !visual.container.scene)) {
+                        this.visuals.delete(u.id);
+                        return;
+                    }
 
-            const isSelected = (window.gameLogic.selectedUnit === u);
-            if (isSelected) {
-                if (this.unitLayer.exists(visual)) { this.unitLayer.remove(visual); this.hpLayer.add(visual); }
-                // ★追加: 選択時にGlow FXを適用
-                if (!visual.glowFx && visual.sprite) {
-                    visual.glowFx = visual.sprite.postFX.addGlow(0xffff00, 2, 0, false, 0.1, 12);
+                    const siblings = hexMap.get(`${u.q},${u.r}`) || [];
+                    const index = siblings.indexOf(u);
+                    const count = siblings.length;
+                    this.updateVisual(visual, u, delta, index, count);
+
+                    const isSelected = (window.gameLogic.selectedUnit === u);
+                    if (isSelected) {
+                        if (this.unitLayer.exists(visual.container)) { this.unitLayer.remove(visual.container); this.hpLayer.add(visual.container); }
+                        if (!visual.glowFx && visual.sprite) {
+                            visual.glowFx = visual.sprite.postFX.addGlow(0xffff00, 2, 0, false, 0.1, 12);
+                        }
+                    } else {
+                        if (this.hpLayer.exists(visual.container)) { this.hpLayer.remove(visual.container); this.unitLayer.add(visual.container); }
+                        if (visual.glowFx && visual.sprite) {
+                            visual.sprite.postFX.remove(visual.glowFx);
+                            visual.glowFx = null;
+                        }
+                    }
+                } catch(err) {
+                    console.error("Unit Update Error:", err);
                 }
-            } else {
-                if (this.hpLayer.exists(visual)) { this.hpLayer.remove(visual); this.unitLayer.add(visual); }
-                // ★追加: 非選択時にGlow FXを削除
-                if (visual.glowFx && visual.sprite) {
-                    visual.sprite.postFX.remove(visual.glowFx);
-                    visual.glowFx = null;
+            });
+
+            // 3. 死んだユニットのクリーンアップ (ここは絶対に実行される)
+            for (const [id, visual] of this.visuals) {
+                if (!activeIds.has(id)) { 
+                    this.destroyVisual(visual); 
+                    this.visuals.delete(id); 
                 }
             }
-        });
-
-        for (const [id, visual] of this.visuals) {
-            if (!activeIds.has(id)) { this.destroyVisual(visual); this.visuals.delete(id); }
+        } catch(e) {
+            console.error("UnitView Main Loop Error:", e);
         }
     }
 
@@ -115,16 +155,14 @@ class UnitView {
         this.hpLayer.add(hpBar);
         this.hpLayer.add(infoContainer);
 
-        container.sprite = sprite;
-        container.hpBg = hpBg; container.hpBar = hpBar; container.infoContainer = infoContainer;
-        // Glow管理用
-        container.glowFx = null;
+        const visual = { container, sprite, hpBg, hpBar, infoContainer, glowFx: null };
+        this.visuals.set(u.id, visual);
         
         const pos = Renderer.hexToPx(u.q, u.r);
         container.setPosition(pos.x, pos.y);
         container.targetX = pos.x; container.targetY = pos.y;
 
-        return container;
+        return visual;
     }
 
     updateVisual(visual, u, delta, index, count) {
@@ -143,20 +181,20 @@ class UnitView {
         visual.targetX = basePos.x + offsetX;
         visual.targetY = basePos.y + offsetY;
 
-        const dx = visual.targetX - visual.x;
-        const dy = visual.targetY - visual.y;
+        const dx = visual.targetX - visual.container.x;
+        const dy = visual.targetY - visual.container.y;
         const dist = Math.sqrt(dx*dx + dy*dy);
         const speed = 0.06; 
         
         let isMoving = false;
         if (dist > 1) {
-            visual.x += dx * speed;
-            visual.y += dy * speed;
+            visual.container.x += dx * speed;
+            visual.container.y += dy * speed;
             isMoving = true;
             if (Math.abs(dx) > 0.1) visual.sprite.setFlipX(dx < 0);
         } else {
-            visual.x = visual.targetX;
-            visual.y = visual.targetY;
+            visual.container.x = visual.targetX;
+            visual.container.y = visual.targetY;
         }
 
         if (!u.def.isTank && visual.sprite) {
@@ -179,8 +217,8 @@ class UnitView {
         }
 
         if (visual.hpBg && visual.hpBar && visual.infoContainer) {
-            const barY = visual.y - 45; 
-            const barX = visual.x - 10;
+            const barY = visual.container.y - 45; 
+            const barX = visual.container.x - 10;
             visual.hpBg.setPosition(barX, barY);
             visual.hpBar.setPosition(barX, barY);
             
@@ -188,8 +226,8 @@ class UnitView {
             visual.hpBar.width = Math.max(0, 20 * hpPct);
             visual.hpBar.fillColor = hpPct > 0.5 ? 0x00ff00 : 0xff0000;
 
-            const infoY = visual.y + 12;
-            visual.infoContainer.setPosition(visual.x, infoY);
+            const infoY = visual.container.y + 12;
+            visual.infoContainer.setPosition(visual.container.x, infoY);
             visual.infoContainer.removeAll(true);
 
             let infoText = "";
@@ -200,14 +238,41 @@ class UnitView {
                 const txt = this.scene.add.text(0, 0, infoText, { fontSize: '10px' }).setOrigin(0.5);
                 visual.infoContainer.add(txt);
             }
+
+            if (typeof SKILL_STYLES !== 'undefined' && u.skills.length > 0) {
+                const uniqueSkills = [...new Set(u.skills)];
+                let iconX = -((uniqueSkills.length - 1) * 6) / 2;
+                
+                if(!visual.skillContainer) {
+                    visual.skillContainer = this.scene.add.container(0, 0);
+                    this.hpLayer.add(visual.skillContainer);
+                }
+                visual.skillContainer.removeAll(true);
+                
+                uniqueSkills.forEach(sk => {
+                    if (SKILL_STYLES[sk]) {
+                        const st = SKILL_STYLES[sk];
+                        const bg = this.scene.add.rectangle(iconX, -58, 8, 8, parseInt(st.col.replace('#','0x')), 0.8);
+                        const badge = this.scene.add.text(iconX, -58, st.icon, { 
+                            fontSize: '9px', fontFamily: 'Segoe UI Emoji' 
+                        }).setOrigin(0.5);
+                        visual.skillContainer.add([bg, badge]);
+                        iconX += 9;
+                    }
+                });
+                visual.skillContainer.setPosition(visual.container.x, visual.container.y);
+            } else {
+                if(visual.skillContainer) visual.skillContainer.removeAll(true);
+            }
         }
     }
 
     destroyVisual(visual) {
+        if(visual.container) visual.container.destroy();
         if(visual.hpBg) visual.hpBg.destroy();
         if(visual.hpBar) visual.hpBar.destroy();
         if(visual.infoContainer) visual.infoContainer.destroy();
-        visual.destroy();
+        if(visual.skillContainer) visual.skillContainer.destroy();
     }
 
     triggerAttack(attacker, target) {

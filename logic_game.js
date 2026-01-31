@@ -1,4 +1,4 @@
-/** LOGIC: Final Fix for Missing Functions & JIT Reload */
+/** LOGIC GAME: Right-Click Cancel for Warnings */
 
 function createCardIcon(type) {
     const c = document.createElement('canvas'); c.width = 1; c.height = 1; return c.toDataURL();
@@ -22,66 +22,110 @@ class Game {
         this.cardsUsed = 0;
         this.interactionMode = 'SELECT';
         this.selectedUnit = null;
-        this.menuSafeLock = false;
+        
         this.tankAutoReload = true; 
+
+        // Instantiate Sub-systems
+        this.ui = new UIManager(this);
+        this.ai = new EnemyAI(this);
 
         this.initDOM();
         this.initSetup();
     }
 
     initDOM() {
-        Renderer.init(document.getElementById('game-view'));
-        window.addEventListener('click', (e) => {
-            if (this.menuSafeLock) return;
-            if (!e.target.closest('#context-menu')) document.getElementById('context-menu').style.display = 'none';
-            if (!e.target.closest('#command-menu') && !e.target.closest('canvas')) { this.hideActionMenu(); }
+        if(typeof Renderer !== 'undefined') Renderer.init(document.getElementById('game-view'));
+    }
+
+    toggleSidebar() { this.ui.toggleSidebar(); }
+    toggleTankAutoReload() { this.tankAutoReload = !this.tankAutoReload; this.updateSidebar(); }
+    log(m) { this.ui.log(m); }
+
+    initSetup() {
+        this.setupSlots = [];
+        this.ui.renderSetupCards(this.setupSlots, (k, domEl) => {
+            const idx = this.setupSlots.indexOf(k);
+            if (idx >= 0) { 
+                this.setupSlots.splice(idx, 1); 
+                domEl.classList.remove('selected'); domEl.querySelector('.card-badge').style.display = 'none'; domEl.style.borderColor = "#555"; 
+            } else { 
+                if (this.setupSlots.length < 3) { 
+                    this.setupSlots.push(k); 
+                    domEl.classList.add('selected'); domEl.querySelector('.card-badge').style.display = 'flex'; domEl.style.borderColor = "#d84"; 
+                } 
+            }
+            const btn = document.getElementById('btn-start'); 
+            if (this.setupSlots.length === 3) { btn.style.display = 'inline-block'; } else { btn.style.display = 'none'; }
         });
-        const resizer = document.getElementById('resizer'); const sidebar = document.getElementById('sidebar');
-        let isResizing = false;
-        if (resizer) {
-            resizer.addEventListener('mousedown', (e) => { isResizing = true; document.body.style.cursor = 'col-resize'; resizer.classList.add('active'); });
-            window.addEventListener('mousemove', (e) => {
-                if (!isResizing) return;
-                const newWidth = document.body.clientWidth - e.clientX;
-                if (newWidth > 200 && newWidth < 800) { sidebar.style.width = newWidth + 'px'; if (sidebar.classList.contains('collapsed')) this.toggleSidebar(); Renderer.resize(); }
-            });
-            window.addEventListener('mouseup', () => { if (isResizing) { isResizing = false; document.body.style.cursor = ''; resizer.classList.remove('active'); Renderer.resize(); } });
+    }
+
+    handleRightClick(mx, my) {
+        // ★追加: 警告モーダルが表示中なら、右クリックでキャンセルボタンを押す
+        const warnModal = document.getElementById('warning-modal');
+        if (warnModal && warnModal.style.display === 'block') {
+            const cancelBtn = document.getElementById('warn-cancel');
+            if (cancelBtn) cancelBtn.click();
+            return;
+        }
+
+        if (this.interactionMode === 'MOVE' || this.interactionMode === 'ATTACK' || this.interactionMode === 'MELEE') {
+            this.setMode('SELECT'); 
+            if (this.selectedUnit) {
+                this.ui.showActionMenu(this.selectedUnit, mx, my);
+                if(window.Sfx) Sfx.play('click');
+            }
+        } else {
+            this.showContext(mx, my);
         }
     }
 
-    toggleSidebar() {
-        const sb = document.getElementById('sidebar'); const tg = document.getElementById('sidebar-toggle');
-        sb.classList.toggle('collapsed');
-        if (sb.classList.contains('collapsed')) { sb.style.width = ''; tg.innerText = '◀'; } else { tg.innerText = '▶'; }
-        setTimeout(() => Renderer.resize(), 350); 
-    }
+    swapEquipment(src, tgt) {
+        const u = this.selectedUnit;
+        if(!u) return;
+        
+        const getItem = (loc) => {
+            if(loc.type === 'main') return u.hands;
+            if(loc.type === 'bag') return u.bag[loc.index];
+            return null;
+        };
+        const setItem = (loc, item) => {
+            if(loc.type === 'main') u.hands = item;
+            if(loc.type === 'bag') u.bag[loc.index] = item;
+        };
 
-    toggleTankAutoReload() {
-        this.tankAutoReload = !this.tankAutoReload;
+        const item1 = getItem(src);
+        const item2 = getItem(tgt);
+
+        setItem(src, item2);
+        setItem(tgt, item1);
+        
         this.updateSidebar();
+        if(window.Sfx) Sfx.play('click');
+        this.log(`${u.name} 装備変更`);
     }
 
-    initSetup() {
-        const box = document.getElementById('setup-cards'); box.innerHTML = ''; this.setupSlots = [];
-        ['rifleman', 'scout', 'gunner', 'sniper'].forEach(k => {
-            const t = UNIT_TEMPLATES[k]; const d = document.createElement('div'); d.className = 'card';
-            let specs = `<div style="text-align:left; font-size:10px; line-height:1.4; color:#aaa; margin-top:5px;">HP:<span style="color:#fff">${t.hp||100}</span> AP:<span style="color:#fff">${t.ap||4}</span><br>`;
-            const mainWpn = WPNS[t.main]; if (mainWpn) { specs += `<span style="color:#d84">${mainWpn.name}</span>`; } specs += `</div>`;
-            const faceSeed = Math.floor(Math.random() * 99999); const faceUrl = Renderer.generateFaceIcon ? Renderer.generateFaceIcon(faceSeed) : "";
-            d.innerHTML = `<div class="card-badge" style="display:none;">✔</div><div class="card-img-box" style="background:#111;"><img src="${faceUrl}" style="width:64px; height:64px; object-fit:cover;"></div><div class="card-body"><h3 style="color:#d84; font-size:14px; margin:5px 0;">${t.name}</h3><p style="font-size:10px; color:#888;">${t.role.toUpperCase()}</p>${specs}</div>`;
-            d.onclick = () => {
-                const idx = this.setupSlots.indexOf(k);
-                if (idx >= 0) { this.setupSlots.splice(idx, 1); d.classList.remove('selected'); d.querySelector('.card-badge').style.display = 'none'; d.style.borderColor = "#555"; } 
-                else { if (this.setupSlots.length < 3) { this.setupSlots.push(k); d.classList.add('selected'); d.querySelector('.card-badge').style.display = 'flex'; d.style.borderColor = "#d84"; } }
-                const btn = document.getElementById('btn-start'); if (this.setupSlots.length === 3) { btn.style.display = 'inline-block'; } else { btn.style.display = 'none'; }
-            };
-            box.appendChild(d);
-        });
+    toggleFireMode() {
+        const u = this.selectedUnit;
+        if (!u || !u.hands || !u.hands.modes) return;
+        
+        const modes = u.hands.modes; 
+        const currentBurst = u.hands.burst;
+        
+        let nextIndex = modes.indexOf(currentBurst) + 1;
+        if (nextIndex >= modes.length) nextIndex = 0;
+        
+        u.hands.burst = modes[nextIndex];
+        
+        if (window.Sfx) Sfx.play('click');
+        this.updateSidebar();
     }
 
     createSoldier(templateKey, team, q, r) {
         const t = UNIT_TEMPLATES[templateKey]; if (!t) return null;
-        const isPlayer = (team === 'player'); const stats = { ...t.stats };
+        const isPlayer = (team === 'player'); 
+        
+        const stats = t.stats ? { ...t.stats } : { str:0, aim:0, mob:0, mor:0 };
+        
         if (isPlayer && !t.isTank) { ['str', 'aim', 'mob', 'mor'].forEach(k => stats[k] = (stats[k] || 0) + Math.floor(Math.random() * 3) - 1); }
         let name = t.name; let rank = 0; let faceSeed = Math.floor(Math.random() * 99999);
         if (isPlayer && !t.isTank) { const first = FIRST_NAMES[Math.floor(Math.random() * FIRST_NAMES.length)]; const last = LAST_NAMES[Math.floor(Math.random() * LAST_NAMES.length)]; name = `${last} ${first}`; }
@@ -92,12 +136,7 @@ class Game {
                 if (isMainWpn && typeof MAG_VARIANTS !== 'undefined' && MAG_VARIANTS[key]) { const vars = MAG_VARIANTS[key]; const choice = vars[Math.floor(Math.random() * vars.length)]; item.cap = choice.cap; item.jam = choice.jam; item.magName = choice.name; }
                 item.current = item.cap;
             } else if (base.type === 'shell' || base.area) { item.current = 1; item.isConsumable = true; }
-            
-            if (t.isTank && isMainWpn) {
-                item.current = 1; 
-                item.cap = 1;     
-                item.reserve = 12; 
-            }
+            if (t.isTank && isMainWpn) { item.current = 1; item.cap = 1; item.reserve = 12; }
             return item;
         };
         
@@ -122,19 +161,18 @@ class Game {
     startCampaign() {
         document.getElementById('setup-screen').style.display = 'none';
         if (typeof Renderer !== 'undefined' && Renderer.game) { const mainScene = Renderer.game.scene.getScene('MainScene'); if (mainScene) { mainScene.mapGenerated = false; if (mainScene.hexGroup && typeof mainScene.hexGroup.removeAll === 'function') mainScene.hexGroup.removeAll(); if (window.EnvSystem) window.EnvSystem.clear(); } }
-        Renderer.resize(); this.selectedUnit = null; this.reachableHexes = []; this.attackLine = []; this.aimTargetUnit = null; this.path = []; this.cardsUsed = 0;
+        if(typeof Renderer !== 'undefined') Renderer.resize(); 
+        this.selectedUnit = null; this.reachableHexes = []; this.attackLine = []; this.aimTargetUnit = null; this.path = []; this.cardsUsed = 0;
         this.units = this.units.filter(u => u.team === 'player' && u.hp > 0); this.units.forEach(u => { u.q = -999; u.r = -999; });
-        
         this.generateMap();
-        
         if (this.units.length === 0) { this.setupSlots.forEach(k => { const p = this.getSafeSpawnPos('player'); const u = this.createSoldier(k, 'player', p.q, p.r); this.units.push(u); }); } else { this.units.forEach(u => { const p = this.getSafeSpawnPos('player'); u.q = p.q; u.r = p.r; }); }
-        
         this.spawnEnemies(); 
-        
         this.state = 'PLAY'; this.log(`SECTOR ${this.sector} START`);
         document.getElementById('sector-counter').innerText = `SECTOR: ${this.sector.toString().padStart(2, '0')}`;
-        const leader = this.units.find(u => u.team === 'player'); if (leader && leader.q !== -999) Renderer.centerOn(leader.q, leader.r);
-        setTimeout(() => { if (Renderer.dealCards) Renderer.dealCards(['rifleman', 'tank_pz4', 'gunner', 'scout', 'tank_tiger']); }, 500);
+        
+        if (typeof Renderer !== 'undefined') Renderer.centerMap();
+        
+        setTimeout(() => { if (typeof Renderer !== 'undefined' && Renderer.dealCards) Renderer.dealCards(['rifleman', 'tank_pz4', 'gunner', 'scout', 'tank_tiger']); }, 500);
     }
 
     getSafeSpawnPos(team) {
@@ -147,8 +185,7 @@ class Game {
         const p = this.getSafeSpawnPos(team);
         const u = this.createSoldier(type, team, p.q, p.r);
         if (u) {
-            u.q = p.q; 
-            u.r = p.r;
+            u.q = p.q; u.r = p.r;
             this.units.push(u);
             this.log(`増援合流: ${u.name}`);
         }
@@ -171,30 +208,26 @@ class Game {
         if (this.state !== 'PLAY') return;
         if (this.interactionMode === 'MOVE') { this.handleClick({ q: u.q, r: u.r }); return; }
         if (u.team !== 'player') {
-            if (this.interactionMode === 'ATTACK' && this.selectedUnit) { this.actionAttack(this.selectedUnit, u); this.setMode('SELECT'); return; }
+            if (this.interactionMode === 'ATTACK' && this.selectedUnit) { this.actionAttack(this.selectedUnit, u); return; }
             if (this.interactionMode === 'MELEE' && this.selectedUnit) { this.actionMelee(this.selectedUnit, u); this.setMode('SELECT'); return; }
             return;
         }
-        this.selectedUnit = u; this.refreshUnitState(u); this.showActionMenu(u); if (window.Sfx) Sfx.play('click');
+        
+        if (this.interactionMode === 'ATTACK' && this.selectedUnit) {
+            this.handleClick({ q: u.q, r: u.r }); 
+            return;
+        }
+
+        this.selectedUnit = u; this.refreshUnitState(u); 
+        if (typeof Renderer !== 'undefined' && Renderer.game) { 
+            const pointer = Renderer.game.input.activePointer; 
+            this.ui.showActionMenu(u, pointer.x, pointer.y);
+        }
+        if (window.Sfx) Sfx.play('click');
     }
 
-    showActionMenu(u) {
-        const menu = document.getElementById('command-menu'); if (!menu) return;
-        this.menuSafeLock = true; setTimeout(() => { this.menuSafeLock = false; }, 300);
-        const btnMove = document.getElementById('btn-move'); const btnAttack = document.getElementById('btn-attack');
-        const btnRepair = document.getElementById('btn-repair'); const btnMelee = document.getElementById('btn-melee'); const btnHeal = document.getElementById('btn-heal');
-        if (u.ap <= 0) { btnMove.classList.add('disabled'); btnAttack.classList.add('disabled'); } else { btnMove.classList.remove('disabled'); btnAttack.classList.remove('disabled'); }
-        if (u.hands && u.hands.isBroken) btnRepair.classList.remove('disabled'); else btnRepair.classList.add('disabled');
-        const neighbors = this.getUnitsInHex(u.q, u.r);
-        const hasEnemy = neighbors.some(n => n.team !== u.team);
-        if (hasEnemy) btnMelee.classList.remove('disabled'); else btnMelee.classList.add('disabled');
-        const hasWounded = neighbors.some(n => n.team === u.team && n.hp < n.maxHp);
-        if (hasWounded) btnHeal.classList.remove('disabled'); else btnHeal.classList.add('disabled');
-        if (Renderer.game) { const pointer = Renderer.game.input.activePointer; menu.style.left = (pointer.x + 20) + 'px'; menu.style.top = (pointer.y - 50) + 'px'; }
-        menu.style.display = 'block';
-    }
-
-    hideActionMenu() { const menu = document.getElementById('command-menu'); if (menu) menu.style.display = 'none'; }
+    showActionMenu(u) { }
+    hideActionMenu() { this.ui.hideActionMenu(); }
 
     setMode(mode) {
         this.interactionMode = mode; this.hideActionMenu(); const indicator = document.getElementById('mode-label');
@@ -215,9 +248,36 @@ class Game {
     }
 
     handleClick(p) {
+        if (this.state !== 'PLAY') return; 
+
         if (this.interactionMode === 'SELECT') { const u = this.getUnitInHex(p.q, p.r); if (!u) this.clearSelection(); } 
-        else if (this.interactionMode === 'MOVE') { if (this.isValidHex(p.q, p.r) && this.path.length > 0) { const last = this.path[this.path.length - 1]; if (last.q === p.q && last.r === p.r) { this.actionMove(this.selectedUnit, this.path); this.setMode('SELECT'); } } else { this.setMode('SELECT'); } } 
-        else if (this.interactionMode === 'ATTACK' || this.interactionMode === 'MELEE') { const u = this.getUnitInHex(p.q, p.r); if (!u) this.setMode('SELECT'); }
+        else if (this.interactionMode === 'MOVE') { if (this.isValidHex(p.q, p.r) && this.path.length > 0) { const last = this.path[this.path.length - 1]; if (last.q === p.q && last.r === p.r) { 
+            this.actionMove(this.selectedUnit, this.path); 
+            this.setMode('SELECT'); 
+        } } else { this.setMode('SELECT'); } } 
+        else if (this.interactionMode === 'ATTACK' || this.interactionMode === 'MELEE') { 
+            const u = this.getUnitInHex(p.q, p.r); 
+            if (!u) {
+                this.setMode('SELECT'); 
+            } else if (this.interactionMode === 'ATTACK') {
+                if (this.selectedUnit && u.team === this.selectedUnit.team) {
+                    this.ui.showFriendlyFireWarning(
+                        () => { this.actionAttack(this.selectedUnit, u); }, 
+                        () => { this.setMode('SELECT'); this.onUnitClick(u); }
+                    );
+                } else {
+                    this.actionAttack(this.selectedUnit, u);
+                }
+            } else {
+                if(this.selectedUnit && u.team === this.selectedUnit.team) {
+                    this.setMode('SELECT');
+                    this.onUnitClick(u);
+                } else {
+                    this.actionMelee(this.selectedUnit, u);
+                    this.setMode('SELECT');
+                }
+            }
+        }
     }
 
     handleHover(p) {
@@ -225,7 +285,10 @@ class Game {
         if (u) { if (this.interactionMode === 'MOVE') { const isReachable = this.reachableHexes.some(h => h.q === p.q && h.r === p.r); const targetUnits = this.getUnitsInHex(p.q, p.r); if (isReachable && targetUnits.length < 4) { this.path = this.findPath(u, p.q, p.r); } else { this.path = []; } } else if (this.interactionMode === 'ATTACK') { this.calcAttackLine(u, p.q, p.r); } }
     }
 
-    refreshUnitState(u) { if (!u || u.hp <= 0) { this.selectedUnit = null; this.reachableHexes = []; this.attackLine = []; this.aimTargetUnit = null; } this.updateSidebar(); }
+    refreshUnitState(u) { 
+        if (!u || u.hp <= 0) { this.selectedUnit = null; this.reachableHexes = []; this.attackLine = []; this.aimTargetUnit = null; } 
+        this.updateSidebar(); 
+    }
     clearSelection() { this.selectedUnit = null; this.reachableHexes = []; this.attackLine = []; this.aimTargetUnit = null; this.path = []; this.setMode('SELECT'); this.hideActionMenu(); this.updateSidebar(); }
 
     setStance(s) {
@@ -244,9 +307,7 @@ class Game {
         if (u.def.isTank) {
             if (u.ap < 1) { this.log("AP不足 (必要:1)"); return; }
             if (w.reserve <= 0) { this.log("予備弾薬なし"); return; }
-            u.ap -= 1;
-            w.current = 1; 
-            w.reserve -= 1;
+            u.ap -= 1; w.current = 1; w.reserve -= 1;
             this.log(`${u.name} 次弾装填完了 (残:${w.reserve})`);
             if (window.Sfx) Sfx.play('reload');
             this.refreshUnitState(u);
@@ -284,16 +345,52 @@ class Game {
     async actionMelee(a, d) {
         if (!a || a.ap < 2) { this.log("AP不足"); return; }
         if (a.q !== d.q || a.r !== d.r) { this.log("射程外"); return; }
+        
+        let wpnName = "銃床";
+        let bonusDmg = 0;
+
+        if (a.def.isTank) {
+            wpnName = "同軸機銃";
+            const subWpn = a.bag.find(i => i && i.type === 'bullet'); 
+            if (subWpn) {
+                if (subWpn.current > 0) {
+                    const consume = Math.min(subWpn.current, 5); 
+                    subWpn.current -= consume;
+                    bonusDmg = 35; 
+                    this.log(`${a.name} 機銃掃射 (弾消費:${consume})`);
+                    this.updateSidebar();
+                } else {
+                    wpnName = "轢き逃げ";
+                    bonusDmg = 10; 
+                    this.log(`${a.name} 弾切れ！履帯で攻撃`);
+                }
+            } else {
+                wpnName = "体当たり";
+                bonusDmg = 15;
+            }
+        } else {
+            let bestWeapon = null;
+            if (a.hands && a.hands.type === 'melee') { bestWeapon = a.hands; }
+            a.bag.forEach(item => { 
+                if (item && item.type === 'melee') {
+                    if (!bestWeapon || item.dmg > bestWeapon.dmg) bestWeapon = item;
+                } 
+            });
+            if (bestWeapon) {
+                wpnName = bestWeapon.name;
+                bonusDmg = bestWeapon.dmg;
+            }
+        }
+        
         a.ap -= 2;
-        let bestWeapon = null; let bestDmg = 0;
-        if (a.hands && a.hands.type === 'melee') { bestWeapon = a.hands; bestDmg = a.hands.dmg; }
-        a.bag.forEach(item => { if (item && item.type === 'melee' && item.dmg > bestDmg) { bestWeapon = item; bestDmg = item.dmg; } });
-        const wpnName = bestWeapon ? bestWeapon.name : "銃床";
+
         this.log(`${a.name} 白兵攻撃(${wpnName}) vs ${d.name}`);
-        if (Renderer.playAttackAnim) Renderer.playAttackAnim(a, d);
+        if (typeof Renderer !== 'undefined' && Renderer.playAttackAnim) Renderer.playAttackAnim(a, d);
         await new Promise(r => setTimeout(r, 300));
-        let totalDmg = 10 + (a.stats.str * 3);
-        if (bestWeapon) totalDmg += bestWeapon.dmg;
+        
+        let strVal = (a.stats && a.stats.str) ? a.stats.str : 0;
+        let totalDmg = 10 + (strVal * 3) + bonusDmg;
+        
         if (d.skills.includes('CQC')) { this.log(`>> ${d.name} カウンター！`); a.hp -= 15; }
         d.hp -= totalDmg;
         if (window.Sfx) Sfx.play('hit');
@@ -307,23 +404,57 @@ class Game {
     }
 
     async actionAttack(a, d) {
+        if (!a) return; 
+        if (a.team === 'player' && this.state !== 'PLAY') return;
+        
         const w = a.hands; if (!w) return;
         if (w.isBroken) { this.log("武器故障中！修理が必要"); return; }
         if (w.isConsumable && w.current <= 0) { this.log("使用済みです"); return; }
         
-        // JIT (Just-In-Time) Auto Reload
+        if (!a.def.isTank && w.current <= 0) {
+            const magIndex = a.bag.findIndex(i => i && i.type === 'ammo' && i.ammoFor === w.code);
+            if (magIndex !== -1) {
+                const reloadCost = w.rld || 1;
+                if (a.ap >= reloadCost) {
+                    this.log(`${a.name} 自動リロード`);
+                    if (window.Sfx) Sfx.play('reload');
+                    a.bag[magIndex] = null;
+                    a.ap -= reloadCost;
+                    w.current = w.cap;
+                    this.refreshUnitState(a);
+                    await new Promise(r => setTimeout(r, 600)); 
+                    
+                    if(a.ap < w.ap) {
+                        this.log("AP不足により攻撃中止");
+                        return;
+                    }
+                } else {
+                    this.log(`AP不足でリロード不可 (必要:${reloadCost})`);
+                    return;
+                }
+            } else {
+                this.log("弾切れ！予備弾薬なし");
+                return;
+            }
+        }
+        
         if (a.def.isTank && w.current <= 0 && this.tankAutoReload) {
             if (w.reserve > 0) {
-                const totalCost = w.ap + 1; // 攻撃+装填コスト
-                if (a.ap >= totalCost) {
-                    a.ap -= 1;
-                    w.reserve--;
+                const reloadCost = 1; 
+                if (a.ap >= reloadCost) {
+                    a.ap -= reloadCost; 
+                    w.reserve--; 
                     w.current = 1;
                     this.log(`${a.name} 自動装填完了`);
                     if (window.Sfx) Sfx.play('reload');
                     this.refreshUnitState(a);
+                    
+                    if(a.ap < w.ap) {
+                        this.log("AP不足により攻撃中止");
+                        return;
+                    }
                 } else {
-                    this.log(`AP不足で自動装填不可 (必要:${totalCost})`);
+                    this.log(`AP不足で自動装填不可 (必要:${reloadCost})`);
                     return;
                 }
             } else {
@@ -337,21 +468,31 @@ class Game {
         
         const dist = this.hexDist(a, d); if (dist > w.rng) { this.log("射程外"); return; }
         a.ap -= w.ap; this.state = 'ANIM';
-        if (Renderer.playAttackAnim) Renderer.playAttackAnim(a, d);
-        let hitChance = (a.stats?.aim || 0) * 2 + w.acc - (dist * 5) - this.map[d.q][d.r].cover;
+        if (typeof Renderer !== 'undefined' && Renderer.playAttackAnim) Renderer.playAttackAnim(a, d);
+        
+        const drop = w.acc_drop || 5; 
+        let hitChance = (a.stats?.aim || 0) * 2 + w.acc - (dist * drop) - this.map[d.q][d.r].cover;
+        
         if (d.stance === 'prone') hitChance -= 20; if (d.stance === 'crouch') hitChance -= 10;
         let dmgMod = 1.0 + (a.stats?.str || 0) * 0.05;
+        
         const shots = w.isConsumable ? 1 : Math.min(w.burst || 1, w.current);
         this.log(`${a.name} 攻撃開始 (${w.name})`);
+        
         for (let i = 0; i < shots; i++) {
             if (d.hp <= 0) break;
             if (!w.isConsumable && w.jam && Math.random() < w.jam) { this.log(`⚠ JAM!! ${w.name}が故障！`); w.isBroken = true; if (window.Sfx) Sfx.play('ricochet'); break; }
             w.current--;
+            
+            this.updateSidebar();
+            
             const sPos = Renderer.hexToPx(a.q, a.r); const ePos = Renderer.hexToPx(d.q, d.r);
             const spread = (100 - w.acc) * 0.5; const tx = ePos.x + (Math.random() - 0.5) * spread; const ty = ePos.y + (Math.random() - 0.5) * spread;
             if (window.Sfx) Sfx.play(w.type === 'shell' || w.type === 'shell_fast' ? 'cannon' : 'shot');
-            const flightTime = w.type.includes('shell') ? dist * 100 : dist * 50;
-            if (window.VFX) VFX.addProj({ x: sPos.x, y: sPos.y, sx: sPos.x, sy: sPos.y, ex: tx, ey: ty, type: w.type, speed: 0.1, progress: 0, arcHeight: (w.type.includes('shell') ? 100 : 0), onHit: () => { } });
+            const isShell = w.type.includes('shell');
+            const flightTime = isShell ? 100 : dist * 30; 
+            const isTracer = isShell || (i === 0 || i % 3 === 0);
+            if (window.VFX) { VFX.addProj({ x: sPos.x, y: sPos.y, sx: sPos.x, sy: sPos.y, ex: tx, ey: ty, type: w.type, speed: isShell ? 0.9 : 0.6, progress: 0, arcHeight: isShell ? 10 : 0, isTracer: isTracer, onHit: () => { } }); }
             setTimeout(() => {
                 if (d.hp <= 0) return;
                 const isHit = (Math.random() * 100) < hitChance;
@@ -369,32 +510,27 @@ class Game {
                     }
                 } else { if (window.VFX) VFX.add({ x: tx, y: ty, vx: 0, vy: 0, life: 10, maxLife: 10, color: "#aaa", size: 2, type: 'smoke' }); }
             }, flightTime);
-            await new Promise(r => setTimeout(r, 100));
+            await new Promise(r => setTimeout(r, isShell ? 200 : 60));
         }
+        
         if (w.isConsumable && w.current <= 0) { a.hands = null; this.log(`${w.name} を消費しました`); }
+        
         setTimeout(() => {
             if (d.hp <= 0 && !d.deadProcessed) { 
                 d.deadProcessed = true; 
                 this.log(`>> ${d.name} を撃破！`); 
                 if (window.Sfx) Sfx.play('death'); 
-                if (window.VFX) VFX.addUnitDebris(Renderer.hexToPx(d.q, d.r).x, Renderer.hexToPx(d.q, d.r).y); 
                 if(this.checkWin()) return;
             }
             this.state = 'PLAY'; 
-            
-            // Post-Attack Auto Reload (補充)
-            if(a.def.isTank && w.current === 0 && w.reserve > 0) {
-                if (this.tankAutoReload && a.ap >= 1) {
-                    this.reloadWeapon(); 
-                }
-            }
-
+            if(a.def.isTank && w.current === 0 && w.reserve > 0) { if (this.tankAutoReload && a.ap >= 1) { this.reloadWeapon(); } }
             this.refreshUnitState(a); 
-            this.checkPhaseEnd();
+            const cost = w ? w.ap : 0;
+            const canShootAgain = (a.ap >= cost) && (w.current > 0 || (a.def.isTank && w.reserve > 0 && this.tankAutoReload && a.ap >= cost + 1));
+            if (canShootAgain) { this.log("射撃可能: 目標選択中..."); } else { this.setMode('SELECT'); this.checkPhaseEnd(); }
         }, 800);
     }
 
-    // ★重要: handleHoverで呼ばれる関数をここで定義
     calcAttackLine(u, targetQ, targetR) {
         this.attackLine = []; this.aimTargetUnit = null; if (!u || u.ap < 2) return; const w = u.hands; if (!w) return;
         const range = w.rng; const dist = this.hexDist(u, { q: targetQ, r: targetR }); if (dist === 0) return;
@@ -449,23 +585,16 @@ class Game {
     checkPhaseEnd() { if (this.units.filter(u => u.team === 'player' && u.hp > 0 && u.ap > 0).length === 0 && this.state === 'PLAY') this.endTurn(); }
     endTurn() {
         if (this.isProcessingTurn) return; this.isProcessingTurn = true;
-        this.selectedUnit = null; this.reachableHexes = []; this.attackLine = []; this.aimTargetUnit = null; this.path = []; this.hideActionMenu();
+        this.setMode('SELECT'); this.selectedUnit = null; this.reachableHexes = []; this.attackLine = []; this.aimTargetUnit = null; this.path = []; this.hideActionMenu();
         this.state = 'ANIM'; const eyecatch = document.getElementById('eyecatch'); if (eyecatch) eyecatch.style.opacity = 1;
         this.units.filter(u => u.team === 'player' && u.hp > 0 && u.skills.includes("Mechanic")).forEach(u => { const c = u.skills.filter(s => s === "Mechanic").length; if (u.hp < u.maxHp) { u.hp = Math.min(u.maxHp, u.hp + c * 20); this.log(`${u.name} 修理`); } });
         setTimeout(async () => {
-            if (eyecatch) eyecatch.style.opacity = 0; const es = this.units.filter(u => u.team === 'enemy' && u.hp > 0);
-            for (let e of es) {
-                const ps = this.units.filter(u => u.team === 'player' && u.hp > 0); if (ps.length === 0) { this.checkLose(); break; }
-                let target = ps[0]; let minDist = 999; ps.forEach(p => { const d = this.hexDist(e, p); if (d < minDist) { minDist = d; target = p; } });
-                e.ap = e.maxAp; const w = e.hands; if (!w) continue; const distToTarget = this.hexDist(e, target);
-                if (distToTarget <= w.rng && e.ap >= w.ap) { await this.actionAttack(e, target); } else {
-                    const p = this.findPath(e, target.q, target.r);
-                    if (p.length > 0) {
-                        const next = p[0]; if (this.map[next.q][next.r].cost <= e.ap) { e.q = next.q; e.r = next.r; e.ap -= this.map[next.q][next.r].cost; await new Promise(r => setTimeout(r, 200)); if (this.hexDist(e, target) <= w.rng && e.ap >= w.ap) { await this.actionAttack(e, target); } }
-                    }
-                }
-            }
-            this.units.forEach(u => { if (u.team === 'player') u.ap = u.maxAp; }); this.log("-- PLAYER PHASE --"); this.state = 'PLAY'; this.isProcessingTurn = false;
+            if (eyecatch) eyecatch.style.opacity = 0; 
+            await this.ai.executeTurn(this.units);
+            this.units.forEach(u => { if (u.team === 'player') u.ap = u.maxAp; }); 
+            this.log("-- PLAYER PHASE --"); 
+            this.state = 'PLAY'; 
+            this.isProcessingTurn = false;
         }, 1200);
     }
     healSurvivors() { this.units.filter(u => u.team === 'player' && u.hp > 0).forEach(u => { const t = Math.floor(u.maxHp * 0.8); if (u.hp < t) u.hp = t; }); this.log("治療完了"); }
@@ -476,62 +605,12 @@ class Game {
     hexDist(a, b) { return (Math.abs(a.q - b.q) + Math.abs(a.q + a.r - b.q - b.r) + Math.abs(a.r - b.r)) / 2; }
     getNeighbors(q, r) { return [[1, 0], [1, -1], [0, -1], [-1, 0], [-1, 1], [0, 1]].map(d => ({ q: q + d[0], r: r + d[1] })).filter(h => this.isValidHex(h.q, h.r)); }
     findPath(u, tq, tr) { let f = [{ q: u.q, r: u.r }], cf = {}, cs = {}; cf[`${u.q},${u.r}`] = null; cs[`${u.q},${u.r}`] = 0; while (f.length > 0) { let c = f.shift(); if (c.q === tq && c.r === tr) break; this.getNeighbors(c.q, c.r).forEach(n => { if (this.getUnitsInHex(n.q, n.r).length >= 4 && (n.q !== tq || n.r !== tr)) return; const cost = this.map[n.q][n.r].cost; if (cost >= 99) return; const nc = cs[`${c.q},${c.r}`] + cost; if (nc <= u.ap) { const k = `${n.q},${n.r}`; if (!(k in cs) || nc < cs[k]) { cs[k] = nc; f.push(n); cf[k] = c; } } }); } let p = [], c = { q: tq, r: tr }; if (!cf[`${tq},${tr}`]) return []; while (c) { if (c.q === u.q && c.r === u.r) break; p.push(c); c = cf[`${c.q},${c.r}`]; } return p.reverse(); }
-    log(m) { const c = document.getElementById('log-container'); if (c) { const d = document.createElement('div'); d.className = 'log-entry'; d.innerText = `> ${m}`; c.appendChild(d); c.scrollTop = c.scrollHeight; } }
-    showContext(mx, my) { const p = Renderer.pxToHex(mx, my); const m = document.getElementById('context-menu'); if (!m) return; const u = this.getUnitInHex(p.q, p.r); const t = this.isValidHex(p.q, p.r) ? this.map[p.q][p.r] : null; let h = ""; if (u) { h += `<div style="color:#0af;font-weight:bold">${u.name}</div>`; h += `<div style="font-size:10px">${u.def.name} (${RANKS[u.rank]})</div>`; h += `HP:${u.hp}/${u.maxHp} AP:${u.ap}/${u.maxAp}<br>`; h += `Stance: ${u.stance}`; } else if (t) { h += `<div style="color:#da4;font-weight:bold">${t.name}</div>`; h += `Cost:${t.cost} Cover:${t.cover}%`; } h += `<hr style="border:0;border-top:1px solid #444;margin:5px 0;">`; h += `<button onclick="gameLogic.endTurn();document.getElementById('context-menu').style.display='none';" style="width:100%;cursor:pointer;background:#522;color:#fcc;border:1px solid #d44;padding:3px;">TURN END</button>`; if (h !== "") { m.innerHTML = h; m.style.display = 'block'; m.style.left = (mx + 10) + 'px'; m.style.top = (my + 10) + 'px'; } }
+    showContext(mx, my) { this.ui.showContext(mx, my, Renderer.pxToHex(mx, my)); }
+    updateSidebar() { this.ui.updateSidebar(this.selectedUnit, this.state, this.tankAutoReload); }
     getStatus(u) { if (u.hp <= 0) return "DEAD"; const r = u.hp / u.maxHp; if (r > 0.8) return "NORMAL"; if (r > 0.5) return "DAMAGED"; return "CRITICAL"; }
     axialToCube(q, r) { return { x: q, y: r, z: -q - r }; }
     cubeToAxial(c) { return { q: c.x, r: c.y }; }
     cubeRound(c) { let rx = Math.round(c.x), ry = Math.round(c.y), rz = Math.round(c.z); const x_diff = Math.abs(rx - c.x), y_diff = Math.abs(ry - c.y), z_diff = Math.abs(rz - c.z); if (x_diff > y_diff && x_diff > z_diff) rx = -ry - rz; else if (y_diff > z_diff) ry = -rx - rz; else rz = -rx - ry; return { x: rx, y: ry, z: rz }; }
-
-    updateSidebar() {
-        const ui = document.getElementById('unit-info'), u = this.selectedUnit;
-        if (u) {
-            const w = u.hands; const s = this.getStatus(u); const skillCounts = {}; u.skills.forEach(sk => { skillCounts[sk] = (skillCounts[sk] || 0) + 1; });
-            let skillHtml = ""; for (const [sk, count] of Object.entries(skillCounts)) { if (window.SKILL_STYLES && window.SKILL_STYLES[sk]) { const st = window.SKILL_STYLES[sk]; skillHtml += `<div style="display:inline-block; background:${st.col}; color:#000; font-weight:bold; font-size:10px; padding:2px 5px; margin:2px; border-radius:3px;">${st.icon} ${st.name} x${count}</div>`; } }
-            const faceUrl = (Renderer.generateFaceIcon) ? Renderer.generateFaceIcon(u.faceSeed) : "";
-            
-            const makeSlot = (item, type, index) => { 
-                if (!item) return `<div class="slot empty" ondragover="onSlotDragOver(event)" ondragleave="onSlotDragLeave(event)" ondrop="onSlotDrop(event, '${type}', ${index})"><div style="font-size:10px; color:#555;">[EMPTY]</div></div>`; 
-                const isMain = (type === 'main'); const isAmmo = (item.type === 'ammo'); 
-                
-                let gaugeHtml = "";
-                if (!isAmmo && item.cap > 0) {
-                    gaugeHtml = `<div class="ammo-gauge">`;
-                    if (u.def.isTank && isMain) {
-                        for(let i=0; i<Math.min(20, item.reserve); i++) gaugeHtml += `<div class="shell"></div>`;
-                        if(item.reserve === 0) gaugeHtml += `<div class="shell empty"></div>`;
-                    } 
-                    else {
-                        for(let i=0; i<item.current; i++) gaugeHtml += `<div class="bullet"></div>`;
-                        for(let i=item.current; i<item.cap; i++) gaugeHtml += `<div class="bullet" style="background:#333;box-shadow:none;"></div>`;
-                    }
-                    gaugeHtml += `</div>`;
-                }
-
-                let blinkClass = "";
-                let clickAction = "";
-                if (u.def.isTank && isMain && item.current === 0 && item.reserve > 0 && !this.tankAutoReload) {
-                    blinkClass = "blink-alert";
-                    clickAction = `onclick="gameLogic.reloadWeapon(true)"`;
-                }
-
-                return `<div class="slot ${isMain?'main-weapon':'bag-item'} ${blinkClass}" ${clickAction} draggable="true" ondragstart="onSlotDragStart(event, '${type}', ${index})" ondragend="onSlotDragEnd(event)" ondragover="onSlotDragOver(event)" ondragleave="onSlotDragLeave(event)" ondrop="onSlotDrop(event, '${type}', ${index})"><div class="slot-name">${isMain?'🔫':''} ${item.name}</div>${!isAmmo ? `<div class="slot-meta"><span>RNG:${item.rng} DMG:${item.dmg}</span> <span class="ammo-text">${u.def.isTank&&isMain ? item.reserve : item.current}/${u.def.isTank&&isMain ? '∞' : item.cap}</span></div>` : `<div class="slot-meta" style="color:#d84">AMMO for ${item.ammoFor}</div>`}${gaugeHtml}</div>`; 
-            };
-
-            const mainSlot = makeSlot(u.hands, 'main', 0); let subSlots = ""; for (let i = 0; i < 4; i++) { subSlots += makeSlot(u.bag[i], 'bag', i); }
-            
-            let canReload = false; if (w && !u.def.isTank && w.current < w.cap && u.bag.some(i => i && i.type === 'ammo' && i.ammoFor === w.code)) canReload = true;
-            let reloadBtn = canReload ? `<button onclick="gameLogic.reloadWeapon()" style="width:100%; background:#442; color:#dd4; border:1px solid #884; cursor:pointer; margin-top:5px;">🔃 RELOAD (${w.rld||1} AP)</button>` : "";
-            
-            let tankAutoReloadCheck = "";
-            if (u.def.isTank) {
-                tankAutoReloadCheck = `<div class="ar-check" onclick="gameLogic.toggleTankAutoReload()"><input type="checkbox" ${this.tankAutoReload ? 'checked' : ''}> AUTO RELOAD (1AP)</div>`;
-                reloadBtn = ""; 
-            }
-
-            ui.innerHTML = `<div class="soldier-header"><div class="face-box"><img src="${faceUrl}" width="64" height="64"></div><div><div class="soldier-name">${u.name}</div><div class="soldier-rank">${RANKS[u.rank] || 'Pvt'}</div></div></div><div class="stat-grid"><div class="stat-row"><span class="stat-label">HP</span> <span class="stat-val">${u.hp}/${u.maxHp}</span></div><div class="stat-row"><span class="stat-label">AP</span> <span class="stat-val">${u.ap}/${u.maxAp}</span></div><div class="stat-row"><span class="stat-label">AIM</span> <span class="stat-val">${u.stats?.aim||'-'}</span></div><div class="stat-row"><span class="stat-label">STR</span> <span class="stat-val">${u.stats?.str||'-'}</span></div></div><div class="inv-header" style="padding:0 10px; margin-top:10px;">LOADOUT (Drag to Swap)</div><div class="loadout-container"><div class="main-slot-area">${mainSlot}</div><div class="sub-slot-area">${subSlots}</div></div><div style="padding:0 10px;">${tankAutoReloadCheck}${reloadBtn}</div><div style="margin:5px 0; padding:0 10px;">${skillHtml}</div><div style="padding:10px;"><div style="font-size:10px; color:#666;">TACTICS</div><button class="btn-stance ${u.stance==='stand'?'active-stance':''}" onclick="gameLogic.toggleStance()">STANCE</button><button onclick="gameLogic.endTurn()" class="${this.state!=='PLAY'?'disabled':''}" style="width:100%; background:#522; border-color:#d44; margin-top:15px; padding:5px; color:#fcc;">End Turn</button></div>`;
-            if (u.def.isTank) document.querySelectorAll('.btn-stance').forEach(b => b.classList.add('disabled'));
-        } else { ui.innerHTML = `<div style="text-align:center;color:#555;margin-top:80px;">// NO SIGNAL //</div>`; }
-    }
 }
+
 window.gameLogic = new Game();
