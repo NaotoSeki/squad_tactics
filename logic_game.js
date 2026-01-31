@@ -1,4 +1,4 @@
-/** LOGIC GAME: Main Gameplay Systems (Fixed Right Click Crash & Re-added Death VFX) */
+/** LOGIC GAME: High-Quality Map Gen & Interaction Fix */
 
 function createCardIcon(type) {
     const c = document.createElement('canvas'); c.width = 1; c.height = 1; return c.toDataURL();
@@ -32,10 +32,7 @@ class Game {
         this.initSetup();
     }
 
-    initDOM() {
-        if(typeof Renderer !== 'undefined') Renderer.init(document.getElementById('game-view'));
-    }
-
+    initDOM() { if(typeof Renderer !== 'undefined') Renderer.init(document.getElementById('game-view')); }
     toggleSidebar() { this.ui.toggleSidebar(); }
     toggleTankAutoReload() { this.tankAutoReload = !this.tankAutoReload; this.updateSidebar(); }
     log(m) { this.ui.log(m); }
@@ -44,36 +41,32 @@ class Game {
         this.setupSlots = [];
         this.ui.renderSetupCards(this.setupSlots, (k, domEl) => {
             const idx = this.setupSlots.indexOf(k);
-            if (idx >= 0) { 
-                this.setupSlots.splice(idx, 1); 
-                domEl.classList.remove('selected'); domEl.querySelector('.card-badge').style.display = 'none'; domEl.style.borderColor = "#555"; 
-            } else { 
-                if (this.setupSlots.length < 3) { 
-                    this.setupSlots.push(k); 
-                    domEl.classList.add('selected'); domEl.querySelector('.card-badge').style.display = 'flex'; domEl.style.borderColor = "#d84"; 
-                } 
-            }
-            const btn = document.getElementById('btn-start'); 
-            if (this.setupSlots.length === 3) { btn.style.display = 'inline-block'; } else { btn.style.display = 'none'; }
+            if (idx >= 0) { this.setupSlots.splice(idx, 1); domEl.classList.remove('selected'); domEl.querySelector('.card-badge').style.display = 'none'; domEl.style.borderColor = "#555"; }
+            else { if (this.setupSlots.length < 3) { this.setupSlots.push(k); domEl.classList.add('selected'); domEl.querySelector('.card-badge').style.display = 'flex'; domEl.style.borderColor = "#d84"; } }
+            const btn = document.getElementById('btn-start'); if (this.setupSlots.length === 3) { btn.style.display = 'inline-block'; } else { btn.style.display = 'none'; }
         });
     }
 
-    // ★修正: hexパラメータを受け取るようにし、showContextへ正しく渡す
     handleRightClick(mx, my, hex) {
-        if (this.interactionMode === 'MOVE' || this.interactionMode === 'ATTACK' || this.interactionMode === 'MELEE') {
+        const warnModal = document.getElementById('warning-modal');
+        if (warnModal && warnModal.style.display === 'block') {
+            const cancelBtn = document.getElementById('warn-cancel');
+            if (cancelBtn) cancelBtn.click();
+            return;
+        }
+        if (this.interactionMode !== 'SELECT') {
             this.setMode('SELECT'); 
-            if (this.selectedUnit) {
+            if (this.selectedUnit && this.selectedUnit.team === 'player') {
                 this.ui.showActionMenu(this.selectedUnit, mx, my);
                 if(window.Sfx) Sfx.play('click');
             }
-        } else {
-            this.showContext(mx, my, hex); 
+        } else if (hex) {
+            this.showContext(mx, my, hex);
         }
     }
 
     swapEquipment(src, tgt) {
-        const u = this.selectedUnit;
-        if(!u) return;
+        const u = this.selectedUnit; if(!u || u.team !== 'player') return;
         const getItem = (loc) => { if(loc.type === 'main') return u.hands; if(loc.type === 'bag') return u.bag[loc.index]; return null; };
         const setItem = (loc, item) => { if(loc.type === 'main') u.hands = item; if(loc.type === 'bag') u.bag[loc.index] = item; };
         const item1 = getItem(src); const item2 = getItem(tgt);
@@ -82,8 +75,7 @@ class Game {
     }
 
     toggleFireMode() {
-        const u = this.selectedUnit;
-        if (!u || !u.hands || !u.hands.modes) return;
+        const u = this.selectedUnit; if (!u || !u.hands || !u.hands.modes) return;
         const modes = u.hands.modes; const currentBurst = u.hands.burst;
         let nextIndex = modes.indexOf(currentBurst) + 1; if (nextIndex >= modes.length) nextIndex = 0;
         u.hands.burst = modes[nextIndex];
@@ -135,27 +127,23 @@ class Game {
 
     getSafeSpawnPos(team) {
         const cy = Math.floor(MAP_H / 2);
-        for (let i = 0; i < 100; i++) { const q = Math.floor(Math.random() * MAP_W); const r = Math.floor(Math.random() * MAP_H); if (team === 'player' && r < cy) continue; if (team === 'enemy' && r >= cy) continue; if (this.isValidHex(q, r) && this.getUnitsInHex(q, r).length < 4 && this.map[q][r].id !== -1 && this.map[q][r].id !== 5) { return { q, r }; } }
-        return { q: 0, r: 0 };
+        for (let i = 0; i < 100; i++) { const q = Math.floor(Math.random() * MAP_W); const r = Math.floor(MAP_H / 2 + (team==='player'?2:-2) + Math.floor(Math.random()*4-2)); if (this.isValidHex(q, r) && this.getUnitsInHex(q, r).length < 4 && this.map[q][r].id !== -1 && this.map[q][r].id !== 5) { return { q, r }; } }
+        return { q: Math.floor(MAP_W/2), r: Math.floor(MAP_H/2) };
     }
 
-    spawnAtSafeGround(team, type) {
-        const p = this.getSafeSpawnPos(team);
-        const u = this.createSoldier(type, team, p.q, p.r);
-        if (u) { u.q = p.q; u.r = p.r; this.units.push(u); this.log(`増援合流: ${u.name}`); }
-    }
+    spawnAtSafeGround(team, type) { const p = this.getSafeSpawnPos(team); const u = this.createSoldier(type, team, p.q, p.r); if (u) { this.units.push(u); this.log(`増援合流: ${u.name}`); } }
 
     checkDeploy(targetHex) {
-        if(!this.isValidHex(targetHex.q, targetHex.r) || this.map[targetHex.q][targetHex.r].id === -1) { this.log("配置不可: 進入不可能な地形です"); return false; }
-        if(this.map[targetHex.q][targetHex.r].id === 5) { this.log("配置不可: 水上には配置できません"); return false; }
+        if(!this.isValidHex(targetHex.q, targetHex.r) || this.map[targetHex.q][targetHex.r].id === -1) { this.log("配置不可: マップ外です"); return false; }
+        if(this.map[targetHex.q][targetHex.r].id === 5) { this.log("配置不可: 水上です"); return false; }
         if (this.getUnitsInHex(targetHex.q, targetHex.r).length >= 4) { this.log("配置不可: 混雑しています"); return false; }
-        if (this.cardsUsed >= 2) { this.log("配置不可: 指揮コスト上限(2/2)に達しています"); return false; }
+        if (this.cardsUsed >= 2) { this.log("配置不可: コスト上限です"); return false; }
         return true;
     }
     deployUnit(targetHex, cardType) {
         if(!this.checkDeploy(targetHex)) return;
         const u = this.createSoldier(cardType, 'player', targetHex.q, targetHex.r);
-        if(u) { this.units.push(u); this.cardsUsed++; this.log(`増援到着: ${u.name} (残コスト:${2-this.cardsUsed})`); if(window.VFX) { const pos = Renderer.hexToPx(targetHex.q, targetHex.r); window.VFX.addSmoke(pos.x, pos.y); } this.updateSidebar(); }
+        if(u) { this.units.push(u); this.cardsUsed++; this.log(`増援到着: ${u.name}`); if(window.VFX) { const pos = Renderer.hexToPx(targetHex.q, targetHex.r); window.VFX.addSmoke(pos.x, pos.y); } this.updateSidebar(); }
     }
 
     onUnitClick(u) {
@@ -163,16 +151,14 @@ class Game {
         if (u.team === 'player') {
             if (this.interactionMode !== 'SELECT') this.setMode('SELECT');
             this.selectedUnit = u; this.refreshUnitState(u); 
-            if (typeof Renderer !== 'undefined' && Renderer.game) { 
-                const pointer = Renderer.game.input.activePointer; 
-                this.ui.showActionMenu(u, pointer.x, pointer.y);
-            }
+            if (typeof Renderer !== 'undefined' && Renderer.game) { const pointer = Renderer.game.input.activePointer; this.ui.showActionMenu(u, pointer.x, pointer.y); }
             if (window.Sfx) Sfx.play('click');
-            return;
+        } else {
+            // 敵をクリックした場合は情報のみ表示（操作メニューは出さない）
+            if (this.interactionMode === 'ATTACK' && this.selectedUnit && this.selectedUnit.team === 'player') { this.actionAttack(this.selectedUnit, u); return; }
+            if (this.interactionMode === 'MELEE' && this.selectedUnit && this.selectedUnit.team === 'player') { this.actionMelee(this.selectedUnit, u); this.setMode('SELECT'); return; }
+            this.selectedUnit = u; this.refreshUnitState(u); this.hideActionMenu();
         }
-        if (this.interactionMode === 'ATTACK' && this.selectedUnit) { this.actionAttack(this.selectedUnit, u); return; }
-        if (this.interactionMode === 'MELEE' && this.selectedUnit) { this.actionMelee(this.selectedUnit, u); this.setMode('SELECT'); return; }
-        this.selectedUnit = u; this.refreshUnitState(u); this.hideActionMenu();
     }
 
     showActionMenu(u) { }
@@ -185,7 +171,7 @@ class Game {
     }
 
     calcReachableHexes(u) {
-        this.reachableHexes = []; if (!u) return;
+        this.reachableHexes = []; if (!u || u.team !== 'player') return;
         let frontier = [{ q: u.q, r: u.r, cost: 0 }], costSoFar = new Map(); costSoFar.set(`${u.q},${u.r}`, 0);
         while (frontier.length > 0) {
             let current = frontier.shift();
@@ -202,9 +188,8 @@ class Game {
         const u = this.getUnitInHex(p.q, p.r);
         if (this.interactionMode === 'SELECT') { if (!u) this.clearSelection(); } 
         else if (this.interactionMode === 'MOVE') { 
-            if (this.isValidHex(p.q, p.r) && this.path.length > 0) { 
-                const last = this.path[this.path.length - 1]; 
-                if (last.q === p.q && last.r === p.r) { this.actionMove(this.selectedUnit, this.path); this.setMode('SELECT'); } 
+            if (this.selectedUnit && this.isValidHex(p.q, p.r) && this.path.length > 0) { 
+                const last = this.path[this.path.length - 1]; if (last.q === p.q && last.r === p.r) { this.actionMove(this.selectedUnit, this.path); this.setMode('SELECT'); } 
             } else { this.setMode('SELECT'); } 
         } 
         else if (this.interactionMode === 'ATTACK' || this.interactionMode === 'MELEE') { 
@@ -217,117 +202,66 @@ class Game {
         }
     }
 
-    handleHover(p) {
-        if (this.state !== 'PLAY') return; this.hoverHex = p; const u = this.selectedUnit;
-        if (u) { if (this.interactionMode === 'MOVE') { const isReachable = this.reachableHexes.some(h => h.q === p.q && h.r === p.r); if (isReachable) { this.path = this.findPath(u, p.q, p.r); } else { this.path = []; } } else if (this.interactionMode === 'ATTACK') { this.calcAttackLine(u, p.q, p.r); } }
-    }
-
+    handleHover(p) { if (this.state !== 'PLAY') return; this.hoverHex = p; const u = this.selectedUnit; if (u && u.team === 'player') { if (this.interactionMode === 'MOVE') { const isReachable = this.reachableHexes.some(h => h.q === p.q && h.r === p.r); if (isReachable) { this.path = this.findPath(u, p.q, p.r); } else { this.path = []; } } else if (this.interactionMode === 'ATTACK') { this.calcAttackLine(u, p.q, p.r); } } }
     refreshUnitState(u) { if (!u || u.hp <= 0) { this.selectedUnit = null; this.reachableHexes = []; this.attackLine = []; this.aimTargetUnit = null; } this.updateSidebar(); }
     clearSelection() { this.selectedUnit = null; this.reachableHexes = []; this.attackLine = []; this.aimTargetUnit = null; this.path = []; this.setMode('SELECT'); this.hideActionMenu(); this.updateSidebar(); }
 
     setStance(s) {
-        const u = this.selectedUnit; if (!u || u.def.isTank) return; if (u.stance === s) return;
-        let cost = 0; if (u.stance === 'prone' && (s === 'stand' || s === 'crouch')) { cost = 1; }
-        if (u.ap < cost) { this.log(`AP不足 (必要:${cost})`); return; }
+        const u = this.selectedUnit; if (!u || u.team !== 'player' || u.def.isTank) return; if (u.stance === s) return;
+        let cost = (u.stance === 'prone' && (s === 'stand' || s === 'crouch')) ? 1 : 0;
+        if (u.ap < cost) { this.log(`AP不足`); return; }
         u.ap -= cost; u.stance = s; this.refreshUnitState(u); this.hideActionMenu(); if (window.Sfx) Sfx.play('click');
     }
-    toggleStance() { const u = this.selectedUnit; if (!u) return; let next = 'stand'; if (u.stance === 'stand') next = 'crouch'; else if (u.stance === 'crouch') next = 'prone'; this.setStance(next); }
+    toggleStance() { const u = this.selectedUnit; if (!u || u.team !== 'player') return; let next = 'stand'; if (u.stance === 'stand') next = 'crouch'; else if (u.stance === 'crouch') next = 'prone'; this.setStance(next); }
 
     reloadWeapon(isManual = false) {
-        const u = this.selectedUnit; if (!u) return; const w = u.hands;
-        if (!w || w.isConsumable) return;
+        const u = this.selectedUnit; if (!u || u.team !== 'player') return; const w = u.hands; if (!w || w.isConsumable) return;
         if (u.def.isTank) {
             if (u.ap < 1 || w.reserve <= 0) return;
             u.ap -= 1; w.current = 1; w.reserve -= 1;
-            if (window.Sfx) Sfx.play('reload'); this.refreshUnitState(u);
-            if (isManual) this.hideActionMenu();
+            if (window.Sfx) Sfx.play('reload'); this.refreshUnitState(u); if (isManual) this.hideActionMenu();
         } else {
-            const cost = w.rld || 1;
-            const magIdx = u.bag.findIndex(i => i && i.type === 'ammo' && i.ammoFor === w.code);
+            const cost = w.rld || 1; const magIdx = u.bag.findIndex(i => i && i.type === 'ammo' && i.ammoFor === w.code);
             if (u.ap < cost || magIdx === -1) return;
-            u.bag[magIdx] = null; u.ap -= cost; w.current = w.cap;
-            if (window.Sfx) Sfx.play('reload'); this.refreshUnitState(u); this.hideActionMenu();
+            u.bag[magIdx] = null; u.ap -= cost; w.current = w.cap; if (window.Sfx) Sfx.play('reload'); this.refreshUnitState(u); this.hideActionMenu();
         }
     }
 
-    actionRepair() { const u = this.selectedUnit; if (!u || u.ap < 2 || !u.hands || !u.hands.isBroken) return; u.ap -= 2; u.hands.isBroken = false; if (window.Sfx) Sfx.play('reload'); this.refreshUnitState(u); this.hideActionMenu(); }
-    actionHeal() { const u = this.selectedUnit; if (!u || u.ap < 2) return; const target = this.getUnitsInHex(u.q, u.r).filter(t => t.team === u.team && t.hp < t.maxHp).sort((a,b) => (a.hp/a.maxHp)-(b.hp/b.maxHp))[0]; if (!target) return; u.ap -= 2; target.hp = Math.min(target.maxHp, target.hp + 30); if (window.VFX) { const p = Renderer.hexToPx(u.q, u.r); window.VFX.add({ x: p.x, y: p.y - 20, vx: 0, vy: -1, life: 30, color: "#0f0", size: 4, type: 'spark' }); } this.refreshUnitState(u); this.hideActionMenu(); }
+    actionRepair() { const u = this.selectedUnit; if (!u || u.team !== 'player' || u.ap < 2 || !u.hands || !u.hands.isBroken) return; u.ap -= 2; u.hands.isBroken = false; if (window.Sfx) Sfx.play('reload'); this.refreshUnitState(u); this.hideActionMenu(); }
+    actionHeal() { const u = this.selectedUnit; if (!u || u.team !== 'player' || u.ap < 2) return; const target = this.getUnitsInHex(u.q, u.r).filter(t => t.team === u.team && t.hp < t.maxHp).sort((a,b) => (a.hp/a.maxHp)-(b.hp/b.maxHp))[0]; if (!target) return; u.ap -= 2; target.hp = Math.min(target.maxHp, target.hp + 30); if (window.VFX) { const p = Renderer.hexToPx(u.q, u.r); window.VFX.add({ x: p.x, y: p.y - 20, vx: 0, vy: -1, life: 30, color: "#0f0", size: 4, type: 'spark' }); } this.refreshUnitState(u); this.hideActionMenu(); }
 
     async actionMelee(a, d) {
-        if (!a || a.ap < 2) return; let wpnName = "銃床"; let bonusDmg = 0;
-        if (a.def.isTank) {
-            const subWpn = a.bag.find(i => i && i.type === 'bullet');
-            if (subWpn && subWpn.current > 0) { const consume = Math.min(subWpn.current, 5); subWpn.current -= consume; bonusDmg = 35; wpnName = "同軸機銃"; } else { wpnName = "体当たり"; bonusDmg = 15; }
-        } else {
-            let best = (a.hands && a.hands.type === 'melee') ? a.hands : null;
-            a.bag.forEach(item => { if (item && item.type === 'melee' && (!best || item.dmg > best.dmg)) best = item; });
-            if (best) { wpnName = best.name; bonusDmg = best.dmg; }
-        }
-        a.ap -= 2; this.log(`${a.name} 白兵攻撃(${wpnName}) vs ${d.name}`);
-        if (typeof Renderer !== 'undefined' && Renderer.playAttackAnim) Renderer.playAttackAnim(a, d);
+        if (!a || a.ap < 2) return; let bonusDmg = 0; if (a.def.isTank) { const subWpn = a.bag.find(i => i && i.type === 'bullet'); if (subWpn && subWpn.current > 0) { subWpn.current -= Math.min(subWpn.current, 5); bonusDmg = 35; } else bonusDmg = 15; }
+        else { let best = (a.hands && a.hands.type === 'melee') ? a.hands : null; a.bag.forEach(item => { if (item && item.type === 'melee' && (!best || item.dmg > best.dmg)) best = item; }); if (best) bonusDmg = best.dmg; }
+        a.ap -= 2; if (typeof Renderer !== 'undefined' && Renderer.playAttackAnim) Renderer.playAttackAnim(a, d);
         await new Promise(r => setTimeout(r, 300));
-        d.hp -= (10 + (a.stats?.str || 0) * 3 + bonusDmg);
-        if (window.Sfx) Sfx.play('hit');
-        // ★修正: 撃破時エフェクト復活
-        if (d.hp <= 0 && !d.deadProcessed) { 
-            d.deadProcessed = true; 
-            this.log(`>> ${d.name} を撃破！`); 
-            if (window.Sfx) Sfx.play('death'); 
-            if (window.VFX) { const p = Renderer.hexToPx(d.q, d.r); VFX.addUnitDebris(p.x, p.y); }
-            if(this.checkWin()) return; 
-        }
+        d.hp -= (10 + (a.stats?.str || 0) * 3 + bonusDmg); if (window.Sfx) Sfx.play('hit');
+        if (d.hp <= 0 && !d.deadProcessed) { d.deadProcessed = true; if (window.Sfx) Sfx.play('death'); if (window.VFX) { const p = Renderer.hexToPx(d.q, d.r); VFX.addUnitDebris(p.x, p.y); } if(this.checkWin()) return; }
         this.refreshUnitState(a); this.checkPhaseEnd();
     }
 
     async actionAttack(a, d) {
-        if (!a || (a.team === 'player' && this.state !== 'PLAY')) return;
-        const w = a.hands; if (!w || w.isBroken || (w.isConsumable && w.current <= 0)) return;
-        if (!a.def.isTank && w.current <= 0) {
-            const magIdx = a.bag.findIndex(i => i && i.type === 'ammo' && i.ammoFor === w.code);
-            if (magIdx !== -1 && a.ap >= (w.rld || 1)) { a.ap -= (w.rld || 1); a.bag[magIdx] = null; w.current = w.cap; if (window.Sfx) Sfx.play('reload'); this.refreshUnitState(a); await new Promise(r => setTimeout(r, 600)); } else return;
-        }
-        if (a.def.isTank && w.current <= 0 && this.tankAutoReload) {
-            if (w.reserve > 0 && a.ap >= 1) { a.ap -= 1; w.reserve--; w.current = 1; if (window.Sfx) Sfx.play('reload'); this.refreshUnitState(a); } else return;
-        }
+        if (!a || (a.team === 'player' && this.state !== 'PLAY')) return; const w = a.hands; if (!w || w.isBroken || (w.isConsumable && w.current <= 0)) return;
+        if (!a.def.isTank && w.current <= 0) { const magIdx = a.bag.findIndex(i => i && i.type === 'ammo' && i.ammoFor === w.code); if (magIdx !== -1 && a.ap >= (w.rld || 1)) { a.ap -= (w.rld || 1); a.bag[magIdx] = null; w.current = w.cap; if (window.Sfx) Sfx.play('reload'); this.refreshUnitState(a); await new Promise(r => setTimeout(r, 600)); } else return; }
+        if (a.def.isTank && w.current <= 0 && this.tankAutoReload) { if (w.reserve > 0 && a.ap >= 1) { a.ap -= 1; w.reserve--; w.current = 1; if (window.Sfx) Sfx.play('reload'); this.refreshUnitState(a); } else return; }
         if (w.current <= 0 || a.ap < w.ap || this.hexDist(a, d) > w.rng) return;
-        a.ap -= w.ap; this.state = 'ANIM';
-        if (typeof Renderer !== 'undefined' && Renderer.playAttackAnim) Renderer.playAttackAnim(a, d);
+        a.ap -= w.ap; this.state = 'ANIM'; if (typeof Renderer !== 'undefined' && Renderer.playAttackAnim) Renderer.playAttackAnim(a, d);
         const shots = w.isConsumable ? 1 : Math.min(w.burst || 1, w.current);
-        this.log(`${a.name} 攻撃開始 (${w.name})`);
         for (let i = 0; i < shots; i++) {
-            if (d.hp <= 0) break;
-            w.current--; this.updateSidebar();
-            const sPos = Renderer.hexToPx(a.q, a.r); const ePos = Renderer.hexToPx(d.q, d.r);
-            const isShell = w.type.includes('shell');
+            if (d.hp <= 0) break; w.current--; this.updateSidebar();
+            const sPos = Renderer.hexToPx(a.q, a.r); const ePos = Renderer.hexToPx(d.q, d.r); const isShell = w.type.includes('shell');
             if (window.Sfx) Sfx.play(isShell ? 'cannon' : 'shot');
-            if (window.VFX) { VFX.addProj({ x: sPos.x, y: sPos.y, sx: sPos.x, sy: sPos.y, ex: ePos.x, ey: ePos.y, type: w.type, speed: isShell ? 0.9 : 0.6, progress: 0, arcHeight: isShell ? 10 : 0, isTracer: true, onHit: () => { } }); }
+            if (window.VFX) VFX.addProj({ x: sPos.x, y: sPos.y, sx: sPos.x, sy: sPos.y, ex: ePos.x, ey: ePos.y, type: w.type, speed: isShell ? 0.9 : 0.6, progress: 0, arcHeight: isShell ? 10 : 0, isTracer: true, onHit: () => { } });
             setTimeout(() => {
-                if (d.hp <= 0) return;
-                const hitChance = (a.stats?.aim || 0) * 2 + w.acc - (this.hexDist(a,d) * (w.acc_drop||5)) - this.map[d.q][d.r].cover;
-                if (Math.random() * 100 < hitChance) {
-                    let dmg = Math.floor(w.dmg * (1 + (a.stats?.str||0)*0.05) * (0.8 + Math.random()*0.4));
-                    if (d.def.isTank && w.type === 'bullet') dmg = 0;
-                    d.hp -= dmg;
-                    if (dmg > 0 && isShell && typeof Renderer !== 'undefined') Renderer.playExplosion(ePos.x, ePos.y);
-                    if (window.Sfx) Sfx.play('ricochet');
-                }
+                if (d.hp <= 0) return; const hitChance = (a.stats?.aim || 0) * 2 + w.acc - (this.hexDist(a,d) * (w.acc_drop||5)) - this.map[d.q][d.r].cover;
+                if (Math.random() * 100 < hitChance) { d.hp -= Math.floor(w.dmg * (1 + (a.stats?.str||0)*0.05) * (0.8 + Math.random()*0.4)); if (isShell && typeof Renderer !== 'undefined') Renderer.playExplosion(ePos.x, ePos.y); if (window.Sfx) Sfx.play('ricochet'); }
             }, isShell ? 100 : this.hexDist(a,d)*30);
             await new Promise(r => setTimeout(r, isShell ? 200 : 60));
         }
         if (w.isConsumable && w.current <= 0) a.hands = null;
-        setTimeout(() => {
-            // ★修正: 撃破時エフェクト復活
-            if (d.hp <= 0 && !d.deadProcessed) { 
-                d.deadProcessed = true; 
-                this.log(`>> ${d.name} を撃破！`); 
-                if (window.Sfx) Sfx.play('death'); 
-                if (window.VFX) { const p = Renderer.hexToPx(d.q, d.r); VFX.addUnitDebris(p.x, p.y); }
-                if(this.checkWin()) return; 
-            }
-            this.state = 'PLAY'; 
-            if(a.def.isTank && w && w.current === 0 && w.reserve > 0 && this.tankAutoReload && a.ap >= 1) this.reloadWeapon();
-            this.refreshUnitState(a); 
-            if (!(a.ap >= (w?w.ap:0))) { this.setMode('SELECT'); this.checkPhaseEnd(); }
+        setTimeout(() => { if (d.hp <= 0 && !d.deadProcessed) { d.deadProcessed = true; if (window.Sfx) Sfx.play('death'); if (window.VFX) { const p = Renderer.hexToPx(d.q, d.r); VFX.addUnitDebris(p.x, p.y); } if(this.checkWin()) return; }
+            this.state = 'PLAY'; if(a.def.isTank && w && w.current === 0 && w.reserve > 0 && this.tankAutoReload && a.ap >= 1) this.reloadWeapon();
+            this.refreshUnitState(a); if (!(a.ap >= (w?w.ap:0))) { this.setMode('SELECT'); this.checkPhaseEnd(); }
         }, 800);
     }
 
@@ -342,38 +276,32 @@ class Game {
         if (this.attackLine.length > 0) { const last = this.attackLine[this.attackLine.length - 1]; if (last.q === targetQ && last.r === targetR) this.aimTargetUnit = this.getUnitInHex(last.q, last.r); }
     }
 
+    // ★以前の高品質なアルゴリズムを復旧
     generateMap() {
         this.map = []; for (let q = 0; q < MAP_W; q++) { this.map[q] = []; for (let r = 0; r < MAP_H; r++) { this.map[q][r] = TERRAIN.VOID; } }
-        let walkers = [{ q: Math.floor(MAP_W/2), r: Math.floor(MAP_H/2) }];
+        const cx = Math.floor(MAP_W / 2), cy = Math.floor(MAP_H / 2);
+        let walkers = [{ q: cx, r: cy }];
+        const paintBrush = (cq, cr) => { [{ q: cq, r: cr }, ...this.getNeighbors(cq, cr)].forEach(h => { if (this.isValidHex(h.q, h.r)) this.map[h.q][h.r] = TERRAIN.GRASS; }); };
         for (let i = 0; i < 140; i++) {
-            const w = walkers[Math.floor(Math.random() * walkers.length)];
-            const hexes = [{ q: w.q, r: w.r }, ...this.getNeighbors(w.q, w.r)];
-            hexes.forEach(h => { if (this.isValidHex(h.q, h.r)) this.map[h.q][h.r] = TERRAIN.GRASS; });
+            const wIdx = Math.floor(Math.random() * walkers.length); const w = walkers[wIdx]; paintBrush(w.q, w.r);
             const dir = [[1, 0], [1, -1], [0, -1], [-1, 0], [-1, 1], [0, 1]][Math.floor(Math.random() * 6)];
-            w.q += dir[0]; w.r += dir[1];
+            const next = { q: w.q + dir[0], r: w.r + dir[1] };
+            if (Math.random() < 0.05 && walkers.length < 5) walkers.push(next); else walkers[wIdx] = next;
         }
-        for (let q = 0; q < MAP_W; q++) { for (let r = 0; r < MAP_H; r++) { if (this.map[q][r].id !== -1) { const n = Math.sin(q*0.4)+Math.cos(r*0.4)+Math.random()*0.4; if (n > 1.1) this.map[q][r] = TERRAIN.FOREST; else if (n < -0.9) this.map[q][r] = TERRAIN.DIRT; } } }
+        // スムージング（穴埋め）
+        for (let i = 0; i < 3; i++) { for (let q = 1; q < MAP_W - 1; q++) { for (let r = 1; r < MAP_H - 1; r++) { if (this.map[q][r].id === -1) { if (this.getNeighbors(q, r).filter(n => this.map[n.q][n.r].id !== -1).length >= 4) this.map[q][r] = TERRAIN.GRASS; } } } }
+        // 水域生成
+        for (let loop = 0; loop < 2; loop++) { const wC = []; for (let q = 0; q < MAP_W; q++) { for (let r = 0; r < MAP_H; r++) { if (this.map[q][r].id === -1 && this.getNeighbors(q, r).some(n => this.map[n.q][n.r].id !== -1)) wC.push({ q, r }); } } wC.forEach(w => { this.map[w.q][w.r] = TERRAIN.WATER; }); }
+        // バイオーム適用
+        for (let q = 0; q < MAP_W; q++) { for (let r = 0; r < MAP_H; r++) { if (this.map[q][r].id !== -1 && this.map[q][r].id !== 5) { const n = Math.sin(q * 0.4) + Math.cos(r * 0.4) + Math.random() * 0.4; if (n > 1.1) this.map[q][r] = TERRAIN.FOREST; else if (n < -0.9) this.map[q][r] = TERRAIN.DIRT; if (Math.random() < 0.05) this.map[q][r] = TERRAIN.TOWN; } } }
     }
-    spawnEnemies() {
-        for (let i = 0; i < 4 + Math.floor(this.sector*0.7); i++) {
-            let k = 'rifleman'; const r = Math.random(); if (r < 0.1+this.sector*0.1) k = 'tank_pz4'; else if (r < 0.4) k = 'gunner';
-            const p = this.getSafeSpawnPos('enemy'); const e = this.createSoldier(k, 'enemy', p.q, p.r); if (e) this.units.push(e);
-        }
-    }
+
+    spawnEnemies() { for (let i = 0; i < 4 + Math.floor(this.sector * 0.7); i++) { let k = 'rifleman'; const r = Math.random(); if (r < 0.1 + this.sector * 0.1) k = 'tank_pz4'; else if (r < 0.4) k = 'gunner'; const p = this.getSafeSpawnPos('enemy'); const e = this.createSoldier(k, 'enemy', p.q, p.r); if (e) this.units.push(e); } }
     toggleAuto() { this.isAuto = !this.isAuto; document.getElementById('auto-toggle').classList.toggle('active'); }
-    runAuto() { }
     async actionMove(u, p) { this.state = 'ANIM'; for (let s of p) { u.ap -= this.map[s.q][s.r].cost; u.q = s.q; u.r = s.r; if (window.Sfx) Sfx.play('move'); await new Promise(r => setTimeout(r, 180)); } this.checkReactionFire(u); this.state = 'PLAY'; this.refreshUnitState(u); this.checkPhaseEnd(); }
     checkReactionFire(u) { this.units.filter(e => e.team !== u.team && e.hp > 0 && e.def.isTank && this.hexDist(u, e) <= 1).forEach(t => { u.hp -= 15; if (window.Sfx) Sfx.play('mg'); if (u.hp <= 0 && !u.deadProcessed) { u.deadProcessed = true; if (window.Sfx) Sfx.play('death'); } }); }
-    swapWeapon() { }
     checkPhaseEnd() { if (this.units.filter(u => u.team === 'player' && u.hp > 0 && u.ap > 0).length === 0 && this.state === 'PLAY') this.endTurn(); }
-    endTurn() {
-        if (this.isProcessingTurn) return; this.isProcessingTurn = true; this.setMode('SELECT'); this.hideActionMenu();
-        this.state = 'ANIM'; document.getElementById('eyecatch').style.opacity = 1;
-        setTimeout(async () => {
-            document.getElementById('eyecatch').style.opacity = 0; await this.ai.executeTurn(this.units);
-            this.units.forEach(u => { if (u.team === 'player') u.ap = u.maxAp; }); this.log("-- PLAYER PHASE --"); this.state = 'PLAY'; this.isProcessingTurn = false;
-        }, 1200);
-    }
+    endTurn() { if (this.isProcessingTurn) return; this.isProcessingTurn = true; this.setMode('SELECT'); this.hideActionMenu(); this.state = 'ANIM'; document.getElementById('eyecatch').style.opacity = 1; setTimeout(async () => { document.getElementById('eyecatch').style.opacity = 0; await this.ai.executeTurn(this.units); this.units.forEach(u => { if (u.team === 'player') u.ap = u.maxAp; }); this.log("-- PLAYER PHASE --"); this.state = 'PLAY'; this.isProcessingTurn = false; }, 1200); }
     promoteSurvivors() { this.units.filter(u => u.team === 'player' && u.hp > 0).forEach(u => { u.rank = Math.min(6, (u.rank||0)+1); u.maxHp += 30; u.hp += 30; }); }
     checkWin() { if (this.units.filter(u => u.team === 'enemy' && u.hp > 0).length === 0) { if (window.Sfx) Sfx.play('win'); document.getElementById('reward-screen').style.display = 'flex'; this.promoteSurvivors(); const b = document.getElementById('reward-cards'); b.innerHTML = ''; [{ k: 'rifleman', t: '新兵' }, { k: 'tank_pz4', t: '戦車' }].forEach(o => { const d = document.createElement('div'); d.className = 'card'; d.innerHTML = `<div class="card-body"><h3>${o.t}</h3></div>`; d.onclick = () => { this.spawnAtSafeGround('player', o.k); this.sector++; document.getElementById('reward-screen').style.display = 'none'; this.startCampaign(); }; b.appendChild(d); }); return true; } return false; }
     isValidHex(q, r) { return q >= 0 && q < MAP_W && r >= 0 && r < MAP_H; }
