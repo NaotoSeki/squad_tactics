@@ -1,4 +1,4 @@
-/** LOGIC UI: Robust Interface Management */
+/** LOGIC UI: Robust Interface Management (Radial Menu) */
 
 class UIManager {
     constructor(game) {
@@ -11,7 +11,11 @@ class UIManager {
         window.addEventListener('click', (e) => {
             if (this.menuSafeLock) return;
             if (!e.target.closest('#context-menu')) document.getElementById('context-menu').style.display = 'none';
-            if (!e.target.closest('#command-menu') && !e.target.closest('canvas')) { this.hideActionMenu(); }
+            
+            // コマンドメニュー外をクリックしたら閉じる（ボタン自体は pointer-events:auto なのでクリック可能）
+            if (!e.target.closest('#command-menu') && !e.target.closest('canvas')) { 
+                this.hideActionMenu(); 
+            }
         });
 
         const stopPropagation = (e) => { e.stopPropagation(); };
@@ -62,39 +66,121 @@ class UIManager {
         }
     }
 
+    // ★円形メニュー生成ロジック
     showActionMenu(u, px, py) {
         const menu = document.getElementById('command-menu'); if (!menu) return;
         this.menuSafeLock = true; setTimeout(() => { this.menuSafeLock = false; }, 300);
-        
-        const btnMove = document.getElementById('btn-move'); 
-        const btnAttack = document.getElementById('btn-attack');
-        const btnRepair = document.getElementById('btn-repair'); 
-        const btnMelee = document.getElementById('btn-melee'); 
-        const btnHeal = document.getElementById('btn-heal');
-        const grpStance = menu.querySelector('.cmd-group'); // 姿勢メニューのグループを取得
 
-        const setEnabled = (btn, enabled) => { if(enabled) btn.classList.remove('disabled'); else btn.classList.add('disabled'); };
-        
-        setEnabled(btnMove, u.ap >= 1);
+        // メニューをリセット
+        menu.innerHTML = '';
+        menu.style.display = 'block';
+        menu.style.left = px + 'px';
+        menu.style.top = py + 'px';
+
+        // コマンドリストの定義
+        const commands = [];
+
+        // 1. 移動
+        commands.push({
+            icon: '👣', label: 'MOVE',
+            action: () => gameLogic.setMode('MOVE'),
+            enabled: u.ap >= 1
+        });
+
+        // 2. 射撃
         const weaponCost = u.hands ? u.hands.ap : 99;
-        setEnabled(btnAttack, u.ap >= weaponCost);
-        setEnabled(btnRepair, u.hands && u.hands.isBroken);
-        const neighbors = this.game.getUnitsInHex(u.q, u.r);
-        setEnabled(btnMelee, neighbors.some(n => n.team !== u.team));
-        setEnabled(btnHeal, neighbors.some(n => n.team === u.team && n.hp < n.maxHp));
+        commands.push({
+            icon: '🔫', label: 'ATTACK',
+            action: () => gameLogic.setMode('ATTACK'),
+            enabled: u.ap >= weaponCost
+        });
 
-        // ★修正: 戦車の場合、姿勢メニューと治療ボタンを非表示にする
         if (u.def.isTank) {
-            if (grpStance) grpStance.style.display = 'none';
-            if (btnHeal) btnHeal.style.display = 'none';
+            // 戦車用メニュー (4つ: 移動, 射撃, 修理, 白兵)
+            // 3. 修理
+            commands.push({
+                icon: '🔧', label: 'REPAIR',
+                action: () => gameLogic.actionRepair(),
+                enabled: u.hands && u.hands.isBroken
+            });
+            // 4. 白兵
+            const neighbors = this.game.getUnitsInHex(u.q, u.r);
+            commands.push({
+                icon: '🔪', label: 'MELEE',
+                action: () => gameLogic.actionMeleeSetup(),
+                enabled: neighbors.some(n => n.team !== u.team)
+            });
+
         } else {
-            if (grpStance) grpStance.style.display = 'block';
-            if (btnHeal) btnHeal.style.display = 'block';
+            // 歩兵用メニュー (6つ: 移動, 射撃, 姿勢, 修理, 白兵, 治療)
+            // 3. 姿勢 (トグル)
+            let stanceIcon = '🧘';
+            if (u.stance === 'stand') stanceIcon = '🧍';
+            else if (u.stance === 'crouch') stanceIcon = '🧎';
+            else if (u.stance === 'prone') stanceIcon = '🛌';
+
+            commands.push({
+                icon: stanceIcon, label: 'STANCE',
+                action: () => gameLogic.toggleStance(),
+                enabled: true
+            });
+
+            // 4. 修理
+            commands.push({
+                icon: '🔧', label: 'REPAIR',
+                action: () => gameLogic.actionRepair(),
+                enabled: u.hands && u.hands.isBroken
+            });
+
+            // 5. 白兵
+            const neighbors = this.game.getUnitsInHex(u.q, u.r);
+            commands.push({
+                icon: '🔪', label: 'MELEE',
+                action: () => gameLogic.actionMeleeSetup(),
+                enabled: neighbors.some(n => n.team !== u.team)
+            });
+
+            // 6. 治療
+            const friendlies = neighbors.filter(n => n.team === u.team && n.hp < n.maxHp);
+            commands.push({
+                icon: '💊', label: 'HEAL',
+                action: () => gameLogic.actionHeal(),
+                enabled: friendlies.length > 0
+            });
         }
 
-        menu.style.left = (px + 20) + 'px'; 
-        menu.style.top = (py - 50) + 'px';
-        menu.style.display = 'block';
+        // ボタンの配置
+        const radius = 60; // 半径
+        const count = commands.length;
+        const startAngle = -90; // 真上から開始
+
+        commands.forEach((cmd, index) => {
+            const angleDeg = startAngle + (360 / count) * index;
+            const angleRad = angleDeg * (Math.PI / 180);
+            
+            const bx = Math.cos(angleRad) * radius;
+            const by = Math.sin(angleRad) * radius;
+
+            const btn = document.createElement('div');
+            btn.className = 'radial-btn';
+            if (!cmd.enabled) btn.classList.add('disabled');
+            
+            btn.innerHTML = `
+                ${cmd.icon}
+                <div class="radial-label">${cmd.label}</div>
+            `;
+            
+            btn.style.left = bx + 'px';
+            btn.style.top = by + 'px';
+            
+            btn.onclick = (e) => {
+                if(cmd.enabled) cmd.action();
+                this.hideActionMenu();
+                e.stopPropagation();
+            };
+
+            menu.appendChild(btn);
+        });
     }
 
     hideActionMenu() { const menu = document.getElementById('command-menu'); if (menu) menu.style.display = 'none'; }
