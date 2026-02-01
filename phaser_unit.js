@@ -257,9 +257,9 @@ class UnitView {
                 const scaleFactor = 0.25;
                 const drawMult = 4;
                 const iconSize = 4 * drawMult;
-                const fontSize = (9 * drawMult) + 'px';
+                const fontSize = (5 * drawMult) + 'px';
                 const yOffset = -58 * drawMult; // 以前の-58pxの位置相当
-                const spacing = 9 * drawMult;
+                const spacing = 5 * drawMult;
 
                 let iconX = -((uniqueSkills.length - 1) * spacing) / 2;
                 
