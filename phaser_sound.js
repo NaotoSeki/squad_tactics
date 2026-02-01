@@ -40,11 +40,10 @@ const Sfx = {
     play(id) {
         this.init();
         
-        // ★修正: リロード音はWAV再生 (phaser_bridge.jsでロードした 'reload_sfx' を再生)
+        // ★修正: リロード音はWAV再生
         if (id === 'reload') {
             if (window.phaserGame) {
                 const main = window.phaserGame.scene.getScene('MainScene');
-                // シーンがアクティブでない場合もあるため確認
                 if (main && main.sound) { 
                     main.sound.play('reload_sfx'); 
                 }
