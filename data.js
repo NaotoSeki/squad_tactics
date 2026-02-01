@@ -1,7 +1,9 @@
-/** DATA: Weapon Stats Update (Penetration, AccDrop, Burst) */
-const HEX_SIZE = 54; 
-const MAP_W = 20;    
-const MAP_H = 20; 
+/** DATA: Unit & Weapon Definitions */
+
+// ★修正: 定数を最上部に移動（読み込みエラー防止）
+const HEX_SIZE = 54;
+const MAP_W = 20;
+const MAP_H = 20;
 
 const TERRAIN = {
     VOID:   { id: -1, name: "---",  cost: 99, cover: 0 },
@@ -76,7 +78,10 @@ const UNIT_TEMPLATES = {
     sniper:   { name:"Sniper", role:"infantry", main:"k98_scope", sub:"m1911", opt:null, stats:{str:3, aim:9, mob:4, mor:4} },
     
     tank_pz4: { name:"Panzer IV", role:"tank", main:"kwk", sub:"mg42", opt:null, hp:600, ap:5, isTank:true },
-    tank_tiger: { name:"Tiger I", role:"tank", main:"kwk88", sub:"mg42", opt:null, hp:1200, ap:4, isTank:true, isBoss:true }
+    tank_tiger: { name:"Tiger I", role:"tank", main:"kwk88", sub:"mg42", opt:null, hp:1200, ap:4, isTank:true, isBoss:true },
+    
+    // ★追加: 爆撃支援カード定義 (純粋な追記)
+    aerial: { name:"AERIAL SPT", role:"TACTIC", main:null, sub:null, opt:null, hp:"N/A", ap:0 }
 };
 
 const MAG_VARIANTS = {
