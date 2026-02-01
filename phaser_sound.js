@@ -1,26 +1,31 @@
-/** PHASER SOUND ENGINE (Asset Manager + Synth Fallback) */
+/** PHASER SOUND ENGINE (Asset Manager + Synth Fallback + Throttling) */
 const Sfx = {
     ctx: null,
     
-    // ★追加: ここにファイルを追加するだけでロード＆再生可能になります
+    // 登録された音声アセット
     assets: {
         'reload': 'asset/audio/001_reload.wav',
         'mg42':   'asset/audio/002_mg42.wav'
     },
+
+    // ★追加: 再生間隔の制限 (ms)
+    // ここにIDを定義すると、その時間内は連続再生されず、最初の1回だけ鳴ります
+    throttles: {
+        'mg42': 2000 // 1回の攻撃アクションが終わるまで次を鳴らさない
+    },
+    lastPlayTime: {},
 
     init() { 
         if(!this.ctx) this.ctx = new (window.AudioContext||window.webkitAudioContext)(); 
         if(this.ctx.state==='suspended') this.ctx.resume(); 
     },
 
-    // ★追加: シーン側から呼び出して一括ロードする関数
     preload(scene) {
         for (const [key, path] of Object.entries(this.assets)) {
             scene.load.audio(key, path);
         }
     },
 
-    // シンセサイザー機能（変更なし）
     noise(dur, freq, type='lowpass', vol=0.2) {
         if(!this.ctx) return; 
         const t=this.ctx.currentTime;
@@ -54,23 +59,32 @@ const Sfx = {
         o1.start(t); o1.stop(t + 0.15); o2.start(t); o2.stop(t + 0.3);
     },
 
-    // ★改修: ファイルがあればそれを再生、なければシンセ音へフォールバック
     play(id, fallbackType = null) {
         this.init();
+
+        // ★追加: スロットリング（間引き）処理
+        if (this.throttles[id]) {
+            const now = Date.now();
+            const last = this.lastPlayTime[id] || 0;
+            // 指定時間が経過していなければ再生をスキップ
+            if (now - last < this.throttles[id]) {
+                return; 
+            }
+            this.lastPlayTime[id] = now;
+        }
 
         // 1. assetsに登録されたIDなら、WAVファイルを再生
         if (this.assets[id]) {
             if (window.phaserGame) {
                 const main = window.phaserGame.scene.getScene('MainScene');
                 if (main && main.sound) {
-                    // 既に再生中ならリスタートなどの制御も可能だが、今回は単純再生
                     main.sound.play(id);
                     return; 
                 }
             }
         }
 
-        // 2. なければ従来のシンセ音を使用（IDまたはフォールバックタイプで判定）
+        // 2. なければ従来のシンセ音を使用
         const target = fallbackType || id;
 
         if(target==='click') this.tone(1200, 'sine', 0.05, 0.05);
