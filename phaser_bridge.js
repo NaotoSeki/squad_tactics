@@ -1,20 +1,66 @@
-/** PHASER BRIDGE: Aerial Bombardment & Dashed Area Highlight */
+/** PHASER BRIDGE: Precise Click Handling & Aerial Support */
+window.phaserGame = null;
+window.HIGH_RES_SCALE = 2.0; 
 
-const Renderer = {
-    game: null, isMapDragging: false, isCardDragging: false, 
+// 関数定義を確実にwindowに紐付け
+window.getCardTextureKey = function(scene, type) {
+    const key = `card_texture_${type}`;
+    if (scene.textures.exists(key)) return key;
+    let template = { name: type, role: 'unknown', hp: 100, ap: 4, main: 'rifle' };
+    if (typeof UNIT_TEMPLATES !== 'undefined' && UNIT_TEMPLATES[type]) { template = UNIT_TEMPLATES[type]; }
+    const canvas = document.createElement('canvas'); canvas.width = 140 * 2; canvas.height = 200 * 2;
+    const ctx = canvas.getContext('2d'); ctx.scale(2, 2);
+    ctx.fillStyle = "#1a1a1a"; ctx.fillRect(0, 0, 140, 200);
+    ctx.strokeStyle = "#555"; ctx.lineWidth = 2; ctx.strokeRect(0, 0, 140, 200);
+    ctx.fillStyle = "#000"; ctx.fillRect(20, 20, 100, 100);
+    const seed = type.length * 999; const rnd = function(s) { return Math.abs(Math.sin(s * 12.9898) * 43758.5453) % 1; };
+    const skinTones = ["#ffdbac", "#f1c27d", "#e0ac69"]; ctx.fillStyle = skinTones[Math.floor(rnd(seed) * skinTones.length)];
+    ctx.beginPath(); ctx.arc(70, 70, 30, 0, Math.PI*2); ctx.fill(); 
+    ctx.fillStyle = "#343"; ctx.beginPath(); ctx.arc(70, 60, 32, Math.PI, 0); ctx.lineTo(102, 60); ctx.lineTo(38, 60); ctx.fill(); 
+    ctx.fillStyle = "#d84"; ctx.font = "bold 14px sans-serif"; ctx.textAlign = "center"; ctx.fillText(template.name, 70, 140);
+    ctx.fillStyle = "#888"; ctx.font = "10px sans-serif"; ctx.fillText(template.role ? template.role.toUpperCase() : "UNIT", 70, 155);
+    let wpnName = template.main || "-"; if (typeof WPNS !== 'undefined' && WPNS[template.main]) { wpnName = WPNS[template.main].name; }
+    ctx.fillStyle = "#ccc"; ctx.font = "11px monospace"; ctx.fillText(`HP:${template.hp||100} AP:${template.ap||4}`, 70, 175);
+    ctx.fillStyle = "#d84"; ctx.font = "10px sans-serif"; ctx.fillText(wpnName, 70, 190);
+    scene.textures.addCanvas(key, canvas); return key;
+};
+
+window.createGradientTexture = function(scene) {
+    const key = 'ui_gradient'; if (scene.textures.exists(key)) return;
+    const canvas = document.createElement('canvas'); canvas.width = 100; canvas.height = 100;
+    const ctx = canvas.getContext('2d'); const grd = ctx.createLinearGradient(0, 0, 0, 100);
+    grd.addColorStop(0, 'rgba(0,0,0,0)'); grd.addColorStop(1, 'rgba(0,0,0,0.9)');
+    ctx.fillStyle = grd; ctx.fillRect(0, 0, 100, 100); scene.textures.addCanvas(key, canvas);
+};
+
+window.createHexTexture = function(scene) {
+    if (scene.textures.exists('hex_base')) return;
+    const g = scene.make.graphics({x: 0, y: 0, add: false});
+    const baseSize = (typeof HEX_SIZE !== 'undefined' ? HEX_SIZE : 54); 
+    const size = baseSize * window.HIGH_RES_SCALE * 1.02;
+    const w = size * 2; const h = size * Math.sqrt(3);
+    g.fillStyle(0xffffff); g.beginPath();
+    for (let i = 0; i < 6; i++) { const angle_deg = 60 * i; const angle_rad = Math.PI / 180 * angle_deg; const px = w/2 + size * Math.cos(angle_rad); const py = h/2 + size * Math.sin(angle_rad); if (i === 0) g.moveTo(px, py); else g.lineTo(px, py); }
+    g.closePath(); g.fillPath(); g.generateTexture('hex_base', w, h);
+};
+
+window.Renderer = {
+    game: null, 
+    isMapDragging: false, 
+    isCardDragging: false,
     suppressMapClick: false,
-    draggedCardType: null, // ★追加: ドラッグ中のカードタイプを保持
+    draggedCardType: null,
 
     init(canvasElement) {
         const config = { type: Phaser.AUTO, parent: 'game-view', width: document.getElementById('game-view').clientWidth, height: document.getElementById('game-view').clientHeight, backgroundColor: '#0b0e0a', pixelArt: false, scene: [MainScene, UIScene], fps: { target: 60 }, physics: { default: 'arcade', arcade: { debug: false } }, input: { activePointers: 1 } };
-        this.game = new Phaser.Game(config); phaserGame = this.game;
+        this.game = new Phaser.Game(config); window.phaserGame = this.game;
         window.addEventListener('resize', () => this.resize());
         const startAudio = () => { if(window.Sfx && window.Sfx.ctx && window.Sfx.ctx.state === 'suspended') { window.Sfx.ctx.resume(); } };
         document.addEventListener('click', startAudio); document.addEventListener('keydown', startAudio);
     },
     resize() { if(this.game) this.game.scale.resize(document.getElementById('game-view').clientWidth, document.getElementById('game-view').clientHeight); },
     hexToPx(q, r) { return { x: HEX_SIZE * 3/2 * q, y: HEX_SIZE * Math.sqrt(3) * (r + q/2) }; },
-    pxToHex(mx, my) { const main = phaserGame.scene.getScene('MainScene'); if(!main) return {q:0, r:0}; const w = main.cameras.main.getWorldPoint(mx, my); return this.roundHex((2/3*w.x)/HEX_SIZE, (-1/3*w.x+Math.sqrt(3)/3*w.y)/HEX_SIZE); },
+    pxToHex(mx, my) { const main = window.phaserGame.scene.getScene('MainScene'); if(!main) return {q:0, r:0}; const w = main.cameras.main.getWorldPoint(mx, my); return this.roundHex((2/3*w.x)/HEX_SIZE, (-1/3*w.x+Math.sqrt(3)/3*w.y)/HEX_SIZE); },
     roundHex(q,r) { let rq=Math.round(q), rr=Math.round(r), rs=Math.round(-q-r); const dq=Math.abs(rq-q), dr=Math.abs(rr-r), ds=Math.abs(rs-(-q-r)); if(dq>dr&&dq>ds) rq=-rr-rs; else if(dr>ds) rr=-rq-rs; return {q:rq, r:rr}; },
     centerOn(q, r) { const main = this.game.scene.getScene('MainScene'); if (main && main.centerCamera) main.centerCamera(q, r); },
     centerMap() { const main = this.game.scene.getScene('MainScene'); if (main && main.centerMap) main.centerMap(); },
