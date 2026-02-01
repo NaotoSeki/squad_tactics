@@ -1,4 +1,4 @@
-/** PHASER BRIDGE: Precise Click Handling */
+/** PHASER BRIDGE: Strict UI Hover Check (Using Client Coordinates) */
 let phaserGame = null;
 window.HIGH_RES_SCALE = 2.0; 
 
@@ -45,12 +45,7 @@ window.createHexTexture = function(scene) {
 };
 
 const Renderer = {
-    game: null, 
-    isMapDragging: false, 
-    isCardDragging: false,
-    // ★追加: ユニットクリックが行われたかを判定するフラグ
-    suppressMapClick: false, 
-
+    game: null, isMapDragging: false, isCardDragging: false,
     init(canvasElement) {
         const config = { type: Phaser.AUTO, parent: 'game-view', width: document.getElementById('game-view').clientWidth, height: document.getElementById('game-view').clientHeight, backgroundColor: '#0b0e0a', pixelArt: false, scene: [MainScene, UIScene], fps: { target: 60 }, physics: { default: 'arcade', arcade: { debug: false } }, input: { activePointers: 1 } };
         this.game = new Phaser.Game(config); phaserGame = this.game;
@@ -67,18 +62,24 @@ const Renderer = {
     dealCards(types) { let ui = this.game.scene.getScene('UIScene'); if(!ui || !ui.sys) ui = this.game.scene.scenes.find(s => s.scene.key === 'UIScene'); if(ui) ui.dealStart(types); },
     dealCard(type) { const ui = this.game.scene.getScene('UIScene'); if(ui) ui.addCardToHand(type); },
     
+    // ★修正: ポインターイベントの生のクライアント座標を受け取って厳密に判定
     checkUIHover(x, y, pointerEvent) { 
         if (this.isCardDragging) return true;
+        
+        // 1. Phaser UI (Cards) Check
         const ui = this.game.scene.getScene('UIScene'); 
         if (ui) {
             for (let card of ui.cards) { const dx = Math.abs(x - card.x); const dy = Math.abs(y - card.y); if (dx < 70 && dy < 100) return true; } 
         }
+
+        // 2. DOM Elements Check (Using Client Coordinates if available)
         const checkX = (pointerEvent && pointerEvent.clientX !== undefined) ? pointerEvent.clientX : x;
         const checkY = (pointerEvent && pointerEvent.clientY !== undefined) ? pointerEvent.clientY : y;
+
         const menus = ['context-menu', 'command-menu', 'warning-modal'];
         for (let id of menus) {
             const el = document.getElementById(id);
-            if (el && el.offsetParent !== null) { 
+            if (el && el.offsetParent !== null) { // offsetParent!=null checks visibility
                 const rect = el.getBoundingClientRect();
                 if (checkX >= rect.left && checkX <= rect.right && checkY >= rect.top && checkY <= rect.bottom) {
                     return true;
@@ -93,7 +94,6 @@ const Renderer = {
     generateFaceIcon(seed) { const c = document.createElement('canvas'); c.width = 64; c.height = 64; const ctx = c.getContext('2d'); const rnd = function() { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; }; ctx.fillStyle = "#334"; ctx.fillRect(0,0,64,64); const skinTones = ["#ffdbac", "#f1c27d", "#e0ac69", "#8d5524"]; ctx.fillStyle = skinTones[Math.floor(rnd() * skinTones.length)]; ctx.beginPath(); ctx.arc(32, 36, 18, 0, Math.PI*2); ctx.fill(); ctx.fillStyle = "#343"; ctx.beginPath(); ctx.arc(32, 28, 20, Math.PI, 0); ctx.lineTo(54, 30); ctx.lineTo(10, 30); ctx.fill(); ctx.strokeStyle = "#121"; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(10,28); ctx.lineTo(54,28); ctx.stroke(); ctx.fillStyle = "#000"; const eyeY = 36; const eyeOff = 6 + rnd()*2; ctx.fillRect(32-eyeOff-2, eyeY, 4, 2); ctx.fillRect(32+eyeOff-2, eyeY, 4, 2); ctx.strokeStyle = "#a76"; ctx.lineWidth = 1; ctx.beginPath(); const mouthW = 4 + rnd()*6; ctx.moveTo(32-mouthW/2, 48); ctx.lineTo(32+mouthW/2, 48); ctx.stroke(); if (rnd() < 0.5) { ctx.fillStyle = "rgba(0,0,0,0.2)"; ctx.fillRect(20 + rnd()*20, 30 + rnd()*20, 4, 2); } return c.toDataURL(); }
 };
 
-// ... (Card, UIScene クラスは変更なし) ...
 class Card extends Phaser.GameObjects.Container {
     constructor(scene, x, y, type) {
         super(scene, x, y); this.scene = scene; this.cardType = type; this.setSize(140, 200);
@@ -107,19 +107,42 @@ class Card extends Phaser.GameObjects.Container {
     }
     updatePhysics() { 
         if (!this.scene || !this.frameImage) return; 
-        if (this.isDragging) { this.setAlpha(0.6); } else {
+        
+        // ドラッグ中は半透明を維持
+        if (this.isDragging) {
+            this.setAlpha(0.6); 
+        } else {
             const isDisabled = (window.gameLogic && window.gameLogic.cardsUsed >= 2);
-            if (isDisabled) { this.frameImage.setTint(0x555555); this.setAlpha(0.6); } else { this.frameImage.clearTint(); this.setAlpha(1.0); }
+            if (isDisabled) { 
+                this.frameImage.setTint(0x555555); 
+                this.setAlpha(0.6); 
+            } else { 
+                this.frameImage.clearTint(); 
+                this.setAlpha(1.0); 
+            }
         }
+
         if (!this.isDragging && !this.scene.isReturning) { this.targetX = this.baseX; if (this.scene.isHandDocked) { this.targetY = this.isHovering ? -120 : 60; } else { this.targetY = this.baseY - (this.isHovering ? 30 : 0); } } 
         const stiffness = this.isDragging ? 0.2 : 0.08; const damping = 0.65; const ax = (this.targetX - this.physX) * stiffness; const ay = (this.targetY - this.physY) * stiffness; this.velocityX += ax; this.velocityY += ay; this.velocityX *= damping; this.velocityY *= damping; this.physX += this.velocityX; this.physY += this.velocityY; this.setPosition(this.physX, this.physY); let staticAngle = 0; if (this.isDragging) staticAngle = -this.dragOffsetX * 0.4; const targetDynamicAngle = -this.velocityX * 1.5; const totalTargetAngle = staticAngle + targetDynamicAngle; const angleForce = (totalTargetAngle - this.angle) * 0.12; this.velocityAngle += angleForce; this.velocityAngle *= 0.85; this.angle += this.velocityAngle; this.angle = Phaser.Math.Clamp(this.angle, -50, 50); 
     }
     onHover() { if(!this.parentContainer || Renderer.isMapDragging || Renderer.isCardDragging) return; this.isHovering = true; this.parentContainer.bringToTop(this); }
     onHoverOut() { this.isHovering = false; }
     onDragStart(pointer) { 
-        if(Renderer.isMapDragging) return; if(window.gameLogic && window.gameLogic.cardsUsed >= 2) return; 
-        this.isDragging = true; Renderer.isCardDragging = true; this.setAlpha(0.6); this.setScale(1.1); 
-        const hand = this.parentContainer; const worldPos = hand.getLocalTransformMatrix().transformPoint(this.x, this.y); hand.remove(this); this.scene.add.existing(this); this.physX = worldPos.x; this.physY = worldPos.y; this.targetX = this.physX; this.targetY = this.physY; this.setDepth(9999); this.dragOffsetX = this.physX - pointer.x; this.dragOffsetY = this.physY - pointer.y; 
+        if(Renderer.isMapDragging) return; 
+        if(window.gameLogic && window.gameLogic.cardsUsed >= 2) return; 
+        this.isDragging = true; 
+        Renderer.isCardDragging = true; 
+        this.setAlpha(0.6); 
+        this.setScale(1.1); 
+        const hand = this.parentContainer; 
+        const worldPos = hand.getLocalTransformMatrix().transformPoint(this.x, this.y); 
+        hand.remove(this); 
+        this.scene.add.existing(this); 
+        this.physX = worldPos.x; this.physY = worldPos.y; 
+        this.targetX = this.physX; this.targetY = this.physY; 
+        this.setDepth(9999); 
+        this.dragOffsetX = this.physX - pointer.x; 
+        this.dragOffsetY = this.physY - pointer.y; 
     }
     onDrag(pointer) { if(!this.isDragging) return; this.targetX = pointer.x + this.dragOffsetX; this.targetY = pointer.y + this.dragOffsetY; const main = this.scene.game.scene.getScene('MainScene'); if (this.y < this.scene.scale.height * 0.65) main.dragHighlightHex = Renderer.pxToHex(pointer.x, pointer.y); else main.dragHighlightHex = null; }
     onDragEnd(pointer) { if(!this.isDragging) return; this.isDragging = false; Renderer.isCardDragging = false; this.setAlpha(1.0); this.setScale(1.0); const main = this.scene.game.scene.getScene('MainScene'); main.dragHighlightHex = null; const dropZoneY = this.scene.scale.height * 0.65; if (this.y < dropZoneY) { const hex = Renderer.pxToHex(pointer.x, pointer.y); let canDeploy = false; if (window.gameLogic) { if (this.cardType === 'aerial') { if (window.gameLogic.isValidHex(hex.q, hex.r)) canDeploy = true; else window.gameLogic.log("配置不可: マップ範囲外です"); } else { canDeploy = window.gameLogic.checkDeploy(hex); } } if (canDeploy) this.burnAndConsume(hex); else this.returnToHand(); } else { this.returnToHand(); } }
@@ -167,34 +190,22 @@ class MainScene extends Phaser.Scene {
         this.unitView = new UnitView(this, this.unitGroup, this.hpGroup);
         this.input.on('wheel', (pointer, gameObjects, deltaX, deltaY, deltaZ) => { let newZoom = this.cameras.main.zoom; if (deltaY > 0) newZoom -= 0.5; else if (deltaY < 0) newZoom += 0.5; newZoom = Phaser.Math.Clamp(newZoom, 0.25, 4.0); this.tweens.add({ targets: this.cameras.main, zoom: newZoom, duration: 150, ease: 'Cubic.out' }); });
         
+        // ★修正: ポインターイベントの生のDOMイベントオブジェクト(p.event)を渡す
         this.input.on('pointerdown', (p) => { 
             if (Renderer.isCardDragging || Renderer.checkUIHover(p.x, p.y, p.event)) return; 
-            
-            // ★修正: ユニットクリックが処理された直後なら、マップクリックを無視する
-            if (Renderer.suppressMapClick) {
-                Renderer.suppressMapClick = false;
-                return;
-            }
-
-            const hex = Renderer.pxToHex(p.x, p.y);
             if(p.button === 0) { 
                 Renderer.isMapDragging = true; 
-                if(window.gameLogic) window.gameLogic.handleClick(hex); 
+                if(window.gameLogic) window.gameLogic.handleClick(Renderer.pxToHex(p.x, p.y)); 
             } else if(p.button === 2) { 
-                if(window.gameLogic) window.gameLogic.handleRightClick(p.x, p.y, hex); 
+                if(window.gameLogic) window.gameLogic.handleRightClick(p.x, p.y); 
             } 
         });
         
         this.input.on('pointerup', () => { Renderer.isMapDragging = false; });
-        this.input.on('pointermove', (p) => { 
-            if (Renderer.isCardDragging) return; 
-            if (p.isDown && Renderer.isMapDragging) { const zoom = this.cameras.main.zoom; this.cameras.main.scrollX -= (p.x - p.prevPosition.x) / zoom; this.cameras.main.scrollY -= (p.y - p.prevPosition.y) / zoom; } 
-            if(!Renderer.isMapDragging && window.gameLogic) window.gameLogic.handleHover(Renderer.pxToHex(p.x, p.y)); 
-        }); 
+        this.input.on('pointermove', (p) => { if (Renderer.isCardDragging) return; if (p.isDown && Renderer.isMapDragging) { const zoom = this.cameras.main.zoom; this.cameras.main.scrollX -= (p.x - p.prevPosition.x) / zoom; this.cameras.main.scrollY -= (p.y - p.prevPosition.y) / zoom; } if(!Renderer.isMapDragging && window.gameLogic) window.gameLogic.handleHover(Renderer.pxToHex(p.x, p.y)); }); 
         this.input.mouse.disableContextMenu();
         this.input.keyboard.on('keydown-ESC', () => { if(window.gameLogic && window.gameLogic.clearSelection) { window.gameLogic.clearSelection(); } });
     }
-    // ... (以下変更なし)
     triggerExplosion(x, y) { const explosion = this.add.sprite(x, y, 'explosion_sheet'); explosion.setDepth(100); explosion.setScale(1.5); explosion.play('explosion_anim'); explosion.once('animationcomplete', () => { explosion.destroy(); }); }
     centerCamera(q, r) { const p = Renderer.hexToPx(q, r); this.cameras.main.centerOn(p.x, p.y); }
     centerMap() { this.cameras.main.centerOn((MAP_W * HEX_SIZE * 1.5) / 2, (MAP_H * HEX_SIZE * 1.732) / 2); }
