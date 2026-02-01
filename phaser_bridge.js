@@ -1,4 +1,4 @@
-/** PHASER BRIDGE: Precise Click Handling & Aerial Support UI */
+/** PHASER BRIDGE: Precise Click Handling & Aerial Support UI (Const Renderer) */
 let phaserGame = null;
 window.HIGH_RES_SCALE = 2.0; 
 
@@ -44,12 +44,13 @@ window.createHexTexture = function(scene) {
     g.closePath(); g.fillPath(); g.generateTexture('hex_base', w, h);
 };
 
+// ★修正: const Renderer に戻す
 const Renderer = {
     game: null, 
     isMapDragging: false, 
     isCardDragging: false,
     suppressMapClick: false,
-    draggedCardType: null, // ★追加: ドラッグ中のカードタイプ
+    draggedCardType: null,
 
     init(canvasElement) {
         const config = { type: Phaser.AUTO, parent: 'game-view', width: document.getElementById('game-view').clientWidth, height: document.getElementById('game-view').clientHeight, backgroundColor: '#0b0e0a', pixelArt: false, scene: [MainScene, UIScene], fps: { target: 60 }, physics: { default: 'arcade', arcade: { debug: false } }, input: { activePointers: 1 } };
@@ -117,23 +118,23 @@ class Card extends Phaser.GameObjects.Container {
     onHover() { if(!this.parentContainer || Renderer.isMapDragging || Renderer.isCardDragging) return; this.isHovering = true; this.parentContainer.bringToTop(this); }
     onHoverOut() { this.isHovering = false; }
     
-    // ★修正: ドラッグ開始時にカードタイプを登録
+    // ★追加: ドラッグ開始時にカードタイプを登録
     onDragStart(pointer) { 
         if(Renderer.isMapDragging) return; if(window.gameLogic && window.gameLogic.cardsUsed >= 2) return; 
         this.isDragging = true; 
         Renderer.isCardDragging = true; 
-        Renderer.draggedCardType = this.cardType; // 追加
+        Renderer.draggedCardType = this.cardType;
         this.setAlpha(0.6); this.setScale(1.1); 
         const hand = this.parentContainer; const worldPos = hand.getLocalTransformMatrix().transformPoint(this.x, this.y); hand.remove(this); this.scene.add.existing(this); this.physX = worldPos.x; this.physY = worldPos.y; this.targetX = this.physX; this.targetY = this.physY; this.setDepth(9999); this.dragOffsetX = this.physX - pointer.x; this.dragOffsetY = this.physY - pointer.y; 
     }
     onDrag(pointer) { if(!this.isDragging) return; this.targetX = pointer.x + this.dragOffsetX; this.targetY = pointer.y + this.dragOffsetY; const main = this.scene.game.scene.getScene('MainScene'); if (this.y < this.scene.scale.height * 0.65) main.dragHighlightHex = Renderer.pxToHex(pointer.x, pointer.y); else main.dragHighlightHex = null; }
     
-    // ★修正: 爆撃支援カードのドロップ処理分岐
+    // ★追加: 爆撃支援カードのドロップ処理分岐
     onDragEnd(pointer) { 
         if(!this.isDragging) return; 
         this.isDragging = false; 
         Renderer.isCardDragging = false; 
-        Renderer.draggedCardType = null; // 追加
+        Renderer.draggedCardType = null;
         this.setAlpha(1.0); this.setScale(1.0); 
         const main = this.scene.game.scene.getScene('MainScene'); main.dragHighlightHex = null; 
         const dropZoneY = this.scene.scale.height * 0.65; 
@@ -195,6 +196,8 @@ class MainScene extends Phaser.Scene {
     constructor() { super({ key: 'MainScene' }); this.hexGroup=null; this.decorGroup=null; this.unitGroup=null; this.treeGroup=null; this.hpGroup=null; this.vfxGraphics=null; this.overlayGraphics=null; this.mapGenerated=false; this.dragHighlightHex=null; this.crosshairGroup=null; this.unitView = null; }
     preload() { 
         if(window.EnvSystem) window.EnvSystem.preload(this);
+        // ★修正: リロード音の読み込みを追加
+        this.load.audio('reload_sfx', 'asset/audio/001_reload.wav');
         this.load.spritesheet('us_soldier', 'asset/us-soldier-back-sheet.png', { frameWidth: 128, frameHeight: 128 });
         this.load.spritesheet('soldier_sheet', 'asset/soldier_sheet_1.png', { frameWidth: 128, frameHeight: 128 });
         this.load.spritesheet('tank_sheet', 'asset/tank_sheet_1.png', { frameWidth: 128, frameHeight: 128 });
@@ -218,7 +221,7 @@ class MainScene extends Phaser.Scene {
         this.input.on('pointerdown', (p) => { 
             if (Renderer.isCardDragging || Renderer.checkUIHover(p.x, p.y, p.event)) return; 
             
-            // ★修正: ユニットクリックが行われたかを判定するフラグ (logic_ui.js側でのクリックイベント伝播防止用)
+            // ★修正: ユニットクリックが行われたかを判定するフラグ
             if (Renderer.suppressMapClick) {
                 Renderer.suppressMapClick = false;
                 return;
