@@ -253,26 +253,35 @@ class UnitView {
 
             if (typeof SKILL_STYLES !== 'undefined' && u.skills.length > 0) {
                 const uniqueSkills = [...new Set(u.skills)];
-                let iconX = -((uniqueSkills.length - 1) * 6) / 2;
+                // ★修正: 解像度そのままでギュッと縮小 (4倍サイズで描画して0.25倍にスケール)
+                const scaleFactor = 0.25;
+                const drawMult = 4;
+                const iconSize = 8 * drawMult;
+                const fontSize = (9 * drawMult) + 'px';
+                const yOffset = -58 * drawMult; // 以前の-58pxの位置相当
+                const spacing = 9 * drawMult;
+
+                let iconX = -((uniqueSkills.length - 1) * spacing) / 2;
                 
                 if(!visual.skillContainer) {
                     visual.skillContainer = this.scene.add.container(0, 0);
                     this.hpLayer.add(visual.skillContainer);
                 }
+                visual.skillContainer.setPosition(visual.container.x, visual.container.y);
+                visual.skillContainer.setScale(scaleFactor); 
                 visual.skillContainer.removeAll(true);
                 
                 uniqueSkills.forEach(sk => {
                     if (SKILL_STYLES[sk]) {
                         const st = SKILL_STYLES[sk];
-                        const bg = this.scene.add.rectangle(iconX, -58, 8, 8, parseInt(st.col.replace('#','0x')), 0.8);
-                        const badge = this.scene.add.text(iconX, -58, st.icon, { 
-                            fontSize: '9px', fontFamily: 'Segoe UI Emoji' 
+                        const bg = this.scene.add.rectangle(iconX, yOffset, iconSize, iconSize, parseInt(st.col.replace('#','0x')), 0.8);
+                        const badge = this.scene.add.text(iconX, yOffset, st.icon, { 
+                            fontSize: fontSize, fontFamily: 'Segoe UI Emoji' 
                         }).setOrigin(0.5);
                         visual.skillContainer.add([bg, badge]);
-                        iconX += 9;
+                        iconX += spacing;
                     }
                 });
-                visual.skillContainer.setPosition(visual.container.x, visual.container.y);
             } else {
                 if(visual.skillContainer) visual.skillContainer.removeAll(true);
             }
