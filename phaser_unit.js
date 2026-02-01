@@ -254,7 +254,7 @@ class UnitView {
             if (typeof SKILL_STYLES !== 'undefined' && u.skills.length > 0) {
                 const uniqueSkills = [...new Set(u.skills)];
                 // ★修正: 解像度そのままでギュッと縮小 (4倍サイズで描画して0.25倍にスケール)
-                const scaleFactor = 0.1;
+                const scaleFactor = 0.2;
                 const drawMult = 4;
                 const iconSize = 8 * drawMult;
                 const fontSize = (9 * drawMult) + 'px';
