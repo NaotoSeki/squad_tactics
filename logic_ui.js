@@ -71,6 +71,7 @@ class UIManager {
         const btnRepair = document.getElementById('btn-repair'); 
         const btnMelee = document.getElementById('btn-melee'); 
         const btnHeal = document.getElementById('btn-heal');
+        const grpStance = menu.querySelector('.cmd-group'); // 姿勢メニューのグループを取得
 
         const setEnabled = (btn, enabled) => { if(enabled) btn.classList.remove('disabled'); else btn.classList.add('disabled'); };
         
@@ -81,6 +82,15 @@ class UIManager {
         const neighbors = this.game.getUnitsInHex(u.q, u.r);
         setEnabled(btnMelee, neighbors.some(n => n.team !== u.team));
         setEnabled(btnHeal, neighbors.some(n => n.team === u.team && n.hp < n.maxHp));
+
+        // ★修正: 戦車の場合、姿勢メニューと治療ボタンを非表示にする
+        if (u.def.isTank) {
+            if (grpStance) grpStance.style.display = 'none';
+            if (btnHeal) btnHeal.style.display = 'none';
+        } else {
+            if (grpStance) grpStance.style.display = 'block';
+            if (btnHeal) btnHeal.style.display = 'block';
+        }
 
         menu.style.left = (px + 20) + 'px'; 
         menu.style.top = (py - 50) + 'px';
@@ -137,7 +147,6 @@ class UIManager {
         };
         const mainSlot = makeSlot(u.hands, 'main', 0); let subSlots = ""; for (let i = 0; i < 4; i++) { subSlots += makeSlot(u.bag[i], 'bag', i); }
         
-        // ★修正: canReload の定義を追加
         let canReload = false;
         if (w && !u.def.isTank && w.current < w.cap && u.bag.some(i => i && i.type === 'ammo' && i.ammoFor === w.code)) {
             canReload = true;
