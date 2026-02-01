@@ -1,4 +1,4 @@
-/** LOGIC GAME: Right-Click Cancel Implementation & Aerial Support */
+/** LOGIC GAME: Aerial Support Added */
 
 function createCardIcon(type) {
     const c = document.createElement('canvas'); c.width = 1; c.height = 1; return c.toDataURL();
@@ -72,12 +72,10 @@ class Game {
     }
 
     handleRightClick(mx, my, hex) {
-        // hexがundefinedの場合、座標から再計算して補完する
         if (!hex && typeof Renderer !== 'undefined') {
             hex = Renderer.pxToHex(mx, my);
         }
 
-        // 1. 移動・攻撃モード中なら、選択モード（メニュー表示）に戻る
         if (this.interactionMode !== 'SELECT') {
             this.setMode('SELECT'); 
             if (this.selectedUnit && this.selectedUnit.team === 'player') {
@@ -87,13 +85,10 @@ class Game {
             return;
         }
 
-        // 2. 選択モード中
         if (this.selectedUnit) {
-            // ★変更点: ユニット選択中ならキャンセル（選択解除＆メニュー閉じる）
             this.clearSelection();
             if (window.Sfx) { Sfx.play('click'); }
         } else {
-            // 何も選択していなければ、地点の地形情報を表示
             if (hex) {
                 this.showContext(mx, my, hex);
             }
