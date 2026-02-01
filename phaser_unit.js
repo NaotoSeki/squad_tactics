@@ -123,7 +123,19 @@ class UnitView {
         container.setInteractive({ useHandCursor: true });
         
         container.on('pointerdown', (pointer) => {
-            if (pointer.button === 0 && window.gameLogic) { pointer.event.stopPropagation(); window.gameLogic.onUnitClick(u); }
+            if (pointer.button === 0 && window.gameLogic) { 
+                // ★修正: MOVEモード中はユニットクリックをスルーして、背後のマップクリックを有効にする
+                if (window.gameLogic.interactionMode === 'MOVE') {
+                    // 何もしない（イベントを伝播させることでMainSceneのpointerdownが拾う）
+                    // または明示的にRenderer.suppressMapClick = false (デフォルト) のままにする
+                    return;
+                }
+                
+                // その他のモードでは、ユニットクリックを優先し、マップクリックをキャンセルする
+                Renderer.suppressMapClick = true;
+                pointer.event.stopPropagation(); 
+                window.gameLogic.onUnitClick(u); 
+            }
         });
 
         const shadow = this.scene.add.ellipse(0, -4, 20, 10, 0x000000, 0.5);
