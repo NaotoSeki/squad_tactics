@@ -44,7 +44,6 @@ window.createHexTexture = function(scene) {
     g.closePath(); g.fillPath(); g.generateTexture('hex_base', w, h);
 };
 
-// ★修正: const Renderer に戻す
 const Renderer = {
     game: null, 
     isMapDragging: false, 
@@ -196,8 +195,9 @@ class MainScene extends Phaser.Scene {
     constructor() { super({ key: 'MainScene' }); this.hexGroup=null; this.decorGroup=null; this.unitGroup=null; this.treeGroup=null; this.hpGroup=null; this.vfxGraphics=null; this.overlayGraphics=null; this.mapGenerated=false; this.dragHighlightHex=null; this.crosshairGroup=null; this.unitView = null; }
     preload() { 
         if(window.EnvSystem) window.EnvSystem.preload(this);
-        // ★修正: リロード音の読み込みを追加
-        this.load.audio('reload_sfx', 'asset/audio/001_reload.wav');
+        // ★修正: Sfx経由で一括ロード
+        if (window.Sfx && window.Sfx.preload) { window.Sfx.preload(this); }
+        
         this.load.spritesheet('us_soldier', 'asset/us-soldier-back-sheet.png', { frameWidth: 128, frameHeight: 128 });
         this.load.spritesheet('soldier_sheet', 'asset/soldier_sheet_1.png', { frameWidth: 128, frameHeight: 128 });
         this.load.spritesheet('tank_sheet', 'asset/tank_sheet_1.png', { frameWidth: 128, frameHeight: 128 });
