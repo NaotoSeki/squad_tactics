@@ -22,6 +22,7 @@
         #sidebar.collapsed { width: 0 !important; border: none; }
         #sidebar.collapsed > *:not(#sidebar-toggle) { display: none; }
         #app.sidebar-closed #resizer { right: 0 !important; }
+        
         #sidebar-toggle { position: absolute; top: 0; left: -24px; width: 24px; height: 24px; background: #111; color: var(--accent); border: 1px solid var(--border); border-right: none; cursor: pointer; z-index: 40; display: flex; justify-content: center; align-items: center; transition: left 0.3s; pointer-events: auto; }
         #sidebar-toggle:hover { background: #333; color: #fff; }
 
@@ -96,21 +97,6 @@
         .ar-check { display: flex; align-items: center; font-size: 10px; color: #888; margin-top: 5px; cursor: pointer; }
         .ar-check input { margin-right: 5px; }
         .ar-check:hover { color: #fff; }
-
-        /* ★追加: 警告モーダル */
-        #warning-modal {
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            background: rgba(30, 10, 10, 0.95); border: 2px solid #f44;
-            padding: 20px; z-index: 20000; display: none;
-            box-shadow: 0 0 20px rgba(255, 0, 0, 0.5); text-align: center; width: 300px;
-        }
-        #warning-modal h3 { color: #f44; margin-top: 0; font-family: monospace; letter-spacing: 2px; }
-        #warning-modal p { color: #ccc; font-size: 12px; line-height: 1.5; margin-bottom: 20px; }
-        .warn-btn-group { display: flex; justify-content: space-around; gap: 10px; }
-        .warn-btn { flex: 1; padding: 8px; border: 1px solid #555; background: #222; color: #ccc; cursor: pointer; font-weight: bold; }
-        .warn-btn.confirm { border-color: #d44; background: #411; color: #fcc; }
-        .warn-btn.cancel { border-color: #484; background: #131; color: #cfc; }
-        .warn-btn:hover { opacity: 0.8; }
     </style>
 </head>
 <body>
@@ -140,15 +126,6 @@
                 <div style="text-align:center;">
                     <h2 style="color:#da4;">SECTOR CLEARED</h2>
                     <div class="card-container" id="reward-cards"></div>
-                </div>
-            </div>
-
-            <div id="warning-modal">
-                <h3>⚠ WARNING ⚠</h3>
-                <p>味方への攻撃は軍規違反です。<br>本当に攻撃を実行しますか？</p>
-                <div class="warn-btn-group">
-                    <div id="warn-ok" class="warn-btn confirm">EXECUTE</div>
-                    <div id="warn-cancel" class="warn-btn cancel">ABORT</div>
                 </div>
             </div>
         </div>

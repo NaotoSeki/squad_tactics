@@ -123,7 +123,19 @@ class UnitView {
         container.setInteractive({ useHandCursor: true });
         
         container.on('pointerdown', (pointer) => {
-            if (pointer.button === 0 && window.gameLogic) { pointer.event.stopPropagation(); window.gameLogic.onUnitClick(u); }
+            if (pointer.button === 0 && window.gameLogic) { 
+                // ★修正: MOVEモード中はユニットクリックをスルーして、背後のマップクリックを有効にする
+                if (window.gameLogic.interactionMode === 'MOVE') {
+                    // 何もしない（イベントを伝播させることでMainSceneのpointerdownが拾う）
+                    // または明示的にRenderer.suppressMapClick = false (デフォルト) のままにする
+                    return;
+                }
+                
+                // その他のモードでは、ユニットクリックを優先し、マップクリックをキャンセルする
+                Renderer.suppressMapClick = true;
+                pointer.event.stopPropagation(); 
+                window.gameLogic.onUnitClick(u); 
+            }
         });
 
         const shadow = this.scene.add.ellipse(0, -4, 20, 10, 0x000000, 0.5);
@@ -241,26 +253,35 @@ class UnitView {
 
             if (typeof SKILL_STYLES !== 'undefined' && u.skills.length > 0) {
                 const uniqueSkills = [...new Set(u.skills)];
-                let iconX = -((uniqueSkills.length - 1) * 6) / 2;
+                // ★修正: 解像度そのままでギュッと縮小 (4倍サイズで描画して0.25倍にスケール)
+                const scaleFactor = 0.25;
+                const drawMult = 4;
+                const iconSize = 4 * drawMult;
+                const fontSize = (5 * drawMult) + 'px';
+                const yOffset = -58 * drawMult; // 以前の-58pxの位置相当
+                const spacing = 5 * drawMult;
+
+                let iconX = -((uniqueSkills.length - 1) * spacing) / 2;
                 
                 if(!visual.skillContainer) {
                     visual.skillContainer = this.scene.add.container(0, 0);
                     this.hpLayer.add(visual.skillContainer);
                 }
+                visual.skillContainer.setPosition(visual.container.x, visual.container.y);
+                visual.skillContainer.setScale(scaleFactor); 
                 visual.skillContainer.removeAll(true);
                 
                 uniqueSkills.forEach(sk => {
                     if (SKILL_STYLES[sk]) {
                         const st = SKILL_STYLES[sk];
-                        const bg = this.scene.add.rectangle(iconX, -58, 8, 8, parseInt(st.col.replace('#','0x')), 0.8);
-                        const badge = this.scene.add.text(iconX, -58, st.icon, { 
-                            fontSize: '9px', fontFamily: 'Segoe UI Emoji' 
+                        const bg = this.scene.add.rectangle(iconX, yOffset, iconSize, iconSize, parseInt(st.col.replace('#','0x')), 0.8);
+                        const badge = this.scene.add.text(iconX, yOffset, st.icon, { 
+                            fontSize: fontSize, fontFamily: 'Segoe UI Emoji' 
                         }).setOrigin(0.5);
                         visual.skillContainer.add([bg, badge]);
-                        iconX += 9;
+                        iconX += spacing;
                     }
                 });
-                visual.skillContainer.setPosition(visual.container.x, visual.container.y);
             } else {
                 if(visual.skillContainer) visual.skillContainer.removeAll(true);
             }
