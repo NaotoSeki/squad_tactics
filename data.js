@@ -1,84 +1,61 @@
-/** DATA: Weapon Stats Update (Penetration, AccDrop, Burst) */
-const HEX_SIZE = 54; 
-const MAP_W = 20;    
-const MAP_H = 20; 
+/** DATA: Unit & Weapon Definitions */
 
-const TERRAIN = {
-    VOID:   { id: -1, name: "---",  cost: 99, cover: 0 },
-    DIRT:   { id: 0,  name: "荒地", cost: 1,  cover: 0 },
-    GRASS:  { id: 1,  name: "草原", cost: 1,  cover: 10 },
-    FOREST: { id: 2,  name: "森林", cost: 2,  cover: 25 },
-    TOWN:   { id: 4,  name: "廃墟", cost: 1,  cover: 40 },
-    WATER:  { id: 5,  name: "水域", cost: 99, cover: 0 }
-};
+const RANKS = ['Pvt', 'Cpl', 'Sgt', 'Lt', 'Cpt', 'Maj', 'Col'];
 
-const RANKS = ["Pvt", "Pfc", "Cpl", "Sgt", "SSgt", "Lt", "Cpt"];
-const FIRST_NAMES = ["John", "Mike", "Robert", "James", "William", "David", "Richard", "Joseph", "Thomas", "Charles", "Daniel", "Matthew", "Donald", "Paul", "George"];
-const LAST_NAMES = ["Smith", "Johnson", "Williams", "Jones", "Brown", "Davis", "Miller", "Wilson", "Moore", "Taylor", "Anderson", "Thomas", "Jackson", "White", "Harris"];
-
-const SKILLS = {
-    "Precision": { name: "精密", desc: "命中+15%" },
-    "Radio":     { name: "通信", desc: "支援効果UP" },
-    "Ambush":    { name: "隠密", desc: "回避+15%" },
-    "AmmoBox":   { name: "弾薬", desc: "予備弾数UP" },
-    "HighPower": { name: "強装", desc: "Dmg+20%" },
-    "Mechanic":  { name: "修理", desc: "毎ターン回復" },
-    "Armor":     { name: "防弾", desc: "被ダメ-5" },
-    "Hero":      { name: "英雄", desc: "AP+1" },
-    "CQC":       { name: "白兵", desc: "近接反撃" }
-};
-
-const SKILL_STYLES = {
-    "Precision": { col: "#2a6", icon: "🎯", name: "AIM" },
-    "Radio":     { col: "#36c", icon: "📡", name: "COM" },
-    "Ambush":    { col: "#556", icon: "👻", name: "HIDE" },
-    "AmmoBox":   { col: "#b82", icon: "📦", name: "AMMO" },
-    "HighPower": { col: "#c44", icon: "💥", name: "POW" },
-    "Mechanic":  { col: "#883", icon: "🔧", name: "MECH" },
-    "Armor":     { col: "#667", icon: "🛡", name: "ARM" },
-    "Hero":      { col: "#da2", icon: "★", name: "HERO" },
-    "CQC":       { col: "#a34", icon: "🔪", name: "CQC" }
-};
-
-// ★修正: ユーザー指定のスペックを反映
-// pen(貫通) -> dmg, acc_drop -> 距離減衰, burst -> 発射数
-const WPNS = {
-    // M1 Garand: Pen 76, Drop 3, Burst 2
-    m1: { name:"M1 Garand", rng:7, acc:85, acc_drop:3, dmg:76, cap:8, mag:6, ap:2, rld:1, wgt:4, type:'bullet', burst:2, desc:"米軍主力小銃。セミオート2連射。" },
-    
-    // Thompson: Pen 41, Drop 4, Burst 2 or 5
-    thompson: { name:"M1A1 SMG", rng:5, acc:60, acc_drop:4, dmg:41, cap:30, mag:4, ap:2, rld:1, wgt:5, type:'bullet', burst:2, modes:[2, 5], desc:"近距離制圧用。射撃モード切替可。" },
-    
-    // Kar98 (Sniper): Pen 72, Drop 3, Burst 1
-    k98_scope: { name:"Kar98k (Scope)", rng:9, acc:95, acc_drop:3, dmg:72, cap:5, mag:5, ap:2, rld:2, wgt:5, type:'bullet', burst:1, desc:"精密狙撃銃。一撃必殺。" },
-    
-    // BAR: 既存スペック維持しつつ調整
-    bar: { name:"M1918 BAR", rng:7, acc:55, acc_drop:3, dmg:45, cap:20, mag:5, ap:2, rld:2, wgt:9, type:'bullet', burst:3, desc:"分隊支援火器。" }, 
-    
-    // Side Arms
-    m1911: { name:"Colt M1911", rng:3, acc:70, acc_drop:10, dmg:30, cap:7, mag:3, ap:2, rld:1, wgt:1, type:'bullet', burst:1, desc:"45口径拳銃。" },
-    luger: { name:"Luger P08", rng:3, acc:75, acc_drop:10, dmg:25, cap:8, mag:2, ap:2, rld:1, wgt:1, type:'bullet', burst:1, desc:"将校の拳銃。" },
-    knife: { name:"Combat Knife", rng:1, acc:90, dmg:35, cap:0, mag:0, ap:1, rld:0, wgt:0, type:'melee', burst:1, desc:"白兵戦用ナイフ。" },
-
-    // Explosives
-    nade: { name:"Mk2 Grenade", rng:4, acc:60, dmg:80, cap:1, mag:2, ap:2, rld:0, wgt:1, type:'shell', area:true, desc:"破片手榴弾。" },
-    
-    // Heavy / Tank
-    mg42: { name:"MG42", rng:8, acc:45, acc_drop:4, dmg:25, cap:50, mag:99, ap:2, rld:3, wgt:12, type:'bullet', burst:10, desc:"電動ノコギリ。" },
-    kwk: { name:"75mm KwK", rng:8, acc:70, acc_drop:2, dmg:150, cap:1, mag:99, ap:2, rld:2, wgt:0, type:'shell_fast', burst:1, desc:"IV号戦車主砲。" },
-    kwk88: { name:"88mm KwK36", rng:10, acc:85, acc_drop:1, dmg:250, cap:1, mag:99, ap:2, rld:2, wgt:0, type:'shell_fast', burst:1, desc:"Tiger I 主砲。" }
-};
+const FIRST_NAMES = ['John', 'Jane', 'Mike', 'Emily', 'Chris', 'Sarah', 'David', 'Laura', 'Robert', 'Emma', 'James', 'Olivia', 'Arthur', 'Sophia', 'William', 'Isabella'];
+const LAST_NAMES = ['Smith', 'Johnson', 'Williams', 'Brown', 'Jones', 'Garcia', 'Miller', 'Davis', 'Rodriguez', 'Martinez', 'Hernandez', 'Lopez', 'Gonzalez', 'Wilson'];
 
 const UNIT_TEMPLATES = {
-    rifleman: { name:"Rifleman", role:"infantry", main:"m1", sub:"m1911", opt:"nade", stats:{str:5, aim:5, mob:5, mor:5} },
-    scout:    { name:"Scout", role:"infantry", main:"thompson", sub:"knife", opt:"nade", stats:{str:4, aim:4, mob:8, mor:6} },
-    gunner:   { name:"Gunner", role:"infantry", main:"bar", sub:"m1911", opt:null, stats:{str:8, aim:4, mob:3, mor:5} },
-    sniper:   { name:"Sniper", role:"infantry", main:"k98_scope", sub:"m1911", opt:null, stats:{str:3, aim:9, mob:4, mor:4} },
-    
-    tank_pz4: { name:"Panzer IV", role:"tank", main:"kwk", sub:"mg42", opt:null, hp:600, ap:5, isTank:true },
-    tank_tiger: { name:"Tiger I", role:"tank", main:"kwk88", sub:"mg42", opt:null, hp:1200, ap:4, isTank:true, isBoss:true }
+    rifleman: { name: "Rifleman", role: "infantry", hp: 100, ap: 4, main: "rifle", sub: "grenade" },
+    scout: { name: "Scout", role: "infantry", hp: 80, ap: 6, main: "smg", sub: "medkit", stats: { mob: 2, aim: 1 } },
+    gunner: { name: "Machine Gunner", role: "infantry", hp: 120, ap: 3, main: "lmg", sub: "ammo_box", stats: { str: 2, aim: -1 } },
+    sniper: { name: "Sniper", role: "infantry", hp: 70, ap: 4, main: "sr", sub: "pistol", stats: { aim: 4, mob: -1 } },
+    tank_pz4: { name: "Panzer IV", role: "tank", hp: 400, ap: 4, main: "kwk40", sub: "mg34", isTank: true, stats: { str: 5 } },
+    tank_tiger: { name: "Tiger I", role: "tank", hp: 600, ap: 3, main: "kwk36", sub: "mg34", isTank: true, stats: { str: 8, mob: -2 } },
+    // ★追加: 爆撃支援カード定義
+    aerial: { name: "AERIAL SPT", role: "TACTIC", hp: "N/A", ap: 0, main: null }
+};
+
+const WPNS = {
+    unarmed: { name: "Unarmed", type: "melee", rng: 1, dmg: 5, ap: 1, acc: 80 },
+    rifle: { name: "M1 Garand", type: "bullet", rng: 6, dmg: 40, ap: 2, acc: 90, cap: 8, rld: 1, mag: 4 },
+    smg: { name: "Thompson", type: "bullet", rng: 4, dmg: 25, ap: 2, acc: 75, burst: 3, cap: 30, rld: 2, mag: 3, modes:[1,3] },
+    lmg: { name: "M1919 Browning", type: "bullet", rng: 5, dmg: 30, ap: 3, acc: 60, burst: 5, cap: 50, rld: 3, mag: 2, modes:[5], jam: 0.05 },
+    sr: { name: "Springfield M1903", type: "bullet", rng: 9, dmg: 80, ap: 3, acc: 95, cap: 5, rld: 2, mag: 3, acc_drop: 0 },
+    pistol: { name: "M1911", type: "bullet", rng: 3, dmg: 20, ap: 1, acc: 80, cap: 7, rld: 1, mag: 3 },
+    kwk40: { name: "7.5cm KwK 40", type: "shell", rng: 8, dmg: 150, ap: 2, acc: 85, cap: 1, rld: 2, mag: 20 },
+    kwk36: { name: "8.8cm KwK 36", type: "shell", rng: 10, dmg: 220, ap: 2, acc: 90, cap: 1, rld: 2, mag: 15 },
+    mg34: { name: "MG34", type: "bullet", rng: 5, dmg: 20, ap: 2, acc: 65, burst: 6, cap: 999, rld: 0 },
+    grenade: { name: "Mk2 Grenade", type: "shell_fast", rng: 4, dmg: 120, ap: 3, acc: 70, area: 1, isConsumable: true },
+    medkit: { name: "Medkit", type: "item", ap: 2, effect: "heal", val: 50, isConsumable: true },
+    ammo_box: { name: "Ammo Box", type: "item", ap: 2, effect: "supply", val: 100, isConsumable: true }
 };
 
 const MAG_VARIANTS = {
-    thompson: [ { name: "20rd Box", code: "45ACP20T", cap: 20, cost: 28, jam: 0.0 }, { name: "30rd Box", code: "45ACP30T", cap: 30, cost: 54, jam: 0.008 } ]
+    smg: [{ name: "Stick Mag (30)", cap: 30, jam: 0.02 }, { name: "Drum Mag (50)", cap: 50, jam: 0.08 }],
+    lmg: [{ name: "Belt (50)", cap: 50, jam: 0.05 }, { name: "Cloth Belt (100)", cap: 100, jam: 0.1 }]
 };
+
+const SKILLS = {
+    "Hero": { name: "Hero", icon: "⭐", col: "#d4af37" },
+    "Ace": { name: "Ace", icon: "♠", col: "#aaa" },
+    "Mechanic": { name: "Mechanic", icon: "🔧", col: "#484" },
+    "Medic": { name: "Medic", icon: "💊", col: "#d44" },
+    "CQC": { name: "CQC", icon: "🔪", col: "#844" },
+    "Sniper": { name: "Sniper", icon: "🎯", col: "#448" }
+};
+
+const SKILL_STYLES = SKILLS;
+
+const TERRAIN = {
+    VOID: { id: -1, name: "Void", cost: 99, cover: 0 },
+    GRASS: { id: 0, name: "Grass", cost: 1, cover: 0 },
+    FOREST: { id: 1, name: "Forest", cost: 2, cover: 30 },
+    DIRT: { id: 2, name: "Dirt", cost: 1, cover: 5 },
+    TOWN: { id: 4, name: "Ruins", cost: 2, cover: 60 },
+    WATER: { id: 5, name: "Water", cost: 99, cover: 0 }
+};
+
+const MAP_W = 20;
+const MAP_H = 12;
+const HEX_SIZE = 54;
