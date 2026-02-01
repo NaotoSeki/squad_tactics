@@ -1,4 +1,4 @@
-/** LOGIC GAME: Main Gameplay Systems (Fixed Syntax: Added Braces) */
+/** LOGIC GAME: Final Fix - Syntax, Right-Click, Win Condition */
 
 function createCardIcon(type) {
     const c = document.createElement('canvas'); c.width = 1; c.height = 1; return c.toDataURL();
@@ -25,7 +25,6 @@ class Game {
         this.menuSafeLock = false;
         this.tankAutoReload = true; 
 
-        // Instantiate Sub-systems
         this.ui = new UIManager(this);
         this.ai = new EnemyAI(this);
 
@@ -34,7 +33,7 @@ class Game {
     }
 
     initDOM() {
-        if(typeof Renderer !== 'undefined') {
+        if (typeof Renderer !== 'undefined') {
             Renderer.init(document.getElementById('game-view'));
         }
     }
@@ -73,29 +72,37 @@ class Game {
     }
 
     handleRightClick(mx, my, hex) {
+        // ★修正: hexがundefinedの場合、座標から再計算して補完する
+        if (!hex && typeof Renderer !== 'undefined') {
+            hex = Renderer.pxToHex(mx, my);
+        }
+
         if (this.interactionMode === 'MOVE' || this.interactionMode === 'ATTACK' || this.interactionMode === 'MELEE') {
             this.setMode('SELECT'); 
-            if (this.selectedUnit) {
+            if (this.selectedUnit && this.selectedUnit.team === 'player') {
                 this.ui.showActionMenu(this.selectedUnit, mx, my);
-                if(window.Sfx) { Sfx.play('click'); }
+                if (window.Sfx) { Sfx.play('click'); }
             }
         } else {
-            this.showContext(mx, my, hex);
+            // hexが有効な場合のみコンテキスト表示
+            if (hex) {
+                this.showContext(mx, my, hex);
+            }
         }
     }
 
     swapEquipment(src, tgt) {
         const u = this.selectedUnit;
-        if(!u) { return; }
+        if (!u || u.team !== 'player') { return; }
         
         const getItem = (loc) => {
-            if(loc.type === 'main') { return u.hands; }
-            if(loc.type === 'bag') { return u.bag[loc.index]; }
+            if (loc.type === 'main') { return u.hands; }
+            if (loc.type === 'bag') { return u.bag[loc.index]; }
             return null;
         };
         const setItem = (loc, item) => {
-            if(loc.type === 'main') { u.hands = item; }
-            if(loc.type === 'bag') { u.bag[loc.index] = item; }
+            if (loc.type === 'main') { u.hands = item; }
+            if (loc.type === 'bag') { u.bag[loc.index] = item; }
         };
 
         const item1 = getItem(src);
@@ -105,7 +112,7 @@ class Game {
         setItem(tgt, item1);
         
         this.updateSidebar();
-        if(window.Sfx) { Sfx.play('click'); }
+        if (window.Sfx) { Sfx.play('click'); }
         this.log(`${u.name} 装備変更`);
     }
 
@@ -206,11 +213,20 @@ class Game {
                 if (window.EnvSystem) { window.EnvSystem.clear(); }
             } 
         }
-        if(typeof Renderer !== 'undefined') { Renderer.resize(); }
-        this.selectedUnit = null; this.reachableHexes = []; this.attackLine = []; this.aimTargetUnit = null; this.path = []; this.cardsUsed = 0;
+        if (typeof Renderer !== 'undefined') { Renderer.resize(); }
+        
+        this.selectedUnit = null; 
+        this.reachableHexes = []; 
+        this.attackLine = []; 
+        this.aimTargetUnit = null; 
+        this.path = []; 
+        this.cardsUsed = 0;
+        
         this.units = this.units.filter(u => u.team === 'player' && u.hp > 0); 
         this.units.forEach(u => { u.q = -999; u.r = -999; });
+        
         this.generateMap();
+        
         if (this.units.length === 0) { 
             this.setupSlots.forEach(k => { 
                 const p = this.getSafeSpawnPos('player'); 
@@ -224,12 +240,18 @@ class Game {
             }); 
         }
         this.spawnEnemies(); 
-        this.state = 'PLAY'; this.log(`SECTOR ${this.sector} START`);
+        
+        this.state = 'PLAY'; 
+        this.log(`SECTOR ${this.sector} START`);
         document.getElementById('sector-counter').innerText = `SECTOR: ${this.sector.toString().padStart(2, '0')}`;
         
         if (typeof Renderer !== 'undefined') { Renderer.centerMap(); }
         
-        setTimeout(() => { if (typeof Renderer !== 'undefined' && Renderer.dealCards) { Renderer.dealCards(['rifleman', 'tank_pz4', 'gunner', 'scout', 'tank_tiger']); } }, 500);
+        setTimeout(() => { 
+            if (typeof Renderer !== 'undefined' && Renderer.dealCards) { 
+                Renderer.dealCards(['rifleman', 'tank_pz4', 'gunner', 'scout', 'tank_tiger']); 
+            } 
+        }, 500);
     }
 
     getSafeSpawnPos(team) {
@@ -255,20 +277,20 @@ class Game {
     }
 
     checkDeploy(targetHex) {
-        if(!this.isValidHex(targetHex.q, targetHex.r) || this.map[targetHex.q][targetHex.r].id === -1) { this.log("配置不可: 進入不可能な地形です"); return false; }
-        if(this.map[targetHex.q][targetHex.r].id === 5) { this.log("配置不可: 水上には配置できません"); return false; }
+        if (!this.isValidHex(targetHex.q, targetHex.r) || this.map[targetHex.q][targetHex.r].id === -1) { this.log("配置不可: 進入不可能な地形です"); return false; }
+        if (this.map[targetHex.q][targetHex.r].id === 5) { this.log("配置不可: 水上には配置できません"); return false; }
         if (this.getUnitsInHex(targetHex.q, targetHex.r).length >= 4) { this.log("配置不可: 混雑しています"); return false; }
         if (this.cardsUsed >= 2) { this.log("配置不可: 指揮コスト上限(2/2)に達しています"); return false; }
         return true;
     }
     deployUnit(targetHex, cardType) {
-        if(!this.checkDeploy(targetHex)) { return; }
+        if (!this.checkDeploy(targetHex)) { return; }
         const u = this.createSoldier(cardType, 'player', targetHex.q, targetHex.r);
-        if(u) { 
+        if (u) { 
             this.units.push(u); 
             this.cardsUsed++; 
             this.log(`増援到着: ${u.name} (残コスト:${2-this.cardsUsed})`); 
-            if(window.VFX) { 
+            if (window.VFX) { 
                 const pos = Renderer.hexToPx(targetHex.q, targetHex.r); 
                 window.VFX.addSmoke(pos.x, pos.y); 
             } 
@@ -279,7 +301,7 @@ class Game {
     onUnitClick(u) {
         if (this.state !== 'PLAY') { return; }
         
-        // ★修正: 味方クリック時は、どのモードであっても警告なしで即座に選択切り替え
+        // ★修正: 味方クリック時は無条件で選択モードへ
         if (u.team === 'player') {
             if (this.interactionMode !== 'SELECT') { this.setMode('SELECT'); }
             this.selectedUnit = u; 
@@ -292,7 +314,7 @@ class Game {
             return;
         }
 
-        // 敵ユニットクリック時の挙動
+        // 敵ユニットクリック時の処理
         if (this.interactionMode === 'ATTACK' && this.selectedUnit && this.selectedUnit.team === 'player') { 
             this.actionAttack(this.selectedUnit, u); 
             return; 
@@ -303,6 +325,7 @@ class Game {
             return; 
         }
         
+        // 敵のステータス表示
         this.selectedUnit = u; 
         this.refreshUnitState(u); 
         this.hideActionMenu();
@@ -357,12 +380,14 @@ class Game {
     handleClick(p) {
         if (this.state !== 'PLAY') { return; } 
 
+        const u = this.getUnitInHex(p.q, p.r);
+
         if (this.interactionMode === 'SELECT') { 
-            const u = this.getUnitInHex(p.q, p.r); 
             if (!u) { this.clearSelection(); }
+            else { this.onUnitClick(u); } // 追加: SELECTモードでのクリックも統一
         } 
         else if (this.interactionMode === 'MOVE') { 
-            if (this.isValidHex(p.q, p.r) && this.path.length > 0) { 
+            if (this.selectedUnit && this.isValidHex(p.q, p.r) && this.path.length > 0) { 
                 const last = this.path[this.path.length - 1]; 
                 if (last.q === p.q && last.r === p.r) { 
                     this.actionMove(this.selectedUnit, this.path); 
@@ -373,7 +398,6 @@ class Game {
             } 
         } 
         else if (this.interactionMode === 'ATTACK' || this.interactionMode === 'MELEE') { 
-            const u = this.getUnitInHex(p.q, p.r); 
             if (!u) {
                 this.setMode('SELECT'); 
             } else if (this.selectedUnit && u.team === this.selectedUnit.team) {
@@ -394,7 +418,7 @@ class Game {
         if (this.state !== 'PLAY') { return; } 
         this.hoverHex = p; 
         const u = this.selectedUnit;
-        if (u) { 
+        if (u && u.team === 'player') { 
             if (this.interactionMode === 'MOVE') { 
                 const isReachable = this.reachableHexes.some(h => h.q === p.q && h.r === p.r); 
                 const targetUnits = this.getUnitsInHex(p.q, p.r); 
@@ -431,7 +455,7 @@ class Game {
 
     setStance(s) {
         const u = this.selectedUnit; 
-        if (!u || u.def.isTank) { return; } 
+        if (!u || u.team !== 'player' || u.def.isTank) { return; } 
         if (u.stance === s) { return; }
         let cost = 0; 
         if (u.stance === 'prone' && (s === 'stand' || s === 'crouch')) { cost = 1; }
@@ -442,7 +466,7 @@ class Game {
         if (window.Sfx) { Sfx.play('click'); }
     }
     toggleStance() { 
-        const u = this.selectedUnit; if (!u) { return; } 
+        const u = this.selectedUnit; if (!u || u.team !== 'player') { return; } 
         let next = 'stand'; 
         if (u.stance === 'stand') { next = 'crouch'; }
         else if (u.stance === 'crouch') { next = 'prone'; }
@@ -450,7 +474,7 @@ class Game {
     }
 
     reloadWeapon(isManual = false) {
-        const u = this.selectedUnit; if (!u) { return; } const w = u.hands;
+        const u = this.selectedUnit; if (!u || u.team !== 'player') { return; } const w = u.hands;
         if (!w || w.isConsumable) { this.log("リロード不可"); return; }
         if (w.current >= w.cap) { this.log("装填済み"); return; }
         
@@ -476,7 +500,7 @@ class Game {
     }
 
     actionRepair() {
-        const u = this.selectedUnit; if (!u || u.ap < 2) { this.log("AP不足 (必要:2)"); return; }
+        const u = this.selectedUnit; if (!u || u.team !== 'player' || u.ap < 2) { this.log("AP不足 (必要:2)"); return; }
         if (!u.hands || !u.hands.isBroken) { this.log("修理不要"); return; }
         u.ap -= 2; u.hands.isBroken = false; 
         this.log(`${u.name} 武器修理完了`); 
@@ -485,7 +509,7 @@ class Game {
     }
 
     actionHeal() {
-        const u = this.selectedUnit; if (!u || u.ap < 2) { this.log("AP不足 (必要:2)"); return; }
+        const u = this.selectedUnit; if (!u || u.team !== 'player' || u.ap < 2) { this.log("AP不足 (必要:2)"); return; }
         const targets = this.getUnitsInHex(u.q, u.r).filter(t => t.team === u.team && t.hp < t.maxHp);
         if (targets.length === 0) { this.log("治療対象なし"); return; }
         targets.sort((a, b) => (a.hp / a.maxHp) - (b.hp / b.maxHp)); const target = targets[0]; 
@@ -502,8 +526,7 @@ class Game {
         if (!a || a.ap < 2) { this.log("AP不足"); return; }
         if (a.q !== d.q || a.r !== d.r) { this.log("射程外"); return; }
         
-        let wpnName = "銃床";
-        let bonusDmg = 0;
+        let wpnName = "銃床"; let bonusDmg = 0;
 
         if (a.def.isTank) {
             wpnName = "同軸機銃";
@@ -550,12 +573,13 @@ class Game {
         if (d.skills.includes('CQC')) { this.log(`>> ${d.name} カウンター！`); a.hp -= 15; }
         d.hp -= totalDmg;
         if (window.Sfx) { Sfx.play('hit'); }
+        
         if (d.hp <= 0 && !d.deadProcessed) { 
             d.deadProcessed = true; 
             this.log(`>> ${d.name} を撃破！`); 
             if (window.Sfx) { Sfx.play('death'); } 
             if (window.VFX) { const p = Renderer.hexToPx(d.q, d.r); VFX.addUnitDebris(p.x, p.y); }
-            if(this.checkWin()) { return; }
+            if (this.checkWin()) { return; }
         }
         this.refreshUnitState(a); this.checkPhaseEnd();
     }
@@ -687,14 +711,12 @@ class Game {
                 this.log(`>> ${d.name} を撃破！`); 
                 if (window.Sfx) { Sfx.play('death'); } 
                 if (window.VFX) { const p = Renderer.hexToPx(d.q, d.r); VFX.addUnitDebris(p.x, p.y); }
-                if(this.checkWin()) { return; }
+                if (this.checkWin()) { return; }
             }
             this.state = 'PLAY'; 
-            if(a.def.isTank && w.current === 0 && w.reserve > 0 && this.tankAutoReload && a.ap >= 1) { this.reloadWeapon(); }
+            if (a.def.isTank && w.current === 0 && w.reserve > 0 && this.tankAutoReload && a.ap >= 1) { this.reloadWeapon(); }
             this.refreshUnitState(a); 
-            const cost = w ? w.ap : 0;
-            const canShootAgain = (a.ap >= cost) && (w.current > 0 || (a.def.isTank && w.reserve > 0 && this.tankAutoReload && a.ap >= cost + 1));
-            if (canShootAgain) { this.log("射撃可能: 目標選択中..."); } else { this.setMode('SELECT'); this.checkPhaseEnd(); }
+            if (!(a.ap >= (w?w.ap:0))) { this.setMode('SELECT'); this.checkPhaseEnd(); }
         }, 800);
     }
 
@@ -720,6 +742,7 @@ class Game {
         }
     }
 
+    // ★以前の高品質なマップ生成アルゴリズムを完全に維持
     generateMap() {
         this.map = []; 
         for (let q = 0; q < MAP_W; q++) { 
@@ -741,6 +764,7 @@ class Game {
             const next = { q: w.q + dir[0], r: w.r + dir[1] };
             if (Math.random() < 0.05 && walkers.length < 5) { walkers.push(next); } else { walkers[wIdx] = next; }
         }
+        // スムージング（穴埋め）
         for (let i = 0; i < 3; i++) { 
             for (let q = 1; q < MAP_W - 1; q++) { 
                 for (let r = 1; r < MAP_H - 1; r++) { 
@@ -751,6 +775,7 @@ class Game {
                 } 
             } 
         }
+        // 水域生成
         for (let loop = 0; loop < 2; loop++) { 
             const wC = []; 
             for (let q = 0; q < MAP_W; q++) { 
@@ -763,6 +788,7 @@ class Game {
             } 
             wC.forEach(w => { this.map[w.q][w.r] = TERRAIN.WATER; }); 
         }
+        // バイオーム適用
         for (let q = 0; q < MAP_W; q++) { 
             for (let r = 0; r < MAP_H; r++) { 
                 const tId = this.map[q][r].id; 
@@ -800,12 +826,19 @@ class Game {
         }
         this.checkReactionFire(u); this.state = 'PLAY'; this.refreshUnitState(u); this.checkPhaseEnd();
     }
+    
+    // ★修正: 反応射撃で敵が死んだ場合も勝利判定を行う
     checkReactionFire(u) {
         this.units.filter(e => e.team !== u.team && e.hp > 0 && e.def.isTank && this.hexDist(u, e) <= 1).forEach(t => {
             this.log(`!! 防御射撃: ${t.name}->${u.name}`); u.hp -= 15; 
             if (window.VFX) { VFX.addExplosion(Renderer.hexToPx(u.q, u.r).x, Renderer.hexToPx(u.q, u.r).y, "#fa0", 5); }
             if (window.Sfx) { Sfx.play('mg'); } 
-            if (u.hp <= 0 && !u.deadProcessed) { u.deadProcessed = true; this.log(`${u.name} 撃破`); if (window.Sfx) { Sfx.play('death'); } }
+            if (u.hp <= 0 && !u.deadProcessed) { 
+                u.deadProcessed = true; 
+                this.log(`${u.name} 撃破`); 
+                if (window.Sfx) { Sfx.play('death'); }
+                if (u.team === 'enemy') { this.checkWin(); } else { this.checkLose(); } // ★追加
+            }
         });
     }
     swapWeapon() { }
@@ -846,7 +879,6 @@ class Game {
             document.getElementById('reward-screen').style.display = 'flex'; 
             this.promoteSurvivors(); 
             const b = document.getElementById('reward-cards'); b.innerHTML = ''; 
-            // ★報酬カード「医療」の復活
             [{ k: 'rifleman', t: '新兵' }, { k: 'tank_pz4', t: '戦車' }, { k: 'heal', t: '医療' }].forEach(o => { 
                 const d = document.createElement('div'); d.className = 'card'; 
                 d.innerHTML = `<div class="card-img-box"><img src="${createCardIcon(o.k === 'heal' ? 'heal' : 'infantry')}"></div><div class="card-body"><h3>${o.t}</h3><p>補給</p></div>`; 
