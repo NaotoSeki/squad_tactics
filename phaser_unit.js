@@ -1,4 +1,4 @@
-/** PHASER UNIT: Visuals & Robust Update Loop */
+/** PHASER UNIT: Visuals & Robust Update Loop (High-Res Icons) */
 
 class UnitView {
     constructor(scene, unitLayer, hpLayer) {
@@ -56,7 +56,6 @@ class UnitView {
             const activeIds = new Set();
             const hexMap = new Map(); 
             
-            // 1. 生存ユニットのリストアップ
             window.gameLogic.units.forEach(u => {
                 if (u.hp <= 0) return;
                 const key = `${u.q},${u.r}`;
@@ -65,7 +64,6 @@ class UnitView {
                 activeIds.add(u.id);
             });
 
-            // 2. ユニットの表示更新 (ここでのエラーが全体を止めないようにする)
             window.gameLogic.units.forEach(u => {
                 if (u.hp <= 0) return;
                 
@@ -105,7 +103,6 @@ class UnitView {
                 }
             });
 
-            // 3. 死んだユニットのクリーンアップ (ここは絶対に実行される)
             for (const [id, visual] of this.visuals) {
                 if (!activeIds.has(id)) { 
                     this.destroyVisual(visual); 
@@ -124,15 +121,10 @@ class UnitView {
         
         container.on('pointerdown', (pointer) => {
             if (pointer.button === 0 && window.gameLogic) { 
-                // ★修正: MOVEモード中はユニットクリックをスルーして、背後のマップクリックを有効にする
-                if (window.gameLogic.interactionMode === 'MOVE') {
-                    // 何もしない（イベントを伝播させることでMainSceneのpointerdownが拾う）
-                    // または明示的にRenderer.suppressMapClick = false (デフォルト) のままにする
-                    return;
-                }
+                if (window.gameLogic.interactionMode === 'MOVE') { return; }
                 
-                // その他のモードでは、ユニットクリックを優先し、マップクリックをキャンセルする
-                Renderer.suppressMapClick = true;
+                // ユニットクリックを優先
+                if (window.Renderer) window.Renderer.suppressMapClick = true;
                 pointer.event.stopPropagation(); 
                 window.gameLogic.onUnitClick(u); 
             }
@@ -170,7 +162,7 @@ class UnitView {
         const visual = { container, sprite, hpBg, hpBar, infoContainer, glowFx: null };
         this.visuals.set(u.id, visual);
         
-        const pos = Renderer.hexToPx(u.q, u.r);
+        const pos = window.Renderer.hexToPx(u.q, u.r);
         container.setPosition(pos.x, pos.y);
         container.targetX = pos.x; container.targetY = pos.y;
 
@@ -178,8 +170,8 @@ class UnitView {
     }
 
     updateVisual(visual, u, delta, index, count) {
-        if(!Renderer || !Renderer.hexToPx) return;
-        const basePos = Renderer.hexToPx(u.q, u.r);
+        if(!window.Renderer || !window.Renderer.hexToPx) return;
+        const basePos = window.Renderer.hexToPx(u.q, u.r);
         
         let offsetX = 0, offsetY = 0;
         if (count > 1) {
@@ -251,28 +243,47 @@ class UnitView {
                 visual.infoContainer.add(txt);
             }
 
+            // ★修正: スキルアイコンの高解像度＆縮小表示
             if (typeof SKILL_STYLES !== 'undefined' && u.skills.length > 0) {
                 const uniqueSkills = [...new Set(u.skills)];
-                let iconX = -((uniqueSkills.length - 1) * 6) / 2;
+                
+                // 設定: 大きく描画して(size, font)、ギュッと縮小(scale)
+                const scaleFactor = 0.4; 
+                const iconSize = 24; 
+                const fontSize = '20px';
+                const spacing = 26; 
+                const yOffset = -140; // 縮小されるので、実際は -140 * 0.4 = -56px 付近に表示される
+
+                let iconX = -((uniqueSkills.length - 1) * spacing) / 2;
                 
                 if(!visual.skillContainer) {
                     visual.skillContainer = this.scene.add.container(0, 0);
+                    visual.skillContainer.setScale(scaleFactor); // コンテナ全体を縮小
                     this.hpLayer.add(visual.skillContainer);
                 }
+                // 位置とスケールを毎フレーム保証
+                visual.skillContainer.setPosition(visual.container.x, visual.container.y);
+                visual.skillContainer.setScale(scaleFactor); 
                 visual.skillContainer.removeAll(true);
                 
                 uniqueSkills.forEach(sk => {
                     if (SKILL_STYLES[sk]) {
                         const st = SKILL_STYLES[sk];
-                        const bg = this.scene.add.rectangle(iconX, -58, 8, 8, parseInt(st.col.replace('#','0x')), 0.8);
-                        const badge = this.scene.add.text(iconX, -58, st.icon, { 
-                            fontSize: '9px', fontFamily: 'Segoe UI Emoji' 
+                        // 背景（大きめ）
+                        const bg = this.scene.add.rectangle(iconX, yOffset, iconSize, iconSize, parseInt(st.col.replace('#','0x')), 0.9);
+                        bg.setStrokeStyle(2, 0x000000); // 枠線で視認性アップ
+                        
+                        // アイコン文字（大きめ）
+                        const badge = this.scene.add.text(iconX, yOffset, st.icon, { 
+                            fontSize: fontSize, 
+                            fontFamily: 'Segoe UI Emoji',
+                            resolution: 2 // テキスト自体の描画解像度も上げる
                         }).setOrigin(0.5);
+                        
                         visual.skillContainer.add([bg, badge]);
-                        iconX += 9;
+                        iconX += spacing;
                     }
                 });
-                visual.skillContainer.setPosition(visual.container.x, visual.container.y);
             } else {
                 if(visual.skillContainer) visual.skillContainer.removeAll(true);
             }
@@ -293,8 +304,8 @@ class UnitView {
         if (attacker.def.isTank) return; 
 
         let animKey = 'anim_shoot'; 
-        const start = Renderer.hexToPx(attacker.q, attacker.r);
-        const end = Renderer.hexToPx(target.q, target.r);
+        const start = window.Renderer.hexToPx(attacker.q, attacker.r);
+        const end = window.Renderer.hexToPx(target.q, target.r);
         const dist = Phaser.Math.Distance.Between(start.x, start.y, end.x, end.y);
         
         if (dist < 60) {
