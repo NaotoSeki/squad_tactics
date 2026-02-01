@@ -1,8 +1,8 @@
-/** PHASER BRIDGE: Precise Click Handling & Aerial Support */
-window.phaserGame = null;
+/** PHASER BRIDGE: Precise Click Handling */
+let phaserGame = null;
 window.HIGH_RES_SCALE = 2.0; 
 
-// 関数定義を確実にwindowに紐付け
+// ... (getCardTextureKey, createGradientTexture, createHexTexture は変更なし) ...
 window.getCardTextureKey = function(scene, type) {
     const key = `card_texture_${type}`;
     if (scene.textures.exists(key)) return key;
@@ -44,23 +44,23 @@ window.createHexTexture = function(scene) {
     g.closePath(); g.fillPath(); g.generateTexture('hex_base', w, h);
 };
 
-window.Renderer = {
+const Renderer = {
     game: null, 
     isMapDragging: false, 
     isCardDragging: false,
-    suppressMapClick: false,
-    draggedCardType: null,
+    // ★追加: ユニットクリックが行われたかを判定するフラグ
+    suppressMapClick: false, 
 
     init(canvasElement) {
         const config = { type: Phaser.AUTO, parent: 'game-view', width: document.getElementById('game-view').clientWidth, height: document.getElementById('game-view').clientHeight, backgroundColor: '#0b0e0a', pixelArt: false, scene: [MainScene, UIScene], fps: { target: 60 }, physics: { default: 'arcade', arcade: { debug: false } }, input: { activePointers: 1 } };
-        this.game = new Phaser.Game(config); window.phaserGame = this.game;
+        this.game = new Phaser.Game(config); phaserGame = this.game;
         window.addEventListener('resize', () => this.resize());
         const startAudio = () => { if(window.Sfx && window.Sfx.ctx && window.Sfx.ctx.state === 'suspended') { window.Sfx.ctx.resume(); } };
         document.addEventListener('click', startAudio); document.addEventListener('keydown', startAudio);
     },
     resize() { if(this.game) this.game.scale.resize(document.getElementById('game-view').clientWidth, document.getElementById('game-view').clientHeight); },
     hexToPx(q, r) { return { x: HEX_SIZE * 3/2 * q, y: HEX_SIZE * Math.sqrt(3) * (r + q/2) }; },
-    pxToHex(mx, my) { const main = window.phaserGame.scene.getScene('MainScene'); if(!main) return {q:0, r:0}; const w = main.cameras.main.getWorldPoint(mx, my); return this.roundHex((2/3*w.x)/HEX_SIZE, (-1/3*w.x+Math.sqrt(3)/3*w.y)/HEX_SIZE); },
+    pxToHex(mx, my) { const main = phaserGame.scene.getScene('MainScene'); if(!main) return {q:0, r:0}; const w = main.cameras.main.getWorldPoint(mx, my); return this.roundHex((2/3*w.x)/HEX_SIZE, (-1/3*w.x+Math.sqrt(3)/3*w.y)/HEX_SIZE); },
     roundHex(q,r) { let rq=Math.round(q), rr=Math.round(r), rs=Math.round(-q-r); const dq=Math.abs(rq-q), dr=Math.abs(rr-r), ds=Math.abs(rs-(-q-r)); if(dq>dr&&dq>ds) rq=-rr-rs; else if(dr>ds) rr=-rq-rs; return {q:rq, r:rr}; },
     centerOn(q, r) { const main = this.game.scene.getScene('MainScene'); if (main && main.centerCamera) main.centerCamera(q, r); },
     centerMap() { const main = this.game.scene.getScene('MainScene'); if (main && main.centerMap) main.centerMap(); },
@@ -116,62 +116,14 @@ class Card extends Phaser.GameObjects.Container {
     }
     onHover() { if(!this.parentContainer || Renderer.isMapDragging || Renderer.isCardDragging) return; this.isHovering = true; this.parentContainer.bringToTop(this); }
     onHoverOut() { this.isHovering = false; }
-    
-    // ★追加: ドラッグ開始時にカードタイプを登録
     onDragStart(pointer) { 
         if(Renderer.isMapDragging) return; if(window.gameLogic && window.gameLogic.cardsUsed >= 2) return; 
-        this.isDragging = true; 
-        Renderer.isCardDragging = true; 
-        Renderer.draggedCardType = this.cardType;
-        this.setAlpha(0.6); this.setScale(1.1); 
+        this.isDragging = true; Renderer.isCardDragging = true; this.setAlpha(0.6); this.setScale(1.1); 
         const hand = this.parentContainer; const worldPos = hand.getLocalTransformMatrix().transformPoint(this.x, this.y); hand.remove(this); this.scene.add.existing(this); this.physX = worldPos.x; this.physY = worldPos.y; this.targetX = this.physX; this.targetY = this.physY; this.setDepth(9999); this.dragOffsetX = this.physX - pointer.x; this.dragOffsetY = this.physY - pointer.y; 
     }
     onDrag(pointer) { if(!this.isDragging) return; this.targetX = pointer.x + this.dragOffsetX; this.targetY = pointer.y + this.dragOffsetY; const main = this.scene.game.scene.getScene('MainScene'); if (this.y < this.scene.scale.height * 0.65) main.dragHighlightHex = Renderer.pxToHex(pointer.x, pointer.y); else main.dragHighlightHex = null; }
-    
-    // ★追加: 爆撃支援カードのドロップ処理分岐
-    onDragEnd(pointer) { 
-        if(!this.isDragging) return; 
-        this.isDragging = false; 
-        Renderer.isCardDragging = false; 
-        Renderer.draggedCardType = null;
-        this.setAlpha(1.0); this.setScale(1.0); 
-        const main = this.scene.game.scene.getScene('MainScene'); main.dragHighlightHex = null; 
-        const dropZoneY = this.scene.scale.height * 0.65; 
-        
-        if (this.y < dropZoneY) { 
-            const hex = Renderer.pxToHex(pointer.x, pointer.y); 
-            let canDeploy = false; 
-            if (window.gameLogic) { 
-                if (this.cardType === 'aerial') {
-                    // 爆撃はマップ範囲内ならOK
-                    if (window.gameLogic.isValidHex(hex.q, hex.r)) canDeploy = true; 
-                    else window.gameLogic.log("配置不可: マップ範囲外です"); 
-                } else { 
-                    canDeploy = window.gameLogic.checkDeploy(hex); 
-                } 
-            } 
-            if (canDeploy) this.burnAndConsume(hex); else this.returnToHand(); 
-        } else { this.returnToHand(); } 
-    }
-    
-    burnAndConsume(hex) { 
-        this.updatePhysics = () => {}; 
-        this.frameImage.setTint(0x552222); 
-        this.frameImage.disableInteractive(); 
-        this.scene.tweens.add({ targets: this, alpha: 0, scale: 0.5, duration: 200, onComplete: () => { 
-            this.scene.removeCard(this); 
-            const type = this.cardType; 
-            this.destroy(); 
-            try { 
-                // ★追加: 爆撃支援カードなら triggerBombardment を実行
-                if (type === 'aerial') { 
-                    if (window.gameLogic) window.gameLogic.triggerBombardment(hex); 
-                } else if(window.gameLogic) { 
-                    window.gameLogic.deployUnit(hex, type); 
-                } 
-            } catch(e) { console.error("Logic Error:", e); } 
-        }}); 
-    }
+    onDragEnd(pointer) { if(!this.isDragging) return; this.isDragging = false; Renderer.isCardDragging = false; this.setAlpha(1.0); this.setScale(1.0); const main = this.scene.game.scene.getScene('MainScene'); main.dragHighlightHex = null; const dropZoneY = this.scene.scale.height * 0.65; if (this.y < dropZoneY) { const hex = Renderer.pxToHex(pointer.x, pointer.y); let canDeploy = false; if (window.gameLogic) { if (this.cardType === 'aerial') { if (window.gameLogic.isValidHex(hex.q, hex.r)) canDeploy = true; else window.gameLogic.log("配置不可: マップ範囲外です"); } else { canDeploy = window.gameLogic.checkDeploy(hex); } } if (canDeploy) this.burnAndConsume(hex); else this.returnToHand(); } else { this.returnToHand(); } }
+    burnAndConsume(hex) { this.updatePhysics = () => {}; this.frameImage.setTint(0x552222); this.frameImage.disableInteractive(); this.scene.tweens.add({ targets: this, alpha: 0, scale: 0.5, duration: 200, onComplete: () => { this.scene.removeCard(this); const type = this.cardType; this.destroy(); try { if (type === 'aerial') { const main = phaserGame.scene.getScene('MainScene'); if (main) main.triggerBombardment(hex); } else if(window.gameLogic) { window.gameLogic.deployUnit(hex, type); } } catch(e) { console.error("Logic Error:", e); } }}); }
     returnToHand() { const hand = this.scene.handContainer; this.scene.children.remove(this); hand.add(this); this.setDepth(0); this.physX = this.x; this.physY = this.y; this.targetX = this.baseX; this.targetY = this.baseY; }
 }
 
@@ -218,7 +170,7 @@ class MainScene extends Phaser.Scene {
         this.input.on('pointerdown', (p) => { 
             if (Renderer.isCardDragging || Renderer.checkUIHover(p.x, p.y, p.event)) return; 
             
-            // ★修正: ユニットクリックが行われたかを判定するフラグ (logic_ui.js側でのクリックイベント伝播防止用)
+            // ★修正: ユニットクリックが処理された直後なら、マップクリックを無視する
             if (Renderer.suppressMapClick) {
                 Renderer.suppressMapClick = false;
                 return;
@@ -271,28 +223,14 @@ class MainScene extends Phaser.Scene {
         
         if (this.dragHighlightHex) {
             const h = this.dragHighlightHex;
-            
-            // ★追加: 爆撃支援カードドラッグ時の範囲表示（破線）
-            if (Renderer.draggedCardType === 'aerial') {
-                 if (window.gameLogic) {
-                    this.overlayGraphics.lineStyle(3, 0xff2222, 0.8); // 赤い破線
-                    this.drawDashedHexOutline(this.overlayGraphics, h.q, h.r, time * 0.05);
-                    const targets = window.gameLogic.getNeighbors(h.q, h.r);
-                    targets.forEach(th => {
-                        this.drawDashedHexOutline(this.overlayGraphics, th.q, th.r, time * 0.05);
-                    });
-                }
-            } else {
-                // 通常のユニット配置ハイライト
-                let isValid = false;
-                if (window.gameLogic) {
-                    isValid = window.gameLogic.isValidHex(h.q, h.r) && window.gameLogic.map[h.q][h.r].id !== -1 && window.gameLogic.getUnitsInHex(h.q, h.r).length < 4;
-                }
-                const color = isValid ? 0x00ffff : 0xff0000;
-                this.overlayGraphics.lineStyle(3, color, 0.8);
-                this.drawHexOutline(this.overlayGraphics, h.q, h.r);
-                if(isValid) { this.overlayGraphics.fillStyle(color, 0.2); this.overlayGraphics.fillPath(); }
+            let isValid = false;
+            if (window.gameLogic) {
+                isValid = window.gameLogic.isValidHex(h.q, h.r) && window.gameLogic.map[h.q][h.r].id !== -1 && window.gameLogic.getUnitsInHex(h.q, h.r).length < 4;
             }
+            const color = isValid ? 0x00ffff : 0xff0000;
+            this.overlayGraphics.lineStyle(3, color, 0.8);
+            this.drawHexOutline(this.overlayGraphics, h.q, h.r);
+            if(isValid) { this.overlayGraphics.fillStyle(color, 0.2); this.overlayGraphics.fillPath(); }
         }
         
         const selected = window.gameLogic.selectedUnit;
