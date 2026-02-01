@@ -1,4 +1,4 @@
-/** LOGIC GAME: Right-Click Cancel Implementation & Aerial Support Added (with Reload SFX) */
+/** LOGIC GAME: Right-Click Cancel Implementation & Aerial Support Added (Refined Audio Calls) */
 
 function createCardIcon(type) {
     const c = document.createElement('canvas'); c.width = 1; c.height = 1; return c.toDataURL();
@@ -218,19 +218,10 @@ class Game {
             } 
         }
         if(typeof Renderer !== 'undefined') { Renderer.resize(); }
-        
-        this.selectedUnit = null; 
-        this.reachableHexes = []; 
-        this.attackLine = []; 
-        this.aimTargetUnit = null; 
-        this.path = []; 
-        this.cardsUsed = 0;
-        
+        this.selectedUnit = null; this.reachableHexes = []; this.attackLine = []; this.aimTargetUnit = null; this.path = []; this.cardsUsed = 0;
         this.units = this.units.filter(u => u.team === 'player' && u.hp > 0); 
         this.units.forEach(u => { u.q = -999; u.r = -999; });
-        
         this.generateMap();
-        
         if (this.units.length === 0) { 
             this.setupSlots.forEach(k => { 
                 const p = this.getSafeSpawnPos('player'); 
@@ -244,18 +235,12 @@ class Game {
             }); 
         }
         this.spawnEnemies(); 
-        
-        this.state = 'PLAY'; 
-        this.log(`SECTOR ${this.sector} START`);
+        this.state = 'PLAY'; this.log(`SECTOR ${this.sector} START`);
         document.getElementById('sector-counter').innerText = `SECTOR: ${this.sector.toString().padStart(2, '0')}`;
         
         if (typeof Renderer !== 'undefined') { Renderer.centerMap(); }
         
-        setTimeout(() => { 
-            if (typeof Renderer !== 'undefined' && Renderer.dealCards) { 
-                Renderer.dealCards(['rifleman', 'tank_pz4', 'aerial', 'scout', 'tank_tiger']); 
-            } 
-        }, 500);
+        setTimeout(() => { if (typeof Renderer !== 'undefined' && Renderer.dealCards) { Renderer.dealCards(['rifleman', 'tank_pz4', 'aerial', 'scout', 'tank_tiger']); } }, 500);
     }
 
     getSafeSpawnPos(team) {
@@ -280,36 +265,31 @@ class Game {
         }
     }
 
-    // ★追加: 爆撃支援実行関数
+    // ★追加: 爆撃支援（Aerial Support）実行メソッド
     async triggerBombardment(centerHex) {
-        if(!this.isValidHex(centerHex.q, centerHex.r)) return;
+        if (!this.isValidHex(centerHex.q, centerHex.r)) { return; }
         this.log(`>> 航空支援要請: 座標 ${centerHex.q},${centerHex.r} への爆撃を開始します`);
         
-        // 対象範囲（中心＋隣接6 = 7ヘックス）
         const neighbors = this.getNeighbors(centerHex.q, centerHex.r);
         const targets = [centerHex, ...neighbors];
         const validTargets = targets.filter(h => this.isValidHex(h.q, h.r));
         
-        // ランダムに3か所選出
         const hits = [];
         const pool = [...validTargets];
         for (let i = 0; i < 3; i++) {
-            if (pool.length === 0) break;
+            if (pool.length === 0) { break; }
             const idx = Math.floor(Math.random() * pool.length);
             hits.push(pool[idx]);
             pool.splice(idx, 1);
         }
 
-        // 爆撃実行
         for (const hex of hits) {
             const pos = Renderer.hexToPx(hex.q, hex.r);
-            // 少し時間をずらして着弾
             const delay = Math.random() * 800;
             setTimeout(() => {
-                if (window.Sfx) Sfx.play('cannon');
-                if (typeof Renderer !== 'undefined') Renderer.playExplosion(pos.x, pos.y);
+                if (window.Sfx) { Sfx.play('cannon'); }
+                if (typeof Renderer !== 'undefined') { Renderer.playExplosion(pos.x, pos.y); }
                 
-                // ダメージ判定
                 const units = this.getUnitsInHex(hex.q, hex.r);
                 units.forEach(u => {
                     u.hp -= 350;
@@ -324,10 +304,7 @@ class Game {
                     }
                 });
                 this.updateSidebar();
-                
-                // 地面効果（煙）
-                if (window.VFX) VFX.addSmoke(pos.x, pos.y);
-
+                if (window.VFX) { VFX.addSmoke(pos.x, pos.y); }
             }, delay);
         }
     }
@@ -416,12 +393,11 @@ class Game {
                 if (this.getUnitsInHex(n.q, n.r).length >= 4) { return; }
                 const cost = this.map[n.q][n.r].cost; 
                 if (cost >= 99) { return; }
-                
-                const newCost = costSoFar.get(`${current.q},${current.r}`) + cost;
-                if (newCost <= u.ap) { 
+                const nc = costSoFar.get(`${current.q},${current.r}`) + cost;
+                if (nc <= u.ap) { 
                     const key = `${n.q},${n.r}`; 
-                    if (!costSoFar.has(key) || newCost < costSoFar.get(key)) { 
-                        costSoFar.set(key, newCost); 
+                    if (!costSoFar.has(key) || nc < costSoFar.get(key)) { 
+                        costSoFar.set(key, nc); 
                         frontier.push({ q: n.q, r: n.r }); 
                         this.reachableHexes.push({ q: n.q, r: n.r }); 
                     } 
@@ -535,7 +511,8 @@ class Game {
             if (w.reserve <= 0) { this.log("予備弾薬なし"); return; }
             u.ap -= 1; w.current = 1; w.reserve -= 1;
             this.log(`${u.name} 次弾装填完了 (残:${w.reserve})`);
-            if (window.Sfx) { Sfx.play('reload'); } // ★追加: リロード音
+            // ★修正: 再生時の引数を明示
+            if (window.Sfx) { Sfx.play('reload'); }
             this.refreshUnitState(u);
             if (isManual) { this.hideActionMenu(); }
             return;
@@ -547,7 +524,8 @@ class Game {
         if (magIndex === -1) { this.log("予備弾薬なし"); return; }
         u.bag[magIndex] = null; u.ap -= cost; w.current = w.cap;
         this.log(`${u.name} リロード完了`); 
-        if (window.Sfx) { Sfx.play('reload'); } // ★追加: リロード音
+        // ★修正: 再生時の引数を明示
+        if (window.Sfx) { Sfx.play('reload'); }
         this.refreshUnitState(u); this.hideActionMenu();
     }
 
@@ -650,7 +628,7 @@ class Game {
                 const reloadCost = w.rld || 1;
                 if (a.ap >= reloadCost) {
                     this.log(`${a.name} 自動リロード`);
-                    if (window.Sfx) { Sfx.play('reload'); }
+                    if (window.Sfx) { Sfx.play('reload'); } // ★修正
                     a.bag[magIndex] = null;
                     a.ap -= reloadCost;
                     w.current = w.cap;
@@ -679,7 +657,7 @@ class Game {
                     w.reserve--; 
                     w.current = 1;
                     this.log(`${a.name} 自動装填完了`);
-                    if (window.Sfx) { Sfx.play('reload'); }
+                    if (window.Sfx) { Sfx.play('reload'); } // ★修正
                     this.refreshUnitState(a);
                     
                     if(a.ap < w.ap) {
@@ -725,7 +703,10 @@ class Game {
             const tx = ePos.x + (Math.random() - 0.5) * spread; 
             const ty = ePos.y + (Math.random() - 0.5) * spread;
             
-            if (window.Sfx) { Sfx.play(w.type === 'shell' || w.type === 'shell_fast' ? 'cannon' : 'shot'); }
+            // ★修正: Sfx.play に武器コード（w.code）とフォールバックタイプを渡す
+            if (window.Sfx) { 
+                Sfx.play(w.code, w.type.includes('shell') ? 'cannon' : 'shot'); 
+            }
             
             const isShell = w.type.includes('shell');
             const flightTime = isShell ? 100 : dist * 30; 
@@ -763,10 +744,10 @@ class Game {
                 this.log(`>> ${d.name} を撃破！`); 
                 if (window.Sfx) { Sfx.play('death'); } 
                 if (window.VFX) { const p = Renderer.hexToPx(d.q, d.r); VFX.addUnitDebris(p.x, p.y); }
-                if (this.checkWin()) { return; }
+                if(this.checkWin()) { return; }
             }
             this.state = 'PLAY'; 
-            if (a.def.isTank && w.current === 0 && w.reserve > 0 && this.tankAutoReload && a.ap >= 1) { this.reloadWeapon(); }
+            if(a.def.isTank && w.current === 0 && w.reserve > 0 && this.tankAutoReload && a.ap >= 1) { this.reloadWeapon(); }
             this.refreshUnitState(a); 
             const cost = w ? w.ap : 0;
             const canShootAgain = (a.ap >= cost) && (w.current > 0 || (a.def.isTank && w.reserve > 0 && this.tankAutoReload && a.ap >= cost + 1));
