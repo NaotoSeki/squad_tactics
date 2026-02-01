@@ -53,7 +53,12 @@ const Renderer = {
 
     init(canvasElement) {
         const config = { type: Phaser.AUTO, parent: 'game-view', width: document.getElementById('game-view').clientWidth, height: document.getElementById('game-view').clientHeight, backgroundColor: '#0b0e0a', pixelArt: false, scene: [MainScene, UIScene], fps: { target: 60 }, physics: { default: 'arcade', arcade: { debug: false } }, input: { activePointers: 1 } };
-        this.game = new Phaser.Game(config); phaserGame = this.game;
+        this.game = new Phaser.Game(config); 
+        
+        // ★修正: window.phaserGame に明示的に代入することで、phaser_sound.js から見えるようにする
+        phaserGame = this.game;
+        window.phaserGame = this.game; 
+
         window.addEventListener('resize', () => this.resize());
         const startAudio = () => { if(window.Sfx && window.Sfx.ctx && window.Sfx.ctx.state === 'suspended') { window.Sfx.ctx.resume(); } };
         document.addEventListener('click', startAudio); document.addEventListener('keydown', startAudio);
