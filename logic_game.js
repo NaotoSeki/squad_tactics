@@ -73,7 +73,6 @@ class Game {
     }
 
     handleRightClick(mx, my, hex) {
-        // ★修正: 警告モーダル判定を削除し、純粋なコンテキストメニュー処理に
         if (this.interactionMode === 'MOVE' || this.interactionMode === 'ATTACK' || this.interactionMode === 'MELEE') {
             this.setMode('SELECT'); 
             if (this.selectedUnit) {
@@ -554,7 +553,7 @@ class Game {
         if (d.hp <= 0 && !d.deadProcessed) { 
             d.deadProcessed = true; 
             this.log(`>> ${d.name} を撃破！`); 
-            if (window.Sfx) { Sfx.play('death'); }
+            if (window.Sfx) { Sfx.play('death'); } 
             if (window.VFX) { const p = Renderer.hexToPx(d.q, d.r); VFX.addUnitDebris(p.x, p.y); }
             if(this.checkWin()) { return; }
         }
@@ -742,7 +741,6 @@ class Game {
             const next = { q: w.q + dir[0], r: w.r + dir[1] };
             if (Math.random() < 0.05 && walkers.length < 5) { walkers.push(next); } else { walkers[wIdx] = next; }
         }
-        // スムージング
         for (let i = 0; i < 3; i++) { 
             for (let q = 1; q < MAP_W - 1; q++) { 
                 for (let r = 1; r < MAP_H - 1; r++) { 
@@ -753,7 +751,6 @@ class Game {
                 } 
             } 
         }
-        // 水域生成
         for (let loop = 0; loop < 2; loop++) { 
             const wC = []; 
             for (let q = 0; q < MAP_W; q++) { 
@@ -766,7 +763,6 @@ class Game {
             } 
             wC.forEach(w => { this.map[w.q][w.r] = TERRAIN.WATER; }); 
         }
-        // バイオーム
         for (let q = 0; q < MAP_W; q++) { 
             for (let r = 0; r < MAP_H; r++) { 
                 const tId = this.map[q][r].id; 
@@ -850,6 +846,7 @@ class Game {
             document.getElementById('reward-screen').style.display = 'flex'; 
             this.promoteSurvivors(); 
             const b = document.getElementById('reward-cards'); b.innerHTML = ''; 
+            // ★報酬カード「医療」の復活
             [{ k: 'rifleman', t: '新兵' }, { k: 'tank_pz4', t: '戦車' }, { k: 'heal', t: '医療' }].forEach(o => { 
                 const d = document.createElement('div'); d.className = 'card'; 
                 d.innerHTML = `<div class="card-img-box"><img src="${createCardIcon(o.k === 'heal' ? 'heal' : 'infantry')}"></div><div class="card-body"><h3>${o.t}</h3><p>補給</p></div>`; 
