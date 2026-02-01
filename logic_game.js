@@ -1,4 +1,4 @@
-/** LOGIC GAME: Aerial Support Added */
+/** LOGIC GAME: Right-Click Cancel Implementation */
 
 function createCardIcon(type) {
     const c = document.createElement('canvas'); c.width = 1; c.height = 1; return c.toDataURL();
@@ -72,10 +72,12 @@ class Game {
     }
 
     handleRightClick(mx, my, hex) {
+        // hexがundefinedの場合、座標から再計算して補完する
         if (!hex && typeof Renderer !== 'undefined') {
             hex = Renderer.pxToHex(mx, my);
         }
 
+        // 1. 移動・攻撃モード中なら、選択モード（メニュー表示）に戻る
         if (this.interactionMode !== 'SELECT') {
             this.setMode('SELECT'); 
             if (this.selectedUnit && this.selectedUnit.team === 'player') {
@@ -85,10 +87,13 @@ class Game {
             return;
         }
 
+        // 2. 選択モード中
         if (this.selectedUnit) {
+            // ★変更点: ユニット選択中ならキャンセル（選択解除＆メニュー閉じる）
             this.clearSelection();
             if (window.Sfx) { Sfx.play('click'); }
         } else {
+            // 何も選択していなければ、地点の地形情報を表示
             if (hex) {
                 this.showContext(mx, my, hex);
             }
@@ -251,10 +256,9 @@ class Game {
         
         if (typeof Renderer !== 'undefined') { Renderer.centerMap(); }
         
-        // ★修正: 配布カードに 'aerial' (爆撃支援) を追加
         setTimeout(() => { 
             if (typeof Renderer !== 'undefined' && Renderer.dealCards) { 
-                Renderer.dealCards(['rifleman', 'tank_pz4', 'aerial', 'scout', 'tank_tiger']); 
+                Renderer.dealCards(['rifleman', 'tank_pz4', 'gunner', 'scout', 'tank_tiger']); 
             } 
         }, 500);
     }
@@ -278,58 +282,6 @@ class Game {
             u.q = p.q; u.r = p.r;
             this.units.push(u);
             this.log(`増援合流: ${u.name}`);
-        }
-    }
-
-    // ★追加: 爆撃支援実行関数
-    async triggerBombardment(centerHex) {
-        if(!this.isValidHex(centerHex.q, centerHex.r)) return;
-        this.log(`>> 航空支援要請: 座標 ${centerHex.q},${centerHex.r} への爆撃を開始します`);
-        
-        // 対象範囲（中心＋隣接6 = 7ヘックス）
-        const neighbors = this.getNeighbors(centerHex.q, centerHex.r);
-        const targets = [centerHex, ...neighbors];
-        const validTargets = targets.filter(h => this.isValidHex(h.q, h.r));
-        
-        // ランダムに3か所選出
-        const hits = [];
-        const pool = [...validTargets];
-        for (let i = 0; i < 3; i++) {
-            if (pool.length === 0) break;
-            const idx = Math.floor(Math.random() * pool.length);
-            hits.push(pool[idx]);
-            pool.splice(idx, 1);
-        }
-
-        // 爆撃実行
-        for (const hex of hits) {
-            const pos = Renderer.hexToPx(hex.q, hex.r);
-            // 少し時間をずらして着弾
-            const delay = Math.random() * 800;
-            setTimeout(() => {
-                if (window.Sfx) Sfx.play('cannon');
-                if (typeof Renderer !== 'undefined') Renderer.playExplosion(pos.x, pos.y);
-                
-                // ダメージ判定
-                const units = this.getUnitsInHex(hex.q, hex.r);
-                units.forEach(u => {
-                    u.hp -= 350;
-                    this.log(`>> 爆撃命中: ${u.name} に 350 ダメージ`);
-                    
-                     if (u.hp <= 0 && !u.deadProcessed) { 
-                        u.deadProcessed = true; 
-                        this.log(`>> ${u.name} を撃破！`); 
-                        if (window.Sfx) { Sfx.play('death'); } 
-                        if (window.VFX) { const p = Renderer.hexToPx(u.q, u.r); VFX.addUnitDebris(p.x, p.y); }
-                        if (u.team === 'enemy') { this.checkWin(); } else { this.checkLose(); }
-                    }
-                });
-                this.updateSidebar();
-                
-                // 地面効果（煙）
-                if (window.VFX) VFX.addSmoke(pos.x, pos.y);
-
-            }, delay);
         }
     }
 
@@ -773,9 +725,7 @@ class Game {
             this.state = 'PLAY'; 
             if (a.def.isTank && w.current === 0 && w.reserve > 0 && this.tankAutoReload && a.ap >= 1) { this.reloadWeapon(); }
             this.refreshUnitState(a); 
-            const cost = w ? w.ap : 0;
-            const canShootAgain = (a.ap >= cost) && (w.current > 0 || (a.def.isTank && w.reserve > 0 && this.tankAutoReload && a.ap >= cost + 1));
-            if (canShootAgain) { this.log("射撃可能: 目標選択中..."); } else { this.setMode('SELECT'); this.checkPhaseEnd(); }
+            if (!(a.ap >= (w?w.ap:0))) { this.setMode('SELECT'); this.checkPhaseEnd(); }
         }, 800);
     }
 
