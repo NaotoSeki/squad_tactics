@@ -1,4 +1,4 @@
-/** PHASER UNIT: Visuals & Robust Update Loop (Increased Hex Spacing) */
+/** PHASER UNIT: Visuals & Robust Update Loop (Pixel-Perfect Click) */
 
 class UnitView {
     constructor(scene, unitLayer, hpLayer) {
@@ -116,18 +116,10 @@ class UnitView {
 
     createVisual(u) {
         const container = this.scene.add.container(0, 0);
-        container.setSize(40, 60);
-        container.setInteractive({ useHandCursor: true });
-        
-        container.on('pointerdown', (pointer) => {
-            if (pointer.button === 0 && window.gameLogic) { 
-                if (window.gameLogic.interactionMode === 'MOVE') { return; }
-                
-                if (typeof Renderer !== 'undefined') Renderer.suppressMapClick = true;
-                pointer.event.stopPropagation(); 
-                window.gameLogic.onUnitClick(u); 
-            }
-        });
+        // ★修正: コンテナ全体のインタラクティブ判定を削除 (これで影や透明部分が反応しなくなる)
+        // container.setSize(40, 60); 
+        // container.setInteractive({ useHandCursor: true });
+        // container.on('pointerdown', ...) も削除
 
         const shadow = this.scene.add.ellipse(0, -4, 20, 10, 0x000000, 0.5);
         
@@ -146,6 +138,20 @@ class UnitView {
             shadow.setSize(46, 18);
         } else {
             sprite = this.scene.add.rectangle(0, 0, 30, 40, u.team==='player'?0x00f:0xf00);
+        }
+
+        // ★修正: スプライト(画像)自体をクリック可能にする
+        if (sprite) {
+            sprite.setInteractive({ useHandCursor: true });
+            sprite.on('pointerdown', (pointer) => {
+                if (pointer.button === 0 && window.gameLogic) { 
+                    if (window.gameLogic.interactionMode === 'MOVE') { return; }
+                    
+                    if (typeof Renderer !== 'undefined') Renderer.suppressMapClick = true;
+                    pointer.event.stopPropagation(); 
+                    window.gameLogic.onUnitClick(u); 
+                }
+            });
         }
 
         container.add([shadow, sprite]);
@@ -176,7 +182,6 @@ class UnitView {
         
         let offsetX = 0, offsetY = 0;
         if (count > 1) {
-            // ★修正: 12 -> 20 に拡大して間隔を広げる
             const spread = 20; 
             if (index === 0) { offsetX = -spread; offsetY = -spread; }
             else if (index === 1) { offsetX = spread; offsetY = -spread; }
