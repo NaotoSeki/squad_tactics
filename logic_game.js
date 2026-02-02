@@ -1,4 +1,4 @@
-/** LOGIC GAME: Right-Click Cancel Implementation & Aerial Support Added (Refined Audio Calls) */
+/** LOGIC GAME: Hex Click Selection Disabled (Pixel-Perfect Only) */
 
 function createCardIcon(type) {
     const c = document.createElement('canvas'); c.width = 1; c.height = 1; return c.toDataURL();
@@ -265,7 +265,6 @@ class Game {
         }
     }
 
-    // ★追加: 爆撃支援（Aerial Support）実行メソッド
     async triggerBombardment(centerHex) {
         if (!this.isValidHex(centerHex.q, centerHex.r)) { return; }
         this.log(`>> 航空支援要請: 座標 ${centerHex.q},${centerHex.r} への爆撃を開始します`);
@@ -406,16 +405,19 @@ class Game {
         }
     }
 
+    // ★修正: ユニット逆引きと選択ロジックを削除
     handleClick(p) {
         if (this.state !== 'PLAY') { return; } 
 
-        const u = this.getUnitInHex(p.q, p.r);
+        // ユニットの直接クリックは phaser_unit.js 側で処理され、ここはスキップされる
+        // つまりここに来るのは「マップ（地面）」をクリックした時のみ
 
         if (this.interactionMode === 'SELECT') { 
-            if (!u) { this.clearSelection(); }
-            else { this.onUnitClick(u); }
+            // ユニット選択中に地面をクリック -> 選択解除
+            this.clearSelection();
         } 
         else if (this.interactionMode === 'MOVE') { 
+            // 移動先指定は地面（ヘックス）に対して行うので維持
             if (this.selectedUnit && this.isValidHex(p.q, p.r) && this.path.length > 0) { 
                 const last = this.path[this.path.length - 1]; 
                 if (last.q === p.q && last.r === p.r) { 
@@ -427,18 +429,8 @@ class Game {
             } 
         } 
         else if (this.interactionMode === 'ATTACK' || this.interactionMode === 'MELEE') { 
-            if (!u) {
-                this.setMode('SELECT'); 
-            } else if (this.selectedUnit && u.team === this.selectedUnit.team) {
-                this.onUnitClick(u); 
-            } else { 
-                if (this.interactionMode === 'ATTACK') {
-                    this.actionAttack(this.selectedUnit, u);
-                } else {
-                    this.actionMelee(this.selectedUnit, u);
-                    this.setMode('SELECT');
-                }
-            }
+            // 攻撃対象選択もユニット直接クリックで行うため、地面クリックはキャンセル
+            this.setMode('SELECT'); 
         }
     }
 
@@ -511,7 +503,6 @@ class Game {
             if (w.reserve <= 0) { this.log("予備弾薬なし"); return; }
             u.ap -= 1; w.current = 1; w.reserve -= 1;
             this.log(`${u.name} 次弾装填完了 (残:${w.reserve})`);
-            // ★修正: 再生時の引数を明示
             if (window.Sfx) { Sfx.play('reload'); }
             this.refreshUnitState(u);
             if (isManual) { this.hideActionMenu(); }
@@ -524,7 +515,6 @@ class Game {
         if (magIndex === -1) { this.log("予備弾薬なし"); return; }
         u.bag[magIndex] = null; u.ap -= cost; w.current = w.cap;
         this.log(`${u.name} リロード完了`); 
-        // ★修正: 再生時の引数を明示
         if (window.Sfx) { Sfx.play('reload'); }
         this.refreshUnitState(u); this.hideActionMenu();
     }
@@ -628,7 +618,7 @@ class Game {
                 const reloadCost = w.rld || 1;
                 if (a.ap >= reloadCost) {
                     this.log(`${a.name} 自動リロード`);
-                    if (window.Sfx) { Sfx.play('reload'); } // ★修正
+                    if (window.Sfx) { Sfx.play('reload'); }
                     a.bag[magIndex] = null;
                     a.ap -= reloadCost;
                     w.current = w.cap;
@@ -657,7 +647,7 @@ class Game {
                     w.reserve--; 
                     w.current = 1;
                     this.log(`${a.name} 自動装填完了`);
-                    if (window.Sfx) { Sfx.play('reload'); } // ★修正
+                    if (window.Sfx) { Sfx.play('reload'); }
                     this.refreshUnitState(a);
                     
                     if(a.ap < w.ap) {
@@ -703,7 +693,6 @@ class Game {
             const tx = ePos.x + (Math.random() - 0.5) * spread; 
             const ty = ePos.y + (Math.random() - 0.5) * spread;
             
-            // ★修正: Sfx.play に武器コード（w.code）とフォールバックタイプを渡す
             if (window.Sfx) { 
                 Sfx.play(w.code, w.type.includes('shell') ? 'cannon' : 'shot'); 
             }
