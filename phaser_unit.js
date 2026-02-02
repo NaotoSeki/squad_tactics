@@ -1,4 +1,4 @@
-/** PHASER UNIT: Visuals & Robust Update Loop */
+/** PHASER UNIT: Visuals & Robust Update Loop (Increased Hex Spacing) */
 
 class UnitView {
     constructor(scene, unitLayer, hpLayer) {
@@ -56,7 +56,6 @@ class UnitView {
             const activeIds = new Set();
             const hexMap = new Map(); 
             
-            // 1. 生存ユニットのリストアップ
             window.gameLogic.units.forEach(u => {
                 if (u.hp <= 0) return;
                 const key = `${u.q},${u.r}`;
@@ -65,7 +64,6 @@ class UnitView {
                 activeIds.add(u.id);
             });
 
-            // 2. ユニットの表示更新 (ここでのエラーが全体を止めないようにする)
             window.gameLogic.units.forEach(u => {
                 if (u.hp <= 0) return;
                 
@@ -105,7 +103,6 @@ class UnitView {
                 }
             });
 
-            // 3. 死んだユニットのクリーンアップ (ここは絶対に実行される)
             for (const [id, visual] of this.visuals) {
                 if (!activeIds.has(id)) { 
                     this.destroyVisual(visual); 
@@ -124,15 +121,9 @@ class UnitView {
         
         container.on('pointerdown', (pointer) => {
             if (pointer.button === 0 && window.gameLogic) { 
-                // ★修正: MOVEモード中はユニットクリックをスルーして、背後のマップクリックを有効にする
-                if (window.gameLogic.interactionMode === 'MOVE') {
-                    // 何もしない（イベントを伝播させることでMainSceneのpointerdownが拾う）
-                    // または明示的にRenderer.suppressMapClick = false (デフォルト) のままにする
-                    return;
-                }
+                if (window.gameLogic.interactionMode === 'MOVE') { return; }
                 
-                // その他のモードでは、ユニットクリックを優先し、マップクリックをキャンセルする
-                Renderer.suppressMapClick = true;
+                if (typeof Renderer !== 'undefined') Renderer.suppressMapClick = true;
                 pointer.event.stopPropagation(); 
                 window.gameLogic.onUnitClick(u); 
             }
@@ -170,20 +161,23 @@ class UnitView {
         const visual = { container, sprite, hpBg, hpBar, infoContainer, glowFx: null };
         this.visuals.set(u.id, visual);
         
-        const pos = Renderer.hexToPx(u.q, u.r);
-        container.setPosition(pos.x, pos.y);
-        container.targetX = pos.x; container.targetY = pos.y;
+        if(typeof Renderer !== 'undefined') {
+            const pos = Renderer.hexToPx(u.q, u.r);
+            container.setPosition(pos.x, pos.y);
+            container.targetX = pos.x; container.targetY = pos.y;
+        }
 
         return visual;
     }
 
     updateVisual(visual, u, delta, index, count) {
-        if(!Renderer || !Renderer.hexToPx) return;
+        if(typeof Renderer === 'undefined' || !Renderer.hexToPx) return;
         const basePos = Renderer.hexToPx(u.q, u.r);
         
         let offsetX = 0, offsetY = 0;
         if (count > 1) {
-            const spread = 12; 
+            // ★修正: 12 -> 20 に拡大して間隔を広げる
+            const spread = 20; 
             if (index === 0) { offsetX = -spread; offsetY = -spread; }
             else if (index === 1) { offsetX = spread; offsetY = -spread; }
             else if (index === 2) { offsetX = -spread; offsetY = spread; }
@@ -253,13 +247,12 @@ class UnitView {
 
             if (typeof SKILL_STYLES !== 'undefined' && u.skills.length > 0) {
                 const uniqueSkills = [...new Set(u.skills)];
-                // ★修正: 解像度そのままでギュッと縮小 (4倍サイズで描画して0.25倍にスケール)
                 const scaleFactor = 0.25;
                 const drawMult = 4;
-                const iconSize = 4 * drawMult;
-                const fontSize = (5 * drawMult) + 'px';
-                const yOffset = -58 * drawMult; // 以前の-58pxの位置相当
-                const spacing = 5 * drawMult;
+                const iconSize = 8 * drawMult;
+                const fontSize = (9 * drawMult) + 'px';
+                const yOffset = -58 * drawMult; 
+                const spacing = 9 * drawMult;
 
                 let iconX = -((uniqueSkills.length - 1) * spacing) / 2;
                 
@@ -302,6 +295,7 @@ class UnitView {
         if (attacker.def.isTank) return; 
 
         let animKey = 'anim_shoot'; 
+        if(typeof Renderer === 'undefined') return;
         const start = Renderer.hexToPx(attacker.q, attacker.r);
         const end = Renderer.hexToPx(target.q, target.r);
         const dist = Phaser.Math.Distance.Between(start.x, start.y, end.x, end.y);
