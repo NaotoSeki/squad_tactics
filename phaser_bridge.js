@@ -44,7 +44,6 @@ window.createHexTexture = function(scene) {
     g.closePath(); g.fillPath(); g.generateTexture('hex_base', w, h);
 };
 
-// ★修正: const Renderer に戻す
 const Renderer = {
     game: null, 
     isMapDragging: false, 
@@ -54,7 +53,12 @@ const Renderer = {
 
     init(canvasElement) {
         const config = { type: Phaser.AUTO, parent: 'game-view', width: document.getElementById('game-view').clientWidth, height: document.getElementById('game-view').clientHeight, backgroundColor: '#0b0e0a', pixelArt: false, scene: [MainScene, UIScene], fps: { target: 60 }, physics: { default: 'arcade', arcade: { debug: false } }, input: { activePointers: 1 } };
-        this.game = new Phaser.Game(config); phaserGame = this.game;
+        this.game = new Phaser.Game(config); 
+        
+        // ★修正: window.phaserGame に明示的に代入することで、phaser_sound.js から見えるようにする
+        phaserGame = this.game;
+        window.phaserGame = this.game; 
+
         window.addEventListener('resize', () => this.resize());
         const startAudio = () => { if(window.Sfx && window.Sfx.ctx && window.Sfx.ctx.state === 'suspended') { window.Sfx.ctx.resume(); } };
         document.addEventListener('click', startAudio); document.addEventListener('keydown', startAudio);
@@ -196,8 +200,9 @@ class MainScene extends Phaser.Scene {
     constructor() { super({ key: 'MainScene' }); this.hexGroup=null; this.decorGroup=null; this.unitGroup=null; this.treeGroup=null; this.hpGroup=null; this.vfxGraphics=null; this.overlayGraphics=null; this.mapGenerated=false; this.dragHighlightHex=null; this.crosshairGroup=null; this.unitView = null; }
     preload() { 
         if(window.EnvSystem) window.EnvSystem.preload(this);
-        // ★修正: リロード音の読み込みを追加
-        this.load.audio('reload_sfx', 'asset/audio/001_reload.wav');
+        // ★修正: Sfx経由で一括ロード
+        if (window.Sfx && window.Sfx.preload) { window.Sfx.preload(this); }
+        
         this.load.spritesheet('us_soldier', 'asset/us-soldier-back-sheet.png', { frameWidth: 128, frameHeight: 128 });
         this.load.spritesheet('soldier_sheet', 'asset/soldier_sheet_1.png', { frameWidth: 128, frameHeight: 128 });
         this.load.spritesheet('tank_sheet', 'asset/tank_sheet_1.png', { frameWidth: 128, frameHeight: 128 });
