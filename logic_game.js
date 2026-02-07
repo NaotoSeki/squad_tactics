@@ -1,4 +1,4 @@
-/** LOGIC GAME: Hex Click Selection Disabled (Pixel-Perfect Only) */
+/** LOGIC GAME: Medical Reward Upgraded to Supply Drop (Ammo/Item Refill) */
 
 function createCardIcon(type) {
     const c = document.createElement('canvas'); c.width = 1; c.height = 1; return c.toDataURL();
@@ -405,19 +405,13 @@ class Game {
         }
     }
 
-    // ★修正: ユニット逆引きと選択ロジックを削除
     handleClick(p) {
         if (this.state !== 'PLAY') { return; } 
 
-        // ユニットの直接クリックは phaser_unit.js 側で処理され、ここはスキップされる
-        // つまりここに来るのは「マップ（地面）」をクリックした時のみ
-
         if (this.interactionMode === 'SELECT') { 
-            // ユニット選択中に地面をクリック -> 選択解除
             this.clearSelection();
         } 
         else if (this.interactionMode === 'MOVE') { 
-            // 移動先指定は地面（ヘックス）に対して行うので維持
             if (this.selectedUnit && this.isValidHex(p.q, p.r) && this.path.length > 0) { 
                 const last = this.path[this.path.length - 1]; 
                 if (last.q === p.q && last.r === p.r) { 
@@ -429,7 +423,6 @@ class Game {
             } 
         } 
         else if (this.interactionMode === 'ATTACK' || this.interactionMode === 'MELEE') { 
-            // 攻撃対象選択もユニット直接クリックで行うため、地面クリックはキャンセル
             this.setMode('SELECT'); 
         }
     }
@@ -874,7 +867,58 @@ class Game {
             this.isProcessingTurn = false;
         }, 1200);
     }
-    healSurvivors() { this.units.filter(u => u.team === 'player' && u.hp > 0).forEach(u => { const t = Math.floor(u.maxHp * 0.8); if (u.hp < t) { u.hp = t; } }); this.log("治療完了"); }
+    
+    // ★追加・変更: HP回復だけでなく弾薬と装備を補充
+    resupplySurvivors() { 
+        this.units.filter(u => u.team === 'player' && u.hp > 0).forEach(u => { 
+            // 1. HP Recovery (75% - 100%)
+            const hpTarget = Math.floor(u.maxHp * (0.75 + Math.random() * 0.25)); 
+            if (u.hp < hpTarget) { u.hp = hpTarget; } 
+
+            // 2. Ammo Replenishment (50% - 100%)
+            if (u.hands) {
+                if (u.def.isTank) {
+                    // Tank: Refill Main Gun Reserve (Max 12)
+                    const resTarget = Math.floor(12 * (0.5 + Math.random() * 0.5));
+                    if (u.hands.reserve < resTarget) { u.hands.reserve = resTarget; }
+                    if (u.hands.current <= 0) u.hands.current = 1; // Ensure loaded
+                } else {
+                    // Infantry: Refill Loaded Ammo
+                    if (u.hands.cap > 0) {
+                        const curTarget = Math.floor(u.hands.cap * (0.5 + Math.random() * 0.5));
+                        if (u.hands.current < curTarget) { u.hands.current = curTarget; }
+                    }
+                }
+            }
+            
+            // 3. Sub-equipment / Bag (Fill empty slots)
+            const bagSize = 4;
+            let emptyCount = 0;
+            for(let i=0; i<bagSize; i++) { if(!u.bag[i]) emptyCount++; }
+            
+            // Determine how many to fill (50% - 100% of empty slots)
+            const fillCount = Math.ceil(emptyCount * (0.5 + Math.random() * 0.5));
+            
+            let filled = 0;
+            for (let i = 0; i < bagSize && filled < fillCount; i++) {
+                if (!u.bag[i]) {
+                    // 消耗品補充（現状は弾薬クリップ、または将来的に手榴弾など）
+                    if (u.hands && u.hands.code && !u.def.isTank) {
+                         u.bag[i] = { type: 'ammo', name: (u.hands.magName || 'Clip'), ammoFor: u.hands.code, cap: u.hands.cap, jam: u.hands.jam, code: 'mag' };
+                         filled++;
+                    }
+                } else {
+                    // 既存の消耗品（弾薬など）も補充
+                    const item = u.bag[i];
+                    if (item && item.isConsumable && item.current < (item.cap || 1)) {
+                         item.current = Math.floor((item.cap || 1) * (0.5 + Math.random() * 0.5));
+                    }
+                }
+            }
+        }); 
+        this.log("補給物資到着: 全ユニット回復・補充完了"); 
+    }
+
     promoteSurvivors() { 
         this.units.filter(u => u.team === 'player' && u.hp > 0).forEach(u => { 
             u.sectorsSurvived++; 
@@ -892,11 +936,15 @@ class Game {
             document.getElementById('reward-screen').style.display = 'flex'; 
             this.promoteSurvivors(); 
             const b = document.getElementById('reward-cards'); b.innerHTML = ''; 
-            [{ k: 'rifleman', t: '新兵' }, { k: 'tank_pz4', t: '戦車' }, { k: 'heal', t: '医療' }].forEach(o => { 
+            
+            // ★変更: 'heal' -> 'supply'
+            [{ k: 'rifleman', t: '新兵' }, { k: 'tank_pz4', t: '戦車' }, { k: 'supply', t: '補給物資' }].forEach(o => { 
                 const d = document.createElement('div'); d.className = 'card'; 
-                d.innerHTML = `<div class="card-img-box"><img src="${createCardIcon(o.k === 'heal' ? 'heal' : 'infantry')}"></div><div class="card-body"><h3>${o.t}</h3><p>補給</p></div>`; 
+                // アイコンは既存の'heal'用を流用
+                const iconType = o.k === 'supply' ? 'heal' : 'infantry'; 
+                d.innerHTML = `<div class="card-img-box"><img src="${createCardIcon(iconType)}"></div><div class="card-body"><h3>${o.t}</h3><p>${o.k === 'supply' ? 'HP/弾薬/装備' : '増援'}</p></div>`; 
                 d.onclick = () => { 
-                    if (o.k === 'heal') { this.healSurvivors(); } 
+                    if (o.k === 'supply') { this.resupplySurvivors(); } 
                     else { this.spawnAtSafeGround('player', o.k); } 
                     this.sector++; 
                     document.getElementById('reward-screen').style.display = 'none'; 
