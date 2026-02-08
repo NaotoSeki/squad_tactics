@@ -1,4 +1,4 @@
-/** LOGIC GAME: Unified Tank Reload Logic & Fixed Attack Phase Drop */
+/** LOGIC GAME: Fixed Tank Double Reload & Attack Phase Drop */
 
 const AVAILABLE_CARDS = ['rifleman', 'tank_pz4', 'aerial', 'scout', 'tank_tiger', 'gunner', 'sniper'];
 
@@ -77,18 +77,12 @@ class Game {
     applyDamage(target, damage, sourceName = "攻撃") {
         if (!target || target.hp <= 0) return;
         target.hp -= damage;
-        
         if (target.hp <= 0 && !target.deadProcessed) {
             target.deadProcessed = true;
             this.log(`>> ${target.name} を撃破！`);
             if (window.Sfx) { Sfx.play('death'); }
             if (window.VFX) { const p = Renderer.hexToPx(target.q, target.r); VFX.addUnitDebris(p.x, p.y); }
-            
-            if (target.team === 'enemy') {
-                this.checkWin();
-            } else {
-                this.checkLose();
-            }
+            if (target.team === 'enemy') { this.checkWin(); } else { this.checkLose(); }
         }
     }
 
@@ -442,7 +436,7 @@ class Game {
         const cost = w.rld || 1;
         if (u.ap < cost) { this.log(`AP不足 (必要:${cost})`); return; }
         const magIndex = u.bag.findIndex(i => i && i.type === 'ammo' && i.ammoFor === w.code);
-        if (magIndex === -1) { this.log("予備弾薬なし"); return; }
+        if (magIndex === -1) { this.log("弾切れ！予備弾薬なし"); return; }
         u.bag[magIndex] = null; u.ap -= cost; w.current = w.cap;
         this.log(`${u.name} リロード完了`); 
         if (window.Sfx) { Sfx.play('reload'); }
@@ -504,27 +498,19 @@ class Game {
         if (w.isConsumable && w.current <= 0) { this.log("使用済みです"); return; }
         
         // --- リロードチェック ---
-        // ★修正: 戦車の場合も reloadWeapon を使用して統一
+        // ★修正: 戦車・歩兵問わず、弾がなければ reloadWeapon を呼ぶ
         if (w.current <= 0) {
             // 自動装填 (戦車 or 歩兵でAPあり)
             if ((a.def.isTank && this.tankAutoReload) || (!a.def.isTank)) {
-                // reloadWeapon内でのAPチェックや予備弾チェックに任せる
-                // ただし、攻撃前にリロードを試みて、成功しなければ攻撃中断
                 this.reloadWeapon(false);
-                
-                // リロード失敗（弾がない/AP不足）なら中断
-                if (w.current <= 0) {
-                    if(!a.def.isTank) this.log("弾切れ！予備弾薬なし");
-                    // 戦車はreloadWeapon内でログが出るのでここでは出さない
-                    return;
-                }
+                // リロード失敗なら中断
+                if (w.current <= 0) return;
             } else {
                 this.log("弾切れ！装填が必要だ！"); 
                 return;
             }
         }
 
-        // 攻撃コスト確認
         if (a.ap < w.ap) { this.log("AP不足"); return; }
         
         const dist = this.hexDist(a, d); if (dist > w.rng) { this.log("射程外"); return; }
@@ -586,7 +572,7 @@ class Game {
             setTimeout(() => {
                 this.state = 'PLAY'; 
                 
-                // ★修正: 攻撃後の自動装填 (弾切れなら)
+                // ★修正: 撃ち終わった後、弾切れなら即装填 (攻撃モード維持のため)
                 if(a.def.isTank && w.current === 0 && w.reserve > 0 && this.tankAutoReload && a.ap >= 1) { 
                     this.reloadWeapon(); 
                 }
@@ -595,6 +581,7 @@ class Game {
                 const cost = w ? w.ap : 0;
                 
                 const hasAmmoInBag = !a.def.isTank && a.bag.some(i => i && i.type === 'ammo' && i.ammoFor === w.code);
+                // 攻撃モード維持判定 (予備弾があればOK)
                 const canShootAgain = (a.ap >= cost) && (w.current > 0 || (a.def.isTank && w.reserve > 0 && this.tankAutoReload && a.ap >= cost + 1) || hasAmmoInBag);
                 
                 if (canShootAgain) { this.log("射撃可能: 目標選択中..."); } else { this.setMode('SELECT'); this.checkPhaseEnd(); }
