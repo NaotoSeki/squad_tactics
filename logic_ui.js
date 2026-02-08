@@ -1,4 +1,4 @@
-/** LOGIC UI: Fixed Resize Handle & D&D */
+/** LOGIC UI: Resize Handle Follow Fix & D&D */
 
 class UIManager {
     constructor(game) {
@@ -7,7 +7,6 @@ class UIManager {
         this.bindEvents();
         this.dragSrc = null; 
         
-        // グローバル公開 (HTML属性用)
         window.onSlotDragStart = (e, type, index) => this.handleDragStart(e, type, index);
         window.onSlotDragOver = (e) => this.handleDragOver(e);
         window.onSlotDrop = (e, type, index) => this.handleDrop(e, type, index);
@@ -31,7 +30,6 @@ class UIManager {
             }
         });
         
-        // シナジー演出 & D&D用スタイル
         const style = document.createElement('style');
         style.innerHTML = `
             .slot.synergy-active {
@@ -53,16 +51,14 @@ class UIManager {
         const sb = document.getElementById('sidebar');
         sb.classList.toggle('collapsed');
         
-        // ★リサイズバーの強制追従処理
+        // リサイズバーの追従修正
         const handle = document.querySelector('.resize-handle');
         if(handle) {
             if(sb.classList.contains('collapsed')) {
-                // 閉じたとき: 右端へ
                 handle.style.right = '0px';
-                handle.style.left = 'auto'; // 安全策
+                handle.style.left = 'auto'; 
             } else {
-                // 開いたとき: 260px位置へ
-                handle.style.right = '260px';
+                handle.style.right = '260px'; // sidebar width
                 handle.style.left = 'auto';
             }
         }
@@ -113,7 +109,7 @@ class UIManager {
         const weaponCost = w ? w.ap : 99;
         
         setEnabled(btnAttack, u.ap >= weaponCost);
-        // Repair check: 3スロットのいずれかが壊れていればOK（簡易）
+        
         const anyBroken = Array.isArray(u.hands) ? u.hands.some(h => h && h.isBroken) : (u.hands && u.hands.isBroken);
         setEnabled(btnRepair, anyBroken);
         
