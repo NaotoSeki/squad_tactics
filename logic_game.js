@@ -1,4 +1,4 @@
-/** LOGIC GAME: Fixed Tank Double Reload & Attack Phase Drop */
+/** LOGIC GAME: Single Reload Per Attack Action */
 
 const AVAILABLE_CARDS = ['rifleman', 'tank_pz4', 'aerial', 'scout', 'tank_tiger', 'gunner', 'sniper'];
 
@@ -77,12 +77,18 @@ class Game {
     applyDamage(target, damage, sourceName = "攻撃") {
         if (!target || target.hp <= 0) return;
         target.hp -= damage;
+        
         if (target.hp <= 0 && !target.deadProcessed) {
             target.deadProcessed = true;
             this.log(`>> ${target.name} を撃破！`);
             if (window.Sfx) { Sfx.play('death'); }
             if (window.VFX) { const p = Renderer.hexToPx(target.q, target.r); VFX.addUnitDebris(p.x, p.y); }
-            if (target.team === 'enemy') { this.checkWin(); } else { this.checkLose(); }
+            
+            if (target.team === 'enemy') {
+                this.checkWin();
+            } else {
+                this.checkLose();
+            }
         }
     }
 
@@ -498,13 +504,15 @@ class Game {
         if (w.isConsumable && w.current <= 0) { this.log("使用済みです"); return; }
         
         // --- リロードチェック ---
-        // ★修正: 戦車・歩兵問わず、弾がなければ reloadWeapon を呼ぶ
+        // ★修正: リロード判定を統一。ここでは reloadWeapon を呼んで、結果的に弾がなければ中止する
+        let reloadedInThisAction = false;
+
         if (w.current <= 0) {
-            // 自動装填 (戦車 or 歩兵でAPあり)
             if ((a.def.isTank && this.tankAutoReload) || (!a.def.isTank)) {
                 this.reloadWeapon(false);
                 // リロード失敗なら中断
                 if (w.current <= 0) return;
+                reloadedInThisAction = true;
             } else {
                 this.log("弾切れ！装填が必要だ！"); 
                 return;
@@ -572,8 +580,9 @@ class Game {
             setTimeout(() => {
                 this.state = 'PLAY'; 
                 
-                // ★修正: 撃ち終わった後、弾切れなら即装填 (攻撃モード維持のため)
-                if(a.def.isTank && w.current === 0 && w.reserve > 0 && this.tankAutoReload && a.ap >= 1) { 
+                // ★修正: 攻撃前にリロードしていなければ、攻撃後にリロードを試みる
+                // これにより「1アクション1リロード」制限を守りつつ、次弾装填状態で終了できる
+                if(!reloadedInThisAction && a.def.isTank && w.current === 0 && w.reserve > 0 && this.tankAutoReload && a.ap >= 1) { 
                     this.reloadWeapon(); 
                 }
                 
@@ -581,8 +590,8 @@ class Game {
                 const cost = w ? w.ap : 0;
                 
                 const hasAmmoInBag = !a.def.isTank && a.bag.some(i => i && i.type === 'ammo' && i.ammoFor === w.code);
-                // 攻撃モード維持判定 (予備弾があればOK)
-                const canShootAgain = (a.ap >= cost) && (w.current > 0 || (a.def.isTank && w.reserve > 0 && this.tankAutoReload && a.ap >= cost + 1) || hasAmmoInBag);
+                // タンクは予備弾があれば「次撃てる」とみなす
+                const canShootAgain = (a.ap >= cost) && (w.current > 0 || (a.def.isTank && w.reserve > 0 && this.tankAutoReload) || hasAmmoInBag);
                 
                 if (canShootAgain) { this.log("射撃可能: 目標選択中..."); } else { this.setMode('SELECT'); this.checkPhaseEnd(); }
                 
