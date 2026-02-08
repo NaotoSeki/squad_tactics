@@ -1,4 +1,4 @@
-/** LOGIC GAME: Auto Mode Logic Implemented */
+/** LOGIC GAME: Fixed Missing UI Methods (updateSidebar restored) */
 
 const AVAILABLE_CARDS = ['rifleman', 'tank_pz4', 'aerial', 'scout', 'tank_tiger', 'gunner', 'sniper'];
 
@@ -259,7 +259,6 @@ class Game {
                 }
                 Renderer.dealCards(deck); 
             }
-            // ★AutoモードがONなら初回ターンも自動開始
             if (this.isAuto) this.runAuto();
         }, 500);
     }
@@ -579,7 +578,6 @@ class Game {
         }, 800);
     }
 
-    // ★追加: 敵生成 (ロジック内)
     spawnEnemies() {
         const c = 4 + Math.floor(this.sector * 0.7);
         for (let i = 0; i < c; i++) {
@@ -592,28 +590,21 @@ class Game {
         }
     }
 
-    // ★追加: オートモード切替
     toggleAuto() { 
         this.isAuto = !this.isAuto; 
         const btn = document.getElementById('auto-toggle');
         if(btn) btn.classList.toggle('active'); 
         this.log(`AUTO: ${this.isAuto ? "ON" : "OFF"}`); 
-        // プレイヤーフェーズなら即時実行
         if (this.isAuto && this.state === 'PLAY') {
             this.runAuto();
         }
     }
 
-    // ★追加: オート実行
     async runAuto() {
         if (this.state !== 'PLAY') return;
         this.ui.log(":: Auto Command ::");
         this.clearSelection();
-        
-        // プレイヤーAI実行
         await this.ai.execute(this.units, 'player');
-        
-        // AI終了後、AutoがまだONならターン終了
         if (this.isAuto && this.state === 'PLAY') {
              this.endTurn();
         }
@@ -650,19 +641,22 @@ class Game {
         });
         setTimeout(async () => {
             if (eyecatch) { eyecatch.style.opacity = 0; }
-            await this.ai.executeTurn(this.units); // 敵AI実行
+            await this.ai.executeTurn(this.units); 
             this.units.forEach(u => { if (u.team === 'player') { u.ap = u.maxAp; } }); 
             this.checkWin();
             this.log("-- PLAYER PHASE --"); 
             this.state = 'PLAY'; 
             this.isProcessingTurn = false;
-            
-            // ★ターン開始時にAutoモードなら実行
             if (this.isAuto) {
                 this.runAuto();
             }
         }, 1200);
     }
+
+    // ★復元: UI連携用メソッド
+    showContext(mx, my, hex) { this.ui.showContext(mx, my, hex); }
+    updateSidebar() { this.ui.updateSidebar(this.selectedUnit, this.state, this.tankAutoReload); }
+    getStatus(u) { if (u.hp <= 0) return "DEAD"; const r = u.hp / u.maxHp; if (r > 0.8) return "NORMAL"; if (r > 0.5) return "DAMAGED"; return "CRITICAL"; }
 }
 
 window.gameLogic = new Game();
