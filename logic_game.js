@@ -1,4 +1,4 @@
-/** LOGIC GAME: Fix Infinite Loop on Win (Stop Auto when Won) */
+/** LOGIC GAME: Prevents Double Execution of Attacks */
 
 const AVAILABLE_CARDS = ['rifleman', 'tank_pz4', 'aerial', 'scout', 'tank_tiger', 'gunner', 'sniper'];
 
@@ -18,7 +18,8 @@ class Game {
         this.aimTargetUnit = null;
         this.hoverHex = null;
         this.isAuto = false;
-        this.isAutoProcessing = false; 
+        this.isAutoProcessing = false;
+        this.isExecutingAttack = false; // ★追加: 攻撃実行中ロック
         this.isProcessingTurn = false;
         this.sector = 1;
         this.enemyAI = 'AGGRESSIVE';
@@ -53,7 +54,6 @@ class Game {
     }
     log(m) { this.ui.log(m); }
 
-    // --- DELEGATED MAP METHODS ---
     generateMap() { if(this.mapSystem) this.mapSystem.generate(); }
     isValidHex(q, r) { return this.mapSystem ? this.mapSystem.isValidHex(q, r) : false; }
     hexDist(a, b) { return this.mapSystem ? this.mapSystem.hexDist(a, b) : 0; }
@@ -72,23 +72,15 @@ class Game {
         } else { this.aimTargetUnit = null; }
     }
 
-    // --- DAMAGE & WIN CHECK ---
     applyDamage(target, damage, sourceName = "攻撃") {
         if (!target || target.hp <= 0) return;
         target.hp -= damage;
-        
         if (target.hp <= 0 && !target.deadProcessed) {
             target.deadProcessed = true;
             this.log(`>> ${target.name} を撃破！`);
             if (window.Sfx) { Sfx.play('death'); }
             if (window.VFX) { const p = Renderer.hexToPx(target.q, target.r); VFX.addUnitDebris(p.x, p.y); }
-            
-            // 死亡時に即座に判定
-            if (target.team === 'enemy') {
-                this.checkWin();
-            } else {
-                this.checkLose();
-            }
+            if (target.team === 'enemy') { this.checkWin(); } else { this.checkLose(); }
         }
     }
 
@@ -487,12 +479,16 @@ class Game {
     }
 
     async actionAttack(a, d) {
+        // ★修正: 実行中なら即座に弾く
+        if (this.isExecutingAttack) return;
         if (!a) { return; }
         if (a.team === 'player' && this.state !== 'PLAY' && !this.isAutoProcessing) { return; }
+        
         const w = a.hands; if (!w) { return; }
         if (w.isBroken) { this.log("武器故障中！修理が必要"); return; }
         if (w.isConsumable && w.current <= 0) { this.log("使用済みです"); return; }
         
+        // --- リロードチェック ---
         if (!a.def.isTank && w.current <= 0) {
             const magIndex = a.bag.findIndex(i => i && i.type === 'ammo' && i.ammoFor === w.code);
             if (magIndex !== -1) {
@@ -523,6 +519,9 @@ class Game {
         if (a.ap < w.ap) { this.log("AP不足"); return; }
         
         const dist = this.hexDist(a, d); if (dist > w.rng) { this.log("射程外"); return; }
+        
+        // ★修正: ロック開始
+        this.isExecutingAttack = true;
         a.ap -= w.ap; 
         
         this.state = 'ANIM';
@@ -536,7 +535,7 @@ class Game {
         let dmgMod = 1.0 + (a.stats?.str || 0) * 0.05;
         
         let shots = w.isConsumable ? 1 : Math.min(w.burst || 1, w.current);
-        if (a.def.isTank && !w.burst) shots = 1; // 戦車は基本単発
+        if (a.def.isTank && !w.burst) shots = 1;
 
         this.log(`${a.name} 攻撃開始 (${w.name})`);
         
@@ -586,6 +585,7 @@ class Game {
                 const canShootAgain = (a.ap >= cost) && (w.current > 0 || (a.def.isTank && w.reserve > 0 && this.tankAutoReload && a.ap >= cost + 1));
                 if (canShootAgain) { this.log("射撃可能: 目標選択中..."); } else { this.setMode('SELECT'); this.checkPhaseEnd(); }
                 
+                this.isExecutingAttack = false; // ★修正: ロック解除
                 resolve(); 
             }, 800);
         });
@@ -617,16 +617,15 @@ class Game {
         if (this.state !== 'PLAY') return;
         this.ui.log(":: Auto Command ::");
         this.clearSelection();
-        this.isAutoProcessing = true; // ★フラグON
+        this.isAutoProcessing = true; 
         
         await this.ai.execute(this.units, 'player');
         
-        this.isAutoProcessing = false; // ★フラグOFF
+        this.isAutoProcessing = false; 
         
-        // ★修正: 勝利していたらストップ
-        if (this.state !== 'PLAY') return;
+        if (this.state === 'WIN') return;
 
-        if (this.isAuto) {
+        if (this.isAuto && this.state === 'PLAY') {
              this.endTurn();
         }
     }
@@ -651,7 +650,6 @@ class Game {
     }
     swapWeapon() { }
     checkPhaseEnd() { if (this.units.filter(u => u.team === 'player' && u.hp > 0 && u.ap > 0).length === 0 && this.state === 'PLAY') { this.endTurn(); } }
-    
     endTurn() {
         if (this.isProcessingTurn) { return; } 
         this.isProcessingTurn = true;
@@ -664,37 +662,41 @@ class Game {
         setTimeout(async () => {
             if (eyecatch) { eyecatch.style.opacity = 0; }
             await this.ai.executeTurn(this.units); 
-            
-            // ★修正: ターン終了時にも勝利判定（敵AIの反撃などで勝つ場合もあるため）
             if (this.checkWin()) return;
-
             this.units.forEach(u => { if (u.team === 'player') { u.ap = u.maxAp; } }); 
             this.log("-- PLAYER PHASE --"); 
             this.state = 'PLAY'; 
             this.isProcessingTurn = false;
-            
             if (this.isAuto) {
                 this.runAuto();
             }
         }, 1200);
     }
 
-    // ★復元: UI連携用メソッド
+    promoteSurvivors() { 
+        this.units.filter(u => u.team === 'player' && u.hp > 0).forEach(u => { 
+            u.sectorsSurvived++; 
+            if (u.sectorsSurvived === 5) { u.skills.push("Hero"); u.maxAp++; this.log("英雄昇格"); } 
+            u.rank = Math.min(5, (u.rank || 0) + 1); u.maxHp += 30; u.hp += 30; 
+            if (u.skills.length < 8 && Math.random() < 0.7) { 
+                const k = Object.keys(SKILLS).filter(z => z !== "Hero"); 
+                u.skills.push(k[Math.floor(Math.random() * k.length)]); this.log("スキル習得"); 
+            } 
+        }); 
+    }
+
     showContext(mx, my, hex) { this.ui.showContext(mx, my, hex); }
     updateSidebar() { this.ui.updateSidebar(this.selectedUnit, this.state, this.tankAutoReload); }
     getStatus(u) { if (u.hp <= 0) return "DEAD"; const r = u.hp / u.maxHp; if (r > 0.8) return "NORMAL"; if (r > 0.5) return "DAMAGED"; return "CRITICAL"; }
     
-    // ★修正: 勝利したらStateをWINにする
     checkWin() { 
-        if (this.state === 'WIN') return true; // 既に勝ってるなら無視
-
+        if (this.state === 'WIN') return true; 
         if (this.units.filter(u => u.team === 'enemy' && u.hp > 0).length === 0) { 
-            this.state = 'WIN'; // ★勝利状態へ移行
+            this.state = 'WIN'; 
             if (window.Sfx) { Sfx.play('win'); }
             document.getElementById('reward-screen').style.display = 'flex'; 
             this.promoteSurvivors(); 
             const b = document.getElementById('reward-cards'); b.innerHTML = ''; 
-            
             [{ k: 'rifleman', t: '新兵' }, { k: 'tank_pz4', t: '戦車' }, { k: 'supply', t: '補給物資' }].forEach(o => { 
                 const d = document.createElement('div'); d.className = 'card'; 
                 const iconType = o.k === 'supply' ? 'heal' : 'infantry'; 
@@ -717,18 +719,6 @@ class Game {
         if (this.units.filter(u => u.team === 'player' && u.hp > 0).length === 0) { 
             document.getElementById('gameover-screen').style.display = 'flex'; 
         } 
-    }
-
-    promoteSurvivors() { 
-        this.units.filter(u => u.team === 'player' && u.hp > 0).forEach(u => { 
-            u.sectorsSurvived++; 
-            if (u.sectorsSurvived === 5) { u.skills.push("Hero"); u.maxAp++; this.log("英雄昇格"); } 
-            u.rank = Math.min(5, (u.rank || 0) + 1); u.maxHp += 30; u.hp += 30; 
-            if (u.skills.length < 8 && Math.random() < 0.7) { 
-                const k = Object.keys(SKILLS).filter(z => z !== "Hero"); 
-                u.skills.push(k[Math.floor(Math.random() * k.length)]); this.log("スキル習得"); 
-            } 
-        }); 
     }
 }
 
