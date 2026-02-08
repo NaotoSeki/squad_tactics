@@ -1,4 +1,4 @@
-/** LOGIC GAME: Mortar Ground Attack, D&D Support, and Bug Fixes */
+/** LOGIC GAME: Syntax Fix & Method Reordering */
 
 const AVAILABLE_CARDS = ['rifleman', 'scout', 'gunner', 'sniper', 'mortar_gunner', 'aerial'];
 
@@ -15,8 +15,8 @@ class Game {
         this.path = [];
         this.reachableHexes = [];
         this.attackLine = [];
-        this.aimTargetUnit = null; // ユニット狙い
-        this.aimTargetHex = null;  // 地点狙い
+        this.aimTargetUnit = null;
+        this.aimTargetHex = null; // 地点攻撃用
         this.hoverHex = null;
         this.isAuto = false;
         this.isAutoProcessing = false;
@@ -33,6 +33,8 @@ class Game {
         this.ui = new UIManager(this);
         if (typeof MapSystem !== 'undefined') {
             this.mapSystem = new MapSystem(this);
+        } else {
+            console.error("MapSystem not found!");
         }
         this.ai = new EnemyAI(this);
 
@@ -72,17 +74,90 @@ class Game {
         });
     }
 
-    // --- HELPER: 仮想武器取得 ---
+    // --- CORE UNIT HELPERS (ここを上部に配置して認識漏れを防ぐ) ---
+    getUnitsInHex(q, r) { return this.units.filter(u => u.q === q && u.r === r && u.hp > 0); }
+    getUnitInHex(q, r) { return this.units.find(u => u.q === q && u.r === r && u.hp > 0); }
+    getUnit(q, r) { return this.getUnitInHex(q, r); }
+
+    // --- UI DELEGATION ---
+    toggleSidebar() { this.ui.toggleSidebar(); }
+    toggleTankAutoReload() { 
+        this.tankAutoReload = !this.tankAutoReload; 
+        this.updateSidebar(); 
+    }
+    log(m) { this.ui.log(m); }
+    updateSidebar() { this.ui.updateSidebar(this.selectedUnit, this.state, this.tankAutoReload); }
+    showContext(mx, my, hex) { this.ui.showContext(mx, my, hex); }
+    hideActionMenu() { this.ui.hideActionMenu(); }
+
+    // --- MAP METHODS ---
+    generateMap() { if(this.mapSystem) this.mapSystem.generate(); }
+    isValidHex(q, r) { return this.mapSystem ? this.mapSystem.isValidHex(q, r) : false; }
+    hexDist(a, b) { return this.mapSystem ? this.mapSystem.hexDist(a, b) : 0; }
+    getNeighbors(q, r) { return this.mapSystem ? this.mapSystem.getNeighbors(q, r) : []; }
+    findPath(u, tq, tr) { return this.mapSystem ? this.mapSystem.findPath(u, tq, tr) : []; }
+    
+    calcAttackLine(u, tq, tr) {
+        if (!this.mapSystem) return;
+        this.attackLine = this.mapSystem.calcAttackLine(u, tq, tr);
+        this.aimTargetUnit = null;
+        this.aimTargetHex = null;
+
+        const w = this.getVirtualWeapon(u);
+        const dist = this.hexDist(u, {q:tq, r:tr});
+
+        // 迫撃砲(Indirect)の特別処理
+        if (w && w.indirect) {
+            if (dist <= w.rng && dist >= (w.minRng || 0)) {
+                if (this.attackLine.length === 0) {
+                    this.attackLine = [{q: u.q, r: u.r}, {q: tq, r: tr}];
+                }
+                this.aimTargetHex = {q: tq, r: tr};
+                const unitOnHex = this.getUnitInHex(tq, tr);
+                if (unitOnHex) this.aimTargetUnit = unitOnHex;
+                return;
+            }
+        }
+
+        if (this.attackLine.length > 0) { 
+            const last = this.attackLine[this.attackLine.length - 1]; 
+            if (last.q === tq && last.r === tr) { 
+                const target = this.getUnitInHex(last.q, last.r); 
+                if (target && target.team !== u.team) { 
+                    this.aimTargetUnit = target; 
+                } 
+            } 
+        } 
+    }
+
+    // --- DAMAGE & WIN CHECK ---
+    applyDamage(target, damage, sourceName = "攻撃") {
+        if (!target || target.hp <= 0) return;
+        target.hp -= damage;
+        
+        if (target.hp <= 0 && !target.deadProcessed) {
+            target.deadProcessed = true;
+            this.log(`>> ${target.name} を撃破！`);
+            if (window.Sfx) { Sfx.play('death'); }
+            if (window.VFX) { const p = Renderer.hexToPx(target.q, target.r); VFX.addUnitDebris(p.x, p.y); }
+            
+            if (target.team === 'enemy') {
+                this.checkWin();
+            } else {
+                this.checkLose();
+            }
+        }
+    }
+
+    // --- INVENTORY & WEAPON LOGIC ---
     getVirtualWeapon(u) {
         if (!u || !u.hands) return null;
         if (!Array.isArray(u.hands)) return u.hands;
 
-        // 1. 通常武器チェック (Slot 0)
         if (u.hands[0] && u.hands[0].attr === 'Weaponry' && u.hands[0].type !== 'part') {
             return u.hands[0];
         }
 
-        // 2. 迫撃砲パーツチェック
         const parts = u.hands.map(i => i ? i.code : null);
         const hasBarrel = parts.includes('mortar_barrel');
         const hasBipod = parts.includes('mortar_bipod');
@@ -90,20 +165,18 @@ class Game {
 
         if (hasBarrel && hasBipod && hasPlate) {
             const base = WPNS['m2_mortar'];
-            // 弾薬数をバッグから合算
             let totalAmmo = 0;
             u.bag.forEach(item => {
                 if (item && item.code === 'mortar_shell_box') {
                     totalAmmo += item.current;
                 }
             });
-            
             return {
                 ...base,
                 code: 'm2_mortar',
                 current: totalAmmo > 0 ? 1 : 0, 
                 cap: 1,
-                isVirtual: true // シナジー演出用
+                isVirtual: true
             };
         }
         return null;
@@ -199,56 +272,6 @@ class Game {
         };
     }
 
-    toggleSidebar() { this.ui.toggleSidebar(); }
-    toggleTankAutoReload() { this.tankAutoReload = !this.tankAutoReload; this.updateSidebar(); }
-    log(m) { this.ui.log(m); }
-
-    generateMap() { if(this.mapSystem) this.mapSystem.generate(); }
-    isValidHex(q, r) { return this.mapSystem ? this.mapSystem.isValidHex(q, r) : false; }
-    hexDist(a, b) { return this.mapSystem ? this.mapSystem.hexDist(a, b) : 0; }
-    getNeighbors(q, r) { return this.mapSystem ? this.mapSystem.getNeighbors(q, r) : []; }
-    findPath(u, tq, tr) { return this.mapSystem ? this.mapSystem.findPath(u, tq, tr) : []; }
-    
-    // --- 攻撃・移動エリア計算 ---
-    calcAttackLine(u, tq, tr) {
-        if (!this.mapSystem) return;
-        this.attackLine = this.mapSystem.calcAttackLine(u, tq, tr);
-        this.aimTargetUnit = null;
-        this.aimTargetHex = null;
-
-        const w = this.getVirtualWeapon(u);
-        const dist = this.hexDist(u, {q:tq, r:tr});
-
-        // 迫撃砲: 射線が通らなくても射程内ならラインを引く (Indirect Fire)
-        if (w && w.indirect) {
-            // 射程チェック
-            if (dist <= w.rng && dist >= (w.minRng || 0)) {
-                // 射線がMapSystemで弾かれても強制的に引く
-                if (this.attackLine.length === 0) {
-                    this.attackLine = [{q: u.q, r: u.r}, {q: tq, r: tr}];
-                }
-                // ターゲットはヘックスそのもの
-                this.aimTargetHex = {q: tq, r: tr};
-                
-                // たまたまそこにユニットがいればターゲットにも入れる（表示用）
-                const unitOnHex = this.getUnitInHex(tq, tr);
-                if (unitOnHex) this.aimTargetUnit = unitOnHex;
-                return;
-            }
-        }
-
-        // 通常攻撃: ラインが通っている場合のみターゲット有効
-        if (this.attackLine.length > 0) { 
-            const last = this.attackLine[this.attackLine.length - 1]; 
-            if (last.q === tq && last.r === tr) { 
-                const target = this.getUnitInHex(last.q, last.r); 
-                if (target && target.team !== u.team) { 
-                    this.aimTargetUnit = target; 
-                } 
-            } 
-        } 
-    }
-
     // --- GAME ACTIONS ---
     async actionAttack(a, d) {
         if (this.isExecutingAttack) return;
@@ -260,26 +283,24 @@ class Game {
 
         if (w.isBroken) { this.log("武器故障中！修理が必要"); return; }
         
-        // --- ターゲット判定 ---
-        // d は Unitオブジェクト または Hex座標オブジェクト {q,r}
+        // ターゲット判定
         let targetUnit = null;
         let targetHex = null;
 
         if (d.hp !== undefined) {
-            targetUnit = d; // d is Unit
+            targetUnit = d; 
             targetHex = {q: d.q, r: d.r};
         } else {
-            targetHex = d; // d is Hex
+            targetHex = d;
             targetUnit = this.getUnitInHex(d.q, d.r);
         }
 
-        // 迫撃砲以外で、ユニット以外（空地）をクリックした場合は攻撃不可
         if (!w.indirect && !targetUnit) {
             this.setMode('SELECT');
             return;
         }
 
-        // --- リロードチェック ---
+        // 弾薬チェック
         if (w.code === 'm2_mortar') {
              if (w.current <= 0) { this.log("弾切れ！弾薬箱が空です"); return; }
         } else {
@@ -296,7 +317,6 @@ class Game {
 
         if (a.ap < w.ap) { this.log("AP不足"); return; }
         
-        // 射程チェック
         const dist = this.hexDist(a, targetHex); 
         if (w.minRng && dist < w.minRng) { this.log("目標が近すぎます！"); return; }
         if (dist > w.rng) { this.log("射程外"); return; }
@@ -305,14 +325,11 @@ class Game {
         a.ap -= w.ap; 
         this.state = 'ANIM';
         
-        // アニメーション用ターゲット（ユニットがいればユニット、いなければダミー）
         const animTarget = targetUnit || { q: targetHex.q, r: targetHex.r, hp: 100 };
-
         if (typeof Renderer !== 'undefined' && Renderer.playAttackAnim) { 
             Renderer.playAttackAnim(a, animTarget); 
         }
         
-        // 地形効果など
         let terrainCover = this.map[targetHex.q][targetHex.r].cover;
         let hitChance = (a.stats?.aim || 0) * 2 + w.acc - (dist * (w.acc_drop||5)) - terrainCover;
         if (targetUnit) {
@@ -341,11 +358,9 @@ class Game {
                 const sPos = Renderer.hexToPx(a.q, a.r); 
                 const ePos = Renderer.hexToPx(targetHex.q, targetHex.r);
                 
-                // 迫撃砲なら放物線（高アーク）、通常弾なら直線
                 const isMortar = (w.code === 'm2_mortar');
                 const isShell = w.type.includes('shell');
                 
-                // 弾のばらつき
                 const spread = (100 - w.acc) * 0.3;
                 const tx = ePos.x + (Math.random() - 0.5) * spread;
                 const ty = ePos.y + (Math.random() - 0.5) * spread;
@@ -354,7 +369,8 @@ class Game {
                 
                 const arc = isMortar ? 250 : (isShell ? 30 : 0);
                 const flightTime = isMortar ? 1000 : (isShell ? 600 : dist * 30); 
-                
+                const fireRate = (w.type === 'bullet') ? 80 : 300;
+
                 if (window.VFX) { 
                     VFX.addProj({ 
                         x: sPos.x, y: sPos.y, sx: sPos.x, sy: sPos.y, ex: tx, ey: ty, 
@@ -365,41 +381,32 @@ class Game {
                 }
                 
                 setTimeout(() => {
-                    // ★着弾処理
-                    // 迫撃砲または榴弾の場合、着弾地点爆発
                     if (isMortar || isShell) {
                         if (window.VFX) { VFX.addExplosion(tx, ty, "#f55", 5); }
-                        if (window.Sfx) { Sfx.play('death'); } // 爆発音代用
+                        if (window.Sfx) { Sfx.play('death'); } 
                     }
 
-                    // 範囲攻撃処理 (迫撃砲)
                     if (isMortar) {
-                        // 中心ヘックス
                         const victims = this.getUnitsInHex(targetHex.q, targetHex.r);
-                        // 周囲ヘックス (Area効果)
                         const neighbors = this.getNeighbors(targetHex.q, targetHex.r);
                         const areaVictims = [];
                         neighbors.forEach(n => {
                             areaVictims.push(...this.getUnitsInHex(n.q, n.r));
                         });
 
-                        // 中心ダメージ
                         victims.forEach(v => {
-                            // 迫撃砲は精度低いのでHit判定する
-                            if ((Math.random() * 100) < hitChance + 20) { // 中心は当たりやすい
+                            if ((Math.random() * 100) < hitChance + 20) { 
                                 this.applyDamage(v, w.dmg, "迫撃砲");
                             } else {
                                 this.log(">> 至近弾！");
                                 this.applyDamage(v, Math.floor(w.dmg / 3), "爆風");
                             }
                         });
-                        // 周囲ダメージ
                         areaVictims.forEach(v => {
                             this.applyDamage(v, Math.floor(w.dmg / 4), "爆風");
                         });
 
                     } else if (targetUnit) {
-                        // 通常攻撃処理
                         if (targetUnit.hp <= 0) return;
                         const isHit = (Math.random() * 100) < hitChance;
                         if (isHit) {
@@ -418,7 +425,7 @@ class Game {
                     }
                 }, flightTime);
                 
-                await new Promise(r => setTimeout(r, 200)); // 連射間隔
+                await new Promise(r => setTimeout(r, fireRate));
             }
             
             setTimeout(() => {
@@ -428,27 +435,14 @@ class Game {
                 }
                 this.refreshUnitState(a); 
                 this.isExecutingAttack = false; 
-                this.setMode('SELECT'); // 攻撃後は選択モードへ
+                this.setMode('SELECT'); 
                 this.checkPhaseEnd();
                 resolve(); 
-            }, 800);
+            }, flightTime + 200);
         });
     }
 
-    // --- OTHER STANDARD METHODS ---
-    applyDamage(target, damage, sourceName = "攻撃") {
-        if (!target || target.hp <= 0) return;
-        target.hp -= damage;
-        // this.log(`${target.name} に ${damage} ダメージ`); // ログ過多ならコメントアウト
-        if (target.hp <= 0 && !target.deadProcessed) {
-            target.deadProcessed = true;
-            this.log(`>> ${target.name} を撃破！`);
-            if (window.Sfx) { Sfx.play('death'); }
-            if (window.VFX) { const p = Renderer.hexToPx(target.q, target.r); VFX.addUnitDebris(p.x, p.y); }
-            if (target.team === 'enemy') { this.checkWin(); } else { this.checkLose(); }
-        }
-    }
-
+    // --- OTHER ACTIONS ---
     handleRightClick(mx, my, hex) {
         if (!hex && typeof Renderer !== 'undefined') {
             hex = Renderer.pxToHex(mx, my);
@@ -469,22 +463,18 @@ class Game {
         }
     }
 
-    // ★修正: D&D対応のためインデックス指定を強化
     swapEquipment(src, tgt) {
         const u = this.selectedUnit;
         if (!u || u.team !== 'player') return;
         
         let item1, item2;
         
-        // src取得
         if (src.type === 'main') item1 = u.hands[src.index];
         else item1 = u.bag[src.index];
         
-        // tgt取得
         if (tgt.type === 'main') item2 = u.hands[tgt.index];
         else item2 = u.bag[tgt.index];
         
-        // 入れ替え
         if (src.type === 'main') u.hands[src.index] = item2;
         else u.bag[src.index] = item2;
         
@@ -499,7 +489,6 @@ class Game {
     toggleFireMode() {
         const u = this.selectedUnit;
         if (!u || !u.hands || !u.hands.modes) return;
-        // 常にSlot0の武器モードを切り替える（簡易実装）
         if (u.hands[0] && u.hands[0].modes) {
             const modes = u.hands[0].modes; 
             const currentBurst = u.hands[0].burst;
@@ -596,17 +585,13 @@ class Game {
                 if (last.q === p.q && last.r === p.r) { this.actionMove(this.selectedUnit, this.path); this.setMode('SELECT'); } 
             } else { this.setMode('SELECT'); } 
         } 
-        // ★修正: 攻撃モード時のクリック処理 (地点攻撃対応)
         else if (this.interactionMode === 'ATTACK') {
-            // クリックした場所(p)に対して攻撃を実行
-            // pは {q, r}
             if (this.selectedUnit) {
-                // ユニットがいるかチェック
                 const targetUnit = this.getUnitInHex(p.q, p.r);
                 if (targetUnit && targetUnit.team !== this.selectedUnit.team) {
-                    this.actionAttack(this.selectedUnit, targetUnit); // ユニット攻撃
+                    this.actionAttack(this.selectedUnit, targetUnit); 
                 } else {
-                    this.actionAttack(this.selectedUnit, p); // 地点攻撃
+                    this.actionAttack(this.selectedUnit, p); 
                 }
             } else {
                 this.setMode('SELECT');
@@ -720,11 +705,10 @@ class Game {
     async runAuto() { if(this.state!=='PLAY') return; this.ui.log(":: Auto ::"); this.clearSelection(); this.isAutoProcessing = true; await this.ai.execute(this.units, 'player'); this.isAutoProcessing = false; if(this.state==='WIN') return; if(this.isAuto && this.state==='PLAY') this.endTurn(); }
     async actionMove(u, p) { this.state = 'ANIM'; for(let s of p){u.ap-=this.map[s.q][s.r].cost; u.q=s.q; u.r=s.r; if(window.Sfx) Sfx.play('move'); await new Promise(r => setTimeout(r, 180)); } this.checkReactionFire(u); this.state = 'PLAY'; this.refreshUnitState(u); this.checkPhaseEnd(); }
     
-    // ★修正: 不死身バグの原因（applyDamageが呼べない）を解消
     checkReactionFire(u) { 
         this.units.filter(e => e.team !== u.team && e.hp > 0 && e.def.isTank && this.hexDist(u, e) <= 1).forEach(t => { 
             this.log("防御射撃"); 
-            this.applyDamage(u, 15, "防御"); // クラス内メソッドとして呼ぶ
+            this.applyDamage(u, 15, "防御");
             if(window.VFX) VFX.addExplosion(Renderer.hexToPx(u.q, u.r).x, Renderer.hexToPx(u.q, u.r).y, "#fa0", 5); 
         }); 
     }
@@ -735,6 +719,50 @@ class Game {
     checkWin() { if (this.state === 'WIN') return true; if (this.units.filter(u => u.team === 'enemy' && u.hp > 0).length === 0) { this.state = 'WIN'; if (window.Sfx) Sfx.play('win'); document.getElementById('reward-screen').style.display = 'flex'; this.promoteSurvivors(); const b = document.getElementById('reward-cards'); b.innerHTML = ''; [{ k: 'rifleman', t: '新兵' }, { k: 'mortar_gunner', t: '迫撃砲兵' }, { k: 'supply', t: '補給' }].forEach(o => { const d = document.createElement('div'); d.className = 'card'; const iconType = o.k === 'supply' ? 'heal' : 'infantry'; d.innerHTML = `<div class="card-img-box"><img src="${createCardIcon(iconType)}"></div><div class="card-body"><p>${o.t}</p></div>`; d.onclick = () => { if (o.k === 'supply') this.resupplySurvivors(); else this.spawnAtSafeGround('player', o.k); this.sector++; document.getElementById('reward-screen').style.display = 'none'; this.startCampaign(); }; b.appendChild(d); }); return true; } return false; }
     checkLose() { if (this.units.filter(u => u.team === 'player' && u.hp > 0).length === 0) { document.getElementById('gameover-screen').style.display = 'flex'; } }
     resupplySurvivors() { this.units.filter(u => u.team === 'player' && u.hp > 0).forEach(u => { if (u.hp < u.maxHp) u.hp = Math.floor(u.maxHp * 0.8); const w = this.getVirtualWeapon(u); if (w) { if (w.code === 'm2_mortar') { u.bag.forEach(i => { if (i && i.code === 'mortar_shell_box') i.current = i.cap; }); } else if (w.type.includes('bullet')) { w.current = w.cap; } else if (u.def.isTank) { w.reserve = 12; } } }); this.log("補給完了"); }
+    
+    // --- HELPER FOR BOOTSTRAP ---
+    checkDeploy(targetHex) {
+        if(!this.isValidHex(targetHex.q, targetHex.r) || this.map[targetHex.q][targetHex.r].id === -1) return false; 
+        if(this.map[targetHex.q][targetHex.r].id === 5) return false; 
+        if (this.getUnitsInHex(targetHex.q, targetHex.r).length >= 4) return false; 
+        if (this.cardsUsed >= 2) return false; 
+        return true;
+    }
+
+    deployUnit(targetHex, cardType) {
+        if(!this.checkDeploy(targetHex)) { return; }
+        const u = this.createSoldier(cardType, 'player', targetHex.q, targetHex.r);
+        if(u) { 
+            this.units.push(u); this.cardsUsed++; 
+            this.log(`増援到着: ${u.name}`); 
+            if(window.VFX) { const pos = Renderer.hexToPx(targetHex.q, targetHex.r); window.VFX.addSmoke(pos.x, pos.y); } 
+            this.updateSidebar(); 
+        }
+    }
+
+    async triggerBombardment(centerHex) {
+        if (!this.isValidHex(centerHex.q, centerHex.r)) return;
+        this.log(`>> 航空支援要請`);
+        const neighbors = this.getNeighbors(centerHex.q, centerHex.r);
+        const targets = [centerHex, ...neighbors];
+        const validTargets = targets.filter(h => this.isValidHex(h.q, h.r));
+        const hits = []; const pool = [...validTargets];
+        for (let i = 0; i < 3; i++) { if (pool.length === 0) break; const idx = Math.floor(Math.random() * pool.length); hits.push(pool[idx]); pool.splice(idx, 1); }
+        for (const hex of hits) {
+            const pos = Renderer.hexToPx(hex.q, hex.r);
+            setTimeout(() => {
+                if (window.Sfx) { Sfx.play('cannon'); }
+                if (typeof Renderer !== 'undefined') { Renderer.playExplosion(pos.x, pos.y); }
+                const units = this.getUnitsInHex(hex.q, hex.r);
+                units.forEach(u => {
+                    this.log(`>> 爆撃命中: ${u.name} に 350 ダメージ`);
+                    this.applyDamage(u, 350, "爆撃");
+                });
+                this.updateSidebar();
+                if (window.VFX) { VFX.addSmoke(pos.x, pos.y); }
+            }, Math.random() * 800);
+        }
+    }
 }
 
 window.gameLogic = new Game();
