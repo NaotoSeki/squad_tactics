@@ -1,4 +1,4 @@
-/** LOGIC GAME: Aggressive Auto-Reload to Maintain Attack Mode */
+/** LOGIC GAME: Fixed "Ghost Enemy" Bug & Previous Improvements */
 
 const AVAILABLE_CARDS = ['rifleman', 'tank_pz4', 'aerial', 'scout', 'tank_tiger', 'gunner', 'sniper'];
 
@@ -54,6 +54,7 @@ class Game {
     }
     log(m) { this.ui.log(m); }
 
+    // --- DELEGATED MAP METHODS ---
     generateMap() { if(this.mapSystem) this.mapSystem.generate(); }
     isValidHex(q, r) { return this.mapSystem ? this.mapSystem.isValidHex(q, r) : false; }
     hexDist(a, b) { return this.mapSystem ? this.mapSystem.hexDist(a, b) : 0; }
@@ -72,15 +73,22 @@ class Game {
         } else { this.aimTargetUnit = null; }
     }
 
+    // --- DAMAGE & WIN CHECK ---
     applyDamage(target, damage, sourceName = "攻撃") {
         if (!target || target.hp <= 0) return;
         target.hp -= damage;
+        
         if (target.hp <= 0 && !target.deadProcessed) {
             target.deadProcessed = true;
             this.log(`>> ${target.name} を撃破！`);
             if (window.Sfx) { Sfx.play('death'); }
             if (window.VFX) { const p = Renderer.hexToPx(target.q, target.r); VFX.addUnitDebris(p.x, p.y); }
-            if (target.team === 'enemy') { this.checkWin(); } else { this.checkLose(); }
+            
+            if (target.team === 'enemy') {
+                this.checkWin();
+            } else {
+                this.checkLose();
+            }
         }
     }
 
@@ -226,19 +234,24 @@ class Game {
         
         this.generateMap(); 
         
+        // ★修正: プレイヤー生成時も場所がないなら生成しない
         if (this.units.length === 0) { 
             this.setupSlots.forEach(k => { 
                 const p = this.getSafeSpawnPos('player'); 
-                const u = this.createSoldier(k, 'player', p.q, p.r); 
-                this.units.push(u); 
+                if (p) {
+                    const u = this.createSoldier(k, 'player', p.q, p.r); 
+                    this.units.push(u); 
+                }
             }); 
         } else { 
             this.units.forEach(u => { 
                 const p = this.getSafeSpawnPos('player'); 
-                u.q = p.q; u.r = p.r; 
+                if (p) { u.q = p.q; u.r = p.r; }
             }); 
         }
+        
         this.spawnEnemies(); 
+        
         this.state = 'PLAY'; this.log(`SECTOR ${this.sector} START`);
         document.getElementById('sector-counter').innerText = `SECTOR: ${this.sector.toString().padStart(2, '0')}`;
         
@@ -257,6 +270,7 @@ class Game {
         }, 500);
     }
 
+    // ★修正: 失敗時に null を返す
     getSafeSpawnPos(team) {
         const cy = Math.floor(MAP_H / 2);
         for (let i = 0; i < 100; i++) { 
@@ -266,16 +280,21 @@ class Game {
             if (team === 'enemy' && r >= cy) { continue; }
             if (this.isValidHex(q, r) && this.getUnitsInHex(q, r).length < 4 && this.map[q][r].id !== -1 && this.map[q][r].id !== 5) { return { q, r }; } 
         }
-        return { q: 0, r: 0 };
+        return null; // ★変更: {q:0, r:0} を返さない
     }
 
+    // ★修正: 場所が null なら生成しない
     spawnAtSafeGround(team, type) {
         const p = this.getSafeSpawnPos(team);
-        const u = this.createSoldier(type, team, p.q, p.r);
-        if (u) {
-            u.q = p.q; u.r = p.r;
-            this.units.push(u);
-            this.log(`増援合流: ${u.name}`);
+        if (p) {
+            const u = this.createSoldier(type, team, p.q, p.r);
+            if (u) {
+                u.q = p.q; u.r = p.r;
+                this.units.push(u);
+                this.log(`増援合流: ${u.name}`);
+            }
+        } else {
+            this.log("増援合流失敗: 配置スペースなし");
         }
     }
 
@@ -576,8 +595,6 @@ class Game {
             setTimeout(() => {
                 this.state = 'PLAY'; 
                 
-                // ★修正: 攻撃前にリロードしたかどうかに関わらず、APがあるなら積極的に次弾を装填する
-                // これにより「攻撃完了時」は常に「装填済み」の状態を目指すため、Attackモードが途切れにくくなる
                 if(a.def.isTank && w.current === 0 && w.reserve > 0 && this.tankAutoReload && a.ap >= 1) { 
                     this.reloadWeapon(); 
                 }
@@ -586,7 +603,6 @@ class Game {
                 const cost = w ? w.ap : 0;
                 
                 const hasAmmoInBag = !a.def.isTank && a.bag.some(i => i && i.type === 'ammo' && i.ammoFor === w.code);
-                // タンクは自動装填があるので、予備弾があれば「撃てる」とみなす
                 const canShootAgain = (a.ap >= cost) && (w.current > 0 || (a.def.isTank && w.reserve > 0 && this.tankAutoReload) || hasAmmoInBag);
                 
                 if (canShootAgain) { this.log("射撃可能: 目標選択中..."); } else { this.setMode('SELECT'); this.checkPhaseEnd(); }
@@ -597,6 +613,7 @@ class Game {
         });
     }
 
+    // ★修正: 配置不能な場合はリストに追加しない
     spawnEnemies() {
         const c = 4 + Math.floor(this.sector * 0.7);
         for (let i = 0; i < c; i++) {
@@ -605,7 +622,13 @@ class Game {
             else if (r < 0.4) { k = 'gunner'; } 
             else if (r < 0.6) { k = 'sniper'; }
             const e = this.createSoldier(k, 'enemy', 0, 0); 
-            if (e) { const p = this.getSafeSpawnPos('enemy'); e.q = p.q; e.r = p.r; this.units.push(e); }
+            if (e) { 
+                const p = this.getSafeSpawnPos('enemy'); 
+                if (p) { // ★修正
+                    e.q = p.q; e.r = p.r; 
+                    this.units.push(e); 
+                }
+            }
         }
     }
 
