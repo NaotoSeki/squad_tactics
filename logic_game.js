@@ -1,4 +1,4 @@
-/** LOGIC GAME: Fixed Missing Methods, Auto Mode Action Block, and Win Check */
+/** LOGIC GAME: Fix Infinite Loop on Win (Stop Auto when Won) */
 
 const AVAILABLE_CARDS = ['rifleman', 'tank_pz4', 'aerial', 'scout', 'tank_tiger', 'gunner', 'sniper'];
 
@@ -18,7 +18,7 @@ class Game {
         this.aimTargetUnit = null;
         this.hoverHex = null;
         this.isAuto = false;
-        this.isAutoProcessing = false; // ★追加: Auto実行中フラグ
+        this.isAutoProcessing = false; 
         this.isProcessingTurn = false;
         this.sector = 1;
         this.enemyAI = 'AGGRESSIVE';
@@ -83,6 +83,7 @@ class Game {
             if (window.Sfx) { Sfx.play('death'); }
             if (window.VFX) { const p = Renderer.hexToPx(target.q, target.r); VFX.addUnitDebris(p.x, p.y); }
             
+            // 死亡時に即座に判定
             if (target.team === 'enemy') {
                 this.checkWin();
             } else {
@@ -487,14 +488,11 @@ class Game {
 
     async actionAttack(a, d) {
         if (!a) { return; }
-        // ★修正: Autoモード実行中（this.isAutoProcessing）なら操作ブロックをスルー
         if (a.team === 'player' && this.state !== 'PLAY' && !this.isAutoProcessing) { return; }
-        
         const w = a.hands; if (!w) { return; }
         if (w.isBroken) { this.log("武器故障中！修理が必要"); return; }
         if (w.isConsumable && w.current <= 0) { this.log("使用済みです"); return; }
         
-        // --- リロードチェック (省略なし) ---
         if (!a.def.isTank && w.current <= 0) {
             const magIndex = a.bag.findIndex(i => i && i.type === 'ammo' && i.ammoFor === w.code);
             if (magIndex !== -1) {
@@ -537,7 +535,6 @@ class Game {
         if (d.stance === 'crouch') { hitChance -= 10; }
         let dmgMod = 1.0 + (a.stats?.str || 0) * 0.05;
         
-        // ★修正: 戦車砲など消耗品以外でも単発武器なら shots=1 になるよう安全策
         let shots = w.isConsumable ? 1 : Math.min(w.burst || 1, w.current);
         if (a.def.isTank && !w.burst) shots = 1; // 戦車は基本単発
 
@@ -620,13 +617,16 @@ class Game {
         if (this.state !== 'PLAY') return;
         this.ui.log(":: Auto Command ::");
         this.clearSelection();
-        this.isAutoProcessing = true; // ★追加: フラグON
+        this.isAutoProcessing = true; // ★フラグON
         
         await this.ai.execute(this.units, 'player');
         
-        this.isAutoProcessing = false; // ★追加: フラグOFF
+        this.isAutoProcessing = false; // ★フラグOFF
         
-        if (this.isAuto && this.state === 'PLAY') {
+        // ★修正: 勝利していたらストップ
+        if (this.state !== 'PLAY') return;
+
+        if (this.isAuto) {
              this.endTurn();
         }
     }
@@ -649,7 +649,6 @@ class Game {
             if (window.Sfx) { Sfx.play('mg'); } 
         });
     }
-    
     swapWeapon() { }
     checkPhaseEnd() { if (this.units.filter(u => u.team === 'player' && u.hp > 0 && u.ap > 0).length === 0 && this.state === 'PLAY') { this.endTurn(); } }
     
@@ -665,36 +664,32 @@ class Game {
         setTimeout(async () => {
             if (eyecatch) { eyecatch.style.opacity = 0; }
             await this.ai.executeTurn(this.units); 
+            
+            // ★修正: ターン終了時にも勝利判定（敵AIの反撃などで勝つ場合もあるため）
+            if (this.checkWin()) return;
+
             this.units.forEach(u => { if (u.team === 'player') { u.ap = u.maxAp; } }); 
-            this.checkWin(); 
             this.log("-- PLAYER PHASE --"); 
             this.state = 'PLAY'; 
             this.isProcessingTurn = false;
+            
             if (this.isAuto) {
                 this.runAuto();
             }
         }, 1200);
     }
 
-    // ★復元: 欠落していた重要メソッド
-    promoteSurvivors() { 
-        this.units.filter(u => u.team === 'player' && u.hp > 0).forEach(u => { 
-            u.sectorsSurvived++; 
-            if (u.sectorsSurvived === 5) { u.skills.push("Hero"); u.maxAp++; this.log("英雄昇格"); } 
-            u.rank = Math.min(5, (u.rank || 0) + 1); u.maxHp += 30; u.hp += 30; 
-            if (u.skills.length < 8 && Math.random() < 0.7) { 
-                const k = Object.keys(SKILLS).filter(z => z !== "Hero"); 
-                u.skills.push(k[Math.floor(Math.random() * k.length)]); this.log("スキル習得"); 
-            } 
-        }); 
-    }
-
+    // ★復元: UI連携用メソッド
     showContext(mx, my, hex) { this.ui.showContext(mx, my, hex); }
     updateSidebar() { this.ui.updateSidebar(this.selectedUnit, this.state, this.tankAutoReload); }
     getStatus(u) { if (u.hp <= 0) return "DEAD"; const r = u.hp / u.maxHp; if (r > 0.8) return "NORMAL"; if (r > 0.5) return "DAMAGED"; return "CRITICAL"; }
     
+    // ★修正: 勝利したらStateをWINにする
     checkWin() { 
+        if (this.state === 'WIN') return true; // 既に勝ってるなら無視
+
         if (this.units.filter(u => u.team === 'enemy' && u.hp > 0).length === 0) { 
+            this.state = 'WIN'; // ★勝利状態へ移行
             if (window.Sfx) { Sfx.play('win'); }
             document.getElementById('reward-screen').style.display = 'flex'; 
             this.promoteSurvivors(); 
@@ -717,7 +712,24 @@ class Game {
         } 
         return false; 
     }
-    checkLose() { if (this.units.filter(u => u.team === 'player' && u.hp > 0).length === 0) { document.getElementById('gameover-screen').style.display = 'flex'; } }
+    
+    checkLose() { 
+        if (this.units.filter(u => u.team === 'player' && u.hp > 0).length === 0) { 
+            document.getElementById('gameover-screen').style.display = 'flex'; 
+        } 
+    }
+
+    promoteSurvivors() { 
+        this.units.filter(u => u.team === 'player' && u.hp > 0).forEach(u => { 
+            u.sectorsSurvived++; 
+            if (u.sectorsSurvived === 5) { u.skills.push("Hero"); u.maxAp++; this.log("英雄昇格"); } 
+            u.rank = Math.min(5, (u.rank || 0) + 1); u.maxHp += 30; u.hp += 30; 
+            if (u.skills.length < 8 && Math.random() < 0.7) { 
+                const k = Object.keys(SKILLS).filter(z => z !== "Hero"); 
+                u.skills.push(k[Math.floor(Math.random() * k.length)]); this.log("スキル習得"); 
+            } 
+        }); 
+    }
 }
 
 window.gameLogic = new Game();
