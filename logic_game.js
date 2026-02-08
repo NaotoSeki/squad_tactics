@@ -1,4 +1,7 @@
-/** LOGIC GAME: Fix Double Reload on Tank & Added Tank Reload Sound */
+/** LOGIC GAME: Randomize Deck Distribution (Full Shuffle) */
+
+// ★追加: 配布可能なカードタイプの定義
+const AVAILABLE_CARDS = ['rifleman', 'tank_pz4', 'aerial', 'scout', 'tank_tiger', 'gunner', 'sniper'];
 
 function createCardIcon(type) {
     const c = document.createElement('canvas'); c.width = 1; c.height = 1; return c.toDataURL();
@@ -240,7 +243,19 @@ class Game {
         
         if (typeof Renderer !== 'undefined') { Renderer.centerMap(); }
         
-        setTimeout(() => { if (typeof Renderer !== 'undefined' && Renderer.dealCards) { Renderer.dealCards(['rifleman', 'tank_pz4', 'aerial', 'scout', 'tank_tiger']); } }, 500);
+        // ★修正: デッキを完全シャッフルして5枚配布
+        setTimeout(() => { 
+            if (typeof Renderer !== 'undefined' && Renderer.dealCards) { 
+                const deck = [];
+                // 5枚になるまでランダムに抽出 (重複ありならこのまま、なしなら一度リストを作ってsplice)
+                // ゲーム性的に重複あり（同じユニットが複数出る）が面白いので重複ありで実装
+                for(let i=0; i<5; i++) {
+                    const randType = AVAILABLE_CARDS[Math.floor(Math.random() * AVAILABLE_CARDS.length)];
+                    deck.push(randType);
+                }
+                Renderer.dealCards(deck); 
+            } 
+        }, 500);
     }
 
     getSafeSpawnPos(team) {
@@ -497,7 +512,6 @@ class Game {
             u.ap -= 1; w.current = 1; w.reserve -= 1;
             this.log(`${u.name} 次弾装填完了 (残:${w.reserve})`);
             
-            // ★変更: 戦車用のリロード音
             if (window.Sfx) { Sfx.play('tank_reload'); } 
             
             this.refreshUnitState(u);
@@ -608,7 +622,6 @@ class Game {
         if (w.isBroken) { this.log("武器故障中！修理が必要"); return; }
         if (w.isConsumable && w.current <= 0) { this.log("使用済みです"); return; }
         
-        // 歩兵のリロードロジック
         if (!a.def.isTank && w.current <= 0) {
             const magIndex = a.bag.findIndex(i => i && i.type === 'ammo' && i.ammoFor === w.code);
             if (magIndex !== -1) {
@@ -636,8 +649,7 @@ class Game {
             }
         }
         
-        // 戦車のリロードロジック (攻撃前)
-        let reloadedBeforeAttack = false; // ★追加: 攻撃前にリロードしたかどうかのフラグ
+        let reloadedBeforeAttack = false; 
         if (a.def.isTank && w.current <= 0 && this.tankAutoReload) {
             if (w.reserve > 0) {
                 const reloadCost = 1; 
@@ -646,9 +658,9 @@ class Game {
                     w.reserve--; 
                     w.current = 1;
                     this.log(`${a.name} 自動装填完了`);
-                    if (window.Sfx) { Sfx.play('tank_reload'); } // ★変更: 戦車用
+                    if (window.Sfx) { Sfx.play('tank_reload'); } 
                     this.refreshUnitState(a);
-                    reloadedBeforeAttack = true; // ★フラグON
+                    reloadedBeforeAttack = true; 
                     
                     if(a.ap < w.ap) {
                         this.log("AP不足により攻撃中止");
@@ -737,7 +749,6 @@ class Game {
             }
             this.state = 'PLAY'; 
             
-            // ★変更: 攻撃前にリロードしていたら、攻撃後リロードをスキップする条件を追加 (!reloadedBeforeAttack)
             if(!reloadedBeforeAttack && a.def.isTank && w.current === 0 && w.reserve > 0 && this.tankAutoReload && a.ap >= 1) { this.reloadWeapon(); }
             
             this.refreshUnitState(a); 
@@ -747,138 +758,6 @@ class Game {
         }, 800);
     }
 
-    calcAttackLine(u, targetQ, targetR) {
-        this.attackLine = []; this.aimTargetUnit = null; 
-        if (!u || u.ap < 2) { return; } 
-        const w = u.hands; if (!w) { return; }
-        const range = w.rng; const dist = this.hexDist(u, { q: targetQ, r: targetR }); 
-        if (dist === 0) { return; }
-        const drawLen = Math.min(dist, range); const start = this.axialToCube(u.q, u.r); const end = this.axialToCube(targetQ, targetR);
-        for (let i = 1; i <= drawLen; i++) {
-            const t = i / dist; 
-            const lerpCube = { x: start.x + (end.x - start.x) * t, y: start.y + (end.y - start.y) * t, z: start.z + (end.z - start.z) * t };
-            const roundCube = this.cubeRound(lerpCube); const hex = this.cubeToAxial(roundCube);
-            if (this.isValidHex(hex.q, hex.r)) { this.attackLine.push({ q: hex.q, r: hex.r }); } else { break; }
-        }
-        if (this.attackLine.length > 0) { 
-            const last = this.attackLine[this.attackLine.length - 1]; 
-            if (last.q === targetQ && last.r === targetR) { 
-                const target = this.getUnitInHex(last.q, last.r); 
-                if (target && target.team !== u.team) { this.aimTargetUnit = target; } 
-            } 
-        }
-    }
-
-    generateMap() {
-        this.map = []; 
-        for (let q = 0; q < MAP_W; q++) { 
-            this.map[q] = []; 
-            for (let r = 0; r < MAP_H; r++) { 
-                this.map[q][r] = TERRAIN.VOID; 
-            } 
-        }
-        const cx = Math.floor(MAP_W / 2), cy = Math.floor(MAP_H / 2); 
-        let walkers = [{ q: cx, r: cy }];
-        const paintBrush = (cq, cr) => { 
-            [{ q: cq, r: cr }, ...this.getNeighbors(cq, cr)].forEach(h => { 
-                if (this.isValidHex(h.q, h.r)) { this.map[h.q][h.r] = TERRAIN.GRASS; } 
-            }); 
-        };
-        for (let i = 0; i < 140; i++) {
-            const wIdx = Math.floor(Math.random() * walkers.length); const w = walkers[wIdx]; paintBrush(w.q, w.r);
-            const dir = [[1, 0], [1, -1], [0, -1], [-1, 0], [-1, 1], [0, 1]][Math.floor(Math.random() * 6)];
-            const next = { q: w.q + dir[0], r: w.r + dir[1] };
-            if (Math.random() < 0.05 && walkers.length < 5) { walkers.push(next); } else { walkers[wIdx] = next; }
-        }
-        for (let i = 0; i < 3; i++) { 
-            for (let q = 1; q < MAP_W - 1; q++) { 
-                for (let r = 1; r < MAP_H - 1; r++) { 
-                    if (this.map[q][r].id === -1) { 
-                        const ln = this.getNeighbors(q, r).filter(n => this.map[n.q][n.r].id !== -1).length; 
-                        if (ln >= 4) { this.map[q][r] = TERRAIN.GRASS; } 
-                    } 
-                } 
-            } 
-        }
-        for (let loop = 0; loop < 2; loop++) { 
-            const wC = []; 
-            for (let q = 0; q < MAP_W; q++) { 
-                for (let r = 0; r < MAP_H; r++) { 
-                    if (this.map[q][r].id === -1) { 
-                        const hn = this.getNeighbors(q, r).some(n => this.map[n.q][n.r].id !== -1); 
-                        if (hn) { wC.push({ q, r }); } 
-                    } 
-                } 
-            } 
-            wC.forEach(w => { this.map[w.q][w.r] = TERRAIN.WATER; }); 
-        }
-        for (let q = 0; q < MAP_W; q++) { 
-            for (let r = 0; r < MAP_H; r++) { 
-                const tId = this.map[q][r].id; 
-                if (tId !== -1 && tId !== 5) { 
-                    const n = Math.sin(q * 0.4) + Math.cos(r * 0.4) + Math.random() * 0.4; 
-                    let t = TERRAIN.GRASS; 
-                    if (n > 1.1) { t = TERRAIN.FOREST; } 
-                    else if (n < -0.9) { t = TERRAIN.DIRT; } 
-                    if (t !== TERRAIN.WATER && Math.random() < 0.05) { t = TERRAIN.TOWN; } 
-                    this.map[q][r] = t; 
-                } 
-            } 
-        }
-    }
-
-    spawnEnemies() {
-        const c = 4 + Math.floor(this.sector * 0.7);
-        for (let i = 0; i < c; i++) {
-            let k = 'rifleman'; const r = Math.random(); 
-            if (r < 0.1 + this.sector * 0.1) { k = 'tank_pz4'; } 
-            else if (r < 0.4) { k = 'gunner'; } 
-            else if (r < 0.6) { k = 'sniper'; }
-            const e = this.createSoldier(k, 'enemy', 0, 0); 
-            if (e) { const p = this.getSafeSpawnPos('enemy'); e.q = p.q; e.r = p.r; this.units.push(e); }
-        }
-    }
-    toggleAuto() { this.isAuto = !this.isAuto; document.getElementById('auto-toggle').classList.toggle('active'); this.log(`AUTO: ${this.isAuto ? "ON" : "OFF"}`); }
-    runAuto() { }
-    async actionMove(u, p) {
-        this.state = 'ANIM'; this.path = []; this.reachableHexes = []; this.attackLine = []; this.aimTargetUnit = null;
-        for (let s of p) { 
-            u.ap -= this.map[s.q][s.r].cost; u.q = s.q; u.r = s.r; 
-            if (window.Sfx) { Sfx.play('move'); } 
-            await new Promise(r => setTimeout(r, 180)); 
-        }
-        this.checkReactionFire(u); this.state = 'PLAY'; this.refreshUnitState(u); this.checkPhaseEnd();
-    }
-    checkReactionFire(u) {
-        this.units.filter(e => e.team !== u.team && e.hp > 0 && e.def.isTank && this.hexDist(u, e) <= 1).forEach(t => {
-            this.log(`!! 防御射撃: ${t.name}->${u.name}`); u.hp -= 15; 
-            if (window.VFX) { VFX.addExplosion(Renderer.hexToPx(u.q, u.r).x, Renderer.hexToPx(u.q, u.r).y, "#fa0", 5); }
-            if (window.Sfx) { Sfx.play('mg'); } 
-            if (u.hp <= 0 && !u.deadProcessed) { u.deadProcessed = true; this.log(`${u.name} 撃破`); if (window.Sfx) { Sfx.play('death'); } }
-        });
-    }
-    swapWeapon() { }
-    checkPhaseEnd() { if (this.units.filter(u => u.team === 'player' && u.hp > 0 && u.ap > 0).length === 0 && this.state === 'PLAY') { this.endTurn(); } }
-    endTurn() {
-        if (this.isProcessingTurn) { return; } 
-        this.isProcessingTurn = true;
-        this.setMode('SELECT'); this.selectedUnit = null; this.reachableHexes = []; this.attackLine = []; this.aimTargetUnit = null; this.path = []; this.hideActionMenu();
-        this.state = 'ANIM'; const eyecatch = document.getElementById('eyecatch'); if (eyecatch) { eyecatch.style.opacity = 1; }
-        this.units.filter(u => u.team === 'player' && u.hp > 0 && u.skills.includes("Mechanic")).forEach(u => { 
-            const c = u.skills.filter(s => s === "Mechanic").length; 
-            if (u.hp < u.maxHp) { u.hp = Math.min(u.maxHp, u.hp + c * 20); this.log(`${u.name} 修理`); } 
-        });
-        setTimeout(async () => {
-            if (eyecatch) { eyecatch.style.opacity = 0; }
-            await this.ai.executeTurn(this.units);
-            this.units.forEach(u => { if (u.team === 'player') { u.ap = u.maxAp; } }); 
-            this.log("-- PLAYER PHASE --"); 
-            this.state = 'PLAY'; 
-            this.isProcessingTurn = false;
-        }, 1200);
-    }
-    
-    // ★修正: 弾薬補充ロジックを強化 (MG42等の多弾数武器が1発にならないように)
     resupplySurvivors() { 
         this.units.filter(u => u.team === 'player' && u.hp > 0).forEach(u => { 
             // 1. HP Recovery (75% - 100%)
@@ -894,24 +773,17 @@ class Game {
                     if (u.hands.current <= 0) u.hands.current = 1; 
                 } else {
                     // Infantry: Refill Loaded Ammo
-                    // ★修正: capプロパティが存在し、かつ1より大きい場合のみ計算
                     if (u.hands.cap && u.hands.cap > 1) {
-                        // 最低でも50%は確保
                         const minSupply = Math.floor(u.hands.cap * 0.5);
-                        // ランダムで50-100%の値を目標値とする
                         const curTarget = Math.floor(u.hands.cap * (0.5 + Math.random() * 0.5));
                         
-                        // 現在値が目標より少なければ補充
-                        // かつ、現在値が極端に少ない(minSupply未満)なら、最低保証値まで引き上げる
                         if (u.hands.current < curTarget) { 
                             u.hands.current = Math.max(u.hands.current, curTarget);
                         }
-                        // ※念のため：もし何かの拍子に0や1になっていたら、強制的にminSupplyにする
                         if (u.hands.current < minSupply) {
                              u.hands.current = minSupply;
                         }
                     } else if (u.hands.cap === 1) {
-                        // ロケットランチャーなどの単発武器
                         u.hands.current = 1;
                     }
                 }
@@ -928,12 +800,10 @@ class Game {
             for (let i = 0; i < bagSize && filled < fillCount; i++) {
                 if (!u.bag[i]) {
                     if (u.hands && u.hands.code && !u.def.isTank) {
-                         // MG42などの場合、予備弾倉として補充
                          u.bag[i] = { type: 'ammo', name: (u.hands.magName || 'Clip'), ammoFor: u.hands.code, cap: u.hands.cap, jam: u.hands.jam, code: 'mag' };
                          filled++;
                     }
                 } else {
-                    // 既存弾倉の補充
                     const item = u.bag[i];
                     if (item && item.isConsumable && item.current < (item.cap || 1)) {
                          item.current = Math.floor((item.cap || 1) * (0.5 + Math.random() * 0.5));
@@ -962,10 +832,8 @@ class Game {
             this.promoteSurvivors(); 
             const b = document.getElementById('reward-cards'); b.innerHTML = ''; 
             
-            // ★変更: 'heal' -> 'supply'
             [{ k: 'rifleman', t: '新兵' }, { k: 'tank_pz4', t: '戦車' }, { k: 'supply', t: '補給物資' }].forEach(o => { 
                 const d = document.createElement('div'); d.className = 'card'; 
-                // アイコンは既存の'heal'用を流用
                 const iconType = o.k === 'supply' ? 'heal' : 'infantry'; 
                 d.innerHTML = `<div class="card-img-box"><img src="${createCardIcon(iconType)}"></div><div class="card-body"><h3>${o.t}</h3><p>${o.k === 'supply' ? 'HP/弾薬/装備' : '増援'}</p></div>`; 
                 d.onclick = () => { 
