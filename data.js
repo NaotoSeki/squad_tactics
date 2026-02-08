@@ -1,6 +1,6 @@
-/** DATA: Global Constants, Unit Templates, Weapons, and Attributes */
+/** DATA: US Army Loadout, Terrain, & Phase 1/2 Definitions */
 
-// ★★★ 復活させた基本定数 ★★★
+// 基本定数 (これがないと描画エラーになる)
 const HEX_SIZE = 54;
 const MAP_W = 24;
 const MAP_H = 14;
@@ -22,16 +22,26 @@ const SKILLS = {
     "Hero": { name: "英雄", desc: "全ステータス+1 / 士気高揚" }
 };
 
-// 武器・アイテム定義
-// weight: lbs (ポンド)
+// 武器・アイテム定義 (米軍仕様に復旧 + 重量追加)
+// weight: lbs (ポンド) ※不明なものは仮設定
 const WPNS = {
-    // --- 既存武器 ---
+    // --- 米軍小火器 ---
     'unarmed': { name: "素手", type: "melee", rng: 1, dmg: 5, ap: 2, acc: 80, weight: 0, attr: ATTR.WEAPON },
-    'rifle':   { name: "Kar98k", type: "bullet", rng: 5, dmg: 40, ap: 3, acc: 90, cap: 5, rld: 2, mag: 3, weight: 9, attr: ATTR.WEAPON },
-    'smg':     { name: "MP40", type: "bullet", rng: 3, dmg: 25, ap: 3, acc: 70, cap: 32, rld: 2, burst: 3, mag: 3, weight: 9, attr: ATTR.WEAPON },
-    'mg':      { name: "MG42", type: "bullet", rng: 5, dmg: 35, ap: 4, acc: 60, cap: 50, rld: 3, burst: 5, jam: 0.05, mag: 2, weight: 25, attr: ATTR.WEAPON },
-    'sniper':  { name: "Kar98k Scope", type: "bullet", rng: 7, dmg: 90, ap: 4, acc: 95, cap: 5, rld: 2, mag: 2, weight: 11, attr: ATTR.WEAPON },
-    'tank_gun':{ name: "75mm KwK 40", type: "shell", rng: 8, dmg: 120, ap: 2, acc: 85, cap: 1, rld: 1, area: 1, weight: 0, attr: ATTR.WEAPON },
+    
+    // Rifle -> M1 Garand
+    'rifle':   { name: "M1 Garand", type: "bullet", rng: 5, dmg: 45, ap: 3, acc: 90, cap: 8, rld: 2, mag: 4, weight: 9.5, attr: ATTR.WEAPON },
+    
+    // SMG -> Thompson M1A1
+    'smg':     { name: "Thompson", type: "bullet", rng: 3, dmg: 30, ap: 3, acc: 75, cap: 30, rld: 2, burst: 3, mag: 3, weight: 10, attr: ATTR.WEAPON },
+    
+    // MG -> BAR (Browning Automatic Rifle)
+    'mg':      { name: "M1918 BAR", type: "bullet", rng: 5, dmg: 40, ap: 4, acc: 65, cap: 20, rld: 3, burst: 4, jam: 0.05, mag: 4, weight: 19, attr: ATTR.WEAPON },
+    
+    // Sniper -> M1903 Springfield
+    'sniper':  { name: "M1903 Scope", type: "bullet", rng: 7, dmg: 95, ap: 4, acc: 98, cap: 5, rld: 2, mag: 2, weight: 9, attr: ATTR.WEAPON },
+
+    // Tank Guns (敵味方共用または敵用)
+    'tank_gun':{ name: "75mm M3", type: "shell", rng: 8, dmg: 120, ap: 2, acc: 85, cap: 1, rld: 1, area: 1, weight: 0, attr: ATTR.WEAPON },
     'tiger_gun':{ name: "88mm KwK 36", type: "shell_fast", rng: 9, dmg: 180, ap: 2, acc: 90, cap: 1, rld: 1, area: 1, weight: 0, attr: ATTR.WEAPON },
 
     // --- ◆フェーズ2: 迫撃砲パーツ & 弾薬 ---
@@ -39,25 +49,26 @@ const WPNS = {
     'mortar_bipod':  { name: "M2 二脚", type: "part", partType: "bipod", weight: 16, attr: ATTR.WEAPON },
     'mortar_plate':  { name: "M2 底板", type: "part", partType: "plate", weight: 13, attr: ATTR.WEAPON },
     
-    // 合体後の仮想武器データ
-    'm2_mortar': { name: "M2 60mm迫撃砲", type: "shell", rng: 10, minRng: 2, dmg: 150, ap: 4, acc: 70, cap: 1, rld: 2, area: 2, indirect: true, weight: 42, attr: ATTR.WEAPON },
+    // 合体後の仮想武器 (M2 60mm Mortar)
+    'm2_mortar': { name: "M2 60mm迫撃砲", type: "shell", rng: 8, minRng: 2, dmg: 140, ap: 4, acc: 70, cap: 1, rld: 0, area: 2, indirect: true, weight: 42, attr: ATTR.WEAPON },
 
     // 迫撃砲弾 (1枠で複数持てる)
     'mortar_shell_box': { name: "60mm榴弾箱", type: "ammo", ammoFor: "m2_mortar", cap: 10, current: 10, weight: 12, attr: ATTR.WEAPON, isConsumable: false },
 
     // --- その他 ---
-    'grenade': { name: "M24型手榴弾", type: "shell", rng: 3, dmg: 80, ap: 3, acc: 60, area: 1, isConsumable: true, weight: 1, attr: ATTR.WEAPON },
-    'faust':   { name: "Panzerfaust", type: "rocket", rng: 2, dmg: 200, ap: 4, acc: 80, isConsumable: true, weight: 14, attr: ATTR.WEAPON }
+    'grenade': { name: "Mk2 手榴弾", type: "shell", rng: 3, dmg: 80, ap: 3, acc: 60, area: 1, isConsumable: true, weight: 1, attr: ATTR.WEAPON },
+    'faust':   { name: "M1 Bazooka", type: "rocket", rng: 4, dmg: 180, ap: 4, acc: 75, isConsumable: true, weight: 13, attr: ATTR.WEAPON }
 };
 
 // 弾倉バリエーション
 const MAG_VARIANTS = {
-    'rifle': [{ name: 'Stripper Clip', cap: 5, jam: 0.01 }],
-    'smg': [{ name: 'Box Mag', cap: 32, jam: 0.05 }],
-    'mg': [{ name: 'Belt', cap: 50, jam: 0.05 }, { name: 'Drum', cap: 50, jam: 0.1 }],
-    'sniper': [{ name: 'Match Grade', cap: 5, jam: 0.0 }]
+    'rifle': [{ name: 'En Bloc Clip', cap: 8, jam: 0.01 }], // M1 Garand用
+    'smg': [{ name: 'Box Mag', cap: 30, jam: 0.05 }],
+    'mg': [{ name: 'BAR Mag', cap: 20, jam: 0.05 }],
+    'sniper': [{ name: 'Stripper Clip', cap: 5, jam: 0.0 }]
 };
 
+// 地形定義（マップ生成アルゴリズムに影響するため慎重に定義）
 const TERRAIN = {
     VOID: { id: -1, name: "VOID", cost: 99, cover: 0 },
     GRASS: { id: 0, name: "平地", cost: 1, cover: 0 },
@@ -74,7 +85,7 @@ const UNIT_TEMPLATES = {
     'gunner':   { name: "機関銃手", role: "infantry", hp: 120, ap: 3, main: 'mg', sub: null, opt: null, stats: { str: 2 }, weight: 0, attr: ATTR.MILITARY },
     'sniper':   { name: "狙撃兵", role: "infantry", hp: 70, ap: 4, main: 'sniper', sub: null, opt: null, stats: { aim: 3 }, weight: 0, attr: ATTR.MILITARY },
     
-    // ◆フェーズ2: デバッグ用 迫撃砲兵
+    // ◆フェーズ2: デバッグ用 迫撃砲兵 (M2 Mortar Team)
     'mortar_gunner': { 
         name: "迫撃砲兵", 
         role: "infantry", 
@@ -98,5 +109,5 @@ const UNIT_TEMPLATES = {
 };
 
 const RANKS = ["Pvt", "Cpl", "Sgt", "Lt", "Cpt", "Maj"];
-const FIRST_NAMES = ["Hans", "Fritz", "Karl", "Otto", "Heinz", "Paul", "Walter"];
-const LAST_NAMES = ["Muller", "Schmidt", "Schneider", "Fischer", "Weber", "Meyer"];
+const FIRST_NAMES = ["John", "James", "Robert", "Michael", "William", "David", "Richard"];
+const LAST_NAMES = ["Smith", "Johnson", "Williams", "Brown", "Jones", "Garcia", "Miller"];
