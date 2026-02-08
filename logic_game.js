@@ -1,4 +1,4 @@
-/** LOGIC GAME: Fixed Win Condition Bug & Improved Card UI */
+/** LOGIC GAME: Centralized Damage Handling & Reliable Win Check */
 
 const AVAILABLE_CARDS = ['rifleman', 'tank_pz4', 'aerial', 'scout', 'tank_tiger', 'gunner', 'sniper'];
 
@@ -71,6 +71,32 @@ class Game {
         } else { this.aimTargetUnit = null; }
     }
     // ---------------------------------------
+
+    // ★新設: ダメージ処理の集約メソッド
+    // これを通すことで、いかなるダメージ発生時も確実に死亡判定と勝利判定を行う
+    applyDamage(target, damage, sourceName = "攻撃") {
+        if (!target || target.hp <= 0) return;
+
+        target.hp -= damage;
+        
+        if (target.hp <= 0 && !target.deadProcessed) {
+            target.deadProcessed = true;
+            this.log(`>> ${target.name} を撃破！`);
+            
+            if (window.Sfx) { Sfx.play('death'); }
+            if (window.VFX) { 
+                const p = Renderer.hexToPx(target.q, target.r); 
+                VFX.addUnitDebris(p.x, p.y); 
+            }
+
+            // 死亡が発生した瞬間、即座に勝敗をチェック
+            if (target.team === 'enemy') {
+                this.checkWin();
+            } else {
+                this.checkLose();
+            }
+        }
+    }
 
     initSetup() {
         this.setupSlots = [];
@@ -329,16 +355,9 @@ class Game {
                 
                 const units = this.getUnitsInHex(hex.q, hex.r);
                 units.forEach(u => {
-                    u.hp -= 350;
+                    // ★修正: applyDamageを使用
                     this.log(`>> 爆撃命中: ${u.name} に 350 ダメージ`);
-                    
-                     if (u.hp <= 0 && !u.deadProcessed) { 
-                        u.deadProcessed = true; 
-                        this.log(`>> ${u.name} を撃破！`); 
-                        if (window.Sfx) { Sfx.play('death'); } 
-                        if (window.VFX) { const p = Renderer.hexToPx(u.q, u.r); VFX.addUnitDebris(p.x, p.y); }
-                        if (u.team === 'enemy') { this.checkWin(); } else { this.checkLose(); }
-                    }
+                    this.applyDamage(u, 350, "爆撃");
                 });
                 this.updateSidebar();
                 if (window.VFX) { VFX.addSmoke(pos.x, pos.y); }
@@ -623,18 +642,17 @@ class Game {
         let strVal = (a.stats && a.stats.str) ? a.stats.str : 0;
         let totalDmg = 10 + (strVal * 3) + bonusDmg;
         
-        if (d.skills.includes('CQC')) { this.log(`>> ${d.name} カウンター！`); a.hp -= 15; }
-        d.hp -= totalDmg;
+        if (d.skills.includes('CQC')) { 
+            this.log(`>> ${d.name} カウンター！`); 
+            // ★修正: applyDamageを使用
+            this.applyDamage(a, 15, "カウンター"); 
+        }
+        
         if (window.Sfx) { Sfx.play('hit'); }
         
-        if (d.hp <= 0 && !d.deadProcessed) { 
-            d.deadProcessed = true; 
-            this.log(`>> ${d.name} を撃破！`); 
-            if (window.Sfx) { Sfx.play('death'); } 
-            if (window.VFX) { const p = Renderer.hexToPx(d.q, d.r); VFX.addUnitDebris(p.x, p.y); }
-            // ★修正: ここでもチェック
-            if (this.checkWin()) { return; }
-        }
+        // ★修正: applyDamageを使用
+        this.applyDamage(d, totalDmg, "白兵");
+
         this.refreshUnitState(a); this.checkPhaseEnd();
     }
 
@@ -746,10 +764,13 @@ class Game {
                     let dmg = Math.floor(w.dmg * dmgMod * (0.8 + Math.random() * 0.4));
                     if (d.def.isTank && w.type === 'bullet') { dmg = 0; }
                     if (dmg > 0) {
-                        d.hp -= dmg;
+                        // ★修正: applyDamageを使用
+                        // Shell系のエフェクトはここで呼ぶ
                         if (typeof Renderer !== 'undefined' && Renderer.playExplosion && w.type.includes('shell')) { Renderer.playExplosion(tx, ty); }
                         else if (window.VFX) { VFX.addExplosion(tx, ty, "#f55", 5); }
                         if (window.Sfx) { Sfx.play('ricochet'); }
+                        
+                        this.applyDamage(d, dmg, w.name);
                     } else {
                         if (window.VFX) { VFX.add({ x: tx, y: ty, vx: 0, vy: -5, life: 10, maxLife: 10, color: "#fff", size: 2, type: 'spark' }); }
                         if (i === 0) { this.log(">> 装甲により無効化！"); }
@@ -764,13 +785,9 @@ class Game {
         if (w.isConsumable && w.current <= 0) { a.hands = null; this.log(`${w.name} を消費しました`); }
         
         setTimeout(() => {
-            if (d.hp <= 0 && !d.deadProcessed) { 
-                d.deadProcessed = true; 
-                this.log(`>> ${d.name} を撃破！`); 
-                if (window.Sfx) { Sfx.play('death'); } 
-                if (window.VFX) { const p = Renderer.hexToPx(d.q, d.r); VFX.addUnitDebris(p.x, p.y); }
-                if(this.checkWin()) { return; }
-            }
+            // ★修正: ここではapplyDamageが既に処理しているので、死体処理などは不要。
+            // 追加攻撃などのチェックのみ行う
+            
             this.state = 'PLAY'; 
             
             if(!reloadedBeforeAttack && a.def.isTank && w.current === 0 && w.reserve > 0 && this.tankAutoReload && a.ap >= 1) { this.reloadWeapon(); }
@@ -784,11 +801,9 @@ class Game {
 
     resupplySurvivors() { 
         this.units.filter(u => u.team === 'player' && u.hp > 0).forEach(u => { 
-            // 1. HP Recovery
             const hpTarget = Math.floor(u.maxHp * (0.75 + Math.random() * 0.25)); 
             if (u.hp < hpTarget) { u.hp = hpTarget; } 
 
-            // 2. Ammo Replenishment
             if (u.hands) {
                 if (u.def.isTank) {
                     const resTarget = Math.floor(12 * (0.5 + Math.random() * 0.5));
@@ -806,7 +821,6 @@ class Game {
                 }
             }
             
-            // 3. Sub-equipment / Bag
             const bagSize = 4;
             let emptyCount = 0;
             for(let i=0; i<bagSize; i++) { if(!u.bag[i]) emptyCount++; }
@@ -850,7 +864,6 @@ class Game {
             [{ k: 'rifleman', t: '新兵' }, { k: 'tank_pz4', t: '戦車' }, { k: 'supply', t: '補給物資' }].forEach(o => { 
                 const d = document.createElement('div'); d.className = 'card'; 
                 const iconType = o.k === 'supply' ? 'heal' : 'infantry'; 
-                // ★UI修正: 名前を上部に配置
                 d.innerHTML = `<div style="background:#222; width:100%; text-align:center; padding:2px 0; border-bottom:1px solid #444; margin-bottom:5px;"><h3 style="color:#da4; font-size:14px; margin:0;">${o.t}</h3></div><div class="card-img-box"><img src="${createCardIcon(iconType)}"></div><div class="card-body"><p>${o.k === 'supply' ? 'HP/弾薬/装備' : '増援'}</p></div>`; 
                 d.onclick = () => { 
                     if (o.k === 'supply') { this.resupplySurvivors(); } 
@@ -903,16 +916,12 @@ class Game {
 
     checkReactionFire(u) {
         this.units.filter(e => e.team !== u.team && e.hp > 0 && e.def.isTank && this.hexDist(u, e) <= 1).forEach(t => {
-            this.log(`!! 防御射撃: ${t.name}->${u.name}`); u.hp -= 15; 
+            this.log(`!! 防御射撃: ${t.name}->${u.name}`); 
+            // ★修正: applyDamageを使用
+            this.applyDamage(u, 15, "防御射撃");
+            
             if (window.VFX) { VFX.addExplosion(Renderer.hexToPx(u.q, u.r).x, Renderer.hexToPx(u.q, u.r).y, "#fa0", 5); }
             if (window.Sfx) { Sfx.play('mg'); } 
-            if (u.hp <= 0 && !u.deadProcessed) { 
-                u.deadProcessed = true; 
-                this.log(`${u.name} 撃破`); 
-                if (window.Sfx) { Sfx.play('death'); } 
-                // ★修正: 反撃で死亡時も勝利/敗北判定を行う
-                if(u.team === 'enemy') { this.checkWin(); } else { this.checkLose(); }
-            }
         });
     }
     swapWeapon() { }
@@ -930,10 +939,7 @@ class Game {
             if (eyecatch) { eyecatch.style.opacity = 0; }
             await this.ai.executeTurn(this.units);
             this.units.forEach(u => { if (u.team === 'player') { u.ap = u.maxAp; } }); 
-            
-            // ★修正: ターン終了時にも一応勝利判定を走らせる（事故防止）
             this.checkWin();
-            
             this.log("-- PLAYER PHASE --"); 
             this.state = 'PLAY'; 
             this.isProcessingTurn = false;
