@@ -1,4 +1,4 @@
-/** LOGIC AI: Fast Paced & Smart Weapon Switching */
+/** LOGIC AI: High Speed Actions */
 
 class EnemyAI {
     constructor(game) {
@@ -38,17 +38,16 @@ class EnemyAI {
                 loopCount++;
                 
                 if (actor.hp <= 0 || target.hp <= 0) break;
-                if (hasAttacked) break; // 1ターン1攻撃制限
+                if (hasAttacked) break; 
 
                 const dist = this.game.hexDist(actor, target);
 
-                // 1. 射程内なら攻撃
                 if (dist <= w.rng && actor.ap >= w.ap) {
                     if (w.current <= 0 || (actor.def.isTank && w.reserve > 0 && w.current === 0)) {
                         const cost = (actor.def.isTank) ? 1 : (w.rld || 1);
                         if (actor.ap >= cost) {
                             await this.game.reloadWeapon(false); 
-                            // リロードは一瞬のタメを入れるが、以前より短く
+                            // ウェイトを200msまで短縮
                             await new Promise(r => setTimeout(r, 200)); 
                             continue; 
                         }
@@ -58,13 +57,12 @@ class EnemyAI {
                         await this.game.actionAttack(actor, target);
                         acted = true;
                         hasAttacked = true;
-                        // ★修正: 攻撃後のウェイトを削除 (アニメーション完了待ちのみ)
+                        
                         if (target.hp <= 0) break; 
                         continue;
                     }
                 }
 
-                // 2. 射程外なら移動
                 if (dist > w.rng && actor.ap >= 1) {
                     const path = this.game.findPath(actor, target.q, target.r);
                     if (path.length > 0) {
@@ -74,13 +72,15 @@ class EnemyAI {
                         if (actor.ap >= cost) {
                             await this.game.actionMove(actor, [next]);
                             acted = true;
-                            // 移動後のウェイトも最小限に
+                            // 移動後のウェイトを100msまで短縮
                             await new Promise(r => setTimeout(r, 100));
                             continue; 
                         }
                     }
                 }
             }
+            // ユニット間のウェイトも短縮
+            await new Promise(r => setTimeout(r, 100));
         }
     }
 
@@ -98,11 +98,9 @@ class EnemyAI {
         }
 
         if (bestSlotIndex !== -1) {
-            // const newWpn = actor.bag[bestSlotIndex];
-            // this.game.log(`${actor.name} 武装切替`); // ログ削減でテンポアップ
             this.game.swapEquipment({type:'main'}, {type:'bag', index: bestSlotIndex});
             if (window.Sfx) window.Sfx.play('swap');
-            await new Promise(r => setTimeout(r, 300)); // 持ち替え時間も短縮
+            await new Promise(r => setTimeout(r, 200)); 
         }
     }
 
