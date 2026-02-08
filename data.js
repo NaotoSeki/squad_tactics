@@ -1,16 +1,14 @@
-/** DATA: US Army Legacy Preserved + Phase 1/2 Additions */
+/** DATA: US Army Loadout & Mortar Definitions */
 
-// ★基本定数 (これを消すと描画されなくなるため維持)
 const HEX_SIZE = 54;
 const MAP_W = 20;
 const MAP_H = 20;
 
-// ◆フェーズ1: 属性定義
 const ATTR = {
-    MILITARY: 'Military forces', // 兵力
-    SUPPORT: 'Fire support',     // 火力支援
-    WEAPON: 'Weaponry',          // 武器類
-    RECOVERY: 'Recovery'         // 回復
+    MILITARY: 'Military forces', 
+    SUPPORT: 'Fire support',     
+    WEAPON: 'Weaponry',          
+    RECOVERY: 'Recovery'         
 };
 
 const TERRAIN = {
@@ -38,49 +36,24 @@ const SKILLS = {
     "CQC":       { name: "白兵", desc: "近接反撃" }
 };
 
-const SKILL_STYLES = {
-    "Precision": { col: "#2a6", icon: "🎯", name: "AIM" },
-    "Radio":     { col: "#36c", icon: "📡", name: "COM" },
-    "Ambush":    { col: "#556", icon: "👻", name: "HIDE" },
-    "AmmoBox":   { col: "#b82", icon: "📦", name: "AMMO" },
-    "HighPower": { col: "#c44", icon: "💥", name: "POW" },
-    "Mechanic":  { col: "#883", icon: "🔧", name: "MECH" },
-    "Armor":     { col: "#667", icon: "🛡", name: "ARM" },
-    "Hero":      { col: "#da2", icon: "★", name: "HERO" },
-    "CQC":       { col: "#a34", icon: "🔪", name: "CQC" }
-};
-
-// 武器定義 (米軍仕様を維持 + 重量/属性追加)
 const WPNS = {
-    // Standard US Weapons
     m1: { name:"M1 Garand", rng:7, acc:85, acc_drop:3, dmg:76, cap:8, mag:6, ap:2, rld:1, wgt:4, type:'bullet', burst:2, desc:"米軍主力小銃。", weight: 9.5, attr: ATTR.WEAPON },
-    
     thompson: { name:"M1A1 SMG", rng:5, acc:60, acc_drop:4, dmg:41, cap:30, mag:4, ap:2, rld:1, wgt:5, type:'bullet', burst:2, modes:[2, 5], desc:"近距離制圧用。", weight: 10, attr: ATTR.WEAPON },
-    
-    k98_scope: { name:"M1903 Scope", rng:9, acc:95, acc_drop:3, dmg:72, cap:5, mag:5, ap:2, rld:2, wgt:5, type:'bullet', burst:1, desc:"精密狙撃銃。", weight: 9, attr: ATTR.WEAPON }, // 名前を米軍風に変更
-    
+    k98_scope: { name:"M1903 Scope", rng:9, acc:95, acc_drop:3, dmg:72, cap:5, mag:5, ap:2, rld:2, wgt:5, type:'bullet', burst:1, desc:"精密狙撃銃。", weight: 9, attr: ATTR.WEAPON },
     bar: { name:"M1918 BAR", rng:7, acc:55, acc_drop:3, dmg:45, cap:20, mag:5, ap:2, rld:2, wgt:9, type:'bullet', burst:3, desc:"分隊支援火器。", weight: 19, attr: ATTR.WEAPON }, 
-    
     m1911: { name:"Colt M1911", rng:3, acc:70, acc_drop:10, dmg:30, cap:7, mag:3, ap:2, rld:1, wgt:1, type:'bullet', burst:1, desc:"45口径拳銃。", weight: 2.4, attr: ATTR.WEAPON },
     luger: { name:"Luger P08", rng:3, acc:75, acc_drop:10, dmg:25, cap:8, mag:2, ap:2, rld:1, wgt:1, type:'bullet', burst:1, desc:"将校の拳銃。", weight: 1.9, attr: ATTR.WEAPON },
     knife: { name:"Combat Knife", rng:1, acc:90, dmg:35, cap:0, mag:0, ap:1, rld:0, wgt:0, type:'melee', burst:1, desc:"白兵戦用。", weight: 1, attr: ATTR.WEAPON },
-
     nade: { name:"Mk2 Grenade", rng:4, acc:60, dmg:80, cap:1, mag:2, ap:2, rld:0, wgt:1, type:'shell', area:true, desc:"破片手榴弾。", weight: 1.3, attr: ATTR.WEAPON },
     
-    // Enemy / Heavy Weapons
     mg42: { name:"MG42", rng:8, acc:45, acc_drop:4, dmg:25, cap:50, mag:99, ap:2, rld:3, wgt:12, type:'bullet', burst:10, desc:"機関銃。", weight: 25, attr: ATTR.WEAPON },
     kwk: { name:"75mm KwK", rng:8, acc:70, acc_drop:2, dmg:150, cap:1, mag:99, ap:2, rld:2, wgt:0, type:'shell_fast', burst:1, desc:"戦車砲。", weight: 0, attr: ATTR.WEAPON },
     kwk88: { name:"88mm KwK36", rng:10, acc:85, acc_drop:1, dmg:250, cap:1, mag:99, ap:2, rld:2, wgt:0, type:'shell_fast', burst:1, desc:"重戦車砲。", weight: 0, attr: ATTR.WEAPON },
 
-    // --- ◆フェーズ2: 迫撃砲パーツ & 弾薬 ---
     'mortar_barrel': { name: "M2 Tube", type: "part", partType: "barrel", desc: "M2迫撃砲の砲身。", weight: 12.8, attr: ATTR.WEAPON },
     'mortar_bipod':  { name: "M2 Bipod", type: "part", partType: "bipod", desc: "M2迫撃砲の二脚。", weight: 16.4, attr: ATTR.WEAPON },
     'mortar_plate':  { name: "M2 Baseplate", type: "part", partType: "plate", desc: "M2迫撃砲の底板。", weight: 12.8, attr: ATTR.WEAPON },
-    
-    // 合体後の仮想武器
     'm2_mortar': { name: "M2 60mm Mortar", type: "shell", rng: 12, minRng: 2, dmg: 140, ap: 4, acc: 65, cap: 1, rld: 0, area: true, indirect: true, desc: "曲射弾道。", weight: 42, attr: ATTR.WEAPON },
-
-    // 迫撃砲弾
     'mortar_shell_box': { name: "60mm Ammo Box", type: "ammo", ammoFor: "m2_mortar", cap: 12, current: 12, desc: "迫撃砲弾。", weight: 20, attr: ATTR.WEAPON, isConsumable: false }
 };
 
@@ -90,7 +63,7 @@ const UNIT_TEMPLATES = {
     gunner:   { name:"Gunner", role:"infantry", main:"bar", sub:"m1911", opt:null, stats:{str:8, aim:4, mob:3, mor:5}, weight: null, attr: ATTR.MILITARY },
     sniper:   { name:"Sniper", role:"infantry", main:"k98_scope", sub:"m1911", opt:null, stats:{str:3, aim:9, mob:4, mor:4}, weight: null, attr: ATTR.MILITARY },
     
-    // ◆フェーズ2: デバッグ用 迫撃砲兵 (Mortar Gunner)
+    // 迫撃砲兵 (初期装備: パーツ3点 + 弾薬箱)
     mortar_gunner: { 
         name: "Mortar Gunner", 
         role: "infantry", 
@@ -105,7 +78,6 @@ const UNIT_TEMPLATES = {
 
     tank_pz4: { name:"Panzer IV", role:"tank", main:"kwk", sub:"mg42", opt:null, hp:600, ap:5, isTank:true, weight: null, attr: ATTR.MILITARY },
     tank_tiger: { name:"Tiger I", role:"tank", main:"kwk88", sub:"mg42", opt:null, hp:1200, ap:4, isTank:true, isBoss:true, weight: null, attr: ATTR.MILITARY },
-    
     aerial: { name:"AERIAL SPT", role:"TACTIC", main:null, sub:null, opt:null, hp:"N/A", ap:0, weight: null, attr: ATTR.SUPPORT }
 };
 
