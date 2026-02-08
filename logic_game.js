@@ -1,4 +1,4 @@
-/** LOGIC GAME: Prevents Double Execution of Attacks */
+/** LOGIC GAME: Fix Attack Mode Persistence & Remove Delays */
 
 const AVAILABLE_CARDS = ['rifleman', 'tank_pz4', 'aerial', 'scout', 'tank_tiger', 'gunner', 'sniper'];
 
@@ -19,7 +19,7 @@ class Game {
         this.hoverHex = null;
         this.isAuto = false;
         this.isAutoProcessing = false;
-        this.isExecutingAttack = false; // ★追加: 攻撃実行中ロック
+        this.isExecutingAttack = false;
         this.isProcessingTurn = false;
         this.sector = 1;
         this.enemyAI = 'AGGRESSIVE';
@@ -54,6 +54,7 @@ class Game {
     }
     log(m) { this.ui.log(m); }
 
+    // --- DELEGATED MAP METHODS ---
     generateMap() { if(this.mapSystem) this.mapSystem.generate(); }
     isValidHex(q, r) { return this.mapSystem ? this.mapSystem.isValidHex(q, r) : false; }
     hexDist(a, b) { return this.mapSystem ? this.mapSystem.hexDist(a, b) : 0; }
@@ -72,15 +73,22 @@ class Game {
         } else { this.aimTargetUnit = null; }
     }
 
+    // --- DAMAGE & WIN CHECK ---
     applyDamage(target, damage, sourceName = "攻撃") {
         if (!target || target.hp <= 0) return;
         target.hp -= damage;
+        
         if (target.hp <= 0 && !target.deadProcessed) {
             target.deadProcessed = true;
             this.log(`>> ${target.name} を撃破！`);
             if (window.Sfx) { Sfx.play('death'); }
             if (window.VFX) { const p = Renderer.hexToPx(target.q, target.r); VFX.addUnitDebris(p.x, p.y); }
-            if (target.team === 'enemy') { this.checkWin(); } else { this.checkLose(); }
+            
+            if (target.team === 'enemy') {
+                this.checkWin();
+            } else {
+                this.checkLose();
+            }
         }
     }
 
@@ -479,7 +487,6 @@ class Game {
     }
 
     async actionAttack(a, d) {
-        // ★修正: 実行中なら即座に弾く
         if (this.isExecutingAttack) return;
         if (!a) { return; }
         if (a.team === 'player' && this.state !== 'PLAY' && !this.isAutoProcessing) { return; }
@@ -520,10 +527,8 @@ class Game {
         
         const dist = this.hexDist(a, d); if (dist > w.rng) { this.log("射程外"); return; }
         
-        // ★修正: ロック開始
         this.isExecutingAttack = true;
         a.ap -= w.ap; 
-        
         this.state = 'ANIM';
         
         if (typeof Renderer !== 'undefined' && Renderer.playAttackAnim) { Renderer.playAttackAnim(a, d); }
@@ -582,10 +587,14 @@ class Game {
                 
                 this.refreshUnitState(a); 
                 const cost = w ? w.ap : 0;
-                const canShootAgain = (a.ap >= cost) && (w.current > 0 || (a.def.isTank && w.reserve > 0 && this.tankAutoReload && a.ap >= cost + 1));
+                
+                // ★修正: 弾切れでも予備弾があるならAttackモード維持
+                const hasAmmoInBag = !a.def.isTank && a.bag.some(i => i && i.type === 'ammo' && i.ammoFor === w.code);
+                const canShootAgain = (a.ap >= cost) && (w.current > 0 || (a.def.isTank && w.reserve > 0 && this.tankAutoReload && a.ap >= cost + 1) || hasAmmoInBag);
+                
                 if (canShootAgain) { this.log("射撃可能: 目標選択中..."); } else { this.setMode('SELECT'); this.checkPhaseEnd(); }
                 
-                this.isExecutingAttack = false; // ★修正: ロック解除
+                this.isExecutingAttack = false; 
                 resolve(); 
             }, 800);
         });
@@ -618,16 +627,10 @@ class Game {
         this.ui.log(":: Auto Command ::");
         this.clearSelection();
         this.isAutoProcessing = true; 
-        
         await this.ai.execute(this.units, 'player');
-        
         this.isAutoProcessing = false; 
-        
         if (this.state === 'WIN') return;
-
-        if (this.isAuto && this.state === 'PLAY') {
-             this.endTurn();
-        }
+        if (this.isAuto && this.state === 'PLAY') { this.endTurn(); }
     }
 
     async actionMove(u, p) {
@@ -650,6 +653,7 @@ class Game {
     }
     swapWeapon() { }
     checkPhaseEnd() { if (this.units.filter(u => u.team === 'player' && u.hp > 0 && u.ap > 0).length === 0 && this.state === 'PLAY') { this.endTurn(); } }
+    
     endTurn() {
         if (this.isProcessingTurn) { return; } 
         this.isProcessingTurn = true;
@@ -667,9 +671,7 @@ class Game {
             this.log("-- PLAYER PHASE --"); 
             this.state = 'PLAY'; 
             this.isProcessingTurn = false;
-            if (this.isAuto) {
-                this.runAuto();
-            }
+            if (this.isAuto) { this.runAuto(); }
         }, 1200);
     }
 
