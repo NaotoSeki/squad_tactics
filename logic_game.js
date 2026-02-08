@@ -1,6 +1,5 @@
-/** LOGIC GAME: Phase 2 - 3-Slot Hands & Mortar Logic */
+/** LOGIC GAME: Fix Syntax Error & Phase 2 Logic */
 
-// ★Mortar Gunnerを追加
 const AVAILABLE_CARDS = ['rifleman', 'tank_pz4', 'aerial', 'scout', 'tank_tiger', 'gunner', 'sniper', 'mortar_gunner'];
 
 function createCardIcon(type) {
@@ -76,11 +75,8 @@ class Game {
 
     // --- UNIT CREATION & INVENTORY ---
     
-    // ★重要: 3つのハンドスロットをチェックして「使える武器」を返す
     getVirtualWeapon(u) {
         if (!u || !u.hands) return null;
-        
-        // 配列でない場合（後方互換）はそのまま返す
         if (!Array.isArray(u.hands)) return u.hands;
 
         // Slot 1 (index 0) に通常の武器がある場合
@@ -88,56 +84,40 @@ class Game {
             return u.hands[0];
         }
 
-        // 迫撃砲の組み立て判定 (Barrel, Bipod, Plate)
-        // 簡易的に名前やpartTypeで判定
+        // 迫撃砲判定
         const parts = u.hands.map(i => i ? i.code : null);
         const hasBarrel = parts.includes('mortar_barrel');
         const hasBipod = parts.includes('mortar_bipod');
         const hasPlate = parts.includes('mortar_plate');
 
         if (hasBarrel && hasBipod && hasPlate) {
-            // ★合体！ M2迫撃砲の仮想オブジェクトを生成して返す
-            // 弾薬数はサブスロットの「mortar_shell_box」を参照する必要がある
-            // ここでは武器のスペック定義を返す
             const base = WPNS['m2_mortar'];
-            
-            // 弾薬数を計算 (バッグ内の mortar_shell_box の合計)
             let totalAmmo = 0;
             u.bag.forEach(item => {
                 if (item && item.code === 'mortar_shell_box') {
                     totalAmmo += item.current;
                 }
             });
-
-            // 仮想武器オブジェクト
             return {
                 ...base,
                 code: 'm2_mortar',
-                current: totalAmmo > 0 ? 1 : 0, // 弾があれば装填済み扱い（簡易）
+                current: totalAmmo > 0 ? 1 : 0, 
                 cap: 1,
-                isVirtual: true // UI表示用フラグ
+                isVirtual: true
             };
         }
-
-        return null; // 武器なし
+        return null;
     }
 
-    // 弾薬消費処理 (迫撃砲対応)
     consumeAmmo(u, weaponCode) {
         if (weaponCode === 'm2_mortar') {
-            // バッグから mortar_shell_box を探して減らす
             const ammoBox = u.bag.find(i => i && i.code === 'mortar_shell_box' && i.current > 0);
             if (ammoBox) {
                 ammoBox.current--;
-                if (ammoBox.current <= 0) {
-                    // 空になったら消すか、空箱を残すか。一旦空箱を残す
-                    // ammoBox.name = "空の弾薬箱";
-                }
                 return true;
             }
             return false;
         } else {
-            // 通常武器
             const w = this.getVirtualWeapon(u);
             if (w) w.current--;
             return true;
@@ -167,34 +147,24 @@ class Game {
             if (!key || !WPNS[key]) { return null; }
             let base = WPNS[key]; 
             let item = { ...base, code: key, id: Math.random(), isBroken: false };
-            
-            // 弾薬・耐久設定
             if (base.type === 'bullet' || base.type === 'shell_fast') {
                 item.current = item.cap;
             } else if (base.type === 'shell' || base.area) { 
                 item.current = 1; 
                 item.isConsumable = true; 
             } else if (base.type === 'ammo') {
-                // 弾薬箱など
                 item.current = base.current || base.cap;
             }
-            
             if (t.isTank && !base.type.includes('part') && !base.type.includes('ammo')) { 
                 item.current = 1; item.cap = 1; item.reserve = 12; 
             }
             return item;
         };
         
-        // ★修正: handsを配列(3スロット)にする
         let hands = [null, null, null];
-        
-        // テンプレートで hands が配列指定されている場合 (mortar_gunnerなど)
         if (Array.isArray(t.hands)) {
-            t.hands.forEach((k, i) => {
-                if (i < 3) hands[i] = createItem(k);
-            });
+            t.hands.forEach((k, i) => { if (i < 3) hands[i] = createItem(k); });
         } else if (t.main) {
-            // 従来方式 (main武器をslot 0へ)
             hands[0] = createItem(t.main);
         }
 
@@ -205,7 +175,6 @@ class Game {
             for (let i = 0; i < count; i++) { bag.push(createItem(t.opt)); }
         }
         
-        // 通常武器のマガジン追加ロジック (Slot0が銃の場合のみ)
         if (hands[0] && hands[0].type === 'bullet' && !t.isTank) { 
             for (let i = 0; i < hands[0].mag; i++) { 
                 if (bag.length >= 4) { break; }
@@ -214,7 +183,6 @@ class Game {
         }
         
         if (!isPlayer) { 
-            // 敵は弾数無限扱いだが、構造は合わせる
             if (hands[0] && !hands[0].partType) { hands[0].current = 999; }
             bag = []; 
         }
@@ -223,7 +191,7 @@ class Game {
             id: Math.random(), team: team, q: q, r: r, def: t, name: name, rank: rank, faceSeed: faceSeed, stats: stats, 
             hp: t.hp || 80, maxHp: t.hp || 80, 
             ap: t.ap || 4, maxAp: t.ap || 4, 
-            hands: hands, // ★配列化
+            hands: hands, 
             bag: bag, 
             stance: 'stand', skills: [], sectorsSurvived: 0, deadProcessed: false 
         };
@@ -241,24 +209,20 @@ class Game {
         }
     }
 
-    // アクション関連は getVirtualWeapon を通すように修正
     async actionAttack(a, d) {
         if (this.isExecutingAttack) return;
         if (!a) return;
         if (a.team === 'player' && this.state !== 'PLAY' && !this.isAutoProcessing) return;
         
-        const w = this.getVirtualWeapon(a); // ★修正
+        const w = this.getVirtualWeapon(a);
         if (!w) return;
 
         if (w.isBroken) { this.log("武器故障中！修理が必要"); return; }
         
-        // 迫撃砲の場合、弾薬箱の残弾チェックが必要
         if (w.code === 'm2_mortar') {
-             // getVirtualWeaponで current=1 (撃てる) か 0 (撃てない) を返している
              if (w.current <= 0) { this.log("弾切れ！弾薬箱が空です"); return; }
         } else {
              if (w.isConsumable && w.current <= 0) { this.log("使用済みです"); return; }
-             // リロードチェック (省略)
              if (w.current <= 0) {
                  if ((a.def.isTank && this.tankAutoReload) || (!a.def.isTank)) {
                      this.reloadWeapon(false);
@@ -272,7 +236,6 @@ class Game {
         if (a.ap < w.ap) { this.log("AP不足"); return; }
         
         const dist = this.hexDist(a, d); 
-        // 迫撃砲の最短射程チェック
         if (w.minRng && dist < w.minRng) { this.log("目標が近すぎます！"); return; }
         if (dist > w.rng) { this.log("射程外"); return; }
         
@@ -282,16 +245,11 @@ class Game {
         
         if (typeof Renderer !== 'undefined' && Renderer.playAttackAnim) { Renderer.playAttackAnim(a, d); }
         
-        // 迫撃砲は間接射撃(Indirect)
-        if (w.indirect) {
-             // 山なり弾道などの特殊演出があればここで分岐
-        }
-
         let hitChance = (a.stats?.aim || 0) * 2 + w.acc - (dist * (w.acc_drop||5)) - this.map[d.q][d.r].cover;
         if (d.stance === 'prone') { hitChance -= 20; }
         
         let shots = w.isConsumable ? 1 : Math.min(w.burst || 1, w.current);
-        if (a.def.isTank || w.code === 'm2_mortar') shots = 1; // 迫撃砲も単発
+        if (a.def.isTank || w.code === 'm2_mortar') shots = 1;
 
         this.log(`${a.name} 攻撃開始 (${w.name})`);
         
@@ -299,9 +257,7 @@ class Game {
             for (let i = 0; i < shots; i++) {
                 if (d.hp <= 0) break;
                 
-                // ★消費処理
                 this.consumeAmmo(a, w.code);
-                
                 this.updateSidebar();
                 
                 const sPos = Renderer.hexToPx(a.q, a.r); const ePos = Renderer.hexToPx(d.q, d.r);
@@ -310,9 +266,8 @@ class Game {
                 if (window.Sfx) { Sfx.play(w.code, w.type.includes('shell') ? 'cannon' : 'shot'); }
                 
                 const isShell = w.type.includes('shell');
-                // 迫撃砲は弾道が高い (arcHeight)
                 const arc = w.code === 'm2_mortar' ? 150 : (isShell ? 10 : 0);
-                const flightTime = isShell ? 600 : dist * 30; // 迫撃砲は着弾まで遅い
+                const flightTime = isShell ? 600 : dist * 30; 
                 
                 if (window.VFX) { VFX.addProj({ x: sPos.x, y: sPos.y, sx: sPos.x, sy: sPos.y, ex: tx, ey: ty, type: w.type, speed: isShell ? 0.9 : 0.6, progress: 0, arcHeight: arc, isTracer: true, onHit: () => { } }); }
                 
@@ -329,7 +284,6 @@ class Game {
                             if (i === 0) { this.log(">> 装甲により無効化！"); }
                         }
                     } else { 
-                        // Miss
                         if (window.VFX) { VFX.add({ x: tx, y: ty, vx: 0, vy: 0, life: 10, maxLife: 10, color: "#aaa", size: 2, type: 'smoke' }); } 
                     }
                 }, flightTime);
@@ -340,7 +294,6 @@ class Game {
             setTimeout(() => {
                 this.state = 'PLAY'; 
                 
-                // オートリロード (迫撃砲は自動装填しない、またはAPがあれば次弾準備)
                 if(a.def.isTank && w.current === 0 && w.reserve > 0 && this.tankAutoReload && a.ap >= 1) { 
                     this.reloadWeapon(); 
                 }
@@ -352,12 +305,9 @@ class Game {
         });
     }
 
-    // 他のメソッドは変更なし、または微調整
-    // swapEquipmentは配列対応が必要だが、まずはMortar Gunnerで遊ぶために簡略化
     swapEquipment(src, tgt) {
         const u = this.selectedUnit;
         if (!u || u.team !== 'player') return;
-        // 簡易実装: Main Slot 0 と Bagの交換のみ対応
         if (src.type === 'main' && tgt.type === 'bag') {
             const item1 = u.hands[0];
             const item2 = u.bag[tgt.index];
@@ -367,7 +317,6 @@ class Game {
         this.updateSidebar();
     }
     
-    // 以下、既存メソッド（省略なし）
     initSetup(){this.setupSlots=[];this.ui.renderSetupCards(this.setupSlots,(k,d)=>{const i=this.setupSlots.indexOf(k);if(i>=0){this.setupSlots.splice(i,1);d.classList.remove('selected');d.querySelector('.card-badge').style.display='none';d.style.borderColor="#555";}else{if(this.setupSlots.length<3){this.setupSlots.push(k);d.classList.add('selected');d.querySelector('.card-badge').style.display='flex';d.style.borderColor="#d84";}}const b=document.getElementById('btn-start');b.style.display=(this.setupSlots.length===3)?'inline-block':'none';});}
     handleRightClick(mx,my,hex){if(!hex&&typeof Renderer!=='undefined')hex=Renderer.pxToHex(mx,my);if(this.interactionMode!=='SELECT'){this.setMode('SELECT');if(this.selectedUnit&&this.selectedUnit.team==='player'){this.ui.showActionMenu(this.selectedUnit,mx,my);if(window.Sfx)Sfx.play('click');}return;}if(this.selectedUnit){this.clearSelection();if(window.Sfx)Sfx.play('click');}else{if(hex)this.showContext(mx,my,hex);}}
     toggleFireMode(){const u=this.selectedUnit;if(!u||!u.hands[0]||!u.hands[0].modes)return;const m=u.hands[0].modes;const c=u.hands[0].burst;let n=m.indexOf(c)+1;if(n>=m.length)n=0;u.hands[0].burst=m[n];if(window.Sfx)Sfx.play('click');this.updateSidebar();}
