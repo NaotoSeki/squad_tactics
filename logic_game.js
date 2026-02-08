@@ -1,4 +1,7 @@
-/** LOGIC GAME: Hex Click Selection Disabled (Pixel-Perfect Only) */
+/** LOGIC GAME: Fixed Missing Functions (generateMap restored) & All Previous Updates Included */
+
+// 配布可能なカードタイプの定義
+const AVAILABLE_CARDS = ['rifleman', 'tank_pz4', 'aerial', 'scout', 'tank_tiger', 'gunner', 'sniper'];
 
 function createCardIcon(type) {
     const c = document.createElement('canvas'); c.width = 1; c.height = 1; return c.toDataURL();
@@ -240,7 +243,17 @@ class Game {
         
         if (typeof Renderer !== 'undefined') { Renderer.centerMap(); }
         
-        setTimeout(() => { if (typeof Renderer !== 'undefined' && Renderer.dealCards) { Renderer.dealCards(['rifleman', 'tank_pz4', 'aerial', 'scout', 'tank_tiger']); } }, 500);
+        // カードをランダムに5枚配布
+        setTimeout(() => { 
+            if (typeof Renderer !== 'undefined' && Renderer.dealCards) { 
+                const deck = [];
+                for(let i=0; i<5; i++) {
+                    const randType = AVAILABLE_CARDS[Math.floor(Math.random() * AVAILABLE_CARDS.length)];
+                    deck.push(randType);
+                }
+                Renderer.dealCards(deck); 
+            } 
+        }, 500);
     }
 
     getSafeSpawnPos(team) {
@@ -405,19 +418,13 @@ class Game {
         }
     }
 
-    // ★修正: ユニット逆引きと選択ロジックを削除
     handleClick(p) {
         if (this.state !== 'PLAY') { return; } 
 
-        // ユニットの直接クリックは phaser_unit.js 側で処理され、ここはスキップされる
-        // つまりここに来るのは「マップ（地面）」をクリックした時のみ
-
         if (this.interactionMode === 'SELECT') { 
-            // ユニット選択中に地面をクリック -> 選択解除
             this.clearSelection();
         } 
         else if (this.interactionMode === 'MOVE') { 
-            // 移動先指定は地面（ヘックス）に対して行うので維持
             if (this.selectedUnit && this.isValidHex(p.q, p.r) && this.path.length > 0) { 
                 const last = this.path[this.path.length - 1]; 
                 if (last.q === p.q && last.r === p.r) { 
@@ -429,7 +436,6 @@ class Game {
             } 
         } 
         else if (this.interactionMode === 'ATTACK' || this.interactionMode === 'MELEE') { 
-            // 攻撃対象選択もユニット直接クリックで行うため、地面クリックはキャンセル
             this.setMode('SELECT'); 
         }
     }
@@ -503,7 +509,9 @@ class Game {
             if (w.reserve <= 0) { this.log("予備弾薬なし"); return; }
             u.ap -= 1; w.current = 1; w.reserve -= 1;
             this.log(`${u.name} 次弾装填完了 (残:${w.reserve})`);
-            if (window.Sfx) { Sfx.play('reload'); }
+            
+            if (window.Sfx) { Sfx.play('tank_reload'); } 
+            
             this.refreshUnitState(u);
             if (isManual) { this.hideActionMenu(); }
             return;
@@ -639,6 +647,7 @@ class Game {
             }
         }
         
+        let reloadedBeforeAttack = false; 
         if (a.def.isTank && w.current <= 0 && this.tankAutoReload) {
             if (w.reserve > 0) {
                 const reloadCost = 1; 
@@ -647,8 +656,9 @@ class Game {
                     w.reserve--; 
                     w.current = 1;
                     this.log(`${a.name} 自動装填完了`);
-                    if (window.Sfx) { Sfx.play('reload'); }
+                    if (window.Sfx) { Sfx.play('tank_reload'); } 
                     this.refreshUnitState(a);
+                    reloadedBeforeAttack = true; 
                     
                     if(a.ap < w.ap) {
                         this.log("AP不足により攻撃中止");
@@ -736,7 +746,9 @@ class Game {
                 if(this.checkWin()) { return; }
             }
             this.state = 'PLAY'; 
-            if(a.def.isTank && w.current === 0 && w.reserve > 0 && this.tankAutoReload && a.ap >= 1) { this.reloadWeapon(); }
+            
+            if(!reloadedBeforeAttack && a.def.isTank && w.current === 0 && w.reserve > 0 && this.tankAutoReload && a.ap >= 1) { this.reloadWeapon(); }
+            
             this.refreshUnitState(a); 
             const cost = w ? w.ap : 0;
             const canShootAgain = (a.ap >= cost) && (w.current > 0 || (a.def.isTank && w.reserve > 0 && this.tankAutoReload && a.ap >= cost + 1));
@@ -766,6 +778,7 @@ class Game {
         }
     }
 
+    // ★復元: generateMap 関数
     generateMap() {
         this.map = []; 
         for (let q = 0; q < MAP_W; q++) { 
@@ -874,7 +887,63 @@ class Game {
             this.isProcessingTurn = false;
         }, 1200);
     }
-    healSurvivors() { this.units.filter(u => u.team === 'player' && u.hp > 0).forEach(u => { const t = Math.floor(u.maxHp * 0.8); if (u.hp < t) { u.hp = t; } }); this.log("治療完了"); }
+    
+    resupplySurvivors() { 
+        this.units.filter(u => u.team === 'player' && u.hp > 0).forEach(u => { 
+            // 1. HP Recovery (75% - 100%)
+            const hpTarget = Math.floor(u.maxHp * (0.75 + Math.random() * 0.25)); 
+            if (u.hp < hpTarget) { u.hp = hpTarget; } 
+
+            // 2. Ammo Replenishment
+            if (u.hands) {
+                if (u.def.isTank) {
+                    // Tank: Refill Reserve
+                    const resTarget = Math.floor(12 * (0.5 + Math.random() * 0.5));
+                    if (u.hands.reserve < resTarget) { u.hands.reserve = resTarget; }
+                    if (u.hands.current <= 0) u.hands.current = 1; 
+                } else {
+                    // Infantry: Refill Loaded Ammo
+                    if (u.hands.cap && u.hands.cap > 1) {
+                        const minSupply = Math.floor(u.hands.cap * 0.5);
+                        const curTarget = Math.floor(u.hands.cap * (0.5 + Math.random() * 0.5));
+                        
+                        if (u.hands.current < curTarget) { 
+                            u.hands.current = Math.max(u.hands.current, curTarget);
+                        }
+                        if (u.hands.current < minSupply) {
+                             u.hands.current = minSupply;
+                        }
+                    } else if (u.hands.cap === 1) {
+                        u.hands.current = 1;
+                    }
+                }
+            }
+            
+            // 3. Sub-equipment / Bag (Fill empty slots)
+            const bagSize = 4;
+            let emptyCount = 0;
+            for(let i=0; i<bagSize; i++) { if(!u.bag[i]) emptyCount++; }
+            
+            const fillCount = Math.ceil(emptyCount * (0.5 + Math.random() * 0.5));
+            
+            let filled = 0;
+            for (let i = 0; i < bagSize && filled < fillCount; i++) {
+                if (!u.bag[i]) {
+                    if (u.hands && u.hands.code && !u.def.isTank) {
+                         u.bag[i] = { type: 'ammo', name: (u.hands.magName || 'Clip'), ammoFor: u.hands.code, cap: u.hands.cap, jam: u.hands.jam, code: 'mag' };
+                         filled++;
+                    }
+                } else {
+                    const item = u.bag[i];
+                    if (item && item.isConsumable && item.current < (item.cap || 1)) {
+                         item.current = Math.floor((item.cap || 1) * (0.5 + Math.random() * 0.5));
+                    }
+                }
+            }
+        }); 
+        this.log("補給物資到着: 全ユニット回復・補充完了"); 
+    }
+
     promoteSurvivors() { 
         this.units.filter(u => u.team === 'player' && u.hp > 0).forEach(u => { 
             u.sectorsSurvived++; 
@@ -892,11 +961,13 @@ class Game {
             document.getElementById('reward-screen').style.display = 'flex'; 
             this.promoteSurvivors(); 
             const b = document.getElementById('reward-cards'); b.innerHTML = ''; 
-            [{ k: 'rifleman', t: '新兵' }, { k: 'tank_pz4', t: '戦車' }, { k: 'heal', t: '医療' }].forEach(o => { 
+            
+            [{ k: 'rifleman', t: '新兵' }, { k: 'tank_pz4', t: '戦車' }, { k: 'supply', t: '補給物資' }].forEach(o => { 
                 const d = document.createElement('div'); d.className = 'card'; 
-                d.innerHTML = `<div class="card-img-box"><img src="${createCardIcon(o.k === 'heal' ? 'heal' : 'infantry')}"></div><div class="card-body"><h3>${o.t}</h3><p>補給</p></div>`; 
+                const iconType = o.k === 'supply' ? 'heal' : 'infantry'; 
+                d.innerHTML = `<div class="card-img-box"><img src="${createCardIcon(iconType)}"></div><div class="card-body"><h3>${o.t}</h3><p>${o.k === 'supply' ? 'HP/弾薬/装備' : '増援'}</p></div>`; 
                 d.onclick = () => { 
-                    if (o.k === 'heal') { this.healSurvivors(); } 
+                    if (o.k === 'supply') { this.resupplySurvivors(); } 
                     else { this.spawnAtSafeGround('player', o.k); } 
                     this.sector++; 
                     document.getElementById('reward-screen').style.display = 'none'; 

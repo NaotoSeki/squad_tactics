@@ -5,11 +5,12 @@ const Sfx = {
     // 登録された音声アセット
     assets: {
         'reload': 'asset/audio/001_reload.wav',
-        'mg42':   'asset/audio/002_mg42.wav'
+        'mg42':   'asset/audio/002_mg42.wav',
+        // ★追加: 戦車砲リロード音
+        'tank_reload': 'asset/audio/003_tank_gun_reload.wav'
     },
 
-    // ★追加: 再生間隔の制限 (ms)
-    // ここにIDを定義すると、その時間内は連続再生されず、最初の1回だけ鳴ります
+    // 再生間隔の制限 (ms)
     throttles: {
         'mg42': 2000 // 1回の攻撃アクションが終わるまで次を鳴らさない
     },
@@ -62,11 +63,10 @@ const Sfx = {
     play(id, fallbackType = null) {
         this.init();
 
-        // ★追加: スロットリング（間引き）処理
+        // スロットリング処理
         if (this.throttles[id]) {
             const now = Date.now();
             const last = this.lastPlayTime[id] || 0;
-            // 指定時間が経過していなければ再生をスキップ
             if (now - last < this.throttles[id]) {
                 return; 
             }
