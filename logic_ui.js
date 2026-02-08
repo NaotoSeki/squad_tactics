@@ -1,13 +1,12 @@
-/** LOGIC UI: Drag & Drop Inventory, Synergy Highlights, and Fixed Sidebar */
+/** LOGIC UI: Resize Handle Follow Fix */
 
 class UIManager {
     constructor(game) {
         this.game = game;
         this.menuSafeLock = false;
         this.bindEvents();
-        this.dragSrc = null; // D&D追跡用
+        this.dragSrc = null; 
         
-        // グローバルにD&Dハンドラを公開 (HTML属性から呼ぶため)
         window.onSlotDragStart = (e, type, index) => this.handleDragStart(e, type, index);
         window.onSlotDragOver = (e) => this.handleDragOver(e);
         window.onSlotDrop = (e, type, index) => this.handleDrop(e, type, index);
@@ -31,7 +30,6 @@ class UIManager {
             }
         });
         
-        // CSS注入 (シナジー演出など)
         const style = document.createElement('style');
         style.innerHTML = `
             .slot.synergy-active {
@@ -52,33 +50,35 @@ class UIManager {
     toggleSidebar() {
         const sb = document.getElementById('sidebar');
         sb.classList.toggle('collapsed');
-        // リサイズバーの追従 (CSSで .collapsed 時の位置を制御するのがベストだが、JSで補完)
+        
+        // リサイズバーの追従修正
         const handle = document.querySelector('.resize-handle');
         if(handle) {
+            // サイドバーが閉じた(.collapsed)なら右端(0)へ、開いたなら260pxへ
+            // CSS transitionに合わせるため少し強引にstyle設定
             if(sb.classList.contains('collapsed')) {
-                handle.style.right = '0';
+                handle.style.right = '0px';
+                handle.style.transform = 'none'; // CSS干渉回避
             } else {
                 handle.style.right = '260px'; // sidebar width
+                handle.style.transform = 'none';
             }
         }
     }
 
-    // --- D&D Handlers ---
     handleDragStart(e, type, index) {
         this.dragSrc = { type, index };
         e.dataTransfer.effectAllowed = 'move';
-        // e.target.style.opacity = '0.4'; 
     }
 
     handleDragOver(e) {
-        e.preventDefault(); // ドロップ許可
+        e.preventDefault(); 
         e.dataTransfer.dropEffect = 'move';
     }
 
     handleDrop(e, type, index) {
         e.preventDefault();
         if (this.dragSrc) {
-            // ゲームロジックへ入れ替え依頼
             this.game.swapEquipment(this.dragSrc, { type, index });
             this.dragSrc = null;
         }
@@ -111,7 +111,6 @@ class UIManager {
         const weaponCost = w ? w.ap : 99;
         
         setEnabled(btnAttack, u.ap >= weaponCost);
-        // Repairは簡易的にSlot0を見る
         setEnabled(btnRepair, u.hands && u.hands[0] && u.hands[0].isBroken);
         
         const neighbors = this.game.getUnitsInHex(u.q, u.r);
@@ -157,7 +156,6 @@ class UIManager {
         const virtualWpn = this.game.getVirtualWeapon(u);
         const isMortarActive = virtualWpn && virtualWpn.code === 'm2_mortar';
 
-        // スロット生成 (D&D対応)
         const makeSlot = (item, type, index) => { 
             const dragAttrs = `draggable="true" ondragstart="onSlotDragStart(event, '${type}', ${index})" ondragover="onSlotDragOver(event)" ondrop="onSlotDrop(event, '${type}', ${index})"`;
             
@@ -185,7 +183,6 @@ class UIManager {
             }
 
             let blinkClass = ""; 
-            // 迫撃砲パーツが揃っているときの演出 (緑色の明滅)
             if (isMain && isMortarActive && item.type === 'part') {
                 blinkClass = "synergy-active"; 
             }
