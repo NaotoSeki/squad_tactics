@@ -1,6 +1,5 @@
-/** LOGIC GAME: Fixed Missing Methods (spawnEnemies, toggleAuto, etc.) */
+/** LOGIC GAME: Fixed Win Condition Bug & Improved Card UI */
 
-// 配布可能なカードタイプの定義
 const AVAILABLE_CARDS = ['rifleman', 'tank_pz4', 'aerial', 'scout', 'tank_tiger', 'gunner', 'sniper'];
 
 function createCardIcon(type) {
@@ -10,7 +9,7 @@ function createCardIcon(type) {
 class Game {
     constructor() {
         this.units = [];
-        this.map = []; // MapSystemによって生成・格納される
+        this.map = []; 
         this.setupSlots = [];
         this.state = 'SETUP';
         this.path = [];
@@ -29,7 +28,6 @@ class Game {
         this.tankAutoReload = true; 
 
         this.ui = new UIManager(this);
-        // ★MapSystemが存在しない場合のエラー回避（logic_map.js読み忘れ対策）
         if (typeof MapSystem !== 'undefined') {
             this.mapSystem = new MapSystem(this);
         } else {
@@ -63,7 +61,6 @@ class Game {
     calcAttackLine(u, tq, tr) {
         if (!this.mapSystem) return;
         this.attackLine = this.mapSystem.calcAttackLine(u, tq, tr);
-        // ターゲット判定更新
         if (this.attackLine.length > 0) { 
             const last = this.attackLine[this.attackLine.length - 1]; 
             if (last.q === tq && last.r === tr) { 
@@ -272,7 +269,6 @@ class Game {
         
         if (typeof Renderer !== 'undefined') { Renderer.centerMap(); }
         
-        // カードをランダムに5枚配布
         setTimeout(() => { 
             if (typeof Renderer !== 'undefined' && Renderer.dealCards) { 
                 const deck = [];
@@ -636,6 +632,7 @@ class Game {
             this.log(`>> ${d.name} を撃破！`); 
             if (window.Sfx) { Sfx.play('death'); } 
             if (window.VFX) { const p = Renderer.hexToPx(d.q, d.r); VFX.addUnitDebris(p.x, p.y); }
+            // ★修正: ここでもチェック
             if (this.checkWin()) { return; }
         }
         this.refreshUnitState(a); this.checkPhaseEnd();
@@ -853,7 +850,8 @@ class Game {
             [{ k: 'rifleman', t: '新兵' }, { k: 'tank_pz4', t: '戦車' }, { k: 'supply', t: '補給物資' }].forEach(o => { 
                 const d = document.createElement('div'); d.className = 'card'; 
                 const iconType = o.k === 'supply' ? 'heal' : 'infantry'; 
-                d.innerHTML = `<div class="card-img-box"><img src="${createCardIcon(iconType)}"></div><div class="card-body"><h3>${o.t}</h3><p>${o.k === 'supply' ? 'HP/弾薬/装備' : '増援'}</p></div>`; 
+                // ★UI修正: 名前を上部に配置
+                d.innerHTML = `<div style="background:#222; width:100%; text-align:center; padding:2px 0; border-bottom:1px solid #444; margin-bottom:5px;"><h3 style="color:#da4; font-size:14px; margin:0;">${o.t}</h3></div><div class="card-img-box"><img src="${createCardIcon(iconType)}"></div><div class="card-body"><p>${o.k === 'supply' ? 'HP/弾薬/装備' : '増援'}</p></div>`; 
                 d.onclick = () => { 
                     if (o.k === 'supply') { this.resupplySurvivors(); } 
                     else { this.spawnAtSafeGround('player', o.k); } 
@@ -869,12 +867,10 @@ class Game {
     }
     checkLose() { if (this.units.filter(u => u.team === 'player' && u.hp > 0).length === 0) { document.getElementById('gameover-screen').style.display = 'flex'; } }
     
-    // UIや他クラスから呼ばれるコンテキストメニュー表示
     showContext(mx, my, hex) { this.ui.showContext(mx, my, hex); }
     updateSidebar() { this.ui.updateSidebar(this.selectedUnit, this.state, this.tankAutoReload); }
     getStatus(u) { if (u.hp <= 0) return "DEAD"; const r = u.hp / u.maxHp; if (r > 0.8) return "NORMAL"; if (r > 0.5) return "DAMAGED"; return "CRITICAL"; }
 
-    // ★復元: 敵生成
     spawnEnemies() {
         const c = 4 + Math.floor(this.sector * 0.7);
         for (let i = 0; i < c; i++) {
@@ -887,16 +883,14 @@ class Game {
         }
     }
 
-    // ★復元: オートモード
     toggleAuto() { 
         this.isAuto = !this.isAuto; 
         const btn = document.getElementById('auto-toggle');
         if(btn) btn.classList.toggle('active'); 
         this.log(`AUTO: ${this.isAuto ? "ON" : "OFF"}`); 
     }
-    runAuto() { } // プレースホルダー
+    runAuto() { }
 
-    // ★復元: 移動アクション
     async actionMove(u, p) {
         this.state = 'ANIM'; this.path = []; this.reachableHexes = []; this.attackLine = []; this.aimTargetUnit = null;
         for (let s of p) { 
@@ -907,13 +901,18 @@ class Game {
         this.checkReactionFire(u); this.state = 'PLAY'; this.refreshUnitState(u); this.checkPhaseEnd();
     }
 
-    // ★復元: 反撃
     checkReactionFire(u) {
         this.units.filter(e => e.team !== u.team && e.hp > 0 && e.def.isTank && this.hexDist(u, e) <= 1).forEach(t => {
             this.log(`!! 防御射撃: ${t.name}->${u.name}`); u.hp -= 15; 
             if (window.VFX) { VFX.addExplosion(Renderer.hexToPx(u.q, u.r).x, Renderer.hexToPx(u.q, u.r).y, "#fa0", 5); }
             if (window.Sfx) { Sfx.play('mg'); } 
-            if (u.hp <= 0 && !u.deadProcessed) { u.deadProcessed = true; this.log(`${u.name} 撃破`); if (window.Sfx) { Sfx.play('death'); } }
+            if (u.hp <= 0 && !u.deadProcessed) { 
+                u.deadProcessed = true; 
+                this.log(`${u.name} 撃破`); 
+                if (window.Sfx) { Sfx.play('death'); } 
+                // ★修正: 反撃で死亡時も勝利/敗北判定を行う
+                if(u.team === 'enemy') { this.checkWin(); } else { this.checkLose(); }
+            }
         });
     }
     swapWeapon() { }
@@ -931,6 +930,10 @@ class Game {
             if (eyecatch) { eyecatch.style.opacity = 0; }
             await this.ai.executeTurn(this.units);
             this.units.forEach(u => { if (u.team === 'player') { u.ap = u.maxAp; } }); 
+            
+            // ★修正: ターン終了時にも一応勝利判定を走らせる（事故防止）
+            this.checkWin();
+            
             this.log("-- PLAYER PHASE --"); 
             this.state = 'PLAY'; 
             this.isProcessingTurn = false;
