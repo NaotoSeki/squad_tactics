@@ -1,4 +1,4 @@
-/** LOGIC UI: Resize Handle Follow Fix */
+/** LOGIC UI: Fixed Resize Handle & D&D */
 
 class UIManager {
     constructor(game) {
@@ -7,6 +7,7 @@ class UIManager {
         this.bindEvents();
         this.dragSrc = null; 
         
+        // グローバル公開 (HTML属性用)
         window.onSlotDragStart = (e, type, index) => this.handleDragStart(e, type, index);
         window.onSlotDragOver = (e) => this.handleDragOver(e);
         window.onSlotDrop = (e, type, index) => this.handleDrop(e, type, index);
@@ -30,6 +31,7 @@ class UIManager {
             }
         });
         
+        // シナジー演出 & D&D用スタイル
         const style = document.createElement('style');
         style.innerHTML = `
             .slot.synergy-active {
@@ -51,17 +53,17 @@ class UIManager {
         const sb = document.getElementById('sidebar');
         sb.classList.toggle('collapsed');
         
-        // リサイズバーの追従修正
+        // ★リサイズバーの強制追従処理
         const handle = document.querySelector('.resize-handle');
         if(handle) {
-            // サイドバーが閉じた(.collapsed)なら右端(0)へ、開いたなら260pxへ
-            // CSS transitionに合わせるため少し強引にstyle設定
             if(sb.classList.contains('collapsed')) {
+                // 閉じたとき: 右端へ
                 handle.style.right = '0px';
-                handle.style.transform = 'none'; // CSS干渉回避
+                handle.style.left = 'auto'; // 安全策
             } else {
-                handle.style.right = '260px'; // sidebar width
-                handle.style.transform = 'none';
+                // 開いたとき: 260px位置へ
+                handle.style.right = '260px';
+                handle.style.left = 'auto';
             }
         }
     }
@@ -111,7 +113,9 @@ class UIManager {
         const weaponCost = w ? w.ap : 99;
         
         setEnabled(btnAttack, u.ap >= weaponCost);
-        setEnabled(btnRepair, u.hands && u.hands[0] && u.hands[0].isBroken);
+        // Repair check: 3スロットのいずれかが壊れていればOK（簡易）
+        const anyBroken = Array.isArray(u.hands) ? u.hands.some(h => h && h.isBroken) : (u.hands && u.hands.isBroken);
+        setEnabled(btnRepair, anyBroken);
         
         const neighbors = this.game.getUnitsInHex(u.q, u.r);
         setEnabled(btnMelee, neighbors.some(n => n.team !== u.team));
