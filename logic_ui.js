@@ -71,7 +71,7 @@ class UIManager {
         const btnRepair = document.getElementById('btn-repair'); 
         const btnMelee = document.getElementById('btn-melee'); 
         const btnHeal = document.getElementById('btn-heal');
-        const grpStance = menu.querySelector('.cmd-group'); // 姿勢メニューのグループを取得
+        const grpStance = menu.querySelector('.cmd-group'); 
 
         const setEnabled = (btn, enabled) => { if(enabled) btn.classList.remove('disabled'); else btn.classList.add('disabled'); };
         
@@ -83,7 +83,6 @@ class UIManager {
         setEnabled(btnMelee, neighbors.some(n => n.team !== u.team));
         setEnabled(btnHeal, neighbors.some(n => n.team === u.team && n.hp < n.maxHp));
 
-        // ★修正: 戦車の場合、姿勢メニューと治療ボタンを非表示にする
         if (u.def.isTank) {
             if (grpStance) grpStance.style.display = 'none';
             if (btnHeal) btnHeal.style.display = 'none';
@@ -165,7 +164,8 @@ class UIManager {
             let specs = `<div style="text-align:left; font-size:10px; line-height:1.4; color:#aaa; margin-top:5px;">HP:<span style="color:#fff">${t.hp||100}</span> AP:<span style="color:#fff">${t.ap||4}</span><br>`;
             const mainWpn = WPNS[t.main]; if (mainWpn) { specs += `<span style="color:#d84">${mainWpn.name}</span>`; } specs += `</div>`;
             const faceUrl = Renderer.generateFaceIcon ? Renderer.generateFaceIcon(Math.floor(Math.random() * 99999)) : "";
-            d.innerHTML = `<div class="card-badge" style="display:none;">✔</div><div class="card-img-box" style="background:#111;"><img src="${faceUrl}" style="width:64px; height:64px; object-fit:cover;"></div><div class="card-body"><h3 style="color:#d84; font-size:14px; margin:5px 0;">${t.name}</h3><p style="font-size:10px; color:#888;">${t.role.toUpperCase()}</p>${specs}</div>`;
+            // ★UI修正: 名前を上部に配置
+            d.innerHTML = `<div class="card-badge" style="display:none;">✔</div><div style="background:#222; width:100%; text-align:center; padding:2px 0; border-bottom:1px solid #444; margin-bottom:5px;"><h3 style="color:#d84; font-size:14px; margin:0;">${t.name}</h3><p style="font-size:10px; color:#888; margin:0;">${t.role.toUpperCase()}</p></div><div class="card-img-box" style="background:#111;"><img src="${faceUrl}" style="width:64px; height:64px; object-fit:cover;"></div><div class="card-body">${specs}</div>`;
             d.onclick = () => { onClick(k, d); };
             box.appendChild(d);
         });
