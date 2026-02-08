@@ -1,50 +1,90 @@
-// ==========================================
-// 2. ENEMY AI (Decision Making)
-// ==========================================
+/** LOGIC AI: Generic AI for both Enemy and Player (Auto Mode) */
+
 class EnemyAI {
     constructor(game) {
         this.game = game;
     }
 
-    async executeTurn(units) {
-        const es = units.filter(u => u.team === 'enemy' && u.hp > 0);
-        
-        for (let e of es) {
-            const ps = units.filter(u => u.team === 'player' && u.hp > 0);
-            if (ps.length === 0) break; // Player wiped out
+    // 汎用AI実行メソッド (team: 'enemy' | 'player')
+    async execute(units, team) {
+        // 行動可能な自軍ユニット
+        const actors = units.filter(u => u.team === team && u.hp > 0);
+        const targetTeam = (team === 'player') ? 'enemy' : 'player';
 
-            // Target Selection (Nearest)
-            let target = ps[0]; 
-            let minDist = 999; 
-            ps.forEach(p => { 
-                const d = this.game.hexDist(e, p); 
-                if (d < minDist) { minDist = d; target = p; } 
+        for (let actor of actors) {
+            if (actor.hp <= 0) continue;
+
+            // 敵の場合のみAPをリセット（プレイヤーは現在のAPで行動する）
+            if (team === 'enemy') actor.ap = actor.maxAp;
+
+            // ターゲット選定（最も近い敵）
+            const targets = units.filter(u => u.team === targetTeam && u.hp > 0);
+            if (targets.length === 0) break; 
+
+            let target = targets[0]; 
+            let minDist = 9999; 
+            targets.forEach(t => { 
+                const d = this.game.hexDist(actor, t); 
+                if (d < minDist) { minDist = d; target = t; } 
             });
 
-            e.ap = e.maxAp; 
-            const w = e.hands; 
-            if (!w) continue; 
+            const w = actor.hands;
+            if (!w) continue;
 
-            // Simple Aggressive AI
-            const distToTarget = this.game.hexDist(e, target);
-            if (distToTarget <= w.rng && e.ap >= w.ap) { 
-                await this.game.actionAttack(e, target); 
-            } else {
-                const p = this.game.findPath(e, target.q, target.r);
-                if (p.length > 0) {
-                    const next = p[0]; 
-                    if (this.game.map[next.q][next.r].cost <= e.ap) { 
-                        // Move
-                        e.q = next.q; e.r = next.r; 
-                        e.ap -= this.game.map[next.q][next.r].cost; 
-                        await new Promise(r => setTimeout(r, 200)); 
-                        // Try Attack after move
-                        if (this.game.hexDist(e, target) <= w.rng && e.ap >= w.ap) { 
-                            await this.game.actionAttack(e, target); 
-                        } 
+            // --- 行動ループ ---
+            let acted = true;
+            while (acted && actor.ap > 0) {
+                acted = false;
+                if (actor.hp <= 0 || target.hp <= 0) break;
+
+                const dist = this.game.hexDist(actor, target);
+
+                // 1. 射程内でAPがあれば攻撃
+                if (dist <= w.rng && actor.ap >= w.ap) {
+                    // 弾切れならリロード（APがあれば）
+                    if (w.current <= 0 || (actor.def.isTank && w.reserve > 0 && w.current === 0)) {
+                        const cost = (actor.def.isTank) ? 1 : (w.rld || 1);
+                        if (actor.ap >= cost) {
+                            await this.game.reloadWeapon(false); 
+                            continue; // リロードできたので攻撃へ戻る
+                        }
+                    }
+
+                    // 弾があれば攻撃
+                    if (w.current > 0 || (actor.def.isTank && w.reserve > 0)) {
+                        await this.game.actionAttack(actor, target);
+                        acted = true;
+                        await new Promise(r => setTimeout(r, 300));
+                        // 敵が死んだらターゲット再取得（簡易的）
+                        if (target.hp <= 0) break; 
+                        continue;
+                    }
+                }
+
+                // 2. 射程外なら移動 (1歩ずつ)
+                if (dist > w.rng && actor.ap >= 1) {
+                    const path = this.game.findPath(actor, target.q, target.r);
+                    if (path.length > 0) {
+                        const next = path[0];
+                        const cost = this.game.map[next.q][next.r].cost;
+                        
+                        if (actor.ap >= cost) {
+                            await this.game.actionMove(actor, [next]); // 1マス移動
+                            acted = true;
+                            // 移動後、再度攻撃チャンスがあるかチェックするためにループ
+                            continue; 
+                        }
                     }
                 }
             }
+            
+            // ユニットごとのウェイト
+            await new Promise(r => setTimeout(r, 100));
         }
+    }
+
+    // 後方互換用（敵ターンの呼び出し）
+    async executeTurn(units) {
+        return this.execute(units, 'enemy');
     }
 }
