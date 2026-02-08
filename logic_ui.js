@@ -1,10 +1,16 @@
-/** LOGIC UI: 3-Slot Inventory Sidebar */
+/** LOGIC UI: Drag & Drop Inventory, Synergy Highlights, and Fixed Sidebar */
 
 class UIManager {
     constructor(game) {
         this.game = game;
         this.menuSafeLock = false;
         this.bindEvents();
+        this.dragSrc = null; // D&D追跡用
+        
+        // グローバルにD&Dハンドラを公開 (HTML属性から呼ぶため)
+        window.onSlotDragStart = (e, type, index) => this.handleDragStart(e, type, index);
+        window.onSlotDragOver = (e) => this.handleDragOver(e);
+        window.onSlotDrop = (e, type, index) => this.handleDrop(e, type, index);
     }
 
     bindEvents() {
@@ -24,11 +30,58 @@ class UIManager {
                 el.addEventListener('wheel', stopPropagation, { passive: false });
             }
         });
+        
+        // CSS注入 (シナジー演出など)
+        const style = document.createElement('style');
+        style.innerHTML = `
+            .slot.synergy-active {
+                box-shadow: 0 0 8px #4f4, inset 0 0 10px #4f4 !important;
+                border-color: #8f8 !important;
+                animation: synergy-pulse 1.5s infinite alternate;
+            }
+            @keyframes synergy-pulse {
+                from { box-shadow: 0 0 5px #2d2; }
+                to { box-shadow: 0 0 12px #6f6; }
+            }
+            .slot[draggable="true"] { cursor: grab; }
+            .slot:active { cursor: grabbing; }
+        `;
+        document.head.appendChild(style);
     }
 
     toggleSidebar() {
         const sb = document.getElementById('sidebar');
         sb.classList.toggle('collapsed');
+        // リサイズバーの追従 (CSSで .collapsed 時の位置を制御するのがベストだが、JSで補完)
+        const handle = document.querySelector('.resize-handle');
+        if(handle) {
+            if(sb.classList.contains('collapsed')) {
+                handle.style.right = '0';
+            } else {
+                handle.style.right = '260px'; // sidebar width
+            }
+        }
+    }
+
+    // --- D&D Handlers ---
+    handleDragStart(e, type, index) {
+        this.dragSrc = { type, index };
+        e.dataTransfer.effectAllowed = 'move';
+        // e.target.style.opacity = '0.4'; 
+    }
+
+    handleDragOver(e) {
+        e.preventDefault(); // ドロップ許可
+        e.dataTransfer.dropEffect = 'move';
+    }
+
+    handleDrop(e, type, index) {
+        e.preventDefault();
+        if (this.dragSrc) {
+            // ゲームロジックへ入れ替え依頼
+            this.game.swapEquipment(this.dragSrc, { type, index });
+            this.dragSrc = null;
+        }
     }
 
     log(m) {
@@ -104,8 +157,11 @@ class UIManager {
         const virtualWpn = this.game.getVirtualWeapon(u);
         const isMortarActive = virtualWpn && virtualWpn.code === 'm2_mortar';
 
+        // スロット生成 (D&D対応)
         const makeSlot = (item, type, index) => { 
-            if (!item) return `<div class="slot empty" ondragover="onSlotDragOver(event)" ondragleave="onSlotDragLeave(event)" ondrop="onSlotDrop(event, '${type}', ${index})"><div style="font-size:10px; color:#555;">[EMPTY]</div></div>`; 
+            const dragAttrs = `draggable="true" ondragstart="onSlotDragStart(event, '${type}', ${index})" ondragover="onSlotDragOver(event)" ondrop="onSlotDrop(event, '${type}', ${index})"`;
+            
+            if (!item) return `<div class="slot empty" ${dragAttrs}><div style="font-size:10px; color:#555;">[EMPTY]</div></div>`; 
             
             const isMain = (type === 'main'); 
             const isAmmo = (item.type === 'ammo'); 
@@ -129,11 +185,12 @@ class UIManager {
             }
 
             let blinkClass = ""; 
+            // 迫撃砲パーツが揃っているときの演出 (緑色の明滅)
             if (isMain && isMortarActive && item.type === 'part') {
                 blinkClass = "synergy-active"; 
             }
 
-            return `<div class="slot ${isMain?'main-weapon':'bag-item'} ${blinkClass}"><div class="slot-name">${isMain?'🔫':''} ${item.name}</div>${!isAmmo && !item.partType ? `<div class="slot-meta">RNG:${item.rng} DMG:${item.dmg}</div>` : ''}${gaugeHtml}</div>`; 
+            return `<div class="slot ${isMain?'main-weapon':'bag-item'} ${blinkClass}" ${dragAttrs}><div class="slot-name">${isMain?'🔫':''} ${item.name}</div>${!isAmmo && !item.partType ? `<div class="slot-meta">RNG:${item.rng} DMG:${item.dmg}</div>` : ''}${gaugeHtml}</div>`; 
         };
 
         let mainSlotsHtml = "";
