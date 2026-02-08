@@ -1,4 +1,4 @@
-/** LOGIC UI: Fixed Card Badge & 3-Slot Display */
+/** LOGIC UI: Fixed Card Badge Element */
 
 class UIManager {
     constructor(game) {
@@ -58,7 +58,6 @@ class UIManager {
         const weaponCost = w ? w.ap : 99;
         
         setEnabled(btnAttack, u.ap >= weaponCost);
-        // Repairは簡易的にSlot0を見る
         setEnabled(btnRepair, u.hands && u.hands[0] && u.hands[0].isBroken);
         
         const neighbors = this.game.getUnitsInHex(u.q, u.r);
@@ -160,7 +159,6 @@ class UIManager {
             const t = UNIT_TEMPLATES[k]; 
             const d = document.createElement('div'); d.className = 'card';
             const faceUrl = Renderer.generateFaceIcon ? Renderer.generateFaceIcon(Math.floor(Math.random() * 99999)) : "";
-            // ★重要: .card-badge をここで定義
             d.innerHTML = `<div class="card-badge" style="display:none;">✔</div><div style="background:#222; width:100%; text-align:center; padding:2px 0; border-bottom:1px solid #444; margin-bottom:5px;"><h3 style="color:#d84; font-size:14px; margin:0;">${t.name}</h3></div><div class="card-img-box" style="background:#111;"><img src="${faceUrl}" style="width:64px; height:64px; object-fit:cover;"></div><div class="card-body" style="font-size:10px; color:#aaa;">AP:${t.ap}<br>${t.role}</div>`;
             d.onclick = () => { onClick(k, d); };
             box.appendChild(d);
