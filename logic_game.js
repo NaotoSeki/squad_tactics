@@ -1,4 +1,4 @@
-/** LOGIC GAME: Medical Reward Upgraded to Supply Drop (Ammo/Item Refill) */
+/** LOGIC GAME: Fix Double Reload on Tank & Added Tank Reload Sound */
 
 function createCardIcon(type) {
     const c = document.createElement('canvas'); c.width = 1; c.height = 1; return c.toDataURL();
@@ -496,7 +496,10 @@ class Game {
             if (w.reserve <= 0) { this.log("予備弾薬なし"); return; }
             u.ap -= 1; w.current = 1; w.reserve -= 1;
             this.log(`${u.name} 次弾装填完了 (残:${w.reserve})`);
-            if (window.Sfx) { Sfx.play('reload'); }
+            
+            // ★変更: 戦車用のリロード音
+            if (window.Sfx) { Sfx.play('tank_reload'); } 
+            
             this.refreshUnitState(u);
             if (isManual) { this.hideActionMenu(); }
             return;
@@ -605,6 +608,7 @@ class Game {
         if (w.isBroken) { this.log("武器故障中！修理が必要"); return; }
         if (w.isConsumable && w.current <= 0) { this.log("使用済みです"); return; }
         
+        // 歩兵のリロードロジック
         if (!a.def.isTank && w.current <= 0) {
             const magIndex = a.bag.findIndex(i => i && i.type === 'ammo' && i.ammoFor === w.code);
             if (magIndex !== -1) {
@@ -632,6 +636,8 @@ class Game {
             }
         }
         
+        // 戦車のリロードロジック (攻撃前)
+        let reloadedBeforeAttack = false; // ★追加: 攻撃前にリロードしたかどうかのフラグ
         if (a.def.isTank && w.current <= 0 && this.tankAutoReload) {
             if (w.reserve > 0) {
                 const reloadCost = 1; 
@@ -640,8 +646,9 @@ class Game {
                     w.reserve--; 
                     w.current = 1;
                     this.log(`${a.name} 自動装填完了`);
-                    if (window.Sfx) { Sfx.play('reload'); }
+                    if (window.Sfx) { Sfx.play('tank_reload'); } // ★変更: 戦車用
                     this.refreshUnitState(a);
+                    reloadedBeforeAttack = true; // ★フラグON
                     
                     if(a.ap < w.ap) {
                         this.log("AP不足により攻撃中止");
@@ -729,7 +736,10 @@ class Game {
                 if(this.checkWin()) { return; }
             }
             this.state = 'PLAY'; 
-            if(a.def.isTank && w.current === 0 && w.reserve > 0 && this.tankAutoReload && a.ap >= 1) { this.reloadWeapon(); }
+            
+            // ★変更: 攻撃前にリロードしていたら、攻撃後リロードをスキップする条件を追加 (!reloadedBeforeAttack)
+            if(!reloadedBeforeAttack && a.def.isTank && w.current === 0 && w.reserve > 0 && this.tankAutoReload && a.ap >= 1) { this.reloadWeapon(); }
+            
             this.refreshUnitState(a); 
             const cost = w ? w.ap : 0;
             const canShootAgain = (a.ap >= cost) && (w.current > 0 || (a.def.isTank && w.reserve > 0 && this.tankAutoReload && a.ap >= cost + 1));
@@ -868,25 +878,41 @@ class Game {
         }, 1200);
     }
     
-    // ★追加・変更: HP回復だけでなく弾薬と装備を補充
+    // ★修正: 弾薬補充ロジックを強化 (MG42等の多弾数武器が1発にならないように)
     resupplySurvivors() { 
         this.units.filter(u => u.team === 'player' && u.hp > 0).forEach(u => { 
             // 1. HP Recovery (75% - 100%)
             const hpTarget = Math.floor(u.maxHp * (0.75 + Math.random() * 0.25)); 
             if (u.hp < hpTarget) { u.hp = hpTarget; } 
 
-            // 2. Ammo Replenishment (50% - 100%)
+            // 2. Ammo Replenishment
             if (u.hands) {
                 if (u.def.isTank) {
-                    // Tank: Refill Main Gun Reserve (Max 12)
+                    // Tank: Refill Reserve
                     const resTarget = Math.floor(12 * (0.5 + Math.random() * 0.5));
                     if (u.hands.reserve < resTarget) { u.hands.reserve = resTarget; }
-                    if (u.hands.current <= 0) u.hands.current = 1; // Ensure loaded
+                    if (u.hands.current <= 0) u.hands.current = 1; 
                 } else {
                     // Infantry: Refill Loaded Ammo
-                    if (u.hands.cap > 0) {
+                    // ★修正: capプロパティが存在し、かつ1より大きい場合のみ計算
+                    if (u.hands.cap && u.hands.cap > 1) {
+                        // 最低でも50%は確保
+                        const minSupply = Math.floor(u.hands.cap * 0.5);
+                        // ランダムで50-100%の値を目標値とする
                         const curTarget = Math.floor(u.hands.cap * (0.5 + Math.random() * 0.5));
-                        if (u.hands.current < curTarget) { u.hands.current = curTarget; }
+                        
+                        // 現在値が目標より少なければ補充
+                        // かつ、現在値が極端に少ない(minSupply未満)なら、最低保証値まで引き上げる
+                        if (u.hands.current < curTarget) { 
+                            u.hands.current = Math.max(u.hands.current, curTarget);
+                        }
+                        // ※念のため：もし何かの拍子に0や1になっていたら、強制的にminSupplyにする
+                        if (u.hands.current < minSupply) {
+                             u.hands.current = minSupply;
+                        }
+                    } else if (u.hands.cap === 1) {
+                        // ロケットランチャーなどの単発武器
+                        u.hands.current = 1;
                     }
                 }
             }
@@ -896,19 +922,18 @@ class Game {
             let emptyCount = 0;
             for(let i=0; i<bagSize; i++) { if(!u.bag[i]) emptyCount++; }
             
-            // Determine how many to fill (50% - 100% of empty slots)
             const fillCount = Math.ceil(emptyCount * (0.5 + Math.random() * 0.5));
             
             let filled = 0;
             for (let i = 0; i < bagSize && filled < fillCount; i++) {
                 if (!u.bag[i]) {
-                    // 消耗品補充（現状は弾薬クリップ、または将来的に手榴弾など）
                     if (u.hands && u.hands.code && !u.def.isTank) {
+                         // MG42などの場合、予備弾倉として補充
                          u.bag[i] = { type: 'ammo', name: (u.hands.magName || 'Clip'), ammoFor: u.hands.code, cap: u.hands.cap, jam: u.hands.jam, code: 'mag' };
                          filled++;
                     }
                 } else {
-                    // 既存の消耗品（弾薬など）も補充
+                    // 既存弾倉の補充
                     const item = u.bag[i];
                     if (item && item.isConsumable && item.current < (item.cap || 1)) {
                          item.current = Math.floor((item.cap || 1) * (0.5 + Math.random() * 0.5));
