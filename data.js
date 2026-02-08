@@ -1,89 +1,97 @@
-/** DATA: Unit & Weapon Definitions */
+/** DATA: Unit Templates, Weapons, Terrain, and New Attributes */
 
-// ★修正: 定数を最上部に移動（読み込みエラー防止）
-const HEX_SIZE = 54;
-const MAP_W = 20;
-const MAP_H = 20;
-
-const TERRAIN = {
-    VOID:   { id: -1, name: "---",  cost: 99, cover: 0 },
-    DIRT:   { id: 0,  name: "荒地", cost: 1,  cover: 0 },
-    GRASS:  { id: 1,  name: "草原", cost: 1,  cover: 10 },
-    FOREST: { id: 2,  name: "森林", cost: 2,  cover: 25 },
-    TOWN:   { id: 4,  name: "廃墟", cost: 1,  cover: 40 },
-    WATER:  { id: 5,  name: "水域", cost: 99, cover: 0 }
+// ◆フェーズ1: 属性定義
+const ATTR = {
+    MILITARY: 'Military forces', // 兵力
+    SUPPORT: 'Fire support',     // 火力支援
+    WEAPON: 'Weaponry',          // 武器類
+    RECOVERY: 'Recovery'         // 回復
 };
-
-const RANKS = ["Pvt", "Pfc", "Cpl", "Sgt", "SSgt", "Lt", "Cpt"];
-const FIRST_NAMES = ["John", "Mike", "Robert", "James", "William", "David", "Richard", "Joseph", "Thomas", "Charles", "Daniel", "Matthew", "Donald", "Paul", "George"];
-const LAST_NAMES = ["Smith", "Johnson", "Williams", "Jones", "Brown", "Davis", "Miller", "Wilson", "Moore", "Taylor", "Anderson", "Thomas", "Jackson", "White", "Harris"];
 
 const SKILLS = {
-    "Precision": { name: "精密", desc: "命中+15%" },
-    "Radio":     { name: "通信", desc: "支援効果UP" },
-    "Ambush":    { name: "隠密", desc: "回避+15%" },
-    "AmmoBox":   { name: "弾薬", desc: "予備弾数UP" },
-    "HighPower": { name: "強装", desc: "Dmg+20%" },
-    "Mechanic":  { name: "修理", desc: "毎ターン回復" },
-    "Armor":     { name: "防弾", desc: "被ダメ-5" },
-    "Hero":      { name: "英雄", desc: "AP+1" },
-    "CQC":       { name: "白兵", desc: "近接反撃" }
+    "Sniper": { name: "狙撃手", desc: "射程+2 / 命中+15%" },
+    "Scout": { name: "偵察", desc: "移動力+1 / 視界+2" },
+    "Medic": { name: "衛生兵", desc: "治療効果+50%" },
+    "Mechanic": { name: "工兵", desc: "修理速度2倍" },
+    "CQC": { name: "近接格闘", desc: "白兵戦ダメージ+20% / 反撃" },
+    "Hero": { name: "英雄", desc: "全ステータス+1 / 士気高揚" }
 };
 
-const SKILL_STYLES = {
-    "Precision": { col: "#2a6", icon: "🎯", name: "AIM" },
-    "Radio":     { col: "#36c", icon: "📡", name: "COM" },
-    "Ambush":    { col: "#556", icon: "👻", name: "HIDE" },
-    "AmmoBox":   { col: "#b82", icon: "📦", name: "AMMO" },
-    "HighPower": { col: "#c44", icon: "💥", name: "POW" },
-    "Mechanic":  { col: "#883", icon: "🔧", name: "MECH" },
-    "Armor":     { col: "#667", icon: "🛡", name: "ARM" },
-    "Hero":      { col: "#da2", icon: "★", name: "HERO" },
-    "CQC":       { col: "#a34", icon: "🔪", name: "CQC" }
-};
-
-// ★修正: ユーザー指定のスペックを反映
-// pen(貫通) -> dmg, acc_drop -> 距離減衰, burst -> 発射数
+// 武器・アイテム定義
+// weight: lbs (ポンド)
 const WPNS = {
-    // M1 Garand: Pen 76, Drop 3, Burst 2
-    m1: { name:"M1 Garand", rng:7, acc:85, acc_drop:3, dmg:76, cap:8, mag:6, ap:2, rld:1, wgt:4, type:'bullet', burst:2, desc:"米軍主力小銃。セミオート2連射。" },
-    
-    // Thompson: Pen 41, Drop 4, Burst 2 or 5
-    thompson: { name:"M1A1 SMG", rng:5, acc:60, acc_drop:4, dmg:41, cap:30, mag:4, ap:2, rld:1, wgt:5, type:'bullet', burst:2, modes:[2, 5], desc:"近距離制圧用。射撃モード切替可。" },
-    
-    // Kar98 (Sniper): Pen 72, Drop 3, Burst 1
-    k98_scope: { name:"Kar98k (Scope)", rng:9, acc:95, acc_drop:3, dmg:72, cap:5, mag:5, ap:2, rld:2, wgt:5, type:'bullet', burst:1, desc:"精密狙撃銃。一撃必殺。" },
-    
-    // BAR: 既存スペック維持しつつ調整
-    bar: { name:"M1918 BAR", rng:7, acc:55, acc_drop:3, dmg:45, cap:20, mag:5, ap:2, rld:2, wgt:9, type:'bullet', burst:3, desc:"分隊支援火器。" }, 
-    
-    // Side Arms
-    m1911: { name:"Colt M1911", rng:3, acc:70, acc_drop:10, dmg:30, cap:7, mag:3, ap:2, rld:1, wgt:1, type:'bullet', burst:1, desc:"45口径拳銃。" },
-    luger: { name:"Luger P08", rng:3, acc:75, acc_drop:10, dmg:25, cap:8, mag:2, ap:2, rld:1, wgt:1, type:'bullet', burst:1, desc:"将校の拳銃。" },
-    knife: { name:"Combat Knife", rng:1, acc:90, dmg:35, cap:0, mag:0, ap:1, rld:0, wgt:0, type:'melee', burst:1, desc:"白兵戦用ナイフ。" },
+    // --- 既存武器 ---
+    'unarmed': { name: "素手", type: "melee", rng: 1, dmg: 5, ap: 2, acc: 80, weight: 0, attr: ATTR.WEAPON },
+    'rifle':   { name: "Kar98k", type: "bullet", rng: 5, dmg: 40, ap: 3, acc: 90, cap: 5, rld: 2, mag: 3, weight: 9, attr: ATTR.WEAPON },
+    'smg':     { name: "MP40", type: "bullet", rng: 3, dmg: 25, ap: 3, acc: 70, cap: 32, rld: 2, burst: 3, mag: 3, weight: 9, attr: ATTR.WEAPON },
+    'mg':      { name: "MG42", type: "bullet", rng: 5, dmg: 35, ap: 4, acc: 60, cap: 50, rld: 3, burst: 5, jam: 0.05, mag: 2, weight: 25, attr: ATTR.WEAPON },
+    'sniper':  { name: "Kar98k Scope", type: "bullet", rng: 7, dmg: 90, ap: 4, acc: 95, cap: 5, rld: 2, mag: 2, weight: 11, attr: ATTR.WEAPON },
+    'tank_gun':{ name: "75mm KwK 40", type: "shell", rng: 8, dmg: 120, ap: 2, acc: 85, cap: 1, rld: 1, area: 1, weight: 0, attr: ATTR.WEAPON },
+    'tiger_gun':{ name: "88mm KwK 36", type: "shell_fast", rng: 9, dmg: 180, ap: 2, acc: 90, cap: 1, rld: 1, area: 1, weight: 0, attr: ATTR.WEAPON },
 
-    // Explosives
-    nade: { name:"Mk2 Grenade", rng:4, acc:60, dmg:80, cap:1, mag:2, ap:2, rld:0, wgt:1, type:'shell', area:true, desc:"破片手榴弾。" },
+    // --- ◆フェーズ2: 迫撃砲パーツ & 弾薬 ---
+    'mortar_barrel': { name: "M2 砲身", type: "part", partType: "barrel", weight: 13, attr: ATTR.WEAPON },
+    'mortar_bipod':  { name: "M2 二脚", type: "part", partType: "bipod", weight: 16, attr: ATTR.WEAPON },
+    'mortar_plate':  { name: "M2 底板", type: "part", partType: "plate", weight: 13, attr: ATTR.WEAPON },
     
-    // Heavy / Tank
-    mg42: { name:"MG42", rng:8, acc:45, acc_drop:4, dmg:25, cap:50, mag:99, ap:2, rld:3, wgt:12, type:'bullet', burst:10, desc:"電動ノコギリ。" },
-    kwk: { name:"75mm KwK", rng:8, acc:70, acc_drop:2, dmg:150, cap:1, mag:99, ap:2, rld:2, wgt:0, type:'shell_fast', burst:1, desc:"IV号戦車主砲。" },
-    kwk88: { name:"88mm KwK36", rng:10, acc:85, acc_drop:1, dmg:250, cap:1, mag:99, ap:2, rld:2, wgt:0, type:'shell_fast', burst:1, desc:"Tiger I 主砲。" }
+    // 合体後の仮想武器データ
+    'm2_mortar': { name: "M2 60mm迫撃砲", type: "shell", rng: 10, minRng: 2, dmg: 150, ap: 4, acc: 70, cap: 1, rld: 2, area: 2, indirect: true, weight: 42, attr: ATTR.WEAPON },
+
+    // 迫撃砲弾 (1枠で複数持てる)
+    'mortar_shell_box': { name: "60mm榴弾箱", type: "ammo", ammoFor: "m2_mortar", cap: 10, current: 10, weight: 12, attr: ATTR.WEAPON, isConsumable: false },
+
+    // --- その他 ---
+    'grenade': { name: "M24型手榴弾", type: "shell", rng: 3, dmg: 80, ap: 3, acc: 60, area: 1, isConsumable: true, weight: 1, attr: ATTR.WEAPON },
+    'faust':   { name: "Panzerfaust", type: "rocket", rng: 2, dmg: 200, ap: 4, acc: 80, isConsumable: true, weight: 14, attr: ATTR.WEAPON }
 };
 
-const UNIT_TEMPLATES = {
-    rifleman: { name:"Rifleman", role:"infantry", main:"m1", sub:"m1911", opt:"nade", stats:{str:5, aim:5, mob:5, mor:5} },
-    scout:    { name:"Scout", role:"infantry", main:"thompson", sub:"knife", opt:"nade", stats:{str:4, aim:4, mob:8, mor:6} },
-    gunner:   { name:"Gunner", role:"infantry", main:"bar", sub:"m1911", opt:null, stats:{str:8, aim:4, mob:3, mor:5} },
-    sniper:   { name:"Sniper", role:"infantry", main:"k98_scope", sub:"m1911", opt:null, stats:{str:3, aim:9, mob:4, mor:4} },
-    
-    tank_pz4: { name:"Panzer IV", role:"tank", main:"kwk", sub:"mg42", opt:null, hp:600, ap:5, isTank:true },
-    tank_tiger: { name:"Tiger I", role:"tank", main:"kwk88", sub:"mg42", opt:null, hp:1200, ap:4, isTank:true, isBoss:true },
-    
-    // ★追加: 爆撃支援カード定義 (純粋な追記)
-    aerial: { name:"AERIAL SPT", role:"TACTIC", main:null, sub:null, opt:null, hp:"N/A", ap:0 }
-};
-
+// 弾倉バリエーション
 const MAG_VARIANTS = {
-    thompson: [ { name: "20rd Box", code: "45ACP20T", cap: 20, cost: 28, jam: 0.0 }, { name: "30rd Box", code: "45ACP30T", cap: 30, cost: 54, jam: 0.008 } ]
+    'rifle': [{ name: 'Stripper Clip', cap: 5, jam: 0.01 }],
+    'smg': [{ name: 'Box Mag', cap: 32, jam: 0.05 }],
+    'mg': [{ name: 'Belt', cap: 50, jam: 0.05 }, { name: 'Drum', cap: 50, jam: 0.1 }],
+    'sniper': [{ name: 'Match Grade', cap: 5, jam: 0.0 }]
 };
+
+const TERRAIN = {
+    VOID: { id: -1, name: "VOID", cost: 99, cover: 0 },
+    GRASS: { id: 0, name: "平地", cost: 1, cover: 0 },
+    FOREST: { id: 1, name: "森林", cost: 2, cover: 20 },
+    TOWN: { id: 2, name: "市街地", cost: 1, cover: 30 },
+    DIRT: { id: 3, name: "荒地", cost: 1, cover: 10 },
+    WATER: { id: 5, name: "水面", cost: 99, cover: 0 }
+};
+
+// ユニットテンプレート
+const UNIT_TEMPLATES = {
+    'rifleman': { name: "小銃兵", role: "infantry", hp: 100, ap: 4, main: 'rifle', sub: 'grenade', opt: null, weight: 0, attr: ATTR.MILITARY },
+    'scout':    { name: "偵察兵", role: "infantry", hp: 80, ap: 5, main: 'smg', sub: null, opt: null, stats: { mob: 2, aim: 1 }, weight: 0, attr: ATTR.MILITARY },
+    'gunner':   { name: "機関銃手", role: "infantry", hp: 120, ap: 3, main: 'mg', sub: null, opt: null, stats: { str: 2 }, weight: 0, attr: ATTR.MILITARY },
+    'sniper':   { name: "狙撃兵", role: "infantry", hp: 70, ap: 4, main: 'sniper', sub: null, opt: null, stats: { aim: 3 }, weight: 0, attr: ATTR.MILITARY },
+    
+    // ◆フェーズ2: デバッグ用 迫撃砲兵
+    'mortar_gunner': { 
+        name: "迫撃砲兵", 
+        role: "infantry", 
+        hp: 100, 
+        ap: 3, 
+        // 3つのパーツを装備
+        hands: ['mortar_barrel', 'mortar_bipod', 'mortar_plate'], 
+        // 弾薬箱を所持
+        sub: 'mortar_shell_box', 
+        opt: null, 
+        weight: 0, 
+        attr: ATTR.MILITARY 
+    },
+
+    'tank_pz4': { name: "IV号戦車", role: "tank", hp: 800, ap: 4, main: 'tank_gun', sub: null, isTank: true, weight: 0, attr: ATTR.MILITARY },
+    'tank_tiger': { name: "VI号戦車", role: "tank", hp: 1200, ap: 3, main: 'tiger_gun', sub: null, isTank: true, weight: 0, attr: ATTR.MILITARY },
+    
+    // 支援カード
+    'aerial': { name: "航空支援", role: "tactic", weight: 0, attr: ATTR.SUPPORT },
+    'supply': { name: "補給物資", role: "tactic", weight: 0, attr: ATTR.RECOVERY }
+};
+
+const RANKS = ["Pvt", "Cpl", "Sgt", "Lt", "Cpt", "Maj"];
+const FIRST_NAMES = ["Hans", "Fritz", "Karl", "Otto", "Heinz", "Paul", "Walter"];
+const LAST_NAMES = ["Muller", "Schmidt", "Schneider", "Fischer", "Weber", "Meyer"];
