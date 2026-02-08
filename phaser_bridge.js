@@ -1,8 +1,8 @@
-/** PHASER BRIDGE: Precise Click Handling & Aerial Support UI (Const Renderer) */
+/** PHASER BRIDGE: Precise Click Handling & Aerial Support UI (Card Layout Updated) */
 let phaserGame = null;
 window.HIGH_RES_SCALE = 2.0; 
 
-// ... (getCardTextureKey, createGradientTexture, createHexTexture は変更なし) ...
+// ★修正: カード名称を上部に表示して、ドック格納時も見やすくする
 window.getCardTextureKey = function(scene, type) {
     const key = `card_texture_${type}`;
     if (scene.textures.exists(key)) return key;
@@ -10,18 +10,36 @@ window.getCardTextureKey = function(scene, type) {
     if (typeof UNIT_TEMPLATES !== 'undefined' && UNIT_TEMPLATES[type]) { template = UNIT_TEMPLATES[type]; }
     const canvas = document.createElement('canvas'); canvas.width = 140 * 2; canvas.height = 200 * 2;
     const ctx = canvas.getContext('2d'); ctx.scale(2, 2);
+    
+    // 背景
     ctx.fillStyle = "#1a1a1a"; ctx.fillRect(0, 0, 140, 200);
     ctx.strokeStyle = "#555"; ctx.lineWidth = 2; ctx.strokeRect(0, 0, 140, 200);
-    ctx.fillStyle = "#000"; ctx.fillRect(20, 20, 100, 100);
+    
+    // ヘッダー背景
+    ctx.fillStyle = "#111"; ctx.fillRect(2, 2, 136, 30);
+    ctx.fillStyle = "#d84"; ctx.font = "bold 14px sans-serif"; ctx.textAlign = "center"; 
+    // ★名称を上部へ
+    ctx.fillText(template.name, 70, 22);
+
+    // 画像エリア
+    ctx.fillStyle = "#000"; ctx.fillRect(20, 40, 100, 100);
+    
     const seed = type.length * 999; const rnd = function(s) { return Math.abs(Math.sin(s * 12.9898) * 43758.5453) % 1; };
     const skinTones = ["#ffdbac", "#f1c27d", "#e0ac69"]; ctx.fillStyle = skinTones[Math.floor(rnd(seed) * skinTones.length)];
-    ctx.beginPath(); ctx.arc(70, 70, 30, 0, Math.PI*2); ctx.fill(); 
-    ctx.fillStyle = "#343"; ctx.beginPath(); ctx.arc(70, 60, 32, Math.PI, 0); ctx.lineTo(102, 60); ctx.lineTo(38, 60); ctx.fill(); 
-    ctx.fillStyle = "#d84"; ctx.font = "bold 14px sans-serif"; ctx.textAlign = "center"; ctx.fillText(template.name, 70, 140);
-    ctx.fillStyle = "#888"; ctx.font = "10px sans-serif"; ctx.fillText(template.role ? template.role.toUpperCase() : "UNIT", 70, 155);
+    // 顔の位置を少し調整
+    ctx.beginPath(); ctx.arc(70, 90, 30, 0, Math.PI*2); ctx.fill(); 
+    ctx.fillStyle = "#343"; ctx.beginPath(); ctx.arc(70, 80, 32, Math.PI, 0); ctx.lineTo(102, 80); ctx.lineTo(38, 80); ctx.fill(); 
+    
+    // スペック情報（下部へ移動）
+    ctx.fillStyle = "#888"; ctx.font = "10px sans-serif"; 
+    ctx.fillText(template.role ? template.role.toUpperCase() : "UNIT", 70, 155);
+    
     let wpnName = template.main || "-"; if (typeof WPNS !== 'undefined' && WPNS[template.main]) { wpnName = WPNS[template.main].name; }
-    ctx.fillStyle = "#ccc"; ctx.font = "11px monospace"; ctx.fillText(`HP:${template.hp||100} AP:${template.ap||4}`, 70, 175);
-    ctx.fillStyle = "#d84"; ctx.font = "10px sans-serif"; ctx.fillText(wpnName, 70, 190);
+    ctx.fillStyle = "#ccc"; ctx.font = "11px monospace"; 
+    ctx.fillText(`HP:${template.hp||100} AP:${template.ap||4}`, 70, 175);
+    ctx.fillStyle = "#d84"; ctx.font = "10px sans-serif"; 
+    ctx.fillText(wpnName, 70, 190);
+    
     scene.textures.addCanvas(key, canvas); return key;
 };
 
@@ -55,7 +73,6 @@ const Renderer = {
         const config = { type: Phaser.AUTO, parent: 'game-view', width: document.getElementById('game-view').clientWidth, height: document.getElementById('game-view').clientHeight, backgroundColor: '#0b0e0a', pixelArt: false, scene: [MainScene, UIScene], fps: { target: 60 }, physics: { default: 'arcade', arcade: { debug: false } }, input: { activePointers: 1 } };
         this.game = new Phaser.Game(config); 
         
-        // ★修正: window.phaserGame に明示的に代入することで、phaser_sound.js から見えるようにする
         phaserGame = this.game;
         window.phaserGame = this.game; 
 
@@ -98,7 +115,6 @@ const Renderer = {
     generateFaceIcon(seed) { const c = document.createElement('canvas'); c.width = 64; c.height = 64; const ctx = c.getContext('2d'); const rnd = function() { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; }; ctx.fillStyle = "#334"; ctx.fillRect(0,0,64,64); const skinTones = ["#ffdbac", "#f1c27d", "#e0ac69", "#8d5524"]; ctx.fillStyle = skinTones[Math.floor(rnd() * skinTones.length)]; ctx.beginPath(); ctx.arc(32, 36, 18, 0, Math.PI*2); ctx.fill(); ctx.fillStyle = "#343"; ctx.beginPath(); ctx.arc(32, 28, 20, Math.PI, 0); ctx.lineTo(54, 30); ctx.lineTo(10, 30); ctx.fill(); ctx.strokeStyle = "#121"; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(10,28); ctx.lineTo(54,28); ctx.stroke(); ctx.fillStyle = "#000"; const eyeY = 36; const eyeOff = 6 + rnd()*2; ctx.fillRect(32-eyeOff-2, eyeY, 4, 2); ctx.fillRect(32+eyeOff-2, eyeY, 4, 2); ctx.strokeStyle = "#a76"; ctx.lineWidth = 1; ctx.beginPath(); const mouthW = 4 + rnd()*6; ctx.moveTo(32-mouthW/2, 48); ctx.lineTo(32+mouthW/2, 48); ctx.stroke(); if (rnd() < 0.5) { ctx.fillStyle = "rgba(0,0,0,0.2)"; ctx.fillRect(20 + rnd()*20, 30 + rnd()*20, 4, 2); } return c.toDataURL(); }
 };
 
-// ... (Card, UIScene クラスは変更なし) ...
 class Card extends Phaser.GameObjects.Container {
     constructor(scene, x, y, type) {
         super(scene, x, y); this.scene = scene; this.cardType = type; this.setSize(140, 200);
@@ -122,7 +138,6 @@ class Card extends Phaser.GameObjects.Container {
     onHover() { if(!this.parentContainer || Renderer.isMapDragging || Renderer.isCardDragging) return; this.isHovering = true; this.parentContainer.bringToTop(this); }
     onHoverOut() { this.isHovering = false; }
     
-    // ★追加: ドラッグ開始時にカードタイプを登録
     onDragStart(pointer) { 
         if(Renderer.isMapDragging) return; if(window.gameLogic && window.gameLogic.cardsUsed >= 2) return; 
         this.isDragging = true; 
@@ -133,7 +148,6 @@ class Card extends Phaser.GameObjects.Container {
     }
     onDrag(pointer) { if(!this.isDragging) return; this.targetX = pointer.x + this.dragOffsetX; this.targetY = pointer.y + this.dragOffsetY; const main = this.scene.game.scene.getScene('MainScene'); if (this.y < this.scene.scale.height * 0.65) main.dragHighlightHex = Renderer.pxToHex(pointer.x, pointer.y); else main.dragHighlightHex = null; }
     
-    // ★追加: 爆撃支援カードのドロップ処理分岐
     onDragEnd(pointer) { 
         if(!this.isDragging) return; 
         this.isDragging = false; 
@@ -148,7 +162,6 @@ class Card extends Phaser.GameObjects.Container {
             let canDeploy = false; 
             if (window.gameLogic) { 
                 if (this.cardType === 'aerial') {
-                    // 爆撃はマップ範囲内ならOK
                     if (window.gameLogic.isValidHex(hex.q, hex.r)) canDeploy = true; 
                     else window.gameLogic.log("配置不可: マップ範囲外です"); 
                 } else { 
@@ -168,7 +181,6 @@ class Card extends Phaser.GameObjects.Container {
             const type = this.cardType; 
             this.destroy(); 
             try { 
-                // ★追加: 爆撃支援カードなら triggerBombardment を実行
                 if (type === 'aerial') { 
                     if (window.gameLogic) window.gameLogic.triggerBombardment(hex); 
                 } else if(window.gameLogic) { 
@@ -200,7 +212,6 @@ class MainScene extends Phaser.Scene {
     constructor() { super({ key: 'MainScene' }); this.hexGroup=null; this.decorGroup=null; this.unitGroup=null; this.treeGroup=null; this.hpGroup=null; this.vfxGraphics=null; this.overlayGraphics=null; this.mapGenerated=false; this.dragHighlightHex=null; this.crosshairGroup=null; this.unitView = null; }
     preload() { 
         if(window.EnvSystem) window.EnvSystem.preload(this);
-        // ★修正: Sfx経由で一括ロード
         if (window.Sfx && window.Sfx.preload) { window.Sfx.preload(this); }
         
         this.load.spritesheet('us_soldier', 'asset/us-soldier-back-sheet.png', { frameWidth: 128, frameHeight: 128 });
@@ -226,7 +237,6 @@ class MainScene extends Phaser.Scene {
         this.input.on('pointerdown', (p) => { 
             if (Renderer.isCardDragging || Renderer.checkUIHover(p.x, p.y, p.event)) return; 
             
-            // ★修正: ユニットクリックが行われたかを判定するフラグ
             if (Renderer.suppressMapClick) {
                 Renderer.suppressMapClick = false;
                 return;
@@ -250,7 +260,6 @@ class MainScene extends Phaser.Scene {
         this.input.mouse.disableContextMenu();
         this.input.keyboard.on('keydown-ESC', () => { if(window.gameLogic && window.gameLogic.clearSelection) { window.gameLogic.clearSelection(); } });
     }
-    // ... (以下変更なし)
     triggerExplosion(x, y) { const explosion = this.add.sprite(x, y, 'explosion_sheet'); explosion.setDepth(100); explosion.setScale(1.5); explosion.play('explosion_anim'); explosion.once('animationcomplete', () => { explosion.destroy(); }); }
     centerCamera(q, r) { const p = Renderer.hexToPx(q, r); this.cameras.main.centerOn(p.x, p.y); }
     centerMap() { this.cameras.main.centerOn((MAP_W * HEX_SIZE * 1.5) / 2, (MAP_H * HEX_SIZE * 1.732) / 2); }
@@ -280,10 +289,9 @@ class MainScene extends Phaser.Scene {
         if (this.dragHighlightHex) {
             const h = this.dragHighlightHex;
             
-            // ★追加: 爆撃支援カードドラッグ時の範囲表示（破線）
             if (Renderer.draggedCardType === 'aerial') {
                  if (window.gameLogic) {
-                    this.overlayGraphics.lineStyle(3, 0xff2222, 0.8); // 赤い破線
+                    this.overlayGraphics.lineStyle(3, 0xff2222, 0.8); 
                     this.drawDashedHexOutline(this.overlayGraphics, h.q, h.r, time * 0.05);
                     const targets = window.gameLogic.getNeighbors(h.q, h.r);
                     targets.forEach(th => {
@@ -291,7 +299,6 @@ class MainScene extends Phaser.Scene {
                     });
                 }
             } else {
-                // 通常のユニット配置ハイライト
                 let isValid = false;
                 if (window.gameLogic) {
                     isValid = window.gameLogic.isValidHex(h.q, h.r) && window.gameLogic.map[h.q][h.r].id !== -1 && window.gameLogic.getUnitsInHex(h.q, h.r).length < 4;
@@ -325,7 +332,6 @@ class MainScene extends Phaser.Scene {
         this.crosshairGroup.clear();
         if (window.gameLogic.aimTargetUnit) { const u = window.gameLogic.aimTargetUnit; const pos = Renderer.hexToPx(u.q, u.r); this.drawCrosshair(this.crosshairGroup, pos.x, pos.y, time); }
     }
-    // ★追加: 破線描画用関数 (既存になければ追加)
     drawHexOutline(g, q, r) { const c = Renderer.hexToPx(q, r); g.beginPath(); for(let i=0; i<6; i++) { const a = Math.PI/180*60*i; g.lineTo(c.x+HEX_SIZE*0.9*Math.cos(a), c.y+HEX_SIZE*0.9*Math.sin(a)); } g.closePath(); g.strokePath(); }
     drawDashedHexOutline(g, q, r, timeOffset = 0) {
         const c = Renderer.hexToPx(q, r); const pts = []; for(let i=0; i<6; i++) { const a = Math.PI/180*60*i; pts.push({ x: c.x+HEX_SIZE*0.9*Math.cos(a), y: c.y+HEX_SIZE*0.9*Math.sin(a) }); }
