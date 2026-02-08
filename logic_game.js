@@ -1,4 +1,4 @@
-/** LOGIC GAME: Fix Attack Mode Persistence & Remove Delays */
+/** LOGIC GAME: Aggressive Auto-Reload to Maintain Attack Mode */
 
 const AVAILABLE_CARDS = ['rifleman', 'tank_pz4', 'aerial', 'scout', 'tank_tiger', 'gunner', 'sniper'];
 
@@ -54,7 +54,6 @@ class Game {
     }
     log(m) { this.ui.log(m); }
 
-    // --- DELEGATED MAP METHODS ---
     generateMap() { if(this.mapSystem) this.mapSystem.generate(); }
     isValidHex(q, r) { return this.mapSystem ? this.mapSystem.isValidHex(q, r) : false; }
     hexDist(a, b) { return this.mapSystem ? this.mapSystem.hexDist(a, b) : 0; }
@@ -73,22 +72,15 @@ class Game {
         } else { this.aimTargetUnit = null; }
     }
 
-    // --- DAMAGE & WIN CHECK ---
     applyDamage(target, damage, sourceName = "攻撃") {
         if (!target || target.hp <= 0) return;
         target.hp -= damage;
-        
         if (target.hp <= 0 && !target.deadProcessed) {
             target.deadProcessed = true;
             this.log(`>> ${target.name} を撃破！`);
             if (window.Sfx) { Sfx.play('death'); }
             if (window.VFX) { const p = Renderer.hexToPx(target.q, target.r); VFX.addUnitDebris(p.x, p.y); }
-            
-            if (target.team === 'enemy') {
-                this.checkWin();
-            } else {
-                this.checkLose();
-            }
+            if (target.team === 'enemy') { this.checkWin(); } else { this.checkLose(); }
         }
     }
 
@@ -583,14 +575,19 @@ class Game {
             
             setTimeout(() => {
                 this.state = 'PLAY'; 
-                if(!reloadedBeforeAttack && a.def.isTank && w.current === 0 && w.reserve > 0 && this.tankAutoReload && a.ap >= 1) { this.reloadWeapon(); }
+                
+                // ★修正: 攻撃前にリロードしたかどうかに関わらず、APがあるなら積極的に次弾を装填する
+                // これにより「攻撃完了時」は常に「装填済み」の状態を目指すため、Attackモードが途切れにくくなる
+                if(a.def.isTank && w.current === 0 && w.reserve > 0 && this.tankAutoReload && a.ap >= 1) { 
+                    this.reloadWeapon(); 
+                }
                 
                 this.refreshUnitState(a); 
                 const cost = w ? w.ap : 0;
                 
-                // ★修正: 弾切れでも予備弾があるならAttackモード維持
                 const hasAmmoInBag = !a.def.isTank && a.bag.some(i => i && i.type === 'ammo' && i.ammoFor === w.code);
-                const canShootAgain = (a.ap >= cost) && (w.current > 0 || (a.def.isTank && w.reserve > 0 && this.tankAutoReload && a.ap >= cost + 1) || hasAmmoInBag);
+                // タンクは自動装填があるので、予備弾があれば「撃てる」とみなす
+                const canShootAgain = (a.ap >= cost) && (w.current > 0 || (a.def.isTank && w.reserve > 0 && this.tankAutoReload) || hasAmmoInBag);
                 
                 if (canShootAgain) { this.log("射撃可能: 目標選択中..."); } else { this.setMode('SELECT'); this.checkPhaseEnd(); }
                 
@@ -653,7 +650,6 @@ class Game {
     }
     swapWeapon() { }
     checkPhaseEnd() { if (this.units.filter(u => u.team === 'player' && u.hp > 0 && u.ap > 0).length === 0 && this.state === 'PLAY') { this.endTurn(); } }
-    
     endTurn() {
         if (this.isProcessingTurn) { return; } 
         this.isProcessingTurn = true;
