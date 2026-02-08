@@ -1,4 +1,9 @@
-/** DATA: Unit Templates, Weapons, Terrain, and New Attributes */
+/** DATA: Global Constants, Unit Templates, Weapons, and Attributes */
+
+// ★★★ 復活させた基本定数 ★★★
+const HEX_SIZE = 54;
+const MAP_W = 24;
+const MAP_H = 14;
 
 // ◆フェーズ1: 属性定義
 const ATTR = {
