@@ -1,4 +1,4 @@
-/** LOGIC AI: High Speed Actions */
+/** LOGIC AI: Mortar & 3-Slot Support */
 
 class EnemyAI {
     constructor(game) {
@@ -11,7 +11,6 @@ class EnemyAI {
 
         for (let actor of actors) {
             if (actor.hp <= 0) continue;
-
             if (team === 'enemy') actor.ap = actor.maxAp;
 
             const targets = units.filter(u => u.team === targetTeam && u.hp > 0);
@@ -24,9 +23,8 @@ class EnemyAI {
                 if (d < minDist) { minDist = d; target = t; } 
             });
 
-            await this.optimizeWeapon(actor, target);
-
-            let w = actor.hands;
+            // ★修正: 仮想武器取得
+            let w = this.game.getVirtualWeapon(actor);
             if (!w) continue;
 
             let acted = true;
@@ -38,71 +36,47 @@ class EnemyAI {
                 loopCount++;
                 
                 if (actor.hp <= 0 || target.hp <= 0) break;
-                if (hasAttacked) break; 
+                if (hasAttacked) break;
 
                 const dist = this.game.hexDist(actor, target);
 
-                if (dist <= w.rng && actor.ap >= w.ap) {
-                    if (w.current <= 0 || (actor.def.isTank && w.reserve > 0 && w.current === 0)) {
-                        const cost = (actor.def.isTank) ? 1 : (w.rld || 1);
-                        if (actor.ap >= cost) {
-                            await this.game.reloadWeapon(false); 
-                            // ウェイトを200msまで短縮
-                            await new Promise(r => setTimeout(r, 200)); 
-                            continue; 
-                        }
-                    }
+                // 射程内攻撃
+                // 迫撃砲の最短射程も考慮
+                const minRng = w.minRng || 0;
+                if (dist >= minRng && dist <= w.rng && actor.ap >= w.ap) {
+                    
+                    // 迫撃砲の弾切れチェックなどは省略（敵は無限弾想定）
+                    // プレイヤーAIの場合は弾切れで止まる可能性があるが、今回は簡易実装
 
-                    if (w.current > 0 || (actor.def.isTank && w.reserve > 0)) {
-                        await this.game.actionAttack(actor, target);
-                        acted = true;
-                        hasAttacked = true;
-                        
-                        if (target.hp <= 0) break; 
-                        continue;
-                    }
+                    await this.game.actionAttack(actor, target);
+                    acted = true;
+                    hasAttacked = true;
+                    if (target.hp <= 0) break; 
+                    continue;
                 }
 
-                if (dist > w.rng && actor.ap >= 1) {
+                // 移動
+                if ((dist > w.rng || dist < minRng) && actor.ap >= 1) {
+                    // 逃げる動きはまだないので、近づくのみ
                     const path = this.game.findPath(actor, target.q, target.r);
                     if (path.length > 0) {
                         const next = path[0];
                         const cost = this.game.map[next.q][next.r].cost;
-                        
                         if (actor.ap >= cost) {
                             await this.game.actionMove(actor, [next]);
                             acted = true;
-                            // 移動後のウェイトを100msまで短縮
                             await new Promise(r => setTimeout(r, 100));
                             continue; 
                         }
                     }
                 }
             }
-            // ユニット間のウェイトも短縮
             await new Promise(r => setTimeout(r, 100));
         }
     }
-
-    async optimizeWeapon(actor, target) {
-        if (!actor.hands) return;
-        const currentWpn = actor.hands;
-        const isTargetHard = target.def.isTank;
-        let bestSlotIndex = -1;
-
-        if (isTargetHard && currentWpn.type === 'bullet') {
-            bestSlotIndex = actor.bag.findIndex(item => item && (item.type.includes('shell') || item.type === 'rocket'));
-        }
-        else if (!isTargetHard && (currentWpn.type.includes('shell') || currentWpn.type === 'rocket')) {
-            bestSlotIndex = actor.bag.findIndex(item => item && item.type === 'bullet');
-        }
-
-        if (bestSlotIndex !== -1) {
-            this.game.swapEquipment({type:'main'}, {type:'bag', index: bestSlotIndex});
-            if (window.Sfx) window.Sfx.play('swap');
-            await new Promise(r => setTimeout(r, 200)); 
-        }
-    }
+    
+    // optimizeWeaponは3スロット化で複雑になったため、一旦無効化（迫撃砲AIは持ち替えしない）
+    async optimizeWeapon(actor, target) {}
 
     async executeTurn(units) {
         return this.execute(units, 'enemy');
