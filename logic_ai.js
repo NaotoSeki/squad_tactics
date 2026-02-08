@@ -1,4 +1,4 @@
-/** LOGIC AI: Restricted to Single Attack per Turn */
+/** LOGIC AI: Fast Paced & Smart Weapon Switching */
 
 class EnemyAI {
     constructor(game) {
@@ -29,18 +29,16 @@ class EnemyAI {
             let w = actor.hands;
             if (!w) continue;
 
-            // --- 行動ループ ---
             let acted = true;
             let loopCount = 0;
-            let hasAttacked = false; // ★追加: 攻撃済みフラグ
+            let hasAttacked = false;
 
             while (acted && actor.ap > 0 && loopCount < 5) {
                 acted = false;
                 loopCount++;
                 
                 if (actor.hp <= 0 || target.hp <= 0) break;
-                // ★追加: 既に攻撃済みなら行動終了 (移動もしない)
-                if (hasAttacked) break;
+                if (hasAttacked) break; // 1ターン1攻撃制限
 
                 const dist = this.game.hexDist(actor, target);
 
@@ -50,7 +48,8 @@ class EnemyAI {
                         const cost = (actor.def.isTank) ? 1 : (w.rld || 1);
                         if (actor.ap >= cost) {
                             await this.game.reloadWeapon(false); 
-                            await new Promise(r => setTimeout(r, 600)); 
+                            // リロードは一瞬のタメを入れるが、以前より短く
+                            await new Promise(r => setTimeout(r, 200)); 
                             continue; 
                         }
                     }
@@ -58,9 +57,9 @@ class EnemyAI {
                     if (w.current > 0 || (actor.def.isTank && w.reserve > 0)) {
                         await this.game.actionAttack(actor, target);
                         acted = true;
-                        hasAttacked = true; // ★フラグON: これでループを抜ける
-                        
-                        await new Promise(r => setTimeout(r, 800));
+                        hasAttacked = true;
+                        // ★修正: 攻撃後のウェイトを削除 (アニメーション完了待ちのみ)
+                        if (target.hp <= 0) break; 
                         continue;
                     }
                 }
@@ -75,14 +74,13 @@ class EnemyAI {
                         if (actor.ap >= cost) {
                             await this.game.actionMove(actor, [next]);
                             acted = true;
-                            await new Promise(r => setTimeout(r, 400));
+                            // 移動後のウェイトも最小限に
+                            await new Promise(r => setTimeout(r, 100));
                             continue; 
                         }
                     }
                 }
             }
-            
-            await new Promise(r => setTimeout(r, 200));
         }
     }
 
@@ -100,11 +98,11 @@ class EnemyAI {
         }
 
         if (bestSlotIndex !== -1) {
-            const newWpn = actor.bag[bestSlotIndex];
-            this.game.log(`${actor.name} 武装切替: ${currentWpn.name} -> ${newWpn.name}`);
+            // const newWpn = actor.bag[bestSlotIndex];
+            // this.game.log(`${actor.name} 武装切替`); // ログ削減でテンポアップ
             this.game.swapEquipment({type:'main'}, {type:'bag', index: bestSlotIndex});
             if (window.Sfx) window.Sfx.play('swap');
-            await new Promise(r => setTimeout(r, 800));
+            await new Promise(r => setTimeout(r, 300)); // 持ち替え時間も短縮
         }
     }
 
