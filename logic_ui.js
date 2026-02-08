@@ -1,4 +1,4 @@
-/** LOGIC UI: 3-Slot Main Weapon & Mortar Display */
+/** LOGIC UI: Fixed Missing Card Badge Element */
 
 class UIManager {
     constructor(game) {
@@ -54,13 +54,11 @@ class UIManager {
         
         setEnabled(btnMove, u.ap >= 1);
         
-        // ★修正: 仮想武器を取得してコスト判定
         const w = this.game.getVirtualWeapon(u);
         const weaponCost = w ? w.ap : 99;
         
         setEnabled(btnAttack, u.ap >= weaponCost);
-        // Repairは簡易的にSlot0を見る
-        setEnabled(btnRepair, u.hands[0] && u.hands[0].isBroken);
+        setEnabled(btnRepair, u.hands && u.hands[0] && u.hands[0].isBroken);
         
         const neighbors = this.game.getUnitsInHex(u.q, u.r);
         setEnabled(btnMelee, neighbors.some(n => n.team !== u.team));
@@ -102,11 +100,9 @@ class UIManager {
         if (!u || u.hp <= 0) { ui.innerHTML = `<div style="text-align:center;color:#555;margin-top:80px;">// NO SIGNAL //</div>`; return; }
         const faceUrl = (Renderer.generateFaceIcon) ? Renderer.generateFaceIcon(u.faceSeed) : "";
         
-        // ★仮想武器（完成した迫撃砲など）を取得
         const virtualWpn = this.game.getVirtualWeapon(u);
         const isMortarActive = virtualWpn && virtualWpn.code === 'm2_mortar';
 
-        // スロット生成ヘルパー
         const makeSlot = (item, type, index) => { 
             if (!item) return `<div class="slot empty"><div style="font-size:10px; color:#555;">[EMPTY]</div></div>`; 
             
@@ -114,7 +110,6 @@ class UIManager {
             const isAmmo = (item.type === 'ammo'); 
             let gaugeHtml = ""; 
             
-            // 弾薬ゲージ表示
             if (!isAmmo && item.cap > 0 && !item.partType) { 
                 gaugeHtml = `<div class="ammo-gauge">`; 
                 const maxDisplay = 20; 
@@ -126,7 +121,6 @@ class UIManager {
                 } 
                 gaugeHtml += `</div>`; 
             }
-            // 弾薬箱（迫撃砲用）のゲージ
             if (isAmmo && item.code === 'mortar_shell_box') {
                 gaugeHtml = `<div class="ammo-gauge">`; 
                 for(let i=0; i<item.current; i++) gaugeHtml += `<div class="shell" style="width:3px;height:6px;background:#fa0;"></div>`;
@@ -134,15 +128,13 @@ class UIManager {
             }
 
             let blinkClass = ""; 
-            // 迫撃砲パーツが揃っているときの演出
             if (isMain && isMortarActive && item.type === 'part') {
-                blinkClass = "synergy-active"; // CSSで光らせる想定
+                blinkClass = "synergy-active"; 
             }
 
             return `<div class="slot ${isMain?'main-weapon':'bag-item'} ${blinkClass}"><div class="slot-name">${isMain?'🔫':''} ${item.name}</div>${!isAmmo && !item.partType ? `<div class="slot-meta">RNG:${item.rng} DMG:${item.dmg}</div>` : ''}${gaugeHtml}</div>`; 
         };
 
-        // ★3つのメインスロット + 4つのバッグスロット
         let mainSlotsHtml = "";
         for(let i=0; i<3; i++) {
             mainSlotsHtml += makeSlot(u.hands[i], 'main', i);
@@ -154,22 +146,21 @@ class UIManager {
         }
         
         let reloadBtn = "";
-        // リロードボタンの表示判定 (仮想武器に対して行う)
         if (virtualWpn && !u.def.isTank && !virtualWpn.partType && virtualWpn.code !== 'm2_mortar') {
              if (virtualWpn.current < virtualWpn.cap) reloadBtn = `<button onclick="gameLogic.reloadWeapon()" style="width:100%; background:#442; color:#dd4; border:1px solid #884; cursor:pointer; margin-top:5px;">🔃 RELOAD</button>`;
         }
 
-        ui.innerHTML = `<div class="soldier-header"><div class="face-box"><img src="${faceUrl}" width="64" height="64"></div><div><div class="soldier-name">${u.name}</div><div class="soldier-rank">Mortar Team</div></div></div><div class="stat-grid"><div class="stat-row"><span>HP</span> <span>${u.hp}/${u.maxHp}</span></div><div class="stat-row"><span>AP</span> <span>${u.ap}/${u.maxAp}</span></div></div><div class="inv-header" style="padding:0 10px; margin-top:10px;">IN HANDS (3 Slots)</div><div class="loadout-container" style="display:flex;flex-direction:column;">${mainSlotsHtml}</div><div class="inv-header" style="padding:0 10px; margin-top:10px;">BACKPACK</div><div class="loadout-container">${subSlotsHtml}</div><div style="padding:0 10px;">${reloadBtn}</div><div style="padding:10px;"><button onclick="gameLogic.endTurn()" style="width:100%; background:#522; border-color:#d44; margin-top:15px; padding:5px; color:#fcc;">End Turn</button></div>`;
+        ui.innerHTML = `<div class="soldier-header"><div class="face-box"><img src="${faceUrl}" width="64" height="64"></div><div><div class="soldier-name">${u.name}</div><div class="soldier-rank">${u.def.role}</div></div></div><div class="stat-grid"><div class="stat-row"><span>HP</span> <span>${u.hp}/${u.maxHp}</span></div><div class="stat-row"><span>AP</span> <span>${u.ap}/${u.maxAp}</span></div></div><div class="inv-header" style="padding:0 10px; margin-top:10px;">IN HANDS (3 Slots)</div><div class="loadout-container" style="display:flex;flex-direction:column;">${mainSlotsHtml}</div><div class="inv-header" style="padding:0 10px; margin-top:10px;">BACKPACK</div><div class="loadout-container">${subSlotsHtml}</div><div style="padding:0 10px;">${reloadBtn}</div><div style="padding:10px;"><button onclick="gameLogic.endTurn()" style="width:100%; background:#522; border-color:#d44; margin-top:15px; padding:5px; color:#fcc;">End Turn</button></div>`;
     }
 
     renderSetupCards(slots, onClick) {
         const box = document.getElementById('setup-cards'); box.innerHTML = '';
-        // mortar_gunner を追加
         ['rifleman', 'scout', 'gunner', 'mortar_gunner'].forEach(k => {
             const t = UNIT_TEMPLATES[k]; 
             const d = document.createElement('div'); d.className = 'card';
             const faceUrl = Renderer.generateFaceIcon ? Renderer.generateFaceIcon(Math.floor(Math.random() * 99999)) : "";
-            d.innerHTML = `<div style="background:#222; width:100%; text-align:center; padding:2px 0; border-bottom:1px solid #444; margin-bottom:5px;"><h3 style="color:#d84; font-size:14px; margin:0;">${t.name}</h3></div><div class="card-img-box" style="background:#111;"><img src="${faceUrl}" style="width:64px; height:64px; object-fit:cover;"></div><div class="card-body" style="font-size:10px; color:#aaa;">AP:${t.ap}<br>${t.role}</div>`;
+            // ★修正: card-badge を復活！
+            d.innerHTML = `<div class="card-badge" style="display:none;">✔</div><div style="background:#222; width:100%; text-align:center; padding:2px 0; border-bottom:1px solid #444; margin-bottom:5px;"><h3 style="color:#d84; font-size:14px; margin:0;">${t.name}</h3></div><div class="card-img-box" style="background:#111;"><img src="${faceUrl}" style="width:64px; height:64px; object-fit:cover;"></div><div class="card-body" style="font-size:10px; color:#aaa;">AP:${t.ap}<br>${t.role}</div>`;
             d.onclick = () => { onClick(k, d); };
             box.appendChild(d);
         });
