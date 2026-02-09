@@ -14,15 +14,14 @@ class CampaignManager {
         this.setupSlots = [];
         this.isAutoMode = false;
         
-        // UI初期化
-        this.initSetupScreen();
+        // UI初期化 (DOMが準備できるのを少し待つ)
+        window.addEventListener('load', () => this.initSetupScreen());
     }
 
     // --- SETUP SCREEN LOGIC ---
     initSetupScreen() {
-        // UIマネージャーは logic_ui.js にあるが、セットアップ画面の描画はここで行う
         const box = document.getElementById('setup-cards');
-        if (!box) return; // まだDOMがない場合
+        if (!box) return; 
         
         box.innerHTML = '';
         this.setupSlots = [];
@@ -31,7 +30,7 @@ class CampaignManager {
         ['rifleman', 'scout', 'gunner', 'mortar_gunner'].forEach(k => {
             const t = UNIT_TEMPLATES[k]; 
             const d = document.createElement('div'); d.className = 'card';
-            const faceUrl = Renderer.generateFaceIcon ? Renderer.generateFaceIcon(Math.floor(Math.random() * 99999)) : "";
+            const faceUrl = (window.Renderer && window.Renderer.generateFaceIcon) ? Renderer.generateFaceIcon(Math.floor(Math.random() * 99999)) : "";
             
             d.innerHTML = `
                 <div class="card-badge" style="display:none;">✔</div>
@@ -90,7 +89,6 @@ class CampaignManager {
         // 1. 生存者がいれば引き継ぎ
         if (this.survivingUnits.length > 0) {
             deployUnits = this.survivingUnits;
-            // 位置リセット
             deployUnits.forEach(u => { u.q = -999; u.r = -999; });
         } 
         // 2. 初回プレイならスロットから生成
@@ -101,13 +99,14 @@ class CampaignManager {
             });
         }
 
-        // BattleLogic（logic_game.js）をインスタンス化して戦闘開始
-        // ここで責務を移譲する
+        // BattleLogic（logic_game.js）をインスタンス化
         if (window.BattleLogic) {
             window.gameLogic = new BattleLogic(this, deployUnits, this.sector);
             window.gameLogic.init(); // マップ生成、敵配置、開始
         } else {
-            console.error("BattleLogic not found!");
+            console.error("BattleLogic not found! logic_game.js loaded?");
+            alert("BattleLogic Error: Reloading...");
+            location.reload();
         }
     }
 
@@ -118,7 +117,6 @@ class CampaignManager {
         
         const isPlayer = (team === 'player'); 
         
-        // ステータス生成
         const stats = t.stats ? { ...t.stats } : { str:0, aim:0, mob:0, mor:0 };
         if (isPlayer && !t.isTank) { 
             ['str', 'aim', 'mob', 'mor'].forEach(k => {
@@ -126,7 +124,6 @@ class CampaignManager {
             });
         }
         
-        // 名前生成
         let name = t.name; 
         let faceSeed = Math.floor(Math.random() * 99999);
         if (isPlayer && !t.isTank) { 
@@ -135,13 +132,11 @@ class CampaignManager {
             name = `${last} ${first}`; 
         }
 
-        // アイテム生成ヘルパー
         const createItem = (key) => {
             if (!key || !WPNS[key]) return null;
             let base = WPNS[key]; 
             let item = { ...base, code: key, id: Math.random(), isBroken: false };
             
-            // 弾数設定
             if (base.type === 'bullet' || base.type === 'shell_fast') {
                 item.current = item.cap;
             } else if (base.type === 'shell' || base.area) { 
@@ -150,17 +145,14 @@ class CampaignManager {
             } else if (base.type === 'ammo') {
                 item.current = base.current || base.cap;
             }
-            // 戦車砲
             if (t.isTank && !base.type.includes('part') && !base.type.includes('ammo')) { 
                 item.current = 1; item.cap = 1; item.reserve = 12; 
             }
             return item;
         };
 
-        // 装備構築 (3スロット)
         let hands = [null, null, null];
         if (t.loadout) {
-            // Mortar Gunnerなどの初期配列指定
             t.loadout.forEach((k, i) => { if (i < 3) hands[i] = createItem(k); });
         } else if (t.main) {
             hands[0] = createItem(t.main);
@@ -173,7 +165,6 @@ class CampaignManager {
             for (let i = 0; i < count; i++) { bag.push(createItem(t.opt)); }
         }
         
-        // 一般兵のマガジン追加
         if (hands[0] && hands[0].type === 'bullet' && !t.isTank) { 
             for (let i = 0; i < hands[0].mag; i++) { 
                 if (bag.length >= 4) break;
@@ -181,29 +172,13 @@ class CampaignManager {
             } 
         }
         
-        // 敵の弾薬無限化など
         if (!isPlayer) { 
             if (hands[0] && !hands[0].partType) { hands[0].current = 999; }
             bag = []; 
         }
 
         return { 
-            id: Math.random(), 
-            team: team, 
-            q: 0, r: 0, // 配置時に決定
-            def: t, 
-            name: name, 
-            rank: 0, 
-            faceSeed: faceSeed, 
-            stats: stats, 
-            hp: t.hp || 80, maxHp: t.hp || 80, 
-            ap: t.ap || 4, maxAp: t.ap || 4, 
-            hands: hands, 
-            bag: bag, 
-            stance: 'stand', 
-            skills: [], 
-            sectorsSurvived: 0, 
-            deadProcessed: false 
+            id: Math.random(), team: team, q: 0, r: 0, def: t, name: name, rank: 0, faceSeed: faceSeed, stats: stats, hp: t.hp || 80, maxHp: t.hp || 80, ap: t.ap || 4, maxAp: t.ap || 4, hands: hands, bag: bag, stance: 'stand', skills: [], sectorsSurvived: 0, deadProcessed: false 
         };
     }
 
@@ -212,39 +187,27 @@ class CampaignManager {
         this.survivingUnits = survivors;
         this.promoteSurvivors();
         
-        // 報酬画面表示
         document.getElementById('reward-screen').style.display = 'flex';
         const b = document.getElementById('reward-cards'); 
         b.innerHTML = ''; 
         
-        // 報酬カード生成
         [{k:'rifleman',t:'新兵'}, {k:'mortar_gunner',t:'迫撃砲兵'}, {k:'tank_pz4',t:'鹵獲戦車'}, {k:'supply',t:'補給'}].forEach(o => { 
             const d = document.createElement('div'); d.className = 'card'; 
             const iconType = o.k === 'supply' ? 'heal' : 'infantry'; 
-            
-            d.innerHTML = `
-                <div class="card-img-box"><img src="${createCardIcon(iconType)}"></div>
-                <div class="card-body"><p>${o.t}</p></div>
-            `;
-            
+            d.innerHTML = `<div class="card-img-box"><img src="${createCardIcon(iconType)}"></div><div class="card-body"><p>${o.t}</p></div>`;
             d.onclick = () => { 
                 if (o.k === 'supply') { 
                     this.resupplySurvivors(); 
                 } else { 
-                    // 新兵追加: キャンペーンマネージャーの生成ロジックを使う
                     const newUnit = this.createSoldier(o.k, 'player');
-                    // 安全な場所に配置するロジックはGame側にあるため、ここではリストに追加するだけ
-                    // 次のstartMissionで配置されるが、継続プレイの場合はGame側に即時追加依頼が必要
                     if(window.gameLogic) window.gameLogic.addReinforcement(newUnit);
                     this.survivingUnits.push(newUnit);
                 }
-                
                 this.sector++; 
                 this.startMission(); 
             }; 
             b.appendChild(d); 
         });
-        
         if (window.Sfx) Sfx.play('win');
     }
 
@@ -252,13 +215,11 @@ class CampaignManager {
         document.getElementById('gameover-screen').style.display = 'flex';
     }
 
-    // 生存者処理
     promoteSurvivors() { 
         this.survivingUnits.forEach(u => { 
             u.sectorsSurvived++; 
             if (u.sectorsSurvived === 5) { u.skills.push("Hero"); u.maxAp++; } 
-            u.rank = Math.min(5, (u.rank||0) + 1); 
-            u.maxHp += 30; u.hp += 30; 
+            u.rank = Math.min(5, (u.rank||0) + 1); u.maxHp += 30; u.hp += 30; 
             if (u.skills.length < 8 && Math.random() < 0.7) { 
                 const k = Object.keys(SKILLS).filter(z => z !== "Hero"); 
                 u.skills.push(k[Math.floor(Math.random() * k.length)]); 
@@ -269,30 +230,13 @@ class CampaignManager {
     resupplySurvivors() { 
         this.survivingUnits.forEach(u => { 
             if (u.hp < u.maxHp) u.hp = Math.floor(u.maxHp * 0.8); 
-            
-            // 仮想武器取得ロジックの簡易版（Gameクラスのメソッドに依存しないように）
             const parts = u.hands.map(i => i ? i.code : null);
             const isMortar = parts.includes('mortar_barrel') && parts.includes('mortar_bipod') && parts.includes('mortar_plate');
-            
-            if (isMortar) { 
-                u.bag.forEach(i => { if (i && i.code === 'mortar_shell_box') i.current = i.cap; }); 
-            } else if (u.hands[0] && u.hands[0].type && u.hands[0].type.includes('bullet')) { 
-                u.hands[0].current = u.hands[0].cap; 
-            } else if (u.def.isTank && u.hands[0]) { 
-                u.hands[0].reserve = 12; 
-            } 
+            if (isMortar) { u.bag.forEach(i => { if (i && i.code === 'mortar_shell_box') i.current = i.cap; }); } 
+            else if (u.hands[0] && u.hands[0].type && u.hands[0].type.includes('bullet')) { u.hands[0].current = u.hands[0].cap; } 
+            else if (u.def.isTank && u.hands[0]) { u.hands[0].reserve = 12; } 
         }); 
     }
 }
 
-// キャンペーンマネージャーを起動
 window.campaign = new CampaignManager();
-
-// グローバルフック（UIボタン用）
-window.gameLogic = {
-    startCampaign: () => window.campaign.startMission(),
-    // 以下はBattleLogic生成後に上書きされるが、エラー防止のためダミーを置いておく
-    toggleAuto: () => {},
-    toggleSidebar: () => {},
-    handleClick: () => {}
-};
