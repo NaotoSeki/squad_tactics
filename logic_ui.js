@@ -107,7 +107,7 @@ class UIManager {
         setEnabled(btnMove, u.ap >= 1);
         
         // gameLogic経由で武器取得
-        const w = window.gameLogic ? window.gameLogic.getVirtualWeapon(u) : null;
+        const w = window.gameLogic && window.gameLogic.getVirtualWeapon ? window.gameLogic.getVirtualWeapon(u) : null;
         const weaponCost = w ? w.ap : 99;
         
         setEnabled(btnAttack, u.ap >= weaponCost);
@@ -115,7 +115,7 @@ class UIManager {
         const anyBroken = Array.isArray(u.hands) ? u.hands.some(h => h && h.isBroken) : (u.hands && u.hands.isBroken);
         setEnabled(btnRepair, anyBroken);
         
-        const neighbors = window.gameLogic ? window.gameLogic.getUnitsInHex(u.q, u.r) : [];
+        const neighbors = (window.gameLogic && window.gameLogic.getUnitsInHex) ? window.gameLogic.getUnitsInHex(u.q, u.r) : [];
         setEnabled(btnMelee, neighbors.some(n => n.team !== u.team));
         setEnabled(btnHeal, neighbors.some(n => n.team === u.team && n.hp < n.maxHp));
 
@@ -138,7 +138,7 @@ class UIManager {
         const m = document.getElementById('context-menu'); if (!m) return;
         if (!hex || typeof hex.q === 'undefined') { m.style.display = 'none'; return; }
 
-        if(!window.gameLogic) return;
+        if(!window.gameLogic || !window.gameLogic.getUnitInHex) return;
 
         const u = window.gameLogic.getUnitInHex(hex.q, hex.r);
         const t = window.gameLogic.isValidHex(hex.q, hex.r) ? window.gameLogic.map[hex.q][hex.r] : null;
@@ -157,7 +157,7 @@ class UIManager {
         if (!u || u.hp <= 0) { ui.innerHTML = `<div style="text-align:center;color:#555;margin-top:80px;">// NO SIGNAL //</div>`; return; }
         const faceUrl = (Renderer.generateFaceIcon) ? Renderer.generateFaceIcon(u.faceSeed) : "";
         
-        const virtualWpn = window.gameLogic ? window.gameLogic.getVirtualWeapon(u) : null;
+        const virtualWpn = (window.gameLogic && window.gameLogic.getVirtualWeapon) ? window.gameLogic.getVirtualWeapon(u) : null;
         const isMortarActive = virtualWpn && virtualWpn.code === 'm2_mortar';
 
         const makeSlot = (item, type, index) => { 
