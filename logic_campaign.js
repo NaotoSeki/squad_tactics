@@ -14,7 +14,7 @@ class CampaignManager {
         this.setupSlots = [];
         this.isAutoMode = false;
         
-        // UI初期化
+        // UI初期化 (DOMが準備できるのを少し待つ)
         window.addEventListener('load', () => this.initSetupScreen());
     }
 
@@ -30,8 +30,14 @@ class CampaignManager {
         ['rifleman', 'scout', 'gunner', 'mortar_gunner'].forEach(k => {
             const t = UNIT_TEMPLATES[k]; 
             const d = document.createElement('div'); d.className = 'card';
-            // 安全策: Rendererが存在しない場合は空文字
-            const faceUrl = (window.Renderer && window.Renderer.generateFaceIcon) ? window.Renderer.generateFaceIcon(Math.floor(Math.random() * 99999)) : "";
+            
+            // 安全策: Rendererが存在しない場合や未ロード時の対策
+            let faceUrl = "";
+            try {
+                if (window.Renderer && typeof window.Renderer.generateFaceIcon === 'function') {
+                    faceUrl = window.Renderer.generateFaceIcon(Math.floor(Math.random() * 99999));
+                }
+            } catch(e) { console.warn("Renderer not ready"); }
             
             d.innerHTML = `
                 <div class="card-badge" style="display:none;">✔</div>
@@ -39,7 +45,7 @@ class CampaignManager {
                     <h3 style="color:#d84; font-size:14px; margin:0;">${t.name}</h3>
                 </div>
                 <div class="card-img-box" style="background:#111;">
-                    <img src="${faceUrl}" style="width:64px; height:64px; object-fit:cover;">
+                    <img src="${faceUrl}" style="width:64px; height:64px; object-fit:cover;" onerror="this.style.display='none'">
                 </div>
                 <div class="card-body" style="font-size:10px; color:#aaa;">
                     AP:${t.ap}<br>${t.role}
@@ -247,9 +253,11 @@ class CampaignManager {
 // キャンペーンマネージャーを起動
 window.campaign = new CampaignManager();
 
-// ★重要: 初期化段階での gameLogic のダミー (サイドバーエラー回避用)
+// ★重要: 初期化段階での gameLogic のダミー (DEPLOYボタン押下時エラー回避用)
 window.gameLogic = {
+    // startCampaign が呼ばれたら、CampaignManager の startMission に転送する
     startCampaign: () => window.campaign.startMission(),
+    
     // サイドバーの開閉はCSS制御が主だが、JSで呼ばれてもエラーにならないようにする
     toggleSidebar: () => { 
         const sb = document.getElementById('sidebar');
