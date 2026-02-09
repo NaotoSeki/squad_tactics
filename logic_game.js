@@ -30,7 +30,7 @@ window.BattleLogic = class BattleLogic {
         }
         this.ai = new EnemyAI(this);
         
-        // 戦闘開始時にグローバル変数を自分に切り替える
+        // グローバルgameLogicを自分自身に更新
         window.gameLogic = this;
     }
 
@@ -53,7 +53,17 @@ window.BattleLogic = class BattleLogic {
         const secCounter = document.getElementById('sector-counter');
         if(secCounter) secCounter.innerText = `SECTOR: ${this.sector.toString().padStart(2, '0')}`;
         
-        if (typeof Renderer !== 'undefined') { Renderer.centerMap(); }
+        // ★修正: マップ描画の準備ができるまで少し待ってからカメラを移動
+        // エラーが出てもゲームを止めないように保護
+        setTimeout(() => {
+            if (typeof Renderer !== 'undefined' && Renderer.game) { 
+                try {
+                    Renderer.centerMap(); 
+                } catch(e) {
+                    console.warn("Renderer not ready for centerMap (Skipped):", e);
+                }
+            }
+        }, 200); // 200ms遅延
         
         // 支援カード配布
         setTimeout(() => { 
@@ -66,7 +76,7 @@ window.BattleLogic = class BattleLogic {
                 Renderer.dealCards(deck); 
             }
             if (this.isAuto) this.runAuto();
-        }, 500);
+        }, 600);
     }
 
     generateMap() { if(this.mapSystem) this.mapSystem.generate(); }
@@ -215,6 +225,8 @@ window.BattleLogic = class BattleLogic {
                 
                 const arc = isMortar ? 250 : (isShell ? 30 : 0);
                 const flightTime = isMortar ? 1000 : (isShell ? 600 : dist * 30); 
+                
+                // ★テンポ改善: 発射レートを高速化
                 const fireRate = (w.type === 'bullet') ? 60 : 300; 
 
                 if (window.VFX) { 
@@ -227,7 +239,7 @@ window.BattleLogic = class BattleLogic {
                     }); 
                 }
                 
-                // 着弾処理
+                // 着弾処理 (非同期)
                 setTimeout(() => {
                     if (isMortar || isShell) {
                         if (window.VFX) VFX.addExplosion(tx, ty, "#f55", 5); 
