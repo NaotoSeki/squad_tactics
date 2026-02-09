@@ -101,6 +101,7 @@ class CampaignManager {
         // 1. 生存者がいれば引き継ぎ
         if (this.survivingUnits.length > 0) {
             deployUnits = this.survivingUnits;
+            // 位置リセット
             deployUnits.forEach(u => { u.q = -999; u.r = -999; });
         } 
         // 2. 初回プレイならスロットから生成
@@ -256,7 +257,7 @@ class CampaignManager {
 // キャンペーンマネージャーを起動
 window.campaign = new CampaignManager();
 
-// 初期化段階での gameLogic のダミー
+// ★重要: 初期化段階での gameLogic のダミー (Phaser側のエラー回避用)
 window.gameLogic = {
     startCampaign: () => window.campaign.startMission(),
     toggleSidebar: () => { 
@@ -264,5 +265,17 @@ window.gameLogic = {
         if(sb) sb.classList.toggle('collapsed');
     },
     toggleAuto: () => {},
-    handleClick: () => {}
+    handleClick: () => {},
+    // 以下、Phaser側が参照する可能性のあるプロパティのダミー
+    map: [],
+    selectedUnit: null,
+    reachableHexes: [],
+    attackLine: [],
+    hoverHex: null,
+    path: [],
+    aimTargetUnit: null,
+    isValidHex: () => false,
+    getUnitsInHex: () => [],
+    getNeighbors: () => [],
+    checkDeploy: () => false
 };
