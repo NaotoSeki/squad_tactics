@@ -1,4 +1,4 @@
-/** LOGIC GAME: Fixed Missing startCampaign & Spawn Methods */
+/** LOGIC GAME: Fixed Missing createSoldier Method */
 
 const AVAILABLE_CARDS = ['rifleman', 'scout', 'gunner', 'sniper', 'mortar_gunner', 'aerial'];
 
@@ -72,7 +72,82 @@ class Game {
         });
     }
 
-    // --- GAME START & SPAWN LOGIC (復活) ---
+    // --- UNIT CREATION (復活!) ---
+    createSoldier(templateKey, team, q, r) {
+        const t = UNIT_TEMPLATES[templateKey]; if (!t) return null;
+        const isPlayer = (team === 'player'); 
+        
+        const stats = t.stats ? { ...t.stats } : { str:0, aim:0, mob:0, mor:0 };
+        if (isPlayer && !t.isTank) { 
+            ['str', 'aim', 'mob', 'mor'].forEach(k => {
+                stats[k] = (stats[k] || 0) + Math.floor(Math.random() * 3) - 1;
+            });
+        }
+        let name = t.name; 
+        let rank = 0; 
+        let faceSeed = Math.floor(Math.random() * 99999);
+        if (isPlayer && !t.isTank) { 
+            const first = FIRST_NAMES[Math.floor(Math.random() * FIRST_NAMES.length)]; 
+            const last = LAST_NAMES[Math.floor(Math.random() * LAST_NAMES.length)]; 
+            name = `${last} ${first}`; 
+        }
+        
+        const createItem = (key) => {
+            if (!key || !WPNS[key]) { return null; }
+            let base = WPNS[key]; 
+            let item = { ...base, code: key, id: Math.random(), isBroken: false };
+            if (base.type === 'bullet' || base.type === 'shell_fast') {
+                item.current = item.cap;
+            } else if (base.type === 'shell' || base.area) { 
+                item.current = 1; 
+                item.isConsumable = true; 
+            } else if (base.type === 'ammo') {
+                item.current = base.current || base.cap;
+            }
+            if (t.isTank && !base.type.includes('part') && !base.type.includes('ammo')) { 
+                item.current = 1; item.cap = 1; item.reserve = 12; 
+            }
+            return item;
+        };
+        
+        // 3スロット初期化
+        let hands = [null, null, null];
+        if (t.loadout) {
+            t.loadout.forEach((k, i) => { if (i < 3) hands[i] = createItem(k); });
+        } else if (t.main) {
+            hands[0] = createItem(t.main);
+        }
+
+        let bag = [];
+        if (t.sub) { bag.push(createItem(t.sub)); }
+        if (t.opt) { 
+            const optBase = WPNS[t.opt]; const count = optBase.mag || 1; 
+            for (let i = 0; i < count; i++) { bag.push(createItem(t.opt)); }
+        }
+        
+        if (hands[0] && hands[0].type === 'bullet' && !t.isTank) { 
+            for (let i = 0; i < hands[0].mag; i++) { 
+                if (bag.length >= 4) { break; }
+                bag.push({ type: 'ammo', name: (hands[0].magName || 'Clip'), ammoFor: hands[0].code, cap: hands[0].cap, jam: hands[0].jam, code: 'mag' }); 
+            } 
+        }
+        
+        if (!isPlayer) { 
+            if (hands[0] && !hands[0].partType) { hands[0].current = 999; }
+            bag = []; 
+        }
+
+        return { 
+            id: Math.random(), team: team, q: q, r: r, def: t, name: name, rank: rank, faceSeed: faceSeed, stats: stats, 
+            hp: t.hp || 80, maxHp: t.hp || 80, 
+            ap: t.ap || 4, maxAp: t.ap || 4, 
+            hands: hands, 
+            bag: bag, 
+            stance: 'stand', skills: [], sectorsSurvived: 0, deadProcessed: false 
+        };
+    }
+
+    // --- GAME START ---
     startCampaign() {
         document.getElementById('setup-screen').style.display = 'none';
         
@@ -98,7 +173,6 @@ class Game {
         
         this.generateMap(); 
         
-        // プレイヤー配置
         if (this.units.length === 0) { 
             this.setupSlots.forEach(k => { 
                 const p = this.getSafeSpawnPos('player'); 
@@ -134,51 +208,6 @@ class Game {
             }
             if (this.isAuto) this.runAuto();
         }, 500);
-    }
-
-    getSafeSpawnPos(team) {
-        const cy = Math.floor(MAP_H / 2);
-        for (let i = 0; i < 100; i++) { 
-            const q = Math.floor(Math.random() * MAP_W); 
-            const r = Math.floor(Math.random() * MAP_H); 
-            if (team === 'player' && r < cy) { continue; }
-            if (team === 'enemy' && r >= cy) { continue; }
-            if (this.isValidHex(q, r) && this.getUnitsInHex(q, r).length < 4 && this.map[q][r].id !== -1 && this.map[q][r].id !== 5) { return { q, r }; } 
-        }
-        return null;
-    }
-
-    spawnAtSafeGround(team, type) {
-        const p = this.getSafeSpawnPos(team);
-        if (p) {
-            const u = this.createSoldier(type, team, p.q, p.r);
-            if (u) {
-                u.q = p.q; u.r = p.r;
-                this.units.push(u);
-                this.log(`増援合流: ${u.name}`);
-            }
-        } else {
-            this.log("増援合流失敗: 配置スペースなし");
-        }
-    }
-
-    // ★重要: applyDamage を前方に移動し、確実に定義させる
-    applyDamage(target, damage, sourceName = "攻撃") {
-        if (!target || target.hp <= 0) return;
-        target.hp -= damage;
-        
-        if (target.hp <= 0 && !target.deadProcessed) {
-            target.deadProcessed = true;
-            this.log(`>> ${target.name} を撃破！`);
-            if (window.Sfx) { Sfx.play('death'); }
-            if (window.VFX) { const p = Renderer.hexToPx(target.q, target.r); VFX.addUnitDebris(p.x, p.y); }
-            
-            if (target.team === 'enemy') {
-                this.checkWin();
-            } else {
-                this.checkLose();
-            }
-        }
     }
 
     // --- CORE METHODS ---
@@ -222,6 +251,51 @@ class Game {
     getUnitsInHex(q, r) { return this.units.filter(u => u.q === q && u.r === r && u.hp > 0); }
     getUnitInHex(q, r) { return this.units.find(u => u.q === q && u.r === r && u.hp > 0); }
     getUnit(q, r) { return this.getUnitInHex(q, r); }
+
+    getSafeSpawnPos(team) {
+        const cy = Math.floor(MAP_H / 2);
+        for (let i = 0; i < 100; i++) { 
+            const q = Math.floor(Math.random() * MAP_W); 
+            const r = Math.floor(Math.random() * MAP_H); 
+            if (team === 'player' && r < cy) { continue; }
+            if (team === 'enemy' && r >= cy) { continue; }
+            if (this.isValidHex(q, r) && this.getUnitsInHex(q, r).length < 4 && this.map[q][r].id !== -1 && this.map[q][r].id !== 5) { return { q, r }; } 
+        }
+        return null;
+    }
+
+    spawnAtSafeGround(team, type) {
+        const p = this.getSafeSpawnPos(team);
+        if (p) {
+            const u = this.createSoldier(type, team, p.q, p.r);
+            if (u) {
+                u.q = p.q; u.r = p.r;
+                this.units.push(u);
+                this.log(`増援合流: ${u.name}`);
+            }
+        } else {
+            this.log("増援合流失敗: 配置スペースなし");
+        }
+    }
+
+    // --- DAMAGE & WIN CHECK ---
+    applyDamage(target, damage, sourceName = "攻撃") {
+        if (!target || target.hp <= 0) return;
+        target.hp -= damage;
+        
+        if (target.hp <= 0 && !target.deadProcessed) {
+            target.deadProcessed = true;
+            this.log(`>> ${target.name} を撃破！`);
+            if (window.Sfx) { Sfx.play('death'); }
+            if (window.VFX) { const p = Renderer.hexToPx(target.q, target.r); VFX.addUnitDebris(p.x, p.y); }
+            
+            if (target.team === 'enemy') {
+                this.checkWin();
+            } else {
+                this.checkLose();
+            }
+        }
+    }
 
     // --- INTERACTION MODE HANDLING ---
     setMode(mode) {
@@ -392,7 +466,6 @@ class Game {
         if (u.ap < cost) { this.log(`AP不足`); return; }
         u.ap -= cost; u.stance = s; this.refreshUnitState(u); this.hideActionMenu(); if (window.Sfx) { Sfx.play('click'); }
     }
-    
     toggleStance() { const u = this.selectedUnit; if (!u) return; let next = 'stand'; if (u.stance === 'stand') { next = 'crouch'; } else if (u.stance === 'crouch') { next = 'prone'; } this.setStance(next); }
 
     swapEquipment(src, tgt) {
@@ -424,6 +497,7 @@ class Game {
         }
     }
 
+    // --- INVENTORY & WEAPON LOGIC ---
     getVirtualWeapon(u) {
         if (!u || !u.hands) return null;
         if (!Array.isArray(u.hands)) return u.hands;
@@ -480,12 +554,12 @@ class Game {
         this.hideActionMenu();
     }
 
+    // --- GAME ACTIONS ---
     async actionAttack(a, d) {
         if (this.isExecutingAttack) return;
         if (!a) return;
         
-        // ★重要: this (Gameインスタンス) を game 変数に退避
-        const game = this;
+        const game = this; // this退避
 
         const w = this.getVirtualWeapon(a);
         if (!w) return;
@@ -537,8 +611,8 @@ class Game {
             for (let i = 0; i < shots; i++) {
                 if (targetUnit && targetUnit.hp <= 0) break;
                 
-                game.consumeAmmo(a, w.code); // this -> game
-                game.updateSidebar(); // this -> game
+                game.consumeAmmo(a, w.code); 
+                game.updateSidebar(); 
                 
                 const sPos = Renderer.hexToPx(a.q, a.r); 
                 const ePos = Renderer.hexToPx(targetHex.q, targetHex.r);
@@ -617,6 +691,44 @@ class Game {
                 resolve(); 
             }, 800);
         });
+    }
+
+    actionRepair() {
+        const u = this.selectedUnit; if (!u || u.ap < 2) return;
+        if (!u.hands[0] || !u.hands[0].isBroken) return;
+        u.ap -= 2; u.hands[0].isBroken = false; this.log(`${u.name} 武器修理完了`); if (window.Sfx) Sfx.play('reload'); this.refreshUnitState(u); this.hideActionMenu();
+    }
+
+    actionHeal() {
+        const u = this.selectedUnit; if (!u || u.ap < 2) return;
+        const targets = this.getUnitsInHex(u.q, u.r).filter(t => t.team === u.team && t.hp < t.maxHp);
+        if (targets.length === 0) return;
+        targets.sort((a, b) => (a.hp / a.maxHp) - (b.hp / b.maxHp)); const target = targets[0]; 
+        u.ap -= 2; const healAmount = 30; target.hp = Math.min(target.maxHp, target.hp + healAmount); 
+        this.log(`${u.name} が ${target.name} を治療`);
+        if (window.VFX) { const p = Renderer.hexToPx(u.q, u.r); window.VFX.add({ x: p.x, y: p.y - 20, vx: 0, vy: -1, life: 30, maxLife: 30, color: "#0f0", size: 4, type: 'spark' }); }
+        this.refreshUnitState(u); this.hideActionMenu();
+    }
+
+    async actionMelee(a, d) {
+        if (!a || a.ap < 2) return;
+        if (a.q !== d.q || a.r !== d.r) return;
+        let wpnName = "銃床"; let bonusDmg = 0;
+        if (a.def.isTank) { wpnName = "体当たり"; bonusDmg = 15; } 
+        else {
+            let bestWeapon = null; if (a.hands[0] && a.hands[0].type === 'melee') { bestWeapon = a.hands[0]; }
+            a.bag.forEach(item => { if (item && item.type === 'melee') { if (!bestWeapon || item.dmg > bestWeapon.dmg) { bestWeapon = item; } } });
+            if (bestWeapon) { wpnName = bestWeapon.name; bonusDmg = bestWeapon.dmg; }
+        }
+        a.ap -= 2;
+        this.log(`${a.name} 白兵攻撃`);
+        if (typeof Renderer !== 'undefined' && Renderer.playAttackAnim) { Renderer.playAttackAnim(a, d); }
+        await new Promise(r => setTimeout(r, 300));
+        let strVal = (a.stats && a.stats.str) ? a.stats.str : 0; let totalDmg = 10 + (strVal * 3) + bonusDmg;
+        if (d.skills.includes('CQC')) { this.log(`>> カウンター！`); this.applyDamage(a, 15, "カウンター"); }
+        if (window.Sfx) { Sfx.play('hit'); }
+        this.applyDamage(d, totalDmg, "白兵");
+        this.refreshUnitState(a); this.checkPhaseEnd();
     }
 
     spawnEnemies() {
