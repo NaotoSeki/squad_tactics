@@ -1,4 +1,4 @@
-/** LOGIC UI: Resize Handle Follow Fix & D&D */
+/** LOGIC UI: Full Features (Resize, D&D, Logging) */
 
 class UIManager {
     constructor(game) {
@@ -50,8 +50,6 @@ class UIManager {
     toggleSidebar() {
         const sb = document.getElementById('sidebar');
         sb.classList.toggle('collapsed');
-        
-        // リサイズバーの追従修正
         const handle = document.querySelector('.resize-handle');
         if(handle) {
             if(sb.classList.contains('collapsed')) {
@@ -77,7 +75,10 @@ class UIManager {
     handleDrop(e, type, index) {
         e.preventDefault();
         if (this.dragSrc) {
-            this.game.swapEquipment(this.dragSrc, { type, index });
+            // BattleLogicへの委譲（gameLogic経由）
+            if(window.gameLogic && window.gameLogic.swapEquipment) {
+                window.gameLogic.swapEquipment(this.dragSrc, { type, index });
+            }
             this.dragSrc = null;
         }
     }
@@ -105,7 +106,8 @@ class UIManager {
         
         setEnabled(btnMove, u.ap >= 1);
         
-        const w = this.game.getVirtualWeapon(u);
+        // gameLogic経由で武器取得
+        const w = window.gameLogic ? window.gameLogic.getVirtualWeapon(u) : null;
         const weaponCost = w ? w.ap : 99;
         
         setEnabled(btnAttack, u.ap >= weaponCost);
@@ -113,7 +115,7 @@ class UIManager {
         const anyBroken = Array.isArray(u.hands) ? u.hands.some(h => h && h.isBroken) : (u.hands && u.hands.isBroken);
         setEnabled(btnRepair, anyBroken);
         
-        const neighbors = this.game.getUnitsInHex(u.q, u.r);
+        const neighbors = window.gameLogic ? window.gameLogic.getUnitsInHex(u.q, u.r) : [];
         setEnabled(btnMelee, neighbors.some(n => n.team !== u.team));
         setEnabled(btnHeal, neighbors.some(n => n.team === u.team && n.hp < n.maxHp));
 
@@ -136,8 +138,10 @@ class UIManager {
         const m = document.getElementById('context-menu'); if (!m) return;
         if (!hex || typeof hex.q === 'undefined') { m.style.display = 'none'; return; }
 
-        const u = this.game.getUnitInHex(hex.q, hex.r);
-        const t = this.game.isValidHex(hex.q, hex.r) ? this.game.map[hex.q][hex.r] : null;
+        if(!window.gameLogic) return;
+
+        const u = window.gameLogic.getUnitInHex(hex.q, hex.r);
+        const t = window.gameLogic.isValidHex(hex.q, hex.r) ? window.gameLogic.map[hex.q][hex.r] : null;
         let h = "";
         if (u) {
             h += `<div style="color:#0af;font-weight:bold">${u.name}</div>HP:${u.hp}/${u.maxHp} AP:${u.ap}/${u.maxAp}<br>Stance: ${u.stance}`;
@@ -153,7 +157,7 @@ class UIManager {
         if (!u || u.hp <= 0) { ui.innerHTML = `<div style="text-align:center;color:#555;margin-top:80px;">// NO SIGNAL //</div>`; return; }
         const faceUrl = (Renderer.generateFaceIcon) ? Renderer.generateFaceIcon(u.faceSeed) : "";
         
-        const virtualWpn = this.game.getVirtualWeapon(u);
+        const virtualWpn = window.gameLogic ? window.gameLogic.getVirtualWeapon(u) : null;
         const isMortarActive = virtualWpn && virtualWpn.code === 'm2_mortar';
 
         const makeSlot = (item, type, index) => { 
@@ -206,17 +210,5 @@ class UIManager {
         }
 
         ui.innerHTML = `<div class="soldier-header"><div class="face-box"><img src="${faceUrl}" width="64" height="64"></div><div><div class="soldier-name">${u.name}</div><div class="soldier-rank">${u.def.role}</div></div></div><div class="stat-grid"><div class="stat-row"><span>HP</span> <span>${u.hp}/${u.maxHp}</span></div><div class="stat-row"><span>AP</span> <span>${u.ap}/${u.maxAp}</span></div></div><div class="inv-header" style="padding:0 10px; margin-top:10px;">IN HANDS (3 Slots)</div><div class="loadout-container" style="display:flex;flex-direction:column;">${mainSlotsHtml}</div><div class="inv-header" style="padding:0 10px; margin-top:10px;">BACKPACK</div><div class="loadout-container">${subSlotsHtml}</div><div style="padding:0 10px;">${reloadBtn}</div><div style="padding:10px;"><button onclick="gameLogic.endTurn()" style="width:100%; background:#522; border-color:#d44; margin-top:15px; padding:5px; color:#fcc;">End Turn</button></div>`;
-    }
-
-    renderSetupCards(slots, onClick) {
-        const box = document.getElementById('setup-cards'); box.innerHTML = '';
-        ['rifleman', 'scout', 'gunner', 'mortar_gunner'].forEach(k => {
-            const t = UNIT_TEMPLATES[k]; 
-            const d = document.createElement('div'); d.className = 'card';
-            const faceUrl = Renderer.generateFaceIcon ? Renderer.generateFaceIcon(Math.floor(Math.random() * 99999)) : "";
-            d.innerHTML = `<div class="card-badge" style="display:none;">✔</div><div style="background:#222; width:100%; text-align:center; padding:2px 0; border-bottom:1px solid #444; margin-bottom:5px;"><h3 style="color:#d84; font-size:14px; margin:0;">${t.name}</h3></div><div class="card-img-box" style="background:#111;"><img src="${faceUrl}" style="width:64px; height:64px; object-fit:cover;"></div><div class="card-body" style="font-size:10px; color:#aaa;">AP:${t.ap}<br>${t.role}</div>`;
-            d.onclick = () => { onClick(k, d); };
-            box.appendChild(d);
-        });
     }
 }
