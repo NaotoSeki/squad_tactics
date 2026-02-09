@@ -1,8 +1,7 @@
-/** PHASER BRIDGE: Precise Click Handling & Aerial Support UI (Card Layout Updated) */
+/** PHASER BRIDGE: Precise Click Handling & Aerial Support UI (Safety Check Added) */
 let phaserGame = null;
 window.HIGH_RES_SCALE = 2.0; 
 
-// ★修正: カード名称を上部に表示して、ドック格納時も見やすくする
 window.getCardTextureKey = function(scene, type) {
     const key = `card_texture_${type}`;
     if (scene.textures.exists(key)) return key;
@@ -10,36 +9,23 @@ window.getCardTextureKey = function(scene, type) {
     if (typeof UNIT_TEMPLATES !== 'undefined' && UNIT_TEMPLATES[type]) { template = UNIT_TEMPLATES[type]; }
     const canvas = document.createElement('canvas'); canvas.width = 140 * 2; canvas.height = 200 * 2;
     const ctx = canvas.getContext('2d'); ctx.scale(2, 2);
-    
-    // 背景
     ctx.fillStyle = "#1a1a1a"; ctx.fillRect(0, 0, 140, 200);
     ctx.strokeStyle = "#555"; ctx.lineWidth = 2; ctx.strokeRect(0, 0, 140, 200);
-    
-    // ヘッダー背景
     ctx.fillStyle = "#111"; ctx.fillRect(2, 2, 136, 30);
     ctx.fillStyle = "#d84"; ctx.font = "bold 14px sans-serif"; ctx.textAlign = "center"; 
-    // ★名称を上部へ
     ctx.fillText(template.name, 70, 22);
-
-    // 画像エリア
     ctx.fillStyle = "#000"; ctx.fillRect(20, 40, 100, 100);
-    
     const seed = type.length * 999; const rnd = function(s) { return Math.abs(Math.sin(s * 12.9898) * 43758.5453) % 1; };
     const skinTones = ["#ffdbac", "#f1c27d", "#e0ac69"]; ctx.fillStyle = skinTones[Math.floor(rnd(seed) * skinTones.length)];
-    // 顔の位置を少し調整
     ctx.beginPath(); ctx.arc(70, 90, 30, 0, Math.PI*2); ctx.fill(); 
     ctx.fillStyle = "#343"; ctx.beginPath(); ctx.arc(70, 80, 32, Math.PI, 0); ctx.lineTo(102, 80); ctx.lineTo(38, 80); ctx.fill(); 
-    
-    // スペック情報（下部へ移動）
     ctx.fillStyle = "#888"; ctx.font = "10px sans-serif"; 
     ctx.fillText(template.role ? template.role.toUpperCase() : "UNIT", 70, 155);
-    
     let wpnName = template.main || "-"; if (typeof WPNS !== 'undefined' && WPNS[template.main]) { wpnName = WPNS[template.main].name; }
     ctx.fillStyle = "#ccc"; ctx.font = "11px monospace"; 
     ctx.fillText(`HP:${template.hp||100} AP:${template.ap||4}`, 70, 175);
     ctx.fillStyle = "#d84"; ctx.font = "10px sans-serif"; 
     ctx.fillText(wpnName, 70, 190);
-    
     scene.textures.addCanvas(key, canvas); return key;
 };
 
@@ -72,10 +58,8 @@ const Renderer = {
     init(canvasElement) {
         const config = { type: Phaser.AUTO, parent: 'game-view', width: document.getElementById('game-view').clientWidth, height: document.getElementById('game-view').clientHeight, backgroundColor: '#0b0e0a', pixelArt: false, scene: [MainScene, UIScene], fps: { target: 60 }, physics: { default: 'arcade', arcade: { debug: false } }, input: { activePointers: 1 } };
         this.game = new Phaser.Game(config); 
-        
         phaserGame = this.game;
         window.phaserGame = this.game; 
-
         window.addEventListener('resize', () => this.resize());
         const startAudio = () => { if(window.Sfx && window.Sfx.ctx && window.Sfx.ctx.state === 'suspended') { window.Sfx.ctx.resume(); } };
         document.addEventListener('click', startAudio); document.addEventListener('keydown', startAudio);
@@ -88,7 +72,6 @@ const Renderer = {
     centerMap() { const main = this.game.scene.getScene('MainScene'); if (main && main.centerMap) main.centerMap(); },
     dealCards(types) { let ui = this.game.scene.getScene('UIScene'); if(!ui || !ui.sys) ui = this.game.scene.scenes.find(s => s.scene.key === 'UIScene'); if(ui) ui.dealStart(types); },
     dealCard(type) { const ui = this.game.scene.getScene('UIScene'); if(ui) ui.addCardToHand(type); },
-    
     checkUIHover(x, y, pointerEvent) { 
         if (this.isCardDragging) return true;
         const ui = this.game.scene.getScene('UIScene'); 
@@ -102,14 +85,11 @@ const Renderer = {
             const el = document.getElementById(id);
             if (el && el.offsetParent !== null) { 
                 const rect = el.getBoundingClientRect();
-                if (checkX >= rect.left && checkX <= rect.right && checkY >= rect.top && checkY <= rect.bottom) {
-                    return true;
-                }
+                if (checkX >= rect.left && checkX <= rect.right && checkY >= rect.top && checkY <= rect.bottom) { return true; }
             }
         }
         return false; 
     },
-    
     playAttackAnim(attacker, target) { const main = this.game.scene.getScene('MainScene'); if (main && main.unitView) main.unitView.triggerAttack(attacker, target); },
     playExplosion(x, y) { const main = this.game.scene.getScene('MainScene'); if (main) main.triggerExplosion(x, y); },
     generateFaceIcon(seed) { const c = document.createElement('canvas'); c.width = 64; c.height = 64; const ctx = c.getContext('2d'); const rnd = function() { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; }; ctx.fillStyle = "#334"; ctx.fillRect(0,0,64,64); const skinTones = ["#ffdbac", "#f1c27d", "#e0ac69", "#8d5524"]; ctx.fillStyle = skinTones[Math.floor(rnd() * skinTones.length)]; ctx.beginPath(); ctx.arc(32, 36, 18, 0, Math.PI*2); ctx.fill(); ctx.fillStyle = "#343"; ctx.beginPath(); ctx.arc(32, 28, 20, Math.PI, 0); ctx.lineTo(54, 30); ctx.lineTo(10, 30); ctx.fill(); ctx.strokeStyle = "#121"; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(10,28); ctx.lineTo(54,28); ctx.stroke(); ctx.fillStyle = "#000"; const eyeY = 36; const eyeOff = 6 + rnd()*2; ctx.fillRect(32-eyeOff-2, eyeY, 4, 2); ctx.fillRect(32+eyeOff-2, eyeY, 4, 2); ctx.strokeStyle = "#a76"; ctx.lineWidth = 1; ctx.beginPath(); const mouthW = 4 + rnd()*6; ctx.moveTo(32-mouthW/2, 48); ctx.lineTo(32+mouthW/2, 48); ctx.stroke(); if (rnd() < 0.5) { ctx.fillStyle = "rgba(0,0,0,0.2)"; ctx.fillRect(20 + rnd()*20, 30 + rnd()*20, 4, 2); } return c.toDataURL(); }
@@ -137,55 +117,38 @@ class Card extends Phaser.GameObjects.Container {
     }
     onHover() { if(!this.parentContainer || Renderer.isMapDragging || Renderer.isCardDragging) return; this.isHovering = true; this.parentContainer.bringToTop(this); }
     onHoverOut() { this.isHovering = false; }
-    
     onDragStart(pointer) { 
         if(Renderer.isMapDragging) return; if(window.gameLogic && window.gameLogic.cardsUsed >= 2) return; 
-        this.isDragging = true; 
-        Renderer.isCardDragging = true; 
-        Renderer.draggedCardType = this.cardType;
+        this.isDragging = true; Renderer.isCardDragging = true; Renderer.draggedCardType = this.cardType;
         this.setAlpha(0.6); this.setScale(1.1); 
         const hand = this.parentContainer; const worldPos = hand.getLocalTransformMatrix().transformPoint(this.x, this.y); hand.remove(this); this.scene.add.existing(this); this.physX = worldPos.x; this.physY = worldPos.y; this.targetX = this.physX; this.targetY = this.physY; this.setDepth(9999); this.dragOffsetX = this.physX - pointer.x; this.dragOffsetY = this.physY - pointer.y; 
     }
     onDrag(pointer) { if(!this.isDragging) return; this.targetX = pointer.x + this.dragOffsetX; this.targetY = pointer.y + this.dragOffsetY; const main = this.scene.game.scene.getScene('MainScene'); if (this.y < this.scene.scale.height * 0.65) main.dragHighlightHex = Renderer.pxToHex(pointer.x, pointer.y); else main.dragHighlightHex = null; }
-    
     onDragEnd(pointer) { 
         if(!this.isDragging) return; 
-        this.isDragging = false; 
-        Renderer.isCardDragging = false; 
-        Renderer.draggedCardType = null;
+        this.isDragging = false; Renderer.isCardDragging = false; Renderer.draggedCardType = null;
         this.setAlpha(1.0); this.setScale(1.0); 
         const main = this.scene.game.scene.getScene('MainScene'); main.dragHighlightHex = null; 
         const dropZoneY = this.scene.scale.height * 0.65; 
-        
         if (this.y < dropZoneY) { 
             const hex = Renderer.pxToHex(pointer.x, pointer.y); 
             let canDeploy = false; 
-            if (window.gameLogic) { 
+            if (window.gameLogic && window.gameLogic.checkDeploy) { 
                 if (this.cardType === 'aerial') {
                     if (window.gameLogic.isValidHex(hex.q, hex.r)) canDeploy = true; 
-                    else window.gameLogic.log("配置不可: マップ範囲外です"); 
-                } else { 
-                    canDeploy = window.gameLogic.checkDeploy(hex); 
-                } 
+                    else if(window.gameLogic.log) window.gameLogic.log("配置不可: マップ範囲外です"); 
+                } else { canDeploy = window.gameLogic.checkDeploy(hex); } 
             } 
             if (canDeploy) this.burnAndConsume(hex); else this.returnToHand(); 
         } else { this.returnToHand(); } 
     }
-    
     burnAndConsume(hex) { 
-        this.updatePhysics = () => {}; 
-        this.frameImage.setTint(0x552222); 
-        this.frameImage.disableInteractive(); 
+        this.updatePhysics = () => {}; this.frameImage.setTint(0x552222); this.frameImage.disableInteractive(); 
         this.scene.tweens.add({ targets: this, alpha: 0, scale: 0.5, duration: 200, onComplete: () => { 
-            this.scene.removeCard(this); 
-            const type = this.cardType; 
-            this.destroy(); 
+            this.scene.removeCard(this); const type = this.cardType; this.destroy(); 
             try { 
-                if (type === 'aerial') { 
-                    if (window.gameLogic) window.gameLogic.triggerBombardment(hex); 
-                } else if(window.gameLogic) { 
-                    window.gameLogic.deployUnit(hex, type); 
-                } 
+                if (type === 'aerial') { if (window.gameLogic) window.gameLogic.triggerBombardment(hex); } 
+                else if(window.gameLogic) { window.gameLogic.deployUnit(hex, type); } 
             } catch(e) { console.error("Logic Error:", e); } 
         }}); 
     }
@@ -213,7 +176,6 @@ class MainScene extends Phaser.Scene {
     preload() { 
         if(window.EnvSystem) window.EnvSystem.preload(this);
         if (window.Sfx && window.Sfx.preload) { window.Sfx.preload(this); }
-        
         this.load.spritesheet('us_soldier', 'asset/us-soldier-back-sheet.png', { frameWidth: 128, frameHeight: 128 });
         this.load.spritesheet('soldier_sheet', 'asset/soldier_sheet_1.png', { frameWidth: 128, frameHeight: 128 });
         this.load.spritesheet('tank_sheet', 'asset/tank_sheet_1.png', { frameWidth: 128, frameHeight: 128 });
@@ -236,18 +198,13 @@ class MainScene extends Phaser.Scene {
         
         this.input.on('pointerdown', (p) => { 
             if (Renderer.isCardDragging || Renderer.checkUIHover(p.x, p.y, p.event)) return; 
-            
-            if (Renderer.suppressMapClick) {
-                Renderer.suppressMapClick = false;
-                return;
-            }
-
+            if (Renderer.suppressMapClick) { Renderer.suppressMapClick = false; return; }
             const hex = Renderer.pxToHex(p.x, p.y);
             if(p.button === 0) { 
                 Renderer.isMapDragging = true; 
-                if(window.gameLogic) window.gameLogic.handleClick(hex); 
+                if(window.gameLogic && window.gameLogic.handleClick) window.gameLogic.handleClick(hex); 
             } else if(p.button === 2) { 
-                if(window.gameLogic) window.gameLogic.handleRightClick(p.x, p.y, hex); 
+                if(window.gameLogic && window.gameLogic.handleRightClick) window.gameLogic.handleRightClick(p.x, p.y, hex); 
             } 
         });
         
@@ -255,7 +212,7 @@ class MainScene extends Phaser.Scene {
         this.input.on('pointermove', (p) => { 
             if (Renderer.isCardDragging) return; 
             if (p.isDown && Renderer.isMapDragging) { const zoom = this.cameras.main.zoom; this.cameras.main.scrollX -= (p.x - p.prevPosition.x) / zoom; this.cameras.main.scrollY -= (p.y - p.prevPosition.y) / zoom; } 
-            if(!Renderer.isMapDragging && window.gameLogic) window.gameLogic.handleHover(Renderer.pxToHex(p.x, p.y)); 
+            if(!Renderer.isMapDragging && window.gameLogic && window.gameLogic.handleHover) window.gameLogic.handleHover(Renderer.pxToHex(p.x, p.y)); 
         }); 
         this.input.mouse.disableContextMenu();
         this.input.keyboard.on('keydown-ESC', () => { if(window.gameLogic && window.gameLogic.clearSelection) { window.gameLogic.clearSelection(); } });
@@ -264,6 +221,7 @@ class MainScene extends Phaser.Scene {
     centerCamera(q, r) { const p = Renderer.hexToPx(q, r); this.cameras.main.centerOn(p.x, p.y); }
     centerMap() { this.cameras.main.centerOn((MAP_W * HEX_SIZE * 1.5) / 2, (MAP_H * HEX_SIZE * 1.732) / 2); }
     createMap() { 
+        if(!window.gameLogic || !window.gameLogic.map) return;
         const map = window.gameLogic.map; this.hexGroup.removeAll(true); this.decorGroup.removeAll(true); this.unitGroup.removeAll(true); this.treeGroup.removeAll(true); this.hpGroup.removeAll(true); 
         if(this.unitView) this.unitView.clear();
         for(let q=0; q<MAP_W; q++) { 
@@ -278,29 +236,29 @@ class MainScene extends Phaser.Scene {
         this.centerMap(); 
     }
     update(time, delta) {
-        if (!window.gameLogic) return;
+        // ★修正: gameLogicが準備できていない、またはマップデータが無い場合は何もしない
+        if (!window.gameLogic || !window.gameLogic.map) return;
+        
         if(window.VFX && window.VFX.shakeRequest > 0) { this.cameras.main.shake(100, window.VFX.shakeRequest * 0.001); window.VFX.shakeRequest = 0; }
         if(window.EnvSystem) window.EnvSystem.update(time);
         if(window.VFX) { window.VFX.update(); this.vfxGraphics.clear(); window.VFX.draw(this.vfxGraphics); }
+        
         if (window.gameLogic.map.length > 0 && !this.mapGenerated) { this.createMap(); this.mapGenerated = true; }
         if(this.unitView) this.unitView.update(time, delta);
         this.overlayGraphics.clear();
         
         if (this.dragHighlightHex) {
             const h = this.dragHighlightHex;
-            
             if (Renderer.draggedCardType === 'aerial') {
-                 if (window.gameLogic) {
+                 if (window.gameLogic && window.gameLogic.isValidHex) {
                     this.overlayGraphics.lineStyle(3, 0xff2222, 0.8); 
                     this.drawDashedHexOutline(this.overlayGraphics, h.q, h.r, time * 0.05);
                     const targets = window.gameLogic.getNeighbors(h.q, h.r);
-                    targets.forEach(th => {
-                        this.drawDashedHexOutline(this.overlayGraphics, th.q, th.r, time * 0.05);
-                    });
+                    targets.forEach(th => { this.drawDashedHexOutline(this.overlayGraphics, th.q, th.r, time * 0.05); });
                 }
             } else {
                 let isValid = false;
-                if (window.gameLogic) {
+                if (window.gameLogic && window.gameLogic.checkDeploy) {
                     isValid = window.gameLogic.isValidHex(h.q, h.r) && window.gameLogic.map[h.q][h.r].id !== -1 && window.gameLogic.getUnitsInHex(h.q, h.r).length < 4;
                 }
                 const color = isValid ? 0x00ffff : 0xff0000;
@@ -312,7 +270,7 @@ class MainScene extends Phaser.Scene {
         
         const selected = window.gameLogic.selectedUnit;
         if(selected) {
-            if(window.gameLogic.reachableHexes.length > 0) { 
+            if(window.gameLogic.reachableHexes && window.gameLogic.reachableHexes.length > 0) { 
                 this.overlayGraphics.lineStyle(1, 0xffffff, 0.3); 
                 window.gameLogic.reachableHexes.forEach(h => this.drawHexOutline(this.overlayGraphics, h.q, h.r)); 
             }
@@ -324,9 +282,9 @@ class MainScene extends Phaser.Scene {
             window.gameLogic.attackLine.forEach(h => { let offset = (targetUnit && targetUnit.q === h.q && targetUnit.r === h.r) ? time * 0.05 : 0; this.drawDashedHexOutline(this.overlayGraphics, h.q, h.r, offset); });
         }
         const hover = window.gameLogic.hoverHex;
-        if(selected && hover && window.gameLogic.reachableHexes.some(h => h.q === hover.q && h.r === hover.r)) { this.overlayGraphics.lineStyle(3, 0xffffff, 0.8); this.drawHexOutline(this.overlayGraphics, hover.q, hover.r); }
+        if(selected && hover && window.gameLogic.reachableHexes && window.gameLogic.reachableHexes.some(h => h.q === hover.q && h.r === hover.r)) { this.overlayGraphics.lineStyle(3, 0xffffff, 0.8); this.drawHexOutline(this.overlayGraphics, hover.q, hover.r); }
         const path = window.gameLogic.path;
-        if(path.length > 0 && selected) { 
+        if(path && path.length > 0 && selected) { 
             this.overlayGraphics.lineStyle(3, 0xffffff, 0.5); this.overlayGraphics.beginPath(); const s = Renderer.hexToPx(selected.q, selected.r); this.overlayGraphics.moveTo(s.x, s.y); path.forEach(p => { const px = Renderer.hexToPx(p.q, p.r); this.overlayGraphics.lineTo(px.x, px.y); }); this.overlayGraphics.strokePath(); 
         }
         this.crosshairGroup.clear();
