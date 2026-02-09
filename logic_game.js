@@ -1,6 +1,6 @@
 /** LOGIC BATTLE: Pure Combat Engine (Decoupled from Meta-Game) */
 
-// ★重要: グローバル変数として登録
+// グローバルスコープにBattleLogicを登録
 window.BattleLogic = class BattleLogic {
     constructor(campaign, playerUnits, sector) {
         this.campaign = campaign; // 親への参照
@@ -30,7 +30,7 @@ window.BattleLogic = class BattleLogic {
         }
         this.ai = new EnemyAI(this);
         
-        // グローバルgameLogicを自分自身に更新 (UIからのアクセス用)
+        // 戦闘開始時にグローバル変数を自分に切り替える
         window.gameLogic = this;
     }
 
@@ -195,6 +195,7 @@ window.BattleLogic = class BattleLogic {
         
         let reloadedInThisAction = false; 
 
+        // パフォーマンス改善: UI更新をループ外へ
         await new Promise(async (resolve) => {
             for (let i = 0; i < shots; i++) {
                 if (targetUnit && targetUnit.hp <= 0) break;
@@ -214,7 +215,6 @@ window.BattleLogic = class BattleLogic {
                 
                 const arc = isMortar ? 250 : (isShell ? 30 : 0);
                 const flightTime = isMortar ? 1000 : (isShell ? 600 : dist * 30); 
-                
                 const fireRate = (w.type === 'bullet') ? 60 : 300; 
 
                 if (window.VFX) { 
