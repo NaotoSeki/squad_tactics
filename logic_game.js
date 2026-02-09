@@ -67,7 +67,8 @@ window.BattleLogic = class BattleLogic {
         
         // 支援カード配布
         setTimeout(() => { 
-            if (typeof Renderer !== 'undefined' && Renderer.dealCards) { 
+            // ★修正: Renderer.game の存在チェックを追加して安全に
+            if (typeof Renderer !== 'undefined' && Renderer.game && Renderer.dealCards) { 
                 const deck = [];
                 for(let i=0; i<5; i++) {
                     const randType = AVAILABLE_CARDS[Math.floor(Math.random() * AVAILABLE_CARDS.length)];
