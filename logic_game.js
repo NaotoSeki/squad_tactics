@@ -1,6 +1,6 @@
 /** LOGIC BATTLE: Pure Combat Engine (Decoupled from Meta-Game) */
 
-// グローバルスコープにBattleLogicを登録
+// ★重要: グローバル変数として登録
 window.BattleLogic = class BattleLogic {
     constructor(campaign, playerUnits, sector) {
         this.campaign = campaign; // 親への参照
@@ -30,7 +30,7 @@ window.BattleLogic = class BattleLogic {
         }
         this.ai = new EnemyAI(this);
         
-        // グローバルgameLogicを自分自身に更新
+        // グローバルgameLogicを自分自身に更新 (UIからのアクセス用)
         window.gameLogic = this;
     }
 
@@ -140,7 +140,7 @@ window.BattleLogic = class BattleLogic {
         } 
     }
 
-    // --- COMBAT LOGIC (Optimized) ---
+    // --- COMBAT LOGIC ---
     async actionAttack(a, d) {
         if (this.isExecutingAttack) return;
         if (!a) return;
@@ -195,13 +195,11 @@ window.BattleLogic = class BattleLogic {
         
         let reloadedInThisAction = false; 
 
-        // ★パフォーマンス改善: ループ内でのUI更新を廃止
         await new Promise(async (resolve) => {
             for (let i = 0; i < shots; i++) {
                 if (targetUnit && targetUnit.hp <= 0) break;
                 
                 game.consumeAmmo(a, w.code); 
-                // game.updateSidebar(); // 重いので削除
                 
                 const sPos = Renderer.hexToPx(a.q, a.r); 
                 const ePos = Renderer.hexToPx(targetHex.q, targetHex.r);
@@ -217,20 +215,19 @@ window.BattleLogic = class BattleLogic {
                 const arc = isMortar ? 250 : (isShell ? 30 : 0);
                 const flightTime = isMortar ? 1000 : (isShell ? 600 : dist * 30); 
                 
-                // ★テンポ改善: 発射レートを高速化
                 const fireRate = (w.type === 'bullet') ? 60 : 300; 
 
                 if (window.VFX) { 
                     VFX.addProj({ 
                         x: sPos.x, y: sPos.y, sx: sPos.x, sy: sPos.y, ex: tx, ey: ty, 
-                        type: w.type, speed: isMortar ? 0.05 : 0.2, // 速度調整 (progress加算値)
+                        type: w.type, speed: isMortar ? 0.05 : 0.2, 
                         progress: 0, 
                         arcHeight: arc, isTracer: true, 
                         onHit: () => { } 
                     }); 
                 }
                 
-                // 着弾処理 (非同期)
+                // 着弾処理
                 setTimeout(() => {
                     if (isMortar || isShell) {
                         if (window.VFX) VFX.addExplosion(tx, ty, "#f55", 5); 
@@ -275,7 +272,7 @@ window.BattleLogic = class BattleLogic {
             
             setTimeout(() => {
                 game.state = 'PLAY'; 
-                game.updateSidebar(); // 最後に一回だけ更新
+                game.updateSidebar(); 
                 
                 if (a.def.isTank && w.current === 0 && w.reserve > 0 && game.tankAutoReload && a.ap >= 1) { 
                     game.reloadWeapon(); 
@@ -492,6 +489,16 @@ window.BattleLogic = class BattleLogic {
         this.path = []; 
         this.setMode('SELECT'); 
         this.ui.hideActionMenu(); 
+        this.updateSidebar(); 
+    }
+
+    refreshUnitState(u) { 
+        if (!u || u.hp <= 0) { 
+            this.selectedUnit = null; 
+            this.reachableHexes = []; 
+            this.attackLine = []; 
+            this.aimTargetUnit = null; 
+        } 
         this.updateSidebar(); 
     }
 
