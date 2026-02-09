@@ -1,4 +1,4 @@
-/** LOGIC GAME: Fix for "applyDamage is not a function" & Mortar Mechanics */
+/** LOGIC GAME: Fixed Missing startCampaign & Spawn Methods */
 
 const AVAILABLE_CARDS = ['rifleman', 'scout', 'gunner', 'sniper', 'mortar_gunner', 'aerial'];
 
@@ -66,12 +66,100 @@ class Game {
                 } 
             }
             const btn = document.getElementById('btn-start'); 
-            if (this.setupSlots.length === 3) { 
-                btn.style.display = 'inline-block'; 
-            } else { 
-                btn.style.display = 'none'; 
+            if (btn) {
+                btn.style.display = (this.setupSlots.length === 3) ? 'inline-block' : 'none';
             }
         });
+    }
+
+    // --- GAME START & SPAWN LOGIC (復活) ---
+    startCampaign() {
+        document.getElementById('setup-screen').style.display = 'none';
+        
+        if (typeof Renderer !== 'undefined' && Renderer.game) { 
+            const mainScene = Renderer.game.scene.getScene('MainScene'); 
+            if (mainScene) { 
+                mainScene.mapGenerated = false; 
+                if (mainScene.hexGroup && typeof mainScene.hexGroup.removeAll === 'function') { mainScene.hexGroup.removeAll(); }
+                if (window.EnvSystem) { window.EnvSystem.clear(); }
+            } 
+        }
+        if(typeof Renderer !== 'undefined') { Renderer.resize(); }
+        
+        this.selectedUnit = null; 
+        this.reachableHexes = []; 
+        this.attackLine = []; 
+        this.aimTargetUnit = null; 
+        this.path = []; 
+        this.cardsUsed = 0;
+        
+        this.units = this.units.filter(u => u.team === 'player' && u.hp > 0); 
+        this.units.forEach(u => { u.q = -999; u.r = -999; });
+        
+        this.generateMap(); 
+        
+        // プレイヤー配置
+        if (this.units.length === 0) { 
+            this.setupSlots.forEach(k => { 
+                const p = this.getSafeSpawnPos('player'); 
+                if (p) {
+                    const u = this.createSoldier(k, 'player', p.q, p.r); 
+                    this.units.push(u); 
+                }
+            }); 
+        } else { 
+            this.units.forEach(u => { 
+                const p = this.getSafeSpawnPos('player'); 
+                if (p) { u.q = p.q; u.r = p.r; }
+            }); 
+        }
+        
+        this.spawnEnemies(); 
+        
+        this.state = 'PLAY'; 
+        this.log(`SECTOR ${this.sector} START`);
+        const secCounter = document.getElementById('sector-counter');
+        if(secCounter) secCounter.innerText = `SECTOR: ${this.sector.toString().padStart(2, '0')}`;
+        
+        if (typeof Renderer !== 'undefined') { Renderer.centerMap(); }
+        
+        setTimeout(() => { 
+            if (typeof Renderer !== 'undefined' && Renderer.dealCards) { 
+                const deck = [];
+                for(let i=0; i<5; i++) {
+                    const randType = AVAILABLE_CARDS[Math.floor(Math.random() * AVAILABLE_CARDS.length)];
+                    deck.push(randType);
+                }
+                Renderer.dealCards(deck); 
+            }
+            if (this.isAuto) this.runAuto();
+        }, 500);
+    }
+
+    getSafeSpawnPos(team) {
+        const cy = Math.floor(MAP_H / 2);
+        for (let i = 0; i < 100; i++) { 
+            const q = Math.floor(Math.random() * MAP_W); 
+            const r = Math.floor(Math.random() * MAP_H); 
+            if (team === 'player' && r < cy) { continue; }
+            if (team === 'enemy' && r >= cy) { continue; }
+            if (this.isValidHex(q, r) && this.getUnitsInHex(q, r).length < 4 && this.map[q][r].id !== -1 && this.map[q][r].id !== 5) { return { q, r }; } 
+        }
+        return null;
+    }
+
+    spawnAtSafeGround(team, type) {
+        const p = this.getSafeSpawnPos(team);
+        if (p) {
+            const u = this.createSoldier(type, team, p.q, p.r);
+            if (u) {
+                u.q = p.q; u.r = p.r;
+                this.units.push(u);
+                this.log(`増援合流: ${u.name}`);
+            }
+        } else {
+            this.log("増援合流失敗: 配置スペースなし");
+        }
     }
 
     // ★重要: applyDamage を前方に移動し、確実に定義させる
@@ -482,7 +570,6 @@ class Game {
                     }
 
                     if (isMortar) {
-                        // ★修正: game.getUnitsInHex 等を使用
                         const victims = game.getUnitsInHex(targetHex.q, targetHex.r);
                         const neighbors = game.getNeighbors(targetHex.q, targetHex.r);
                         const areaVictims = [];
@@ -552,6 +639,50 @@ class Game {
     checkWin() { if (this.state === 'WIN') return true; if (this.units.filter(u => u.team === 'enemy' && u.hp > 0).length === 0) { this.state = 'WIN'; if (window.Sfx) Sfx.play('win'); document.getElementById('reward-screen').style.display = 'flex'; this.promoteSurvivors(); const b = document.getElementById('reward-cards'); b.innerHTML = ''; [{ k: 'rifleman', t: '新兵' }, { k: 'mortar_gunner', t: '迫撃砲兵' }, { k: 'supply', t: '補給' }].forEach(o => { const d = document.createElement('div'); d.className = 'card'; const iconType = o.k === 'supply' ? 'heal' : 'infantry'; d.innerHTML = `<div class="card-img-box"><img src="${createCardIcon(iconType)}"></div><div class="card-body"><p>${o.t}</p></div>`; d.onclick = () => { if (o.k === 'supply') this.resupplySurvivors(); else this.spawnAtSafeGround('player', o.k); this.sector++; document.getElementById('reward-screen').style.display = 'none'; this.startCampaign(); }; b.appendChild(d); }); return true; } return false; }
     checkLose() { if (this.units.filter(u => u.team === 'player' && u.hp > 0).length === 0) { document.getElementById('gameover-screen').style.display = 'flex'; } }
     resupplySurvivors() { this.units.filter(u => u.team === 'player' && u.hp > 0).forEach(u => { if (u.hp < u.maxHp) u.hp = Math.floor(u.maxHp * 0.8); const w = this.getVirtualWeapon(u); if (w) { if (w.code === 'm2_mortar') { u.bag.forEach(i => { if (i && i.code === 'mortar_shell_box') i.current = i.cap; }); } else if (w.type.includes('bullet')) { w.current = w.cap; } else if (u.def.isTank) { w.reserve = 12; } } }); this.log("補給完了"); }
+    
+    // --- HELPER FOR BOOTSTRAP ---
+    checkDeploy(targetHex) {
+        if(!this.isValidHex(targetHex.q, targetHex.r) || this.map[targetHex.q][targetHex.r].id === -1) return false; 
+        if(this.map[targetHex.q][targetHex.r].id === 5) return false; 
+        if (this.getUnitsInHex(targetHex.q, targetHex.r).length >= 4) return false; 
+        if (this.cardsUsed >= 2) return false; 
+        return true;
+    }
+
+    deployUnit(targetHex, cardType) {
+        if(!this.checkDeploy(targetHex)) { return; }
+        const u = this.createSoldier(cardType, 'player', targetHex.q, targetHex.r);
+        if(u) { 
+            this.units.push(u); this.cardsUsed++; 
+            this.log(`増援到着: ${u.name}`); 
+            if(window.VFX) { const pos = Renderer.hexToPx(targetHex.q, targetHex.r); window.VFX.addSmoke(pos.x, pos.y); } 
+            this.updateSidebar(); 
+        }
+    }
+
+    async triggerBombardment(centerHex) {
+        if (!this.isValidHex(centerHex.q, centerHex.r)) return;
+        this.log(`>> 航空支援要請`);
+        const neighbors = this.getNeighbors(centerHex.q, centerHex.r);
+        const targets = [centerHex, ...neighbors];
+        const validTargets = targets.filter(h => this.isValidHex(h.q, h.r));
+        const hits = []; const pool = [...validTargets];
+        for (let i = 0; i < 3; i++) { if (pool.length === 0) break; const idx = Math.floor(Math.random() * pool.length); hits.push(pool[idx]); pool.splice(idx, 1); }
+        for (const hex of hits) {
+            const pos = Renderer.hexToPx(hex.q, hex.r);
+            setTimeout(() => {
+                if (window.Sfx) { Sfx.play('cannon'); }
+                if (typeof Renderer !== 'undefined') { Renderer.playExplosion(pos.x, pos.y); }
+                const units = this.getUnitsInHex(hex.q, hex.r);
+                units.forEach(u => {
+                    this.log(`>> 爆撃命中: ${u.name} に 350 ダメージ`);
+                    this.applyDamage(u, 350, "爆撃");
+                });
+                this.updateSidebar();
+                if (window.VFX) { VFX.addSmoke(pos.x, pos.y); }
+            }, Math.random() * 800);
+        }
+    }
 }
 
 window.gameLogic = new Game();
