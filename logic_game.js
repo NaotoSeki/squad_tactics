@@ -1,6 +1,7 @@
 /** LOGIC BATTLE: Pure Combat Engine (Decoupled from Meta-Game) */
 
-class BattleLogic {
+// グローバルスコープにBattleLogicを登録
+window.BattleLogic = class BattleLogic {
     constructor(campaign, playerUnits, sector) {
         this.campaign = campaign; // 親への参照
         this.units = [...playerUnits]; // プレイヤーユニット
@@ -24,8 +25,13 @@ class BattleLogic {
         this.cardsUsed = 0; // 増援カード用
 
         this.ui = new UIManager(this);
-        this.mapSystem = new MapSystem(this);
+        if (typeof MapSystem !== 'undefined') {
+            this.mapSystem = new MapSystem(this);
+        }
         this.ai = new EnemyAI(this);
+        
+        // グローバルgameLogicを自分自身に更新
+        window.gameLogic = this;
     }
 
     // --- INITIALIZATION ---
@@ -42,7 +48,7 @@ class BattleLogic {
         this.spawnEnemies();
 
         this.state = 'PLAY';
-        this.log(`SECTOR ${this.sector} ENGAGEMENT START`);
+        this.ui.log(`SECTOR ${this.sector} ENGAGEMENT START`);
         
         const secCounter = document.getElementById('sector-counter');
         if(secCounter) secCounter.innerText = `SECTOR: ${this.sector.toString().padStart(2, '0')}`;
@@ -63,7 +69,7 @@ class BattleLogic {
         }, 500);
     }
 
-    generateMap() { this.mapSystem.generate(); }
+    generateMap() { if(this.mapSystem) this.mapSystem.generate(); }
 
     spawnEnemies() {
         const c = 4 + Math.floor(this.sector * 0.7);
@@ -96,7 +102,7 @@ class BattleLogic {
         
         // ターン経過処理
         this.units.filter(u => u.team === 'player' && u.hp > 0 && u.skills.includes("Mechanic")).forEach(u => { 
-            if (u.hp < u.maxHp) { u.hp = Math.min(u.maxHp, u.hp + 20); this.log("修理"); } 
+            if (u.hp < u.maxHp) { u.hp = Math.min(u.maxHp, u.hp + 20); this.ui.log("修理"); } 
         }); 
         
         setTimeout(async () => { 
@@ -107,7 +113,7 @@ class BattleLogic {
             
             // AP回復
             this.units.forEach(u => { if (u.team === 'player') u.ap = u.maxAp; }); 
-            this.log("-- PLAYER PHASE --"); 
+            this.ui.log("-- PLAYER PHASE --"); 
             this.state = 'PLAY'; 
             this.isProcessingTurn = false; 
             if (this.isAuto) this.runAuto(); 
@@ -142,7 +148,7 @@ class BattleLogic {
         const game = this; 
         const w = this.getVirtualWeapon(a);
         if (!w) return;
-        if (w.isBroken) { this.log("武器故障中！修理が必要"); return; }
+        if (w.isBroken) { this.ui.log("武器故障中！修理が必要"); return; }
         
         // ターゲット判定
         let targetUnit = null;
@@ -154,17 +160,17 @@ class BattleLogic {
 
         // 弾薬チェック
         if (w.code === 'm2_mortar') {
-             if (w.current <= 0) { this.log("弾切れ！弾薬箱が空です"); return; }
+             if (w.current <= 0) { this.ui.log("弾切れ！弾薬箱が空です"); return; }
         } else {
-             if (w.isConsumable && w.current <= 0) { this.log("使用済みです"); return; }
+             if (w.isConsumable && w.current <= 0) { this.ui.log("使用済みです"); return; }
              if (w.current <= 0) { this.reloadWeapon(false); if (w.current <= 0) return; }
         }
 
-        if (a.ap < w.ap) { this.log("AP不足"); return; }
+        if (a.ap < w.ap) { this.ui.log("AP不足"); return; }
         
         const dist = this.hexDist(a, targetHex); 
-        if (w.minRng && dist < w.minRng) { this.log("目標が近すぎます！"); return; }
-        if (dist > w.rng) { this.log("射程外"); return; }
+        if (w.minRng && dist < w.minRng) { this.ui.log("目標が近すぎます！"); return; }
+        if (dist > w.rng) { this.ui.log("射程外"); return; }
         
         this.isExecutingAttack = true;
         a.ap -= w.ap; 
@@ -184,8 +190,8 @@ class BattleLogic {
         let shots = w.isConsumable ? 1 : Math.min(w.burst || 1, w.current);
         if (a.def.isTank || w.code === 'm2_mortar') shots = 1;
 
-        if (w.indirect) { this.log(`${a.name} 砲撃開始!`); } 
-        else { this.log(`${a.name} 攻撃開始`); }
+        if (w.indirect) { this.ui.log(`${a.name} 砲撃開始!`); } 
+        else { this.ui.log(`${a.name} 攻撃開始`); }
         
         let reloadedInThisAction = false; 
 
@@ -241,7 +247,7 @@ class BattleLogic {
                             if ((Math.random() * 100) < hitChance + 20) { 
                                 game.applyDamage(v, w.dmg, "迫撃砲"); 
                             } else { 
-                                game.log(">> 至近弾！"); 
+                                game.ui.log(">> 至近弾！"); 
                                 game.applyDamage(v, Math.floor(w.dmg / 3), "爆風"); 
                             }
                         });
@@ -257,7 +263,7 @@ class BattleLogic {
                             if (dmg > 0) {
                                 if (!isShell && window.VFX) VFX.add({ x: tx, y: ty, vx: 0, vy: -5, life: 10, maxLife: 10, color: "#fff", size: 2, type: 'spark' });
                                 game.applyDamage(targetUnit, dmg, w.name);
-                            } else { if (i === 0) game.log(">> 装甲により無効化！"); }
+                            } else { if (i === 0) game.ui.log(">> 装甲により無効化！"); }
                         } else { 
                             if (window.VFX) VFX.add({ x: tx, y: ty, vx: 0, vy: 0, life: 10, maxLife: 10, color: "#aaa", size: 2, type: 'smoke' }); 
                         }
@@ -288,7 +294,7 @@ class BattleLogic {
         target.hp -= damage;
         if (target.hp <= 0 && !target.deadProcessed) {
             target.deadProcessed = true;
-            this.log(`>> ${target.name} を撃破！`);
+            this.ui.log(`>> ${target.name} を撃破！`);
             if (window.Sfx) { Sfx.play('death'); }
             if (window.VFX) { const p = Renderer.hexToPx(target.q, target.r); VFX.addUnitDebris(p.x, p.y); }
             
@@ -331,7 +337,6 @@ class BattleLogic {
     // --- HELPER METHODS ---
     toggleSidebar() { this.ui.toggleSidebar(); }
     toggleTankAutoReload() { this.tankAutoReload = !this.tankAutoReload; this.updateSidebar(); }
-    log(m) { this.ui.log(m); }
     updateSidebar() { this.ui.updateSidebar(this.selectedUnit, this.state, this.tankAutoReload); }
     showContext(mx, my, hex) { this.ui.showContext(mx, my, hex); }
     hideActionMenu() { this.ui.hideActionMenu(); }
@@ -511,7 +516,7 @@ class BattleLogic {
         const u = this.selectedUnit; if (!u || u.def.isTank) return;
         if (u.stance === s) return;
         let cost = 0; if (u.stance === 'prone' && (s === 'stand' || s === 'crouch')) { cost = 1; }
-        if (u.ap < cost) { this.log(`AP不足`); return; }
+        if (u.ap < cost) { this.ui.log("AP不足"); return; }
         u.ap -= cost; u.stance = s; this.refreshUnitState(u); this.ui.hideActionMenu(); if (window.Sfx) { Sfx.play('click'); }
     }
     
@@ -529,7 +534,7 @@ class BattleLogic {
 
         this.updateSidebar();
         if (window.Sfx) { Sfx.play('click'); }
-        this.log(`${u.name} 装備変更`);
+        this.ui.log(`${u.name} 装備変更`);
     }
 
     toggleFireMode() {
@@ -550,23 +555,23 @@ class BattleLogic {
         const u=this.selectedUnit; if(!u) return;
         const w=this.getVirtualWeapon(u); if(!w) return;
         if(u.def.isTank){
-            if(u.ap<1) { this.log("AP不足"); return; }
-            if(w.reserve<=0) { this.log("予備弾なし"); return; }
+            if(u.ap<1) { this.ui.log("AP不足"); return; }
+            if(w.reserve<=0) { this.ui.log("予備弾なし"); return; }
             u.ap-=1; w.current=1; w.reserve-=1;
-            this.log("装填完了");
+            this.ui.log("装填完了");
             if(window.Sfx) Sfx.play('tank_reload');
             this.refreshUnitState(u);
             if(manual) this.ui.hideActionMenu();
             return;
         }
         const cost=w.rld||1;
-        if(u.ap<cost){ this.log("AP不足"); return; }
+        if(u.ap<cost){ this.ui.log("AP不足"); return; }
         const magIndex=u.bag.findIndex(i=>i&&i.type==='ammo'&&i.ammoFor===w.code);
-        if(magIndex===-1){ this.log("予備弾なし"); return; }
+        if(magIndex===-1){ this.ui.log("予備弾なし"); return; }
         u.bag[magIndex]=null;
         u.ap-=cost;
         w.current=w.cap;
-        this.log("リロード完了");
+        this.ui.log("リロード完了");
         if(window.Sfx) Sfx.play('reload');
         this.refreshUnitState(u);
         this.ui.hideActionMenu();
@@ -575,7 +580,7 @@ class BattleLogic {
     actionRepair() {
         const u = this.selectedUnit; if (!u || u.ap < 2) return;
         if (!u.hands[0] || !u.hands[0].isBroken) return;
-        u.ap -= 2; u.hands[0].isBroken = false; this.log(`${u.name} 武器修理完了`); if (window.Sfx) Sfx.play('reload'); this.refreshUnitState(u); this.ui.hideActionMenu();
+        u.ap -= 2; u.hands[0].isBroken = false; this.ui.log(`${u.name} 武器修理完了`); if (window.Sfx) Sfx.play('reload'); this.refreshUnitState(u); this.ui.hideActionMenu();
     }
 
     actionHeal() {
@@ -584,7 +589,7 @@ class BattleLogic {
         if (targets.length === 0) return;
         targets.sort((a, b) => (a.hp / a.maxHp) - (b.hp / b.maxHp)); const target = targets[0]; 
         u.ap -= 2; const healAmount = 30; target.hp = Math.min(target.maxHp, target.hp + healAmount); 
-        this.log(`${u.name} が ${target.name} を治療`);
+        this.ui.log(`${u.name} が ${target.name} を治療`);
         if (window.VFX) { const p = Renderer.hexToPx(u.q, u.r); window.VFX.add({ x: p.x, y: p.y - 20, vx: 0, vy: -1, life: 30, maxLife: 30, color: "#0f0", size: 4, type: 'spark' }); }
         this.refreshUnitState(u); this.ui.hideActionMenu();
     }
@@ -600,11 +605,11 @@ class BattleLogic {
             if (bestWeapon) { wpnName = bestWeapon.name; bonusDmg = bestWeapon.dmg; }
         }
         a.ap -= 2;
-        this.log(`${a.name} 白兵攻撃`);
+        this.ui.log(`${a.name} 白兵攻撃`);
         if (typeof Renderer !== 'undefined' && Renderer.playAttackAnim) { Renderer.playAttackAnim(a, d); }
         await new Promise(r => setTimeout(r, 300));
         let strVal = (a.stats && a.stats.str) ? a.stats.str : 0; let totalDmg = 10 + (strVal * 3) + bonusDmg;
-        if (d.skills.includes('CQC')) { this.log(`>> カウンター！`); this.applyDamage(a, 15, "カウンター"); }
+        if (d.skills.includes('CQC')) { this.ui.log(`>> カウンター！`); this.applyDamage(a, 15, "カウンター"); }
         if (window.Sfx) { Sfx.play('hit'); }
         this.applyDamage(d, totalDmg, "白兵");
         this.refreshUnitState(a); this.checkPhaseEnd();
@@ -613,7 +618,7 @@ class BattleLogic {
     toggleAuto() { this.isAuto = !this.isAuto; const b = document.getElementById('auto-toggle'); if(b) b.classList.toggle('active'); if(this.isAuto && this.state==='PLAY') this.runAuto(); }
     async runAuto() { if(this.state!=='PLAY') return; this.ui.log(":: Auto ::"); this.clearSelection(); this.isAutoProcessing = true; await this.ai.execute(this.units, 'player'); this.isAutoProcessing = false; if(this.state==='WIN') return; if(this.isAuto && this.state==='PLAY') this.endTurn(); }
     async actionMove(u, p) { this.state = 'ANIM'; for(let s of p){u.ap-=this.map[s.q][s.r].cost; u.q=s.q; u.r=s.r; if(window.Sfx) Sfx.play('move'); await new Promise(r => setTimeout(r, 180)); } this.checkReactionFire(u); this.state = 'PLAY'; this.refreshUnitState(u); this.checkPhaseEnd(); }
-    checkReactionFire(u) { this.units.filter(e => e.team !== u.team && e.hp > 0 && e.def.isTank && this.hexDist(u, e) <= 1).forEach(t => { this.log("防御射撃"); this.applyDamage(u, 15, "防御"); if(window.VFX) VFX.addExplosion(Renderer.hexToPx(u.q, u.r).x, Renderer.hexToPx(u.q, u.r).y, "#fa0", 5); }); }
+    checkReactionFire(u) { this.units.filter(e => e.team !== u.team && e.hp > 0 && e.def.isTank && this.hexDist(u, e) <= 1).forEach(t => { this.ui.log("防御射撃"); this.applyDamage(u, 15, "防御"); if(window.VFX) VFX.addExplosion(Renderer.hexToPx(u.q, u.r).x, Renderer.hexToPx(u.q, u.r).y, "#fa0", 5); }); }
     checkPhaseEnd() { if (this.units.filter(u => u.team === 'player' && u.hp > 0 && u.ap > 0).length === 0 && this.state === 'PLAY') { this.endTurn(); } }
     
     // --- UTILS ---
@@ -631,7 +636,7 @@ class BattleLogic {
         if(u) { 
             u.q = targetHex.q; u.r = targetHex.r;
             this.units.push(u); this.cardsUsed++; 
-            this.log(`増援到着: ${u.name}`); 
+            this.ui.log(`増援到着: ${u.name}`); 
             if(window.VFX) { const pos = Renderer.hexToPx(targetHex.q, targetHex.r); window.VFX.addSmoke(pos.x, pos.y); } 
             this.updateSidebar(); 
         }
@@ -639,7 +644,7 @@ class BattleLogic {
 
     async triggerBombardment(centerHex) {
         if (!this.isValidHex(centerHex.q, centerHex.r)) return;
-        this.log(`>> 航空支援要請`);
+        this.ui.log(`>> 航空支援要請`);
         const neighbors = this.getNeighbors(centerHex.q, centerHex.r);
         const hits = []; const pool = [centerHex, ...neighbors].filter(h => this.isValidHex(h.q, h.r));
         for (let i = 0; i < 3; i++) { if (pool.length === 0) break; const idx = Math.floor(Math.random() * pool.length); hits.push(pool[idx]); pool.splice(idx, 1); }
@@ -649,7 +654,7 @@ class BattleLogic {
                 if (window.Sfx) { Sfx.play('cannon'); }
                 if (typeof Renderer !== 'undefined') { Renderer.playExplosion(pos.x, pos.y); }
                 const units = this.getUnitsInHex(hex.q, hex.r);
-                units.forEach(u => { this.log(`>> 爆撃命中`); this.applyDamage(u, 350, "爆撃"); });
+                units.forEach(u => { this.ui.log(`>> 爆撃命中`); this.applyDamage(u, 350, "爆撃"); });
                 this.updateSidebar();
                 if (window.VFX) { VFX.addSmoke(pos.x, pos.y); }
             }, Math.random() * 800);
@@ -658,4 +663,14 @@ class BattleLogic {
     
     // 増援用
     addReinforcement(u) { this.units.push(u); }
-}
+
+    refreshUnitState(u) { 
+        if (!u || u.hp <= 0) { 
+            this.selectedUnit = null; 
+            this.reachableHexes = []; 
+            this.attackLine = []; 
+            this.aimTargetUnit = null; 
+        } 
+        this.updateSidebar(); 
+    }
+}; // クラス定義終わり
