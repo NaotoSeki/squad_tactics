@@ -20,6 +20,12 @@ class CampaignManager {
 
     // --- SETUP SCREEN LOGIC ---
     initSetupScreen() {
+        // ★追加: 描画システムの初期化 (まだ起動していない場合)
+        if (typeof Renderer !== 'undefined' && !Renderer.game) {
+            const view = document.getElementById('game-view');
+            if (view) Renderer.init(view);
+        }
+
         const box = document.getElementById('setup-cards');
         if (!box) return; 
         
@@ -31,7 +37,6 @@ class CampaignManager {
             const t = UNIT_TEMPLATES[k]; 
             const d = document.createElement('div'); d.className = 'card';
             
-            // 安全策: Rendererが存在しない場合や未ロード時の対策
             let faceUrl = "";
             try {
                 if (window.Renderer && typeof window.Renderer.generateFaceIcon === 'function') {
@@ -96,7 +101,6 @@ class CampaignManager {
         // 1. 生存者がいれば引き継ぎ
         if (this.survivingUnits.length > 0) {
             deployUnits = this.survivingUnits;
-            // 位置リセット
             deployUnits.forEach(u => { u.q = -999; u.r = -999; });
         } 
         // 2. 初回プレイならスロットから生成
@@ -109,7 +113,6 @@ class CampaignManager {
 
         // BattleLogic（logic_game.js）をインスタンス化
         if (window.BattleLogic) {
-            // ★重要: gameLogicを上書きして戦闘開始
             window.gameLogic = new BattleLogic(this, deployUnits, this.sector);
             window.gameLogic.init(); 
         } else {
@@ -253,12 +256,9 @@ class CampaignManager {
 // キャンペーンマネージャーを起動
 window.campaign = new CampaignManager();
 
-// ★重要: 初期化段階での gameLogic のダミー (DEPLOYボタン押下時エラー回避用)
+// 初期化段階での gameLogic のダミー
 window.gameLogic = {
-    // startCampaign が呼ばれたら、CampaignManager の startMission に転送する
     startCampaign: () => window.campaign.startMission(),
-    
-    // サイドバーの開閉はCSS制御が主だが、JSで呼ばれてもエラーにならないようにする
     toggleSidebar: () => { 
         const sb = document.getElementById('sidebar');
         if(sb) sb.classList.toggle('collapsed');
