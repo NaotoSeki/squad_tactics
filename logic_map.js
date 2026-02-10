@@ -1,11 +1,10 @@
-/** LOGIC MAP: Map Generation, Pathfinding, and Geometry Math */
+/** LOGIC MAP: Map Generation, Pathfinding, and Geometry Math (Fix for 3-Slot) */
 
 class MapSystem {
     constructor(game) {
-        this.game = game; // Gameクラスへの参照を持つ
+        this.game = game;
     }
 
-    // マップ生成 (Gameクラスの this.map を直接操作)
     generate() {
         this.game.map = []; 
         for (let q = 0; q < MAP_W; q++) { 
@@ -30,7 +29,6 @@ class MapSystem {
             if (Math.random() < 0.05 && walkers.length < 5) { walkers.push(next); } else { walkers[wIdx] = next; }
         }
 
-        // 孤立ヘックスの穴埋め
         for (let i = 0; i < 3; i++) { 
             for (let q = 1; q < MAP_W - 1; q++) { 
                 for (let r = 1; r < MAP_H - 1; r++) { 
@@ -42,7 +40,6 @@ class MapSystem {
             } 
         }
 
-        // 水場の生成
         for (let loop = 0; loop < 2; loop++) { 
             const wC = []; 
             for (let q = 0; q < MAP_W; q++) { 
@@ -56,7 +53,6 @@ class MapSystem {
             wC.forEach(w => { this.game.map[w.q][w.r] = TERRAIN.WATER; }); 
         }
 
-        // 地形バリエーション（森など）
         for (let q = 0; q < MAP_W; q++) { 
             for (let r = 0; r < MAP_H; r++) { 
                 const tId = this.game.map[q][r].id; 
@@ -72,7 +68,6 @@ class MapSystem {
         }
     }
 
-    // ジオメトリ計算・経路探索
     isValidHex(q, r) { return q >= 0 && q < MAP_W && r >= 0 && r < MAP_H; }
     
     hexDist(a, b) { return (Math.abs(a.q - b.q) + Math.abs(a.q + a.r - b.q - b.r) + Math.abs(a.r - b.r)) / 2; }
@@ -107,10 +102,27 @@ class MapSystem {
     calcAttackLine(u, targetQ, targetR) {
         const line = []; 
         if (!u || u.ap < 2) { return []; } 
-        const w = u.hands; if (!w) { return []; }
-        const range = w.rng; const dist = this.hexDist(u, { q: targetQ, r: targetR }); 
+        
+        // ★修正: Gameクラスのヘルパーを使って正しい武器データを取得
+        // これにより hands が配列でもオブジェクトでも動作する
+        let w = null;
+        if (this.game.getVirtualWeapon) {
+            w = this.game.getVirtualWeapon(u);
+        } else {
+            // fallback (初期化前など)
+            w = Array.isArray(u.hands) ? u.hands[0] : u.hands;
+        }
+
+        if (!w) { return []; }
+        
+        const range = w.rng; 
+        const dist = this.hexDist(u, { q: targetQ, r: targetR }); 
         if (dist === 0) { return []; }
-        const drawLen = Math.min(dist, range); const start = this.axialToCube(u.q, u.r); const end = this.axialToCube(targetQ, targetR);
+        
+        const drawLen = Math.min(dist, range); 
+        const start = this.axialToCube(u.q, u.r); 
+        const end = this.axialToCube(targetQ, targetR);
+        
         for (let i = 1; i <= drawLen; i++) {
             const t = i / dist; 
             const lerpCube = { x: start.x + (end.x - start.x) * t, y: start.y + (end.y - start.y) * t, z: start.z + (end.z - start.z) * t };
@@ -120,7 +132,6 @@ class MapSystem {
         return line;
     }
 
-    // 内部計算用ヘルパー
     axialToCube(q, r) { return { x: q, y: r, z: -q - r }; }
     cubeToAxial(c) { return { q: c.x, r: c.y }; }
     cubeRound(c) { let rx = Math.round(c.x), ry = Math.round(c.y), rz = Math.round(c.z); const x_diff = Math.abs(rx - c.x), y_diff = Math.abs(ry - c.y), z_diff = Math.abs(rz - c.z); if (x_diff > y_diff && x_diff > z_diff) rx = -ry - rz; else if (y_diff > z_diff) ry = -rx - rz; else rz = -rx - ry; return { x: rx, y: ry, z: rz }; }
