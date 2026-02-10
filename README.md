@@ -1,60 +1,60 @@
-# SQUAD TACTICS - HEROIC EDITION
+📋 Changelog: v1.0 "Heroic Update"
+今回のアップデートでは、分隊運用の戦略性を広げる「迫撃砲」システムの実装に加え、ユニットが成長するキャンペーンモード、および没入感を高める環境シミュレーション（風・草木）が追加されました。また、進行不能バグを防ぐための安全装置が多数導入されています。
 
-A high-fidelity turn-based tactical strategy game built with **Phaser 3.60**.
-Experience squad-level combat with organic environmental simulation and deep weapon mechanics.
+✨ New Features (新機能)
+迫撃砲システム (Mortar System)
 
-## 🌟 Key Features
+3つのパーツ（砲身・二脚・底板）と弾薬箱を組み合わせることで使用可能な「M2 60mm迫撃砲」を追加。
 
-### 🎨 High-End Environmental Simulation
-* **Procedural Vegetation**: 
-    * 60FPS smooth vector-morphed grass with wind propagation waves.
-    * Two distinct grass variants (Tall & Wild) for organic terrain texturing.
-* **Dynamic Forestry**:
-    * Multi-layered fir trees with independent branch inertia simulation.
-    * Trees react to wind gusts and sway naturally with "whipping" motion.
-* **Atmosphere**:
-    * Particle-based weather effects (Wind lines, debris).
-    * Dynamic lighting/glow effects on unit selection.
+間接射撃: 障害物越しの攻撃が可能。着弾までのタイムラグと、着弾地点を中心とした範囲ダメージ（爆風）を実装。
 
-### ⚔️ Deep Tactical Gameplay
-* **Hex-Grid Combat**: Classic turn-based movement and combat on a procedurally generated map.
-* **Advanced Ballistics & Ammo**:
-    * **Infantry**: Magazine management system (Reload consumes AP).
-    * **Tanks**: "Just-In-Time" shell loading system with Auto/Manual reload toggle.
-    * Visual bullet gauges showing exact remaining rounds.
-* **Unit Classes**:
-    * **Infantry**: Rifleman, Scout, Gunner, Sniper (with specific loadouts).
-    * **Armor**: Panzer IV, Tiger I (Heavy armor, limited AP, devastating firepower).
-* **RPG Elements**: Unit promotions, skill acquisition (Hero, CQC, Mechanic), and sector progression.
+誤射メカニズム: 命中率に基づき着弾地点がズレる「至近弾」システムを導入。味方を巻き込まないよう注意が必要です。
 
-### 💻 Technical Highlights
-* **Tech Stack**: HTML5, JavaScript (ES6+), Phaser 3.60.
-* **Responsive UI**: Collapsible sidebar with CSS transitions and DOM-based overlay menus.
-* **Performance**: Optimized particle pooling and vector graphics rendering.
+キャンペーン & 育成要素 (Campaign Progression)
 
-## 🎮 Controls
+生存者の引き継ぎ: ステージクリア時に生存しているユニットは次へ持ち越し可能に。
 
-* **Left Click**: Select Unit / Move / Attack
-* **Right Click**: Context Menu (Unit Info / End Turn)
-* **Drag & Drop**: Deploy units from cards / Swap equipment in loadout
-* **UI Toggles**:
-    * **Sidebar**: Toggle unit dossier panel.
-    * **Auto Reload**: Toggle automatic shell loading for tanks (1AP cost).
+昇進とスキル: 戦いを生き抜くことでランクアップし、ランダムなスキル（Hero, CQC, Mechanicなど）を習得します。
 
-## 🚀 How to Run
+リワード: クリア時に「新兵」「鹵獲戦車」「補給」から報酬を選択可能。
 
-1.  Clone the repository.
-2.  Open `index.html` in a modern web browser.
-    * *Note: Due to local file security policies in some browsers, it is recommended to run a local server (e.g., VS Code Live Server).*
+航空支援 (Aerial Support)
 
-## 📜 Recent Updates (Heroic Update)
+アイテムとして使用できる「航空支援要請」を追加。指定座標周辺にランダムな爆撃を行います。
 
-* **Visual Overhaul**: Implemented "Fluffy" tree rendering algorithm and grounded shadows.
-* **UI Update**: Moved HP bars to overhead position (slim design) and added glow selection effects.
-* **Logic Fixes**: 
-    * Implemented JIT (Just-In-Time) reloading logic to prevent soft-locks.
-    * Instant victory condition check upon last enemy elimination.
-    * Fixed sidebar coordinate desync issues.
+🎨 Visuals & Environment (グラフィックと環境)
+High-Fidelity Environmental Simulation
 
----
-*Developed by Naoto Seki & Gemini AI*
+風のシミュレーション: マップ上の草や木が風の影響を受けてなびくようになりました。突風（Gust）が発生し、戦場の空気感を演出します。
+
+プロシージャル植生: 60FPSで動作する滑らかな草の揺れと、多層レイヤー構造の木のアニメーションを実装。
+
+UI Overhaul
+
+オーバーヘッドHPバー: HPバーと弾薬状況をユニットの頭上に表示し、視認性を向上。
+
+スキルアイコン: 習得したスキルがアイコンとしてユニット上に表示されるようになりました。
+
+VFX強化: 着弾時の土煙、火花、爆発エフェクトを刷新。
+
+🤖 AI & Logic Improvements (AIとロジック改善)
+AIの武器運用ロジック修正:
+
+AIが状況に応じて適切な武器（対戦車/対歩兵）に持ち替える判断ロジックを修正。
+
+武器持ち替え時に発生していた undefined エラーを解決し、思考ルーチンの安定性を向上。
+
+戦車のリロードシステム:
+
+戦車砲の自動リロード（Auto Reload）機能と、手動トグルスイッチを実装。「撃ちたいときに弾がない」ストレスを軽減。
+
+レンダリングの安全性向上:
+
+Renderer クラスへの依存を疎結合にし、描画エラーが発生してもゲームロジックが停止しないよう防御的プログラミングを徹底しました。
+
+🐛 Bug Fixes (修正)
+ソフトロックの解消: 敵AIのターンで無限ループやフリーズが発生する複数の要因（パス探索、武器選択）を修正。
+
+勝利判定の即時化: 最後の敵を倒した瞬間に勝利演出が入るようタイミングを調整。
+
+座標ズレの修正: サイドバー開閉時やリサイズ時にUIやマップの座標がズレる問題を修正。
