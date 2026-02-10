@@ -20,6 +20,13 @@ class CampaignManager {
 
     // --- SETUP SCREEN LOGIC ---
     initSetupScreen() {
+        // ★修正: 起動直後はUIManagerがまだ存在しないため、直接DOMを操作してサイドバー一式を隠す
+        const idsToHide = ['sidebar', 'resizer', 'sidebar-toggle'];
+        idsToHide.forEach(id => {
+            const el = document.getElementById(id);
+            if(el) el.style.display = 'none';
+        });
+
         // ★追加: 描画システムの初期化 (まだ起動していない場合)
         if (typeof Renderer !== 'undefined' && !Renderer.game) {
             const view = document.getElementById('game-view');
@@ -84,6 +91,16 @@ class CampaignManager {
         document.getElementById('setup-screen').style.display = 'none';
         document.getElementById('reward-screen').style.display = 'none';
         
+        // ★修正: ゲーム開始時にサイドバー一式を直接表示に戻す
+        const sb = document.getElementById('sidebar');
+        if(sb) sb.style.display = 'flex'; // CSSのflexレイアウトを維持
+        
+        const rs = document.getElementById('resizer');
+        if(rs) rs.style.display = 'block';
+
+        const tg = document.getElementById('sidebar-toggle');
+        if(tg) tg.style.display = 'flex';
+
         // Phaserのリセット
         if (typeof Renderer !== 'undefined' && Renderer.game) { 
             const mainScene = Renderer.game.scene.getScene('MainScene'); 
@@ -268,6 +285,7 @@ window.gameLogic = {
     handleClick: () => {},
     // 以下、Phaser側が参照する可能性のあるプロパティのダミー
     map: [],
+    units: [], // エラー回避用
     selectedUnit: null,
     reachableHexes: [],
     attackLine: [],
