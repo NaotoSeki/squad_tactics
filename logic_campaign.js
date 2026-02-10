@@ -278,6 +278,7 @@ window.gameLogic = {
     handleClick: () => {},
     // 以下、Phaser側が参照する可能性のあるプロパティのダミー
     map: [],
+    units: [], // ★これを追加しました！これでエラーが消えます
     selectedUnit: null,
     reachableHexes: [],
     attackLine: [],
