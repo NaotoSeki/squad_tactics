@@ -107,7 +107,20 @@ class UIManager {
             }
         }
     }
+    setSidebarVisible(visible) {
+        const sb = document.getElementById('sidebar');
+        const resizer = document.getElementById('resizer');
+        const toggleBtn = document.getElementById('sidebar-toggle'); // index.htmlのIDと一致させる
 
+        const displayStyle = visible ? 'block' : 'none';
+
+        if (sb) sb.style.display = displayStyle;
+        if (resizer) resizer.style.display = displayStyle;
+        if (toggleBtn) toggleBtn.style.display = displayStyle;
+        
+        // 非表示にする際は、マップ描画領域（#game-container）を全幅に広げるなどの調整が必要ならここで行う
+        // 今回はオーバーレイ画面が出る前提なので、単に隠すだけでOK
+    }
     handleDragStart(e, type, index) {
         this.dragSrc = { type, index };
         e.dataTransfer.effectAllowed = 'move';
