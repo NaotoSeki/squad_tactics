@@ -4,8 +4,13 @@ class UIManager {
     constructor(game) {
         this.game = game;
         this.menuSafeLock = false;
-        this.bindEvents();
         this.dragSrc = null; 
+        
+        // リサイズ管理用フラグ
+        this.isResizing = false;
+
+        this.bindEvents();
+        this.initResizer(); // リサイザー初期化
         
         window.onSlotDragStart = (e, type, index) => this.handleDragStart(e, type, index);
         window.onSlotDragOver = (e) => this.handleDragOver(e);
@@ -47,17 +52,58 @@ class UIManager {
         document.head.appendChild(style);
     }
 
+    // --- Resizer Logic ---
+    initResizer() {
+        const resizer = document.getElementById('resizer');
+        const sidebar = document.getElementById('sidebar');
+        if (!resizer || !sidebar) return;
+
+        resizer.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            this.isResizing = true;
+            document.body.style.cursor = 'col-resize';
+            // ドラッグ中はトランジションを無効化して追従性を良くする
+            sidebar.style.transition = 'none';
+            resizer.style.transition = 'none';
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!this.isResizing) return;
+            // 右端からの距離を計算
+            const newWidth = window.innerWidth - e.clientX;
+            
+            // 最小・最大幅の制限 (例えば 200px ~ 800px)
+            if (newWidth > 200 && newWidth < 800) {
+                sidebar.style.width = `${newWidth}px`;
+                resizer.style.right = `${newWidth}px`;
+            }
+        });
+
+        document.addEventListener('mouseup', () => {
+            if (this.isResizing) {
+                this.isResizing = false;
+                document.body.style.cursor = '';
+                // トランジションを復元
+                sidebar.style.transition = ''; 
+                resizer.style.transition = '';
+            }
+        });
+    }
+
     toggleSidebar() {
         const sb = document.getElementById('sidebar');
+        const resizer = document.getElementById('resizer');
+        if (!sb) return;
+
         sb.classList.toggle('collapsed');
-        const handle = document.querySelector('.resize-handle');
-        if(handle) {
-            if(sb.classList.contains('collapsed')) {
-                handle.style.right = '0px';
-                handle.style.left = 'auto'; 
+        
+        // リサイザーの位置も連動させる
+        if (resizer) {
+            if (sb.classList.contains('collapsed')) {
+                resizer.style.right = '0px';
             } else {
-                handle.style.right = '260px'; // sidebar width
-                handle.style.left = 'auto';
+                // 現在のスタイル幅、またはデフォルト幅(340px)に戻す
+                resizer.style.right = sb.style.width || '340px';
             }
         }
     }
@@ -127,8 +173,15 @@ class UIManager {
             if (btnHeal) btnHeal.style.display = 'block';
         }
 
-        menu.style.left = (px + 20) + 'px'; 
-        menu.style.top = (py - 50) + 'px';
+        // 画面端対策: メニューが見切れないように調整
+        let menuLeft = px + 20;
+        let menuTop = py - 50;
+        
+        // 簡易的な画面端チェック (もし必要なら)
+        // if (menuLeft + 120 > window.innerWidth) menuLeft = px - 140;
+        
+        menu.style.left = menuLeft + 'px'; 
+        menu.style.top = menuTop + 'px';
         menu.style.display = 'block';
     }
 
