@@ -20,6 +20,11 @@ class CampaignManager {
 
     // --- SETUP SCREEN LOGIC ---
     initSetupScreen() {
+        // ★追加: SQUAD RECRUITMENT画面ではサイドバー（右ペイン・リサイザー・開閉ボタン）を隠す
+        if (window.uiManager && typeof window.uiManager.setSidebarVisible === 'function') {
+            window.uiManager.setSidebarVisible(false);
+        }
+
         // ★追加: 描画システムの初期化 (まだ起動していない場合)
         if (typeof Renderer !== 'undefined' && !Renderer.game) {
             const view = document.getElementById('game-view');
@@ -84,6 +89,11 @@ class CampaignManager {
         document.getElementById('setup-screen').style.display = 'none';
         document.getElementById('reward-screen').style.display = 'none';
         
+        // ★追加: ゲーム開始時にサイドバー（右ペイン・リサイザー・開閉ボタン）を表示する
+        if (window.uiManager && typeof window.uiManager.setSidebarVisible === 'function') {
+            window.uiManager.setSidebarVisible(true);
+        }
+
         // Phaserのリセット
         if (typeof Renderer !== 'undefined' && Renderer.game) { 
             const mainScene = Renderer.game.scene.getScene('MainScene'); 
