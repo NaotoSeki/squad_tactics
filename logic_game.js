@@ -596,7 +596,11 @@ window.BattleLogic = class BattleLogic {
         this.refreshUnitState(u);
         this.ui.hideActionMenu();
     }
-
+    
+    actionMeleeSetup() {
+        this.setMode('MELEE');
+    }
+    
     actionRepair() {
         const u = this.selectedUnit; if (!u || u.ap < 2) return;
         if (!u.hands[0] || !u.hands[0].isBroken) return;
