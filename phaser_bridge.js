@@ -277,12 +277,24 @@ class MainScene extends Phaser.Scene {
             }
         }
         
+        const gl = window.gameLogic;
+        let overAimTarget = false;
+        if (gl && gl.selectedUnit && gl.interactionMode === 'ATTACK' && gl.aimTargetUnit && this.unitView) {
+            const aimUnit = gl.aimTargetUnit;
+            const visual = this.unitView.visuals.get(aimUnit.id);
+            if (visual && visual.container) {
+                const bounds = visual.container.getBounds();
+                const ptr = this.input.activePointer;
+                const wp = this.cameras.main.getWorldPoint(ptr.x, ptr.y);
+                overAimTarget = bounds.contains(wp.x, wp.y);
+            }
+        }
         if(selected && window.gameLogic.attackLine && window.gameLogic.attackLine.length > 0) {
             this.overlayGraphics.lineStyle(3, 0xff2222, 0.8);
             const targetUnit = window.gameLogic.aimTargetUnit;
             window.gameLogic.attackLine.forEach(h => {
                 const isUnitTarget = targetUnit && targetUnit.q === h.q && targetUnit.r === h.r;
-                const offset = isUnitTarget ? time * 0.05 : 0;
+                const offset = overAimTarget ? 0 : (isUnitTarget ? time * 0.05 : 0);
                 this.drawDashedHexOutline(this.overlayGraphics, h.q, h.r, offset);
             });
         }
@@ -294,13 +306,11 @@ class MainScene extends Phaser.Scene {
         }
         this.crosshairGroup.clear();
         if (window.gameLogic.aimTargetUnit) { const u = window.gameLogic.aimTargetUnit; const pos = Renderer.hexToPx(u.q, u.r); this.drawCrosshair(this.crosshairGroup, pos.x, pos.y, time); }
-        const gl = window.gameLogic;
-        const overAimTarget = gl && gl.selectedUnit && gl.interactionMode === 'ATTACK' && gl.aimTargetUnit && gl.hoverHex && gl.hoverHex.q === gl.aimTargetUnit.q && gl.hoverHex.r === gl.aimTargetUnit.r;
         const canvas = this.game && this.game.canvas;
         if (canvas) {
             if (overAimTarget) {
-                const svgBright = '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><line x1="16" y1="2" x2="16" y2="30" stroke="#f44" stroke-width="2"/><line x1="2" y1="16" x2="30" y2="16" stroke="#f44" stroke-width="2"/></svg>';
-                const svgDim = '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><line x1="16" y1="2" x2="16" y2="30" stroke="#a33" stroke-width="2"/><line x1="2" y1="16" x2="30" y2="16" stroke="#a33" stroke-width="2"/></svg>';
+                const svgBright = '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><circle cx="16" cy="16" r="12" fill="none" stroke="#f44" stroke-width="2"/><line x1="16" y1="2" x2="16" y2="30" stroke="#f44" stroke-width="2"/><line x1="2" y1="16" x2="30" y2="16" stroke="#f44" stroke-width="2"/></svg>';
+                const svgDim = '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><circle cx="16" cy="16" r="12" fill="none" stroke="#a33" stroke-width="2"/><line x1="16" y1="2" x2="16" y2="30" stroke="#a33" stroke-width="2"/><line x1="2" y1="16" x2="30" y2="16" stroke="#a33" stroke-width="2"/></svg>';
                 const phase = Math.floor(time / 280) % 2;
                 const url = phase === 0 ? 'url("data:image/svg+xml,' + encodeURIComponent(svgBright) + '") 16 16, crosshair' : 'url("data:image/svg+xml,' + encodeURIComponent(svgDim) + '") 16 16, crosshair';
                 canvas.style.cursor = url;
