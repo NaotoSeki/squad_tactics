@@ -1,5 +1,9 @@
 /** PHASER SIDEBAR: Right panel rendered in Phaser (unit info, loadout, log) */
-const SIDEBAR_WIDTH = 340;
+const SIDEBAR_WIDTH_DEFAULT = 340;
+const SIDEBAR_WIDTH_MIN = 240;
+const SIDEBAR_WIDTH_MAX = 560;
+window.__sidebarWidth = window.__sidebarWidth != null ? window.__sidebarWidth : SIDEBAR_WIDTH_DEFAULT;
+window.getSidebarWidth = function() { return (typeof window.__sidebarWidth === 'number' ? window.__sidebarWidth : SIDEBAR_WIDTH_DEFAULT); };
 const PANEL_BG = 0x1a1a1a;
 const HEADER_BG = 0x111111;
 const SLOT_BG = 0x111111;
@@ -23,18 +27,19 @@ window.PhaserSidebar = class PhaserSidebar {
     init() {
         const w = this.scene.scale.width;
         const h = this.scene.scale.height;
-        const panelX = w - SIDEBAR_WIDTH / 2;
+        const sw = window.getSidebarWidth();
+        const panelX = w - sw / 2;
 
-        this.panelBg = this.scene.add.rectangle(panelX, h / 2, SIDEBAR_WIDTH, h, PANEL_BG);
+        this.panelBg = this.scene.add.rectangle(panelX, h / 2, sw, h, PANEL_BG);
         this.panelBg.setStrokeStyle(1, SLOT_BORDER);
         this.container.add(this.panelBg);
 
         const headerH = 28;
-        const header = this.scene.add.rectangle(panelX, headerH / 2, SIDEBAR_WIDTH - 2, headerH, HEADER_BG);
+        const header = this.scene.add.rectangle(panelX, headerH / 2, sw - 2, headerH, HEADER_BG);
         header.setStrokeStyle(1, SLOT_BORDER, 0.5);
         this.container.add(header);
 
-        const headerText = this.scene.add.text(panelX - SIDEBAR_WIDTH / 2 + 12, 8, 'SOLDIER DOSSIER', { fontSize: '11px', color: '#ddaa44', fontFamily: 'sans-serif' });
+        const headerText = this.scene.add.text(panelX - sw / 2 + 12, 8, 'SOLDIER DOSSIER', { fontSize: '11px', color: '#ddaa44', fontFamily: 'sans-serif' });
         headerText.setOrigin(0, 0);
         this.container.add(headerText);
 
@@ -59,7 +64,8 @@ window.PhaserSidebar = class PhaserSidebar {
 
         const w = this.scene.scale.width;
         const h = this.scene.scale.height;
-        const left = w - SIDEBAR_WIDTH + 12;
+        const sw = window.getSidebarWidth();
+        const left = w - sw + 12;
         let y = 36;
 
         const faceKey = 'face_' + (u.faceSeed || u.id || 0);
@@ -118,18 +124,18 @@ window.PhaserSidebar = class PhaserSidebar {
 
         if (virtualWpn && !u.def.isTank && !virtualWpn.partType && virtualWpn.code !== 'm2_mortar' && virtualWpn.current < virtualWpn.cap) {
             y += 10;
-            const reloadBtn = this.createButton(left, y, SIDEBAR_WIDTH - 36, 28, 'RELOAD', () => { if (window.gameLogic) window.gameLogic.reloadWeapon(); });
+            const reloadBtn = this.createButton(left, y, sw - 36, 28, 'RELOAD', () => { if (window.gameLogic) window.gameLogic.reloadWeapon(); });
             this.unitContent.add(reloadBtn.container);
             y += 38;
         }
 
         y += 12;
-        const endTurnBtn = this.createButton(left, y, SIDEBAR_WIDTH - 36, 32, 'End Turn', () => { if (window.gameLogic) window.gameLogic.endTurn(); }, 0x552222, 0xdd4444);
+        const endTurnBtn = this.createButton(left, y, sw - 36, 32, 'End Turn', () => { if (window.gameLogic) window.gameLogic.endTurn(); }, 0x552222, 0xdd4444);
         this.unitContent.add(endTurnBtn.container);
     }
 
     createSlot(u, item, type, index, x, y, isMain, isMortarActive) {
-        const slotW = SIDEBAR_WIDTH - 36;
+        const slotW = window.getSidebarWidth() - 36;
         const slotH = isMain ? 90 : 36;
         const borderColor = isMain ? ACCENT : SLOT_BORDER;
         const bgColor = isMain ? 0x2a201a : SLOT_BG;
@@ -274,7 +280,7 @@ window.PhaserSidebar = class PhaserSidebar {
             const w = this.scene.scale.width;
             const h = this.scene.scale.height;
             const dropZoneY = h * 0.88;
-            const overDeck = p.x < w - SIDEBAR_WIDTH && p.y >= dropZoneY;
+            const overDeck = p.x < w - window.getSidebarWidth() && p.y >= dropZoneY;
             const sameSlot = dropTarget && this.dragSrc.type === dropTarget.type && this.dragSrc.index === dropTarget.index;
             const didSwap = dropTarget && window.gameLogic && window.gameLogic.swapEquipment && !sameSlot;
             const didMoveToDeck = overDeck && window.gameLogic && window.gameLogic.moveWeaponToDeck;
@@ -294,7 +300,7 @@ window.PhaserSidebar = class PhaserSidebar {
 
     hitTestSlots(px, py) {
         const w = this.scene.scale.width;
-        if (px < w - SIDEBAR_WIDTH) return null;
+        if (px < w - window.getSidebarWidth()) return null;
         for (const s of this.slots) {
             const bounds = s.container.getBounds();
             if (bounds.contains(px, py)) {
@@ -345,8 +351,9 @@ window.PhaserSidebar = class PhaserSidebar {
 
     onResize(w, h) {
         if (this.panelBg) {
-            this.panelBg.setPosition(w - SIDEBAR_WIDTH / 2, h / 2);
-            this.panelBg.setSize(SIDEBAR_WIDTH, h);
+            const sw = window.getSidebarWidth();
+            this.panelBg.setPosition(w - sw / 2, h / 2);
+            this.panelBg.setSize(sw, h);
         }
     }
 };

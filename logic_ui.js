@@ -59,6 +59,8 @@ class UIManager {
         if (!resizer || !sidebar) return;
 
         resizer.addEventListener('mousedown', (e) => {
+            const app = document.getElementById('app');
+            if (app && app.classList.contains('phaser-sidebar')) return;
             e.preventDefault();
             this.isResizing = true;
             document.body.style.cursor = 'col-resize';

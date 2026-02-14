@@ -79,7 +79,18 @@ const Renderer = {
         const config = { type: Phaser.AUTO, parent: 'game-view', width: document.getElementById('game-view').clientWidth, height: document.getElementById('game-view').clientHeight, backgroundColor: '#0b0e0a', pixelArt: false, scene: [MainScene, UIScene], fps: { target: 60 }, physics: { default: 'arcade', arcade: { debug: false } }, input: { activePointers: 1 } };
         this.game = new Phaser.Game(config); 
         phaserGame = this.game;
-        window.phaserGame = this.game; 
+        window.phaserGame = this.game;
+        window.notifySidebarResize = () => {
+            if (!this.game || !this.game.scene) return;
+            const w = this.game.scale.width;
+            const h = this.game.scale.height;
+            const ui = this.game.scene.getScene('UIScene');
+            if (ui && ui.onResize) ui.onResize({ width: w, height: h });
+            const main = this.game.scene.getScene('MainScene');
+            if (main && main.updateSidebarViewport) main.updateSidebarViewport();
+            if (window.phaserSidebar && window.phaserSidebar.onResize) window.phaserSidebar.onResize(w, h);
+            if (window.gameLogic && window.gameLogic.updateSidebar) window.gameLogic.updateSidebar();
+        };
         window.addEventListener('resize', () => this.resize());
         const startAudio = () => { if(window.Sfx && window.Sfx.ctx && window.Sfx.ctx.state === 'suspended') { window.Sfx.ctx.resume(); } };
         document.addEventListener('click', startAudio); document.addEventListener('keydown', startAudio);
@@ -97,7 +108,7 @@ const Renderer = {
         const app = document.getElementById('app');
         if (app && app.classList.contains('phaser-sidebar') && this.game) {
             const w = this.game.scale.width;
-            if (x >= w - SIDEBAR_WIDTH) return true;
+            if (x >= w - (window.getSidebarWidth ? window.getSidebarWidth() : 340)) return true;
         }
         const ui = this.game ? this.game.scene.getScene('UIScene') : null; 
         if (ui) {
@@ -165,7 +176,7 @@ class Card extends Phaser.GameObjects.Container {
         this.targetX = pointer.x + this.dragOffsetX;
         this.targetY = pointer.y + this.dragOffsetY;
         const main = this.scene.game.scene.getScene('MainScene');
-        const overRightPanel = pointer.x >= this.scene.scale.width - SIDEBAR_WIDTH;
+        const overRightPanel = pointer.x >= this.scene.scale.width - (window.getSidebarWidth ? window.getSidebarWidth() : 340);
         const dropZoneY = this.scene.scale.height * 0.88;
         const isWeaponry = typeof WPNS !== 'undefined' && WPNS[this.cardType] && WPNS[this.cardType].attr === (typeof ATTR !== 'undefined' ? ATTR.WEAPON : 'Weaponry');
         if (!isWeaponry && this.y < dropZoneY && !overRightPanel) main.dragHighlightHex = Renderer.pxToHex(pointer.x, pointer.y);
@@ -178,7 +189,7 @@ class Card extends Phaser.GameObjects.Container {
         const main = this.scene.game.scene.getScene('MainScene'); main.dragHighlightHex = null; 
         const dropZoneY = this.scene.scale.height * 0.88;
         const sw = this.scene.scale.width;
-        const overRightPanel = pointer.x >= sw - SIDEBAR_WIDTH;
+        const overRightPanel = pointer.x >= sw - (window.getSidebarWidth ? window.getSidebarWidth() : 340);
         const isWeaponry = typeof WPNS !== 'undefined' && WPNS[this.cardType] && WPNS[this.cardType].attr === (typeof ATTR !== 'undefined' ? ATTR.WEAPON : 'Weaponry');
         if (this.y >= dropZoneY) { this.returnToHand(); return; }
         if (overRightPanel) {
@@ -221,13 +232,14 @@ class UIScene extends Phaser.Scene {
         if(window.createGradientTexture) window.createGradientTexture(this);
         const app = document.getElementById('app');
         const usePhaserSidebar = app && app.classList.contains('phaser-sidebar');
-        const gameW = usePhaserSidebar ? Math.max(1, w - SIDEBAR_WIDTH) : w;
-        const centerX = usePhaserSidebar ? (w - SIDEBAR_WIDTH) / 2 : w / 2;
+        const sidebarW = window.getSidebarWidth ? window.getSidebarWidth() : 340;
+        const gameW = usePhaserSidebar ? Math.max(1, w - sidebarW) : w;
+        const centerX = usePhaserSidebar ? (w - sidebarW) / 2 : w / 2;
         if (this.textures.exists('ui_gradient')) { this.gradientBg = this.add.image(centerX, h, 'ui_gradient').setOrigin(0.5, 1).setDepth(0).setDisplaySize(gameW, h*0.175); } else { this.gradientBg = this.add.rectangle(centerX, h, gameW, h*0.175, 0x000000, 0.8).setOrigin(0.5, 1); }
         this.handContainer = this.add.container(centerX, h); this.uiVfxGraphics = this.add.graphics().setDepth(10000); this.scale.on('resize', this.onResize, this);
         if (window.PhaserSidebar) { this.sidebar = new PhaserSidebar(this); this.sidebar.init(); window.phaserSidebar = this.sidebar; }
     }
-    onResize(gameSize) { const w = gameSize.width; const h = gameSize.height; const app = document.getElementById('app'); const usePhaserSidebar = app && app.classList.contains('phaser-sidebar'); const gameW = usePhaserSidebar ? Math.max(1, w - SIDEBAR_WIDTH) : w; const centerX = usePhaserSidebar ? (w - SIDEBAR_WIDTH) / 2 : w / 2; if (this.gradientBg) { this.gradientBg.setPosition(centerX, h); this.gradientBg.setDisplaySize(gameW, h * 0.175); } if (this.handContainer) { this.handContainer.setPosition(centerX, h); } if (this.sidebar) this.sidebar.onResize(w, h); }
+    onResize(gameSize) { const w = gameSize.width; const h = gameSize.height; const app = document.getElementById('app'); const usePhaserSidebar = app && app.classList.contains('phaser-sidebar'); const sidebarW = window.getSidebarWidth ? window.getSidebarWidth() : 340; const gameW = usePhaserSidebar ? Math.max(1, w - sidebarW) : w; const centerX = usePhaserSidebar ? (w - sidebarW) / 2 : w / 2; if (this.gradientBg) { this.gradientBg.setPosition(centerX, h); this.gradientBg.setDisplaySize(gameW, h * 0.175); } if (this.handContainer) { this.handContainer.setPosition(centerX, h); } if (this.sidebar) this.sidebar.onResize(w, h); }
     update(time, delta) {
         this.cards.forEach(card => { if (card.active) card.updatePhysics(); });
         if (this.sidebar) {
@@ -284,7 +296,8 @@ class UIScene extends Phaser.Scene {
         const sh = this.scale.height;
         const DECK_ZONE_HEIGHT = sh * 0.12;
         const dropZoneY = sh - DECK_ZONE_HEIGHT;
-        const mapRight = sw - SIDEBAR_WIDTH;
+        const sidebarW = window.getSidebarWidth ? window.getSidebarWidth() : 340;
+        const mapRight = sw - sidebarW;
         const g = this.uiVfxGraphics;
         const t = time * 0.001;
         const colors = [0x88ccff, 0xaaddff, 0x6688cc, 0x99bbee];
@@ -297,20 +310,21 @@ class UIScene extends Phaser.Scene {
     drawDropZoneGlow(time, weaponryOnly) {
         const sw = this.scale.width;
         const sh = this.scale.height;
+        const sidebarW = window.getSidebarWidth ? window.getSidebarWidth() : 340;
         const DECK_ZONE_HEIGHT = sh * 0.12;
         const dropZoneY = sh - DECK_ZONE_HEIGHT;
-        const mapRight = sw - SIDEBAR_WIDTH;
+        const mapRight = sw - sidebarW;
         const g = this.uiVfxGraphics;
         const t = time * 0.001;
         const colors = [0xffdd66, 0xddaa44, 0xffaa22, 0xdd8844, 0xffcc44];
         g.fillStyle(0xddaa44, 0.025);
         g.fillRect(0, dropZoneY, mapRight, DECK_ZONE_HEIGHT);
         g.fillStyle(0xddaa44, 0.018);
-        g.fillRect(mapRight, 0, SIDEBAR_WIDTH, sh);
+        g.fillRect(mapRight, 0, sidebarW, sh);
         const segs = [
             { x1: 0, y1: dropZoneY, x2: mapRight, y2: dropZoneY, vert: false, len: mapRight },
             { x1: mapRight, y1: dropZoneY, x2: mapRight, y2: 0, vert: true, len: dropZoneY },
-            { x1: mapRight, y1: 0, x2: sw, y2: 0, vert: false, len: SIDEBAR_WIDTH },
+            { x1: mapRight, y1: 0, x2: sw, y2: 0, vert: false, len: sidebarW },
             { x1: sw, y1: 0, x2: sw, y2: sh, vert: true, len: sh },
             { x1: sw, y1: sh, x2: 0, y2: sh, vert: false, len: sw },
             { x1: 0, y1: sh, x2: 0, y2: dropZoneY, vert: true, len: sh - dropZoneY }
@@ -438,7 +452,8 @@ class MainScene extends Phaser.Scene {
         const app = document.getElementById('app');
         if (app && app.classList.contains('phaser-sidebar')) {
             const w = this.scale.width; const h = this.scale.height;
-            this.cameras.main.setViewport(0, 0, Math.max(1, w - SIDEBAR_WIDTH), h);
+            const sidebarW = window.getSidebarWidth ? window.getSidebarWidth() : 340;
+            this.cameras.main.setViewport(0, 0, Math.max(1, w - sidebarW), h);
         } else {
             this.cameras.main.setViewport(0, 0, this.scale.width, this.scale.height);
         }
