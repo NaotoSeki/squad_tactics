@@ -137,6 +137,25 @@ class VFXSystem {
             type:'smoke'
         }); 
     }
+
+    addBulletImpact(x, y, burst) {
+        const count = (burst && burst > 1) ? Math.min(6 + burst, 24) : 4;
+        const radius = (burst && burst > 1) ? 10 + burst * 1.5 : 12;
+        const lifeBase = (burst && burst > 1) ? 12 : 15;
+        for (let i = 0; i < count; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            this.add({
+                x: x + (Math.random() - 0.5) * radius * 2,
+                y: y + (Math.random() - 0.5) * radius * 1.2,
+                vx: Math.cos(angle) * (0.5 + Math.random() * 1.2),
+                vy: -0.2 - Math.random() * 0.8,
+                color: (Math.random() > 0.5) ? "#8a7355" : "#6b5a45",
+                size: (burst && burst > 1) ? 2 + Math.random() * 4 : 2 + Math.random() * 3,
+                life: lifeBase + Math.random() * 18,
+                type: 'smoke'
+            });
+        }
+    }
     
     addFire(x, y) { 
         this.add({ 
@@ -242,12 +261,13 @@ class EnvSystem {
         const countBack = 6 + Math.floor(Math.random() * 4);
         const countFront = 6 + Math.floor(Math.random() * 4);
         const scaleMin = 0.1; const scaleRange = 0.14;
+        const rubbleScale = 0.8;
         for (let i = 0; i < countBack; i++) {
             const r = Math.random() * (HEX_SIZE * 0.9); const angle = Math.random() * Math.PI * 2;
             const ox = Math.cos(angle) * r; const oy = Math.sin(angle) * r * 0.866;
             const key = `rubble_chunk_${i % 5}`;
             const chunk = scene.add.image(x + ox, y + oy, key).setOrigin(0.5, 0.5);
-            chunk.setScale(scaleMin + Math.random() * scaleRange); chunk.setAngle((Math.random() - 0.5) * 55);
+            chunk.setScale((scaleMin + Math.random() * scaleRange) * rubbleScale); chunk.setAngle((Math.random() - 0.5) * 55);
             chunk.setDepth(0.5 + (y + oy) * 0.0001 + i * 0.0001);
             chunk.setTint(Phaser.Display.Color.GetColor(130 + Math.floor(Math.random() * 45), 125 + Math.floor(Math.random() * 40), 110 + Math.floor(Math.random() * 35)));
             decorGroup.add(chunk);
@@ -257,7 +277,7 @@ class EnvSystem {
             const ox = Math.cos(angle) * r; const oy = Math.sin(angle) * r * 0.866;
             const key = `rubble_chunk_${i % 5}`;
             const chunk = scene.add.image(x + ox, y + oy, key).setOrigin(0.5, 0.5);
-            chunk.setScale(scaleMin + Math.random() * scaleRange); chunk.setAngle((Math.random() - 0.5) * 60);
+            chunk.setScale((scaleMin + Math.random() * scaleRange) * rubbleScale); chunk.setAngle((Math.random() - 0.5) * 60);
             chunk.setDepth(1.5 + (y + oy) * 0.0001 + i * 0.0001);
             chunk.setTint(Phaser.Display.Color.GetColor(125 + Math.floor(Math.random() * 50), 120 + Math.floor(Math.random() * 45), 105 + Math.floor(Math.random() * 40)));
             rubbleFrontGroup.add(chunk);

@@ -143,6 +143,14 @@ class UIManager {
     }
 
     log(m) {
+        const logWin = document.getElementById('battle-log-window');
+        const logBody = document.getElementById('battle-log-body');
+        if (logWin && logBody) {
+            logWin.style.display = 'flex';
+            const d = document.createElement('div'); d.className = 'log-entry'; d.textContent = '> ' + m;
+            logBody.appendChild(d); logBody.scrollTop = logBody.scrollHeight;
+            return;
+        }
         const c = document.getElementById('log-container');
         if (c) {
             const d = document.createElement('div'); d.className = 'log-entry'; d.innerText = `> ${m}`;
@@ -165,11 +173,11 @@ class UIManager {
         
         setEnabled(btnMove, u.ap >= 1);
         
-        // gameLogic経由で武器取得
+        // 射撃可能条件: ①AP足りる ②InHandsにWeaponry(or仮想迫撃砲) ③残弾あり（戦車は予備弾があれば可）
         const w = window.gameLogic && window.gameLogic.getVirtualWeapon ? window.gameLogic.getVirtualWeapon(u) : null;
         const weaponCost = w ? w.ap : 99;
-        
-        setEnabled(btnAttack, u.ap >= weaponCost);
+        const hasAmmo = w && ((w.current || 0) > 0 || (u.def && u.def.isTank && (w.reserve || 0) > 0));
+        setEnabled(btnAttack, !!w && u.ap >= weaponCost && hasAmmo);
         
         const anyBroken = Array.isArray(u.hands) ? u.hands.some(h => h && h.isBroken) : (u.hands && u.hands.isBroken);
         setEnabled(btnRepair, anyBroken);
@@ -218,7 +226,8 @@ class UIManager {
         setEnabled(btnMove, u.ap >= 1);
         const w = window.gameLogic && window.gameLogic.getVirtualWeapon ? window.gameLogic.getVirtualWeapon(u) : null;
         const weaponCost = w ? w.ap : 99;
-        setEnabled(btnAttack, u.ap >= weaponCost);
+        const hasAmmo = w && ((w.current || 0) > 0 || (u.def && u.def.isTank && (w.reserve || 0) > 0));
+        setEnabled(btnAttack, !!w && u.ap >= weaponCost && hasAmmo);
         const anyBroken = Array.isArray(u.hands) ? u.hands.some(h => h && h.isBroken) : (u.hands && u.hands.isBroken);
         setEnabled(btnRepair, anyBroken);
         const neighbors = (window.gameLogic && window.gameLogic.getUnitsInHex) ? window.gameLogic.getUnitsInHex(u.q, u.r) : [];
@@ -252,7 +261,13 @@ class UIManager {
     }
 
     updateSidebar(u, state, tankAutoReload) {
+        if (window.phaserSidebar && document.getElementById('app') && document.getElementById('app').classList.contains('phaser-sidebar')) {
+            window.phaserSidebar.updateSidebar(u, state, tankAutoReload);
+            if (window.gameLogic && window.gameLogic.selectedUnit) this.refreshCommandMenuState(window.gameLogic.selectedUnit);
+            return;
+        }
         const ui = document.getElementById('unit-info');
+        if (!ui) return;
         if (!u || u.hp <= 0) { ui.innerHTML = `<div style="text-align:center;color:#555;margin-top:80px;">// NO SIGNAL //</div>`; return; }
         const faceUrl = (Renderer.generateFaceIcon) ? Renderer.generateFaceIcon(u.faceSeed) : "";
         

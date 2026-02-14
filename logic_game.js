@@ -289,7 +289,10 @@ window.BattleLogic = class BattleLogic {
                 if (i === 0) game.ui.log(">> 装甲により無効化！");
               }
             } else {
-              if (window.VFX) VFX.add({ x: tx, y: ty, vx: 0, vy: 0, life: 10, maxLife: 10, color: "#aaa", size: 2, type: 'smoke' });
+              if (window.VFX) {
+                VFX.add({ x: tx, y: ty, vx: 0, vy: 0, life: 10, maxLife: 10, color: "#aaa", size: 2, type: 'smoke' });
+                if (!isShell && w.type === 'bullet') VFX.addBulletImpact(tx, ty, 1);
+              }
             }
           }
         }, flightTime);
@@ -344,11 +347,10 @@ window.BattleLogic = class BattleLogic {
     // 前提: hands は常に3要素配列
     if (!Array.isArray(u.hands) || u.hands.length < 3) return null;
 
-    // スロット0が通常武器の場合
+    // スロット0が通常武器の場合（attr がなくても code で WPNS 一致すれば武器扱い）
     const slot0 = u.hands[0];
-    if (slot0 && slot0.attr === 'Weaponry' && slot0.type !== 'part') {
-      return slot0;
-    }
+    const isWeapon = slot0 && slot0.type !== 'part' && (slot0.attr === (typeof ATTR !== 'undefined' ? ATTR.WEAPON : 'Weaponry') || (slot0.code && typeof WPNS !== 'undefined' && WPNS[slot0.code] && WPNS[slot0.code].attr === (typeof ATTR !== 'undefined' ? ATTR.WEAPON : 'Weaponry')));
+    if (isWeapon) return slot0;
 
     // 迫撃砲パーツ3種揃い → 仮想 m2_mortar
     const parts = u.hands.map(i => i ? i.code : null);
@@ -464,7 +466,7 @@ window.BattleLogic = class BattleLogic {
     this.selectedUnit = u; this.refreshUnitState(u); this.ui.hideActionMenu();
   }
 
-  handleClick(p) {
+  handleClick(p, pointerX, pointerY) {
     if (this.state !== 'PLAY') return;
     if (this.interactionMode === 'SELECT') { this.clearSelection(); }
     else if (this.interactionMode === 'MOVE') {
@@ -475,7 +477,15 @@ window.BattleLogic = class BattleLogic {
     }
     else if (this.interactionMode === 'ATTACK') {
       if (this.selectedUnit) {
-        const targetUnit = this.getUnitInHex(p.q, p.r);
+        let targetUnit = null;
+        const inHex = this.getUnitsInHex(p.q, p.r);
+        if (pointerX != null && pointerY != null && typeof phaserGame !== 'undefined' && phaserGame.scene) {
+          const main = phaserGame.scene.getScene('MainScene');
+          if (main && main.getUnitAtScreenPosition) targetUnit = main.getUnitAtScreenPosition(pointerX, pointerY);
+          if (targetUnit && inHex.indexOf(targetUnit) < 0) targetUnit = null;
+          if (!targetUnit && inHex.length > 1 && main && main.getClosestUnitToScreen) targetUnit = main.getClosestUnitToScreen(inHex, pointerX, pointerY);
+        }
+        if (!targetUnit) targetUnit = inHex[0] || this.getUnitInHex(p.q, p.r);
         if (targetUnit && targetUnit.team !== this.selectedUnit.team) {
           this.actionAttack(this.selectedUnit, targetUnit);
         } else {
@@ -590,6 +600,10 @@ window.BattleLogic = class BattleLogic {
     let item1 = src.type === 'main' ? u.hands[srcIdx] : u.bag[srcIdx];
     let item2 = tgt.type === 'main' ? u.hands[tgtIdx] : u.bag[tgtIdx];
 
+    if (src.type === tgt.type && srcIdx === tgtIdx) return;
+    const changed = (item1 !== item2) || (item1 && item2 && (item1.code !== item2.code || item1.id !== item2.id));
+    if (!changed) return;
+
     if (src.type === 'main') u.hands[srcIdx] = item2; else u.bag[srcIdx] = item2;
     if (tgt.type === 'main') u.hands[tgtIdx] = item1; else u.bag[tgtIdx] = item1;
 
@@ -597,6 +611,39 @@ window.BattleLogic = class BattleLogic {
     if (u === this.selectedUnit) this.ui.refreshCommandMenuState(u);
     if (window.Sfx) Sfx.play('click');
     this.ui.log(`${u.name} 装備変更`);
+  }
+
+  moveWeaponToDeck(src) {
+    const u = this.selectedUnit;
+    if (!u) return;
+    const idx = src.type === 'main' ? src.index : src.index;
+    const item = src.type === 'main' ? u.hands[idx] : u.bag[idx];
+    if (!item || !item.code || !WPNS[item.code] || WPNS[item.code].attr !== ATTR.WEAPON) return;
+    if (src.type === 'main') u.hands[idx] = null; else u.bag[idx] = null;
+    if (typeof Renderer !== 'undefined' && Renderer.dealCard) Renderer.dealCard(item.code);
+    this.updateSidebar();
+    if (window.Sfx) Sfx.play('click');
+    this.ui.log(`${u.name} 装備解除: ${item.name}`);
+  }
+
+  equipWeaponFromDeck(weaponCode, slotTarget) {
+    const u = this.selectedUnit;
+    if (!u || !WPNS[weaponCode] || WPNS[weaponCode].attr !== ATTR.WEAPON) return;
+    const base = WPNS[weaponCode];
+    const newItem = { ...base, code: weaponCode, id: Math.random(), isBroken: false };
+    if (base.type === 'bullet' || base.type === 'shell_fast') newItem.current = newItem.cap;
+    else if (base.type === 'shell' || base.area) { newItem.current = 1; newItem.isConsumable = true; }
+    else if (base.type === 'ammo') newItem.current = base.current || base.cap;
+    if (u.def && u.def.isTank && !base.type.includes('part') && !base.type.includes('ammo')) { newItem.current = 1; newItem.cap = 1; newItem.reserve = newItem.reserve || (weaponCode === 'mg42' ? 300 : 12); }
+    const tgtIdx = slotTarget.type === 'main' ? slotTarget.index : slotTarget.index;
+    const oldItem = slotTarget.type === 'main' ? u.hands[tgtIdx] : u.bag[tgtIdx];
+    if (slotTarget.type === 'main') u.hands[tgtIdx] = newItem; else u.bag[tgtIdx] = newItem;
+    if (oldItem && oldItem.code && WPNS[oldItem.code] && WPNS[oldItem.code].attr === ATTR.WEAPON && typeof Renderer !== 'undefined' && Renderer.dealCard) {
+      Renderer.dealCard(oldItem.code);
+    }
+    this.updateSidebar();
+    if (window.Sfx) Sfx.play('click');
+    this.ui.log(`${u.name} 装備: ${newItem.name}`);
   }
 
   toggleFireMode() {
