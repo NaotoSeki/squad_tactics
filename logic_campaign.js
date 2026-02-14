@@ -1,7 +1,6 @@
 /** LOGIC CAMPAIGN: Game Lifecycle, Data Persistence, and Unit Factory */
 
 const AVAILABLE_CARDS = ['rifleman', 'scout', 'gunner', 'sniper', 'mortar_gunner', 'aerial', 'tank_pz4', 'tank_tiger'];
-const FUSABLE_UNIT_TYPES = ['rifleman', 'scout', 'gunner', 'sniper', 'mortar_gunner', 'tank_pz4', 'tank_tiger'];
 
 function createCardIcon(type) {
     const c = document.createElement('canvas'); c.width = 1; c.height = 1; return c.toDataURL();
