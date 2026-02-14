@@ -60,6 +60,34 @@ const Sfx = {
         o1.start(t); o1.stop(t + 0.15); o2.start(t); o2.stop(t + 0.3);
     },
 
+    /** ソフトターゲット命中: 短いキレのよい肉弾着音 */
+    softHit() {
+        if (!this.ctx) return;
+        const t = this.ctx.currentTime;
+        const dur = 0.06;
+        const b = this.ctx.createBuffer(1, this.ctx.sampleRate * dur, this.ctx.sampleRate);
+        const d = b.getChannelData(0);
+        for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.exp(-i / (d.length * 0.15));
+        const s = this.ctx.createBufferSource(); s.buffer = b;
+        const f = this.ctx.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 800;
+        const g = this.ctx.createGain();
+        g.gain.setValueAtTime(0.25, t); g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+        s.connect(f); f.connect(g); g.connect(this.ctx.destination);
+        s.start(t);
+    },
+
+    /** ハードターゲット命中（リコシェ）: 短い金属的な跳弾音 */
+    hardHit() {
+        if (!this.ctx) return;
+        const t = this.ctx.currentTime;
+        const o = this.ctx.createOscillator(); o.type = 'sine';
+        o.frequency.setValueAtTime(2400, t); o.frequency.exponentialRampToValueAtTime(400, t + 0.08);
+        const g = this.ctx.createGain();
+        g.gain.setValueAtTime(0.12, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.08);
+        o.connect(g); g.connect(this.ctx.destination);
+        o.start(t); o.stop(t + 0.08);
+    },
+
     play(id, fallbackType = null) {
         this.init();
 
@@ -96,6 +124,8 @@ const Sfx = {
         else if(target==='boom') { this.noise(1.2, 60, 'lowpass', 0.8); this.noise(0.5, 200, 'lowpass', 0.5); }
         else if(target==='rocket') { this.noise(1.5, 120, 'lowpass', 0.6); }
         else if(target==='ricochet') { this.metalImpact(); }
+        else if(target==='soft_hit' || target==='hit') { this.softHit(); }
+        else if(target==='hard_hit') { this.hardHit(); }
         else if(target==='death') { this.noise(0.5, 150, 'lowpass', 0.5); }
         else if(target==='win') { 
             setTimeout(()=>this.tone(440,'square',0.1),0);

@@ -190,6 +190,12 @@ window.BattleLogic = class BattleLogic {
     a.ap -= w.ap;
     this.state = 'ANIM';
 
+    // 戦車砲: 発射直後に砲弾を確実に消費（AP0→敵ターン後でも二重リロードに見えないよう即時反映）
+    if (a.def.isTank && w.type && w.type.includes('shell')) {
+      this.consumeAmmo(a, w.code);
+      this.updateSidebar();
+    }
+
     const animTarget = targetUnit || { q: targetHex.q, r: targetHex.r, hp: 100 };
     if (typeof Renderer !== 'undefined' && Renderer.playAttackAnim) Renderer.playAttackAnim(a, animTarget);
 
@@ -212,7 +218,10 @@ window.BattleLogic = class BattleLogic {
       for (let i = 0; i < shots; i++) {
         if (targetUnit && targetUnit.hp <= 0) break;
 
-        game.consumeAmmo(a, w.code);
+        // 戦車砲は発射直前に既に消費済み
+        if (!(a.def.isTank && w.type && w.type.includes('shell'))) {
+          game.consumeAmmo(a, w.code);
+        }
 
         const sPos = Renderer.hexToPx(a.q, a.r);
         const ePos = Renderer.hexToPx(targetHex.q, targetHex.r);
@@ -272,9 +281,13 @@ window.BattleLogic = class BattleLogic {
               let dmg = Math.floor(w.dmg * (0.8 + Math.random() * 0.4));
               if (targetUnit.def.isTank && w.type === 'bullet') dmg = 0;
               if (dmg > 0) {
+                if (window.Sfx) Sfx.play('soft_hit');
                 if (!isShell && window.VFX) VFX.add({ x: tx, y: ty, vx: 0, vy: -5, life: 10, maxLife: 10, color: "#fff", size: 2, type: 'spark' });
                 game.applyDamage(targetUnit, dmg, w.name);
-              } else { if (i === 0) game.ui.log(">> 装甲により無効化！"); }
+              } else {
+                if (window.Sfx) Sfx.play('hard_hit');
+                if (i === 0) game.ui.log(">> 装甲により無効化！");
+              }
             } else {
               if (window.VFX) VFX.add({ x: tx, y: ty, vx: 0, vy: 0, life: 10, maxLife: 10, color: "#aaa", size: 2, type: 'smoke' });
             }
