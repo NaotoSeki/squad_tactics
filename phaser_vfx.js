@@ -162,7 +162,7 @@ class VFXSystem {
 }
 
 class EnvSystem {
-    constructor() { this.grassElements = []; this.treeElements = []; this.gustPower = 0; this.waveTime = 0; this.TOTAL_GRASS_FRAMES = 60; }
+    constructor() { this.grassElements = []; this.treeElements = []; this.gustPower = 0; this.waveTime = 0; this.TOTAL_GRASS_FRAMES = 24; }
     preload(scene) {
         const TEXTURE_SCALE = 4.0; const canvasW = 64 * TEXTURE_SCALE * 1.8; const canvasH = 64 * TEXTURE_SCALE;
         const palettes = [0x4a5d23, 0x5b6e34, 0x3a4d13, 0x6c7a44, 0x554e33];
@@ -175,11 +175,12 @@ class EnvSystem {
     }
     generateGrassFrames(scene, keyPrefix, bladeDefs, w, h, scale, windSens) { for (let frame = 0; frame < this.TOTAL_GRASS_FRAMES; frame++) { const g = scene.make.graphics({x:0, y:0, add:false}); g.fillStyle(0x2a331a, 0.8); g.fillEllipse(w/2, h, h/4, h/10); const bendFactor = frame / (this.TOTAL_GRASS_FRAMES - 1.0); for(let b of bladeDefs) { g.lineStyle(1.5 * scale, b.col, 1.0); const startX = b.startX; const startY = h; const windX = bendFactor * (h * windSens); const windY = Math.abs(windX) * 0.2; const endX = startX + b.lean + windX; const endY = startY - b.len + windY; const ctrlX = startX + (b.lean * 0.1) + (windX * 0.5) + b.ctrlOff; const ctrlY = startY - (b.len * 0.5); const curve = new Phaser.Curves.QuadraticBezier(new Phaser.Math.Vector2(startX, startY), new Phaser.Math.Vector2(ctrlX, ctrlY), new Phaser.Math.Vector2(endX, endY)); curve.draw(g); } g.generateTexture(`${keyPrefix}_${frame}`, w, h); } }
     clear() { this.grassElements = []; this.treeElements = []; }
-    spawnGrass(scene, group, x, y) { const count = 60; const scaleFactor = 0.07; for(let i=0; i<count; i++) { const r = Math.random() * (HEX_SIZE * 1.0); const angle = Math.random() * Math.PI * 2; const ox = Math.cos(angle) * r; const oy = Math.sin(angle) * r * 0.866; const type = Math.random() > 0.5 ? 'A' : 'B'; const textureKey = type === 'A' ? 'hd_grass_0' : 'hd_grass_b_0'; const grass = scene.add.sprite(x+ox, y+oy, textureKey); grass.setOrigin(0.5, 1.0); const typeScale = type === 'A' ? 1.0 : 0.85; grass.setScale((0.8 + Math.random() * 0.4) * scaleFactor * typeScale); grass.setDepth(y+oy); grass.grassType = type; grass.currentWindValue = 0; grass.origX = x + ox; grass.origY = y + oy; const tintVar = Math.floor(Math.random() * 40); grass.setTint(Phaser.Display.Color.GetColor(160 + tintVar, 170 + tintVar, 130 + tintVar)); group.add(grass); this.grassElements.push(grass); } }
-    spawnTrees(scene, group, x, y) { const count = 5 + Math.floor(Math.random() * 3); const scaleFactor = 0.18; for(let i=0; i<count; i++) { const r = Math.random() * (HEX_SIZE * 0.85); const angle = Math.random() * Math.PI * 2; const ox = Math.cos(angle) * r; const oy = Math.sin(angle) * r * 0.866; const scale = (0.7 + Math.random() * 0.6) * scaleFactor; const shadow = scene.add.ellipse(x+ox, y+oy+3, 40*scale, 15*scale, 0x000000, 0.5); group.add(shadow); const treeContainer = scene.add.container(x+ox, y+oy); treeContainer.setDepth(y+oy + 20); treeContainer.setScale(scale); const trunk = scene.add.image(0, 0, 'hd_tree_trunk').setOrigin(0.5, 0.95); treeContainer.add(trunk); const leaves = []; for(let l=0; l<3; l++) { const leaf = scene.add.image(0, 0, `hd_tree_leaves_${l}`).setOrigin(0.5, 0.95); treeContainer.add(leaf); leaves.push(leaf); } treeContainer.trunk = trunk; treeContainer.leaves = leaves; treeContainer.currentSkew = 0; treeContainer.baseSkew = 0; treeContainer.origX = x + ox; treeContainer.origY = y + oy; treeContainer.swayOffset = (Math.random() - 0.5) * Math.PI * 0.6; group.add(treeContainer); this.treeElements.push(treeContainer); } }
+    spawnGrass(scene, group, x, y) { const count = 60; const scaleFactor = 0.07; for(let i=0; i<count; i++) { const r = Math.random() * (HEX_SIZE * 1.0); const angle = Math.random() * Math.PI * 2; const ox = Math.cos(angle) * r; const oy = Math.sin(angle) * r * 0.866; const type = Math.random() > 0.5 ? 'A' : 'B'; const textureKey = type === 'A' ? 'hd_grass_0' : 'hd_grass_b_0'; const grass = scene.add.sprite(x+ox, y+oy, textureKey); grass.setOrigin(0.5, 1.0); const typeScale = type === 'A' ? 1.0 : 0.85; grass.setScale((0.8 + Math.random() * 0.4) * scaleFactor * typeScale); grass.setDepth(y+oy); grass.grassType = type; grass.currentWindValue = 0; grass.origX = x + ox; grass.origY = y + oy; grass.amp = 0.82 + Math.random() * 0.36; const tintVar = Math.floor(Math.random() * 40); grass.setTint(Phaser.Display.Color.GetColor(160 + tintVar, 170 + tintVar, 130 + tintVar)); group.add(grass); this.grassElements.push(grass); } }
+    spawnTrees(scene, group, x, y) { const count = 5 + Math.floor(Math.random() * 3); const scaleFactor = 0.18; for(let i=0; i<count; i++) { const r = Math.random() * (HEX_SIZE * 0.85); const angle = Math.random() * Math.PI * 2; const ox = Math.cos(angle) * r; const oy = Math.sin(angle) * r * 0.866; const scale = (0.7 + Math.random() * 0.6) * scaleFactor; const shadow = scene.add.ellipse(x+ox, y+oy+3, 40*scale, 15*scale, 0x000000, 0.5); group.add(shadow); const treeContainer = scene.add.container(x+ox, y+oy); treeContainer.setDepth(y+oy + 20); treeContainer.setScale(scale); const trunk = scene.add.image(0, 0, 'hd_tree_trunk').setOrigin(0.5, 0.95); treeContainer.add(trunk); const leaves = []; for(let l=0; l<3; l++) { const leaf = scene.add.image(0, 0, `hd_tree_leaves_${l}`).setOrigin(0.5, 0.95); treeContainer.add(leaf); leaves.push(leaf); } treeContainer.trunk = trunk; treeContainer.leaves = leaves; treeContainer.currentSkew = 0; treeContainer.baseSkew = 0; treeContainer.origX = x + ox; treeContainer.origY = y + oy; treeContainer.swayOffset = (Math.random() - 0.5) * Math.PI * 0.6; treeContainer.amp = 0.88 + Math.random() * 0.24; group.add(treeContainer); this.treeElements.push(treeContainer); } }
     registerWater(image, y, q, r, group) { if (!image.scene) return; image.scene.tweens.add({ targets: image, alpha: { from: 0.85, to: 1.0 }, y: '+=3', scaleX: { from: 1.0/window.HIGH_RES_SCALE, to: 1.02/window.HIGH_RES_SCALE }, duration: 1500 + Math.random() * 1000, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' }); }
     onGust() { this.gustPower = 1.0; }
     update(time) {
+        // 風向き統一: wavePhase の sin が正のとき「風が右向き」= 草は右に曲がり・樹木は右に傾く（同一方向）
         this.waveTime += 0.018;
         const t = this.waveTime;
         this.gustPower *= 0.98;
@@ -203,7 +204,7 @@ class EnvSystem {
             const bigWave = (Math.sin(wavePhase) + 1.0) * 0.5;
             const ripple = Math.sin(wavePhase * 2.5) * 0.05;
             const gust = this.gustPower * 0.6;
-            let targetWindValue = (bigWave * 0.4) + 0.1 + ripple + gust;
+            let targetWindValue = ((bigWave * 0.4) + 0.1 + ripple + gust) * (g.amp !== undefined ? g.amp : 1);
             targetWindValue = Math.max(0, Math.min(1.0, targetWindValue));
             const stiffness = 0.06;
             g.currentWindValue += (targetWindValue - g.currentWindValue) * stiffness;
@@ -223,9 +224,10 @@ class EnvSystem {
             if (bounds && !bounds.contains(tr.origX, tr.origY)) { tr.visible = false; continue; }
             tr.visible = true;
             const wavePhase = windBase - tr.origX * windSpreadX - tr.origY * windSpreadY + tr.swayOffset;
-            const mainSway = Math.sin(wavePhase) * 0.03;
-            const subSway = Math.sin(wavePhase * 1.6 + 1.2) * 0.012;
-            const gust = this.gustPower * 0.1;
+            const amp = (tr.amp !== undefined ? tr.amp : 1);
+            const mainSway = Math.sin(wavePhase) * 0.03 * amp;
+            const subSway = Math.sin(wavePhase * 1.6 + 1.2) * 0.012 * amp;
+            const gust = this.gustPower * 0.1 * amp;
             const targetSkew = mainSway + subSway + gust;
             const stiffness = 0.032;
             tr.currentSkew += (targetSkew - tr.currentSkew) * stiffness;
@@ -235,14 +237,14 @@ class EnvSystem {
             if (tr.leaves) {
                 const phase1 = wavePhase - 0.25;
                 const phase2 = wavePhase - 0.5;
-                const s1 = Math.sin(phase1) * 0.025 + Math.sin(phase1 * 1.5) * 0.01 + gust * 0.5;
-                const s2 = Math.sin(phase2) * 0.022 + Math.sin(phase2 * 1.4) * 0.008 + gust * 0.7;
+                const s1 = (Math.sin(phase1) * 0.025 + Math.sin(phase1 * 1.5) * 0.01 + gust * 0.5);
+                const s2 = (Math.sin(phase2) * 0.022 + Math.sin(phase2 * 1.4) * 0.008 + gust * 0.7);
                 tr.leaves[0].skewX = tr.leaves[0].skewX * 0.92 + s1 * 0.8;
-                tr.leaves[0].x = tr.leaves[0].x * 0.92 + s1 * -4;
+                tr.leaves[0].x = tr.leaves[0].x * 0.92 + s1 * 4;
                 tr.leaves[1].skewX = tr.leaves[1].skewX * 0.9 + s1 * 1.1;
-                tr.leaves[1].x = tr.leaves[1].x * 0.9 + s1 * -12;
+                tr.leaves[1].x = tr.leaves[1].x * 0.9 + s1 * 12;
                 tr.leaves[2].skewX = tr.leaves[2].skewX * 0.88 + s2 * 1.4;
-                tr.leaves[2].x = tr.leaves[2].x * 0.88 + s2 * -20;
+                tr.leaves[2].x = tr.leaves[2].x * 0.88 + s2 * 20;
             }
         }
     }
