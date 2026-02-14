@@ -291,7 +291,7 @@ window.BattleLogic = class BattleLogic {
             } else {
               if (window.VFX) {
                 VFX.add({ x: tx, y: ty, vx: 0, vy: 0, life: 10, maxLife: 10, color: "#aaa", size: 2, type: 'smoke' });
-                if (!isShell && w.type === 'bullet') VFX.addBulletImpact(tx, ty);
+                if (!isShell && w.type === 'bullet') VFX.addBulletImpact(tx, ty, w.burst || 1);
               }
             }
           }

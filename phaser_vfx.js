@@ -138,17 +138,20 @@ class VFXSystem {
         }); 
     }
 
-    addBulletImpact(x, y) {
-        for (let i = 0; i < 4; i++) {
+    addBulletImpact(x, y, burst) {
+        const count = (burst && burst > 1) ? Math.min(6 + burst, 24) : 4;
+        const radius = (burst && burst > 1) ? 10 + burst * 1.5 : 12;
+        const lifeBase = (burst && burst > 1) ? 12 : 15;
+        for (let i = 0; i < count; i++) {
             const angle = Math.random() * Math.PI * 2;
             this.add({
-                x: x + (Math.random() - 0.5) * 12,
-                y: y + (Math.random() - 0.5) * 8,
-                vx: Math.cos(angle) * 0.8,
-                vy: -0.3 - Math.random() * 0.6,
+                x: x + (Math.random() - 0.5) * radius * 2,
+                y: y + (Math.random() - 0.5) * radius * 1.2,
+                vx: Math.cos(angle) * (0.5 + Math.random() * 1.2),
+                vy: -0.2 - Math.random() * 0.8,
                 color: (Math.random() > 0.5) ? "#8a7355" : "#6b5a45",
-                size: 2 + Math.random() * 3,
-                life: 15 + Math.random() * 15,
+                size: (burst && burst > 1) ? 2 + Math.random() * 4 : 2 + Math.random() * 3,
+                life: lifeBase + Math.random() * 18,
                 type: 'smoke'
             });
         }

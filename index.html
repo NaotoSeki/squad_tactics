@@ -100,7 +100,8 @@
         .ar-check input { margin-right: 5px; }
         .ar-check:hover { color: #fff; }
 
-        #battle-log-window { position: fixed; top: 20px; left: 20px; width: 320px; max-height: 280px; background: rgba(10,15,10,0.92); border: 1px solid #d84; border-radius: 6px; box-shadow: 0 4px 20px rgba(0,0,0,0.6); z-index: 500; display: flex; flex-direction: column; overflow: hidden; }
+        #battle-log-window { position: fixed; top: 20px; left: 20px; width: 320px; max-height: 280px; background: rgba(10,15,10,0.92); border: 1px solid #d84; border-radius: 6px; box-shadow: 0 4px 20px rgba(0,0,0,0.6); z-index: 1000; display: flex; flex-direction: column; overflow: hidden; pointer-events: auto; }
+        #battle-log-window * { pointer-events: auto; }
         #battle-log-window.minimized { max-height: 36px; }
         #battle-log-window .log-title-bar { background: #222; padding: 6px 10px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #444; cursor: move; user-select: none; }
         #battle-log-window .log-title-bar span { font-size: 11px; color: #d84; font-weight: bold; }

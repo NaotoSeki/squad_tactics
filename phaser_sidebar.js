@@ -137,7 +137,7 @@ window.PhaserSidebar = class PhaserSidebar {
         const container = this.scene.add.container(x, y);
         const bg = this.scene.add.rectangle(slotW / 2, slotH / 2, slotW, slotH, item ? bgColor : 0x0a0a0a);
         bg.setStrokeStyle(1, borderColor, item ? 1 : 0.3);
-        bg.setInteractive({ useHandCursor: true });
+        bg.setInteractive({ useHandCursor: !!item });
         container.add(bg);
 
         if (isMain && isMortarActive && item && item.type === 'part') {
@@ -193,9 +193,9 @@ window.PhaserSidebar = class PhaserSidebar {
         }
 
         const self = this;
-        bg.on('pointerdown', (ptr) => { self.onSlotPointerDown(ptr, type, index, slotW, slotH, label, container); });
-        bg.on('pointerover', () => { if (self.dragSrc && !self.dragGhost) bg.setStrokeStyle(2, 0xffffff); });
-        bg.on('pointerout', () => { if (!self.dragGhost) bg.setStrokeStyle(1, borderColor, item ? 1 : 0.3); });
+        bg.on('pointerdown', (ptr) => { if (label === '[EMPTY]') return; self.onSlotPointerDown(ptr, type, index, slotW, slotH, label, container); });
+        bg.on('pointerover', () => { if (self.dragSrc) bg.setStrokeStyle(3, ACCENT, 1); });
+        bg.on('pointerout', () => { bg.setStrokeStyle(1, borderColor, item ? 1 : 0.3); });
         bg.on('pointerup', (ptr) => { self.onSlotPointerUp(ptr, type, index); });
 
         container.slotData = { type, index, u };
