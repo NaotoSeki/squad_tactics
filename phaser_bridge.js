@@ -157,7 +157,7 @@ class Card extends Phaser.GameObjects.Container {
         this.targetY = pointer.y + this.dragOffsetY;
         const main = this.scene.game.scene.getScene('MainScene');
         const overRightPanel = pointer.x >= this.scene.scale.width - SIDEBAR_WIDTH;
-        const dropZoneY = this.scene.scale.height * 0.65;
+        const dropZoneY = this.scene.scale.height * 0.88;
         const isWeaponry = typeof WPNS !== 'undefined' && WPNS[this.cardType] && WPNS[this.cardType].attr === (typeof ATTR !== 'undefined' ? ATTR.WEAPON : 'Weaponry');
         if (!isWeaponry && this.y < dropZoneY && !overRightPanel) main.dragHighlightHex = Renderer.pxToHex(pointer.x, pointer.y);
         else main.dragHighlightHex = null;
@@ -167,7 +167,7 @@ class Card extends Phaser.GameObjects.Container {
         this.isDragging = false; Renderer.isCardDragging = false; Renderer.draggedCardType = null;
         this.setAlpha(1.0); this.setScale(1.0); 
         const main = this.scene.game.scene.getScene('MainScene'); main.dragHighlightHex = null; 
-        const dropZoneY = this.scene.scale.height * 0.65;
+        const dropZoneY = this.scene.scale.height * 0.88;
         const sw = this.scene.scale.width;
         const overRightPanel = pointer.x >= sw - SIDEBAR_WIDTH;
         const isWeaponry = typeof WPNS !== 'undefined' && WPNS[this.cardType] && WPNS[this.cardType].attr === (typeof ATTR !== 'undefined' ? ATTR.WEAPON : 'Weaponry');
@@ -229,13 +229,32 @@ class UIScene extends Phaser.Scene {
     drawDropZoneGlow(time) {
         const w = this.scale.width;
         const h = this.scale.height;
-        const dropZoneY = h * 0.65;
+        const DECK_ZONE_HEIGHT = h * 0.12;
+        const dropZoneY = h - DECK_ZONE_HEIGHT;
         const g = this.uiVfxGraphics;
-        const pulse = 0.4 + 0.15 * Math.sin(time * 0.003);
-        g.lineStyle(12, 0xddaa44, pulse * 0.5);
-        g.strokeRect(2, dropZoneY - 2, w - SIDEBAR_WIDTH - 4, h - dropZoneY);
-        g.lineStyle(10, 0xddaa44, pulse * 0.6);
-        g.strokeRect(w - SIDEBAR_WIDTH, 0, SIDEBAR_WIDTH, h);
+        const t = time * 0.001;
+        const organic = (i) => Math.sin(t * 1.7 + i * 0.8) * 0.15 + Math.sin(t * 2.3 + i * 1.2) * 0.1 + Math.sin(t * 0.9 + i * 0.5) * 0.08;
+        const colors = [0xffdd66, 0xddaa44, 0xffaa22, 0xdd8844, 0xffcc44];
+        const drawCoronaRect = (x, y, rw, rh, baseAlpha) => {
+            for (let i = 0; i < 12; i++) {
+                const layer = i / 12;
+                const wobble = 2 + organic(i) * 8;
+                const ax = x - wobble; const ay = y - wobble;
+                const aw = rw + wobble * 2; const ah = rh + wobble * 2;
+                const col = colors[i % colors.length];
+                const a = baseAlpha * (1 - layer * 0.6) * (0.5 + 0.3 * Math.sin(t * 2 + i * 0.4));
+                g.lineStyle(6 + organic(i) * 4, col, Math.max(0.05, a));
+                g.strokeRect(ax, ay, aw, ah);
+            }
+            for (let i = 0; i < 6; i++) {
+                const shade = colors[(Math.floor(t * 2) + i) % colors.length];
+                const a = 0.12 * (0.6 + 0.4 * Math.sin(t * 3 + i * 1.5));
+                g.fillStyle(shade, Math.max(0.02, a));
+                g.fillRect(x + 4, y + 4, rw - 8, rh - 8);
+            }
+        };
+        drawCoronaRect(2, dropZoneY - 2, w - SIDEBAR_WIDTH - 4, DECK_ZONE_HEIGHT + 4, 0.6);
+        drawCoronaRect(w - SIDEBAR_WIDTH, 0, SIDEBAR_WIDTH, h, 0.5);
     }
     dealStart(types) { this.isHandDocked = false; types.forEach((type, i) => { this.time.delayedCall(i * 150, () => { this.addCardToHand(type); }); }); this.time.delayedCall(150 * types.length + 1000, () => { this.isHandDocked = true; }); }
     addCardToHand(type) { if (this.cards.length >= 12) return; const card = new Card(this, 0, 0, type); this.handContainer.add(card); this.cards.push(card); card.physX = 600; card.physY = 300; card.setPosition(card.physX, card.physY); this.arrangeHand(); }

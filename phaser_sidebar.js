@@ -217,16 +217,20 @@ window.PhaserSidebar = class PhaserSidebar {
 
     onSlotPointerDown(pointer, type, index, slotW, slotH, label, slotContainer) {
         if (this.dragSrc) return;
-        const x = slotContainer.x + slotContainer.parentContainer.x; const y = slotContainer.y + slotContainer.parentContainer.y;
-        const worldX = x + slotW / 2; const worldY = y + slotH / 2;
+        const isMain = type === 'main';
+        const borderColor = isMain ? ACCENT : SLOT_BORDER;
+        const bgColor = isMain ? 0x2a201a : SLOT_BG;
         this.dragSrc = { type, index };
+        this.dragLiftedSlot = slotContainer;
+        slotContainer.setAlpha(0.2);
         this.dragGhost = this.scene.add.container(pointer.x, pointer.y);
-        const ghostBg = this.scene.add.rectangle(0, 0, slotW, slotH, 0x2a201a, 0.7);
-        ghostBg.setStrokeStyle(2, 0xddaa44, 0.9);
-        const ghostText = this.scene.add.text(0, 0, label.length > 18 ? label.substring(0, 17) + '..' : label, { fontSize: '12px', color: '#dddddd', fontFamily: 'sans-serif' });
-        ghostText.setOrigin(0.5, 0.5);
-        this.dragGhost.add(ghostBg); this.dragGhost.add(ghostText);
+        const liftedBg = this.scene.add.rectangle(0, 0, slotW, slotH, bgColor, 1);
+        liftedBg.setStrokeStyle(2, borderColor, 1);
+        const liftedText = this.scene.add.text(0, 0, label.length > 18 ? label.substring(0, 17) + '..' : label, { fontSize: isMain ? '12px' : '10px', color: '#dddddd', fontFamily: 'sans-serif' });
+        liftedText.setOrigin(0.5, 0.5);
+        this.dragGhost.add(liftedBg); this.dragGhost.add(liftedText);
         this.dragGhost.setDepth(10001);
+        this.dragGhost.setScale(1.02);
         this.dragGhost.physX = pointer.x; this.dragGhost.physY = pointer.y;
         this.dragGhost.velocityX = 0; this.dragGhost.velocityY = 0;
         this.dragGhost.targetX = pointer.x; this.dragGhost.targetY = pointer.y;
@@ -234,15 +238,27 @@ window.PhaserSidebar = class PhaserSidebar {
         const onMove = (p) => { this.dragGhost.targetX = p.x; this.dragGhost.targetY = p.y; };
         const onUp = (p) => {
             this.scene.input.off('pointermove', onMove); this.scene.input.off('pointerup', onUp);
+            if (!this.dragSrc || !this.dragGhost) {
+                if (this.dragGhost) this.dragGhost.destroy();
+                this.dragGhost = null; this.dragSrc = null;
+                if (this.dragLiftedSlot) { this.dragLiftedSlot.setAlpha(1); this.dragLiftedSlot = null; }
+                return;
+            }
             const dropTarget = this.hitTestSlots(p.x, p.y);
-            const dropZoneY = this.scene.scale.height * 0.65;
-            const overDeck = p.y >= dropZoneY;
+            const w = this.scene.scale.width;
+            const h = this.scene.scale.height;
+            const dropZoneY = h * 0.88;
+            const overDeck = p.x < w - SIDEBAR_WIDTH && p.y >= dropZoneY;
             const sameSlot = dropTarget && this.dragSrc.type === dropTarget.type && this.dragSrc.index === dropTarget.index;
-            if (dropTarget && window.gameLogic && window.gameLogic.swapEquipment && !sameSlot) {
+            const didSwap = dropTarget && window.gameLogic && window.gameLogic.swapEquipment && !sameSlot;
+            const didMoveToDeck = overDeck && window.gameLogic && window.gameLogic.moveWeaponToDeck;
+            if (didSwap) {
                 window.gameLogic.swapEquipment(this.dragSrc, dropTarget);
-            } else if (overDeck && window.gameLogic && window.gameLogic.moveWeaponToDeck) {
+            } else if (didMoveToDeck) {
                 window.gameLogic.moveWeaponToDeck(this.dragSrc);
             }
+            if (this.dragLiftedSlot && !didSwap && !didMoveToDeck) this.dragLiftedSlot.setAlpha(1);
+            this.dragLiftedSlot = null;
             this.dragGhost.destroy(); this.dragGhost = null; this.dragSrc = null;
         };
         this.scene.input.on('pointermove', onMove);
