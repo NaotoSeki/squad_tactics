@@ -36,6 +36,19 @@ const SKILLS = {
     "CQC":       { name: "白兵", desc: "近接反撃" }
 };
 
+/** マップ上バッジ表示用（スキルID → アイコン・色） */
+const SKILL_STYLES = {
+    "Precision": { icon: "🎯", col: "#4a9" },
+    "Radio":     { icon: "📻", col: "#6af" },
+    "Ambush":    { icon: "🌙", col: "#663" },
+    "AmmoBox":   { icon: "📦", col: "#c84" },
+    "HighPower": { icon: "💥", col: "#d44" },
+    "Mechanic":  { icon: "🔧", col: "#8a8" },
+    "Armor":     { icon: "🛡", col: "#88c" },
+    "Hero":      { icon: "⭐", col: "#dc4" },
+    "CQC":       { icon: "⚔", col: "#a6a" }
+};
+
 const WPNS = {
     m1: { name:"M1 Garand", rng:7, acc:85, acc_drop:3, dmg:76, cap:8, mag:6, ap:2, rld:1, wgt:4, type:'bullet', burst:2, desc:"米軍主力小銃。", weight: 9.5, attr: ATTR.WEAPON },
     thompson: { name:"M1A1 SMG", rng:5, acc:60, acc_drop:4, dmg:41, cap:30, mag:4, ap:2, rld:1, wgt:5, type:'bullet', burst:2, modes:[2, 5], desc:"近距離制圧用。", weight: 10, attr: ATTR.WEAPON },

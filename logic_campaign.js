@@ -248,14 +248,16 @@ class CampaignManager {
 
     promoteSurvivors() { 
         this.survivingUnits.forEach(u => { 
-            u.sectorsSurvived++; 
-            if (u.sectorsSurvived === 5) { u.skills.push("Hero"); u.maxAp++; } 
-            u.rank = Math.min(5, (u.rank||0) + 1); 
-            u.maxHp += 30; u.hp += 30; 
+            u.sectorsSurvived = (u.sectorsSurvived || 0) + 1;
+            if (!u.skills) u.skills = [];
+            if (u.sectorsSurvived === 5) { u.skills.push("Hero"); u.maxAp = (u.maxAp || 4) + 1; }
+            u.rank = Math.min(5, (u.rank||0) + 1);
+            u.maxHp = (u.maxHp || 80) + 30; u.hp = (u.hp || u.maxHp) + 30;
+            if (u.hp > u.maxHp) u.hp = u.maxHp;
             if (u.skills.length < 8 && Math.random() < 0.7) { 
-                const k = Object.keys(SKILLS).filter(z => z !== "Hero"); 
-                u.skills.push(k[Math.floor(Math.random() * k.length)]); 
-            } 
+                const k = Object.keys(typeof SKILLS !== 'undefined' ? SKILLS : {}).filter(z => z !== "Hero");
+                if (k.length) u.skills.push(k[Math.floor(Math.random() * k.length)]);
+            }
         }); 
     }
 

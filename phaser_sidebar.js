@@ -34,15 +34,6 @@ window.PhaserSidebar = class PhaserSidebar {
         this.panelBg.setStrokeStyle(1, SLOT_BORDER);
         this.container.add(this.panelBg);
 
-        const headerH = 28;
-        const header = this.scene.add.rectangle(panelX, headerH / 2, sw - 2, headerH, HEADER_BG);
-        header.setStrokeStyle(1, SLOT_BORDER, 0.5);
-        this.container.add(header);
-
-        const headerText = this.scene.add.text(panelX - sw / 2 + 12, 8, 'SOLDIER DOSSIER', { fontSize: '11px', color: '#ddaa44', fontFamily: 'sans-serif' });
-        headerText.setOrigin(0, 0);
-        this.container.add(headerText);
-
         this.unitContent = this.scene.add.container(0, 0);
         this.container.add(this.unitContent);
 
@@ -66,7 +57,7 @@ window.PhaserSidebar = class PhaserSidebar {
         const h = this.scene.scale.height;
         const sw = window.getSidebarWidth();
         const left = w - sw + 12;
-        let y = 36;
+        let y = 12;
 
         const faceKey = 'face_' + (u.faceSeed || u.id || 0);
         const faceUrl = (typeof Renderer !== 'undefined' && Renderer && Renderer.generateFaceIcon) ? Renderer.generateFaceIcon(u.faceSeed || 0) : '';
@@ -86,7 +77,15 @@ window.PhaserSidebar = class PhaserSidebar {
         this.unitContent.add(nameText);
         const roleText = this.scene.add.text(left + 74, y + 28, (u.def && u.def.role) || '', { fontSize: '11px', color: '#ddaa44', fontFamily: 'monospace' });
         this.unitContent.add(roleText);
-        y += 88;
+
+        const skills = (u.skills && Array.isArray(u.skills)) ? [...new Set(u.skills)] : [];
+        if (skills.length > 0 && typeof SKILLS !== 'undefined') {
+            const skillLines = skills.map(sk => SKILLS[sk] ? `${SKILLS[sk].name}: ${SKILLS[sk].desc}` : sk).join('  |  ');
+            const skillText = this.scene.add.text(left + 74, y + 46, skillLines, { fontSize: '9px', color: TEXT_DIM, fontFamily: 'sans-serif', wordWrap: { width: sw - 90 } });
+            this.unitContent.add(skillText);
+            y += 22;
+        }
+        y += 42;
 
         const hpText = this.scene.add.text(left, y, `HP  ${u.hp}/${u.maxHp}`, { fontSize: '11px', color: TEXT_COLOR, fontFamily: 'sans-serif' });
         this.unitContent.add(hpText);

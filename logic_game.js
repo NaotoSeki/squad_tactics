@@ -199,13 +199,15 @@ window.BattleLogic = class BattleLogic {
     const animTarget = targetUnit || { q: targetHex.q, r: targetHex.r, hp: 100 };
     if (typeof Renderer !== 'undefined' && Renderer.playAttackAnim) Renderer.playAttackAnim(a, animTarget);
 
-    // 命中率計算
+    // 命中率計算（スキル: Precision +15%, Ambush 回避 +15%）
     let terrainCover = this.map[targetHex.q][targetHex.r].cover;
     let hitChance = (a.stats?.aim || 0) * 2 + w.acc - (dist * (w.acc_drop||5)) - terrainCover;
     if (targetUnit) {
       if (targetUnit.stance === 'prone') hitChance -= 20;
       if (targetUnit.stance === 'crouch') hitChance -= 10;
+      if (targetUnit.skills && targetUnit.skills.includes('Ambush')) hitChance -= 15;
     }
+    if (a.skills && a.skills.includes('Precision')) hitChance += 15;
 
     let shots = w.isConsumable ? 1 : Math.min(w.burst || 1, w.current);
     if (a.def.isTank || w.code === 'm2_mortar') shots = 1;
@@ -279,6 +281,7 @@ window.BattleLogic = class BattleLogic {
             if (targetUnit.hp <= 0) return;
             if ((Math.random() * 100) < hitChance) {
               let dmg = Math.floor(w.dmg * (0.8 + Math.random() * 0.4));
+              if (a.skills && a.skills.includes('HighPower')) dmg = Math.floor(dmg * 1.2);
               if (targetUnit.def.isTank && w.type === 'bullet') dmg = 0;
               if (dmg > 0) {
                 if (window.Sfx) Sfx.play('soft_hit');
@@ -322,6 +325,7 @@ window.BattleLogic = class BattleLogic {
 
   applyDamage(target, damage, sourceName = "攻撃") {
     if (!target || target.hp <= 0) return;
+    if (target.skills && target.skills.includes('Armor')) damage = Math.max(0, damage - 5);
     target.hp -= damage;
     if (target.hp <= 0 && !target.deadProcessed) {
       target.deadProcessed = true;
@@ -759,7 +763,7 @@ window.BattleLogic = class BattleLogic {
     await new Promise(r => setTimeout(r, 300));
     let strVal = (a.stats && a.stats.str) ? a.stats.str : 0;
     let totalDmg = 10 + (strVal * 3) + bonusDmg;
-    if (d.skills.includes('CQC')) { this.ui.log(`>> カウンター！`); this.applyDamage(a, 15, "カウンター"); }
+    if (d.skills && d.skills.includes('CQC')) { this.ui.log(`>> カウンター！`); this.applyDamage(a, 15, "カウンター"); }
     if (window.Sfx) Sfx.play('hit');
     this.applyDamage(d, totalDmg, "白兵");
     this.refreshUnitState(a);
