@@ -1,60 +1,63 @@
-📋 Changelog: v1.0 "Heroic Update"
-今回のアップデートでは、分隊運用の戦略性を広げる「迫撃砲」システムの実装に加え、ユニットが成長するキャンペーンモード、および没入感を高める環境シミュレーション（風・草木）が追加されました。また、進行不能バグを防ぐための安全装置が多数導入されています。
+# SQUAD TACTICS - Heroic Update
 
-✨ New Features (新機能)
-迫撃砲システム (Mortar System)
+A turn-based tactical strategy game set in WWII, built with HTML5, JavaScript (ES6+), and the Phaser 3 engine. The game features hex-grid combat, squad management, and combined arms warfare (Infantry, Tanks, and Artillery support).
 
-3つのパーツ（砲身・二脚・底板）と弾薬箱を組み合わせることで使用可能な「M2 60mm迫撃砲」を追加。
+## 🎮 Game Features
 
-間接射撃: 障害物越しの攻撃が可能。着弾までのタイムラグと、着弾地点を中心とした範囲ダメージ（爆風）を実装。
+* **Tactical Combat**: Turn-based engagement on a hexagonal grid system.
+* **Combined Arms**: Command Riflemen, Scouts, Machine Gunners, Snipers, and Tanks (Panzer IV/Tiger).
+* **Action Point (AP) System**: Manage unit AP for movement, attacking, reloading, and stance changes.
+* **Stance System**: Stand, Crouch, or Prone to balance mobility vs. accuracy and cover.
+* **Inventory & Loadout**: Manage weapons, ammo, and equipment (Grenades, Mortars) via the side panel.
+* **Support System**: Request aerial bombardment and other tactical supports using cards.
+* **Campaign Mode**: Progress through sectors, recruiting new units and managing survivors.
 
-誤射メカニズム: 命中率に基づき着弾地点がズレる「至近弾」システムを導入。味方を巻き込まないよう注意が必要です。
+## 🛠 Tech Stack & Architecture
 
-キャンペーン & 育成要素 (Campaign Progression)
+* **Engine**: [Phaser 3](https://phaser.io/) (Rendering, Input, Physics for UI cards)
+* **Language**: Vanilla JavaScript (ES6 Modules structure)
+* **State Management**: Custom `BattleLogic` class decoupled from the view.
 
-生存者の引き継ぎ: ステージクリア時に生存しているユニットは次へ持ち越し可能に。
+### File Structure
 
-昇進とスキル: 戦いを生き抜くことでランクアップし、ランダムなスキル（Hero, CQC, Mechanicなど）を習得します。
+* **Entry Point**:
+    * `index.html`: Main DOM structure, UI overlays, and script loading order.
+* **Logic Core** (Pure JS):
+    * `logic_game.js`: Main battle loop, turn processing, and combat calculations.
+    * `logic_map.js`: Hex grid generation, A* pathfinding, and line-of-sight calculations.
+    * `logic_ai.js`: Enemy behavior tree (Patrol, Engage, Chase).
+    * `logic_campaign.js`: Meta-game management (Sector progression, Unit factory).
+    * `logic_ui.js`: Bridge between game logic and HTML DOM UI (Sidebar).
+    * `data.js`: Configuration for Units, Weapons, Terrain, and Skills.
+* **Rendering** (Phaser):
+    * `phaser_bridge.js`: Main bridge integrating Phaser scenes with Game Logic. Handles Input and Card UI.
+    * `phaser_unit.js`: Unit sprites, animations, and health bar rendering.
+    * `phaser_vfx.js`: Particle effects (Explosions, Smoke, Projectile trails) and Environment (Grass/Trees).
+    * `phaser_sound.js`: Audio management.
 
-リワード: クリア時に「新兵」「鹵獲戦車」「補給」から報酬を選択可能。
+## 🚀 How to Run
 
-航空支援 (Aerial Support)
+No build step is required. Since the project uses ES6 features and fetches local assets:
 
-アイテムとして使用できる「航空支援要請」を追加。指定座標周辺にランダムな爆撃を行います。
+1.  **Clone the repository**.
+2.  **Start a local server** (Required to avoid CORS issues with Phaser textures).
+    * VS Code: Use "Live Server" extension.
+    * Python: `python -m http.server`
+    * Node: `npx http-server`
+3.  Open `index.html` in your browser.
 
-🎨 Visuals & Environment (グラフィックと環境)
-High-Fidelity Environmental Simulation
+## 🕹 Controls
 
-風のシミュレーション: マップ上の草や木が風の影響を受けてなびくようになりました。突風（Gust）が発生し、戦場の空気感を演出します。
+* **Left Click**: Select Unit / Move / Attack / Use Card.
+* **Right Click**: Deselect / Open Context Menu (Unit Info).
+* **Drag & Drop**: Use Support Cards from the hand to the battlefield.
+* **UI Panel**: Click on the right sidebar to manage inventory (Reload, Swap weapons).
 
-プロシージャル植生: 60FPSで動作する滑らかな草の揺れと、多層レイヤー構造の木のアニメーションを実装。
+## 📝 Developer Notes
 
-UI Overhaul
+* **Renderer Global**: The `Renderer` object in `phaser_bridge.js` is exposed globally to allow `BattleLogic` to trigger visual events (Animations, Camera movement).
+* **AI Pathfinding**: Uses A* algorithm located in `logic_map.js`.
+* **Map Generation**: Currently procedural based on sector difficulty.
 
-オーバーヘッドHPバー: HPバーと弾薬状況をユニットの頭上に表示し、視認性を向上。
-
-スキルアイコン: 習得したスキルがアイコンとしてユニット上に表示されるようになりました。
-
-VFX強化: 着弾時の土煙、火花、爆発エフェクトを刷新。
-
-🤖 AI & Logic Improvements (AIとロジック改善)
-AIの武器運用ロジック修正:
-
-AIが状況に応じて適切な武器（対戦車/対歩兵）に持ち替える判断ロジックを修正。
-
-武器持ち替え時に発生していた undefined エラーを解決し、思考ルーチンの安定性を向上。
-
-戦車のリロードシステム:
-
-戦車砲の自動リロード（Auto Reload）機能と、手動トグルスイッチを実装。「撃ちたいときに弾がない」ストレスを軽減。
-
-レンダリングの安全性向上:
-
-Renderer クラスへの依存を疎結合にし、描画エラーが発生してもゲームロジックが停止しないよう防御的プログラミングを徹底しました。
-
-🐛 Bug Fixes (修正)
-ソフトロックの解消: 敵AIのターンで無限ループやフリーズが発生する複数の要因（パス探索、武器選択）を修正。
-
-勝利判定の即時化: 最後の敵を倒した瞬間に勝利演出が入るようタイミングを調整。
-
-座標ズレの修正: サイドバー開閉時やリサイズ時にUIやマップの座標がズレる問題を修正。
+---
+*Development status: v1.0 Heroic Update (Active)*
