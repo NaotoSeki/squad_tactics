@@ -138,7 +138,16 @@ class Card extends Phaser.GameObjects.Container {
             const isDisabled = !isWeapon && (window.gameLogic && window.gameLogic.cardsUsed >= 2);
             if (isDisabled) { this.frameImage.setTint(0x555555); this.setAlpha(0.6); } else { this.frameImage.clearTint(); this.setAlpha(1.0); }
         }
-        if (!this.isDragging && !this.scene.isReturning) { this.targetX = this.baseX; if (this.scene.isHandDocked) { this.targetY = this.isHovering ? -120 : 60; } else { this.targetY = this.baseY - (this.isHovering ? 30 : 0); } } 
+        if (!this.isDragging && !this.scene.isReturning) {
+          let partOffset = 0;
+          const hoveredIdx = this.scene.cards.findIndex(c => c.isHovering);
+          if (hoveredIdx >= 0) {
+            const myIdx = this.scene.cards.indexOf(this);
+            partOffset = (myIdx - hoveredIdx) * 28;
+          }
+          this.targetX = this.baseX + partOffset;
+          if (this.scene.isHandDocked) { this.targetY = this.isHovering ? -120 : 60; } else { this.targetY = this.baseY - (this.isHovering ? 30 : 0); }
+        } 
         const stiffness = this.isDragging ? 0.2 : 0.08; const damping = 0.65; const ax = (this.targetX - this.physX) * stiffness; const ay = (this.targetY - this.physY) * stiffness; this.velocityX += ax; this.velocityY += ay; this.velocityX *= damping; this.velocityY *= damping; this.physX += this.velocityX; this.physY += this.velocityY; this.setPosition(this.physX, this.physY); let staticAngle = 0; if (this.isDragging) staticAngle = -this.dragOffsetX * 0.4; const targetDynamicAngle = -this.velocityX * 1.5; const totalTargetAngle = staticAngle + targetDynamicAngle; const angleForce = (totalTargetAngle - this.angle) * 0.12; this.velocityAngle += angleForce; this.velocityAngle *= 0.85; this.angle += this.velocityAngle; this.angle = Phaser.Math.Clamp(this.angle, -50, 50); 
     }
     onHover() { if(!this.parentContainer || Renderer.isMapDragging || Renderer.isCardDragging) return; if (this.scene.cancelResetHandOrderTimer) this.scene.cancelResetHandOrderTimer(); this.isHovering = true; this.parentContainer.bringToTop(this); }
@@ -295,7 +304,7 @@ class UIScene extends Phaser.Scene {
         this.drawWavyHaloLine(g, t, colors, 0, dropZoneY, sw - SIDEBAR_WIDTH, dropZoneY, false, 100, 36);
     }
     dealStart(types) { this.isHandDocked = false; types.forEach((type, i) => { this.time.delayedCall(i * 150, () => { this.addCardToHand(type); }); }); this.time.delayedCall(150 * types.length + 1000, () => { this.isHandDocked = true; }); }
-    addCardToHand(type) { if (this.cards.length >= 12) return; const card = new Card(this, 0, 0, type); this.handContainer.add(card); this.cards.push(card); card.physX = 600; card.physY = 300; card.setPosition(card.physX, card.physY); this.arrangeHand(); }
+    addCardToHand(type) { const card = new Card(this, 0, 0, type); this.handContainer.add(card); this.cards.push(card); card.physX = 600; card.physY = 300; card.setPosition(card.physX, card.physY); this.arrangeHand(); }
     removeCard(cardToRemove) { this.cards = this.cards.filter(c => c !== cardToRemove); this.arrangeHand(); }
     cancelResetHandOrderTimer() { if (this._resetOrderTimer) { this.time.removeEvent(this._resetOrderTimer); this._resetOrderTimer = null; } }
     scheduleResetHandOrderIfNoHover() { this.cancelResetHandOrderTimer(); this._resetOrderTimer = this.time.delayedCall(80, this.resetHandCardOrderIfNoHover, [], this); }

@@ -175,7 +175,7 @@ class CampaignManager {
                 item.current = base.current || base.cap;
             }
             if (t.isTank && !base.type.includes('part') && !base.type.includes('ammo')) { 
-                item.current = 1; item.cap = 1; item.reserve = 12; 
+                item.current = 1; item.cap = 1; item.reserve = (key === 'mg42' ? 300 : 12); 
             }
             return item;
         };
@@ -266,7 +266,7 @@ class CampaignManager {
             const isMortar = parts.includes('mortar_barrel') && parts.includes('mortar_bipod') && parts.includes('mortar_plate');
             if (isMortar) { u.bag.forEach(i => { if (i && i.code === 'mortar_shell_box') i.current = i.cap; }); } 
             else if (u.hands[0] && u.hands[0].type && u.hands[0].type.includes('bullet')) { u.hands[0].current = u.hands[0].cap; } 
-            else if (u.def.isTank && u.hands[0]) { u.hands[0].reserve = 12; } 
+            else if (u.def.isTank && u.hands[0]) { u.hands[0].reserve = (u.hands[0].code === 'mg42' ? 300 : 12); } 
         }); 
     }
 }

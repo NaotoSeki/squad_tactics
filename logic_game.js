@@ -289,7 +289,10 @@ window.BattleLogic = class BattleLogic {
                 if (i === 0) game.ui.log(">> 装甲により無効化！");
               }
             } else {
-              if (window.VFX) VFX.add({ x: tx, y: ty, vx: 0, vy: 0, life: 10, maxLife: 10, color: "#aaa", size: 2, type: 'smoke' });
+              if (window.VFX) {
+                VFX.add({ x: tx, y: ty, vx: 0, vy: 0, life: 10, maxLife: 10, color: "#aaa", size: 2, type: 'smoke' });
+                if (!isShell && w.type === 'bullet') VFX.addBulletImpact(tx, ty);
+              }
             }
           }
         }, flightTime);
@@ -631,7 +634,7 @@ window.BattleLogic = class BattleLogic {
     if (base.type === 'bullet' || base.type === 'shell_fast') newItem.current = newItem.cap;
     else if (base.type === 'shell' || base.area) { newItem.current = 1; newItem.isConsumable = true; }
     else if (base.type === 'ammo') newItem.current = base.current || base.cap;
-    if (u.def && u.def.isTank && !base.type.includes('part') && !base.type.includes('ammo')) { newItem.current = 1; newItem.cap = 1; newItem.reserve = newItem.reserve || 12; }
+    if (u.def && u.def.isTank && !base.type.includes('part') && !base.type.includes('ammo')) { newItem.current = 1; newItem.cap = 1; newItem.reserve = newItem.reserve || (weaponCode === 'mg42' ? 300 : 12); }
     const tgtIdx = slotTarget.type === 'main' ? slotTarget.index : slotTarget.index;
     const oldItem = slotTarget.type === 'main' ? u.hands[tgtIdx] : u.bag[tgtIdx];
     if (slotTarget.type === 'main') u.hands[tgtIdx] = newItem; else u.bag[tgtIdx] = newItem;

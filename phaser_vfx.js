@@ -137,6 +137,22 @@ class VFXSystem {
             type:'smoke'
         }); 
     }
+
+    addBulletImpact(x, y) {
+        for (let i = 0; i < 4; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            this.add({
+                x: x + (Math.random() - 0.5) * 12,
+                y: y + (Math.random() - 0.5) * 8,
+                vx: Math.cos(angle) * 0.8,
+                vy: -0.3 - Math.random() * 0.6,
+                color: (Math.random() > 0.5) ? "#8a7355" : "#6b5a45",
+                size: 2 + Math.random() * 3,
+                life: 15 + Math.random() * 15,
+                type: 'smoke'
+            });
+        }
+    }
     
     addFire(x, y) { 
         this.add({ 
