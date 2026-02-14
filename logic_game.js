@@ -599,6 +599,39 @@ window.BattleLogic = class BattleLogic {
     this.ui.log(`${u.name} 装備変更`);
   }
 
+  moveWeaponToDeck(src) {
+    const u = this.selectedUnit;
+    if (!u) return;
+    const idx = src.type === 'main' ? src.index : src.index;
+    const item = src.type === 'main' ? u.hands[idx] : u.bag[idx];
+    if (!item || !item.code || !WPNS[item.code] || WPNS[item.code].attr !== ATTR.WEAPON) return;
+    if (src.type === 'main') u.hands[idx] = null; else u.bag[idx] = null;
+    if (typeof Renderer !== 'undefined' && Renderer.dealCard) Renderer.dealCard(item.code);
+    this.updateSidebar();
+    if (window.Sfx) Sfx.play('click');
+    this.ui.log(`${u.name} 装備解除: ${item.name}`);
+  }
+
+  equipWeaponFromDeck(weaponCode, slotTarget) {
+    const u = this.selectedUnit;
+    if (!u || !WPNS[weaponCode] || WPNS[weaponCode].attr !== ATTR.WEAPON) return;
+    const base = WPNS[weaponCode];
+    const newItem = { ...base, code: weaponCode, id: Math.random(), isBroken: false };
+    if (base.type === 'bullet' || base.type === 'shell_fast') newItem.current = newItem.cap;
+    else if (base.type === 'shell' || base.area) { newItem.current = 1; newItem.isConsumable = true; }
+    else if (base.type === 'ammo') newItem.current = base.current || base.cap;
+    if (u.def && u.def.isTank && !base.type.includes('part') && !base.type.includes('ammo')) { newItem.current = 1; newItem.cap = 1; newItem.reserve = newItem.reserve || 12; }
+    const tgtIdx = slotTarget.type === 'main' ? slotTarget.index : slotTarget.index;
+    const oldItem = slotTarget.type === 'main' ? u.hands[tgtIdx] : u.bag[tgtIdx];
+    if (slotTarget.type === 'main') u.hands[tgtIdx] = newItem; else u.bag[tgtIdx] = newItem;
+    if (oldItem && oldItem.code && WPNS[oldItem.code] && WPNS[oldItem.code].attr === ATTR.WEAPON && typeof Renderer !== 'undefined' && Renderer.dealCard) {
+      Renderer.dealCard(oldItem.code);
+    }
+    this.updateSidebar();
+    if (window.Sfx) Sfx.play('click');
+    this.ui.log(`${u.name} 装備: ${newItem.name}`);
+  }
+
   toggleFireMode() {
     const u = this.selectedUnit;
     if (!u || !u.hands || !Array.isArray(u.hands)) return;

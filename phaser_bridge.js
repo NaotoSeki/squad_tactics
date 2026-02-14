@@ -5,6 +5,26 @@ window.HIGH_RES_SCALE = 2.0;
 window.getCardTextureKey = function(scene, type) {
     const key = `card_texture_${type}`;
     if (scene.textures.exists(key)) return key;
+    if (typeof WPNS !== 'undefined' && WPNS[type]) {
+        const w = WPNS[type];
+        const canvas = document.createElement('canvas'); canvas.width = 140 * 2; canvas.height = 200 * 2;
+        const ctx = canvas.getContext('2d'); ctx.scale(2, 2);
+        ctx.fillStyle = "#1a1a1a"; ctx.fillRect(0, 0, 140, 200);
+        ctx.strokeStyle = "#d84"; ctx.lineWidth = 2; ctx.strokeRect(0, 0, 140, 200);
+        ctx.fillStyle = "#2a201a"; ctx.fillRect(2, 2, 136, 30);
+        ctx.fillStyle = "#d84"; ctx.font = "bold 14px sans-serif"; ctx.textAlign = "center"; 
+        ctx.fillText(w.name, 70, 22);
+        ctx.fillStyle = "#111"; ctx.fillRect(20, 40, 100, 100);
+        ctx.fillStyle = "#555"; ctx.font = "10px sans-serif"; ctx.textAlign = "center";
+        ctx.fillText("WEAPONRY", 70, 90);
+        ctx.fillStyle = "#888"; ctx.font = "10px sans-serif"; 
+        ctx.fillText(w.desc || "", 70, 155);
+        ctx.fillStyle = "#ccc"; ctx.font = "11px monospace"; 
+        ctx.fillText(`RNG:${w.rng||'-'} DMG:${w.dmg||'-'}`, 70, 175);
+        ctx.fillStyle = "#d84"; ctx.font = "10px sans-serif"; 
+        ctx.fillText(w.type || 'weapon', 70, 190);
+        scene.textures.addCanvas(key, canvas); return key;
+    }
     let template = { name: type, role: 'unknown', hp: 100, ap: 4, main: 'rifle' };
     if (typeof UNIT_TEMPLATES !== 'undefined' && UNIT_TEMPLATES[type]) { template = UNIT_TEMPLATES[type]; }
     const canvas = document.createElement('canvas'); canvas.width = 140 * 2; canvas.height = 200 * 2;
@@ -114,7 +134,8 @@ class Card extends Phaser.GameObjects.Container {
     updatePhysics() { 
         if (!this.scene || !this.frameImage) return; 
         if (this.isDragging) { this.setAlpha(0.6); } else {
-            const isDisabled = (window.gameLogic && window.gameLogic.cardsUsed >= 2);
+            const isWeapon = typeof WPNS !== 'undefined' && WPNS[this.cardType];
+            const isDisabled = !isWeapon && (window.gameLogic && window.gameLogic.cardsUsed >= 2);
             if (isDisabled) { this.frameImage.setTint(0x555555); this.setAlpha(0.6); } else { this.frameImage.clearTint(); this.setAlpha(1.0); }
         }
         if (!this.isDragging && !this.scene.isReturning) { this.targetX = this.baseX; if (this.scene.isHandDocked) { this.targetY = this.isHovering ? -120 : 60; } else { this.targetY = this.baseY - (this.isHovering ? 30 : 0); } } 
@@ -123,29 +144,42 @@ class Card extends Phaser.GameObjects.Container {
     onHover() { if(!this.parentContainer || Renderer.isMapDragging || Renderer.isCardDragging) return; this.isHovering = true; this.parentContainer.bringToTop(this); }
     onHoverOut() { this.isHovering = false; }
     onDragStart(pointer) { 
-        if(Renderer.isMapDragging) return; if(window.gameLogic && window.gameLogic.cardsUsed >= 2) return; 
+        if(Renderer.isMapDragging) return;
+        const isWeapon = typeof WPNS !== 'undefined' && WPNS[this.cardType];
+        if (!isWeapon && window.gameLogic && window.gameLogic.cardsUsed >= 2) return; 
         this.isDragging = true; Renderer.isCardDragging = true; Renderer.draggedCardType = this.cardType;
         this.setAlpha(0.6); this.setScale(1.1); 
         const hand = this.parentContainer; const worldPos = hand.getLocalTransformMatrix().transformPoint(this.x, this.y); hand.remove(this); this.scene.add.existing(this); this.physX = worldPos.x; this.physY = worldPos.y; this.targetX = this.physX; this.targetY = this.physY; this.setDepth(9999); this.dragOffsetX = this.physX - pointer.x; this.dragOffsetY = this.physY - pointer.y; 
     }
-    onDrag(pointer) { if(!this.isDragging) return; this.targetX = pointer.x + this.dragOffsetX; this.targetY = pointer.y + this.dragOffsetY; const main = this.scene.game.scene.getScene('MainScene'); if (this.y < this.scene.scale.height * 0.65) main.dragHighlightHex = Renderer.pxToHex(pointer.x, pointer.y); else main.dragHighlightHex = null; }
+    onDrag(pointer) { if(!this.isDragging) return; this.targetX = pointer.x + this.dragOffsetX; this.targetY = pointer.y + this.dragOffsetY; const main = this.scene.game.scene.getScene('MainScene'); const overRightPanel = pointer.x >= this.scene.scale.width - SIDEBAR_WIDTH; const dropZoneY = this.scene.scale.height * 0.65; if (this.y < dropZoneY && !overRightPanel) main.dragHighlightHex = Renderer.pxToHex(pointer.x, pointer.y); else main.dragHighlightHex = null; }
     onDragEnd(pointer) { 
         if(!this.isDragging) return; 
         this.isDragging = false; Renderer.isCardDragging = false; Renderer.draggedCardType = null;
         this.setAlpha(1.0); this.setScale(1.0); 
         const main = this.scene.game.scene.getScene('MainScene'); main.dragHighlightHex = null; 
-        const dropZoneY = this.scene.scale.height * 0.65; 
-        if (this.y < dropZoneY) { 
-            const hex = Renderer.pxToHex(pointer.x, pointer.y); 
-            let canDeploy = false; 
-            if (window.gameLogic && window.gameLogic.checkDeploy) { 
-                if (this.cardType === 'aerial') {
-                    if (window.gameLogic.isValidHex(hex.q, hex.r)) canDeploy = true; 
-                    else if(window.gameLogic.log) window.gameLogic.log("配置不可: マップ範囲外です"); 
-                } else { canDeploy = window.gameLogic.checkDeploy(hex); } 
-            } 
-            if (canDeploy) this.burnAndConsume(hex); else this.returnToHand(); 
-        } else { this.returnToHand(); } 
+        const dropZoneY = this.scene.scale.height * 0.65;
+        const sw = this.scene.scale.width;
+        const overRightPanel = pointer.x >= sw - SIDEBAR_WIDTH;
+        const isWeaponry = typeof WPNS !== 'undefined' && WPNS[this.cardType] && WPNS[this.cardType].attr === (typeof ATTR !== 'undefined' ? ATTR.WEAPON : 'Weaponry');
+        if (this.y >= dropZoneY) { this.returnToHand(); return; }
+        if (overRightPanel) {
+            if (!isWeaponry) { this.returnToHand(); return; }
+            const sidebar = window.phaserSidebar;
+            if (sidebar && sidebar.hitTestSlots(pointer.x, pointer.y) && window.gameLogic && window.gameLogic.equipWeaponFromDeck) {
+                window.gameLogic.equipWeaponFromDeck(this.cardType, sidebar.hitTestSlots(pointer.x, pointer.y));
+                this.scene.removeCard(this); this.destroy(); return;
+            }
+            this.returnToHand(); return;
+        }
+        const hex = Renderer.pxToHex(pointer.x, pointer.y); 
+        let canDeploy = false; 
+        if (window.gameLogic && window.gameLogic.checkDeploy) { 
+            if (this.cardType === 'aerial') {
+                if (window.gameLogic.isValidHex(hex.q, hex.r)) canDeploy = true; 
+                else if(window.gameLogic.log) window.gameLogic.log("配置不可: マップ範囲外です"); 
+            } else { canDeploy = window.gameLogic.checkDeploy(hex); } 
+        } 
+        if (canDeploy) this.burnAndConsume(hex); else this.returnToHand(); 
     }
     burnAndConsume(hex) { 
         this.updatePhysics = () => {}; this.frameImage.setTint(0x552222); this.frameImage.disableInteractive(); 
@@ -174,11 +208,11 @@ class UIScene extends Phaser.Scene {
         if (window.PhaserSidebar) { this.sidebar = new PhaserSidebar(this); this.sidebar.init(); window.phaserSidebar = this.sidebar; }
     }
     onResize(gameSize) { const w = gameSize.width; const h = gameSize.height; const app = document.getElementById('app'); const usePhaserSidebar = app && app.classList.contains('phaser-sidebar'); const gameW = usePhaserSidebar ? Math.max(1, w - SIDEBAR_WIDTH) : w; const centerX = usePhaserSidebar ? (w - SIDEBAR_WIDTH) / 2 : w / 2; if (this.gradientBg) { this.gradientBg.setPosition(centerX, h); this.gradientBg.setDisplaySize(gameW, h * 0.175); } if (this.handContainer) { this.handContainer.setPosition(centerX, h); } if (this.sidebar) this.sidebar.onResize(w, h); }
-    update() { this.cards.forEach(card => { if (card.active) card.updatePhysics(); }); if(window.UIVFX) { window.UIVFX.update(); this.uiVfxGraphics.clear(); window.UIVFX.draw(this.uiVfxGraphics); } }
+    update(time, delta) { this.cards.forEach(card => { if (card.active) card.updatePhysics(); }); if (this.sidebar && this.sidebar.dragGhost) this.sidebar.updateDragGhost(time, delta); if(window.UIVFX) { window.UIVFX.update(); this.uiVfxGraphics.clear(); window.UIVFX.draw(this.uiVfxGraphics); } }
     dealStart(types) { this.isHandDocked = false; types.forEach((type, i) => { this.time.delayedCall(i * 150, () => { this.addCardToHand(type); }); }); this.time.delayedCall(150 * types.length + 1000, () => { this.isHandDocked = true; }); }
-    addCardToHand(type) { if (this.cards.length >= 5) return; const card = new Card(this, 0, 0, type); this.handContainer.add(card); this.cards.push(card); card.physX = 600; card.physY = 300; card.setPosition(card.physX, card.physY); this.arrangeHand(); }
+    addCardToHand(type) { if (this.cards.length >= 12) return; const card = new Card(this, 0, 0, type); this.handContainer.add(card); this.cards.push(card); card.physX = 600; card.physY = 300; card.setPosition(card.physX, card.physY); this.arrangeHand(); }
     removeCard(cardToRemove) { this.cards = this.cards.filter(c => c !== cardToRemove); this.arrangeHand(); }
-    arrangeHand() { const total = this.cards.length; const centerIdx = (total - 1) / 2; const spacing = 160; this.cards.forEach((card, i) => { const offset = i - centerIdx; card.baseX = offset * spacing; card.baseY = -120; }); }
+    arrangeHand() { const total = this.cards.length; const centerIdx = (total - 1) / 2; const spacing = total <= 5 ? 160 : Math.max(55, 220 - total * 20); const overlap = total <= 5 ? 1 : 0.72; this.cards.forEach((card, i) => { const offset = i - centerIdx; card.baseX = offset * spacing * overlap; card.baseY = this.isHandDocked ? -120 : -120; card.baseDepth = i; }); }
 }
 
 class MainScene extends Phaser.Scene {

@@ -14,12 +14,9 @@ window.PhaserSidebar = class PhaserSidebar {
         this.container = scene.add.container(0, 0).setDepth(5000).setScrollFactor(0);
         this.panelBg = null;
         this.unitContent = null;
-        this.logContent = null;
         this.slots = [];
-        this.logEntries = [];
-        this.logScrollY = 0;
-        this.maxLogEntries = 50;
         this.dragSrc = null;
+        this.dragGhost = null;
         this.currentUnit = null;
     }
 
@@ -43,18 +40,6 @@ window.PhaserSidebar = class PhaserSidebar {
 
         this.unitContent = this.scene.add.container(0, 0);
         this.container.add(this.unitContent);
-
-        const logHeaderY = h - 180;
-        const logHeader = this.scene.add.rectangle(panelX, logHeaderY - 12, SIDEBAR_WIDTH - 2, 24, HEADER_BG);
-        logHeader.setStrokeStyle(1, SLOT_BORDER, 0.5);
-        this.container.add(logHeader);
-
-        const logHeaderText = this.scene.add.text(panelX - SIDEBAR_WIDTH / 2 + 12, logHeaderY - 20, 'BATTLE LOG', { fontSize: '11px', color: '#ddaa44', fontFamily: 'sans-serif' });
-        logHeaderText.setOrigin(0, 0);
-        this.container.add(logHeaderText);
-
-        this.logContent = this.scene.add.container(0, 0);
-        this.container.add(this.logContent);
 
         this.noSignalText = this.scene.add.text(panelX, h / 2 - 80, '// NO SIGNAL //', { fontSize: '14px', color: '#555555', fontFamily: 'sans-serif' });
         this.noSignalText.setOrigin(0.5, 0.5);
@@ -206,10 +191,10 @@ window.PhaserSidebar = class PhaserSidebar {
         }
 
         const self = this;
-        bg.on('pointerdown', () => { self.onSlotPointerDown(type, index); });
-        bg.on('pointerover', () => { if (self.dragSrc) bg.setStrokeStyle(2, 0xffffff); });
-        bg.on('pointerout', () => { bg.setStrokeStyle(1, borderColor, item ? 1 : 0.3); });
-        bg.on('pointerup', () => { self.onSlotPointerUp(type, index); });
+        bg.on('pointerdown', (ptr) => { self.onSlotPointerDown(ptr, type, index, slotW, slotH, label, container); });
+        bg.on('pointerover', () => { if (self.dragSrc && !self.dragGhost) bg.setStrokeStyle(2, 0xffffff); });
+        bg.on('pointerout', () => { if (!self.dragGhost) bg.setStrokeStyle(1, borderColor, item ? 1 : 0.3); });
+        bg.on('pointerup', (ptr) => { self.onSlotPointerUp(ptr, type, index); });
 
         container.slotData = { type, index, u };
         return { container, height: slotH };
@@ -228,33 +213,68 @@ window.PhaserSidebar = class PhaserSidebar {
         return { container };
     }
 
-    onSlotPointerDown(type, index) {
+    onSlotPointerDown(pointer, type, index, slotW, slotH, label, slotContainer) {
+        if (this.dragSrc) return;
+        const x = slotContainer.x + slotContainer.parentContainer.x; const y = slotContainer.y + slotContainer.parentContainer.y;
+        const worldX = x + slotW / 2; const worldY = y + slotH / 2;
         this.dragSrc = { type, index };
+        this.dragGhost = this.scene.add.container(pointer.x, pointer.y);
+        const ghostBg = this.scene.add.rectangle(0, 0, slotW, slotH, 0x2a201a, 0.7);
+        ghostBg.setStrokeStyle(2, 0xddaa44, 0.9);
+        const ghostText = this.scene.add.text(0, 0, label.length > 18 ? label.substring(0, 17) + '..' : label, { fontSize: '12px', color: '#dddddd', fontFamily: 'sans-serif' });
+        ghostText.setOrigin(0.5, 0.5);
+        this.dragGhost.add(ghostBg); this.dragGhost.add(ghostText);
+        this.dragGhost.setDepth(10001);
+        this.dragGhost.physX = pointer.x; this.dragGhost.physY = pointer.y;
+        this.dragGhost.velocityX = 0; this.dragGhost.velocityY = 0;
+        this.dragGhost.targetX = pointer.x; this.dragGhost.targetY = pointer.y;
+        this.container.add(this.dragGhost);
+        const onMove = (p) => { this.dragGhost.targetX = p.x; this.dragGhost.targetY = p.y; };
+        const onUp = (p) => {
+            this.scene.input.off('pointermove', onMove); this.scene.input.off('pointerup', onUp);
+            const dropTarget = this.hitTestSlots(p.x, p.y);
+            const dropZoneY = this.scene.scale.height * 0.65;
+            const overDeck = p.y >= dropZoneY;
+            if (dropTarget && window.gameLogic && window.gameLogic.swapEquipment) {
+                window.gameLogic.swapEquipment(this.dragSrc, dropTarget);
+            } else if (overDeck && window.gameLogic && window.gameLogic.moveWeaponToDeck) {
+                window.gameLogic.moveWeaponToDeck(this.dragSrc);
+            }
+            this.dragGhost.destroy(); this.dragGhost = null; this.dragSrc = null;
+        };
+        this.scene.input.on('pointermove', onMove);
+        this.scene.input.once('pointerup', onUp);
     }
 
-    onSlotPointerUp(type, index) {
-        if (this.dragSrc && window.gameLogic && window.gameLogic.swapEquipment) {
+    hitTestSlots(px, py) {
+        const w = this.scene.scale.width;
+        if (px < w - SIDEBAR_WIDTH) return null;
+        for (const s of this.slots) {
+            const bounds = s.container.getBounds();
+            if (bounds.contains(px, py)) {
+                return s.container.slotData ? { type: s.container.slotData.type, index: s.container.slotData.index } : null;
+            }
+        }
+        return null;
+    }
+
+    onSlotPointerUp(pointer, type, index) {
+        if (!this.dragSrc || this.dragGhost) return;
+        if (window.gameLogic && window.gameLogic.swapEquipment) {
             window.gameLogic.swapEquipment(this.dragSrc, { type, index });
         }
         this.dragSrc = null;
     }
 
-    log(msg) {
-        const h = this.scene.scale.height;
-        const left = this.scene.scale.width - SIDEBAR_WIDTH + 14;
-        const logBaseY = h - 168;
-        const lineH = 16;
-
-        const entry = this.scene.add.text(left, logBaseY + this.logEntries.length * lineH, '> ' + msg, { fontSize: '10px', color: '#66cc66', fontFamily: 'Lucida Console, monospace' });
-        entry.setOrigin(0, 0);
-        this.logContent.add(entry);
-        this.logEntries.push(entry);
-
-        if (this.logEntries.length > this.maxLogEntries) {
-            const old = this.logEntries.shift();
-            old.destroy();
-            this.logEntries.forEach((e, i) => e.setY(logBaseY + i * lineH));
-        }
+    updateDragGhost(time, delta) {
+        if (!this.dragGhost || !this.dragGhost.scene) return;
+        const stiffness = 0.25; const damping = 0.65;
+        const ax = (this.dragGhost.targetX - this.dragGhost.physX) * stiffness;
+        const ay = (this.dragGhost.targetY - this.dragGhost.physY) * stiffness;
+        this.dragGhost.velocityX += ax; this.dragGhost.velocityY += ay;
+        this.dragGhost.velocityX *= damping; this.dragGhost.velocityY *= damping;
+        this.dragGhost.physX += this.dragGhost.velocityX; this.dragGhost.physY += this.dragGhost.velocityY;
+        this.dragGhost.setPosition(this.dragGhost.physX, this.dragGhost.physY);
     }
 
     onResize(w, h) {

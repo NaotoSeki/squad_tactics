@@ -99,6 +99,17 @@
         .ar-check { display: flex; align-items: center; font-size: 10px; color: #888; margin-top: 5px; cursor: pointer; }
         .ar-check input { margin-right: 5px; }
         .ar-check:hover { color: #fff; }
+
+        #battle-log-window { position: fixed; top: 20px; left: 20px; width: 320px; max-height: 280px; background: rgba(10,15,10,0.92); border: 1px solid #d84; border-radius: 6px; box-shadow: 0 4px 20px rgba(0,0,0,0.6); z-index: 500; display: flex; flex-direction: column; overflow: hidden; }
+        #battle-log-window.minimized { max-height: 36px; }
+        #battle-log-window .log-title-bar { background: #222; padding: 6px 10px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #444; cursor: move; user-select: none; }
+        #battle-log-window .log-title-bar span { font-size: 11px; color: #d84; font-weight: bold; }
+        #battle-log-window .log-title-bar .log-btns { display: flex; gap: 4px; }
+        #battle-log-window .log-title-bar button { width: 22px; height: 22px; background: #333; border: 1px solid #555; color: #ccc; cursor: pointer; font-size: 12px; line-height: 1; padding: 0; border-radius: 3px; }
+        #battle-log-window .log-title-bar button:hover { background: #444; color: #fff; }
+        #battle-log-window .log-title-bar button.close:hover { background: #633; color: #fcc; }
+        #battle-log-window #battle-log-body { flex: 1; overflow-y: auto; padding: 10px; font-family: "Lucida Console", monospace; font-size: 10px; color: #6c6; user-select: text; -webkit-user-select: text; }
+        #battle-log-window #battle-log-body .log-entry { margin-bottom: 3px; border-bottom: 1px solid #222; white-space: pre-wrap; word-break: break-all; }
     </style>
 </head>
 <body>
@@ -141,6 +152,17 @@
         </div>
     </div>
     
+    <div id="battle-log-window">
+        <div class="log-title-bar">
+            <span>BATTLE LOG</span>
+            <div class="log-btns">
+                <button class="minimize" title="最小化">−</button>
+                <button class="close" title="閉じる">×</button>
+            </div>
+        </div>
+        <div id="battle-log-body"></div>
+    </div>
+
     <div id="context-menu"></div>
     <div id="command-menu">
         <div class="cmd-btn" id="btn-move" onclick="gameLogic.setMode('MOVE')"><i>👣</i> 移動</div>
@@ -161,6 +183,13 @@
     </div>
 
     <script>
+        (function initBattleLogWindow() {
+            const win = document.getElementById('battle-log-window');
+            if (!win) return;
+            const body = document.getElementById('battle-log-body');
+            win.querySelector('.close').onclick = () => { win.style.display = 'none'; };
+            win.querySelector('.minimize').onclick = () => { win.classList.toggle('minimized'); body.style.display = win.classList.contains('minimized') ? 'none' : 'block'; };
+        })();
         function onSlotDragStart(e, type, index) { e.dataTransfer.setData("text/plain", JSON.stringify({type, index})); e.target.classList.add('dragging'); }
         function onSlotDragEnd(e) { e.target.classList.remove('dragging'); }
         function onSlotDragOver(e) { e.preventDefault(); e.currentTarget.classList.add('drag-over'); }

@@ -143,8 +143,12 @@ class UIManager {
     }
 
     log(m) {
-        if (window.phaserSidebar && document.getElementById('app') && document.getElementById('app').classList.contains('phaser-sidebar')) {
-            window.phaserSidebar.log(m);
+        const logWin = document.getElementById('battle-log-window');
+        const logBody = document.getElementById('battle-log-body');
+        if (logWin && logBody) {
+            logWin.style.display = 'flex';
+            const d = document.createElement('div'); d.className = 'log-entry'; d.textContent = '> ' + m;
+            logBody.appendChild(d); logBody.scrollTop = logBody.scrollHeight;
             return;
         }
         const c = document.getElementById('log-container');
