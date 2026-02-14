@@ -91,6 +91,7 @@ const Renderer = {
     suppressMapClick: false,
     draggedCardType: null,
     draggedCardFusionData: null,
+    draggedCard: null,
 
     init(canvasElement) {
         const config = { type: Phaser.AUTO, parent: 'game-view', width: document.getElementById('game-view').clientWidth, height: document.getElementById('game-view').clientHeight, backgroundColor: '#0b0e0a', pixelArt: false, scene: [MainScene, UIScene], fps: { target: 60 }, physics: { default: 'arcade', arcade: { debug: false } }, input: { activePointers: 1 } };
@@ -213,7 +214,7 @@ class Card extends Phaser.GameObjects.Container {
         if(Renderer.isMapDragging) return;
         const isWeapon = typeof WPNS !== 'undefined' && WPNS[this.cardType];
         if (!isWeapon && window.gameLogic && window.gameLogic.cardsUsed >= 2) return; 
-        this.isDragging = true; Renderer.isCardDragging = true; Renderer.draggedCardType = this.cardType; Renderer.draggedCardFusionData = this.fusionData;
+        this.isDragging = true; Renderer.isCardDragging = true; Renderer.draggedCardType = this.cardType; Renderer.draggedCardFusionData = this.fusionData; Renderer.draggedCard = this;
         this.setAlpha(0.6); this.setScale(1.1); 
         const hand = this.parentContainer; const worldPos = hand.getLocalTransformMatrix().transformPoint(this.x, this.y); hand.remove(this); this.scene.add.existing(this); this.physX = worldPos.x; this.physY = worldPos.y; this.targetX = this.physX; this.targetY = this.physY; this.setDepth(9999); this.dragOffsetX = this.physX - pointer.x; this.dragOffsetY = this.physY - pointer.y; 
     }
@@ -225,26 +226,25 @@ class Card extends Phaser.GameObjects.Container {
         const overRightPanel = pointer.x >= this.scene.scale.width - (window.getSidebarWidth ? window.getSidebarWidth() : 340);
         const dropZoneY = this.scene.scale.height * 0.88;
         const isWeaponry = typeof WPNS !== 'undefined' && WPNS[this.cardType] && WPNS[this.cardType].attr === (typeof ATTR !== 'undefined' ? ATTR.WEAPON : 'Weaponry');
-        if (!isWeaponry && this.y < dropZoneY && !overRightPanel) main.dragHighlightHex = Renderer.pxToHex(pointer.x, pointer.y);
+        if (!isWeaponry && this.targetY < dropZoneY && !overRightPanel) main.dragHighlightHex = Renderer.pxToHex(pointer.x, pointer.y);
         else main.dragHighlightHex = null;
+        const cx = this.targetX; const cy = this.targetY;
+        const target = this.findOverlappingSameTypeCardAt(cx, cy);
+        if (target && FUSABLE_UNIT_TYPES.includes(this.cardType)) this.scene.fusionTargetCard = target;
+        else this.scene.fusionTargetCard = null;
     }
     onDragEnd(pointer) { 
         if(!this.isDragging) return; 
-        this.isDragging = false; Renderer.isCardDragging = false; Renderer.draggedCardType = null; Renderer.draggedCardFusionData = null;
+        this.isDragging = false; Renderer.isCardDragging = false; Renderer.draggedCardType = null; Renderer.draggedCardFusionData = null; Renderer.draggedCard = null;
+        this.scene.fusionTargetCard = null;
         this.setAlpha(1.0); this.setScale(1.0); 
         const main = this.scene.game.scene.getScene('MainScene'); main.dragHighlightHex = null; 
         const dropZoneY = this.scene.scale.height * 0.88;
         const sw = this.scene.scale.width;
         const overRightPanel = pointer.x >= sw - (window.getSidebarWidth ? window.getSidebarWidth() : 340);
         const isWeaponry = typeof WPNS !== 'undefined' && WPNS[this.cardType] && WPNS[this.cardType].attr === (typeof ATTR !== 'undefined' ? ATTR.WEAPON : 'Weaponry');
-        if (this.y >= dropZoneY) {
-            const targetCard = this.findOverlappingSameTypeCard(pointer);
-            if (targetCard && FUSABLE_UNIT_TYPES.includes(this.cardType)) {
-                this.scene.fuseCards(this, targetCard);
-                return;
-            }
-            this.returnToHand(); return;
-        }
+        const cx = pointer.x + this.dragOffsetX; const cy = pointer.y + this.dragOffsetY;
+        const targetCard = this.findOverlappingSameTypeCardAt(cx, cy);
         if (overRightPanel) {
             if (!isWeaponry) { this.returnToHand(); return; }
             const sidebar = window.phaserSidebar;
@@ -254,7 +254,12 @@ class Card extends Phaser.GameObjects.Container {
             }
             this.returnToHand(); return;
         }
+        if (targetCard && FUSABLE_UNIT_TYPES.includes(this.cardType)) {
+            this.scene.fuseCards(this, targetCard);
+            return;
+        }
         if (isWeaponry) { this.returnToHand(); return; }
+        if (cy >= dropZoneY) { this.returnToHand(); return; }
         const hex = Renderer.pxToHex(pointer.x, pointer.y); 
         let canDeploy = false; 
         if (window.gameLogic && window.gameLogic.checkDeploy) { 
@@ -277,8 +282,7 @@ class Card extends Phaser.GameObjects.Container {
         }}); 
     }
     returnToHand() { const hand = this.scene.handContainer; this.scene.children.remove(this); hand.add(this); this.setDepth(0); this.physX = this.x; this.physY = this.y; this.targetX = this.baseX; this.targetY = this.baseY; }
-    findOverlappingSameTypeCard(pointer) {
-        const cx = this.physX; const cy = this.physY;
+    findOverlappingSameTypeCardAt(cx, cy) {
         const hand = this.scene.handContainer;
         for (const c of this.scene.cards) {
             if (c === this || !c.active) continue;
@@ -291,7 +295,7 @@ class Card extends Phaser.GameObjects.Container {
 }
 
 class UIScene extends Phaser.Scene {
-    constructor() { super({ key: 'UIScene', active: false }); this.cards=[]; this.handContainer=null; this.gradientBg=null; this.uiVfxGraphics=null; this.isHandDocked = false; this.sidebar = null; this._resetOrderTimer = null; }
+    constructor() { super({ key: 'UIScene', active: false }); this.cards=[]; this.handContainer=null; this.gradientBg=null; this.uiVfxGraphics=null; this.isHandDocked = false; this.sidebar = null; this._resetOrderTimer = null; this.fusionTargetCard = null; }
     create() {
         const w = this.scale.width; const h = this.scale.height;
         if(window.createGradientTexture) window.createGradientTexture(this);
@@ -321,7 +325,37 @@ class UIScene extends Phaser.Scene {
         const isMapCardDrag = cardDragging && !isWeaponryDrag && (draggedType === 'aerial' || (typeof UNIT_TEMPLATES !== 'undefined' && UNIT_TEMPLATES[draggedType] && deployableAttrs.indexOf(UNIT_TEMPLATES[draggedType].attr) >= 0));
         if (isWeaponryDrag) this.drawDropZoneGlow(time, true);
         else if (isMapCardDrag) this.drawMapPerimeterGlow(time);
+        if (this.fusionTargetCard && Renderer.draggedCard) this.drawFusionHalo(time);
         if (window.UIVFX) { window.UIVFX.update(); window.UIVFX.draw(this.uiVfxGraphics); }
+    }
+    drawFusionHalo(time) {
+        const t = time * 0.001;
+        const g = this.uiVfxGraphics;
+        const hand = this.handContainer;
+        const pulse = 0.7 + 0.3 * Math.sin(t * 8);
+        const colors = [0xffff88, 0xffdd44, 0xffaa00, 0xffffff];
+        const drawHaloAt = (x, y) => {
+            for (let r = 60; r <= 140; r += 20) {
+                const a = pulse * (1 - (r - 60) / 100) * 0.25;
+                g.lineStyle(4, colors[Math.floor(r / 35) % colors.length], a);
+                g.strokeCircle(x, y, r);
+            }
+            for (let ray = 0; ray < 24; ray++) {
+                const angle = (ray / 24) * Math.PI * 2 + t * 2;
+                const len = 80 + Math.sin(t * 6 + ray) * 15;
+                g.lineStyle(6, 0xffffff, pulse * 0.6);
+                g.beginPath();
+                g.moveTo(x, y);
+                g.lineTo(x + Math.cos(angle) * len, y + Math.sin(angle) * len);
+                g.strokePath();
+            }
+        };
+        const target = this.fusionTargetCard;
+        const tx = hand.x + target.physX;
+        const ty = hand.y + target.physY;
+        drawHaloAt(tx, ty);
+        const drag = Renderer.draggedCard;
+        if (drag) drawHaloAt(drag.physX, drag.physY);
     }
     drawWavyHaloLine(g, t, colors, x1, y1, x2, y2, isVertical, segments, haloSpread, cycleMult, phaseOffset) {
         const k = typeof cycleMult === 'number' ? cycleMult : 1;
