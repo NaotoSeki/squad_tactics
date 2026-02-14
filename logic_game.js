@@ -65,14 +65,14 @@ window.BattleLogic = class BattleLogic {
       }
     }, 200); // 200ms遅延
 
-    // 支援カード配布
+    // 支援カード配布（融合カードを先頭に、続けてランダム）
     setTimeout(() => {
-      // ★修正: Renderer.game の存在チェックを追加して安全に
       if (typeof Renderer !== 'undefined' && Renderer.game && Renderer.dealCards) {
-        const deck = [];
-        for(let i=0; i<5; i++) {
-          const randType = AVAILABLE_CARDS[Math.floor(Math.random() * AVAILABLE_CARDS.length)];
-          deck.push(randType);
+        const deck = [...(this.campaign.carriedCards || [])];
+        this.campaign.carriedCards = [];
+        const need = Math.max(0, 5 - deck.length);
+        for (let i = 0; i < need; i++) {
+          deck.push(AVAILABLE_CARDS[Math.floor(Math.random() * AVAILABLE_CARDS.length)]);
         }
         Renderer.dealCards(deck);
       }
@@ -825,9 +825,9 @@ window.BattleLogic = class BattleLogic {
     return true;
   }
 
-  deployUnit(targetHex, cardType) {
+  deployUnit(targetHex, cardType, fusionData) {
     if(!this.checkDeploy(targetHex)) { return; }
-    const u = this.campaign.createSoldier(cardType, 'player');
+    const u = this.campaign.createSoldier(cardType, 'player', fusionData);
     if(u) {
       u.q = targetHex.q; u.r = targetHex.r;
       this.units.push(u); this.cardsUsed++;

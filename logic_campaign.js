@@ -1,7 +1,7 @@
 /** LOGIC CAMPAIGN: Game Lifecycle, Data Persistence, and Unit Factory */
 
-// 戦車を含む全カード定義
 const AVAILABLE_CARDS = ['rifleman', 'scout', 'gunner', 'sniper', 'mortar_gunner', 'aerial', 'tank_pz4', 'tank_tiger'];
+const FUSABLE_UNIT_TYPES = ['rifleman', 'scout', 'gunner', 'sniper', 'mortar_gunner', 'tank_pz4', 'tank_tiger'];
 
 function createCardIcon(type) {
     const c = document.createElement('canvas'); c.width = 1; c.height = 1; return c.toDataURL();
@@ -10,11 +10,10 @@ function createCardIcon(type) {
 class CampaignManager {
     constructor() {
         this.sector = 1;
-        this.survivingUnits = []; // 前の戦いから生き残ったユニット
+        this.survivingUnits = [];
         this.setupSlots = [];
         this.isAutoMode = false;
-        
-        // UI初期化 (DOMが準備できるのを少し待つ)
+        this.carriedCards = [];
         window.addEventListener('load', () => this.initSetupScreen());
     }
 
@@ -140,7 +139,7 @@ class CampaignManager {
     }
 
     // --- UNIT FACTORY ---
-    createSoldier(templateKey, team) {
+    createSoldier(templateKey, team, fusionData) {
         const t = UNIT_TEMPLATES[templateKey]; 
         if (!t) { console.error("Template not found:", templateKey); return null; }
         
@@ -159,6 +158,15 @@ class CampaignManager {
             const first = FIRST_NAMES[Math.floor(Math.random() * FIRST_NAMES.length)]; 
             const last = LAST_NAMES[Math.floor(Math.random() * LAST_NAMES.length)]; 
             name = `${last} ${first}`; 
+        }
+
+        let baseHp = t.hp || 80;
+        let baseAp = t.ap || 4;
+        let skills = [];
+        if (fusionData) {
+            if (fusionData.hpBoost) baseHp = Math.floor(baseHp * (1 + fusionData.hpBoost));
+            if (fusionData.apBonus) baseAp = baseAp + fusionData.apBonus;
+            if (Array.isArray(fusionData.skills)) skills = [...fusionData.skills];
         }
 
         const createItem = (key) => {
@@ -206,8 +214,10 @@ class CampaignManager {
             bag = []; 
         }
 
+        const hp = baseHp;
+        const maxAp = baseAp;
         return { 
-            id: Math.random(), team: team, q: 0, r: 0, def: t, name: name, rank: 0, faceSeed: faceSeed, stats: stats, hp: t.hp || 80, maxHp: t.hp || 80, ap: t.ap || 4, maxAp: t.ap || 4, hands: hands, bag: bag, stance: 'stand', skills: [], sectorsSurvived: 0, deadProcessed: false 
+            id: Math.random(), team: team, q: 0, r: 0, def: t, name: name, rank: 0, faceSeed: faceSeed, stats: stats, hp: hp, maxHp: hp, ap: maxAp, maxAp: maxAp, hands: hands, bag: bag, stance: 'stand', skills: skills, sectorsSurvived: 0, deadProcessed: false 
         };
     }
 
@@ -215,6 +225,9 @@ class CampaignManager {
     onSectorCleared(survivors) {
         this.survivingUnits = survivors;
         this.promoteSurvivors();
+        if (typeof Renderer !== 'undefined' && Renderer.getFusedCardsFromHand) {
+            this.carriedCards = Renderer.getFusedCardsFromHand();
+        }
         
         document.getElementById('reward-screen').style.display = 'flex';
         const b = document.getElementById('reward-cards'); 
