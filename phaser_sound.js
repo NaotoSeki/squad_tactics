@@ -78,7 +78,7 @@ const Sfx = {
             if (window.phaserGame) {
                 const main = window.phaserGame.scene.getScene('MainScene');
                 if (main && main.sound) {
-                    main.sound.play(id);
+                    main.sound.play(id, { volume: 0.4 });
                     return; 
                 }
             }

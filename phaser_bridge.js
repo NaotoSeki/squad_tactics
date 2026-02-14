@@ -282,7 +282,7 @@ class MainScene extends Phaser.Scene {
             const targetUnit = window.gameLogic.aimTargetUnit;
             window.gameLogic.attackLine.forEach(h => {
                 const isUnitTarget = targetUnit && targetUnit.q === h.q && targetUnit.r === h.r;
-                const offset = isUnitTarget ? 0 : time * 0.05;
+                const offset = isUnitTarget ? time * 0.05 : 0;
                 this.drawDashedHexOutline(this.overlayGraphics, h.q, h.r, offset);
             });
         }
@@ -295,10 +295,18 @@ class MainScene extends Phaser.Scene {
         this.crosshairGroup.clear();
         if (window.gameLogic.aimTargetUnit) { const u = window.gameLogic.aimTargetUnit; const pos = Renderer.hexToPx(u.q, u.r); this.drawCrosshair(this.crosshairGroup, pos.x, pos.y, time); }
         const gl = window.gameLogic;
-        const gv = document.getElementById('game-view');
-        if (gv) {
-            const overAimTarget = gl && gl.selectedUnit && gl.interactionMode === 'ATTACK' && gl.aimTargetUnit && gl.hoverHex && gl.hoverHex.q === gl.aimTargetUnit.q && gl.hoverHex.r === gl.aimTargetUnit.r;
-            gv.style.cursor = overAimTarget ? 'crosshair' : '';
+        const overAimTarget = gl && gl.selectedUnit && gl.interactionMode === 'ATTACK' && gl.aimTargetUnit && gl.hoverHex && gl.hoverHex.q === gl.aimTargetUnit.q && gl.hoverHex.r === gl.aimTargetUnit.r;
+        const canvas = this.game && this.game.canvas;
+        if (canvas) {
+            if (overAimTarget) {
+                const svgBright = '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><line x1="16" y1="2" x2="16" y2="30" stroke="#f44" stroke-width="2"/><line x1="2" y1="16" x2="30" y2="16" stroke="#f44" stroke-width="2"/></svg>';
+                const svgDim = '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><line x1="16" y1="2" x2="16" y2="30" stroke="#a33" stroke-width="2"/><line x1="2" y1="16" x2="30" y2="16" stroke="#a33" stroke-width="2"/></svg>';
+                const phase = Math.floor(time / 280) % 2;
+                const url = phase === 0 ? 'url("data:image/svg+xml,' + encodeURIComponent(svgBright) + '") 16 16, crosshair' : 'url("data:image/svg+xml,' + encodeURIComponent(svgDim) + '") 16 16, crosshair';
+                canvas.style.cursor = url;
+            } else {
+                canvas.style.cursor = '';
+            }
         }
     }
     drawHexOutline(g, q, r) { const c = Renderer.hexToPx(q, r); g.beginPath(); for(let i=0; i<6; i++) { const a = Math.PI/180*60*i; g.lineTo(c.x+HEX_SIZE*0.9*Math.cos(a), c.y+HEX_SIZE*0.9*Math.sin(a)); } g.closePath(); g.strokePath(); }
