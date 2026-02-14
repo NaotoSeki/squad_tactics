@@ -464,7 +464,7 @@ window.BattleLogic = class BattleLogic {
     this.selectedUnit = u; this.refreshUnitState(u); this.ui.hideActionMenu();
   }
 
-  handleClick(p) {
+  handleClick(p, pointerX, pointerY) {
     if (this.state !== 'PLAY') return;
     if (this.interactionMode === 'SELECT') { this.clearSelection(); }
     else if (this.interactionMode === 'MOVE') {
@@ -475,7 +475,15 @@ window.BattleLogic = class BattleLogic {
     }
     else if (this.interactionMode === 'ATTACK') {
       if (this.selectedUnit) {
-        const targetUnit = this.getUnitInHex(p.q, p.r);
+        let targetUnit = null;
+        const inHex = this.getUnitsInHex(p.q, p.r);
+        if (pointerX != null && pointerY != null && typeof phaserGame !== 'undefined' && phaserGame.scene) {
+          const main = phaserGame.scene.getScene('MainScene');
+          if (main && main.getUnitAtScreenPosition) targetUnit = main.getUnitAtScreenPosition(pointerX, pointerY);
+          if (targetUnit && inHex.indexOf(targetUnit) < 0) targetUnit = null;
+          if (!targetUnit && inHex.length > 1 && main && main.getClosestUnitToScreen) targetUnit = main.getClosestUnitToScreen(inHex, pointerX, pointerY);
+        }
+        if (!targetUnit) targetUnit = inHex[0] || this.getUnitInHex(p.q, p.r);
         if (targetUnit && targetUnit.team !== this.selectedUnit.team) {
           this.actionAttack(this.selectedUnit, targetUnit);
         } else {

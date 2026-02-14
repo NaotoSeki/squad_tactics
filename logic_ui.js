@@ -263,6 +263,7 @@ class UIManager {
     updateSidebar(u, state, tankAutoReload) {
         if (window.phaserSidebar && document.getElementById('app') && document.getElementById('app').classList.contains('phaser-sidebar')) {
             window.phaserSidebar.updateSidebar(u, state, tankAutoReload);
+            if (window.gameLogic && window.gameLogic.selectedUnit) this.refreshCommandMenuState(window.gameLogic.selectedUnit);
             return;
         }
         const ui = document.getElementById('unit-info');
