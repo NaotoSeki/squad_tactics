@@ -252,10 +252,11 @@ class UnitView {
 
             const skillsArr = (u.skills && Array.isArray(u.skills)) ? [...new Set(u.skills)] : [];
             if (typeof SKILL_STYLES !== 'undefined' && skillsArr.length > 0) {
-                const scaleFactor = 0.28;
-                const iconSize = 10;
-                const yOffset = -38;
-                const spacing = 12;
+                const scaleFactor = 0.24;
+                const iconSize = 8;
+                const barBottomY = -43;
+                const yOffset = barBottomY + 4;
+                const spacing = 10;
                 let iconX = -((skillsArr.length - 1) * spacing) / 2;
 
                 if(!visual.skillContainer) {
@@ -269,8 +270,8 @@ class UnitView {
                 skillsArr.forEach(sk => {
                     if (SKILL_STYLES[sk]) {
                         const st = SKILL_STYLES[sk];
-                        const bg = this.scene.add.rectangle(iconX, yOffset, iconSize, iconSize, parseInt(st.col.replace('#','0x'), 16), 0.85);
-                        const badge = this.scene.add.text(iconX, yOffset, st.icon, { fontSize: '14px', fontFamily: 'Segoe UI Emoji' }).setOrigin(0.5);
+                        const bg = this.scene.add.rectangle(iconX, yOffset, iconSize, iconSize, parseInt(st.col.replace('#','0x'), 16), 0.9);
+                        const badge = this.scene.add.text(iconX, yOffset, st.icon, { fontSize: '12px', fontFamily: 'Segoe UI Emoji' }).setOrigin(0.5);
                         visual.skillContainer.add([bg, badge]);
                         iconX += spacing;
                     }

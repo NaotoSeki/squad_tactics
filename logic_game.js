@@ -161,13 +161,22 @@ window.BattleLogic = class BattleLogic {
     if (!w) return;
     if (w.isBroken) { this.ui.log("武器故障中！修理が必要"); return; }
 
-    // ターゲット判定
+    // ターゲット判定（indirectは常にエリア射撃のみ。直接武器はユニット/ヘックスで区別）
     let targetUnit = null;
     let targetHex = null;
-    if (d.hp !== undefined) { targetUnit = d; targetHex = {q: d.q, r: d.r}; }
-    else { targetHex = d; targetUnit = this.getUnitInHex(d.q, d.r); }
+    let isAreaAttack = false;
+    if (d.hp !== undefined) {
+      targetUnit = d;
+      targetHex = { q: d.q, r: d.r };
+      if (w.indirect) { isAreaAttack = true; targetUnit = null; }
+    } else {
+      targetHex = d;
+      targetUnit = w.indirect ? null : this.getUnitInHex(d.q, d.r);
+      if (!targetUnit) isAreaAttack = true;
+    }
+    if (w.indirect) isAreaAttack = true;
 
-    if (!w.indirect && !targetUnit) { this.setMode('SELECT'); return; }
+    if (!w.indirect && !targetUnit && !isAreaAttack) { this.setMode('SELECT'); return; }
 
     // 弾薬チェック
     if (w.code === 'm2_mortar') {
@@ -190,7 +199,6 @@ window.BattleLogic = class BattleLogic {
     a.ap -= w.ap;
     this.state = 'ANIM';
 
-    // 戦車砲: 発射直後に砲弾を確実に消費（AP0→敵ターン後でも二重リロードに見えないよう即時反映）
     if (a.def.isTank && w.type && w.type.includes('shell')) {
       this.consumeAmmo(a, w.code);
       this.updateSidebar();
@@ -199,15 +207,16 @@ window.BattleLogic = class BattleLogic {
     const animTarget = targetUnit || { q: targetHex.q, r: targetHex.r, hp: 100 };
     if (typeof Renderer !== 'undefined' && Renderer.playAttackAnim) Renderer.playAttackAnim(a, animTarget);
 
-    // 命中率計算（スキル: Precision +15%, Ambush 回避 +15%）
-    let terrainCover = this.map[targetHex.q][targetHex.r].cover;
-    let hitChance = (a.stats?.aim || 0) * 2 + w.acc - (dist * (w.acc_drop||5)) - terrainCover;
-    if (targetUnit) {
+    const terrainCover = this.map[targetHex.q][targetHex.r].cover;
+    const distPenalty = dist * (w.acc_drop || 5);
+    let hitChance = 0;
+    if (!isAreaAttack && targetUnit) {
+      hitChance = (a.stats?.aim || 0) * 2 + w.acc - distPenalty - terrainCover;
       if (targetUnit.stance === 'prone') hitChance -= 20;
       if (targetUnit.stance === 'crouch') hitChance -= 10;
       if (targetUnit.skills && targetUnit.skills.includes('Ambush')) hitChance -= 15;
+      if (a.skills && a.skills.includes('Precision')) hitChance += 15;
     }
-    if (a.skills && a.skills.includes('Precision')) hitChance += 15;
 
     let shots = w.isConsumable ? 1 : Math.min(w.burst || 1, w.current);
     if (a.def.isTank || w.code === 'm2_mortar') shots = 1;
@@ -218,7 +227,7 @@ window.BattleLogic = class BattleLogic {
     // パフォーマンス改善: UI更新をループ外へ
     await new Promise(async (resolve) => {
       for (let i = 0; i < shots; i++) {
-        if (targetUnit && targetUnit.hp <= 0) break;
+        if (!isAreaAttack && targetUnit && targetUnit.hp <= 0) break;
 
         // 戦車砲は発射直前に既に消費済み
         if (!(a.def.isTank && w.type && w.type.includes('shell'))) {
@@ -259,14 +268,13 @@ window.BattleLogic = class BattleLogic {
             if (window.Sfx) Sfx.play('death');
           }
 
-          if (isMortar) {
+          if (w.indirect) {
             const victims = game.getUnitsInHex(targetHex.q, targetHex.r);
             const neighbors = game.getNeighbors(targetHex.q, targetHex.r);
             const areaVictims = [];
             neighbors.forEach(n => { areaVictims.push(...game.getUnitsInHex(n.q, n.r)); });
-
             victims.forEach(v => {
-              if ((Math.random() * 100) < hitChance + 20) {
+              if ((Math.random() * 100) < 65 + 20 - dist * 2) {
                 game.applyDamage(v, w.dmg, "迫撃砲");
               } else {
                 game.ui.log(">> 至近弾！");
@@ -277,12 +285,29 @@ window.BattleLogic = class BattleLogic {
               game.applyDamage(v, Math.floor(w.dmg / 4), "爆風");
             });
 
-          } else if (targetUnit) {
+          } else if (isAreaAttack) {
+            const victims = game.getUnitsInHex(targetHex.q, targetHex.r).filter(v => v.team !== a.team);
+            const baseChance = (w.type === 'bullet') ? 15 : 25;
+            const distDrop = Math.min(10, dist * 1.5);
+            const areaHitChance = Math.max(2, baseChance - distDrop);
+            victims.forEach(v => {
+              if ((Math.random() * 100) < areaHitChance) {
+                let dmg = Math.floor(w.dmg * (0.6 + Math.random() * 0.3));
+                if (a.skills && a.skills.includes('HighPower')) dmg = Math.floor(dmg * 1.2);
+                if (v.def.isTank && w.type === 'bullet') dmg = 0;
+                if (dmg > 0) {
+                  if (window.Sfx) Sfx.play('soft_hit');
+                  game.applyDamage(v, dmg, "制圧射撃");
+                }
+              }
+            });
+
+          } else {
+            const mainDmg = Math.floor(w.dmg * (0.8 + Math.random() * 0.4));
+            const dmgWithSkill = a.skills && a.skills.includes('HighPower') ? Math.floor(mainDmg * 1.2) : mainDmg;
             if (targetUnit.hp <= 0) return;
             if ((Math.random() * 100) < hitChance) {
-              let dmg = Math.floor(w.dmg * (0.8 + Math.random() * 0.4));
-              if (a.skills && a.skills.includes('HighPower')) dmg = Math.floor(dmg * 1.2);
-              if (targetUnit.def.isTank && w.type === 'bullet') dmg = 0;
+              let dmg = targetUnit.def.isTank && w.type === 'bullet' ? 0 : dmgWithSkill;
               if (dmg > 0) {
                 if (window.Sfx) Sfx.play('soft_hit');
                 if (!isShell && window.VFX) VFX.add({ x: tx, y: ty, vx: 0, vy: -5, life: 10, maxLife: 10, color: "#fff", size: 2, type: 'spark' });
@@ -297,6 +322,15 @@ window.BattleLogic = class BattleLogic {
                 if (!isShell && w.type === 'bullet') VFX.addBulletImpact(tx, ty, 1);
               }
             }
+            const sameHexUnits = game.getUnitsInHex(targetHex.q, targetHex.r).filter(u => u !== targetUnit && u.team !== a.team && u.hp > 0);
+            const splashChance = (w.type === 'bullet') ? 5 : 10;
+            const splashDmg = (w.type === 'bullet') ? Math.floor(dmgWithSkill * 0.5) : Math.floor(dmgWithSkill * 0.5);
+            sameHexUnits.forEach(v => {
+              if ((Math.random() * 100) < splashChance) {
+                let sd = v.def.isTank && w.type === 'bullet' ? 0 : splashDmg;
+                if (sd > 0) game.applyDamage(v, sd, isShell ? "破片" : "流弾");
+              }
+            });
           }
         }, flightTime);
 
@@ -481,19 +515,25 @@ window.BattleLogic = class BattleLogic {
     }
     else if (this.interactionMode === 'ATTACK') {
       if (this.selectedUnit) {
-        let targetUnit = null;
-        const inHex = this.getUnitsInHex(p.q, p.r);
-        if (pointerX != null && pointerY != null && typeof phaserGame !== 'undefined' && phaserGame.scene) {
-          const main = phaserGame.scene.getScene('MainScene');
-          if (main && main.getUnitAtScreenPosition) targetUnit = main.getUnitAtScreenPosition(pointerX, pointerY);
-          if (targetUnit && inHex.indexOf(targetUnit) < 0) targetUnit = null;
-          if (!targetUnit && inHex.length > 1 && main && main.getClosestUnitToScreen) targetUnit = main.getClosestUnitToScreen(inHex, pointerX, pointerY);
-        }
-        if (!targetUnit) targetUnit = inHex[0] || this.getUnitInHex(p.q, p.r);
-        if (targetUnit && targetUnit.team !== this.selectedUnit.team) {
-          this.actionAttack(this.selectedUnit, targetUnit);
-        } else {
+        const w = this.getVirtualWeapon(this.selectedUnit);
+        const isIndirect = w && w.indirect;
+        if (isIndirect) {
           this.actionAttack(this.selectedUnit, p);
+        } else {
+          let targetUnit = null;
+          const inHex = this.getUnitsInHex(p.q, p.r);
+          if (pointerX != null && pointerY != null && typeof phaserGame !== 'undefined' && phaserGame.scene) {
+            const main = phaserGame.scene.getScene('MainScene');
+            if (main && main.getUnitAtScreenPosition) targetUnit = main.getUnitAtScreenPosition(pointerX, pointerY);
+            if (targetUnit && inHex.indexOf(targetUnit) < 0) targetUnit = null;
+            if (!targetUnit && inHex.length > 1 && main && main.getClosestUnitToScreen) targetUnit = main.getClosestUnitToScreen(inHex, pointerX, pointerY);
+          }
+          if (!targetUnit) targetUnit = inHex[0] || this.getUnitInHex(p.q, p.r);
+          if (targetUnit && targetUnit.team !== this.selectedUnit.team) {
+            this.actionAttack(this.selectedUnit, targetUnit);
+          } else {
+            this.actionAttack(this.selectedUnit, p);
+          }
         }
       } else {
         this.setMode('SELECT');

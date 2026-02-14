@@ -68,24 +68,27 @@ window.PhaserSidebar = class PhaserSidebar {
             } catch (e) { /* ignore */ }
         }
         if (faceUrl && this.scene.textures.exists(faceKey)) {
-            const face = this.scene.add.image(left + 32, y + 32, faceKey).setDisplaySize(64, 64);
+            const face = this.scene.add.image(left, y, faceKey).setDisplaySize(64, 64);
             face.setOrigin(0, 0);
             this.unitContent.add(face);
         }
 
-        const nameText = this.scene.add.text(left + 74, y + 8, u.name, { fontSize: '14px', color: '#ffffff', fontFamily: 'sans-serif' });
+        const textLeft = left + 72;
+        const nameText = this.scene.add.text(textLeft, y + 4, u.name, { fontSize: '14px', color: '#ffffff', fontFamily: 'sans-serif' });
         this.unitContent.add(nameText);
-        const roleText = this.scene.add.text(left + 74, y + 28, (u.def && u.def.role) || '', { fontSize: '11px', color: '#ddaa44', fontFamily: 'monospace' });
+        const roleText = this.scene.add.text(textLeft, y + 24, (u.def && u.def.role) || '', { fontSize: '11px', color: '#ddaa44', fontFamily: 'monospace' });
         this.unitContent.add(roleText);
 
         const skills = (u.skills && Array.isArray(u.skills)) ? [...new Set(u.skills)] : [];
         if (skills.length > 0 && typeof SKILLS !== 'undefined') {
             const skillLines = skills.map(sk => SKILLS[sk] ? `${SKILLS[sk].name}: ${SKILLS[sk].desc}` : sk).join('  |  ');
-            const skillText = this.scene.add.text(left + 74, y + 46, skillLines, { fontSize: '9px', color: TEXT_DIM, fontFamily: 'sans-serif', wordWrap: { width: sw - 90 } });
+            const skillText = this.scene.add.text(textLeft, y + 42, skillLines, { fontSize: '9px', color: TEXT_DIM, fontFamily: 'sans-serif', wordWrap: { width: sw - 88 } });
             this.unitContent.add(skillText);
-            y += 22;
+            y += 60;
+        } else {
+            y += 42;
         }
-        y += 42;
+        y += 10;
 
         const hpText = this.scene.add.text(left, y, `HP  ${u.hp}/${u.maxHp}`, { fontSize: '11px', color: TEXT_COLOR, fontFamily: 'sans-serif' });
         this.unitContent.add(hpText);
