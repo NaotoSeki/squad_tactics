@@ -172,7 +172,7 @@ class EnvSystem {
         if (!scene.textures.exists('hd_tree_trunk')) { const g = scene.make.graphics({x:0, y:0, add:false}); g.fillStyle(0x332211); g.beginPath(); const bW = treeW * 0.12; const tW = treeW * 0.02; const cx = treeW/2; g.moveTo(cx - bW/2, treeH * 0.95); g.lineTo(cx + bW/2, treeH * 0.95); g.lineTo(cx + tW/2, treeH * 0.1); g.lineTo(cx - tW/2, treeH * 0.1); g.closePath(); g.fill(); g.generateTexture('hd_tree_trunk', treeW, treeH); }
         const layers = 3; const baseColors = [ { r: 10, g: 31, b: 11 }, { r: 22, g: 51, b: 24 }, { r: 34, g: 68, b: 34 } ];
         if (!scene.textures.exists('rubble_chunk_0')) {
-            const RSC = 4.0;
+            const RSC = 3.2; // 瓦礫1つ1つの大きさを約20%縮小
             const rubbleColors = [0x9a958c, 0x8c877e, 0xa29d94, 0x7e796e, 0xb0aaa0];
             const rubbleDark = 0x6a6558;
             [0,1,2,3,4].forEach((idx) => {

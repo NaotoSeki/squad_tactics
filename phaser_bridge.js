@@ -160,10 +160,10 @@ class UIScene extends Phaser.Scene {
     create() {
         const w = this.scale.width; const h = this.scale.height;
         if(window.createGradientTexture) window.createGradientTexture(this);
-        if (this.textures.exists('ui_gradient')) { this.gradientBg = this.add.image(w/2, h, 'ui_gradient').setOrigin(0.5, 1).setDepth(0).setDisplaySize(w, h*0.25); } else { this.gradientBg = this.add.rectangle(w/2, h, w, h*0.25, 0x000000, 0.8).setOrigin(0.5, 1); }
+        if (this.textures.exists('ui_gradient')) { this.gradientBg = this.add.image(w/2, h, 'ui_gradient').setOrigin(0.5, 1).setDepth(0).setDisplaySize(w, h*0.175); } else { this.gradientBg = this.add.rectangle(w/2, h, w, h*0.175, 0x000000, 0.8).setOrigin(0.5, 1); }
         this.handContainer = this.add.container(w/2, h); this.uiVfxGraphics = this.add.graphics().setDepth(10000); this.scale.on('resize', this.onResize, this);
     }
-    onResize(gameSize) { const w = gameSize.width; const h = gameSize.height; if (this.gradientBg) { this.gradientBg.setPosition(w / 2, h); this.gradientBg.setDisplaySize(w, h * 0.25); } if (this.handContainer) { this.handContainer.setPosition(w / 2, h); } }
+    onResize(gameSize) { const w = gameSize.width; const h = gameSize.height; if (this.gradientBg) { this.gradientBg.setPosition(w / 2, h); this.gradientBg.setDisplaySize(w, h * 0.175); } if (this.handContainer) { this.handContainer.setPosition(w / 2, h); } }
     update() { this.cards.forEach(card => { if (card.active) card.updatePhysics(); }); if(window.UIVFX) { window.UIVFX.update(); this.uiVfxGraphics.clear(); window.UIVFX.draw(this.uiVfxGraphics); } }
     dealStart(types) { this.isHandDocked = false; types.forEach((type, i) => { this.time.delayedCall(i * 150, () => { this.addCardToHand(type); }); }); this.time.delayedCall(150 * types.length + 1000, () => { this.isHandDocked = true; }); }
     addCardToHand(type) { if (this.cards.length >= 5) return; const card = new Card(this, 0, 0, type); this.handContainer.add(card); this.cards.push(card); card.physX = 600; card.physY = 300; card.setPosition(card.physX, card.physY); this.arrangeHand(); }
