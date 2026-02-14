@@ -246,8 +246,10 @@ class UIScene extends Phaser.Scene {
         else if (isMapCardDrag) this.drawMapPerimeterGlow(time);
         if (window.UIVFX) { window.UIVFX.update(); window.UIVFX.draw(this.uiVfxGraphics); }
     }
-    drawWavyHaloLine(g, t, colors, x1, y1, x2, y2, isVertical, segments, haloSpread) {
-        const wave = (i, s) => Math.sin((i / segments) * 4 * Math.PI + t * 2 + s) * 6 + Math.sin((i / segments) * 2 * Math.PI + t * 1.2 + s * 0.7) * 4;
+    drawWavyHaloLine(g, t, colors, x1, y1, x2, y2, isVertical, segments, haloSpread, cycleMult, phaseOffset) {
+        const k = typeof cycleMult === 'number' ? cycleMult : 1;
+        const phase = typeof phaseOffset === 'number' ? phaseOffset : 0;
+        const wave = (i, s) => Math.sin((i / segments) * 4 * k * Math.PI + t * 2 + s + phase) * 6 + Math.sin((i / segments) * 2 * k * Math.PI + t * 1.2 + s * 0.7 + phase) * 4;
         for (let layer = 0; layer < 5; layer++) {
             const phase = layer * 0.4 + t * 0.5;
             const col = colors[layer % colors.length];
@@ -297,15 +299,31 @@ class UIScene extends Phaser.Scene {
         const sh = this.scale.height;
         const DECK_ZONE_HEIGHT = sh * 0.12;
         const dropZoneY = sh - DECK_ZONE_HEIGHT;
+        const mapRight = sw - SIDEBAR_WIDTH;
         const g = this.uiVfxGraphics;
         const t = time * 0.001;
         const colors = [0xffdd66, 0xddaa44, 0xffaa22, 0xdd8844, 0xffcc44];
         g.fillStyle(0xddaa44, 0.025);
-        g.fillRect(0, dropZoneY, sw - SIDEBAR_WIDTH, DECK_ZONE_HEIGHT);
+        g.fillRect(0, dropZoneY, mapRight, DECK_ZONE_HEIGHT);
         g.fillStyle(0xddaa44, 0.018);
-        g.fillRect(sw - SIDEBAR_WIDTH, 0, SIDEBAR_WIDTH, sh);
-        this.drawWavyHaloLine(g, t, colors, sw - SIDEBAR_WIDTH, 0, sw - SIDEBAR_WIDTH, sh, true, 100, 36);
-        this.drawWavyHaloLine(g, t, colors, 0, dropZoneY, sw - SIDEBAR_WIDTH, dropZoneY, false, 100, 36);
+        g.fillRect(mapRight, 0, SIDEBAR_WIDTH, sh);
+        const segs = [
+            { x1: 0, y1: dropZoneY, x2: mapRight, y2: dropZoneY, vert: false, len: mapRight },
+            { x1: mapRight, y1: dropZoneY, x2: mapRight, y2: 0, vert: true, len: dropZoneY },
+            { x1: mapRight, y1: 0, x2: sw, y2: 0, vert: false, len: SIDEBAR_WIDTH },
+            { x1: sw, y1: 0, x2: sw, y2: sh, vert: true, len: sh },
+            { x1: sw, y1: sh, x2: 0, y2: sh, vert: false, len: sw },
+            { x1: 0, y1: sh, x2: 0, y2: dropZoneY, vert: true, len: sh - dropZoneY }
+        ];
+        const totalLen = segs.reduce((a, s) => a + s.len, 0);
+        let acc = 0;
+        const cycleMult = 2;
+        const pathCycles = 12;
+        for (const s of segs) {
+            const phaseOffset = (acc / totalLen) * pathCycles * Math.PI;
+            this.drawWavyHaloLine(g, t, colors, s.x1, s.y1, s.x2, s.y2, s.vert, 120, 36, cycleMult, phaseOffset);
+            acc += s.len;
+        }
     }
     dealStart(types) { this.isHandDocked = false; types.forEach((type, i) => { this.time.delayedCall(i * 150, () => { this.addCardToHand(type); }); }); this.time.delayedCall(150 * types.length + 1000, () => { this.isHandDocked = true; }); }
     addCardToHand(type) { const card = new Card(this, 0, 0, type); this.handContainer.add(card); this.cards.push(card); card.physX = 600; card.physY = 300; card.setPosition(card.physX, card.physY); this.arrangeHand(); }
