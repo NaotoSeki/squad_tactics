@@ -191,16 +191,38 @@ class EnvSystem {
         if (!scene.textures.exists('hd_tree_trunk')) { const g = scene.make.graphics({x:0, y:0, add:false}); g.fillStyle(0x332211); g.beginPath(); const bW = treeW * 0.12; const tW = treeW * 0.02; const cx = treeW/2; g.moveTo(cx - bW/2, treeH * 0.95); g.lineTo(cx + bW/2, treeH * 0.95); g.lineTo(cx + tW/2, treeH * 0.1); g.lineTo(cx - tW/2, treeH * 0.1); g.closePath(); g.fill(); g.generateTexture('hd_tree_trunk', treeW, treeH); }
         const layers = 3; const baseColors = [ { r: 10, g: 31, b: 11 }, { r: 22, g: 51, b: 24 }, { r: 34, g: 68, b: 34 } ];
         if (!scene.textures.exists('rubble_chunk_0')) {
-            const RSC = 3.2; // 瓦礫1つ1つの大きさを約20%縮小
+            const RSC = 2.0; // 瓦礫1つ1つのサイズ縮小（影・ひび割れ付き）
             const rubbleColors = [0x9a958c, 0x8c877e, 0xa29d94, 0x7e796e, 0xb0aaa0];
             const rubbleDark = 0x6a6558;
+            const shadowColor = 0x2a2520;
+            const crackColor = 0x4a4540;
             [0,1,2,3,4].forEach((idx) => {
                 const g = scene.make.graphics({x:0,y:0,add:false});
                 const w = (72 + idx * 16) * RSC;
                 const h = (56 + idx * 14) * RSC;
                 const cx = w * 0.5; const cy = h * 0.5;
+                const shadowOffX = Math.max(2, RSC * 0.6); const shadowOffY = Math.max(3, RSC * 0.9);
+                const drawShadow = () => {
+                    g.fillStyle(shadowColor, 0.45);
+                    g.fillEllipse(cx + shadowOffX, cy + shadowOffY, w * 0.5, h * 0.35);
+                };
+                const drawCracks = () => {
+                    g.lineStyle(Math.max(0.8, RSC * 0.25), crackColor, 0.65);
+                    const numCracks = 2 + (idx % 3);
+                    for (let c = 0; c < numCracks; c++) {
+                        const len = 0.15 + Math.random() * 0.25;
+                        const ax = cx + (Math.random() - 0.5) * w * 0.6;
+                        const ay = cy + (Math.random() - 0.5) * h * 0.6;
+                        const ang = Math.random() * Math.PI * 2;
+                        g.beginPath();
+                        g.moveTo(ax, ay);
+                        g.lineTo(ax + Math.cos(ang) * w * len, ay + Math.sin(ang) * h * len);
+                        g.strokePath();
+                    }
+                };
+                drawShadow();
                 g.fillStyle(rubbleColors[idx % rubbleColors.length], 0.97);
-                g.lineStyle(Math.max(2, RSC * 0.8), rubbleDark, 0.75);
+                g.lineStyle(Math.max(1.5, RSC * 0.6), rubbleDark, 0.75);
                 if (idx === 0 || idx === 1) {
                     const n = 6 + idx; const pts = [];
                     for (let i = 0; i < n; i++) {
@@ -211,8 +233,9 @@ class EnvSystem {
                     g.beginPath(); g.moveTo(pts[0].x, pts[0].y);
                     for (let i = 1; i < pts.length; i++) g.lineTo(pts[i].x, pts[i].y);
                     g.closePath(); g.fillPath(); g.strokePath();
-                    g.lineStyle(Math.max(1, RSC * 0.4), rubbleDark, 0.4);
+                    g.lineStyle(Math.max(0.8, RSC * 0.3), rubbleDark, 0.4);
                     g.beginPath(); g.moveTo(pts[0].x, pts[0].y); g.lineTo((pts[0].x + pts[Math.floor(n/2)].x)*0.5, (pts[0].y + pts[Math.floor(n/2)].y)*0.5); g.strokePath();
+                    drawCracks();
                 } else if (idx === 2) {
                     const bw = w * 0.88; const bh = h * 0.48;
                     g.beginPath();
@@ -224,6 +247,7 @@ class EnvSystem {
                     g.lineTo(cx - bw/2, cy - bh/2 + bh*0.2);
                     g.closePath();
                     g.fillPath(); g.strokePath();
+                    drawCracks();
                 } else if (idx === 3) {
                     const bw = w * 0.7; const bh = h * 0.55;
                     const notch = bw * 0.25;
@@ -236,6 +260,7 @@ class EnvSystem {
                     g.lineTo(cx - bw/2, cy + bh/2 - bh*0.15);
                     g.closePath();
                     g.fillPath(); g.strokePath();
+                    drawCracks();
                 } else {
                     const n = 8;
                     const pts = [];
@@ -247,8 +272,9 @@ class EnvSystem {
                     g.beginPath(); g.moveTo(pts[0].x, pts[0].y);
                     for (let i = 1; i < pts.length; i++) g.lineTo(pts[i].x, pts[i].y);
                     g.closePath(); g.fillPath(); g.strokePath();
+                    drawCracks();
                 }
-                g.generateTexture(`rubble_chunk_${idx}`, w + 8, h + 8);
+                g.generateTexture(`rubble_chunk_${idx}`, w + 10, h + 12);
             });
         }
         for(let l=0; l<layers; l++) { const key = `hd_tree_leaves_${l}`; if (scene.textures.exists(key)) continue; const g = scene.make.graphics({x:0, y:0, add:false}); const startH = 0.9 - (l * 0.25); const endH = startH - 0.4; const branches = 80 + l * 30; const baseCol = baseColors[l]; for(let i=0; i<branches; i++) { const progress = i / branches; const rndH = startH - (startH - endH) * Math.random(); const layerY = treeH * rndH; const widthRatio = (rndH - 0.1) / 0.8; const layerWidth = treeW * 0.95 * widthRatio; const rVar = Math.floor((Math.random() - 0.5) * 20); const gVar = Math.floor((Math.random() - 0.5) * 30); const bVar = Math.floor((Math.random() - 0.5) * 20); const highlight = (Math.random() < (0.1 + l * 0.2)) ? 20 : 0; const r = Phaser.Math.Clamp(baseCol.r + rVar + highlight, 0, 255); const gVal = Phaser.Math.Clamp(baseCol.g + gVar + highlight, 0, 255); const b = Phaser.Math.Clamp(baseCol.b + bVar + highlight, 0, 255); const color = Phaser.Display.Color.GetColor(r, gVal, b); g.lineStyle((2.0 + Math.random()) * TEXTURE_SCALE, color, 0.9); const cx = treeW/2; const side = Math.random() > 0.5 ? 1 : -1; const length = layerWidth * 0.5 * (0.5 + Math.random()*0.6); const startX = cx + (Math.random()-0.5) * (treeW*0.08); const startY = layerY + (Math.random()-0.5) * (treeH*0.02); const endX = startX + (side * length); const droop = (length * 0.3) + Math.random() * (treeH * 0.08); const endY = startY + droop; const ctrlX = startX + (side * length * 0.3) + (Math.random()-0.5)*10; const ctrlY = startY - (length * 0.15) + (Math.random()-0.5)*10; const curve = new Phaser.Curves.QuadraticBezier( new Phaser.Math.Vector2(startX, startY), new Phaser.Math.Vector2(ctrlX, ctrlY), new Phaser.Math.Vector2(endX, endY) ); curve.draw(g); if (Math.random() < 0.3) { g.lineStyle(1.0 * TEXTURE_SCALE, Phaser.Display.Color.GetColor(r+20, gVal+20, b+10), 0.6); curve.draw(g); } } g.generateTexture(key, treeW, treeH); }
@@ -260,8 +286,8 @@ class EnvSystem {
     spawnRubble(scene, x, y, decorGroup, rubbleFrontGroup) {
         const countBack = 6 + Math.floor(Math.random() * 4);
         const countFront = 6 + Math.floor(Math.random() * 4);
-        const scaleMin = 0.1; const scaleRange = 0.14;
-        const rubbleScale = 0.8;
+        const scaleMin = 0.08; const scaleRange = 0.11;
+        const rubbleScale = 0.58;
         for (let i = 0; i < countBack; i++) {
             const r = Math.random() * (HEX_SIZE * 0.9); const angle = Math.random() * Math.PI * 2;
             const ox = Math.cos(angle) * r; const oy = Math.sin(angle) * r * 0.866;
@@ -278,7 +304,7 @@ class EnvSystem {
             const key = `rubble_chunk_${i % 5}`;
             const chunk = scene.add.image(x + ox, y + oy, key).setOrigin(0.5, 0.5);
             chunk.setScale((scaleMin + Math.random() * scaleRange) * rubbleScale); chunk.setAngle((Math.random() - 0.5) * 60);
-            chunk.setDepth(1.5 + (y + oy) * 0.0001 + i * 0.0001);
+            chunk.setDepth(1.5 + (y + oy) * 0.0001 + (countBack + i) * 0.0001);
             chunk.setTint(Phaser.Display.Color.GetColor(125 + Math.floor(Math.random() * 50), 120 + Math.floor(Math.random() * 45), 105 + Math.floor(Math.random() * 40)));
             rubbleFrontGroup.add(chunk);
         }
