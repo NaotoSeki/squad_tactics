@@ -578,6 +578,7 @@ window.BattleLogic = class BattleLogic {
     if (tgt.type === 'main') u.hands[tgtIdx] = item1; else u.bag[tgtIdx] = item1;
 
     this.updateSidebar();
+    if (u === this.selectedUnit) this.ui.refreshCommandMenuState(u);
     if (window.Sfx) Sfx.play('click');
     this.ui.log(`${u.name} 装備変更`);
   }
