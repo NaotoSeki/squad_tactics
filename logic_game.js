@@ -290,11 +290,14 @@ window.BattleLogic = class BattleLogic {
 
         const wAfter = game.getVirtualWeapon(a);
         if (a.def.isTank && wAfter && wAfter.current === 0 && wAfter.reserve > 0 && game.tankAutoReload && a.ap >= 1) {
-          game.reloadWeapon(a, false);  // unit, manual
+          game.reloadWeapon(a, false);
         }
         game.refreshUnitState(a);
         game.isExecutingAttack = false;
-        game.setMode('SELECT');
+        const weaponCost = wAfter ? wAfter.ap : 99;
+        if (a.ap < weaponCost || !wAfter || (wAfter.current <= 0 && (!wAfter.indirect || !a.bag.some(i => i && i.code === 'mortar_shell_box' && i.current > 0)))) {
+          game.setMode('SELECT');
+        }
         game.checkPhaseEnd();
         resolve();
       }, 500);

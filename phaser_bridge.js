@@ -280,7 +280,11 @@ class MainScene extends Phaser.Scene {
         if(selected && window.gameLogic.attackLine && window.gameLogic.attackLine.length > 0) {
             this.overlayGraphics.lineStyle(3, 0xff2222, 0.8);
             const targetUnit = window.gameLogic.aimTargetUnit;
-            window.gameLogic.attackLine.forEach(h => { let offset = (targetUnit && targetUnit.q === h.q && targetUnit.r === h.r) ? time * 0.05 : 0; this.drawDashedHexOutline(this.overlayGraphics, h.q, h.r, offset); });
+            window.gameLogic.attackLine.forEach(h => {
+                const isUnitTarget = targetUnit && targetUnit.q === h.q && targetUnit.r === h.r;
+                const offset = isUnitTarget ? 0 : time * 0.05;
+                this.drawDashedHexOutline(this.overlayGraphics, h.q, h.r, offset);
+            });
         }
         const hover = window.gameLogic.hoverHex;
         if(selected && hover && window.gameLogic.reachableHexes && window.gameLogic.reachableHexes.some(h => h.q === hover.q && h.r === hover.r)) { this.overlayGraphics.lineStyle(3, 0xffffff, 0.8); this.drawHexOutline(this.overlayGraphics, hover.q, hover.r); }
@@ -290,6 +294,12 @@ class MainScene extends Phaser.Scene {
         }
         this.crosshairGroup.clear();
         if (window.gameLogic.aimTargetUnit) { const u = window.gameLogic.aimTargetUnit; const pos = Renderer.hexToPx(u.q, u.r); this.drawCrosshair(this.crosshairGroup, pos.x, pos.y, time); }
+        const gl = window.gameLogic;
+        const gv = document.getElementById('game-view');
+        if (gv) {
+            const overAimTarget = gl && gl.selectedUnit && gl.interactionMode === 'ATTACK' && gl.aimTargetUnit && gl.hoverHex && gl.hoverHex.q === gl.aimTargetUnit.q && gl.hoverHex.r === gl.aimTargetUnit.r;
+            gv.style.cursor = overAimTarget ? 'crosshair' : '';
+        }
     }
     drawHexOutline(g, q, r) { const c = Renderer.hexToPx(q, r); g.beginPath(); for(let i=0; i<6; i++) { const a = Math.PI/180*60*i; g.lineTo(c.x+HEX_SIZE*0.9*Math.cos(a), c.y+HEX_SIZE*0.9*Math.sin(a)); } g.closePath(); g.strokePath(); }
     drawDashedHexOutline(g, q, r, timeOffset = 0) {
