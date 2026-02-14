@@ -198,8 +198,32 @@ window.PhaserSidebar = class PhaserSidebar {
         bg.on('pointerout', () => { bg.setStrokeStyle(1, borderColor, item ? 1 : 0.3); });
         bg.on('pointerup', (ptr) => { self.onSlotPointerUp(ptr, type, index); });
 
-        container.slotData = { type, index, u };
+        container.slotData = { type, index, u, borderColor, hasItem: !!item };
         return { container, height: slotH };
+    }
+
+    updateDropHighlight(px, py) {
+        const isWeaponryCardDrag = typeof Renderer !== 'undefined' && Renderer.isCardDragging && typeof WPNS !== 'undefined' && Renderer.draggedCardType && WPNS[Renderer.draggedCardType] && WPNS[Renderer.draggedCardType].attr === (typeof ATTR !== 'undefined' ? ATTR.WEAPON : 'Weaponry');
+        const showHighlight = this.dragSrc || isWeaponryCardDrag;
+        this._snapTarget = null;
+        const over = this.slots.length ? this.hitTestSlots(px, py) : null;
+        if (over) {
+            for (const s of this.slots) {
+                const d = s.container.slotData;
+                if (d && d.type === over.type && d.index === over.index) {
+                    const b = s.container.getBounds();
+                    this._snapTarget = { x: b.x + b.width / 2, y: b.y + b.height / 2 };
+                    break;
+                }
+            }
+        }
+        for (const s of this.slots) {
+            const bg = s.container.list[0];
+            if (!bg || typeof bg.setStrokeStyle !== 'function') continue;
+            const data = s.container.slotData || {};
+            const isTarget = showHighlight && over && data.type === over.type && data.index === over.index;
+            bg.setStrokeStyle(isTarget ? 3 : 1, isTarget ? ACCENT : (data.borderColor || SLOT_BORDER), data.hasItem ? 1 : 0.3);
+        }
     }
 
     createButton(x, y, w, h, label, cb, bgColor = 0x442222, borderColor = 0x886644) {
@@ -234,8 +258,10 @@ window.PhaserSidebar = class PhaserSidebar {
         this.dragGhost.physX = pointer.x; this.dragGhost.physY = pointer.y;
         this.dragGhost.velocityX = 0; this.dragGhost.velocityY = 0;
         this.dragGhost.targetX = pointer.x; this.dragGhost.targetY = pointer.y;
+        this.dragGhost.angle = 0; this.dragGhost.velocityAngle = 0;
+        this._pointerX = pointer.x; this._pointerY = pointer.y;
         this.container.add(this.dragGhost);
-        const onMove = (p) => { this.dragGhost.targetX = p.x; this.dragGhost.targetY = p.y; };
+        const onMove = (p) => { this.dragGhost.targetX = p.x; this.dragGhost.targetY = p.y; this._pointerX = p.x; this._pointerY = p.y; };
         const onUp = (p) => {
             this.scene.input.off('pointermove', onMove); this.scene.input.off('pointerup', onUp);
             if (!this.dragSrc || !this.dragGhost) {
@@ -260,6 +286,7 @@ window.PhaserSidebar = class PhaserSidebar {
             if (this.dragLiftedSlot && !didSwap && !didMoveToDeck) this.dragLiftedSlot.setAlpha(1);
             this.dragLiftedSlot = null;
             this.dragGhost.destroy(); this.dragGhost = null; this.dragSrc = null;
+            this._snapTarget = null;
         };
         this.scene.input.on('pointermove', onMove);
         this.scene.input.once('pointerup', onUp);
@@ -288,13 +315,32 @@ window.PhaserSidebar = class PhaserSidebar {
 
     updateDragGhost(time, delta) {
         if (!this.dragGhost || !this.dragGhost.scene) return;
-        const stiffness = 0.25; const damping = 0.65;
+        const dt = Math.min(delta / 16, 2);
+        const px = this._pointerX !== undefined ? this._pointerX : this.dragGhost.physX;
+        const py = this._pointerY !== undefined ? this._pointerY : this.dragGhost.physY;
+        if (this._snapTarget) {
+            const snapStr = 0.22;
+            this.dragGhost.targetX = this.dragGhost.targetX + (this._snapTarget.x - this.dragGhost.targetX) * snapStr;
+            this.dragGhost.targetY = this.dragGhost.targetY + (this._snapTarget.y - this.dragGhost.targetY) * snapStr;
+        } else {
+            this.dragGhost.targetX = px;
+            this.dragGhost.targetY = py;
+        }
+        const stiffness = 0.08;
+        const damping = 0.65;
         const ax = (this.dragGhost.targetX - this.dragGhost.physX) * stiffness;
         const ay = (this.dragGhost.targetY - this.dragGhost.physY) * stiffness;
         this.dragGhost.velocityX += ax; this.dragGhost.velocityY += ay;
         this.dragGhost.velocityX *= damping; this.dragGhost.velocityY *= damping;
         this.dragGhost.physX += this.dragGhost.velocityX; this.dragGhost.physY += this.dragGhost.velocityY;
         this.dragGhost.setPosition(this.dragGhost.physX, this.dragGhost.physY);
+        const staticAngle = -(this.dragGhost.physX - px) * 0.4;
+        const targetAngle = staticAngle - this.dragGhost.velocityX * 1.5;
+        const angleForce = (targetAngle - this.dragGhost.angle) * 0.12;
+        this.dragGhost.velocityAngle = (this.dragGhost.velocityAngle || 0) + angleForce;
+        this.dragGhost.velocityAngle *= 0.85;
+        this.dragGhost.angle += this.dragGhost.velocityAngle;
+        this.dragGhost.angle = Phaser.Math.Clamp(this.dragGhost.angle, -35, 35);
     }
 
     onResize(w, h) {

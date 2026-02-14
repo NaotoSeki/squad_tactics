@@ -230,7 +230,11 @@ class UIScene extends Phaser.Scene {
     onResize(gameSize) { const w = gameSize.width; const h = gameSize.height; const app = document.getElementById('app'); const usePhaserSidebar = app && app.classList.contains('phaser-sidebar'); const gameW = usePhaserSidebar ? Math.max(1, w - SIDEBAR_WIDTH) : w; const centerX = usePhaserSidebar ? (w - SIDEBAR_WIDTH) / 2 : w / 2; if (this.gradientBg) { this.gradientBg.setPosition(centerX, h); this.gradientBg.setDisplaySize(gameW, h * 0.175); } if (this.handContainer) { this.handContainer.setPosition(centerX, h); } if (this.sidebar) this.sidebar.onResize(w, h); }
     update(time, delta) {
         this.cards.forEach(card => { if (card.active) card.updatePhysics(); });
-        if (this.sidebar && this.sidebar.dragGhost) this.sidebar.updateDragGhost(time, delta);
+        if (this.sidebar) {
+            const ptr = this.input.activePointer;
+            this.sidebar.updateDropHighlight(ptr.x, ptr.y);
+            if (this.sidebar.dragGhost) this.sidebar.updateDragGhost(time, delta);
+        }
         this.uiVfxGraphics.clear();
         const cardDragging = typeof Renderer !== 'undefined' && Renderer.isCardDragging;
         const slotDragging = this.sidebar && this.sidebar.dragGhost;
@@ -243,7 +247,7 @@ class UIScene extends Phaser.Scene {
         if (window.UIVFX) { window.UIVFX.update(); window.UIVFX.draw(this.uiVfxGraphics); }
     }
     drawWavyHaloLine(g, t, colors, x1, y1, x2, y2, isVertical, segments, haloSpread) {
-        const wave = (i, s) => Math.sin(t * 2 + i * 0.02 + s) * 8 + Math.sin(t * 1.3 + i * 0.015 + s * 2) * 5;
+        const wave = (i, s) => Math.sin((i / segments) * 4 * Math.PI + t * 2 + s) * 6 + Math.sin((i / segments) * 2 * Math.PI + t * 1.2 + s * 0.7) * 4;
         for (let layer = 0; layer < 5; layer++) {
             const phase = layer * 0.4 + t * 0.5;
             const col = colors[layer % colors.length];
