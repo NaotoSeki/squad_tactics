@@ -66,8 +66,8 @@ window.PhaserSidebar = class PhaserSidebar {
         const faceUrl = (typeof Renderer !== 'undefined' && Renderer && Renderer.generateFaceIcon) ? Renderer.generateFaceIcon(u.faceSeed || 0) : '';
         if (faceUrl && !this.scene.textures.exists(faceKey)) {
             try {
-                const base64 = faceUrl.indexOf('base64,') >= 0 ? faceUrl.split('base64,')[1] : faceUrl;
-                this.scene.textures.addBase64(faceKey, base64);
+                const dataUrl = faceUrl.indexOf('data:') === 0 ? faceUrl : 'data:image/png;base64,' + (faceUrl.indexOf('base64,') >= 0 ? faceUrl.split('base64,')[1] : faceUrl);
+                this.scene.textures.addBase64(faceKey, dataUrl);
             } catch (e) { /* ignore */ }
         }
         if (faceUrl && this.scene.textures.exists(faceKey)) {

@@ -173,10 +173,10 @@ class UIManager {
         
         setEnabled(btnMove, u.ap >= 1);
         
-        // 射撃可能条件: ①AP足りる ②InHandsにWeaponry(or仮想迫撃砲) ③残弾あり
+        // 射撃可能条件: ①AP足りる ②InHandsにWeaponry(or仮想迫撃砲) ③残弾あり（戦車は予備弾があれば可）
         const w = window.gameLogic && window.gameLogic.getVirtualWeapon ? window.gameLogic.getVirtualWeapon(u) : null;
         const weaponCost = w ? w.ap : 99;
-        const hasAmmo = w && (w.current || 0) > 0;
+        const hasAmmo = w && ((w.current || 0) > 0 || (u.def && u.def.isTank && (w.reserve || 0) > 0));
         setEnabled(btnAttack, !!w && u.ap >= weaponCost && hasAmmo);
         
         const anyBroken = Array.isArray(u.hands) ? u.hands.some(h => h && h.isBroken) : (u.hands && u.hands.isBroken);
@@ -226,7 +226,7 @@ class UIManager {
         setEnabled(btnMove, u.ap >= 1);
         const w = window.gameLogic && window.gameLogic.getVirtualWeapon ? window.gameLogic.getVirtualWeapon(u) : null;
         const weaponCost = w ? w.ap : 99;
-        const hasAmmo = w && (w.current || 0) > 0;
+        const hasAmmo = w && ((w.current || 0) > 0 || (u.def && u.def.isTank && (w.reserve || 0) > 0));
         setEnabled(btnAttack, !!w && u.ap >= weaponCost && hasAmmo);
         const anyBroken = Array.isArray(u.hands) ? u.hands.some(h => h && h.isBroken) : (u.hands && u.hands.isBroken);
         setEnabled(btnRepair, anyBroken);

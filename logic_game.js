@@ -344,11 +344,10 @@ window.BattleLogic = class BattleLogic {
     // 前提: hands は常に3要素配列
     if (!Array.isArray(u.hands) || u.hands.length < 3) return null;
 
-    // スロット0が通常武器の場合
+    // スロット0が通常武器の場合（attr がなくても code で WPNS 一致すれば武器扱い）
     const slot0 = u.hands[0];
-    if (slot0 && slot0.attr === 'Weaponry' && slot0.type !== 'part') {
-      return slot0;
-    }
+    const isWeapon = slot0 && slot0.type !== 'part' && (slot0.attr === (typeof ATTR !== 'undefined' ? ATTR.WEAPON : 'Weaponry') || (slot0.code && typeof WPNS !== 'undefined' && WPNS[slot0.code] && WPNS[slot0.code].attr === (typeof ATTR !== 'undefined' ? ATTR.WEAPON : 'Weaponry')));
+    if (isWeapon) return slot0;
 
     // 迫撃砲パーツ3種揃い → 仮想 m2_mortar
     const parts = u.hands.map(i => i ? i.code : null);

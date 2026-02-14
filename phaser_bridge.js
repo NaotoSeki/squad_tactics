@@ -141,8 +141,8 @@ class Card extends Phaser.GameObjects.Container {
         if (!this.isDragging && !this.scene.isReturning) { this.targetX = this.baseX; if (this.scene.isHandDocked) { this.targetY = this.isHovering ? -120 : 60; } else { this.targetY = this.baseY - (this.isHovering ? 30 : 0); } } 
         const stiffness = this.isDragging ? 0.2 : 0.08; const damping = 0.65; const ax = (this.targetX - this.physX) * stiffness; const ay = (this.targetY - this.physY) * stiffness; this.velocityX += ax; this.velocityY += ay; this.velocityX *= damping; this.velocityY *= damping; this.physX += this.velocityX; this.physY += this.velocityY; this.setPosition(this.physX, this.physY); let staticAngle = 0; if (this.isDragging) staticAngle = -this.dragOffsetX * 0.4; const targetDynamicAngle = -this.velocityX * 1.5; const totalTargetAngle = staticAngle + targetDynamicAngle; const angleForce = (totalTargetAngle - this.angle) * 0.12; this.velocityAngle += angleForce; this.velocityAngle *= 0.85; this.angle += this.velocityAngle; this.angle = Phaser.Math.Clamp(this.angle, -50, 50); 
     }
-    onHover() { if(!this.parentContainer || Renderer.isMapDragging || Renderer.isCardDragging) return; this.isHovering = true; this.parentContainer.bringToTop(this); }
-    onHoverOut() { this.isHovering = false; }
+    onHover() { if(!this.parentContainer || Renderer.isMapDragging || Renderer.isCardDragging) return; if (this.scene.cancelResetHandOrderTimer) this.scene.cancelResetHandOrderTimer(); this.isHovering = true; this.parentContainer.bringToTop(this); }
+    onHoverOut() { this.isHovering = false; if (this.scene.scheduleResetHandOrderIfNoHover) this.scene.scheduleResetHandOrderIfNoHover(); }
     onDragStart(pointer) { 
         if(Renderer.isMapDragging) return;
         const isWeapon = typeof WPNS !== 'undefined' && WPNS[this.cardType];
@@ -206,7 +206,7 @@ class Card extends Phaser.GameObjects.Container {
 }
 
 class UIScene extends Phaser.Scene {
-    constructor() { super({ key: 'UIScene', active: false }); this.cards=[]; this.handContainer=null; this.gradientBg=null; this.uiVfxGraphics=null; this.isHandDocked = false; this.sidebar = null; }
+    constructor() { super({ key: 'UIScene', active: false }); this.cards=[]; this.handContainer=null; this.gradientBg=null; this.uiVfxGraphics=null; this.isHandDocked = false; this.sidebar = null; this._resetOrderTimer = null; }
     create() {
         const w = this.scale.width; const h = this.scale.height;
         if(window.createGradientTexture) window.createGradientTexture(this);
@@ -297,22 +297,34 @@ class UIScene extends Phaser.Scene {
     dealStart(types) { this.isHandDocked = false; types.forEach((type, i) => { this.time.delayedCall(i * 150, () => { this.addCardToHand(type); }); }); this.time.delayedCall(150 * types.length + 1000, () => { this.isHandDocked = true; }); }
     addCardToHand(type) { if (this.cards.length >= 12) return; const card = new Card(this, 0, 0, type); this.handContainer.add(card); this.cards.push(card); card.physX = 600; card.physY = 300; card.setPosition(card.physX, card.physY); this.arrangeHand(); }
     removeCard(cardToRemove) { this.cards = this.cards.filter(c => c !== cardToRemove); this.arrangeHand(); }
+    cancelResetHandOrderTimer() { if (this._resetOrderTimer) { this.time.removeEvent(this._resetOrderTimer); this._resetOrderTimer = null; } }
+    scheduleResetHandOrderIfNoHover() { this.cancelResetHandOrderTimer(); this._resetOrderTimer = this.time.delayedCall(80, this.resetHandCardOrderIfNoHover, [], this); }
+    resetHandCardOrderIfNoHover() { this._resetOrderTimer = null; if (this.cards.some(c => c.isHovering)) return; this.resetHandCardOrder(); }
+    resetHandCardOrder() {
+        if (!this.handContainer || this.cards.length === 0) return;
+        const n = this.cards.length;
+        for (let i = 0; i < n; i++) {
+            this.handContainer.remove(this.cards[i]);
+            this.handContainer.addAt(this.cards[i], i);
+        }
+    }
     arrangeHand() {
         const total = this.cards.length;
         const centerIdx = (total - 1) / 2;
         const cardWidth = 140;
-        const maxSpread = 700;
+        const maxSpread = 760;
         let step;
         if (total <= 1) step = 0;
-        else if (total <= 5) step = 160;
-        else step = Math.max(40, Math.min(80, maxSpread / total));
-        const overlap = total <= 5 ? 1 : Math.max(0.45, 1 - (total - 5) * 0.04);
+        else if (total <= 5) step = 165;
+        else step = Math.max(52, Math.min(88, maxSpread / total));
+        const overlap = total <= 5 ? 1 : Math.max(0.48, 1 - (total - 5) * 0.035);
         this.cards.forEach((card, i) => {
             const offset = i - centerIdx;
             card.baseX = offset * step * overlap;
             card.baseY = this.isHandDocked ? -120 : -120;
             card.baseDepth = i;
         });
+        this.resetHandCardOrder();
     }
 }
 
