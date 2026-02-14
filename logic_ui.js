@@ -200,6 +200,39 @@ class UIManager {
 
     hideActionMenu() { const menu = document.getElementById('command-menu'); if (menu) menu.style.display = 'none'; }
 
+    /**
+     * コマンドメニュー（射撃・移動等）のボタン状態のみを即時更新する。
+     * 迫撃砲など3種揃いの武器で装備スワップ後に射撃をグレーアウトするため。
+     * メニューが表示中の場合のみ更新。
+     */
+    refreshCommandMenuState(u) {
+        const menu = document.getElementById('command-menu');
+        if (!menu || !u || menu.style.display !== 'block') return;
+        const btnMove = document.getElementById('btn-move');
+        const btnAttack = document.getElementById('btn-attack');
+        const btnRepair = document.getElementById('btn-repair');
+        const btnMelee = document.getElementById('btn-melee');
+        const btnHeal = document.getElementById('btn-heal');
+        const grpStance = menu.querySelector('.cmd-group');
+        const setEnabled = (btn, enabled) => { if (btn) { if (enabled) btn.classList.remove('disabled'); else btn.classList.add('disabled'); } };
+        setEnabled(btnMove, u.ap >= 1);
+        const w = window.gameLogic && window.gameLogic.getVirtualWeapon ? window.gameLogic.getVirtualWeapon(u) : null;
+        const weaponCost = w ? w.ap : 99;
+        setEnabled(btnAttack, u.ap >= weaponCost);
+        const anyBroken = Array.isArray(u.hands) ? u.hands.some(h => h && h.isBroken) : (u.hands && u.hands.isBroken);
+        setEnabled(btnRepair, anyBroken);
+        const neighbors = (window.gameLogic && window.gameLogic.getUnitsInHex) ? window.gameLogic.getUnitsInHex(u.q, u.r) : [];
+        setEnabled(btnMelee, neighbors.some(n => n.team !== u.team));
+        setEnabled(btnHeal, neighbors.some(n => n.team === u.team && n.hp < n.maxHp));
+        if (u.def.isTank) {
+            if (grpStance) grpStance.style.display = 'none';
+            if (btnHeal) btnHeal.style.display = 'none';
+        } else {
+            if (grpStance) grpStance.style.display = 'block';
+            if (btnHeal) btnHeal.style.display = 'block';
+        }
+    }
+
     showContext(mx, my, hex) {
         const m = document.getElementById('context-menu'); if (!m) return;
         if (!hex || typeof hex.q === 'undefined') { m.style.display = 'none'; return; }

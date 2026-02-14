@@ -160,10 +160,10 @@ class UIScene extends Phaser.Scene {
     create() {
         const w = this.scale.width; const h = this.scale.height;
         if(window.createGradientTexture) window.createGradientTexture(this);
-        if (this.textures.exists('ui_gradient')) { this.gradientBg = this.add.image(w/2, h, 'ui_gradient').setOrigin(0.5, 1).setDepth(0).setDisplaySize(w, h*0.25); } else { this.gradientBg = this.add.rectangle(w/2, h, w, h*0.25, 0x000000, 0.8).setOrigin(0.5, 1); }
+        if (this.textures.exists('ui_gradient')) { this.gradientBg = this.add.image(w/2, h, 'ui_gradient').setOrigin(0.5, 1).setDepth(0).setDisplaySize(w, h*0.175); } else { this.gradientBg = this.add.rectangle(w/2, h, w, h*0.175, 0x000000, 0.8).setOrigin(0.5, 1); }
         this.handContainer = this.add.container(w/2, h); this.uiVfxGraphics = this.add.graphics().setDepth(10000); this.scale.on('resize', this.onResize, this);
     }
-    onResize(gameSize) { const w = gameSize.width; const h = gameSize.height; if (this.gradientBg) { this.gradientBg.setPosition(w / 2, h); this.gradientBg.setDisplaySize(w, h * 0.25); } if (this.handContainer) { this.handContainer.setPosition(w / 2, h); } }
+    onResize(gameSize) { const w = gameSize.width; const h = gameSize.height; if (this.gradientBg) { this.gradientBg.setPosition(w / 2, h); this.gradientBg.setDisplaySize(w, h * 0.175); } if (this.handContainer) { this.handContainer.setPosition(w / 2, h); } }
     update() { this.cards.forEach(card => { if (card.active) card.updatePhysics(); }); if(window.UIVFX) { window.UIVFX.update(); this.uiVfxGraphics.clear(); window.UIVFX.draw(this.uiVfxGraphics); } }
     dealStart(types) { this.isHandDocked = false; types.forEach((type, i) => { this.time.delayedCall(i * 150, () => { this.addCardToHand(type); }); }); this.time.delayedCall(150 * types.length + 1000, () => { this.isHandDocked = true; }); }
     addCardToHand(type) { if (this.cards.length >= 5) return; const card = new Card(this, 0, 0, type); this.handContainer.add(card); this.cards.push(card); card.physX = 600; card.physY = 300; card.setPosition(card.physX, card.physY); this.arrangeHand(); }
@@ -186,6 +186,7 @@ class MainScene extends Phaser.Scene {
         this.hexGroup = this.add.layer(); this.hexGroup.setDepth(0);
         this.decorGroup = this.add.layer(); this.decorGroup.setDepth(0.5);
         this.unitGroup = this.add.layer(); this.unitGroup.setDepth(1);
+        this.rubbleFrontGroup = this.add.layer(); this.rubbleFrontGroup.setDepth(1.5);
         this.treeGroup = this.add.layer(); this.treeGroup.setDepth(2);
         this.hpGroup = this.add.layer(); this.hpGroup.setDepth(10);
         this.crosshairGroup = this.add.graphics().setDepth(200);
@@ -222,14 +223,14 @@ class MainScene extends Phaser.Scene {
     centerMap() { this.cameras.main.centerOn((MAP_W * HEX_SIZE * 1.5) / 2, (MAP_H * HEX_SIZE * 1.732) / 2); }
     createMap() { 
         if(!window.gameLogic || !window.gameLogic.map) return;
-        const map = window.gameLogic.map; this.hexGroup.removeAll(true); this.decorGroup.removeAll(true); this.unitGroup.removeAll(true); this.treeGroup.removeAll(true); this.hpGroup.removeAll(true); 
+        const map = window.gameLogic.map; this.hexGroup.removeAll(true); this.decorGroup.removeAll(true); this.unitGroup.removeAll(true); if(this.rubbleFrontGroup) this.rubbleFrontGroup.removeAll(true); this.treeGroup.removeAll(true); this.hpGroup.removeAll(true); 
         if(this.unitView) this.unitView.clear();
         for(let q=0; q<MAP_W; q++) { 
             for(let r=0; r<MAP_H; r++) { 
                 const t = map[q][r]; if(t.id===-1)continue; const pos = Renderer.hexToPx(q, r); 
                 const hex = this.add.image(pos.x, pos.y, 'hex_base').setScale(1/window.HIGH_RES_SCALE); 
                 let tint = 0x555555; if(t.id===0) tint=0x5a5245; else if(t.id===1) tint=0x335522; else if(t.id===2) tint=0x112211; else if(t.id===4) tint=0x504540; else if(t.id===5) { tint=0x303840; if(window.EnvSystem) window.EnvSystem.registerWater(hex, pos.y, q, r, this.decorGroup); }
-                if(window.EnvSystem) { if(t.id === 1) window.EnvSystem.spawnGrass(this, this.decorGroup, pos.x, pos.y); if(t.id === 2) window.EnvSystem.spawnTrees(this, this.treeGroup, pos.x, pos.y); }
+                if(window.EnvSystem) { if(t.id === 1) window.EnvSystem.spawnGrass(this, this.decorGroup, pos.x, pos.y); if(t.id === 2) window.EnvSystem.spawnTrees(this, this.treeGroup, pos.x, pos.y); if(t.id === 4) window.EnvSystem.spawnRubble(this, pos.x, pos.y, this.decorGroup, this.rubbleFrontGroup); }
                 hex.setTint(tint); this.hexGroup.add(hex); 
             } 
         } 
@@ -276,10 +277,26 @@ class MainScene extends Phaser.Scene {
             }
         }
         
+        const gl = window.gameLogic;
+        let overAimTarget = false;
+        if (gl && gl.selectedUnit && gl.interactionMode === 'ATTACK' && gl.aimTargetUnit && this.unitView) {
+            const aimUnit = gl.aimTargetUnit;
+            const visual = this.unitView.visuals.get(aimUnit.id);
+            if (visual && visual.container) {
+                const bounds = visual.container.getBounds();
+                const ptr = this.input.activePointer;
+                const wp = this.cameras.main.getWorldPoint(ptr.x, ptr.y);
+                overAimTarget = bounds.contains(wp.x, wp.y);
+            }
+        }
         if(selected && window.gameLogic.attackLine && window.gameLogic.attackLine.length > 0) {
             this.overlayGraphics.lineStyle(3, 0xff2222, 0.8);
             const targetUnit = window.gameLogic.aimTargetUnit;
-            window.gameLogic.attackLine.forEach(h => { let offset = (targetUnit && targetUnit.q === h.q && targetUnit.r === h.r) ? time * 0.05 : 0; this.drawDashedHexOutline(this.overlayGraphics, h.q, h.r, offset); });
+            window.gameLogic.attackLine.forEach(h => {
+                const isUnitTarget = targetUnit && targetUnit.q === h.q && targetUnit.r === h.r;
+                const offset = overAimTarget ? 0 : (isUnitTarget ? time * 0.05 : 0);
+                this.drawDashedHexOutline(this.overlayGraphics, h.q, h.r, offset);
+            });
         }
         const hover = window.gameLogic.hoverHex;
         if(selected && hover && window.gameLogic.reachableHexes && window.gameLogic.reachableHexes.some(h => h.q === hover.q && h.r === hover.r)) { this.overlayGraphics.lineStyle(3, 0xffffff, 0.8); this.drawHexOutline(this.overlayGraphics, hover.q, hover.r); }
@@ -289,6 +306,18 @@ class MainScene extends Phaser.Scene {
         }
         this.crosshairGroup.clear();
         if (window.gameLogic.aimTargetUnit) { const u = window.gameLogic.aimTargetUnit; const pos = Renderer.hexToPx(u.q, u.r); this.drawCrosshair(this.crosshairGroup, pos.x, pos.y, time); }
+        const canvas = this.game && this.game.canvas;
+        if (canvas) {
+            if (overAimTarget) {
+                const svgBright = '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><circle cx="16" cy="16" r="12" fill="none" stroke="#f44" stroke-width="2"/><line x1="16" y1="2" x2="16" y2="30" stroke="#f44" stroke-width="2"/><line x1="2" y1="16" x2="30" y2="16" stroke="#f44" stroke-width="2"/></svg>';
+                const svgDim = '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><circle cx="16" cy="16" r="12" fill="none" stroke="#a33" stroke-width="2"/><line x1="16" y1="2" x2="16" y2="30" stroke="#a33" stroke-width="2"/><line x1="2" y1="16" x2="30" y2="16" stroke="#a33" stroke-width="2"/></svg>';
+                const phase = Math.floor(time / 280) % 2;
+                const url = phase === 0 ? 'url("data:image/svg+xml,' + encodeURIComponent(svgBright) + '") 16 16, crosshair' : 'url("data:image/svg+xml,' + encodeURIComponent(svgDim) + '") 16 16, crosshair';
+                canvas.style.cursor = url;
+            } else {
+                canvas.style.cursor = '';
+            }
+        }
     }
     drawHexOutline(g, q, r) { const c = Renderer.hexToPx(q, r); g.beginPath(); for(let i=0; i<6; i++) { const a = Math.PI/180*60*i; g.lineTo(c.x+HEX_SIZE*0.9*Math.cos(a), c.y+HEX_SIZE*0.9*Math.sin(a)); } g.closePath(); g.strokePath(); }
     drawDashedHexOutline(g, q, r, timeOffset = 0) {
