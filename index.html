@@ -19,6 +19,8 @@
 
         #resizer { position: absolute; top: 0; right: 340px; bottom: 0; width: 6px; background: #222; cursor: col-resize; z-index: 30; border-left: 1px solid #000; border-right: 1px solid #333; transition: right 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); }
         #sidebar { position: absolute; top: 0; right: 0; bottom: 0; width: 340px; min-width: 0; background: var(--panel); border-left: 1px solid var(--border); display: flex; flex-direction: column; z-index: 20; transition: width 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); pointer-events: auto; }
+        #app.phaser-sidebar #resizer, #app.phaser-sidebar #sidebar { display: none !important; }
+        #app.phaser-sidebar #game-view { width: 100% !important; }
         #sidebar.collapsed { width: 0 !important; border: none; }
         #sidebar.collapsed > *:not(#sidebar-toggle) { display: none; }
         #app.sidebar-closed #resizer { right: 0 !important; }
@@ -100,7 +102,7 @@
     </style>
 </head>
 <body>
-    <div id="app">
+    <div id="app" class="phaser-sidebar">
         <div id="game-view">
             <div id="sector-counter">SECTOR: 01</div>
             <div id="mode-label" class="mode-indicator">SELECT TARGET</div>
@@ -170,6 +172,7 @@
         }
     </script>
     <script src="data.js"></script>
+    <script src="phaser_sidebar.js"></script>
     <script src="phaser_sound.js"></script> 
     <script src="phaser_vfx.js"></script> 
     <script src="phaser_unit.js"></script> 

@@ -74,7 +74,12 @@ const Renderer = {
     dealCard(type) { const ui = this.game.scene.getScene('UIScene'); if(ui) ui.addCardToHand(type); },
     checkUIHover(x, y, pointerEvent) { 
         if (this.isCardDragging) return true;
-        const ui = this.game.scene.getScene('UIScene'); 
+        const app = document.getElementById('app');
+        if (app && app.classList.contains('phaser-sidebar') && this.game) {
+            const w = this.game.scale.width;
+            if (x >= w - SIDEBAR_WIDTH) return true;
+        }
+        const ui = this.game ? this.game.scene.getScene('UIScene') : null; 
         if (ui) {
             for (let card of ui.cards) { const dx = Math.abs(x - card.x); const dy = Math.abs(y - card.y); if (dx < 70 && dy < 100) return true; } 
         }
@@ -155,15 +160,22 @@ class Card extends Phaser.GameObjects.Container {
     returnToHand() { const hand = this.scene.handContainer; this.scene.children.remove(this); hand.add(this); this.setDepth(0); this.physX = this.x; this.physY = this.y; this.targetX = this.baseX; this.targetY = this.baseY; }
 }
 
+const SIDEBAR_WIDTH = 340;
+
 class UIScene extends Phaser.Scene {
-    constructor() { super({ key: 'UIScene', active: false }); this.cards=[]; this.handContainer=null; this.gradientBg=null; this.uiVfxGraphics=null; this.isHandDocked = false; }
+    constructor() { super({ key: 'UIScene', active: false }); this.cards=[]; this.handContainer=null; this.gradientBg=null; this.uiVfxGraphics=null; this.isHandDocked = false; this.sidebar = null; }
     create() {
         const w = this.scale.width; const h = this.scale.height;
         if(window.createGradientTexture) window.createGradientTexture(this);
-        if (this.textures.exists('ui_gradient')) { this.gradientBg = this.add.image(w/2, h, 'ui_gradient').setOrigin(0.5, 1).setDepth(0).setDisplaySize(w, h*0.175); } else { this.gradientBg = this.add.rectangle(w/2, h, w, h*0.175, 0x000000, 0.8).setOrigin(0.5, 1); }
-        this.handContainer = this.add.container(w/2, h); this.uiVfxGraphics = this.add.graphics().setDepth(10000); this.scale.on('resize', this.onResize, this);
+        const app = document.getElementById('app');
+        const usePhaserSidebar = app && app.classList.contains('phaser-sidebar');
+        const gameW = usePhaserSidebar ? Math.max(1, w - SIDEBAR_WIDTH) : w;
+        const centerX = usePhaserSidebar ? (w - SIDEBAR_WIDTH) / 2 : w / 2;
+        if (this.textures.exists('ui_gradient')) { this.gradientBg = this.add.image(centerX, h, 'ui_gradient').setOrigin(0.5, 1).setDepth(0).setDisplaySize(gameW, h*0.175); } else { this.gradientBg = this.add.rectangle(centerX, h, gameW, h*0.175, 0x000000, 0.8).setOrigin(0.5, 1); }
+        this.handContainer = this.add.container(centerX, h); this.uiVfxGraphics = this.add.graphics().setDepth(10000); this.scale.on('resize', this.onResize, this);
+        if (window.PhaserSidebar) { this.sidebar = new PhaserSidebar(this); this.sidebar.init(); window.phaserSidebar = this.sidebar; }
     }
-    onResize(gameSize) { const w = gameSize.width; const h = gameSize.height; if (this.gradientBg) { this.gradientBg.setPosition(w / 2, h); this.gradientBg.setDisplaySize(w, h * 0.175); } if (this.handContainer) { this.handContainer.setPosition(w / 2, h); } }
+    onResize(gameSize) { const w = gameSize.width; const h = gameSize.height; const app = document.getElementById('app'); const usePhaserSidebar = app && app.classList.contains('phaser-sidebar'); const gameW = usePhaserSidebar ? Math.max(1, w - SIDEBAR_WIDTH) : w; const centerX = usePhaserSidebar ? (w - SIDEBAR_WIDTH) / 2 : w / 2; if (this.gradientBg) { this.gradientBg.setPosition(centerX, h); this.gradientBg.setDisplaySize(gameW, h * 0.175); } if (this.handContainer) { this.handContainer.setPosition(centerX, h); } if (this.sidebar) this.sidebar.onResize(w, h); }
     update() { this.cards.forEach(card => { if (card.active) card.updatePhysics(); }); if(window.UIVFX) { window.UIVFX.update(); this.uiVfxGraphics.clear(); window.UIVFX.draw(this.uiVfxGraphics); } }
     dealStart(types) { this.isHandDocked = false; types.forEach((type, i) => { this.time.delayedCall(i * 150, () => { this.addCardToHand(type); }); }); this.time.delayedCall(150 * types.length + 1000, () => { this.isHandDocked = true; }); }
     addCardToHand(type) { if (this.cards.length >= 5) return; const card = new Card(this, 0, 0, type); this.handContainer.add(card); this.cards.push(card); card.physX = 600; card.physY = 300; card.setPosition(card.physX, card.physY); this.arrangeHand(); }
@@ -183,6 +195,8 @@ class MainScene extends Phaser.Scene {
     }
     create() {
         window.createHexTexture(this); this.cameras.main.setBackgroundColor('#0b0e0a'); 
+        this.updateSidebarViewport();
+        this.scale.on('resize', () => this.updateSidebarViewport());
         this.hexGroup = this.add.layer(); this.hexGroup.setDepth(0);
         this.decorGroup = this.add.layer(); this.decorGroup.setDepth(0.5);
         this.unitGroup = this.add.layer(); this.unitGroup.setDepth(1);
@@ -217,6 +231,15 @@ class MainScene extends Phaser.Scene {
         }); 
         this.input.mouse.disableContextMenu();
         this.input.keyboard.on('keydown-ESC', () => { if(window.gameLogic && window.gameLogic.clearSelection) { window.gameLogic.clearSelection(); } });
+    }
+    updateSidebarViewport() {
+        const app = document.getElementById('app');
+        if (app && app.classList.contains('phaser-sidebar')) {
+            const w = this.scale.width; const h = this.scale.height;
+            this.cameras.main.setViewport(0, 0, Math.max(1, w - SIDEBAR_WIDTH), h);
+        } else {
+            this.cameras.main.setViewport(0, 0, this.scale.width, this.scale.height);
+        }
     }
     triggerExplosion(x, y) { const explosion = this.add.sprite(x, y, 'explosion_sheet'); explosion.setDepth(100); explosion.setScale(1.5); explosion.play('explosion_anim'); explosion.once('animationcomplete', () => { explosion.destroy(); }); }
     centerCamera(q, r) { const p = Renderer.hexToPx(q, r); this.cameras.main.centerOn(p.x, p.y); }

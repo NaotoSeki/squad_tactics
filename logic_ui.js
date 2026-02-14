@@ -143,6 +143,10 @@ class UIManager {
     }
 
     log(m) {
+        if (window.phaserSidebar && document.getElementById('app') && document.getElementById('app').classList.contains('phaser-sidebar')) {
+            window.phaserSidebar.log(m);
+            return;
+        }
         const c = document.getElementById('log-container');
         if (c) {
             const d = document.createElement('div'); d.className = 'log-entry'; d.innerText = `> ${m}`;
@@ -252,7 +256,12 @@ class UIManager {
     }
 
     updateSidebar(u, state, tankAutoReload) {
+        if (window.phaserSidebar && document.getElementById('app') && document.getElementById('app').classList.contains('phaser-sidebar')) {
+            window.phaserSidebar.updateSidebar(u, state, tankAutoReload);
+            return;
+        }
         const ui = document.getElementById('unit-info');
+        if (!ui) return;
         if (!u || u.hp <= 0) { ui.innerHTML = `<div style="text-align:center;color:#555;margin-top:80px;">// NO SIGNAL //</div>`; return; }
         const faceUrl = (Renderer.generateFaceIcon) ? Renderer.generateFaceIcon(u.faceSeed) : "";
         
