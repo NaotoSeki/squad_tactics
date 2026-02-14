@@ -152,7 +152,9 @@ window.PhaserSidebar = class PhaserSidebar {
                 meta.setOrigin(0, 0);
                 container.add(meta);
             }
-            if (u.def.isTank && isMain && item.reserve !== undefined) {
+            if (u.team === 'enemy') {
+                // 敵ユニットは弾丸ゲージ表示なし（はみ出し防止・弾切れは行動で表現）
+            } else if (u.def.isTank && isMain && item.reserve !== undefined) {
                 const shellCount = Math.min(20, item.reserve || 0);
                 for (let i = 0; i < shellCount; i++) {
                     const dot = this.scene.add.rectangle(10 + i * 6, slotH - 10, 4, 8, 0xdaa444);
@@ -235,7 +237,8 @@ window.PhaserSidebar = class PhaserSidebar {
             const dropTarget = this.hitTestSlots(p.x, p.y);
             const dropZoneY = this.scene.scale.height * 0.65;
             const overDeck = p.y >= dropZoneY;
-            if (dropTarget && window.gameLogic && window.gameLogic.swapEquipment) {
+            const sameSlot = dropTarget && this.dragSrc.type === dropTarget.type && this.dragSrc.index === dropTarget.index;
+            if (dropTarget && window.gameLogic && window.gameLogic.swapEquipment && !sameSlot) {
                 window.gameLogic.swapEquipment(this.dragSrc, dropTarget);
             } else if (overDeck && window.gameLogic && window.gameLogic.moveWeaponToDeck) {
                 window.gameLogic.moveWeaponToDeck(this.dragSrc);
@@ -260,7 +263,8 @@ window.PhaserSidebar = class PhaserSidebar {
 
     onSlotPointerUp(pointer, type, index) {
         if (!this.dragSrc || this.dragGhost) return;
-        if (window.gameLogic && window.gameLogic.swapEquipment) {
+        const sameSlot = this.dragSrc.type === type && this.dragSrc.index === index;
+        if (!sameSlot && window.gameLogic && window.gameLogic.swapEquipment) {
             window.gameLogic.swapEquipment(this.dragSrc, { type, index });
         }
         this.dragSrc = null;

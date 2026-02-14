@@ -151,7 +151,17 @@ class Card extends Phaser.GameObjects.Container {
         this.setAlpha(0.6); this.setScale(1.1); 
         const hand = this.parentContainer; const worldPos = hand.getLocalTransformMatrix().transformPoint(this.x, this.y); hand.remove(this); this.scene.add.existing(this); this.physX = worldPos.x; this.physY = worldPos.y; this.targetX = this.physX; this.targetY = this.physY; this.setDepth(9999); this.dragOffsetX = this.physX - pointer.x; this.dragOffsetY = this.physY - pointer.y; 
     }
-    onDrag(pointer) { if(!this.isDragging) return; this.targetX = pointer.x + this.dragOffsetX; this.targetY = pointer.y + this.dragOffsetY; const main = this.scene.game.scene.getScene('MainScene'); const overRightPanel = pointer.x >= this.scene.scale.width - SIDEBAR_WIDTH; const dropZoneY = this.scene.scale.height * 0.65; if (this.y < dropZoneY && !overRightPanel) main.dragHighlightHex = Renderer.pxToHex(pointer.x, pointer.y); else main.dragHighlightHex = null; }
+    onDrag(pointer) {
+        if (!this.isDragging) return;
+        this.targetX = pointer.x + this.dragOffsetX;
+        this.targetY = pointer.y + this.dragOffsetY;
+        const main = this.scene.game.scene.getScene('MainScene');
+        const overRightPanel = pointer.x >= this.scene.scale.width - SIDEBAR_WIDTH;
+        const dropZoneY = this.scene.scale.height * 0.65;
+        const isWeaponry = typeof WPNS !== 'undefined' && WPNS[this.cardType] && WPNS[this.cardType].attr === (typeof ATTR !== 'undefined' ? ATTR.WEAPON : 'Weaponry');
+        if (!isWeaponry && this.y < dropZoneY && !overRightPanel) main.dragHighlightHex = Renderer.pxToHex(pointer.x, pointer.y);
+        else main.dragHighlightHex = null;
+    }
     onDragEnd(pointer) { 
         if(!this.isDragging) return; 
         this.isDragging = false; Renderer.isCardDragging = false; Renderer.draggedCardType = null;
@@ -208,11 +218,45 @@ class UIScene extends Phaser.Scene {
         if (window.PhaserSidebar) { this.sidebar = new PhaserSidebar(this); this.sidebar.init(); window.phaserSidebar = this.sidebar; }
     }
     onResize(gameSize) { const w = gameSize.width; const h = gameSize.height; const app = document.getElementById('app'); const usePhaserSidebar = app && app.classList.contains('phaser-sidebar'); const gameW = usePhaserSidebar ? Math.max(1, w - SIDEBAR_WIDTH) : w; const centerX = usePhaserSidebar ? (w - SIDEBAR_WIDTH) / 2 : w / 2; if (this.gradientBg) { this.gradientBg.setPosition(centerX, h); this.gradientBg.setDisplaySize(gameW, h * 0.175); } if (this.handContainer) { this.handContainer.setPosition(centerX, h); } if (this.sidebar) this.sidebar.onResize(w, h); }
-    update(time, delta) { this.cards.forEach(card => { if (card.active) card.updatePhysics(); }); if (this.sidebar && this.sidebar.dragGhost) this.sidebar.updateDragGhost(time, delta); if(window.UIVFX) { window.UIVFX.update(); this.uiVfxGraphics.clear(); window.UIVFX.draw(this.uiVfxGraphics); } }
+    update(time, delta) {
+        this.cards.forEach(card => { if (card.active) card.updatePhysics(); });
+        if (this.sidebar && this.sidebar.dragGhost) this.sidebar.updateDragGhost(time, delta);
+        this.uiVfxGraphics.clear();
+        const isDragging = (typeof Renderer !== 'undefined' && Renderer.isCardDragging) || (this.sidebar && this.sidebar.dragGhost);
+        if (isDragging) this.drawDropZoneGlow(time);
+        if (window.UIVFX) { window.UIVFX.update(); window.UIVFX.draw(this.uiVfxGraphics); }
+    }
+    drawDropZoneGlow(time) {
+        const w = this.scale.width;
+        const h = this.scale.height;
+        const dropZoneY = h * 0.65;
+        const g = this.uiVfxGraphics;
+        const pulse = 0.4 + 0.15 * Math.sin(time * 0.003);
+        g.lineStyle(12, 0xddaa44, pulse * 0.5);
+        g.strokeRect(2, dropZoneY - 2, w - SIDEBAR_WIDTH - 4, h - dropZoneY);
+        g.lineStyle(10, 0xddaa44, pulse * 0.6);
+        g.strokeRect(w - SIDEBAR_WIDTH, 0, SIDEBAR_WIDTH, h);
+    }
     dealStart(types) { this.isHandDocked = false; types.forEach((type, i) => { this.time.delayedCall(i * 150, () => { this.addCardToHand(type); }); }); this.time.delayedCall(150 * types.length + 1000, () => { this.isHandDocked = true; }); }
     addCardToHand(type) { if (this.cards.length >= 12) return; const card = new Card(this, 0, 0, type); this.handContainer.add(card); this.cards.push(card); card.physX = 600; card.physY = 300; card.setPosition(card.physX, card.physY); this.arrangeHand(); }
     removeCard(cardToRemove) { this.cards = this.cards.filter(c => c !== cardToRemove); this.arrangeHand(); }
-    arrangeHand() { const total = this.cards.length; const centerIdx = (total - 1) / 2; const spacing = total <= 5 ? 160 : Math.max(55, 220 - total * 20); const overlap = total <= 5 ? 1 : 0.72; this.cards.forEach((card, i) => { const offset = i - centerIdx; card.baseX = offset * spacing * overlap; card.baseY = this.isHandDocked ? -120 : -120; card.baseDepth = i; }); }
+    arrangeHand() {
+        const total = this.cards.length;
+        const centerIdx = (total - 1) / 2;
+        const cardWidth = 140;
+        const maxSpread = 700;
+        let step;
+        if (total <= 1) step = 0;
+        else if (total <= 5) step = 160;
+        else step = Math.max(40, Math.min(80, maxSpread / total));
+        const overlap = total <= 5 ? 1 : Math.max(0.45, 1 - (total - 5) * 0.04);
+        this.cards.forEach((card, i) => {
+            const offset = i - centerIdx;
+            card.baseX = offset * step * overlap;
+            card.baseY = this.isHandDocked ? -120 : -120;
+            card.baseDepth = i;
+        });
+    }
 }
 
 class MainScene extends Phaser.Scene {

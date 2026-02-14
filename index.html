@@ -187,8 +187,34 @@
             const win = document.getElementById('battle-log-window');
             if (!win) return;
             const body = document.getElementById('battle-log-body');
+            const titleBar = win.querySelector('.log-title-bar');
             win.querySelector('.close').onclick = () => { win.style.display = 'none'; };
             win.querySelector('.minimize').onclick = () => { win.classList.toggle('minimized'); body.style.display = win.classList.contains('minimized') ? 'none' : 'block'; };
+            if (titleBar) {
+                let drag = { active: false, startX: 0, startY: 0, startLeft: 0, startTop: 0 };
+                titleBar.addEventListener('mousedown', function(e) {
+                    if (e.button !== 0) return;
+                    drag.active = true;
+                    drag.startX = e.clientX;
+                    drag.startY = e.clientY;
+                    const rect = win.getBoundingClientRect();
+                    drag.startLeft = rect.left;
+                    drag.startTop = rect.top;
+                });
+                document.addEventListener('mousemove', function(e) {
+                    if (!drag.active) return;
+                    const dx = e.clientX - drag.startX;
+                    const dy = e.clientY - drag.startY;
+                    let left = drag.startLeft + dx;
+                    let top = drag.startTop + dy;
+                    left = Math.max(0, Math.min(left, window.innerWidth - win.offsetWidth));
+                    top = Math.max(0, Math.min(top, window.innerHeight - 36));
+                    win.style.left = left + 'px';
+                    win.style.top = top + 'px';
+                    win.style.right = 'auto';
+                });
+                document.addEventListener('mouseup', function() { drag.active = false; });
+            }
         })();
         function onSlotDragStart(e, type, index) { e.dataTransfer.setData("text/plain", JSON.stringify({type, index})); e.target.classList.add('dragging'); }
         function onSlotDragEnd(e) { e.target.classList.remove('dragging'); }

@@ -590,6 +590,10 @@ window.BattleLogic = class BattleLogic {
     let item1 = src.type === 'main' ? u.hands[srcIdx] : u.bag[srcIdx];
     let item2 = tgt.type === 'main' ? u.hands[tgtIdx] : u.bag[tgtIdx];
 
+    if (src.type === tgt.type && srcIdx === tgtIdx) return;
+    const changed = (item1 !== item2) || (item1 && item2 && (item1.code !== item2.code || item1.id !== item2.id));
+    if (!changed) return;
+
     if (src.type === 'main') u.hands[srcIdx] = item2; else u.bag[srcIdx] = item2;
     if (tgt.type === 'main') u.hands[tgtIdx] = item1; else u.bag[tgtIdx] = item1;
 

@@ -26,7 +26,6 @@ class EnemyAI {
       await this.optimizeWeapon(actor, target);
 
       let w = this.game.getVirtualWeapon(actor);
-      if (!w) continue;
 
       let acted = true;
       let loopCount = 0;
@@ -35,39 +34,42 @@ class EnemyAI {
       while (acted && actor.ap > 0 && loopCount < 5) {
         acted = false;
         loopCount++;
-
         if (actor.hp <= 0 || target.hp <= 0) break;
         if (hasAttacked) break;
 
+        w = this.game.getVirtualWeapon(actor);
         const dist = this.game.hexDist(actor, target);
+        const minRng = w ? (w.minRng || 0) : 0;
+        const canShoot = w && w.current > 0 && dist >= minRng && dist <= w.rng && actor.ap >= w.ap;
 
-        // 射程内攻撃 (迫撃砲対応)
-        const minRng = w.minRng || 0;
-        if (dist >= minRng && dist <= w.rng && actor.ap >= w.ap) {
-          if (w.current <= 0) {
-            // リロード試行（actor を明示的に渡す）
-            if (actor.def.isTank || !w.code.includes('mortar')) {
-              this.game.reloadWeapon(actor, false);
-              await new Promise(r => setTimeout(r, 200));
-              w = this.game.getVirtualWeapon(actor);
-              if (w.current <= 0) continue;
-            } else {
-              // 迫撃砲弾切れなら何もしない
-              break;
-            }
-          }
-
-          if (w.current > 0) {
-            await this.game.actionAttack(actor, target);
-            acted = true;
-            hasAttacked = true;
-            if (target.hp <= 0) break;
-            continue;
-          }
+        // 同一ヘックスで白兵可能
+        if (dist === 0 && actor.ap >= 2) {
+          await this.game.actionMelee(actor, target);
+          acted = true;
+          hasAttacked = true;
+          if (target.hp <= 0) break;
+          continue;
         }
 
-        // 移動
-        if ((dist > w.rng || dist < minRng) && actor.ap >= 1) {
+        // 射撃可能なら射撃（弾あり）
+        if (canShoot) {
+          await this.game.actionAttack(actor, target);
+          acted = true;
+          hasAttacked = true;
+          if (target.hp <= 0) break;
+          continue;
+        }
+
+        // 弾切れ時はリロード試行（成功したら次ループで射撃）
+        if (w && w.current <= 0 && (actor.def.isTank || !w.code.includes('mortar'))) {
+          this.game.reloadWeapon(actor, false);
+          await new Promise(r => setTimeout(r, 200));
+          w = this.game.getVirtualWeapon(actor);
+          if (w && w.current > 0) { acted = true; continue; }
+        }
+
+        // 武器なし・弾切れ・射程外: 移動（接近 or 退却）または隣接時は次のターンで白兵するため接近
+        if (actor.ap >= 1) {
           const path = this.game.findPath(actor, target.q, target.r);
           if (path.length > 0) {
             const next = path[0];
