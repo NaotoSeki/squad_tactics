@@ -173,10 +173,11 @@ class UIManager {
         
         setEnabled(btnMove, u.ap >= 1);
         
-        // gameLogic経由で武器取得（主武器なしの場合は射撃グレーアウト）
+        // 射撃可能条件: ①AP足りる ②InHandsにWeaponry(or仮想迫撃砲) ③残弾あり
         const w = window.gameLogic && window.gameLogic.getVirtualWeapon ? window.gameLogic.getVirtualWeapon(u) : null;
         const weaponCost = w ? w.ap : 99;
-        setEnabled(btnAttack, !!w && u.ap >= weaponCost);
+        const hasAmmo = w && (w.current || 0) > 0;
+        setEnabled(btnAttack, !!w && u.ap >= weaponCost && hasAmmo);
         
         const anyBroken = Array.isArray(u.hands) ? u.hands.some(h => h && h.isBroken) : (u.hands && u.hands.isBroken);
         setEnabled(btnRepair, anyBroken);
@@ -225,7 +226,8 @@ class UIManager {
         setEnabled(btnMove, u.ap >= 1);
         const w = window.gameLogic && window.gameLogic.getVirtualWeapon ? window.gameLogic.getVirtualWeapon(u) : null;
         const weaponCost = w ? w.ap : 99;
-        setEnabled(btnAttack, !!w && u.ap >= weaponCost);
+        const hasAmmo = w && (w.current || 0) > 0;
+        setEnabled(btnAttack, !!w && u.ap >= weaponCost && hasAmmo);
         const anyBroken = Array.isArray(u.hands) ? u.hands.some(h => h && h.isBroken) : (u.hands && u.hands.isBroken);
         setEnabled(btnRepair, anyBroken);
         const neighbors = (window.gameLogic && window.gameLogic.getUnitsInHex) ? window.gameLogic.getUnitsInHex(u.q, u.r) : [];

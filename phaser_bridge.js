@@ -227,34 +227,45 @@ class UIScene extends Phaser.Scene {
         if (window.UIVFX) { window.UIVFX.update(); window.UIVFX.draw(this.uiVfxGraphics); }
     }
     drawDropZoneGlow(time) {
-        const w = this.scale.width;
-        const h = this.scale.height;
-        const DECK_ZONE_HEIGHT = h * 0.12;
-        const dropZoneY = h - DECK_ZONE_HEIGHT;
+        const sw = this.scale.width;
+        const sh = this.scale.height;
+        const DECK_ZONE_HEIGHT = sh * 0.12;
+        const dropZoneY = sh - DECK_ZONE_HEIGHT;
         const g = this.uiVfxGraphics;
         const t = time * 0.001;
-        const organic = (i) => Math.sin(t * 1.7 + i * 0.8) * 0.15 + Math.sin(t * 2.3 + i * 1.2) * 0.1 + Math.sin(t * 0.9 + i * 0.5) * 0.08;
+        const wobble = (i, seed) => Math.sin(t * 1.5 + i * 0.7 + seed) * 3 + Math.sin(t * 2.1 + i * 0.4) * 2;
         const colors = [0xffdd66, 0xddaa44, 0xffaa22, 0xdd8844, 0xffcc44];
-        const drawCoronaRect = (x, y, rw, rh, baseAlpha) => {
-            for (let i = 0; i < 12; i++) {
-                const layer = i / 12;
-                const wobble = 2 + organic(i) * 8;
-                const ax = x - wobble; const ay = y - wobble;
-                const aw = rw + wobble * 2; const ah = rh + wobble * 2;
-                const col = colors[i % colors.length];
-                const a = baseAlpha * (1 - layer * 0.6) * (0.5 + 0.3 * Math.sin(t * 2 + i * 0.4));
-                g.lineStyle(6 + organic(i) * 4, col, Math.max(0.05, a));
-                g.strokeRect(ax, ay, aw, ah);
-            }
-            for (let i = 0; i < 6; i++) {
-                const shade = colors[(Math.floor(t * 2) + i) % colors.length];
-                const a = 0.12 * (0.6 + 0.4 * Math.sin(t * 3 + i * 1.5));
-                g.fillStyle(shade, Math.max(0.02, a));
-                g.fillRect(x + 4, y + 4, rw - 8, rh - 8);
+        const HALO_WIDTH = 36;
+        const drawBoundaryHaloVertical = (boundX, topY, len) => {
+            for (let i = -HALO_WIDTH; i <= HALO_WIDTH; i++) {
+                const dist = Math.abs(i);
+                const fade = 1 - (dist / HALO_WIDTH) * (dist / HALO_WIDTH);
+                const jitter = wobble(i, 0) + wobble(i * 0.5, 1);
+                const ox = i + jitter * 0.5;
+                const col = colors[Math.abs(Math.floor(i * 0.3 + t * 5)) % colors.length];
+                const a = 0.18 * fade * (0.7 + 0.3 * Math.sin(t * 2.5 + i * 0.15));
+                g.fillStyle(col, Math.max(0.01, a));
+                g.fillRect(boundX + ox - 1, topY, 2, len);
             }
         };
-        drawCoronaRect(2, dropZoneY - 2, w - SIDEBAR_WIDTH - 4, DECK_ZONE_HEIGHT + 4, 0.6);
-        drawCoronaRect(w - SIDEBAR_WIDTH, 0, SIDEBAR_WIDTH, h, 0.5);
+        const drawBoundaryHaloHorizontal = (leftX, boundY, len) => {
+            for (let i = -HALO_WIDTH; i <= HALO_WIDTH; i++) {
+                const dist = Math.abs(i);
+                const fade = 1 - (dist / HALO_WIDTH) * (dist / HALO_WIDTH);
+                const jitter = wobble(i, 2) + wobble(i * 0.5, 3);
+                const oy = i + jitter * 0.5;
+                const col = colors[Math.abs(Math.floor(i * 0.3 + t * 5)) % colors.length];
+                const a = 0.18 * fade * (0.7 + 0.3 * Math.sin(t * 2.5 + i * 0.15));
+                g.fillStyle(col, Math.max(0.01, a));
+                g.fillRect(leftX, boundY + oy - 1, len, 2);
+            }
+        };
+        g.fillStyle(0xddaa44, 0.03);
+        g.fillRect(0, dropZoneY, sw - SIDEBAR_WIDTH, DECK_ZONE_HEIGHT);
+        g.fillStyle(0xddaa44, 0.02);
+        g.fillRect(sw - SIDEBAR_WIDTH, 0, SIDEBAR_WIDTH, sh);
+        drawBoundaryHaloVertical(sw - SIDEBAR_WIDTH, 0, sh);
+        drawBoundaryHaloHorizontal(0, dropZoneY, sw - SIDEBAR_WIDTH);
     }
     dealStart(types) { this.isHandDocked = false; types.forEach((type, i) => { this.time.delayedCall(i * 150, () => { this.addCardToHand(type); }); }); this.time.delayedCall(150 * types.length + 1000, () => { this.isHandDocked = true; }); }
     addCardToHand(type) { if (this.cards.length >= 12) return; const card = new Card(this, 0, 0, type); this.handContainer.add(card); this.cards.push(card); card.physX = 600; card.physY = 300; card.setPosition(card.physX, card.physY); this.arrangeHand(); }
