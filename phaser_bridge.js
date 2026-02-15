@@ -166,28 +166,45 @@ class Card extends Phaser.GameObjects.Container {
         this.frameImage.setInteractive({ useHandCursor: true, draggable: true });
         const shadow = scene.add.rectangle(6, 6, 130, 190, 0x000000, 0.5); this.add(shadow); this.add(this.frameImage);
         this.rainbowGraphics = scene.add.graphics().setDepth(1);
-        this.add(this.rainbowGraphics);
+        this.fusionCandidateGraphics = scene.add.graphics().setDepth(2);
+        this.add(this.rainbowGraphics); this.add(this.fusionCandidateGraphics);
         this.setScrollFactor(0); this.baseX = x; this.baseY = y; this.physX = x; this.physY = y; this.velocityX = 0; this.velocityY = 0; this.velocityAngle = 0; this.targetX = x; this.targetY = y; this.dragOffsetX = 0; this.dragOffsetY = 0;
         this.frameImage.on('pointerover', this.onHover, this); this.frameImage.on('pointerout', this.onHoverOut, this); this.frameImage.on('dragstart', this.onDragStart, this); this.frameImage.on('drag', this.onDrag, this); this.frameImage.on('dragend', this.onDragEnd, this);
         scene.add.existing(this);
     }
     updatePhysics() { 
         if (!this.scene || !this.frameImage) return; 
+        const isFusionCandidate = Renderer.isCardDragging && Renderer.draggedCard && Renderer.draggedCard !== this && FUSABLE_UNIT_TYPES.includes(Renderer.draggedCard.cardType) && this.cardType === Renderer.draggedCard.cardType;
+        if (this.fusionCandidateGraphics) {
+            this.fusionCandidateGraphics.clear();
+            if (isFusionCandidate) {
+                const pulse = 0.6 + 0.4 * Math.sin((this.scene.time || { now: 0 }).now * 0.005);
+                this.fusionCandidateGraphics.lineStyle(4, 0xffdd44, pulse);
+                this.fusionCandidateGraphics.strokeRect(-70, -100, 140, 200);
+                this.fusionCandidateGraphics.lineStyle(2, 0xffffff, pulse * 0.8);
+                this.fusionCandidateGraphics.strokeRect(-72, -102, 144, 204);
+            }
+        }
         if (this.rainbowGraphics) {
             if (this.fusionData) {
             this.rainbowGraphics.clear();
             const t = (this.scene.time || { now: 0 }).now * 0.001;
-            const w = 70; const h = 100; const pad = 2; const segs = 48;
-            const colors = [0xff0000, 0xff8800, 0xffff00, 0x00ff00, 0x0088ff, 0x8800ff];
+            const w = 70; const h = 100; const pad = 2; const segs = 96;
+            const colors = [0xff0000, 0xff4400, 0xff8800, 0xffcc00, 0xffff00, 0xaaff00, 0x00ff00, 0x00ff88, 0x0088ff, 0x4400ff, 0x8800ff];
             for (let i = 0; i < segs; i++) {
-                const u = (i / segs + t * 0.25) % 1;
-                const c = colors[Math.floor(u * colors.length) % colors.length];
-                this.rainbowGraphics.lineStyle(2, c, 0.85);
+                const u = (i / segs + t * 0.15) % 1;
+                const ci = Math.floor(u * colors.length) % colors.length;
+                const c0 = colors[ci]; const c1 = colors[(ci + 1) % colors.length];
+                const mix = (u * colors.length) % 1;
+                const r = ((c0 >> 16) & 0xff) * (1 - mix) + ((c1 >> 16) & 0xff) * mix;
+                const g = ((c0 >> 8) & 0xff) * (1 - mix) + ((c1 >> 8) & 0xff) * mix;
+                const b = (c0 & 0xff) * (1 - mix) + (c1 & 0xff) * mix;
+                const blended = (r << 16) | (g << 8) | b;
+                this.rainbowGraphics.lineStyle(2, blended, 0.88);
                 const frac = i / segs; const nextFrac = (i + 1) / segs;
-                let x1, y1, x2, y2;
-                if (frac < 0.25) { x1 = -w - pad + (frac / 0.25) * 2 * w; y1 = -h - pad; } else if (frac < 0.5) { x1 = w + pad; y1 = -h - pad + ((frac - 0.25) / 0.25) * 2 * h; } else if (frac < 0.75) { x1 = w + pad - ((frac - 0.5) / 0.25) * 2 * w; y1 = h + pad; } else { x1 = -w - pad; y1 = h + pad - ((frac - 0.75) / 0.25) * 2 * h; }
-                if (nextFrac < 0.25) { x2 = -w - pad + (nextFrac / 0.25) * 2 * w; y2 = -h - pad; } else if (nextFrac < 0.5) { x2 = w + pad; y2 = -h - pad + ((nextFrac - 0.25) / 0.25) * 2 * h; } else if (nextFrac < 0.75) { x2 = w + pad - ((nextFrac - 0.5) / 0.25) * 2 * w; y2 = h + pad; } else { x2 = -w - pad; y2 = h + pad - ((nextFrac - 0.75) / 0.25) * 2 * h; }
-                this.rainbowGraphics.beginPath(); this.rainbowGraphics.moveTo(x1, y1); this.rainbowGraphics.lineTo(x2, y2); this.rainbowGraphics.strokePath();
+                const rad = (f) => { const u2 = f * 4; const side = Math.floor(u2); const v = u2 - side; let x, y; if (side === 0) { x = -w - pad + v * 2 * (w + pad); y = -h - pad; } else if (side === 1) { x = w + pad; y = -h - pad + v * 2 * (h + pad); } else if (side === 2) { x = w + pad - v * 2 * (w + pad); y = h + pad; } else { x = -w - pad; y = h + pad - v * 2 * (h + pad); } return { x, y }; };
+                const p1 = rad(frac); const p2 = rad(nextFrac);
+                this.rainbowGraphics.beginPath(); this.rainbowGraphics.moveTo(p1.x, p1.y); this.rainbowGraphics.lineTo(p2.x, p2.y); this.rainbowGraphics.strokePath();
             }
             } else { this.rainbowGraphics.clear(); }
         }
@@ -284,11 +301,13 @@ class Card extends Phaser.GameObjects.Container {
     returnToHand() { const hand = this.scene.handContainer; this.scene.children.remove(this); hand.add(this); this.setDepth(0); this.physX = this.x; this.physY = this.y; this.targetX = this.baseX; this.targetY = this.baseY; }
     findOverlappingSameTypeCardAt(cx, cy) {
         const hand = this.scene.handContainer;
+        const cardW = 70; const cardH = 100;
         for (const c of this.scene.cards) {
             if (c === this || !c.active) continue;
             const ox = c.parentContainer === hand ? hand.x + c.physX : c.physX;
             const oy = c.parentContainer === hand ? hand.y + c.physY : c.physY;
-            if (Math.abs(cx - ox) < 90 && Math.abs(cy - oy) < 120 && c.cardType === this.cardType) return c;
+            const left = ox - cardW; const right = ox + cardW; const top = oy - cardH; const bottom = oy + cardH;
+            if (cx >= left && cx <= right && cy >= top && cy <= bottom && c.cardType === this.cardType) return c;
         }
         return null;
     }
@@ -339,15 +358,6 @@ class UIScene extends Phaser.Scene {
                 const a = pulse * (1 - (r - 60) / 100) * 0.25;
                 g.lineStyle(4, colors[Math.floor(r / 35) % colors.length], a);
                 g.strokeCircle(x, y, r);
-            }
-            for (let ray = 0; ray < 24; ray++) {
-                const angle = (ray / 24) * Math.PI * 2 + t * 2;
-                const len = 80 + Math.sin(t * 6 + ray) * 15;
-                g.lineStyle(6, 0xffffff, pulse * 0.6);
-                g.beginPath();
-                g.moveTo(x, y);
-                g.lineTo(x + Math.cos(angle) * len, y + Math.sin(angle) * len);
-                g.strokePath();
             }
         };
         const target = this.fusionTargetCard;
