@@ -241,7 +241,6 @@ window.BattleLogic = class BattleLogic {
       const mg42Speed = 0.08;
 
       for (let i = 0; i < shots; i++) {
-        if (!isAreaAttack && targetUnit && targetUnit.hp <= 0) break;
 
         if (!(a.def.isTank && w.type && w.type.includes('shell'))) {
           game.consumeAmmo(a, w.code);
@@ -327,22 +326,25 @@ window.BattleLogic = class BattleLogic {
           } else {
             const mainDmg = Math.floor(w.dmg * (0.8 + Math.random() * 0.4));
             const dmgWithSkill = a.skills && a.skills.includes('HighPower') ? Math.floor(mainDmg * 1.2) : mainDmg;
-            if (targetUnit.hp <= 0) return;
-            if ((Math.random() * 100) < hitChance) {
-              let dmg = targetUnit.def.isTank && w.type === 'bullet' ? 0 : dmgWithSkill;
-              if (dmg > 0) {
-                if (window.Sfx) Sfx.play('soft_hit');
-                if (!isShell && window.VFX) VFX.add({ x: tx, y: ty, vx: 0, vy: -5, life: 10, maxLife: 10, color: "#fff", size: 2, type: 'spark' });
-                game.applyDamage(targetUnit, dmg, w.name);
+            if (targetUnit && targetUnit.hp > 0) {
+              if ((Math.random() * 100) < hitChance) {
+                let dmg = targetUnit.def.isTank && w.type === 'bullet' ? 0 : dmgWithSkill;
+                if (dmg > 0) {
+                  if (window.Sfx) Sfx.play('soft_hit');
+                  if (!isShell && window.VFX) VFX.add({ x: tx, y: ty, vx: 0, vy: -5, life: 10, maxLife: 10, color: "#fff", size: 2, type: 'spark' });
+                  game.applyDamage(targetUnit, dmg, w.name);
+                } else {
+                  if (window.Sfx) Sfx.play('hard_hit');
+                  if (i === 0) game.ui.log(">> 装甲により無効化！");
+                }
               } else {
-                if (window.Sfx) Sfx.play('hard_hit');
-                if (i === 0) game.ui.log(">> 装甲により無効化！");
+                if (window.VFX) {
+                  VFX.add({ x: tx, y: ty, vx: 0, vy: 0, life: 10, maxLife: 10, color: "#aaa", size: 2, type: 'smoke' });
+                  if (!isShell && w.type === 'bullet') VFX.addBulletImpact(tx, ty, 1);
+                }
               }
-            } else {
-              if (window.VFX) {
-                VFX.add({ x: tx, y: ty, vx: 0, vy: 0, life: 10, maxLife: 10, color: "#aaa", size: 2, type: 'smoke' });
-                if (!isShell && w.type === 'bullet') VFX.addBulletImpact(tx, ty, 1);
-              }
+            } else if (!isShell && w.type === 'bullet' && window.VFX) {
+              VFX.addBulletImpact(tx, ty, 1);
             }
             const sameHexUnits = game.getUnitsInHex(targetHex.q, targetHex.r).filter(u => u !== targetUnit && u.team !== a.team && u.hp > 0);
             const splashChance = (w.type === 'bullet') ? 5 : 10;
