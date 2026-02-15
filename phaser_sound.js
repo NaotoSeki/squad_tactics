@@ -12,13 +12,27 @@ const Sfx = {
 
     // 再生間隔の制限 (ms)
     throttles: {
-        'mg42': 2000 // 1回の攻撃アクションが終わるまで次を鳴らさない
+        'mg42': 2000, // 1回の攻撃アクションが終わるまで次を鳴らさない
+        'tank_reload': 1500  // 敵戦車の連続射撃で2回鳴るのを防止
     },
     lastPlayTime: {},
 
     init() { 
         if(!this.ctx) this.ctx = new (window.AudioContext||window.webkitAudioContext)(); 
-        if(this.ctx.state==='suspended') this.ctx.resume(); 
+        if(this.ctx.state==='suspended') this.ctx.resume();
+        if (!this._visibilityBound) {
+            this._visibilityBound = () => {
+                if (document.visibilityState === 'visible') {
+                    const now = Date.now();
+                    Object.keys(this.lastPlayTime || {}).forEach(k => { this.lastPlayTime[k] = now; });
+                    if (window.phaserGame) {
+                        const main = window.phaserGame.scene.getScene('MainScene');
+                        if (main && main.sound) main.sound.stopAll();
+                    }
+                }
+            };
+            document.addEventListener('visibilitychange', this._visibilityBound);
+        }
     },
 
     preload(scene) {
@@ -106,7 +120,8 @@ const Sfx = {
             if (window.phaserGame) {
                 const main = window.phaserGame.scene.getScene('MainScene');
                 if (main && main.sound) {
-                    main.sound.play(id, { volume: 0.4 });
+                    const vol = (id === 'tank_reload') ? 0.28 : 0.4;
+                    main.sound.play(id, { volume: vol });
                     return; 
                 }
             }

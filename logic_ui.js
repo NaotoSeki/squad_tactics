@@ -59,6 +59,8 @@ class UIManager {
         if (!resizer || !sidebar) return;
 
         resizer.addEventListener('mousedown', (e) => {
+            const app = document.getElementById('app');
+            if (app && app.classList.contains('phaser-sidebar')) return;
             e.preventDefault();
             this.isResizing = true;
             document.body.style.cursor = 'col-resize';
@@ -283,15 +285,26 @@ class UIManager {
             const isAmmo = (item.type === 'ammo'); 
             let gaugeHtml = ""; 
             
-            if (!isAmmo && item.cap > 0 && !item.partType) { 
+            if (!isAmmo && !item.partType) { 
                 gaugeHtml = `<div class="ammo-gauge">`; 
-                const maxDisplay = 20; 
-                if (u.def.isTank && isMain) { 
-                    for(let i=0; i<Math.min(maxDisplay, item.reserve); i++) gaugeHtml += `<div class="shell"></div>`; 
-                } else { 
-                    for(let i=0; i<item.current; i++) gaugeHtml += `<div class="bullet"></div>`; 
-                    for(let i=item.current; i<item.cap; i++) gaugeHtml += `<div class="bullet" style="background:#333;box-shadow:none;"></div>`; 
-                } 
+                if (item.code === 'mg42' && item.reserve !== undefined && isMain) {
+                    const maxRounds = 300;
+                    const reserve = Math.min(maxRounds, item.reserve || 0);
+                    gaugeHtml += `<div style="font-size:8px;color:#888;margin-bottom:2px;">${reserve}/${maxRounds}</div>`;
+                    gaugeHtml += `<div style="display:grid;grid-template-columns:repeat(30,1fr);grid-template-rows:repeat(10,2px);gap:1px;width:100%;max-width:100%;box-sizing:border-box;">`;
+                    for (let i = 0; i < 300; i++) {
+                        gaugeHtml += `<div style="min-width:2px;height:2px;background:${i < reserve ? '#ddaa44' : '#333'};"></div>`;
+                    }
+                    gaugeHtml += `</div>`;
+                } else if (item.cap > 0) {
+                    const maxDisplay = 20; 
+                    if (u.def.isTank && isMain) { 
+                        for(let i=0; i<Math.min(maxDisplay, item.reserve || 0); i++) gaugeHtml += `<div class="shell"></div>`; 
+                    } else { 
+                        for(let i=0; i<item.current; i++) gaugeHtml += `<div class="bullet"></div>`; 
+                        for(let i=item.current; i<item.cap; i++) gaugeHtml += `<div class="bullet" style="background:#333;box-shadow:none;"></div>`; 
+                    }
+                }
                 gaugeHtml += `</div>`; 
             }
             if (isAmmo && item.code === 'mortar_shell_box') {
@@ -323,6 +336,13 @@ class UIManager {
              if (virtualWpn.current < virtualWpn.cap) reloadBtn = `<button onclick="gameLogic.reloadWeapon()" style="width:100%; background:#442; color:#dd4; border:1px solid #884; cursor:pointer; margin-top:5px;">🔃 RELOAD</button>`;
         }
 
-        ui.innerHTML = `<div class="soldier-header"><div class="face-box"><img src="${faceUrl}" width="64" height="64"></div><div><div class="soldier-name">${u.name}</div><div class="soldier-rank">${u.def.role}</div></div></div><div class="stat-grid"><div class="stat-row"><span>HP</span> <span>${u.hp}/${u.maxHp}</span></div><div class="stat-row"><span>AP</span> <span>${u.ap}/${u.maxAp}</span></div></div><div class="inv-header" style="padding:0 10px; margin-top:10px;">IN HANDS (3 Slots)</div><div class="loadout-container" style="display:flex;flex-direction:column;">${mainSlotsHtml}</div><div class="inv-header" style="padding:0 10px; margin-top:10px;">BACKPACK</div><div class="loadout-container">${subSlotsHtml}</div><div style="padding:0 10px;">${reloadBtn}</div><div style="padding:10px;"><button onclick="gameLogic.endTurn()" style="width:100%; background:#522; border-color:#d44; margin-top:15px; padding:5px; color:#fcc;">End Turn</button></div>`;
+        const skills = (u.skills && Array.isArray(u.skills)) ? [...new Set(u.skills)] : [];
+        let skillListHtml = '';
+        if (skills.length > 0 && typeof SKILLS !== 'undefined') {
+            const skillParts = skills.map(sk => SKILLS[sk] ? `${SKILLS[sk].name}: ${SKILLS[sk].desc}` : sk);
+            skillListHtml = `<div class="unit-skills" style="font-size:10px;color:#888;margin-top:4px;margin-bottom:6px;">${skillParts.join('  |  ')}</div>`;
+        }
+
+        ui.innerHTML = `<div class="soldier-header"><div class="face-box"><img src="${faceUrl}" width="64" height="64"></div><div><div class="soldier-name">${u.name}</div><div class="soldier-rank">${u.def.role}</div>${skillListHtml}</div></div><div class="stat-grid"><div class="stat-row"><span>HP</span> <span>${u.hp}/${u.maxHp}</span></div><div class="stat-row"><span>AP</span> <span>${u.ap}/${u.maxAp}</span></div></div><div class="inv-header" style="padding:0 10px; margin-top:10px;">IN HANDS (3 Slots)</div><div class="loadout-container" style="display:flex;flex-direction:column;">${mainSlotsHtml}</div><div class="inv-header" style="padding:0 10px; margin-top:10px;">BACKPACK</div><div class="loadout-container">${subSlotsHtml}</div><div style="padding:0 10px;">${reloadBtn}</div><div style="padding:10px;"><button onclick="gameLogic.endTurn()" style="width:100%; background:#522; border-color:#d44; margin-top:15px; padding:5px; color:#fcc;">End Turn</button></div>`;
     }
 }

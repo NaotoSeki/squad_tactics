@@ -36,6 +36,19 @@ const SKILLS = {
     "CQC":       { name: "白兵", desc: "近接反撃" }
 };
 
+/** マップ上バッジ表示用（スキルID → アイコン・色） */
+const SKILL_STYLES = {
+    "Precision": { icon: "🎯", col: "#4a9" },
+    "Radio":     { icon: "📻", col: "#6af" },
+    "Ambush":    { icon: "🌙", col: "#663" },
+    "AmmoBox":   { icon: "📦", col: "#c84" },
+    "HighPower": { icon: "💥", col: "#d44" },
+    "Mechanic":  { icon: "🔧", col: "#8a8" },
+    "Armor":     { icon: "🛡", col: "#88c" },
+    "Hero":      { icon: "⭐", col: "#dc4" },
+    "CQC":       { icon: "⚔", col: "#a6a" }
+};
+
 const WPNS = {
     m1: { name:"M1 Garand", rng:7, acc:85, acc_drop:3, dmg:76, cap:8, mag:6, ap:2, rld:1, wgt:4, type:'bullet', burst:2, desc:"米軍主力小銃。", weight: 9.5, attr: ATTR.WEAPON },
     thompson: { name:"M1A1 SMG", rng:5, acc:60, acc_drop:4, dmg:41, cap:30, mag:4, ap:2, rld:1, wgt:5, type:'bullet', burst:2, modes:[2, 5], desc:"近距離制圧用。", weight: 10, attr: ATTR.WEAPON },
@@ -47,8 +60,8 @@ const WPNS = {
     nade: { name:"Mk2 Grenade", rng:4, acc:60, dmg:80, cap:1, mag:2, ap:2, rld:0, wgt:1, type:'shell', area:true, desc:"破片手榴弾。", weight: 1.3, attr: ATTR.WEAPON },
     
     mg42: { name:"MG42", rng:8, acc:45, acc_drop:4, dmg:25, cap:50, mag:99, ap:2, rld:3, wgt:12, type:'bullet', burst:15, desc:"機関銃。", weight: 25, attr: ATTR.WEAPON },
-    kwk: { name:"75mm KwK", rng:8, acc:70, acc_drop:2, dmg:150, cap:1, mag:99, ap:2, rld:2, wgt:0, type:'shell_fast', burst:1, desc:"戦車砲。", weight: 0, attr: ATTR.WEAPON },
-    kwk88: { name:"88mm KwK36", rng:10, acc:85, acc_drop:1, dmg:250, cap:1, mag:99, ap:2, rld:2, wgt:0, type:'shell_fast', burst:1, desc:"重戦車砲。", weight: 0, attr: ATTR.WEAPON },
+    kwk: { name:"75mm KwK", rng:8, acc:70, acc_drop:2, dmg:150, cap:1, mag:99, ap:3, rld:0, wgt:0, type:'shell_fast', burst:1, desc:"戦車砲。", weight: 0, attr: ATTR.WEAPON },
+    kwk88: { name:"88mm KwK36", rng:10, acc:85, acc_drop:1, dmg:250, cap:1, mag:99, ap:3, rld:0, wgt:0, type:'shell_fast', burst:1, desc:"重戦車砲。", weight: 0, attr: ATTR.WEAPON },
 
     'mortar_barrel': { name: "M2 Tube", type: "part", partType: "barrel", desc: "M2迫撃砲の砲身。", weight: 12.8, attr: ATTR.WEAPON },
     'mortar_bipod':  { name: "M2 Bipod", type: "part", partType: "bipod", desc: "M2迫撃砲の二脚。", weight: 16.4, attr: ATTR.WEAPON },

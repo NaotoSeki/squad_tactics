@@ -1,5 +1,9 @@
 /** PHASER SIDEBAR: Right panel rendered in Phaser (unit info, loadout, log) */
-const SIDEBAR_WIDTH = 340;
+const SIDEBAR_WIDTH_DEFAULT = 340;
+const SIDEBAR_WIDTH_MIN = 240;
+const SIDEBAR_WIDTH_MAX = 560;
+window.__sidebarWidth = window.__sidebarWidth != null ? window.__sidebarWidth : SIDEBAR_WIDTH_DEFAULT;
+window.getSidebarWidth = function() { return (typeof window.__sidebarWidth === 'number' ? window.__sidebarWidth : SIDEBAR_WIDTH_DEFAULT); };
 const PANEL_BG = 0x1a1a1a;
 const HEADER_BG = 0x111111;
 const SLOT_BG = 0x111111;
@@ -23,20 +27,12 @@ window.PhaserSidebar = class PhaserSidebar {
     init() {
         const w = this.scene.scale.width;
         const h = this.scene.scale.height;
-        const panelX = w - SIDEBAR_WIDTH / 2;
+        const sw = window.getSidebarWidth();
+        const panelX = w - sw / 2;
 
-        this.panelBg = this.scene.add.rectangle(panelX, h / 2, SIDEBAR_WIDTH, h, PANEL_BG);
+        this.panelBg = this.scene.add.rectangle(panelX, h / 2, sw, h, PANEL_BG);
         this.panelBg.setStrokeStyle(1, SLOT_BORDER);
         this.container.add(this.panelBg);
-
-        const headerH = 28;
-        const header = this.scene.add.rectangle(panelX, headerH / 2, SIDEBAR_WIDTH - 2, headerH, HEADER_BG);
-        header.setStrokeStyle(1, SLOT_BORDER, 0.5);
-        this.container.add(header);
-
-        const headerText = this.scene.add.text(panelX - SIDEBAR_WIDTH / 2 + 12, 8, 'SOLDIER DOSSIER', { fontSize: '11px', color: '#ddaa44', fontFamily: 'sans-serif' });
-        headerText.setOrigin(0, 0);
-        this.container.add(headerText);
 
         this.unitContent = this.scene.add.container(0, 0);
         this.container.add(this.unitContent);
@@ -59,8 +55,9 @@ window.PhaserSidebar = class PhaserSidebar {
 
         const w = this.scene.scale.width;
         const h = this.scene.scale.height;
-        const left = w - SIDEBAR_WIDTH + 12;
-        let y = 36;
+        const sw = window.getSidebarWidth();
+        const left = w - sw + 12;
+        let y = 12;
 
         const faceKey = 'face_' + (u.faceSeed || u.id || 0);
         const faceUrl = (typeof Renderer !== 'undefined' && Renderer && Renderer.generateFaceIcon) ? Renderer.generateFaceIcon(u.faceSeed || 0) : '';
@@ -71,16 +68,27 @@ window.PhaserSidebar = class PhaserSidebar {
             } catch (e) { /* ignore */ }
         }
         if (faceUrl && this.scene.textures.exists(faceKey)) {
-            const face = this.scene.add.image(left + 32, y + 32, faceKey).setDisplaySize(64, 64);
+            const face = this.scene.add.image(left, y, faceKey).setDisplaySize(64, 64);
             face.setOrigin(0, 0);
             this.unitContent.add(face);
         }
 
-        const nameText = this.scene.add.text(left + 74, y + 8, u.name, { fontSize: '14px', color: '#ffffff', fontFamily: 'sans-serif' });
+        const textLeft = left + 72;
+        const nameText = this.scene.add.text(textLeft, y + 4, u.name, { fontSize: '14px', color: '#ffffff', fontFamily: 'sans-serif' });
         this.unitContent.add(nameText);
-        const roleText = this.scene.add.text(left + 74, y + 28, (u.def && u.def.role) || '', { fontSize: '11px', color: '#ddaa44', fontFamily: 'monospace' });
+        const roleText = this.scene.add.text(textLeft, y + 24, (u.def && u.def.role) || '', { fontSize: '11px', color: '#ddaa44', fontFamily: 'monospace' });
         this.unitContent.add(roleText);
-        y += 88;
+
+        const skills = (u.skills && Array.isArray(u.skills)) ? [...new Set(u.skills)] : [];
+        if (skills.length > 0 && typeof SKILLS !== 'undefined') {
+            const skillLines = skills.map(sk => SKILLS[sk] ? `${SKILLS[sk].name}: ${SKILLS[sk].desc}` : sk).join('  |  ');
+            const skillText = this.scene.add.text(textLeft, y + 42, skillLines, { fontSize: '9px', color: TEXT_DIM, fontFamily: 'sans-serif', wordWrap: { width: sw - 88 } });
+            this.unitContent.add(skillText);
+            y += 60;
+        } else {
+            y += 42;
+        }
+        y += 10;
 
         const hpText = this.scene.add.text(left, y, `HP  ${u.hp}/${u.maxHp}`, { fontSize: '11px', color: TEXT_COLOR, fontFamily: 'sans-serif' });
         this.unitContent.add(hpText);
@@ -118,19 +126,20 @@ window.PhaserSidebar = class PhaserSidebar {
 
         if (virtualWpn && !u.def.isTank && !virtualWpn.partType && virtualWpn.code !== 'm2_mortar' && virtualWpn.current < virtualWpn.cap) {
             y += 10;
-            const reloadBtn = this.createButton(left, y, SIDEBAR_WIDTH - 36, 28, 'RELOAD', () => { if (window.gameLogic) window.gameLogic.reloadWeapon(); });
+            const reloadBtn = this.createButton(left, y, sw - 36, 28, 'RELOAD', () => { if (window.gameLogic) window.gameLogic.reloadWeapon(); });
             this.unitContent.add(reloadBtn.container);
             y += 38;
         }
 
         y += 12;
-        const endTurnBtn = this.createButton(left, y, SIDEBAR_WIDTH - 36, 32, 'End Turn', () => { if (window.gameLogic) window.gameLogic.endTurn(); }, 0x552222, 0xdd4444);
+        const endTurnBtn = this.createButton(left, y, sw - 36, 32, 'End Turn', () => { if (window.gameLogic) window.gameLogic.endTurn(); }, 0x552222, 0xdd4444);
         this.unitContent.add(endTurnBtn.container);
     }
 
     createSlot(u, item, type, index, x, y, isMain, isMortarActive) {
-        const slotW = SIDEBAR_WIDTH - 36;
-        const slotH = isMain ? 90 : 36;
+        const slotW = window.getSidebarWidth() - 36;
+        const needsMg42Gauge = item && item.code === 'mg42' && item.reserve !== undefined && isMain;
+        const slotH = (isMain && needsMg42Gauge) ? 130 : (isMain ? 90 : 36);
         const borderColor = isMain ? ACCENT : SLOT_BORDER;
         const bgColor = isMain ? 0x2a201a : SLOT_BG;
 
@@ -154,6 +163,25 @@ window.PhaserSidebar = class PhaserSidebar {
             }
             if (u.team === 'enemy') {
                 // 敵ユニットは弾丸ゲージ表示なし（はみ出し防止・弾切れは行動で表現）
+            } else if (item && item.code === 'mg42' && item.reserve !== undefined && isMain) {
+                const maxRounds = 300;
+                const reserve = Math.min(maxRounds, item.reserve || 0);
+                const cols = 30, rows = 10, gap = 1;
+                const availW = slotW - 16;
+                const cellW = Math.floor((availW - (cols - 1) * gap) / cols);
+                const cellH = 2;
+                const gridTop = 38;
+                const countText = this.scene.add.text(8, gridTop - 6, `${reserve}/${maxRounds}`, { fontSize: '8px', color: TEXT_DIM, fontFamily: 'monospace' });
+                countText.setOrigin(0, 0);
+                container.add(countText);
+                for (let r = 0; r < rows; r++) {
+                    for (let c = 0; c < cols; c++) {
+                        const idx = r * cols + c;
+                        const dot = this.scene.add.rectangle(8 + c * (cellW + gap), gridTop + r * (cellH + gap), cellW, cellH, idx < reserve ? 0xddaa44 : 0x333333);
+                        dot.setOrigin(0, 0);
+                        container.add(dot);
+                    }
+                }
             } else if (u.def.isTank && isMain && item.reserve !== undefined) {
                 const shellCount = Math.min(20, item.reserve || 0);
                 for (let i = 0; i < shellCount; i++) {
@@ -274,7 +302,7 @@ window.PhaserSidebar = class PhaserSidebar {
             const w = this.scene.scale.width;
             const h = this.scene.scale.height;
             const dropZoneY = h * 0.88;
-            const overDeck = p.x < w - SIDEBAR_WIDTH && p.y >= dropZoneY;
+            const overDeck = p.x < w - window.getSidebarWidth() && p.y >= dropZoneY;
             const sameSlot = dropTarget && this.dragSrc.type === dropTarget.type && this.dragSrc.index === dropTarget.index;
             const didSwap = dropTarget && window.gameLogic && window.gameLogic.swapEquipment && !sameSlot;
             const didMoveToDeck = overDeck && window.gameLogic && window.gameLogic.moveWeaponToDeck;
@@ -294,7 +322,7 @@ window.PhaserSidebar = class PhaserSidebar {
 
     hitTestSlots(px, py) {
         const w = this.scene.scale.width;
-        if (px < w - SIDEBAR_WIDTH) return null;
+        if (px < w - window.getSidebarWidth()) return null;
         for (const s of this.slots) {
             const bounds = s.container.getBounds();
             if (bounds.contains(px, py)) {
@@ -345,8 +373,9 @@ window.PhaserSidebar = class PhaserSidebar {
 
     onResize(w, h) {
         if (this.panelBg) {
-            this.panelBg.setPosition(w - SIDEBAR_WIDTH / 2, h / 2);
-            this.panelBg.setSize(SIDEBAR_WIDTH, h);
+            const sw = window.getSidebarWidth();
+            this.panelBg.setPosition(w - sw / 2, h / 2);
+            this.panelBg.setSize(sw, h);
         }
     }
 };

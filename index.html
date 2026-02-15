@@ -17,9 +17,11 @@
         #game-view { width: 100%; height: 100%; position: absolute; top: 0; left: 0; background: var(--bg); z-index: 1; }
         canvas { display: block; width: 100%; height: 100%; outline: none; }
 
-        #resizer { position: absolute; top: 0; right: 340px; bottom: 0; width: 6px; background: #222; cursor: col-resize; z-index: 30; border-left: 1px solid #000; border-right: 1px solid #333; transition: right 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); }
+        :root { --sidebar-width: 340px; }
+        #resizer { position: absolute; top: 0; right: var(--sidebar-width, 340px); bottom: 0; width: 6px; background: #222; cursor: col-resize; z-index: 30; border-left: 1px solid #000; border-right: 1px solid #333; transition: right 0.15s ease-out; }
         #sidebar { position: absolute; top: 0; right: 0; bottom: 0; width: 340px; min-width: 0; background: var(--panel); border-left: 1px solid var(--border); display: flex; flex-direction: column; z-index: 20; transition: width 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); pointer-events: auto; }
-        #app.phaser-sidebar #resizer, #app.phaser-sidebar #sidebar { display: none !important; }
+        #app.phaser-sidebar #sidebar { display: none !important; }
+        #app.phaser-sidebar #resizer { right: var(--sidebar-width, 340px); transition: none; }
         #app.phaser-sidebar #game-view { width: 100% !important; }
         #sidebar.collapsed { width: 0 !important; border: none; }
         #sidebar.collapsed > *:not(#sidebar-toggle) { display: none; }
@@ -146,7 +148,6 @@
         <div id="resizer"></div>
         <div id="sidebar">
             <div id="sidebar-toggle" onclick="gameLogic.toggleSidebar()">▶</div>
-            <div class="panel-header">SOLDIER DOSSIER</div>
             <div id="unit-info"></div>
             <div class="panel-header" style="border-top:1px solid #444;">BATTLE LOG</div>
             <div id="log-container"></div>
@@ -216,6 +217,33 @@
                 });
                 document.addEventListener('mouseup', function() { drag.active = false; });
             }
+        })();
+        (function initPhaserSidebarResizer() {
+            const app = document.getElementById('app');
+            const resizer = document.getElementById('resizer');
+            if (!app || !resizer) return;
+            document.documentElement.style.setProperty('--sidebar-width', (window.getSidebarWidth ? window.getSidebarWidth() : 340) + 'px');
+            const MIN = 240, MAX = 560;
+            resizer.addEventListener('mousedown', function(e) {
+                if (e.button !== 0) return;
+                if (!app.classList.contains('phaser-sidebar')) return;
+                e.preventDefault();
+                const startX = e.clientX;
+                const startW = window.getSidebarWidth ? window.getSidebarWidth() : 340;
+                const move = function(ev) {
+                    let w = startW + (startX - ev.clientX);
+                    w = Math.max(MIN, Math.min(MAX, w));
+                    window.__sidebarWidth = w;
+                    document.documentElement.style.setProperty('--sidebar-width', w + 'px');
+                    if (window.notifySidebarResize) window.notifySidebarResize();
+                };
+                const up = function() {
+                    document.removeEventListener('mousemove', move);
+                    document.removeEventListener('mouseup', up);
+                };
+                document.addEventListener('mousemove', move);
+                document.addEventListener('mouseup', up);
+            });
         })();
         function onSlotDragStart(e, type, index) { e.dataTransfer.setData("text/plain", JSON.stringify({type, index})); e.target.classList.add('dragging'); }
         function onSlotDragEnd(e) { e.target.classList.remove('dragging'); }
