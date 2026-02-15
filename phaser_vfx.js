@@ -8,7 +8,7 @@ class VFXSystem {
 
     update() {
         this.windTimer++;
-        if (this.windTimer > 200 + Math.random() * 200) {
+        if (this.windTimer > 400 + Math.random() * 300) {
             this.triggerWindGust();
             this.windTimer = 0;
         }
@@ -46,11 +46,11 @@ class VFXSystem {
     }
 
     triggerWindGust() {
-        for (let i = 0; i < 10; i++) {
+        for (let i = 0; i < 4; i++) {
             this.add({
                 x: -300 - Math.random() * 500, y: Math.random() * 3000,
                 vx: 12 + Math.random() * 5, vy: 1 + Math.random() * 1,
-                life: 250, color: "#ffffff", size: 1, type: 'wind'
+                life: 180, color: "#ffffff", size: 1, type: 'wind'
             });
         }
         if(window.EnvSystem) window.EnvSystem.onGust();

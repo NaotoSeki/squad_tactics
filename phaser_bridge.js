@@ -94,7 +94,7 @@ const Renderer = {
     draggedCard: null,
 
     init(canvasElement) {
-        const config = { type: Phaser.AUTO, parent: 'game-view', width: document.getElementById('game-view').clientWidth, height: document.getElementById('game-view').clientHeight, backgroundColor: '#0b0e0a', pixelArt: false, scene: [MainScene, UIScene], fps: { target: 60 }, physics: { default: 'arcade', arcade: { debug: false } }, input: { activePointers: 1 } };
+        const config = { type: Phaser.AUTO, parent: 'game-view', width: document.getElementById('game-view').clientWidth, height: document.getElementById('game-view').clientHeight, backgroundColor: '#0b0e0a', pixelArt: false, scene: [MainScene, UIScene], fps: { target: 30 }, physics: { default: 'arcade', arcade: { debug: false } }, input: { activePointers: 1 } };
         this.game = new Phaser.Game(config); 
         phaserGame = this.game;
         window.phaserGame = this.game;
@@ -567,13 +567,16 @@ class MainScene extends Phaser.Scene {
                 const isDoubleClick = (now - last.time < 450) && (Math.abs(p.x - last.x) < 15 && Math.abs(p.y - last.y) < 15);
                 this._lastClick = { time: now, x: p.x, y: p.y };
 
-                if (window.__debugInstantKill && isDoubleClick && window.gameLogic) {
-                    const unit = this.getUnitAtScreenPosition ? this.getUnitAtScreenPosition(p.x, p.y) : null;
-                    if (unit && unit.hp > 0) {
-                        window.gameLogic.applyDamage(unit, unit.hp + 999, 'Instant kill');
-                        if (window.gameLogic.updateSidebar) window.gameLogic.updateSidebar();
-                        Renderer.isMapDragging = true;
-                        return;
+                if (window.__debugInstantKill && isDoubleClick && window.gameLogic && window.gameLogic.getUnitsInHex) {
+                    const inHex = window.gameLogic.getUnitsInHex(hex.q, hex.r).filter(u => u.hp > 0);
+                    if (inHex.length > 0) {
+                        const unit = inHex.length === 1 ? inHex[0] : (this.getClosestUnitToScreen ? this.getClosestUnitToScreen(inHex, p.x, p.y) : inHex[0]);
+                        if (unit) {
+                            window.gameLogic.applyDamage(unit, unit.hp + 999, 'Instant kill');
+                            if (window.gameLogic.updateSidebar) window.gameLogic.updateSidebar();
+                            Renderer.isMapDragging = true;
+                            return;
+                        }
                     }
                 }
                 Renderer.isMapDragging = true; 
