@@ -216,6 +216,7 @@ window.BattleLogic = class BattleLogic {
     let hitChance = 0;
     if (!isAreaAttack && targetUnit) {
       hitChance = (a.stats?.aim || 0) * 2 + w.acc - distPenalty - terrainCover;
+      if (w.code === 'mg42') hitChance += 30;
       if (targetUnit.stance === 'prone') hitChance -= 20;
       if (targetUnit.stance === 'crouch') hitChance -= 10;
       if (targetUnit.skills && targetUnit.skills.includes('Ambush')) hitChance -= 15;
@@ -224,18 +225,24 @@ window.BattleLogic = class BattleLogic {
 
     let shots = w.isConsumable ? 1 : Math.min(w.burst || 1, w.current);
     if ((a.def.isTank && w.type && w.type.includes('shell')) || w.code === 'm2_mortar') shots = 1;
+    if (w.code === 'mg42' && w.reserve !== undefined) shots = Math.min(w.burst || 15, w.reserve);
 
     if (w.indirect) { this.ui.log(`${a.name} 砲撃開始!`); }
     else { this.ui.log(`${a.name} 攻撃開始`); }
 
     // パフォーマンス改善: UI更新をループ外へ
     await new Promise(async (resolve) => {
+      const isMg42 = (w.code === 'mg42');
+      const fireRate = isMg42 ? 85 : ((w.type === 'bullet') ? 60 : 300);
+      const mg42Speed = 0.08;
+
       for (let i = 0; i < shots; i++) {
         if (!isAreaAttack && targetUnit && targetUnit.hp <= 0) break;
 
         if (!(a.def.isTank && w.type && w.type.includes('shell'))) {
           game.consumeAmmo(a, w.code);
         }
+        if (game.updateSidebar) game.updateSidebar();
 
         const sPos = Renderer.hexToPx(a.q, a.r);
         const ePos = Renderer.hexToPx(targetHex.q, targetHex.r);
@@ -243,24 +250,26 @@ window.BattleLogic = class BattleLogic {
         const isMortar = (w.code === 'm2_mortar');
         const isShell = w.type.includes('shell');
         const spread = (100 - w.acc) * 0.3;
-        const tx = ePos.x + (Math.random() - 0.5) * spread;
-        const ty = ePos.y + (Math.random() - 0.5) * spread;
+        const tx = ePos.x + (Math.random() - 0.5) * spread * (isMg42 ? 2 : 1);
+        const ty = ePos.y + (Math.random() - 0.5) * spread * (isMg42 ? 2 : 1);
 
-        if (window.Sfx) Sfx.play(w.code, isShell ? 'cannon' : (w.code === 'mg42' ? 'mg' : 'shot'));
+        if (window.Sfx) Sfx.play(w.code, isShell ? 'cannon' : (isMg42 ? 'mg' : 'shot'));
 
         const arc = isMortar ? 250 : (isShell ? 30 : 0);
-        const flightTime = isMortar ? 1000 : (isShell ? 600 : dist * 30);
-        const isMg42 = (w.code === 'mg42');
-        const fireRate = isMg42 ? 25 : ((w.type === 'bullet') ? 60 : 300);
+        const flightTime = isMortar ? 1000 : (isShell ? 600 : (isMg42 ? dist * 50 : dist * 30));
+        const projSpeed = isMg42 ? mg42Speed : (isMortar ? 0.05 : 0.2);
 
         if (window.VFX) {
           if (isMg42) {
-            const mfPos = { x: sPos.x - 20 + Math.random() * 40, y: sPos.y - 30 };
-            VFX.add({ x: mfPos.x, y: mfPos.y, vx: 2, vy: -1, life: 8, maxLife: 8, color: "#ffff88", size: 6, type: 'spark' });
+            for (let m = 0; m < 3; m++) {
+              const mfx = sPos.x - 15 + Math.random() * 30;
+              const mfy = sPos.y - 25 - Math.random() * 15;
+              VFX.add({ x: mfx, y: mfy, vx: 1 + Math.random() * 2, vy: -2 - Math.random() * 2, life: 18, maxLife: 18, color: "#ffffaa", size: 8 + Math.random() * 4, type: 'spark' });
+            }
           }
           VFX.addProj({
             x: sPos.x, y: sPos.y, sx: sPos.x, sy: sPos.y, ex: tx, ey: ty,
-            type: w.type, speed: isMortar ? 0.05 : 0.2,
+            type: w.type, speed: projSpeed,
             progress: 0,
             arcHeight: arc, isTracer: true,
             onHit: () => { }
@@ -325,7 +334,7 @@ window.BattleLogic = class BattleLogic {
             } else {
               if (window.VFX) {
                 VFX.add({ x: tx, y: ty, vx: 0, vy: 0, life: 10, maxLife: 10, color: "#aaa", size: 2, type: 'smoke' });
-                if (!isShell && w.type === 'bullet') VFX.addBulletImpact(tx, ty, isMg42 ? 15 : 1);
+                if (!isShell && w.type === 'bullet') VFX.addBulletImpact(tx, ty, 1);
               }
             }
             const sameHexUnits = game.getUnitsInHex(targetHex.q, targetHex.r).filter(u => u !== targetUnit && u.team !== a.team && u.hp > 0);
@@ -413,9 +422,14 @@ window.BattleLogic = class BattleLogic {
       if (ammoBox) { ammoBox.current--; return true; }
       return false;
     }
-    if (weaponCode === 'mg42' && u.hands[1] && u.hands[1].code === 'mg42' && u.hands[1].current > 0) {
-      u.hands[1].current--;
-      return true;
+    if (weaponCode === 'mg42' && u.hands[1] && u.hands[1].code === 'mg42') {
+      const mg = u.hands[1];
+      if (u.def?.isTank && mg.reserve !== undefined && mg.reserve > 0) {
+        mg.reserve--;
+        return true;
+      }
+      if (mg.current > 0) { mg.current--; return true; }
+      return false;
     }
     const w = this.getVirtualWeapon(u);
     if (!w) return false;
@@ -432,7 +446,8 @@ window.BattleLogic = class BattleLogic {
     if (!main) return null;
     if (a.def.isTank && targetUnit && !targetUnit.def?.isTank) {
       const mg = a.hands?.[1];
-      if (mg && mg.code === 'mg42' && mg.current > 0) {
+      const mgAmmo = (mg && mg.reserve !== undefined) ? mg.reserve : (mg && mg.current);
+      if (mg && mg.code === 'mg42' && mgAmmo > 0) {
         const dist = this.hexDist(a, targetUnit);
         const rng = mg.rng || 8; const minRng = mg.minRng || 0;
         if (dist >= minRng && dist <= rng && a.ap >= (mg.ap || 2)) return mg;

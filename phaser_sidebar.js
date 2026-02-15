@@ -138,7 +138,8 @@ window.PhaserSidebar = class PhaserSidebar {
 
     createSlot(u, item, type, index, x, y, isMain, isMortarActive) {
         const slotW = window.getSidebarWidth() - 36;
-        const slotH = isMain ? 90 : 36;
+        const needsMg42Gauge = item && item.code === 'mg42' && item.reserve !== undefined && isMain;
+        const slotH = (isMain && needsMg42Gauge) ? 130 : (isMain ? 90 : 36);
         const borderColor = isMain ? ACCENT : SLOT_BORDER;
         const bgColor = isMain ? 0x2a201a : SLOT_BG;
 
@@ -162,6 +163,22 @@ window.PhaserSidebar = class PhaserSidebar {
             }
             if (u.team === 'enemy') {
                 // 敵ユニットは弾丸ゲージ表示なし（はみ出し防止・弾切れは行動で表現）
+            } else if (item.code === 'mg42' && item.reserve !== undefined && isMain) {
+                const maxRounds = 300;
+                const reserve = Math.min(maxRounds, item.reserve || 0);
+                const cols = 30, rows = 10, cellW = 3, cellH = 2, gap = 1;
+                const gridTop = slotH - 48;
+                const countText = this.scene.add.text(8, gridTop - 4, `${reserve}/${maxRounds}`, { fontSize: '8px', color: TEXT_DIM, fontFamily: 'monospace' });
+                countText.setOrigin(0, 0);
+                container.add(countText);
+                for (let r = 0; r < rows; r++) {
+                    for (let c = 0; c < cols; c++) {
+                        const idx = r * cols + c;
+                        const dot = this.scene.add.rectangle(8 + c * (cellW + gap), gridTop + 8 + r * (cellH + gap), cellW, cellH, idx < reserve ? 0xddaa44 : 0x333333);
+                        dot.setOrigin(0, 0);
+                        container.add(dot);
+                    }
+                }
             } else if (u.def.isTank && isMain && item.reserve !== undefined) {
                 const shellCount = Math.min(20, item.reserve || 0);
                 for (let i = 0; i < shellCount; i++) {

@@ -285,15 +285,26 @@ class UIManager {
             const isAmmo = (item.type === 'ammo'); 
             let gaugeHtml = ""; 
             
-            if (!isAmmo && item.cap > 0 && !item.partType) { 
+            if (!isAmmo && !item.partType) { 
                 gaugeHtml = `<div class="ammo-gauge">`; 
-                const maxDisplay = 20; 
-                if (u.def.isTank && isMain) { 
-                    for(let i=0; i<Math.min(maxDisplay, item.reserve); i++) gaugeHtml += `<div class="shell"></div>`; 
-                } else { 
-                    for(let i=0; i<item.current; i++) gaugeHtml += `<div class="bullet"></div>`; 
-                    for(let i=item.current; i<item.cap; i++) gaugeHtml += `<div class="bullet" style="background:#333;box-shadow:none;"></div>`; 
-                } 
+                if (item.code === 'mg42' && item.reserve !== undefined && isMain) {
+                    const maxRounds = 300;
+                    const reserve = Math.min(maxRounds, item.reserve || 0);
+                    gaugeHtml += `<div style="font-size:8px;color:#888;margin-bottom:2px;">${reserve}/${maxRounds}</div>`;
+                    gaugeHtml += `<div style="display:grid;grid-template-columns:repeat(30,3px);grid-template-rows:repeat(10,2px);gap:1px;width:124px;">`;
+                    for (let i = 0; i < 300; i++) {
+                        gaugeHtml += `<div style="width:3px;height:2px;background:${i < reserve ? '#ddaa44' : '#333'};"></div>`;
+                    }
+                    gaugeHtml += `</div>`;
+                } else if (item.cap > 0) {
+                    const maxDisplay = 20; 
+                    if (u.def.isTank && isMain) { 
+                        for(let i=0; i<Math.min(maxDisplay, item.reserve || 0); i++) gaugeHtml += `<div class="shell"></div>`; 
+                    } else { 
+                        for(let i=0; i<item.current; i++) gaugeHtml += `<div class="bullet"></div>`; 
+                        for(let i=item.current; i<item.cap; i++) gaugeHtml += `<div class="bullet" style="background:#333;box-shadow:none;"></div>`; 
+                    }
+                }
                 gaugeHtml += `</div>`; 
             }
             if (isAmmo && item.code === 'mortar_shell_box') {
