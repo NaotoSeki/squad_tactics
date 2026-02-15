@@ -16,7 +16,7 @@ class EnemyAI {
       const targets = units.filter(u => u.team === targetTeam && u.hp > 0);
       if (targets.length === 0) break;
 
-      const w = this.game.getVirtualWeapon(actor) || (actor.hands?.[1]?.code === 'mg42' ? actor.hands[1] : null);
+      let w = this.game.getVirtualWeapon(actor) || (actor.hands?.[1]?.code === 'mg42' ? actor.hands[1] : null);
       const preferSoft = w && w.type === 'bullet' && !w.type.includes('shell');
       let target = targets[0];
       let bestScore = -9999;
@@ -30,7 +30,7 @@ class EnemyAI {
       });
       await this.optimizeWeapon(actor, target);
 
-      let w = this.game.getVirtualWeapon(actor);
+      w = this.game.getVirtualWeapon(actor) || (actor.hands?.[1]?.code === 'mg42' ? actor.hands[1] : null);
 
       let acted = true;
       let loopCount = 0;
