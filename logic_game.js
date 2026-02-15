@@ -201,7 +201,8 @@ window.BattleLogic = class BattleLogic {
 
     const dist = this.hexDist(a, targetHex);
     if (w.minRng && dist < w.minRng) { this.ui.log("目標が近すぎます！"); return; }
-    if (dist > w.rng) { this.ui.log("射程外"); return; }
+    const maxRange = Math.ceil((w.rng || 1) * 2);
+    if (dist > maxRange) { this.ui.log("射程外"); return; }
 
     this.isExecutingAttack = true;
     a.ap -= w.ap;
@@ -217,9 +218,11 @@ window.BattleLogic = class BattleLogic {
 
     const terrainCover = this.map[targetHex.q][targetHex.r].cover;
     const distPenalty = dist * (w.acc_drop || 5);
+    const overRange = Math.max(0, dist - (w.rng || 0));
     let hitChance = 0;
     if (!isAreaAttack && targetUnit) {
       hitChance = (a.stats?.aim || 0) * 2 + w.acc - distPenalty - terrainCover;
+      hitChance -= overRange * (w.overRangePenalty ?? 15);
       if (w.code === 'mg42') hitChance += 15;
       if (targetUnit.stance === 'prone') hitChance -= 20;
       if (targetUnit.stance === 'crouch') hitChance -= 10;
@@ -620,6 +623,35 @@ window.BattleLogic = class BattleLogic {
         this.calcAttackLine(u, p.q, p.r);
       }
     }
+  }
+
+  /**
+   * ATTACK MODE用：指定ヘックスへの概算命中率（％）を返す。ユニット狙いとエリア射撃で計算が異なる。
+   * @param {Object} attacker - 攻撃者ユニット
+   * @param {{q:number,r:number}} targetHex - 目標ヘックス
+   * @param {Object|null} targetUnit - 狙うユニット（いなければエリア射撃として中央着弾目安）
+   * @returns {{ hit: number, isArea: boolean }|null} 攻撃不可時は null
+   */
+  getEstimatedHitChance(attacker, targetHex, targetUnit) {
+    if (!attacker || !targetHex || !this.map[targetHex.q] || !this.map[targetHex.q][targetHex.r]) return null;
+    const w = this.getVirtualWeapon ? this.getVirtualWeapon(attacker) : null;
+    if (!w || w.type === 'melee') return null;
+    const dist = this.hexDist(attacker, targetHex);
+    const maxRange = Math.ceil((w.rng || 1) * 2);
+    if (dist > maxRange) return null;
+    if (w.minRng && dist < w.minRng) return null;
+    const terrainCover = this.map[targetHex.q][targetHex.r].cover;
+    let hit = (attacker.stats?.aim || 0) * 2 + (w.acc || 0) - (dist * (w.acc_drop || 5)) - terrainCover;
+    const overRange = Math.max(0, dist - (w.rng || 0));
+    hit -= overRange * (w.overRangePenalty ?? 15);
+    if (targetUnit) {
+      if (targetUnit.stance === 'prone') hit -= 20;
+      if (targetUnit.stance === 'crouch') hit -= 10;
+    } else if (w.area) {
+      hit += 20;
+    }
+    hit = Math.max(0, Math.min(100, Math.round(hit)));
+    return { hit, isArea: !!w.area && !targetUnit };
   }
 
   handleRightClick(mx, my, hex) {

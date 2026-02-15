@@ -107,6 +107,7 @@ class MapSystem {
 
   /**
    * 攻撃ライン（射線上のヘックス）を計算する。
+   * 定格射程までは alpha:1、それ以遠は 2*range 付近で 0 に線形でフェード。各要素に { q, r, alpha } を返す。
    * u.hands は常に3スロット配列を前提。getVirtualWeapon で実効武器を取得。
    */
   calcAttackLine(u, targetQ, targetR) {
@@ -119,12 +120,12 @@ class MapSystem {
     const dist = this.hexDist(u, { q: targetQ, r: targetR });
     if (dist === 0) { return []; }
 
-    const drawLen = Math.min(dist, range);
+    const maxDrawLen = Math.min(dist, Math.ceil(range * 2));
     const start = this.axialToCube(u.q, u.r);
     const end = this.axialToCube(targetQ, targetR);
 
     const line = [];
-    for (let i = 1; i <= drawLen; i++) {
+    for (let i = 1; i <= maxDrawLen; i++) {
       const t = i / dist;
       const lerpCube = {
         x: start.x + (end.x - start.x) * t,
@@ -133,7 +134,13 @@ class MapSystem {
       };
       const roundCube = this.cubeRound(lerpCube);
       const hex = this.cubeToAxial(roundCube);
-      if (this.isValidHex(hex.q, hex.r)) { line.push({ q: hex.q, r: hex.r }); } else { break; }
+      if (!this.isValidHex(hex.q, hex.r)) break;
+      let alpha = 1;
+      if (i > range) {
+        const over = i - range;
+        alpha = Math.max(0, 1 - over / range);
+      }
+      line.push({ q: hex.q, r: hex.r, alpha });
     }
     return line;
   }

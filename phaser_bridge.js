@@ -522,6 +522,7 @@ class MainScene extends Phaser.Scene {
         this.treeGroup = this.add.layer(); this.treeGroup.setDepth(2);
         this.hpGroup = this.add.layer(); this.hpGroup.setDepth(10);
         this.crosshairGroup = this.add.graphics().setDepth(200);
+        this.hitChanceText = this.add.text(0, 0, '', { fontSize: '14px', fontFamily: 'sans-serif', color: '#e8e8f0' }).setScrollFactor(0).setDepth(300).setVisible(false);
         this.vfxGraphics = this.add.graphics().setDepth(100); 
         this.overlayGraphics = this.add.graphics().setDepth(50); 
         if(window.EnvSystem) window.EnvSystem.clear();
@@ -658,13 +659,35 @@ class MainScene extends Phaser.Scene {
             }
         }
         if(selected && window.gameLogic.attackLine && window.gameLogic.attackLine.length > 0) {
-            this.overlayGraphics.lineStyle(3, 0xff2222, 0.8);
             const targetUnit = window.gameLogic.aimTargetUnit;
             window.gameLogic.attackLine.forEach(h => {
+                const alpha = (h.alpha !== undefined) ? h.alpha : 1;
+                this.overlayGraphics.lineStyle(3, 0xff2222, 0.8 * alpha);
                 const isUnitTarget = targetUnit && targetUnit.q === h.q && targetUnit.r === h.r;
                 const offset = overAimTarget ? 0 : (isUnitTarget ? time * 0.05 : 0);
                 this.drawDashedHexOutline(this.overlayGraphics, h.q, h.r, offset);
             });
+        }
+        const ptr = this.input.activePointer;
+        const inAttackMode = gl && gl.selectedUnit && gl.interactionMode === 'ATTACK';
+        if (this.hitChanceText) {
+            if (inAttackMode && hover && gl.getEstimatedHitChance) {
+                const targetUnit = this.getUnitAtScreenPosition ? this.getUnitAtScreenPosition(ptr.x, ptr.y) : null;
+                const inHex = gl.getUnitsInHex ? gl.getUnitsInHex(hover.q, hover.r) : [];
+                const enemies = inHex.filter(u => u.team !== gl.selectedUnit.team);
+                let unit = (targetUnit && inHex.indexOf(targetUnit) >= 0) ? targetUnit : null;
+                if (!unit && enemies.length > 0) unit = (this.getClosestUnitToScreen && enemies.length > 1) ? this.getClosestUnitToScreen(enemies, ptr.x, ptr.y) : enemies[0];
+                const est = gl.getEstimatedHitChance(gl.selectedUnit, hover, unit);
+                if (est) {
+                    this.hitChanceText.setPosition(ptr.x + 22, ptr.y - 14);
+                    this.hitChanceText.setText(est.isArea ? `~${est.hit}%` : `${est.hit}%`);
+                    this.hitChanceText.setVisible(true);
+                } else {
+                    this.hitChanceText.setVisible(false);
+                }
+            } else {
+                this.hitChanceText.setVisible(false);
+            }
         }
         const hover = window.gameLogic.hoverHex;
         if(selected && hover && window.gameLogic.reachableHexes && window.gameLogic.reachableHexes.some(h => h.q === hover.q && h.r === hover.r)) { this.overlayGraphics.lineStyle(3, 0xffffff, 0.8); this.drawHexOutline(this.overlayGraphics, hover.q, hover.r); }
@@ -682,6 +705,9 @@ class MainScene extends Phaser.Scene {
                 const phase = Math.floor(time / 280) % 2;
                 const url = phase === 0 ? 'url("data:image/svg+xml,' + encodeURIComponent(svgBright) + '") 16 16, crosshair' : 'url("data:image/svg+xml,' + encodeURIComponent(svgDim) + '") 16 16, crosshair';
                 canvas.style.cursor = url;
+            } else if (inAttackMode) {
+                const svgWhite = '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><circle cx="16" cy="16" r="12" fill="none" stroke="#e8e8f0" stroke-width="2"/><line x1="16" y1="4" x2="16" y2="28" stroke="#e8e8f0" stroke-width="2"/><line x1="4" y1="16" x2="28" y2="16" stroke="#e8e8f0" stroke-width="2"/></svg>';
+                canvas.style.cursor = 'url("data:image/svg+xml,' + encodeURIComponent(svgWhite) + '") 16 16, crosshair';
             } else {
                 canvas.style.cursor = '';
             }

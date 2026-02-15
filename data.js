@@ -50,18 +50,18 @@ const SKILL_STYLES = {
 };
 
 const WPNS = {
-    m1: { name:"M1 Garand", rng:7, acc:85, acc_drop:3, dmg:76, cap:8, mag:6, ap:2, rld:1, wgt:4, type:'bullet', burst:2, desc:"米軍主力小銃。", weight: 9.5, attr: ATTR.WEAPON },
-    thompson: { name:"M1A1 SMG", rng:5, acc:60, acc_drop:4, dmg:41, cap:30, mag:4, ap:2, rld:1, wgt:5, type:'bullet', burst:2, modes:[2, 5], desc:"近距離制圧用。", weight: 10, attr: ATTR.WEAPON },
-    k98_scope: { name:"M1903 Scope", rng:9, acc:95, acc_drop:3, dmg:72, cap:5, mag:5, ap:2, rld:2, wgt:5, type:'bullet', burst:1, desc:"精密狙撃銃。", weight: 9, attr: ATTR.WEAPON },
-    bar: { name:"M1918 BAR", rng:7, acc:55, acc_drop:3, dmg:45, cap:20, mag:5, ap:2, rld:2, wgt:9, type:'bullet', burst:3, desc:"分隊支援火器。", weight: 19, attr: ATTR.WEAPON }, 
-    m1911: { name:"Colt M1911", rng:3, acc:70, acc_drop:10, dmg:30, cap:7, mag:3, ap:2, rld:1, wgt:1, type:'bullet', burst:1, desc:"45口径拳銃。", weight: 2.4, attr: ATTR.WEAPON },
-    luger: { name:"Luger P08", rng:3, acc:75, acc_drop:10, dmg:25, cap:8, mag:2, ap:2, rld:1, wgt:1, type:'bullet', burst:1, desc:"将校の拳銃。", weight: 1.9, attr: ATTR.WEAPON },
+    m1: { name:"M1 Garand", rng:7, acc:85, acc_drop:3, dmg:76, cap:8, mag:6, ap:2, rld:1, wgt:4, type:'bullet', burst:2, overRangePenalty:10, desc:"米軍主力小銃。", weight: 9.5, attr: ATTR.WEAPON },
+    thompson: { name:"M1A1 SMG", rng:5, acc:60, acc_drop:4, dmg:41, cap:30, mag:4, ap:2, rld:1, wgt:5, type:'bullet', burst:2, modes:[2, 5], overRangePenalty:22, desc:"近距離制圧用。", weight: 10, attr: ATTR.WEAPON },
+    k98_scope: { name:"M1903 Scope", rng:9, acc:95, acc_drop:3, dmg:72, cap:5, mag:5, ap:2, rld:2, wgt:5, type:'bullet', burst:1, overRangePenalty:10, desc:"精密狙撃銃。", weight: 9, attr: ATTR.WEAPON },
+    bar: { name:"M1918 BAR", rng:7, acc:55, acc_drop:3, dmg:45, cap:20, mag:5, ap:2, rld:2, wgt:9, type:'bullet', burst:3, overRangePenalty:10, desc:"分隊支援火器。", weight: 19, attr: ATTR.WEAPON }, 
+    m1911: { name:"Colt M1911", rng:3, acc:70, acc_drop:10, dmg:30, cap:7, mag:3, ap:2, rld:1, wgt:1, type:'bullet', burst:1, overRangePenalty:25, desc:"45口径拳銃。", weight: 2.4, attr: ATTR.WEAPON },
+    luger: { name:"Luger P08", rng:3, acc:75, acc_drop:10, dmg:25, cap:8, mag:2, ap:2, rld:1, wgt:1, type:'bullet', burst:1, overRangePenalty:25, desc:"将校の拳銃。", weight: 1.9, attr: ATTR.WEAPON },
     knife: { name:"Combat Knife", rng:1, acc:90, dmg:35, cap:0, mag:0, ap:1, rld:0, wgt:0, type:'melee', burst:1, desc:"白兵戦用。", weight: 1, attr: ATTR.WEAPON },
     nade: { name:"Mk2 Grenade", rng:4, acc:60, dmg:80, cap:1, mag:2, ap:2, rld:0, wgt:1, type:'shell', area:true, desc:"破片手榴弾。", weight: 1.3, attr: ATTR.WEAPON },
     
-    mg42: { name:"MG42", rng:8, acc:45, acc_drop:4, dmg:25, cap:50, mag:99, ap:2, rld:3, wgt:12, type:'bullet', burst:15, desc:"機関銃。", weight: 25, attr: ATTR.WEAPON },
-    kwk: { name:"75mm KwK", rng:8, acc:70, acc_drop:2, dmg:150, cap:1, mag:99, ap:3, rld:0, wgt:0, type:'shell_fast', burst:1, desc:"戦車砲。", weight: 0, attr: ATTR.WEAPON },
-    kwk88: { name:"88mm KwK36", rng:10, acc:85, acc_drop:1, dmg:250, cap:1, mag:99, ap:3, rld:0, wgt:0, type:'shell_fast', burst:1, desc:"重戦車砲。", weight: 0, attr: ATTR.WEAPON },
+    mg42: { name:"MG42", rng:8, acc:45, acc_drop:4, dmg:25, cap:50, mag:99, ap:2, rld:3, wgt:12, type:'bullet', burst:15, overRangePenalty:15, desc:"機関銃。", weight: 25, attr: ATTR.WEAPON },
+    kwk: { name:"75mm KwK", rng:8, acc:70, acc_drop:2, dmg:150, cap:1, mag:99, ap:3, rld:0, wgt:0, type:'shell_fast', burst:1, overRangePenalty:4, desc:"戦車砲。", weight: 0, attr: ATTR.WEAPON },
+    kwk88: { name:"88mm KwK36", rng:10, acc:85, acc_drop:1, dmg:250, cap:1, mag:99, ap:3, rld:0, wgt:0, type:'shell_fast', burst:1, overRangePenalty:3, desc:"重戦車砲。", weight: 0, attr: ATTR.WEAPON },
 
     'mortar_barrel': { name: "M2 Tube", type: "part", partType: "barrel", desc: "M2迫撃砲の砲身。", weight: 12.8, attr: ATTR.WEAPON },
     'mortar_bipod':  { name: "M2 Bipod", type: "part", partType: "bipod", desc: "M2迫撃砲の二脚。", weight: 16.4, attr: ATTR.WEAPON },
