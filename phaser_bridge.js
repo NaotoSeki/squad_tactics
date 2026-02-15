@@ -300,14 +300,16 @@ class Card extends Phaser.GameObjects.Container {
     }
     returnToHand() { const hand = this.scene.handContainer; this.scene.children.remove(this); hand.add(this); this.setDepth(0); this.physX = this.x; this.physY = this.y; this.targetX = this.baseX; this.targetY = this.baseY; }
     findOverlappingSameTypeCardAt(cx, cy) {
-        const hand = this.scene.handContainer;
-        const cardW = 70; const cardH = 100;
+        const dragRect = new Phaser.Geom.Rectangle(cx - 70, cy - 100, 140, 200);
         for (const c of this.scene.cards) {
             if (c === this || !c.active) continue;
-            const ox = c.parentContainer === hand ? hand.x + c.physX : c.physX;
-            const oy = c.parentContainer === hand ? hand.y + c.physY : c.physY;
-            const left = ox - cardW; const right = ox + cardW; const top = oy - cardH; const bottom = oy + cardH;
-            if (cx >= left && cx <= right && cy >= top && cy <= bottom && c.cardType === this.cardType) return c;
+            if (c.cardType !== this.cardType) continue;
+            try {
+                const b = c.getBounds();
+                if (!b) continue;
+                if (b.contains(cx, cy)) return c;
+                if (Phaser.Geom.Rectangle.Overlaps(dragRect, b)) return c;
+            } catch (e) { continue; }
         }
         return null;
     }
@@ -350,7 +352,6 @@ class UIScene extends Phaser.Scene {
     drawFusionHalo(time) {
         const t = time * 0.001;
         const g = this.uiVfxGraphics;
-        const hand = this.handContainer;
         const pulse = 0.7 + 0.3 * Math.sin(t * 8);
         const colors = [0xffff88, 0xffdd44, 0xffaa00, 0xffffff];
         const drawHaloAt = (x, y) => {
@@ -361,11 +362,11 @@ class UIScene extends Phaser.Scene {
             }
         };
         const target = this.fusionTargetCard;
-        const tx = hand.x + target.physX;
-        const ty = hand.y + target.physY;
-        drawHaloAt(tx, ty);
         const drag = Renderer.draggedCard;
-        if (drag) drawHaloAt(drag.physX, drag.physY);
+        try {
+            if (target) { const b = target.getBounds(); if (b) drawHaloAt(b.centerX, b.centerY); }
+            if (drag) { const b = drag.getBounds(); if (b) drawHaloAt(b.centerX, b.centerY); }
+        } catch (e) {}
     }
     drawWavyHaloLine(g, t, colors, x1, y1, x2, y2, isVertical, segments, haloSpread, cycleMult, phaseOffset) {
         const k = typeof cycleMult === 'number' ? cycleMult : 1;
