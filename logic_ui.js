@@ -291,9 +291,9 @@ class UIManager {
                     const maxRounds = 300;
                     const reserve = Math.min(maxRounds, item.reserve || 0);
                     gaugeHtml += `<div style="font-size:8px;color:#888;margin-bottom:2px;">${reserve}/${maxRounds}</div>`;
-                    gaugeHtml += `<div style="display:grid;grid-template-columns:repeat(30,3px);grid-template-rows:repeat(10,2px);gap:1px;width:124px;">`;
+                    gaugeHtml += `<div style="display:grid;grid-template-columns:repeat(30,1fr);grid-template-rows:repeat(10,2px);gap:1px;width:100%;max-width:100%;box-sizing:border-box;">`;
                     for (let i = 0; i < 300; i++) {
-                        gaugeHtml += `<div style="width:3px;height:2px;background:${i < reserve ? '#ddaa44' : '#333'};"></div>`;
+                        gaugeHtml += `<div style="min-width:2px;height:2px;background:${i < reserve ? '#ddaa44' : '#333'};"></div>`;
                     }
                     gaugeHtml += `</div>`;
                 } else if (item.cap > 0) {

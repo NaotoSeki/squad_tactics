@@ -216,7 +216,7 @@ window.BattleLogic = class BattleLogic {
     let hitChance = 0;
     if (!isAreaAttack && targetUnit) {
       hitChance = (a.stats?.aim || 0) * 2 + w.acc - distPenalty - terrainCover;
-      if (w.code === 'mg42') hitChance += 30;
+      if (w.code === 'mg42') hitChance += 15;
       if (targetUnit.stance === 'prone') hitChance -= 20;
       if (targetUnit.stance === 'crouch') hitChance -= 10;
       if (targetUnit.skills && targetUnit.skills.includes('Ambush')) hitChance -= 15;
@@ -233,7 +233,7 @@ window.BattleLogic = class BattleLogic {
     // パフォーマンス改善: UI更新をループ外へ
     await new Promise(async (resolve) => {
       const isMg42 = (w.code === 'mg42');
-      const fireRate = isMg42 ? 85 : ((w.type === 'bullet') ? 60 : 300);
+      const fireRate = isMg42 ? 30 : ((w.type === 'bullet') ? 60 : 300);
       const mg42Speed = 0.08;
 
       for (let i = 0; i < shots; i++) {
@@ -242,7 +242,9 @@ window.BattleLogic = class BattleLogic {
         if (!(a.def.isTank && w.type && w.type.includes('shell'))) {
           game.consumeAmmo(a, w.code);
         }
-        if (game.updateSidebar) game.updateSidebar();
+        if (game.updateSidebar) {
+          requestAnimationFrame(() => game.updateSidebar(a));
+        }
 
         const sPos = Renderer.hexToPx(a.q, a.r);
         const ePos = Renderer.hexToPx(targetHex.q, targetHex.r);
@@ -264,7 +266,7 @@ window.BattleLogic = class BattleLogic {
             for (let m = 0; m < 3; m++) {
               const mfx = sPos.x - 15 + Math.random() * 30;
               const mfy = sPos.y - 25 - Math.random() * 15;
-              VFX.add({ x: mfx, y: mfy, vx: 1 + Math.random() * 2, vy: -2 - Math.random() * 2, life: 18, maxLife: 18, color: "#ffffaa", size: 8 + Math.random() * 4, type: 'spark' });
+              VFX.add({ x: mfx, y: mfy, vx: 1 + Math.random() * 2, vy: -2 - Math.random() * 2, life: 12, maxLife: 12, color: "#ffffaa", size: 4 + Math.random() * 2, type: 'spark' });
             }
           }
           VFX.addProj({
@@ -354,7 +356,7 @@ window.BattleLogic = class BattleLogic {
 
       setTimeout(() => {
         game.state = 'PLAY';
-        game.updateSidebar();
+        game.updateSidebar(a);
 
         const wAfter = game.getVirtualWeapon(a);
         if (a.def.isTank && wAfter && wAfter.current === 0 && wAfter.reserve > 0 && game.tankAutoReload && a.ap >= 1) {
@@ -459,7 +461,10 @@ window.BattleLogic = class BattleLogic {
   // --- HELPER METHODS ---
   toggleSidebar() { this.ui.toggleSidebar(); }
   toggleTankAutoReload() { this.tankAutoReload = !this.tankAutoReload; this.updateSidebar(); }
-  updateSidebar() { this.ui.updateSidebar(this.selectedUnit, this.state, this.tankAutoReload); }
+  updateSidebar(unitOverride) {
+    const u = unitOverride != null ? unitOverride : this.selectedUnit;
+    this.ui.updateSidebar(u, this.state, this.tankAutoReload);
+  }
   showContext(mx, my, hex) { this.ui.showContext(mx, my, hex); }
   hideActionMenu() { this.ui.hideActionMenu(); }
   getUnitsInHex(q, r) { return this.units.filter(u => u.q === q && u.r === r && u.hp > 0); }
