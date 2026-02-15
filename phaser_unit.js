@@ -99,18 +99,14 @@ class UnitView {
                     const isSelected = (window.gameLogic.selectedUnit === u);
                     if (isSelected) {
                         if (this.unitLayer.exists(visual.container)) { this.unitLayer.remove(visual.container); this.hpLayer.add(visual.container); }
-                        if (visual.glowFx && visual.sprite) { visual.sprite.postFX.remove(visual.glowFx); visual.glowFx = null; }
-                        if (visual.sprite && !visual.sprite.setTint) { /* no tint */ } else if (visual.sprite) { visual.sprite.setTint(0xffff88); }
+                        if (!visual.glowFx && visual.sprite) {
+                            visual.glowFx = visual.sprite.postFX.addGlow(0xffff00, 2, 0, false, 0.1, 12);
+                        }
                     } else {
                         if (this.hpLayer.exists(visual.container)) { this.hpLayer.remove(visual.container); this.unitLayer.add(visual.container); }
                         if (visual.glowFx && visual.sprite) {
                             visual.sprite.postFX.remove(visual.glowFx);
                             visual.glowFx = null;
-                        }
-                        if (visual.sprite) {
-                            visual.sprite.clearTint();
-                            if (u.team === 'player') visual.sprite.setTint(u.def.isTank ? 0xccddee : 0xeeeeff);
-                            else visual.sprite.setTint(0x9955ff);
                         }
                     }
                 } catch(err) {
