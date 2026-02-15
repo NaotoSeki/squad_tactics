@@ -48,6 +48,7 @@ window.BattleLogic = class BattleLogic {
     this.spawnEnemies();
 
     this.state = 'PLAY';
+    this._victoryProcessed = false;
     this.ui.log(`SECTOR ${this.sector} ENGAGEMENT START`);
 
     const secCounter = document.getElementById('sector-counter');
@@ -116,27 +117,28 @@ window.BattleLogic = class BattleLogic {
       if (u.hp < u.maxHp) { u.hp = Math.min(u.maxHp, u.hp + 20); this.ui.log("修理"); }
     });
 
+    const turnDelay = this.isAuto ? 300 : 1200;
     setTimeout(async () => {
       if (e) e.style.opacity = 0;
       await this.ai.executeTurn(this.units);
 
       if (this.checkWin()) return;
 
-      // AP回復
       this.units.forEach(u => { if (u.team === 'player') u.ap = u.maxAp; });
       this.ui.log("-- PLAYER PHASE --");
       this.state = 'PLAY';
       this.isProcessingTurn = false;
       if (this.isAuto) this.runAuto();
-    }, 1200);
+    }, turnDelay);
   }
 
   checkWin() {
     if (this.state === 'WIN') return true;
+    if (this._victoryProcessed) return true;
     const enemies = this.units.filter(u => u.team === 'enemy' && u.hp > 0);
     if (enemies.length === 0) {
       this.state = 'WIN';
-      // 生存者を抽出してCampaignへ返す
+      this._victoryProcessed = true;
       const survivors = this.units.filter(u => u.team === 'player' && u.hp > 0);
       this.campaign.onSectorCleared(survivors);
       return true;
@@ -155,9 +157,11 @@ window.BattleLogic = class BattleLogic {
   async actionAttack(a, d) {
     if (this.isExecutingAttack) return;
     if (!a) return;
+    const targetUnitForWeapon = (d.hp !== undefined) ? d : (this.getUnitInHex(d.q, d.r));
 
     const game = this;
-    const w = this.getVirtualWeapon(a);
+    let w = this.getAttackWeapon ? this.getAttackWeapon(a, targetUnitForWeapon) : null;
+    if (!w) w = this.getVirtualWeapon(a);
     if (!w) return;
     if (w.isBroken) { this.ui.log("武器故障中！修理が必要"); return; }
 
@@ -219,7 +223,7 @@ window.BattleLogic = class BattleLogic {
     }
 
     let shots = w.isConsumable ? 1 : Math.min(w.burst || 1, w.current);
-    if (a.def.isTank || w.code === 'm2_mortar') shots = 1;
+    if ((a.def.isTank && w.type && w.type.includes('shell')) || w.code === 'm2_mortar') shots = 1;
 
     if (w.indirect) { this.ui.log(`${a.name} 砲撃開始!`); }
     else { this.ui.log(`${a.name} 攻撃開始`); }
@@ -229,7 +233,6 @@ window.BattleLogic = class BattleLogic {
       for (let i = 0; i < shots; i++) {
         if (!isAreaAttack && targetUnit && targetUnit.hp <= 0) break;
 
-        // 戦車砲は発射直前に既に消費済み
         if (!(a.def.isTank && w.type && w.type.includes('shell'))) {
           game.consumeAmmo(a, w.code);
         }
@@ -243,15 +246,18 @@ window.BattleLogic = class BattleLogic {
         const tx = ePos.x + (Math.random() - 0.5) * spread;
         const ty = ePos.y + (Math.random() - 0.5) * spread;
 
-        if (window.Sfx) Sfx.play(w.code, isShell ? 'cannon' : 'shot');
+        if (window.Sfx) Sfx.play(w.code, isShell ? 'cannon' : (w.code === 'mg42' ? 'mg' : 'shot'));
 
         const arc = isMortar ? 250 : (isShell ? 30 : 0);
         const flightTime = isMortar ? 1000 : (isShell ? 600 : dist * 30);
-
-        // ★テンポ改善: 発射レートを高速化
-        const fireRate = (w.type === 'bullet') ? 60 : 300;
+        const isMg42 = (w.code === 'mg42');
+        const fireRate = isMg42 ? 25 : ((w.type === 'bullet') ? 60 : 300);
 
         if (window.VFX) {
+          if (isMg42) {
+            const mfPos = { x: sPos.x - 20 + Math.random() * 40, y: sPos.y - 30 };
+            VFX.add({ x: mfPos.x, y: mfPos.y, vx: 2, vy: -1, life: 8, maxLife: 8, color: "#ffff88", size: 6, type: 'spark' });
+          }
           VFX.addProj({
             x: sPos.x, y: sPos.y, sx: sPos.x, sy: sPos.y, ex: tx, ey: ty,
             type: w.type, speed: isMortar ? 0.05 : 0.2,
@@ -319,7 +325,7 @@ window.BattleLogic = class BattleLogic {
             } else {
               if (window.VFX) {
                 VFX.add({ x: tx, y: ty, vx: 0, vy: 0, life: 10, maxLife: 10, color: "#aaa", size: 2, type: 'smoke' });
-                if (!isShell && w.type === 'bullet') VFX.addBulletImpact(tx, ty, 1);
+                if (!isShell && w.type === 'bullet') VFX.addBulletImpact(tx, ty, isMg42 ? 15 : 1);
               }
             }
             const sameHexUnits = game.getUnitsInHex(targetHex.q, targetHex.r).filter(u => u !== targetUnit && u.team !== a.team && u.hp > 0);
@@ -407,6 +413,10 @@ window.BattleLogic = class BattleLogic {
       if (ammoBox) { ammoBox.current--; return true; }
       return false;
     }
+    if (weaponCode === 'mg42' && u.hands[1] && u.hands[1].code === 'mg42' && u.hands[1].current > 0) {
+      u.hands[1].current--;
+      return true;
+    }
     const w = this.getVirtualWeapon(u);
     if (!w) return false;
     const primarySlot = u.hands[0];
@@ -415,6 +425,20 @@ window.BattleLogic = class BattleLogic {
       return true;
     }
     return false;
+  }
+
+  getAttackWeapon(a, targetUnit) {
+    const main = this.getVirtualWeapon(a);
+    if (!main) return null;
+    if (a.def.isTank && targetUnit && !targetUnit.def?.isTank) {
+      const mg = a.hands?.[1];
+      if (mg && mg.code === 'mg42' && mg.current > 0) {
+        const dist = this.hexDist(a, targetUnit);
+        const rng = mg.rng || 8; const minRng = mg.minRng || 0;
+        if (dist >= minRng && dist <= rng && a.ap >= (mg.ap || 2)) return mg;
+      }
+    }
+    return main;
   }
 
   // --- HELPER METHODS ---
@@ -812,7 +836,7 @@ window.BattleLogic = class BattleLogic {
 
   toggleAuto() { this.isAuto = !this.isAuto; const b = document.getElementById('auto-toggle'); if(b) b.classList.toggle('active'); if(this.isAuto && this.state==='PLAY') this.runAuto(); }
   async runAuto() { if(this.state!=='PLAY') return; this.ui.log(":: Auto ::"); this.clearSelection(); this.isAutoProcessing = true; await this.ai.execute(this.units, 'player'); this.isAutoProcessing = false; if(this.state==='WIN') return; if(this.isAuto && this.state==='PLAY') this.endTurn(); }
-  async actionMove(u, p) { this.state = 'ANIM'; for(let s of p){u.ap-=this.map[s.q][s.r].cost; u.q=s.q; u.r=s.r; if(window.Sfx) Sfx.play('move'); await new Promise(r => setTimeout(r, 180)); } this.checkReactionFire(u); this.state = 'PLAY'; this.refreshUnitState(u); this.checkPhaseEnd(); }
+  async actionMove(u, p) { this.state = 'ANIM'; const stepMs = (this.isAuto || this.isAutoProcessing) ? 60 : 180; for(let s of p){u.ap-=this.map[s.q][s.r].cost; u.q=s.q; u.r=s.r; if(window.Sfx) Sfx.play('move'); await new Promise(r => setTimeout(r, stepMs)); } this.checkReactionFire(u); this.state = 'PLAY'; this.refreshUnitState(u); this.checkPhaseEnd(); }
   checkReactionFire(u) { this.units.filter(e => e.team !== u.team && e.hp > 0 && e.def.isTank && this.hexDist(u, e) <= 1).forEach(t => { this.ui.log("防御射撃"); this.applyDamage(u, 15, "防御"); if(window.VFX) VFX.addExplosion(Renderer.hexToPx(u.q, u.r).x, Renderer.hexToPx(u.q, u.r).y, "#fa0", 5); }); }
   checkPhaseEnd() { if (this.units.filter(u => u.team === 'player' && u.hp > 0 && u.ap > 0).length === 0 && this.state === 'PLAY') { this.endTurn(); } }
 

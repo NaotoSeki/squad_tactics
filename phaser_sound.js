@@ -18,7 +18,20 @@ const Sfx = {
 
     init() { 
         if(!this.ctx) this.ctx = new (window.AudioContext||window.webkitAudioContext)(); 
-        if(this.ctx.state==='suspended') this.ctx.resume(); 
+        if(this.ctx.state==='suspended') this.ctx.resume();
+        if (!this._visibilityBound) {
+            this._visibilityBound = () => {
+                if (document.visibilityState === 'visible') {
+                    const now = Date.now();
+                    Object.keys(this.lastPlayTime || {}).forEach(k => { this.lastPlayTime[k] = now; });
+                    if (window.phaserGame) {
+                        const main = window.phaserGame.scene.getScene('MainScene');
+                        if (main && main.sound) main.sound.stopAll();
+                    }
+                }
+            };
+            document.addEventListener('visibilitychange', this._visibilityBound);
+        }
     },
 
     preload(scene) {

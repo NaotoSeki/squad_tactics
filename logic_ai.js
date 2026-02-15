@@ -16,13 +16,18 @@ class EnemyAI {
       const targets = units.filter(u => u.team === targetTeam && u.hp > 0);
       if (targets.length === 0) break;
 
+      const w = this.game.getVirtualWeapon(actor) || (actor.hands?.[1]?.code === 'mg42' ? actor.hands[1] : null);
+      const preferSoft = w && w.type === 'bullet' && !w.type.includes('shell');
       let target = targets[0];
-      let minDist = 9999;
+      let bestScore = -9999;
       targets.forEach(t => {
-        const d = this.game.hexDist(actor, t);
-        if (d < minDist) { minDist = d; target = t; }
+        const dist = this.game.hexDist(actor, t);
+        const inRange = w && dist >= (w.minRng || 0) && dist <= w.rng;
+        let score = -dist * 2 - t.hp;
+        if (preferSoft && !t.def?.isTank) score += 200;
+        if (inRange) score += 100;
+        if (score > bestScore) { bestScore = score; target = t; }
       });
-
       await this.optimizeWeapon(actor, target);
 
       let w = this.game.getVirtualWeapon(actor);
@@ -63,7 +68,7 @@ class EnemyAI {
         // 弾切れ時はリロード試行（成功したら次ループで射撃）
         if (w && w.current <= 0 && (actor.def.isTank || !w.code.includes('mortar'))) {
           this.game.reloadWeapon(actor, false);
-          await new Promise(r => setTimeout(r, 200));
+          await new Promise(r => setTimeout(r, 50));
           w = this.game.getVirtualWeapon(actor);
           if (w && w.current > 0) { acted = true; continue; }
         }
@@ -77,13 +82,13 @@ class EnemyAI {
             if (actor.ap >= cost) {
               await this.game.actionMove(actor, [next]);
               acted = true;
-              await new Promise(r => setTimeout(r, 100));
+              await new Promise(r => setTimeout(r, 30));
               continue;
             }
           }
         }
       }
-      await new Promise(r => setTimeout(r, 100));
+      await new Promise(r => setTimeout(r, 30));
     }
   }
 
@@ -109,7 +114,7 @@ class EnemyAI {
     if (bestSlotIndex !== -1) {
       this.game.swapEquipment({ type: 'main', index: 0 }, { type: 'bag', index: bestSlotIndex }, actor);
       if (window.Sfx) window.Sfx.play('swap');
-      await new Promise(r => setTimeout(r, 200));
+      await new Promise(r => setTimeout(r, 50));
     }
   }
 
