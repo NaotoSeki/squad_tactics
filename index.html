@@ -102,17 +102,25 @@
         .ar-check input { margin-right: 5px; }
         .ar-check:hover { color: #fff; }
 
-        #battle-log-window { position: fixed; top: 20px; left: 20px; width: 320px; max-height: 280px; background: rgba(10,15,10,0.92); border: 1px solid #d84; border-radius: 6px; box-shadow: 0 4px 20px rgba(0,0,0,0.6); z-index: 1000; display: flex; flex-direction: column; overflow: hidden; pointer-events: auto; }
+        #battle-log-window { position: fixed; top: 20px; left: 20px; width: 320px; height: 280px; min-width: 200px; min-height: 36px; max-width: 90vw; max-height: 80vh; background: rgba(10,15,10,0.92); border: 1px solid #d84; border-radius: 6px; box-shadow: 0 4px 20px rgba(0,0,0,0.6); z-index: 1000; display: flex; flex-direction: column; overflow: hidden; pointer-events: auto; }
         #battle-log-window * { pointer-events: auto; }
-        #battle-log-window.minimized { max-height: 36px; }
+        #battle-log-window.minimized { height: 36px !important; min-height: 36px; }
         #battle-log-window .log-title-bar { background: #222; padding: 6px 10px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #444; cursor: move; user-select: none; }
         #battle-log-window .log-title-bar span { font-size: 11px; color: #d84; font-weight: bold; }
         #battle-log-window .log-title-bar .log-btns { display: flex; gap: 4px; }
         #battle-log-window .log-title-bar button { width: 22px; height: 22px; background: #333; border: 1px solid #555; color: #ccc; cursor: pointer; font-size: 12px; line-height: 1; padding: 0; border-radius: 3px; }
         #battle-log-window .log-title-bar button:hover { background: #444; color: #fff; }
         #battle-log-window .log-title-bar button.close:hover { background: #633; color: #fcc; }
-        #battle-log-window #battle-log-body { flex: 1; overflow-y: auto; padding: 10px; font-family: "Lucida Console", monospace; font-size: 10px; color: #6c6; user-select: text; -webkit-user-select: text; }
+        #battle-log-window #battle-log-body { flex: 1; overflow-y: auto; padding: 10px; font-family: "Lucida Console", monospace; font-size: 10px; color: #6c6; user-select: text; -webkit-user-select: text; min-height: 0; }
         #battle-log-window #battle-log-body .log-entry { margin-bottom: 3px; border-bottom: 1px solid #222; white-space: pre-wrap; word-break: break-all; }
+        #battle-log-window .log-resize-handle { position: absolute; right: 0; bottom: 0; width: 16px; height: 16px; cursor: nwse-resize; background: linear-gradient(135deg, transparent 50%, #444 50%, #444 60%, transparent 60%); border-radius: 0 0 4px 0; z-index: 10; }
+        #battle-log-window.minimized .log-resize-handle { display: none; }
+
+        #debug-window { position: fixed; left: 20px; width: 320px; min-width: 200px; background: rgba(10,15,10,0.92); border: 1px solid #555; border-radius: 4px; box-shadow: 0 2px 10px rgba(0,0,0,0.5); z-index: 999; padding: 6px 10px; font-size: 11px; color: #888; pointer-events: auto; display: flex; align-items: center; gap: 8px; }
+        #debug-window * { pointer-events: auto; }
+        #debug-window label { cursor: pointer; display: flex; align-items: center; gap: 6px; }
+        #debug-window input[type="checkbox"] { cursor: pointer; }
+        #debug-window .debug-label { color: #d84; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -163,6 +171,12 @@
             </div>
         </div>
         <div id="battle-log-body"></div>
+        <div class="log-resize-handle" title="リサイズ"></div>
+    </div>
+
+    <div id="debug-window">
+        <span class="debug-label">DEBUG</span>
+        <label><input type="checkbox" id="debug-instant-kill"> Instant kill</label>
     </div>
 
     <div id="context-menu"></div>
@@ -190,8 +204,23 @@
             if (!win) return;
             const body = document.getElementById('battle-log-body');
             const titleBar = win.querySelector('.log-title-bar');
-            win.querySelector('.close').onclick = () => { win.style.display = 'none'; };
-            win.querySelector('.minimize').onclick = () => { win.classList.toggle('minimized'); body.style.display = win.classList.contains('minimized') ? 'none' : 'block'; };
+            const resizeHandle = win.querySelector('.log-resize-handle');
+            const debugWin = document.getElementById('debug-window');
+
+            function positionDebugWindow() {
+                if (!debugWin) return;
+                const rect = win.getBoundingClientRect();
+                debugWin.style.top = (rect.bottom + 4) + 'px';
+                debugWin.style.width = Math.max(200, Math.min(win.offsetWidth, 320)) + 'px';
+            }
+
+            win.querySelector('.close').onclick = () => { win.style.display = 'none'; positionDebugWindow(); };
+            win.querySelector('.minimize').onclick = () => {
+                win.classList.toggle('minimized');
+                body.style.display = win.classList.contains('minimized') ? 'none' : 'block';
+                positionDebugWindow();
+            };
+
             if (titleBar) {
                 let drag = { active: false, startX: 0, startY: 0, startLeft: 0, startTop: 0 };
                 titleBar.addEventListener('mousedown', function(e) {
@@ -214,9 +243,40 @@
                     win.style.left = left + 'px';
                     win.style.top = top + 'px';
                     win.style.right = 'auto';
+                    positionDebugWindow();
                 });
                 document.addEventListener('mouseup', function() { drag.active = false; });
             }
+
+            if (resizeHandle) {
+                let resize = { active: false, startX: 0, startY: 0, startW: 0, startH: 0 };
+                resizeHandle.addEventListener('mousedown', function(e) {
+                    if (e.button !== 0) return;
+                    e.preventDefault();
+                    resize.active = true;
+                    resize.startX = e.clientX;
+                    resize.startY = e.clientY;
+                    resize.startW = win.offsetWidth;
+                    resize.startH = win.offsetHeight;
+                });
+                document.addEventListener('mousemove', function(e) {
+                    if (!resize.active) return;
+                    let w = resize.startW + (e.clientX - resize.startX);
+                    let h = resize.startH + (e.clientY - resize.startY);
+                    w = Math.max(200, Math.min(w, window.innerWidth - 40));
+                    h = Math.max(36, Math.min(h, window.innerHeight - 60));
+                    win.style.width = w + 'px';
+                    win.style.height = h + 'px';
+                    positionDebugWindow();
+                });
+                document.addEventListener('mouseup', function() { resize.active = false; });
+            }
+
+            document.getElementById('debug-instant-kill').addEventListener('change', function() {
+                window.__debugInstantKill = this.checked;
+            });
+            window.__debugInstantKill = false;
+            positionDebugWindow();
         })();
         (function initPhaserSidebarResizer() {
             const app = document.getElementById('app');

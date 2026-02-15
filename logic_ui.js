@@ -24,7 +24,7 @@ class UIManager {
             if (!e.target.closest('#command-menu') && !e.target.closest('canvas')) { this.hideActionMenu(); }
         });
         const stopPropagation = (e) => { e.stopPropagation(); };
-        const menuIds = ['context-menu', 'command-menu', 'setup-screen', 'reward-screen', 'gameover-screen'];
+        const menuIds = ['context-menu', 'command-menu', 'setup-screen', 'reward-screen', 'gameover-screen', 'battle-log-window', 'debug-window'];
         menuIds.forEach(id => {
             const el = document.getElementById(id);
             if (el) {

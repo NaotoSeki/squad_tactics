@@ -570,6 +570,15 @@ window.BattleLogic = class BattleLogic {
 
   handleClick(p, pointerX, pointerY) {
     if (this.state !== 'PLAY') return;
+    if (window.__debugInstantKill && pointerX != null && pointerY != null && typeof phaserGame !== 'undefined' && phaserGame.scene) {
+      const main = phaserGame.scene.getScene('MainScene');
+      const unit = main && main.getUnitAtScreenPosition ? main.getUnitAtScreenPosition(pointerX, pointerY) : null;
+      if (unit && unit.hp > 0) {
+        this.applyDamage(unit, unit.hp + 999, 'Instant kill');
+        if (this.updateSidebar) this.updateSidebar();
+        return;
+      }
+    }
     if (this.interactionMode === 'SELECT') { this.clearSelection(); }
     else if (this.interactionMode === 'MOVE') {
       if (this.selectedUnit && this.isValidHex(p.q, p.r) && this.path.length > 0) {
