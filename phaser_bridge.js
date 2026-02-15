@@ -556,11 +556,26 @@ class MainScene extends Phaser.Scene {
             });
             return best;
         };
+        this._lastClick = { time: 0, x: 0, y: 0 };
         this.input.on('pointerdown', (p) => { 
             if (Renderer.isCardDragging || Renderer.checkUIHover(p.x, p.y, p.event)) return; 
             if (Renderer.suppressMapClick) { Renderer.suppressMapClick = false; return; }
             const hex = Renderer.pxToHex(p.x, p.y);
             if(p.button === 0) { 
+                const now = Date.now();
+                const last = this._lastClick;
+                const isDoubleClick = (now - last.time < 450) && (Math.abs(p.x - last.x) < 15 && Math.abs(p.y - last.y) < 15);
+                this._lastClick = { time: now, x: p.x, y: p.y };
+
+                if (window.__debugInstantKill && isDoubleClick && window.gameLogic) {
+                    const unit = this.getUnitAtScreenPosition ? this.getUnitAtScreenPosition(p.x, p.y) : null;
+                    if (unit && unit.hp > 0) {
+                        window.gameLogic.applyDamage(unit, unit.hp + 999, 'Instant kill');
+                        if (window.gameLogic.updateSidebar) window.gameLogic.updateSidebar();
+                        Renderer.isMapDragging = true;
+                        return;
+                    }
+                }
                 Renderer.isMapDragging = true; 
                 if(window.gameLogic && window.gameLogic.handleClick) window.gameLogic.handleClick(hex, p.x, p.y); 
             } else if(p.button === 2) { 

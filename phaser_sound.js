@@ -105,6 +105,9 @@ const Sfx = {
     play(id, fallbackType = null) {
         this.init();
 
+        // 戦車リロード音は一旦再生しない（コメントアウト的）
+        if (id === 'tank_reload') return;
+
         // スロットリング処理
         if (this.throttles[id]) {
             const now = Date.now();
