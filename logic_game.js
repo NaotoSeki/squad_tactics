@@ -185,6 +185,8 @@ window.BattleLogic = class BattleLogic {
     // 弾薬チェック
     if (w.code === 'm2_mortar') {
       if (w.current <= 0) { this.ui.log("弾切れ！弾薬箱が空です"); return; }
+    } else if (w.code === 'mg42' && w.reserve !== undefined) {
+      if (w.reserve <= 0) { this.ui.log("弾切れ！MG42ベルトが空です"); return; }
     } else {
       if (w.isConsumable && w.current <= 0) { this.ui.log("使用済みです"); return; }
       if (w.current <= 0) {
@@ -236,13 +238,17 @@ window.BattleLogic = class BattleLogic {
       const fireRate = isMg42 ? 30 : ((w.type === 'bullet') ? 60 : 300);
       const mg42Speed = 0.08;
 
+      if (isMg42 && shots > 0) {
+        game.consumeAmmo(a, w.code, shots);
+        if (game.updateSidebar) requestAnimationFrame(() => game.updateSidebar(a));
+      }
       for (let i = 0; i < shots; i++) {
         if (!isAreaAttack && targetUnit && targetUnit.hp <= 0) break;
 
-        if (!(a.def.isTank && w.type && w.type.includes('shell'))) {
+        if (!isMg42 && !(a.def.isTank && w.type && w.type.includes('shell'))) {
           game.consumeAmmo(a, w.code);
         }
-        if (game.updateSidebar) {
+        if (!isMg42 && game.updateSidebar) {
           requestAnimationFrame(() => game.updateSidebar(a));
         }
 
@@ -359,7 +365,8 @@ window.BattleLogic = class BattleLogic {
         game.updateSidebar(a);
 
         const wAfter = game.getVirtualWeapon(a);
-        if (a.def.isTank && wAfter && wAfter.current === 0 && wAfter.reserve > 0 && game.tankAutoReload && a.ap >= 1) {
+        const lastWeaponWasMg42 = (w && w.code === 'mg42');
+        if (!lastWeaponWasMg42 && a.def.isTank && wAfter && wAfter.current === 0 && wAfter.reserve > 0 && game.tankAutoReload && a.ap >= 1) {
           game.reloadWeapon(a, false);
         }
         game.refreshUnitState(a);
@@ -418,7 +425,8 @@ window.BattleLogic = class BattleLogic {
     return null;
   }
 
-  consumeAmmo(u, weaponCode) {
+  consumeAmmo(u, weaponCode, count) {
+    const n = (count != null && count > 0) ? count : 1;
     if (weaponCode === 'm2_mortar') {
       const ammoBox = u.bag.find(i => i && i.code === 'mortar_shell_box' && i.current > 0);
       if (ammoBox) { ammoBox.current--; return true; }
@@ -427,11 +435,11 @@ window.BattleLogic = class BattleLogic {
     if (weaponCode === 'mg42' && u.hands[1] && u.hands[1].code === 'mg42') {
       const mg = u.hands[1];
       if (u.def?.isTank && mg.reserve !== undefined && mg.reserve > 0) {
-        mg.reserve--;
+        mg.reserve = Math.max(0, mg.reserve - n);
         return true;
       }
-      if (mg.current > 0) { mg.current--; return true; }
-      return false;
+      for (let i = 0; i < n && mg.current > 0; i++) mg.current--;
+      return true;
     }
     const w = this.getVirtualWeapon(u);
     if (!w) return false;
