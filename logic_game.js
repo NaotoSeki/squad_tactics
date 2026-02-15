@@ -238,17 +238,13 @@ window.BattleLogic = class BattleLogic {
       const fireRate = isMg42 ? 30 : ((w.type === 'bullet') ? 60 : 300);
       const mg42Speed = 0.08;
 
-      if (isMg42 && shots > 0) {
-        game.consumeAmmo(a, w.code, shots);
-        if (game.updateSidebar) requestAnimationFrame(() => game.updateSidebar(a));
-      }
       for (let i = 0; i < shots; i++) {
         if (!isAreaAttack && targetUnit && targetUnit.hp <= 0) break;
 
-        if (!isMg42 && !(a.def.isTank && w.type && w.type.includes('shell'))) {
+        if (!(a.def.isTank && w.type && w.type.includes('shell'))) {
           game.consumeAmmo(a, w.code);
         }
-        if (!isMg42 && game.updateSidebar) {
+        if (game.updateSidebar) {
           requestAnimationFrame(() => game.updateSidebar(a));
         }
 
@@ -289,6 +285,7 @@ window.BattleLogic = class BattleLogic {
           if (isMortar || isShell) {
             if (window.VFX) VFX.addExplosion(tx, ty, "#f55", 5);
             if (window.Sfx) Sfx.play('death');
+            if (isShell && window.Sfx) setTimeout(() => Sfx.play('tank_reload'), 200);
           }
 
           if (w.indirect) {
@@ -366,7 +363,8 @@ window.BattleLogic = class BattleLogic {
 
         const wAfter = game.getVirtualWeapon(a);
         const lastWeaponWasMg42 = (w && w.code === 'mg42');
-        if (!lastWeaponWasMg42 && a.def.isTank && wAfter && wAfter.current === 0 && wAfter.reserve > 0 && game.tankAutoReload && a.ap >= 1) {
+        const lastWeaponWasShell = (w && w.type && w.type.includes('shell'));
+        if (!lastWeaponWasMg42 && !lastWeaponWasShell && a.def.isTank && wAfter && wAfter.current === 0 && wAfter.reserve > 0 && game.tankAutoReload && a.ap >= 1) {
           game.reloadWeapon(a, false);
         }
         game.refreshUnitState(a);
@@ -439,6 +437,12 @@ window.BattleLogic = class BattleLogic {
         return true;
       }
       for (let i = 0; i < n && mg.current > 0; i++) mg.current--;
+      return true;
+    }
+    // 戦車主砲(shell_fast): reserve消費+即時装填（リロードAP不要）
+    if (u.def?.isTank && u.hands[0] && u.hands[0].code === weaponCode && u.hands[0].type?.includes('shell') && u.hands[0].reserve !== undefined && u.hands[0].reserve > 0) {
+      u.hands[0].reserve--;
+      u.hands[0].current = 1;
       return true;
     }
     const w = this.getVirtualWeapon(u);

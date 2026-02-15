@@ -119,7 +119,8 @@ const Sfx = {
             if (window.phaserGame) {
                 const main = window.phaserGame.scene.getScene('MainScene');
                 if (main && main.sound) {
-                    main.sound.play(id, { volume: 0.4 });
+                    const vol = (id === 'tank_reload') ? 0.28 : 0.4;
+                    main.sound.play(id, { volume: vol });
                     return; 
                 }
             }
