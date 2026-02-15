@@ -438,12 +438,18 @@ window.BattleLogic = class BattleLogic {
       return false;
     }
     if (weaponCode === 'mg42' && u.hands) {
-      const mg = u.hands.find(h => h && h.code === 'mg42');
-      if (!mg) return false;
-      if (u.def?.isTank && mg.reserve !== undefined && mg.reserve > 0) {
-        mg.reserve = Math.max(0, mg.reserve - n);
+      if (u.def?.isTank) {
+        const mgs = u.hands.filter(h => h && h.code === 'mg42' && (h.reserve !== undefined ? h.reserve > 0 : h.current > 0));
+        for (let i = 0; i < n && mgs.length > 0; i++) {
+          const mg = mgs.find(m => (m.reserve !== undefined ? m.reserve : m.current) > 0);
+          if (!mg) break;
+          if (mg.reserve !== undefined) mg.reserve = Math.max(0, mg.reserve - 1);
+          else if (mg.current > 0) mg.current--;
+        }
         return true;
       }
+      const mg = u.hands.find(h => h && h.code === 'mg42');
+      if (!mg) return false;
       for (let i = 0; i < n && mg.current > 0; i++) mg.current--;
       return true;
     }
@@ -467,12 +473,15 @@ window.BattleLogic = class BattleLogic {
     const main = this.getVirtualWeapon(a);
     if (!main) return null;
     if (a.def.isTank && targetUnit && !targetUnit.def?.isTank) {
-      const mg = a.hands?.find(h => h && h.code === 'mg42');
-      const mgAmmo = (mg && mg.reserve !== undefined) ? mg.reserve : (mg && mg.current);
-      if (mg && mgAmmo > 0) {
+      const mgs = (a.hands || []).filter(h => h && h.code === 'mg42');
+      const totalReserve = mgs.reduce((s, m) => s + (m.reserve !== undefined ? m.reserve : m.current || 0), 0);
+      if (mgs.length > 0 && totalReserve > 0) {
         const dist = this.hexDist(a, targetUnit);
+        const mg = mgs[0];
         const rng = mg.rng || 8; const minRng = mg.minRng || 0;
-        if (dist >= minRng && dist <= rng && a.ap >= (mg.ap || 2)) return mg;
+        if (dist >= minRng && dist <= rng && a.ap >= (mg.ap || 2)) {
+          return { ...mg, reserve: totalReserve, burst: (mg.burst || 15) * mgs.length };
+        }
       }
     }
     return main;

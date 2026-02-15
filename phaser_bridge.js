@@ -618,7 +618,15 @@ class MainScene extends Phaser.Scene {
                 const hex = this.add.image(pos.x, pos.y, 'hex_base').setScale(1/window.HIGH_RES_SCALE); 
                 let tint = 0x555555; if(t.id===0) tint=0x5a5245; else if(t.id===1) tint=0x335522; else if(t.id===2) tint=0x112211; else if(t.id===4) tint=0x504540; else if(t.id===5) { tint=0x303840; if(window.EnvSystem) window.EnvSystem.registerWater(hex, pos.y, q, r, this.decorGroup); }
                 if(window.EnvSystem) {
-                    if(t.id === 1 && (q * 7 + r * 11) % 2 === 0) window.EnvSystem.spawnGrass(this, this.decorGroup, pos.x, pos.y);
+                    if(t.id === 1) {
+                        const sx = Math.floor(q / 3), sy = Math.floor(r / 3);
+                        const seed = ((sx * 31 + sy * 17) % 100 + 100) % 100;
+                        if (seed < 50) {
+                            const cx = sx * 3 + (seed % 3), cy = sy * 3 + (Math.floor(seed / 3) % 3);
+                            const dq = Math.abs(q - cx), dr = Math.abs(r - cy), ds = Math.abs((q + r) - (cx + cy));
+                            if (Math.max(dq, dr, ds) <= 1) window.EnvSystem.spawnGrass(this, this.decorGroup, pos.x, pos.y);
+                        }
+                    }
                     if(t.id === 2) window.EnvSystem.spawnTrees(this, this.treeGroup, pos.x, pos.y);
                     if(t.id === 4) window.EnvSystem.spawnRubble(this, pos.x, pos.y, this.decorGroup, this.rubbleFrontGroup);
                 }
