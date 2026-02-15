@@ -198,6 +198,7 @@ class UnitView {
             else if (index === 1) { offsetX = spread; offsetY = -spread; }
             else if (index === 2) { offsetX = -spread; offsetY = spread; }
             else if (index === 3) { offsetX = spread; offsetY = spread; }
+            else if (index === 4) { offsetX = 0; offsetY = 0; }
         }
         
         visual.targetX = basePos.x + offsetX;

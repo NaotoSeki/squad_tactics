@@ -264,7 +264,7 @@ window.BattleLogic = class BattleLogic {
         if (window.Sfx) Sfx.play(w.code, isShell ? 'cannon' : (isMg42 ? 'mg' : 'shot'));
 
         const arc = isMortar ? 250 : (isShell ? 30 : 0);
-        const flightTime = isMortar ? 1000 : (isShell ? 600 : (isMg42 ? dist * 50 : dist * 30));
+        const flightTime = isMortar ? 1000 : (isShell ? 300 : (isMg42 ? dist * 50 : dist * 30));
         const projSpeed = isMg42 ? mg42Speed : (isMortar ? 0.05 : 0.2);
 
         if (window.VFX) {
@@ -531,7 +531,7 @@ window.BattleLogic = class BattleLogic {
       const r = Math.floor(Math.random() * MAP_H);
       if (team === 'player' && r < cy) { continue; }
       if (team === 'enemy' && r >= cy) { continue; }
-      if (this.isValidHex(q, r) && this.getUnitsInHex(q, r).length < 4 && this.map[q][r].id !== -1 && this.map[q][r].id !== 5) { return { q, r }; }
+      if (this.isValidHex(q, r) && this.getUnitsInHex(q, r).length < 5 && this.map[q][r].id !== -1 && this.map[q][r].id !== 5) { return { q, r }; }
     }
     return null;
   }
@@ -623,7 +623,7 @@ window.BattleLogic = class BattleLogic {
       if (this.interactionMode === 'MOVE') {
         const isReachable = this.reachableHexes.some(h => h.q === p.q && h.r === p.r);
         const targetUnits = this.getUnitsInHex(p.q, p.r);
-        if (isReachable && targetUnits.length < 4) {
+        if (isReachable && targetUnits.length < 5) {
           this.path = this.findPath(u, p.q, p.r);
         } else {
           this.path = [];
@@ -922,7 +922,7 @@ window.BattleLogic = class BattleLogic {
   checkDeploy(targetHex) {
     if(!this.isValidHex(targetHex.q, targetHex.r) || this.map[targetHex.q][targetHex.r].id === -1) return false;
     if(this.map[targetHex.q][targetHex.r].id === 5) return false;
-    if (this.getUnitsInHex(targetHex.q, targetHex.r).length >= 4) return false;
+    if (this.getUnitsInHex(targetHex.q, targetHex.r).length >= 5) return false;
     if (this.cardsUsed >= 2) return false;
     return true;
   }

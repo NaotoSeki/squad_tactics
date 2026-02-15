@@ -659,7 +659,7 @@ class MainScene extends Phaser.Scene {
             } else {
                 let isValid = false;
                 if (window.gameLogic && window.gameLogic.checkDeploy) {
-                    isValid = window.gameLogic.isValidHex(h.q, h.r) && window.gameLogic.map[h.q][h.r].id !== -1 && window.gameLogic.getUnitsInHex(h.q, h.r).length < 4;
+                    isValid = window.gameLogic.isValidHex(h.q, h.r) && window.gameLogic.map[h.q][h.r].id !== -1 && window.gameLogic.getUnitsInHex(h.q, h.r).length < 5;
                 }
                 const color = isValid ? 0x00ffff : 0xff0000;
                 this.overlayGraphics.lineStyle(3, color, 0.8);
