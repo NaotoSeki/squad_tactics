@@ -165,7 +165,8 @@ window.BattleLogic = class BattleLogic {
     if (!w) return;
     if (w.isBroken) { this.ui.log("武器故障中！修理が必要"); return; }
 
-    // ターゲット判定（indirectは常にエリア射撃のみ。直接武器はユニット/ヘックスで区別）
+    // ターゲット判定：ユニットクリック＝狙い撃ち、ヘックスクリック＝制圧射撃
+    // indirectは常にエリア射撃。直接武器はd.hpの有無で区別（ユニット指定なら狙い撃ち、ヘックスのみなら制圧）
     let targetUnit = null;
     let targetHex = null;
     let isAreaAttack = false;
@@ -173,10 +174,11 @@ window.BattleLogic = class BattleLogic {
       targetUnit = d;
       targetHex = { q: d.q, r: d.r };
       if (w.indirect) { isAreaAttack = true; targetUnit = null; }
+      else { isAreaAttack = false; }
     } else {
       targetHex = d;
-      targetUnit = w.indirect ? null : this.getUnitInHex(d.q, d.r);
-      if (!targetUnit) isAreaAttack = true;
+      targetUnit = null;
+      isAreaAttack = true;
     }
     if (w.indirect) isAreaAttack = true;
 
