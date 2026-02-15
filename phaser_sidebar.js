@@ -163,7 +163,7 @@ window.PhaserSidebar = class PhaserSidebar {
             }
             if (u.team === 'enemy') {
                 // 敵ユニットは弾丸ゲージ表示なし（はみ出し防止・弾切れは行動で表現）
-            } else if (item.code === 'mg42' && item.reserve !== undefined && isMain) {
+            } else if (item && item.code === 'mg42' && item.reserve !== undefined && isMain) {
                 const maxRounds = 300;
                 const reserve = Math.min(maxRounds, item.reserve || 0);
                 const cols = 30, rows = 10, gap = 1;

@@ -430,8 +430,9 @@ window.BattleLogic = class BattleLogic {
       if (ammoBox) { ammoBox.current--; return true; }
       return false;
     }
-    if (weaponCode === 'mg42' && u.hands[1] && u.hands[1].code === 'mg42') {
-      const mg = u.hands[1];
+    if (weaponCode === 'mg42' && u.hands) {
+      const mg = u.hands.find(h => h && h.code === 'mg42');
+      if (!mg) return false;
       if (u.def?.isTank && mg.reserve !== undefined && mg.reserve > 0) {
         mg.reserve = Math.max(0, mg.reserve - n);
         return true;
@@ -459,9 +460,9 @@ window.BattleLogic = class BattleLogic {
     const main = this.getVirtualWeapon(a);
     if (!main) return null;
     if (a.def.isTank && targetUnit && !targetUnit.def?.isTank) {
-      const mg = a.hands?.[1];
+      const mg = a.hands?.find(h => h && h.code === 'mg42');
       const mgAmmo = (mg && mg.reserve !== undefined) ? mg.reserve : (mg && mg.current);
-      if (mg && mg.code === 'mg42' && mgAmmo > 0) {
+      if (mg && mgAmmo > 0) {
         const dist = this.hexDist(a, targetUnit);
         const rng = mg.rng || 8; const minRng = mg.minRng || 0;
         if (dist >= minRng && dist <= rng && a.ap >= (mg.ap || 2)) return mg;
