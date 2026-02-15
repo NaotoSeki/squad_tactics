@@ -658,6 +658,7 @@ class MainScene extends Phaser.Scene {
                 overAimTarget = bounds.contains(wp.x, wp.y);
             }
         }
+        const hover = window.gameLogic ? window.gameLogic.hoverHex : null;
         if(selected && window.gameLogic.attackLine && window.gameLogic.attackLine.length > 0) {
             const targetUnit = window.gameLogic.aimTargetUnit;
             window.gameLogic.attackLine.forEach(h => {
@@ -689,7 +690,6 @@ class MainScene extends Phaser.Scene {
                 this.hitChanceText.setVisible(false);
             }
         }
-        const hover = window.gameLogic.hoverHex;
         if(selected && hover && window.gameLogic.reachableHexes && window.gameLogic.reachableHexes.some(h => h.q === hover.q && h.r === hover.r)) { this.overlayGraphics.lineStyle(3, 0xffffff, 0.8); this.drawHexOutline(this.overlayGraphics, hover.q, hover.r); }
         const path = window.gameLogic.path;
         if(path && path.length > 0 && selected) { 
