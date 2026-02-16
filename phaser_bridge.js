@@ -705,7 +705,7 @@ class MainScene extends Phaser.Scene {
                     const offsetX = HEX_SIZE * 0.7;
                     const offsetY = -HEX_SIZE * 0.8;
                     this.hitChanceText.setPosition(aimPos.x + offsetX, aimPos.y + offsetY);
-                    const val = est.hit.toFixed(1);
+                    const val = Math.round(est.hit);
                     this.hitChanceText.setText(est.isArea ? `~${val}%` : `${val}%`);
                     this.hitChanceText.setVisible(true);
                 } else {

@@ -386,9 +386,6 @@ window.BattleLogic = class BattleLogic {
 
   applyDamage(target, damage, sourceName = "攻撃") {
     if (!target || target.hp <= 0) return;
-    if (typeof window !== 'undefined' && window.__debugInstantKill && target.team === 'enemy') {
-      damage = Math.max(damage, (target.hp || 0) + 999);
-    }
     if (target.skills && target.skills.includes('Armor')) damage = Math.max(0, damage - 5);
     target.hp -= damage;
     if (target.hp <= 0 && !target.deadProcessed) {
@@ -504,8 +501,7 @@ window.BattleLogic = class BattleLogic {
     } else if (w.area) {
       hit += 20;
     }
-    hit = Math.max(0, Math.min(100, hit));
-    hit = Math.round(hit * 10) / 10;
+    hit = Math.max(0, Math.min(100, Math.round(hit)));
     return { hit, isArea: !!w.area && !targetUnit };
   }
 
@@ -601,6 +597,26 @@ window.BattleLogic = class BattleLogic {
 
   handleClick(p, pointerX, pointerY) {
     if (this.state !== 'PLAY') return;
+
+    // DEBUG: Instant Kill（同一ヘックスへの素早いダブルクリックで即死）
+    if (typeof window !== 'undefined' && window.__debugInstantKill && p && this.isValidHex(p.q, p.r)) {
+      const now = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
+      const lastHex = this._lastClickHex;
+      const lastTime = this._lastClickTime || 0;
+      const sameHex = lastHex && lastHex.q === p.q && lastHex.r === p.r;
+      const interval = now - lastTime;
+      const isDouble = sameHex && interval <= 320;
+      this._lastClickHex = { q: p.q, r: p.r };
+      this._lastClickTime = now;
+      if (isDouble) {
+        const victim = this.getUnitInHex(p.q, p.r);
+        if (victim) {
+          this.ui.log(`>> DEBUG: Instant kill (${victim.name})`);
+          this.applyDamage(victim, (victim.hp || 0) + 9999, "DEBUG");
+          return;
+        }
+      }
+    }
     if (this.interactionMode === 'SELECT') { this.clearSelection(); }
     else if (this.interactionMode === 'MOVE') {
       if (this.selectedUnit && this.isValidHex(p.q, p.r) && this.path.length > 0) {
