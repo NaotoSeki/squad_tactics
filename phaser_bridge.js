@@ -94,7 +94,7 @@ const Renderer = {
     draggedCard: null,
 
     init(canvasElement) {
-        const config = { type: Phaser.AUTO, parent: 'game-view', width: document.getElementById('game-view').clientWidth, height: document.getElementById('game-view').clientHeight, backgroundColor: '#0b0e0a', pixelArt: false, scene: [MainScene, UIScene], fps: { target: 30 }, physics: { default: 'arcade', arcade: { debug: false } }, input: { activePointers: 1 } };
+        const config = { type: Phaser.AUTO, parent: 'game-view', width: document.getElementById('game-view').clientWidth, height: document.getElementById('game-view').clientHeight, backgroundColor: '#0b0e0a', pixelArt: false, scene: [MainScene, UIScene], fps: { target: 60 }, physics: { default: 'arcade', arcade: { debug: false } }, input: { activePointers: 1 } };
         this.game = new Phaser.Game(config); 
         phaserGame = this.game;
         window.phaserGame = this.game;
@@ -502,7 +502,7 @@ class UIScene extends Phaser.Scene {
 }
 
 class MainScene extends Phaser.Scene {
-    constructor() { super({ key: 'MainScene' }); this.hexGroup=null; this.decorGroup=null; this.unitGroup=null; this.treeGroup=null; this.hpGroup=null; this.vfxGraphics=null; this.overlayGraphics=null; this.mapGenerated=false; this.dragHighlightHex=null; this.crosshairGroup=null; this.unitView = null; }
+    constructor() { super({ key: 'MainScene' }); this.hexGroup=null; this.decorGroup=null; this.unitGroup=null; this.treeGroup=null; this.hpGroup=null; this.vfxGraphics=null; this.overlayGraphics=null; this.mapGenerated=false; this.dragHighlightHex=null; this.crosshairGroup=null; this.hitChanceText=null; this.unitView = null; }
     preload() { 
         if(window.EnvSystem) window.EnvSystem.preload(this);
         if (window.Sfx && window.Sfx.preload) { window.Sfx.preload(this); }
@@ -522,7 +522,11 @@ class MainScene extends Phaser.Scene {
         this.treeGroup = this.add.layer(); this.treeGroup.setDepth(2);
         this.hpGroup = this.add.layer(); this.hpGroup.setDepth(10);
         this.crosshairGroup = this.add.graphics().setDepth(200);
-        this.hitChanceText = this.add.text(0, 0, '', { fontSize: '14px', fontFamily: 'sans-serif', color: '#e8e8f0' }).setScrollFactor(0).setDepth(300).setVisible(false);
+        this.hitChanceText = this.add.text(0, 0, '', { fontSize: '14px', fontFamily: 'sans-serif', color: '#e8e8f0' })
+            .setOrigin(0, 1)
+            .setScrollFactor(0)
+            .setDepth(300)
+            .setVisible(false);
         this.vfxGraphics = this.add.graphics().setDepth(100); 
         this.overlayGraphics = this.add.graphics().setDepth(50); 
         if(window.EnvSystem) window.EnvSystem.clear();
@@ -556,29 +560,11 @@ class MainScene extends Phaser.Scene {
             });
             return best;
         };
-        this._lastClick = { time: 0, x: 0, y: 0 };
         this.input.on('pointerdown', (p) => { 
             if (Renderer.isCardDragging || Renderer.checkUIHover(p.x, p.y, p.event)) return; 
             if (Renderer.suppressMapClick) { Renderer.suppressMapClick = false; return; }
             const hex = Renderer.pxToHex(p.x, p.y);
             if(p.button === 0) { 
-                const now = Date.now();
-                const last = this._lastClick;
-                const isDoubleClick = (now - last.time < 450) && (Math.abs(p.x - last.x) < 15 && Math.abs(p.y - last.y) < 15);
-                this._lastClick = { time: now, x: p.x, y: p.y };
-
-                if (window.__debugInstantKill && isDoubleClick && window.gameLogic && window.gameLogic.getUnitsInHex) {
-                    const inHex = window.gameLogic.getUnitsInHex(hex.q, hex.r).filter(u => u.hp > 0);
-                    if (inHex.length > 0) {
-                        const unit = inHex.length === 1 ? inHex[0] : (this.getClosestUnitToScreen ? this.getClosestUnitToScreen(inHex, p.x, p.y) : inHex[0]);
-                        if (unit) {
-                            window.gameLogic.applyDamage(unit, unit.hp + 999, 'Instant kill');
-                            if (window.gameLogic.updateSidebar) window.gameLogic.updateSidebar();
-                            Renderer.isMapDragging = true;
-                            return;
-                        }
-                    }
-                }
                 Renderer.isMapDragging = true; 
                 if(window.gameLogic && window.gameLogic.handleClick) window.gameLogic.handleClick(hex, p.x, p.y); 
             } else if(p.button === 2) { 
@@ -617,19 +603,7 @@ class MainScene extends Phaser.Scene {
                 const t = map[q][r]; if(t.id===-1)continue; const pos = Renderer.hexToPx(q, r); 
                 const hex = this.add.image(pos.x, pos.y, 'hex_base').setScale(1/window.HIGH_RES_SCALE); 
                 let tint = 0x555555; if(t.id===0) tint=0x5a5245; else if(t.id===1) tint=0x335522; else if(t.id===2) tint=0x112211; else if(t.id===4) tint=0x504540; else if(t.id===5) { tint=0x303840; if(window.EnvSystem) window.EnvSystem.registerWater(hex, pos.y, q, r, this.decorGroup); }
-                if(window.EnvSystem) {
-                    if(t.id === 1) {
-                        const sx = Math.floor(q / 3), sy = Math.floor(r / 3);
-                        const seed = ((sx * 31 + sy * 17) % 100 + 100) % 100;
-                        if (seed < 50) {
-                            const cx = sx * 3 + (seed % 3), cy = sy * 3 + (Math.floor(seed / 3) % 3);
-                            const dq = Math.abs(q - cx), dr = Math.abs(r - cy), ds = Math.abs((q + r) - (cx + cy));
-                            if (Math.max(dq, dr, ds) <= 1) window.EnvSystem.spawnGrass(this, this.decorGroup, pos.x, pos.y);
-                        }
-                    }
-                    if(t.id === 2) window.EnvSystem.spawnTrees(this, this.treeGroup, pos.x, pos.y);
-                    if(t.id === 4) window.EnvSystem.spawnRubble(this, pos.x, pos.y, this.decorGroup, this.rubbleFrontGroup);
-                }
+                if(window.EnvSystem) { if(t.id === 1) window.EnvSystem.spawnGrass(this, this.decorGroup, pos.x, pos.y); if(t.id === 2) window.EnvSystem.spawnTrees(this, this.treeGroup, pos.x, pos.y); if(t.id === 4) window.EnvSystem.spawnRubble(this, pos.x, pos.y, this.decorGroup, this.rubbleFrontGroup); }
                 hex.setTint(tint); this.hexGroup.add(hex); 
             } 
         } 
@@ -659,7 +633,7 @@ class MainScene extends Phaser.Scene {
             } else {
                 let isValid = false;
                 if (window.gameLogic && window.gameLogic.checkDeploy) {
-                    isValid = window.gameLogic.isValidHex(h.q, h.r) && window.gameLogic.map[h.q][h.r].id !== -1 && window.gameLogic.getUnitsInHex(h.q, h.r).length < 5;
+                    isValid = window.gameLogic.isValidHex(h.q, h.r) && window.gameLogic.map[h.q][h.r].id !== -1 && window.gameLogic.getUnitsInHex(h.q, h.r).length < 4;
                 }
                 const color = isValid ? 0x00ffff : 0xff0000;
                 this.overlayGraphics.lineStyle(3, color, 0.8);
@@ -688,10 +662,9 @@ class MainScene extends Phaser.Scene {
                 overAimTarget = bounds.contains(wp.x, wp.y);
             }
         }
-        const hover = window.gameLogic ? window.gameLogic.hoverHex : null;
-        if(selected && window.gameLogic.attackLine && window.gameLogic.attackLine.length > 0) {
-            const targetUnit = window.gameLogic.aimTargetUnit;
-            window.gameLogic.attackLine.forEach(h => {
+        if(selected && gl && gl.attackLine && gl.attackLine.length > 0) {
+            const targetUnit = gl.aimTargetUnit;
+            gl.attackLine.forEach(h => {
                 const alpha = (h.alpha !== undefined) ? h.alpha : 1;
                 this.overlayGraphics.lineStyle(3, 0xff2222, 0.8 * alpha);
                 const isUnitTarget = targetUnit && targetUnit.q === h.q && targetUnit.r === h.r;
@@ -699,19 +672,38 @@ class MainScene extends Phaser.Scene {
                 this.drawDashedHexOutline(this.overlayGraphics, h.q, h.r, offset);
             });
         }
+        const hover = gl ? gl.hoverHex : null;
+        if(selected && hover && window.gameLogic.reachableHexes && window.gameLogic.reachableHexes.some(h => h.q === hover.q && h.r === hover.r)) { this.overlayGraphics.lineStyle(3, 0xffffff, 0.8); this.drawHexOutline(this.overlayGraphics, hover.q, hover.r); }
+        const path = window.gameLogic.path;
+        if(path && path.length > 0 && selected) { 
+            this.overlayGraphics.lineStyle(3, 0xffffff, 0.5); this.overlayGraphics.beginPath(); const s = Renderer.hexToPx(selected.q, selected.r); this.overlayGraphics.moveTo(s.x, s.y); path.forEach(p => { const px = Renderer.hexToPx(p.q, p.r); this.overlayGraphics.lineTo(px.x, px.y); }); this.overlayGraphics.strokePath(); 
+        }
+        this.crosshairGroup.clear();
+        if (gl && gl.aimTargetUnit) { const u = gl.aimTargetUnit; const pos = Renderer.hexToPx(u.q, u.r); this.drawCrosshair(this.crosshairGroup, pos.x, pos.y, time); }
+
         const ptr = this.input.activePointer;
         const inAttackMode = gl && gl.selectedUnit && gl.interactionMode === 'ATTACK';
         if (this.hitChanceText) {
-            if (inAttackMode && hover && gl.getEstimatedHitChance) {
+            if (inAttackMode && hover && gl && typeof gl.getEstimatedHitChance === 'function') {
                 const targetUnit = this.getUnitAtScreenPosition ? this.getUnitAtScreenPosition(ptr.x, ptr.y) : null;
                 const inHex = gl.getUnitsInHex ? gl.getUnitsInHex(hover.q, hover.r) : [];
                 const enemies = inHex.filter(u => u.team !== gl.selectedUnit.team);
                 let unit = (targetUnit && inHex.indexOf(targetUnit) >= 0) ? targetUnit : null;
-                if (!unit && enemies.length > 0) unit = (this.getClosestUnitToScreen && enemies.length > 1) ? this.getClosestUnitToScreen(enemies, ptr.x, ptr.y) : enemies[0];
+                if (!unit && enemies.length > 0) {
+                    unit = (this.getClosestUnitToScreen && enemies.length > 1) ? this.getClosestUnitToScreen(enemies, ptr.x, ptr.y) : enemies[0];
+                }
                 const est = gl.getEstimatedHitChance(gl.selectedUnit, hover, unit);
                 if (est) {
-                    this.hitChanceText.setPosition(ptr.x + 22, ptr.y - 14);
-                    this.hitChanceText.setText(est.isArea ? `~${est.hit}%` : `${est.hit}%`);
+                    const w = this.scale.width;
+                    const h = this.scale.height;
+                    const margin = 8;
+                    let tx = ptr.x + 24;
+                    let ty = ptr.y - 18;
+                    tx = Phaser.Math.Clamp(tx, margin, w - margin);
+                    ty = Phaser.Math.Clamp(ty, margin, h - margin);
+                    this.hitChanceText.setPosition(tx, ty);
+                    const val = est.hit.toFixed(1);
+                    this.hitChanceText.setText(est.isArea ? `~${val}%` : `${val}%`);
                     this.hitChanceText.setVisible(true);
                 } else {
                     this.hitChanceText.setVisible(false);
@@ -720,13 +712,7 @@ class MainScene extends Phaser.Scene {
                 this.hitChanceText.setVisible(false);
             }
         }
-        if(selected && hover && window.gameLogic.reachableHexes && window.gameLogic.reachableHexes.some(h => h.q === hover.q && h.r === hover.r)) { this.overlayGraphics.lineStyle(3, 0xffffff, 0.8); this.drawHexOutline(this.overlayGraphics, hover.q, hover.r); }
-        const path = window.gameLogic.path;
-        if(path && path.length > 0 && selected) { 
-            this.overlayGraphics.lineStyle(3, 0xffffff, 0.5); this.overlayGraphics.beginPath(); const s = Renderer.hexToPx(selected.q, selected.r); this.overlayGraphics.moveTo(s.x, s.y); path.forEach(p => { const px = Renderer.hexToPx(p.q, p.r); this.overlayGraphics.lineTo(px.x, px.y); }); this.overlayGraphics.strokePath(); 
-        }
-        this.crosshairGroup.clear();
-        if (window.gameLogic.aimTargetUnit) { const u = window.gameLogic.aimTargetUnit; const pos = Renderer.hexToPx(u.q, u.r); this.drawCrosshair(this.crosshairGroup, pos.x, pos.y, time); }
+
         const canvas = this.game && this.game.canvas;
         if (canvas) {
             if (overAimTarget) {

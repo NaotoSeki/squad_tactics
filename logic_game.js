@@ -218,11 +218,9 @@ window.BattleLogic = class BattleLogic {
 
     const terrainCover = this.map[targetHex.q][targetHex.r].cover;
     const distPenalty = dist * (w.acc_drop || 5);
-    const overRange = Math.max(0, dist - (w.rng || 0));
     let hitChance = 0;
     if (!isAreaAttack && targetUnit) {
       hitChance = (a.stats?.aim || 0) * 2 + w.acc - distPenalty - terrainCover;
-      hitChance -= overRange * (w.overRangePenalty ?? 15);
       if (w.code === 'mg42') hitChance += 15;
       if (targetUnit.stance === 'prone') hitChance -= 20;
       if (targetUnit.stance === 'crouch') hitChance -= 10;
@@ -264,7 +262,7 @@ window.BattleLogic = class BattleLogic {
         if (window.Sfx) Sfx.play(w.code, isShell ? 'cannon' : (isMg42 ? 'mg' : 'shot'));
 
         const arc = isMortar ? 250 : (isShell ? 30 : 0);
-        const flightTime = isMortar ? 1000 : (isShell ? 300 : (isMg42 ? dist * 50 : dist * 30));
+        const flightTime = isMortar ? 1000 : (isShell ? 600 : (isMg42 ? dist * 50 : dist * 30));
         const projSpeed = isMg42 ? mg42Speed : (isMortar ? 0.05 : 0.2);
 
         if (window.VFX) {
@@ -438,18 +436,12 @@ window.BattleLogic = class BattleLogic {
       return false;
     }
     if (weaponCode === 'mg42' && u.hands) {
-      if (u.def?.isTank) {
-        const mgs = u.hands.filter(h => h && h.code === 'mg42' && (h.reserve !== undefined ? h.reserve > 0 : h.current > 0));
-        for (let i = 0; i < n && mgs.length > 0; i++) {
-          const mg = mgs.find(m => (m.reserve !== undefined ? m.reserve : m.current) > 0);
-          if (!mg) break;
-          if (mg.reserve !== undefined) mg.reserve = Math.max(0, mg.reserve - 1);
-          else if (mg.current > 0) mg.current--;
-        }
-        return true;
-      }
       const mg = u.hands.find(h => h && h.code === 'mg42');
       if (!mg) return false;
+      if (u.def?.isTank && mg.reserve !== undefined && mg.reserve > 0) {
+        mg.reserve = Math.max(0, mg.reserve - n);
+        return true;
+      }
       for (let i = 0; i < n && mg.current > 0; i++) mg.current--;
       return true;
     }
@@ -473,18 +465,45 @@ window.BattleLogic = class BattleLogic {
     const main = this.getVirtualWeapon(a);
     if (!main) return null;
     if (a.def.isTank && targetUnit && !targetUnit.def?.isTank) {
-      const mgs = (a.hands || []).filter(h => h && h.code === 'mg42');
-      const totalReserve = mgs.reduce((s, m) => s + (m.reserve !== undefined ? m.reserve : m.current || 0), 0);
-      if (mgs.length > 0 && totalReserve > 0) {
+      const mg = a.hands?.find(h => h && h.code === 'mg42');
+      const mgAmmo = (mg && mg.reserve !== undefined) ? mg.reserve : (mg && mg.current);
+      if (mg && mgAmmo > 0) {
         const dist = this.hexDist(a, targetUnit);
-        const mg = mgs[0];
         const rng = mg.rng || 8; const minRng = mg.minRng || 0;
-        if (dist >= minRng && dist <= rng && a.ap >= (mg.ap || 2)) {
-          return { ...mg, reserve: totalReserve, burst: (mg.burst || 15) * mgs.length };
-        }
+        if (dist >= minRng && dist <= rng && a.ap >= (mg.ap || 2)) return mg;
       }
     }
     return main;
+  }
+
+  /**
+   * ATTACK MODE用：指定ヘックスへの概算命中率（％）を返す。ユニット狙いとエリア射撃で計算が異なる。
+   * @param {Object} attacker - 攻撃者ユニット
+   * @param {{q:number,r:number}} targetHex - 目標ヘックス
+   * @param {Object|null} targetUnit - 狙うユニット（いなければエリア射撃として中央着弾目安）
+   * @returns {{ hit: number, isArea: boolean }|null} 攻撃不可時は null
+   */
+  getEstimatedHitChance(attacker, targetHex, targetUnit) {
+    if (!attacker || !targetHex || !this.map[targetHex.q] || !this.map[targetHex.q][targetHex.r]) return null;
+    const w = this.getVirtualWeapon ? this.getVirtualWeapon(attacker) : null;
+    if (!w || w.type === 'melee') return null;
+    const dist = this.hexDist(attacker, targetHex);
+    const maxRange = Math.ceil((w.rng || 1) * 2);
+    if (dist > maxRange) return null;
+    if (w.minRng && dist < w.minRng) return null;
+    const terrainCover = this.map[targetHex.q][targetHex.r].cover;
+    let hit = (attacker.stats?.aim || 0) * 2 + (w.acc || 0) - (dist * (w.acc_drop || 5)) - terrainCover;
+    const overRange = Math.max(0, dist - (w.rng || 0));
+    hit -= overRange * (w.overRangePenalty ?? 15);
+    if (targetUnit) {
+      if (targetUnit.stance === 'prone') hit -= 20;
+      if (targetUnit.stance === 'crouch') hit -= 10;
+    } else if (w.area) {
+      hit += 20;
+    }
+    hit = Math.max(0, Math.min(100, hit));
+    hit = Math.round(hit * 10) / 10;
+    return { hit, isArea: !!w.area && !targetUnit };
   }
 
   // --- HELPER METHODS ---
@@ -531,7 +550,7 @@ window.BattleLogic = class BattleLogic {
       const r = Math.floor(Math.random() * MAP_H);
       if (team === 'player' && r < cy) { continue; }
       if (team === 'enemy' && r >= cy) { continue; }
-      if (this.isValidHex(q, r) && this.getUnitsInHex(q, r).length < 5 && this.map[q][r].id !== -1 && this.map[q][r].id !== 5) { return { q, r }; }
+      if (this.isValidHex(q, r) && this.getUnitsInHex(q, r).length < 4 && this.map[q][r].id !== -1 && this.map[q][r].id !== 5) { return { q, r }; }
     }
     return null;
   }
@@ -623,7 +642,7 @@ window.BattleLogic = class BattleLogic {
       if (this.interactionMode === 'MOVE') {
         const isReachable = this.reachableHexes.some(h => h.q === p.q && h.r === p.r);
         const targetUnits = this.getUnitsInHex(p.q, p.r);
-        if (isReachable && targetUnits.length < 5) {
+        if (isReachable && targetUnits.length < 4) {
           this.path = this.findPath(u, p.q, p.r);
         } else {
           this.path = [];
@@ -632,35 +651,6 @@ window.BattleLogic = class BattleLogic {
         this.calcAttackLine(u, p.q, p.r);
       }
     }
-  }
-
-  /**
-   * ATTACK MODE用：指定ヘックスへの概算命中率（％）を返す。ユニット狙いとエリア射撃で計算が異なる。
-   * @param {Object} attacker - 攻撃者ユニット
-   * @param {{q:number,r:number}} targetHex - 目標ヘックス
-   * @param {Object|null} targetUnit - 狙うユニット（いなければエリア射撃として中央着弾目安）
-   * @returns {{ hit: number, isArea: boolean }|null} 攻撃不可時は null
-   */
-  getEstimatedHitChance(attacker, targetHex, targetUnit) {
-    if (!attacker || !targetHex || !this.map[targetHex.q] || !this.map[targetHex.q][targetHex.r]) return null;
-    const w = this.getVirtualWeapon ? this.getVirtualWeapon(attacker) : null;
-    if (!w || w.type === 'melee') return null;
-    const dist = this.hexDist(attacker, targetHex);
-    const maxRange = Math.ceil((w.rng || 1) * 2);
-    if (dist > maxRange) return null;
-    if (w.minRng && dist < w.minRng) return null;
-    const terrainCover = this.map[targetHex.q][targetHex.r].cover;
-    let hit = (attacker.stats?.aim || 0) * 2 + (w.acc || 0) - (dist * (w.acc_drop || 5)) - terrainCover;
-    const overRange = Math.max(0, dist - (w.rng || 0));
-    hit -= overRange * (w.overRangePenalty ?? 15);
-    if (targetUnit) {
-      if (targetUnit.stance === 'prone') hit -= 20;
-      if (targetUnit.stance === 'crouch') hit -= 10;
-    } else if (w.area) {
-      hit += 20;
-    }
-    hit = Math.max(0, Math.min(100, Math.round(hit)));
-    return { hit, isArea: !!w.area && !targetUnit };
   }
 
   handleRightClick(mx, my, hex) {
@@ -922,7 +912,7 @@ window.BattleLogic = class BattleLogic {
   checkDeploy(targetHex) {
     if(!this.isValidHex(targetHex.q, targetHex.r) || this.map[targetHex.q][targetHex.r].id === -1) return false;
     if(this.map[targetHex.q][targetHex.r].id === 5) return false;
-    if (this.getUnitsInHex(targetHex.q, targetHex.r).length >= 5) return false;
+    if (this.getUnitsInHex(targetHex.q, targetHex.r).length >= 4) return false;
     if (this.cardsUsed >= 2) return false;
     return true;
   }
