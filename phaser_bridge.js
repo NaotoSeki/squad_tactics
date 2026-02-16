@@ -679,7 +679,15 @@ class MainScene extends Phaser.Scene {
             this.overlayGraphics.lineStyle(3, 0xffffff, 0.5); this.overlayGraphics.beginPath(); const s = Renderer.hexToPx(selected.q, selected.r); this.overlayGraphics.moveTo(s.x, s.y); path.forEach(p => { const px = Renderer.hexToPx(p.q, p.r); this.overlayGraphics.lineTo(px.x, px.y); }); this.overlayGraphics.strokePath(); 
         }
         this.crosshairGroup.clear();
-        if (gl && gl.aimTargetUnit) { const u = gl.aimTargetUnit; const pos = Renderer.hexToPx(u.q, u.r); this.drawCrosshair(this.crosshairGroup, pos.x, pos.y, time); }
+        let aimPos = null;
+        if (gl && gl.aimTargetUnit) {
+            const u = gl.aimTargetUnit;
+            const pos = Renderer.hexToPx(u.q, u.r);
+            aimPos = pos;
+            this.drawCrosshair(this.crosshairGroup, pos.x, pos.y, time);
+        } else if (gl && hover) {
+            aimPos = Renderer.hexToPx(hover.q, hover.r);
+        }
 
         const ptr = this.input.activePointer;
         const inAttackMode = gl && gl.selectedUnit && gl.interactionMode === 'ATTACK';
@@ -693,15 +701,10 @@ class MainScene extends Phaser.Scene {
                     unit = (this.getClosestUnitToScreen && enemies.length > 1) ? this.getClosestUnitToScreen(enemies, ptr.x, ptr.y) : enemies[0];
                 }
                 const est = gl.getEstimatedHitChance(gl.selectedUnit, hover, unit);
-                if (est) {
-                    const w = this.scale.width;
-                    const h = this.scale.height;
-                    const margin = 8;
-                    let tx = ptr.x + 24;
-                    let ty = ptr.y - 18;
-                    tx = Phaser.Math.Clamp(tx, margin, w - margin);
-                    ty = Phaser.Math.Clamp(ty, margin, h - margin);
-                    this.hitChanceText.setPosition(tx, ty);
+                if (est && aimPos) {
+                    const offsetX = HEX_SIZE * 0.7;
+                    const offsetY = -HEX_SIZE * 0.8;
+                    this.hitChanceText.setPosition(aimPos.x + offsetX, aimPos.y + offsetY);
                     const val = est.hit.toFixed(1);
                     this.hitChanceText.setText(est.isArea ? `~${val}%` : `${val}%`);
                     this.hitChanceText.setVisible(true);

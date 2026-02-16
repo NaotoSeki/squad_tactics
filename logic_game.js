@@ -386,6 +386,9 @@ window.BattleLogic = class BattleLogic {
 
   applyDamage(target, damage, sourceName = "攻撃") {
     if (!target || target.hp <= 0) return;
+    if (typeof window !== 'undefined' && window.__debugInstantKill && target.team === 'enemy') {
+      damage = Math.max(damage, (target.hp || 0) + 999);
+    }
     if (target.skills && target.skills.includes('Armor')) damage = Math.max(0, damage - 5);
     target.hp -= damage;
     if (target.hp <= 0 && !target.deadProcessed) {
