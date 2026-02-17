@@ -8,7 +8,7 @@ class VFXSystem {
 
     update() {
         this.windTimer++;
-        if (this.windTimer > 200 + Math.random() * 200) {
+        if (this.windTimer > 400 + Math.random() * 300) {
             this.triggerWindGust();
             this.windTimer = 0;
         }
@@ -46,11 +46,11 @@ class VFXSystem {
     }
 
     triggerWindGust() {
-        for (let i = 0; i < 10; i++) {
+        for (let i = 0; i < 4; i++) {
             this.add({
                 x: -300 - Math.random() * 500, y: Math.random() * 3000,
                 vx: 12 + Math.random() * 5, vy: 1 + Math.random() * 1,
-                life: 250, color: "#ffffff", size: 1, type: 'wind'
+                life: 180, color: "#ffffff", size: 1, type: 'wind'
             });
         }
         if(window.EnvSystem) window.EnvSystem.onGust();
@@ -282,7 +282,7 @@ class EnvSystem {
     generateGrassFrames(scene, keyPrefix, bladeDefs, w, h, scale, windSens) { for (let frame = 0; frame < this.TOTAL_GRASS_FRAMES; frame++) { const g = scene.make.graphics({x:0, y:0, add:false}); g.fillStyle(0x2a331a, 0.8); g.fillEllipse(w/2, h, h/4, h/10); const bendFactor = frame / (this.TOTAL_GRASS_FRAMES - 1.0); for(let b of bladeDefs) { g.lineStyle(1.5 * scale, b.col, 1.0); const startX = b.startX; const startY = h; const windX = bendFactor * (h * windSens); const windY = Math.abs(windX) * 0.2; const endX = startX + b.lean + windX; const endY = startY - b.len + windY; const ctrlX = startX + (b.lean * 0.1) + (windX * 0.5) + b.ctrlOff; const ctrlY = startY - (b.len * 0.5); const curve = new Phaser.Curves.QuadraticBezier(new Phaser.Math.Vector2(startX, startY), new Phaser.Math.Vector2(ctrlX, ctrlY), new Phaser.Math.Vector2(endX, endY)); curve.draw(g); } g.generateTexture(`${keyPrefix}_${frame}`, w, h); } }
     clear() { this.grassElements = []; this.treeElements = []; }
     spawnGrass(scene, group, x, y) { const count = 60; const scaleFactor = 0.07; for(let i=0; i<count; i++) { const r = Math.random() * (HEX_SIZE * 1.0); const angle = Math.random() * Math.PI * 2; const ox = Math.cos(angle) * r; const oy = Math.sin(angle) * r * 0.866; const type = Math.random() > 0.5 ? 'A' : 'B'; const textureKey = type === 'A' ? 'hd_grass_0' : 'hd_grass_b_0'; const grass = scene.add.sprite(x+ox, y+oy, textureKey); grass.setOrigin(0.5, 1.0); const typeScale = type === 'A' ? 1.0 : 0.85; grass.setScale((0.8 + Math.random() * 0.4) * scaleFactor * typeScale); grass.setDepth(y+oy); grass.grassType = type; grass.currentWindValue = 0; grass.origX = x + ox; grass.origY = y + oy; grass.amp = 0.82 + Math.random() * 0.36; const tintVar = Math.floor(Math.random() * 40); grass.setTint(Phaser.Display.Color.GetColor(160 + tintVar, 170 + tintVar, 130 + tintVar)); group.add(grass); this.grassElements.push(grass); } }
-    spawnTrees(scene, group, x, y) { const count = 5 + Math.floor(Math.random() * 3); const scaleFactor = 0.18; for(let i=0; i<count; i++) { const r = Math.random() * (HEX_SIZE * 0.85); const angle = Math.random() * Math.PI * 2; const ox = Math.cos(angle) * r; const oy = Math.sin(angle) * r * 0.866; const scale = (0.7 + Math.random() * 0.6) * scaleFactor; const shadow = scene.add.ellipse(x+ox, y+oy+3, 40*scale, 15*scale, 0x000000, 0.5); group.add(shadow); const treeContainer = scene.add.container(x+ox, y+oy); treeContainer.setDepth(y+oy + 20); treeContainer.setScale(scale); const trunk = scene.add.image(0, 0, 'hd_tree_trunk').setOrigin(0.5, 0.95); treeContainer.add(trunk); const leaves = []; for(let l=0; l<3; l++) { const leaf = scene.add.image(0, 0, `hd_tree_leaves_${l}`).setOrigin(0.5, 0.95); treeContainer.add(leaf); leaves.push(leaf); } treeContainer.trunk = trunk; treeContainer.leaves = leaves; treeContainer.currentSkew = 0; treeContainer.baseSkew = 0; treeContainer.origX = x + ox; treeContainer.origY = y + oy; treeContainer.swayOffset = (Math.random() - 0.5) * Math.PI * 0.6; treeContainer.amp = 0.88 + Math.random() * 0.24; group.add(treeContainer); this.treeElements.push(treeContainer); } }
+    spawnTrees(scene, group, x, y) { const count = 4 + Math.floor(Math.random() * 3); const scaleFactor = 0.18; for(let i=0; i<count; i++) { const r = Math.random() * (HEX_SIZE * 0.85); const angle = Math.random() * Math.PI * 2; const ox = Math.cos(angle) * r; const oy = Math.sin(angle) * r * 0.866; const scale = (0.7 + Math.random() * 0.6) * scaleFactor; const shadow = scene.add.ellipse(x+ox, y+oy+3, 40*scale, 15*scale, 0x000000, 0.5); group.add(shadow); const treeContainer = scene.add.container(x+ox, y+oy); treeContainer.setDepth(y+oy + 20); treeContainer.setScale(scale); const trunk = scene.add.image(0, 0, 'hd_tree_trunk').setOrigin(0.5, 0.95); treeContainer.add(trunk); const leaves = []; for(let l=0; l<3; l++) { const leaf = scene.add.image(0, 0, `hd_tree_leaves_${l}`).setOrigin(0.5, 0.95); treeContainer.add(leaf); leaves.push(leaf); } treeContainer.trunk = trunk; treeContainer.leaves = leaves; treeContainer.currentSkew = 0; treeContainer.baseSkew = 0; treeContainer.origX = x + ox; treeContainer.origY = y + oy; treeContainer.swayOffset = (Math.random() - 0.5) * Math.PI * 0.6; treeContainer.amp = 0.88 + Math.random() * 0.24; group.add(treeContainer); this.treeElements.push(treeContainer); } }
     spawnRubble(scene, x, y, decorGroup, rubbleFrontGroup) {
         const countBack = 6 + Math.floor(Math.random() * 4);
         const countFront = 6 + Math.floor(Math.random() * 4);

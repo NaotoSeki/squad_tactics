@@ -167,6 +167,7 @@ class CampaignManager {
             if (fusionData.apBonus) baseAp = baseAp + fusionData.apBonus;
             if (Array.isArray(fusionData.skills)) skills = [...fusionData.skills];
         }
+        const isFusedTank = !!(t.isTank && fusionData);
 
         const createItem = (key) => {
             if (!key || !WPNS[key]) return null;
@@ -192,10 +193,24 @@ class CampaignManager {
             t.loadout.forEach((k, i) => { if (i < 3) hands[i] = createItem(k); });
         } else if (t.main) {
             hands[0] = createItem(t.main);
+            if (t.isTank && t.sub) {
+                hands[1] = createItem(t.sub);
+                if (isFusedTank) {
+                    hands[2] = createItem(t.sub);
+                    const r1 = (hands[1].reserve !== undefined) ? hands[1].reserve : 0;
+                    const r2 = (hands[2].reserve !== undefined) ? hands[2].reserve : 0;
+                    const total = r1 + r2;
+                    if (total > 0) {
+                        const half = Math.floor(total / 2);
+                        if (hands[1].reserve !== undefined) hands[1].reserve = half;
+                        if (hands[2].reserve !== undefined) hands[2].reserve = total - half;
+                    }
+                }
+            }
         }
 
         let bag = [];
-        if (t.sub) { bag.push(createItem(t.sub)); }
+        if (t.sub && !t.isTank) { bag.push(createItem(t.sub)); }
         if (t.opt) { 
             const optBase = WPNS[t.opt]; const count = optBase.mag || 1; 
             for (let i = 0; i < count; i++) { bag.push(createItem(t.opt)); }
@@ -280,7 +295,10 @@ class CampaignManager {
             const isMortar = parts.includes('mortar_barrel') && parts.includes('mortar_bipod') && parts.includes('mortar_plate');
             if (isMortar) { u.bag.forEach(i => { if (i && i.code === 'mortar_shell_box') i.current = i.cap; }); } 
             else if (u.hands[0] && u.hands[0].type && u.hands[0].type.includes('bullet')) { u.hands[0].current = u.hands[0].cap; } 
-            else if (u.def.isTank && u.hands[0]) { u.hands[0].reserve = (u.hands[0].code === 'mg42' ? 300 : 12); } 
+            else if (u.def.isTank && u.hands) {
+                u.hands.forEach(h => { if (h && h.code === 'mg42' && h.reserve !== undefined) h.reserve = 300; });
+                if (u.hands[0] && u.hands[0].reserve !== undefined && u.hands[0].code !== 'mg42') u.hands[0].reserve = 12;
+            } 
         }); 
     }
 }

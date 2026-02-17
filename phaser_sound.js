@@ -22,8 +22,14 @@ const Sfx = {
         if(this.ctx.state==='suspended') this.ctx.resume();
         if (!this._visibilityBound) {
             this._visibilityBound = () => {
-                if (document.visibilityState === 'visible') {
-                    const now = Date.now();
+                const now = Date.now();
+                if (document.visibilityState === 'hidden') {
+                    if (window.phaserGame) {
+                        const main = window.phaserGame.scene.getScene('MainScene');
+                        if (main && main.sound) main.sound.stopAll();
+                    }
+                    Object.keys(this.lastPlayTime || {}).forEach(k => { this.lastPlayTime[k] = now; });
+                } else {
                     Object.keys(this.lastPlayTime || {}).forEach(k => { this.lastPlayTime[k] = now; });
                     if (window.phaserGame) {
                         const main = window.phaserGame.scene.getScene('MainScene');
@@ -104,6 +110,9 @@ const Sfx = {
 
     play(id, fallbackType = null) {
         this.init();
+
+        if (id === 'tank_reload') return;
+        if (document.visibilityState === 'hidden') return;
 
         // スロットリング処理
         if (this.throttles[id]) {

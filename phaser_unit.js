@@ -57,7 +57,18 @@ class UnitView {
             const hexMap = new Map(); 
             
             window.gameLogic.units.forEach(u => {
-                if (u.hp <= 0) return;
+                if (u.hp <= 0) {
+                    const deadVisual = this.visuals.get(u.id);
+                    if (deadVisual) {
+                        if (deadVisual.container) deadVisual.container.destroy();
+                        if (deadVisual.hpBg) deadVisual.hpBg.destroy();
+                        if (deadVisual.hpBar) deadVisual.hpBar.destroy();
+                        if (deadVisual.infoContainer) deadVisual.infoContainer.destroy();
+                        if (deadVisual.skillContainer) deadVisual.skillContainer.destroy();
+                        this.visuals.delete(u.id);
+                    }
+                    return;
+                }
                 const key = `${u.q},${u.r}`;
                 if (!hexMap.has(key)) hexMap.set(key, []);
                 hexMap.get(key).push(u);
@@ -187,6 +198,7 @@ class UnitView {
             else if (index === 1) { offsetX = spread; offsetY = -spread; }
             else if (index === 2) { offsetX = -spread; offsetY = spread; }
             else if (index === 3) { offsetX = spread; offsetY = spread; }
+            else if (index === 4) { offsetX = 0; offsetY = 0; }
         }
         
         visual.targetX = basePos.x + offsetX;
