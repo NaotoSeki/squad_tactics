@@ -48,6 +48,40 @@ class UIManager {
             }
             .slot[draggable="true"] { cursor: grab; }
             .slot:active { cursor: grabbing; }
+
+            /* 射撃ボタンの弾数撃ち分けUI */
+            #command-menu .cmd-btn.burst-mode {
+                position: relative;
+                overflow: hidden;
+            }
+            #command-menu .cmd-btn.burst-mode .burst-container {
+                position: absolute;
+                inset: 0;
+                display: flex;
+                pointer-events: none;
+            }
+            #command-menu .cmd-btn.burst-mode .burst-option {
+                flex: 1;
+                font-size: 11px;
+                text-align: center;
+                line-height: 24px;
+                background: rgba(16,16,16,0.92);
+                border-left: 1px solid #333;
+                color: #ffd;
+                pointer-events: auto;
+                cursor: pointer;
+                user-select: none;
+            }
+            #command-menu .cmd-btn.burst-mode .burst-option:first-child {
+                border-left: none;
+            }
+            #command-menu .cmd-btn.burst-mode .burst-option:hover {
+                background: rgba(80,60,20,0.95);
+                color: #fff7c0;
+            }
+            #command-menu .cmd-btn.burst-mode .burst-label {
+                opacity: 0.4;
+            }
         `;
         document.head.appendChild(style);
     }
@@ -196,6 +230,11 @@ class UIManager {
             if (btnHeal) btnHeal.style.display = 'block';
         }
 
+        // 射撃ボタンの弾数撃ち分けホバーUIをセットアップ
+        if (btnAttack && window.gameLogic && window.gameLogic.getBurstSelectionConfigForWeapon) {
+            this.setupAttackBurstHover(u);
+        }
+
         // 画面端対策: メニューが見切れないように調整
         let menuLeft = px + 20;
         let menuTop = py - 50;
@@ -209,6 +248,87 @@ class UIManager {
     }
 
     hideActionMenu() { const menu = document.getElementById('command-menu'); if (menu) menu.style.display = 'none'; }
+
+    /**
+     * 射撃ボタンに対して、弾数撃ち分け用のホバーUIを設定する。
+     * 対象武器（BAR / M1A1 SMG / M2 Mortar）を装備している場合にのみ有効。
+     */
+    setupAttackBurstHover(u) {
+        const btnAttack = document.getElementById('btn-attack');
+        if (!btnAttack || !window.gameLogic || !window.gameLogic.getVirtualWeapon) return;
+        const w = window.gameLogic.getVirtualWeapon(u);
+        const cfg = w && window.gameLogic.getBurstSelectionConfigForWeapon
+            ? window.gameLogic.getBurstSelectionConfigForWeapon(w)
+            : null;
+
+        // 対象外武器 or 武器なし の場合は見た目を元に戻す
+        if (!cfg || !w) {
+            this.clearAttackBurstUI();
+            return;
+        }
+
+        // 一度だけイベントをバインドする
+        if (!btnAttack._burstHoverBound) {
+            btnAttack.addEventListener('mouseenter', () => this.onAttackButtonHover());
+            btnAttack.addEventListener('mouseleave', () => this.onAttackButtonHoverOut());
+            btnAttack._burstHoverBound = true;
+        }
+
+        // 現在の武器コードを覚えておく（ホバー時に再判定用）
+        btnAttack._burstWeaponCode = w.code;
+    }
+
+    clearAttackBurstUI() {
+        const btnAttack = document.getElementById('btn-attack');
+        if (!btnAttack) return;
+        const container = btnAttack.querySelector('.burst-container');
+        if (container) container.remove();
+        btnAttack.classList.remove('burst-mode');
+    }
+
+    onAttackButtonHover() {
+        const btnAttack = document.getElementById('btn-attack');
+        if (!btnAttack || btnAttack.classList.contains('disabled')) return;
+        if (!window.gameLogic || !window.gameLogic.selectedUnit || !window.gameLogic.getVirtualWeapon) return;
+
+        const u = window.gameLogic.selectedUnit;
+        const w = window.gameLogic.getVirtualWeapon(u);
+        const cfg = w && window.gameLogic.getBurstSelectionConfigForWeapon
+            ? window.gameLogic.getBurstSelectionConfigForWeapon(w)
+            : null;
+        if (!cfg || !Array.isArray(cfg.modes) || cfg.modes.length < 2) {
+            this.clearAttackBurstUI();
+            return;
+        }
+
+        // 既に表示中なら何もしない
+        if (btnAttack.classList.contains('burst-mode')) return;
+
+        btnAttack.classList.add('burst-mode');
+
+        const container = document.createElement('div');
+        container.className = 'burst-container';
+
+        cfg.modes.forEach((shots) => {
+            const opt = document.createElement('div');
+            opt.className = 'burst-option';
+            opt.textContent = String(shots);
+            opt.addEventListener('click', (e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                if (window.gameLogic && window.gameLogic.setAttackModeWithBurst) {
+                    window.gameLogic.setAttackModeWithBurst(shots);
+                }
+            });
+            container.appendChild(opt);
+        });
+
+        btnAttack.appendChild(container);
+    }
+
+    onAttackButtonHoverOut() {
+        this.clearAttackBurstUI();
+    }
 
     /**
      * コマンドメニュー（射撃・移動等）のボタン状態のみを即時更新する。
@@ -241,6 +361,11 @@ class UIManager {
         } else {
             if (grpStance) grpStance.style.display = 'block';
             if (btnHeal) btnHeal.style.display = 'block';
+        }
+
+        // 装備スワップ等で武器が変わった場合も、撃ち分けUIを更新
+        if (btnAttack && window.gameLogic && window.gameLogic.getBurstSelectionConfigForWeapon) {
+            this.setupAttackBurstHover(u);
         }
     }
 

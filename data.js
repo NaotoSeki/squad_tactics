@@ -51,9 +51,9 @@ const SKILL_STYLES = {
 
 const WPNS = {
     m1: { name:"M1 Garand", rng:7, acc:85, acc_drop:3, dmg:76, cap:8, mag:6, ap:2, rld:1, wgt:4, type:'bullet', burst:2, overRangePenalty:10, desc:"米軍主力小銃。", weight: 9.5, attr: ATTR.WEAPON },
-    thompson: { name:"M1A1 SMG", rng:5, acc:60, acc_drop:4, dmg:41, cap:30, mag:4, ap:2, rld:1, wgt:5, type:'bullet', burst:2, modes:[2, 5], overRangePenalty:22, desc:"近距離制圧用。", weight: 10, attr: ATTR.WEAPON },
+    thompson: { name:"M1A1 SMG", rng:5, acc:60, acc_drop:4, dmg:41, cap:30, mag:4, ap:2, rld:1, wgt:5, type:'bullet', burst:3, modes:[3, 7], overRangePenalty:22, desc:"近距離制圧用。", weight: 10, attr: ATTR.WEAPON },
     k98_scope: { name:"M1903 Scope", rng:9, acc:95, acc_drop:3, dmg:72, cap:5, mag:5, ap:2, rld:2, wgt:5, type:'bullet', burst:1, overRangePenalty:10, desc:"精密狙撃銃。", weight: 9, attr: ATTR.WEAPON },
-    bar: { name:"M1918 BAR", rng:7, acc:55, acc_drop:3, dmg:45, cap:20, mag:5, ap:2, rld:2, wgt:9, type:'bullet', burst:3, overRangePenalty:10, desc:"分隊支援火器。", weight: 19, attr: ATTR.WEAPON }, 
+    bar: { name:"M1918 BAR", rng:7, acc:55, acc_drop:3, dmg:45, cap:20, mag:5, ap:2, rld:2, wgt:9, type:'bullet', burst:2, modes:[2, 5], overRangePenalty:10, desc:"分隊支援火器。", weight: 19, attr: ATTR.WEAPON }, 
     m1911: { name:"Colt M1911", rng:3, acc:70, acc_drop:10, dmg:30, cap:7, mag:3, ap:2, rld:1, wgt:1, type:'bullet', burst:1, overRangePenalty:25, desc:"45口径拳銃。", weight: 2.4, attr: ATTR.WEAPON },
     luger: { name:"Luger P08", rng:3, acc:75, acc_drop:10, dmg:25, cap:8, mag:2, ap:2, rld:1, wgt:1, type:'bullet', burst:1, overRangePenalty:25, desc:"将校の拳銃。", weight: 1.9, attr: ATTR.WEAPON },
     knife: { name:"Combat Knife", rng:1, acc:90, dmg:35, cap:0, mag:0, ap:1, rld:0, wgt:0, type:'melee', burst:1, desc:"白兵戦用。", weight: 1, attr: ATTR.WEAPON },
@@ -66,7 +66,7 @@ const WPNS = {
     'mortar_barrel': { name: "M2 Tube", type: "part", partType: "barrel", desc: "M2迫撃砲の砲身。", weight: 12.8, attr: ATTR.WEAPON },
     'mortar_bipod':  { name: "M2 Bipod", type: "part", partType: "bipod", desc: "M2迫撃砲の二脚。", weight: 16.4, attr: ATTR.WEAPON },
     'mortar_plate':  { name: "M2 Baseplate", type: "part", partType: "plate", desc: "M2迫撃砲の底板。", weight: 12.8, attr: ATTR.WEAPON },
-    'm2_mortar': { name: "M2 60mm Mortar", type: "shell", rng: 12, minRng: 2, dmg: 150, ap: 4, acc: 65, cap: 1, rld: 0, area: true, indirect: true, desc: "曲射弾道。", weight: 42, attr: ATTR.WEAPON },
+    'm2_mortar': { name: "M2 60mm Mortar", type: "shell", rng: 12, minRng: 2, dmg: 150, ap: 4, acc: 65, cap: 1, burst: 1, modes:[1, 2], rld: 0, area: true, indirect: true, desc: "曲射弾道。", weight: 42, attr: ATTR.WEAPON },
     'mortar_shell_box': { name: "60mm Ammo Box", type: "ammo", ammoFor: "m2_mortar", cap: 12, current: 12, desc: "迫撃砲弾。", weight: 20, attr: ATTR.WEAPON, isConsumable: false }
 };
 
