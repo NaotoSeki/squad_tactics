@@ -160,6 +160,8 @@ class Card extends Phaser.GameObjects.Container {
         const isObj = typeof typeOrData === 'object' && typeOrData !== null;
         this.cardType = isObj ? typeOrData.type : typeOrData;
         this.fusionData = isObj && typeOrData.fusionData ? typeOrData.fusionData : null;
+        // 武器カードの場合、実インスタンス（弾数などの状態を含む）を保持できる
+        this.weaponData = isObj && typeOrData.weaponData ? typeOrData.weaponData : null;
         this.scene = scene; this.setSize(140, 200);
         const texKey = window.getCardTextureKey(scene, this.cardType);
         this.frameImage = scene.add.image(0, 0, texKey).setDisplaySize(140, 200);
@@ -266,7 +268,10 @@ class Card extends Phaser.GameObjects.Container {
             if (!isWeaponry) { this.returnToHand(); return; }
             const sidebar = window.phaserSidebar;
             if (sidebar && sidebar.hitTestSlots(pointer.x, pointer.y) && window.gameLogic && window.gameLogic.equipWeaponFromDeck) {
-                window.gameLogic.equipWeaponFromDeck(this.cardType, sidebar.hitTestSlots(pointer.x, pointer.y));
+                const slotTarget = sidebar.hitTestSlots(pointer.x, pointer.y);
+                // weaponData があれば弾数等の状態ごと装備、なければ従来どおりコードのみで装備
+                const src = this.weaponData || this.cardType;
+                window.gameLogic.equipWeaponFromDeck(src, slotTarget);
                 this.scene.removeCard(this); this.destroy(); return;
             }
             this.returnToHand(); return;

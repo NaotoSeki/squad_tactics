@@ -27,8 +27,8 @@ window.BattleLogic = class BattleLogic {
     /**
      * 射撃モード用の弾数上書き情報。
      * { unitId, weaponCode, shots }
-     * コンテキストメニューから弾数を指定したときに設定され、
-     * 1回の攻撃アクションが完了すると自動でクリアされる。
+     * コンテキストメニューから弾数を指定したときに設定される。
+     * ATTACK MODE の間は維持され、SELECT など別モードに戻ったタイミングでクリアされる。
      */
     this.attackBurstOverride = null;
 
@@ -432,8 +432,6 @@ window.BattleLogic = class BattleLogic {
         }
         game.refreshUnitState(a);
         game.isExecutingAttack = false;
-        // 弾数撃ち分けの指定は1アクションごとにリセット
-        game.attackBurstOverride = null;
         const weaponCost = wAfter ? wAfter.ap : 99;
         if (a.ap < weaponCost || !wAfter || (wAfter.current <= 0 && (!wAfter.indirect || !a.bag.some(i => i && i.code === 'mortar_shell_box' && i.current > 0)))) {
           game.setMode('SELECT');
@@ -876,27 +874,56 @@ window.BattleLogic = class BattleLogic {
     const idx = src.type === 'main' ? src.index : src.index;
     const item = src.type === 'main' ? u.hands[idx] : u.bag[idx];
     if (!item || !item.code || !WPNS[item.code] || WPNS[item.code].attr !== ATTR.WEAPON) return;
+    // ユニットからは取り外し、弾数などの状態を保持したままカード化する
     if (src.type === 'main') u.hands[idx] = null; else u.bag[idx] = null;
-    if (typeof Renderer !== 'undefined' && Renderer.dealCard) Renderer.dealCard(item.code);
+    if (typeof Renderer !== 'undefined' && Renderer.dealCard) {
+      Renderer.dealCard({ type: item.code, weaponData: item });
+    }
     this.updateSidebar();
     if (window.Sfx) Sfx.play('click');
     this.ui.log(`${u.name} 装備解除: ${item.name}`);
   }
 
-  equipWeaponFromDeck(weaponCode, slotTarget) {
+  /**
+   * デッキから武器カードを装備スロットへ移す。
+   * weaponSource は string（従来どおりWPNSから生成）か、
+   * { code, ... } などの実インスタンスオブジェクトのどちらか。
+   */
+  equipWeaponFromDeck(weaponSource, slotTarget) {
     const u = this.selectedUnit;
-    if (!u || !WPNS[weaponCode] || WPNS[weaponCode].attr !== ATTR.WEAPON) return;
-    const base = WPNS[weaponCode];
-    const newItem = { ...base, code: weaponCode, id: Math.random(), isBroken: false };
-    if (base.type === 'bullet' || base.type === 'shell_fast') newItem.current = newItem.cap;
-    else if (base.type === 'shell' || base.area) { newItem.current = 1; newItem.isConsumable = true; }
-    else if (base.type === 'ammo') newItem.current = base.current || base.cap;
-    if (u.def && u.def.isTank && !base.type.includes('part') && !base.type.includes('ammo')) { newItem.current = 1; newItem.cap = 1; newItem.reserve = newItem.reserve || (weaponCode === 'mg42' ? 300 : 12); }
+    if (!u) return;
+
+    let newItem = null;
+    let base = null;
+
+    if (typeof weaponSource === 'string') {
+      const weaponCode = weaponSource;
+      if (!WPNS[weaponCode] || WPNS[weaponCode].attr !== ATTR.WEAPON) return;
+      base = WPNS[weaponCode];
+      // 従来どおりの「新品」生成パス
+      newItem = { ...base, code: weaponCode, id: Math.random(), isBroken: false };
+      if (base.type === 'bullet' || base.type === 'shell_fast') newItem.current = newItem.cap;
+      else if (base.type === 'shell' || base.area) { newItem.current = 1; newItem.isConsumable = true; }
+      else if (base.type === 'ammo') newItem.current = base.current || base.cap;
+      if (u.def && u.def.isTank && !base.type.includes('part') && !base.type.includes('ammo')) {
+        newItem.current = 1; newItem.cap = 1;
+        newItem.reserve = newItem.reserve || (weaponCode === 'mg42' ? 300 : 12);
+      }
+    } else if (weaponSource && weaponSource.code && WPNS[weaponSource.code] && WPNS[weaponSource.code].attr === ATTR.WEAPON) {
+      // 実インスタンスから装備（弾数などの状態を保持）
+      newItem = weaponSource;
+      base = WPNS[newItem.code];
+    } else {
+      return;
+    }
+
     const tgtIdx = slotTarget.type === 'main' ? slotTarget.index : slotTarget.index;
     const oldItem = slotTarget.type === 'main' ? u.hands[tgtIdx] : u.bag[tgtIdx];
     if (slotTarget.type === 'main') u.hands[tgtIdx] = newItem; else u.bag[tgtIdx] = newItem;
+
+    // 既にそのスロットにあった武器は、状態を保持したままデッキへ送る
     if (oldItem && oldItem.code && WPNS[oldItem.code] && WPNS[oldItem.code].attr === ATTR.WEAPON && typeof Renderer !== 'undefined' && Renderer.dealCard) {
-      Renderer.dealCard(oldItem.code);
+      Renderer.dealCard({ type: oldItem.code, weaponData: oldItem });
     }
     this.updateSidebar();
     if (window.Sfx) Sfx.play('click');
