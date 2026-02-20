@@ -24,6 +24,14 @@ window.BattleLogic = class BattleLogic {
     this.tankAutoReload = true;
     this.cardsUsed = 0; // 増援カード用
 
+    /**
+     * 射撃モード用の弾数上書き情報。
+     * { unitId, weaponCode, shots }
+     * コンテキストメニューから弾数を指定したときに設定される。
+     * ATTACK MODE の間は維持され、SELECT など別モードに戻ったタイミングでクリアされる。
+     */
+    this.attackBurstOverride = null;
+
     this.ui = new UIManager(this);
     if (typeof MapSystem !== 'undefined') {
       this.mapSystem = new MapSystem(this);
@@ -230,9 +238,57 @@ window.BattleLogic = class BattleLogic {
       if (a.skills && a.skills.includes('Precision')) hitChance += 15;
     }
 
-    let shots = w.isConsumable ? 1 : Math.min(w.burst || 1, w.current);
-    if ((a.def.isTank && w.type && w.type.includes('shell')) || w.code === 'm2_mortar') shots = 1;
-    if (w.code === 'mg42' && w.reserve !== undefined) shots = Math.min(w.burst || 15, w.reserve);
+    // 弾数撃ち分けによる命中率ペナルティ（多弾発射側を選んだとき）
+    const overrideInfo = (this.attackBurstOverride &&
+      this.attackBurstOverride.unitId === a.id &&
+      this.attackBurstOverride.weaponCode === w.code) ? this.attackBurstOverride : null;
+    if (!isAreaAttack && targetUnit && overrideInfo) {
+      const cfg = this.getBurstSelectionConfigForWeapon(w);
+      if (cfg && cfg.modes && cfg.modes.length >= 2) {
+        const maxMode = Math.max.apply(null, cfg.modes);
+        if (overrideInfo.shots >= maxMode) {
+          // 多弾数モードは命中率を数％低下させる
+          hitChance -= 5;
+        }
+      }
+    }
+
+    // --- 発射弾数計算（弾数撃ち分け対応） ---
+    let shots;
+    if (w.code === 'mg42' && w.reserve !== undefined) {
+      shots = Math.min(w.burst || 15, w.reserve);
+    } else if (a.def.isTank && w.type && w.type.includes('shell')) {
+      shots = 1;
+    } else if (w.code === 'm2_mortar') {
+      // M2 迫撃砲は仮想武器。弾薬箱残数に応じて最大発射数を制限
+      let totalAmmo = 0;
+      a.bag.forEach(item => {
+        if (item && item.code === 'mortar_shell_box') totalAmmo += (item.current || 0);
+      });
+      shots = Math.min(w.burst || 1, totalAmmo);
+      if (shots <= 0) shots = 1;
+    } else if (w.isConsumable) {
+      shots = 1;
+    } else {
+      shots = Math.min(w.burst || 1, w.current);
+    }
+
+    // 弾数撃ち分けの上書き（BAR / SMG / Mortar のみ）
+    if (overrideInfo) {
+      let maxByAmmo = shots;
+      if (w.code === 'm2_mortar') {
+        let totalAmmo = 0;
+        a.bag.forEach(item => {
+          if (item && item.code === 'mortar_shell_box') totalAmmo += (item.current || 0);
+        });
+        maxByAmmo = totalAmmo;
+      } else if (!w.isConsumable && !(a.def.isTank && w.type && w.type.includes('shell'))) {
+        maxByAmmo = w.current;
+      }
+      if (maxByAmmo > 0) {
+        shots = Math.max(1, Math.min(overrideInfo.shots, maxByAmmo));
+      }
+    }
 
     if (w.indirect) { this.ui.log(`${a.name} 砲撃開始!`); }
     else { this.ui.log(`${a.name} 攻撃開始`); }
@@ -488,6 +544,43 @@ window.BattleLogic = class BattleLogic {
   }
 
   // --- HELPER METHODS ---
+
+  /**
+   * 指定武器が弾数撃ち分けUIの対象かどうかと、そのモード情報を返す。
+   * 現状は BAR / M1A1 SMG / M2 Mortar のみ対象。
+   * @param {Object} w - getVirtualWeapon / getAttackWeapon が返す武器オブジェクト
+   * @returns {{ weaponCode: string, modes: number[] }|null}
+   */
+  getBurstSelectionConfigForWeapon(w) {
+    if (!w || !w.code) return null;
+    const supported = ['bar', 'thompson', 'm2_mortar'];
+    if (supported.indexOf(w.code) === -1) return null;
+    if (!Array.isArray(w.modes) || w.modes.length < 2) return null;
+    return {
+      weaponCode: w.code,
+      modes: w.modes.slice()
+    };
+  }
+
+  /**
+   * コンテキストメニューから弾数を選んで ATTACK モードへ入る。
+   * UI から直接呼ばれる。
+   * @param {number} shots - 選択された発射弾数
+   */
+  setAttackModeWithBurst(shots) {
+    const u = this.selectedUnit;
+    if (!u || !shots || shots <= 0) return;
+    const w = this.getVirtualWeapon ? this.getVirtualWeapon(u) : null;
+    const cfg = this.getBurstSelectionConfigForWeapon(w);
+    if (!w || !cfg) return;
+    this.attackBurstOverride = {
+      unitId: u.id,
+      weaponCode: w.code,
+      shots: shots
+    };
+    this.setMode('ATTACK');
+  }
+
   toggleSidebar() { this.ui.toggleSidebar(); }
   toggleTankAutoReload() { this.tankAutoReload = !this.tankAutoReload; this.updateSidebar(); }
   updateSidebar(unitOverride) {
@@ -545,6 +638,8 @@ window.BattleLogic = class BattleLogic {
       if(indicator) indicator.style.display = 'none';
       this.path = [];
       this.attackLine = [];
+      // ATTACK以外のモードに移行したら弾数指定はクリアしておく
+      this.attackBurstOverride = null;
     } else {
       if(indicator) {
         indicator.style.display = 'block';
@@ -659,6 +754,20 @@ window.BattleLogic = class BattleLogic {
     } else if (w.area) {
       hit += 20;
     }
+
+    // ATTACK MODE で弾数撃ち分けを指定済みなら、概算命中率にも反映
+    const overrideInfo = (this.attackBurstOverride &&
+      this.attackBurstOverride.unitId === attacker.id &&
+      this.attackBurstOverride.weaponCode === w.code) ? this.attackBurstOverride : null;
+    if (overrideInfo) {
+      const cfg = this.getBurstSelectionConfigForWeapon(w);
+      if (cfg && cfg.modes && cfg.modes.length >= 2) {
+        const maxMode = Math.max.apply(null, cfg.modes);
+        if (overrideInfo.shots >= maxMode) {
+          hit -= 5;
+        }
+      }
+    }
     hit = Math.max(0, Math.min(100, Math.round(hit)));
     return { hit, isArea: !!w.area && !targetUnit };
   }
@@ -765,27 +874,56 @@ window.BattleLogic = class BattleLogic {
     const idx = src.type === 'main' ? src.index : src.index;
     const item = src.type === 'main' ? u.hands[idx] : u.bag[idx];
     if (!item || !item.code || !WPNS[item.code] || WPNS[item.code].attr !== ATTR.WEAPON) return;
+    // ユニットからは取り外し、弾数などの状態を保持したままカード化する
     if (src.type === 'main') u.hands[idx] = null; else u.bag[idx] = null;
-    if (typeof Renderer !== 'undefined' && Renderer.dealCard) Renderer.dealCard(item.code);
+    if (typeof Renderer !== 'undefined' && Renderer.dealCard) {
+      Renderer.dealCard({ type: item.code, weaponData: item });
+    }
     this.updateSidebar();
     if (window.Sfx) Sfx.play('click');
     this.ui.log(`${u.name} 装備解除: ${item.name}`);
   }
 
-  equipWeaponFromDeck(weaponCode, slotTarget) {
+  /**
+   * デッキから武器カードを装備スロットへ移す。
+   * weaponSource は string（従来どおりWPNSから生成）か、
+   * { code, ... } などの実インスタンスオブジェクトのどちらか。
+   */
+  equipWeaponFromDeck(weaponSource, slotTarget) {
     const u = this.selectedUnit;
-    if (!u || !WPNS[weaponCode] || WPNS[weaponCode].attr !== ATTR.WEAPON) return;
-    const base = WPNS[weaponCode];
-    const newItem = { ...base, code: weaponCode, id: Math.random(), isBroken: false };
-    if (base.type === 'bullet' || base.type === 'shell_fast') newItem.current = newItem.cap;
-    else if (base.type === 'shell' || base.area) { newItem.current = 1; newItem.isConsumable = true; }
-    else if (base.type === 'ammo') newItem.current = base.current || base.cap;
-    if (u.def && u.def.isTank && !base.type.includes('part') && !base.type.includes('ammo')) { newItem.current = 1; newItem.cap = 1; newItem.reserve = newItem.reserve || (weaponCode === 'mg42' ? 300 : 12); }
+    if (!u) return;
+
+    let newItem = null;
+    let base = null;
+
+    if (typeof weaponSource === 'string') {
+      const weaponCode = weaponSource;
+      if (!WPNS[weaponCode] || WPNS[weaponCode].attr !== ATTR.WEAPON) return;
+      base = WPNS[weaponCode];
+      // 従来どおりの「新品」生成パス
+      newItem = { ...base, code: weaponCode, id: Math.random(), isBroken: false };
+      if (base.type === 'bullet' || base.type === 'shell_fast') newItem.current = newItem.cap;
+      else if (base.type === 'shell' || base.area) { newItem.current = 1; newItem.isConsumable = true; }
+      else if (base.type === 'ammo') newItem.current = base.current || base.cap;
+      if (u.def && u.def.isTank && !base.type.includes('part') && !base.type.includes('ammo')) {
+        newItem.current = 1; newItem.cap = 1;
+        newItem.reserve = newItem.reserve || (weaponCode === 'mg42' ? 300 : 12);
+      }
+    } else if (weaponSource && weaponSource.code && WPNS[weaponSource.code] && WPNS[weaponSource.code].attr === ATTR.WEAPON) {
+      // 実インスタンスから装備（弾数などの状態を保持）
+      newItem = weaponSource;
+      base = WPNS[newItem.code];
+    } else {
+      return;
+    }
+
     const tgtIdx = slotTarget.type === 'main' ? slotTarget.index : slotTarget.index;
     const oldItem = slotTarget.type === 'main' ? u.hands[tgtIdx] : u.bag[tgtIdx];
     if (slotTarget.type === 'main') u.hands[tgtIdx] = newItem; else u.bag[tgtIdx] = newItem;
+
+    // 既にそのスロットにあった武器は、状態を保持したままデッキへ送る
     if (oldItem && oldItem.code && WPNS[oldItem.code] && WPNS[oldItem.code].attr === ATTR.WEAPON && typeof Renderer !== 'undefined' && Renderer.dealCard) {
-      Renderer.dealCard(oldItem.code);
+      Renderer.dealCard({ type: oldItem.code, weaponData: oldItem });
     }
     this.updateSidebar();
     if (window.Sfx) Sfx.play('click');
