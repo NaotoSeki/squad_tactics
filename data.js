@@ -4,6 +4,9 @@ const HEX_SIZE = 54;
 const MAP_W = 20;
 const MAP_H = 20;
 
+/** 自軍ポートレート最大枚数（asset/portraits/inf_us_001.jpg 〜 inf_us_NNN.jpg）。画像を追加するときはこの数までファイルを置けばよい。 */
+const PORTRAIT_MAX = 99;
+
 const ATTR = {
     MILITARY: 'Military forces', 
     SUPPORT: 'Fire support',     

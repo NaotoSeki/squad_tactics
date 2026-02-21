@@ -6,7 +6,6 @@ function createCardIcon(type) {
     const c = document.createElement('canvas'); c.width = 1; c.height = 1; return c.toDataURL();
 }
 
-const PORTRAIT_COUNT = 7;
 
 class CampaignManager {
     constructor() {
@@ -161,7 +160,7 @@ class CampaignManager {
             const first = FIRST_NAMES[Math.floor(Math.random() * FIRST_NAMES.length)]; 
             const last = LAST_NAMES[Math.floor(Math.random() * LAST_NAMES.length)]; 
             name = `${last} ${first}`; 
-            portraitIndex = this.nextPortraitIndex % PORTRAIT_COUNT;
+            portraitIndex = this.nextPortraitIndex % PORTRAIT_MAX;
             this.nextPortraitIndex++;
         }
 
