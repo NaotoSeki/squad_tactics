@@ -659,6 +659,11 @@ class UIScene extends Phaser.Scene {
         if (isUnit && data.portraitIndex === undefined && window.campaign && typeof window.campaign.getRandomPortraitIndex === 'function') {
             data.portraitIndex = window.campaign.getRandomPortraitIndex();
         }
+        const template = (typeof UNIT_TEMPLATES !== 'undefined' && data.type && UNIT_TEMPLATES[data.type]) ? UNIT_TEMPLATES[data.type] : null;
+        const isInfantry = template && template.role && String(template.role).toLowerCase() === 'infantry';
+        if (isInfantry && !data.name && typeof FIRST_NAMES !== 'undefined' && typeof LAST_NAMES !== 'undefined' && FIRST_NAMES.length && LAST_NAMES.length) {
+            data.name = LAST_NAMES[Math.floor(Math.random() * LAST_NAMES.length)] + ' ' + FIRST_NAMES[Math.floor(Math.random() * FIRST_NAMES.length)];
+        }
         const card = new Card(this, 0, 0, data);
         this.handContainer.add(card); this.cards.push(card); card.physX = 600; card.physY = 300; card.setPosition(card.physX, card.physY); this.arrangeHand();
     }
