@@ -135,7 +135,7 @@ const Renderer = {
     getFusedCardsFromHand() {
         const ui = this.game ? this.game.scene.getScene('UIScene') : null;
         if (!ui || !ui.cards) return [];
-        return ui.cards.filter(c => c.fusionData).map(c => ({ type: c.cardType, fusionData: c.fusionData }));
+        return ui.cards.filter(c => c.fusionData).map(c => ({ type: c.cardType, fusionData: c.fusionData, fusionCount: c.fusionCount }));
     },
     checkUIHover(x, y, pointerEvent) { 
         if (this.isCardDragging) return true;
@@ -171,6 +171,7 @@ class Card extends Phaser.GameObjects.Container {
         const isObj = typeof typeOrData === 'object' && typeOrData !== null;
         this.cardType = isObj ? typeOrData.type : typeOrData;
         this.fusionData = isObj && typeOrData.fusionData ? typeOrData.fusionData : null;
+        this.fusionCount = isObj && typeOrData.fusionCount != null ? typeOrData.fusionCount : (this.fusionData ? 2 : 0);
         this.portraitIndex = isObj && typeOrData.portraitIndex !== undefined ? typeOrData.portraitIndex : undefined;
         // 武器カードの場合、実インスタンス（弾数などの状態を含む）を保持できる
         this.weaponData = isObj && typeOrData.weaponData ? typeOrData.weaponData : null;
@@ -181,7 +182,8 @@ class Card extends Phaser.GameObjects.Container {
         const shadow = scene.add.rectangle(6, 6, 130, 190, 0x000000, 0.5); this.add(shadow); this.add(this.frameImage);
         this.rainbowGraphics = scene.add.graphics().setDepth(1);
         this.fusionCandidateGraphics = scene.add.graphics().setDepth(2);
-        this.add(this.rainbowGraphics); this.add(this.fusionCandidateGraphics);
+        this.auraGraphics = scene.add.graphics().setDepth(2.5);
+        this.add(this.rainbowGraphics); this.add(this.fusionCandidateGraphics); this.add(this.auraGraphics);
         this.setScrollFactor(0); this.baseX = x; this.baseY = y; this.physX = x; this.physY = y; this.velocityX = 0; this.velocityY = 0; this.velocityAngle = 0; this.targetX = x; this.targetY = y; this.dragOffsetX = 0; this.dragOffsetY = 0;
         this.frameImage.on('pointerover', this.onHover, this); this.frameImage.on('pointerout', this.onHoverOut, this); this.frameImage.on('dragstart', this.onDragStart, this); this.frameImage.on('drag', this.onDrag, this); this.frameImage.on('dragend', this.onDragEnd, this);
         scene.add.existing(this);
@@ -203,10 +205,12 @@ class Card extends Phaser.GameObjects.Container {
             if (this.fusionData) {
             this.rainbowGraphics.clear();
             const t = (this.scene.time || { now: 0 }).now * 0.001;
+            const count = Math.max(2, this.fusionCount || 2);
+            const speed = count <= 2 ? 0.08 : 0.28;
             const w = 70; const h = 100; const pad = 2; const segs = 96;
             const colors = [0xff0000, 0xff4400, 0xff8800, 0xffcc00, 0xffff00, 0xaaff00, 0x00ff00, 0x00ff88, 0x0088ff, 0x4400ff, 0x8800ff];
             for (let i = 0; i < segs; i++) {
-                const u = (i / segs + t * 0.15) % 1;
+                const u = (i / segs + t * speed) % 1;
                 const ci = Math.floor(u * colors.length) % colors.length;
                 const c0 = colors[ci]; const c1 = colors[(ci + 1) % colors.length];
                 const mix = (u * colors.length) % 1;
@@ -214,13 +218,30 @@ class Card extends Phaser.GameObjects.Container {
                 const g = ((c0 >> 8) & 0xff) * (1 - mix) + ((c1 >> 8) & 0xff) * mix;
                 const b = (c0 & 0xff) * (1 - mix) + (c1 & 0xff) * mix;
                 const blended = (r << 16) | (g << 8) | b;
-                this.rainbowGraphics.lineStyle(2, blended, 0.88);
+                this.rainbowGraphics.lineStyle(count >= 3 ? 3 : 2, blended, count >= 3 ? 0.95 : 0.88);
                 const frac = i / segs; const nextFrac = (i + 1) / segs;
                 const rad = (f) => { let u2 = f * 4; if (u2 >= 4) u2 = 3.9999; const side = Math.floor(u2) % 4; const v = u2 - Math.floor(u2); let x, y; if (side === 0) { x = -w - pad + v * 2 * (w + pad); y = -h - pad; } else if (side === 1) { x = w + pad; y = -h - pad + v * 2 * (h + pad); } else if (side === 2) { x = w + pad - v * 2 * (w + pad); y = h + pad; } else { x = -w - pad; y = h + pad - v * 2 * (h + pad); } return { x, y }; };
                 const p1 = rad(frac); const p2 = rad(nextFrac);
                 this.rainbowGraphics.beginPath(); this.rainbowGraphics.moveTo(p1.x, p1.y); this.rainbowGraphics.lineTo(p2.x, p2.y); this.rainbowGraphics.strokePath();
             }
-            } else { this.rainbowGraphics.clear(); }
+            if (count >= 3 && this.auraGraphics) {
+                this.auraGraphics.clear();
+                const pulse = 0.4 + 0.35 * Math.sin(t * 4);
+                for (let j = 0; j < 3; j++) {
+                    const off = (j + 1) * 6 + Math.sin(t * 3 + j) * 2;
+                    this.auraGraphics.lineStyle(2, 0xffaa44, pulse * (1 - j * 0.2));
+                    this.auraGraphics.strokeRect(-70 - off, -100 - off, 140 + off * 2, 200 + off * 2);
+                }
+                const spark = Math.sin(t * 12) * 0.5 + 0.5;
+                this.auraGraphics.lineStyle(1, 0xffff88, spark * 0.6);
+                for (let s = 0; s < 8; s++) {
+                    const a = (s / 8) * Math.PI * 2 + t * 2;
+                    const r = 95 + Math.sin(t * 8 + s) * 15;
+                    const x = Math.cos(a) * r; const y = Math.sin(a) * r;
+                    this.auraGraphics.beginPath(); this.auraGraphics.moveTo(0, 0); this.auraGraphics.lineTo(x, y); this.auraGraphics.strokePath();
+                }
+            }
+            } else { this.rainbowGraphics.clear(); if (this.auraGraphics) this.auraGraphics.clear(); }
         }
         if (this.isDragging) { this.setAlpha(0.6); } else {
             const isWeapon = typeof WPNS !== 'undefined' && WPNS[this.cardType];
@@ -305,13 +326,13 @@ class Card extends Phaser.GameObjects.Container {
         if (canDeploy) this.burnAndConsume(hex); else this.returnToHand(); 
     }
     burnAndConsume(hex) { 
-        const type = this.cardType; const fusionData = this.fusionData; const portraitIndex = this.portraitIndex;
+        const type = this.cardType; const fusionData = this.fusionData; const portraitIndex = this.portraitIndex; const fusionCount = this.fusionCount || 0;
         this.updatePhysics = () => {}; this.frameImage.setTint(0x552222); this.frameImage.disableInteractive(); 
         this.scene.tweens.add({ targets: this, alpha: 0, scale: 0.5, duration: 200, onComplete: () => { 
             this.scene.removeCard(this); this.destroy(); 
             try { 
                 if (type === 'aerial') { if (window.gameLogic) window.gameLogic.triggerBombardment(hex); } 
-                else if(window.gameLogic) { window.gameLogic.deployUnit(hex, type, fusionData, portraitIndex); } 
+                else if(window.gameLogic) { window.gameLogic.deployUnit(hex, type, fusionData, portraitIndex, fusionCount); } 
             } catch(e) { console.error("Logic Error:", e); } 
         }}); 
     }
@@ -476,8 +497,8 @@ class UIScene extends Phaser.Scene {
     addCardToHand(typeOrData) {
         let data = typeof typeOrData === 'object' && typeOrData !== null ? { ...typeOrData } : { type: typeOrData };
         const isUnit = typeof UNIT_TEMPLATES !== 'undefined' && data.type && UNIT_TEMPLATES[data.type] && !(typeof WPNS !== 'undefined' && WPNS[data.type]);
-        if (isUnit && data.portraitIndex === undefined && window.campaign && typeof window.campaign.getNextPortraitIndex === 'function') {
-            data.portraitIndex = window.campaign.getNextPortraitIndex();
+        if (isUnit && data.portraitIndex === undefined && window.campaign && typeof window.campaign.getRandomPortraitIndex === 'function') {
+            data.portraitIndex = window.campaign.getRandomPortraitIndex();
         }
         const card = new Card(this, 0, 0, data);
         this.handContainer.add(card); this.cards.push(card); card.physX = 600; card.physY = 300; card.setPosition(card.physX, card.physY); this.arrangeHand();
@@ -486,9 +507,10 @@ class UIScene extends Phaser.Scene {
         const type = dragged.cardType;
         const fusionData = generateFusionData();
         const portraitIndex = dragged.portraitIndex !== undefined ? dragged.portraitIndex : target.portraitIndex;
+        const fusionCount = (dragged.fusionCount || 1) + (target.fusionCount || 1);
         this.removeCard(dragged); dragged.destroy();
         this.removeCard(target); target.destroy();
-        const card = new Card(this, 0, 0, { type, fusionData, portraitIndex });
+        const card = new Card(this, 0, 0, { type, fusionData, portraitIndex, fusionCount });
         this.handContainer.add(card); this.cards.push(card);
         card.physX = (dragged.physX + target.physX) / 2; card.physY = (dragged.physY + target.physY) / 2;
         card.setPosition(card.physX, card.physY);
