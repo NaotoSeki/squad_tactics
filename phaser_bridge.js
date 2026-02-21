@@ -210,8 +210,9 @@ class Card extends Phaser.GameObjects.Container {
         this.frameImage.on('pointerover', this.onHover, this); this.frameImage.on('pointerout', this.onHoverOut, this); this.frameImage.on('dragstart', this.onDragStart, this); this.frameImage.on('drag', this.onDrag, this); this.frameImage.on('dragend', this.onDragEnd, this);
         this.rainbowDmgText = null;
         if (this.isRainbowWeapon && this.weaponData && this.weaponData.rainbowDmgBonus != null) {
-            this.rainbowDmgText = scene.add.text(28, 75, '+' + this.weaponData.rainbowDmgBonus, { fontSize: '12px', color: '#eecc00', fontFamily: 'sans-serif' });
+            this.rainbowDmgText = scene.add.text(32, 75, '+' + this.weaponData.rainbowDmgBonus, { fontSize: '11px', color: '#eecc00', fontFamily: 'monospace' });
             this.rainbowDmgText.setOrigin(0, 0.5);
+            if (this.rainbowDmgText.setResolution) this.rainbowDmgText.setResolution(2);
             this.rainbowDmgText.setDepth(4);
             this.add(this.rainbowDmgText);
         }

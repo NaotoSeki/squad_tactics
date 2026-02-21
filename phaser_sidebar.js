@@ -157,7 +157,7 @@ window.PhaserSidebar = class PhaserSidebar {
         if (isMain && isMortarActive && item && item.type === 'part') {
             bg.setStrokeStyle(2, 0x44ff44, 0.8);
         }
-        if (!isMain && item && item.isRainbow) {
+        if (item && item.isRainbow) {
             const rainbowSlot = this.scene.add.graphics();
             const rw = slotW + 4, rh = slotH + 4, ox = slotW / 2, oy = slotH / 2;
             [0xff0000, 0xff8800, 0xffff00, 0x00ff88, 0x0088ff, 0x8800ff].forEach((col, i) => {
@@ -174,12 +174,15 @@ window.PhaserSidebar = class PhaserSidebar {
             if (!item.type || item.type !== 'ammo') {
                 const baseDmgStr = item.dmg != null ? String(item.dmg) : '-';
                 const hasBonus = item.isRainbow && item.rainbowDmgBonus;
-                const metaLeft = this.scene.add.text(8, slotH - 18, `RNG:${item.rng || '-'} DMG:${baseDmgStr}`, { fontSize: '9px', color: TEXT_DIM, fontFamily: 'sans-serif' });
+                const metaStyle = { fontSize: '9px', fontFamily: 'sans-serif' };
+                const metaLeft = this.scene.add.text(8, slotH - 18, `RNG:${item.rng || '-'} DMG:${baseDmgStr}`, Object.assign({}, metaStyle, { color: TEXT_DIM }));
                 metaLeft.setOrigin(0, 0);
+                if (metaLeft.setResolution) metaLeft.setResolution(2);
                 container.add(metaLeft);
                 if (hasBonus) {
-                    const bonusText = this.scene.add.text(8 + metaLeft.width, slotH - 18, `+${item.rainbowDmgBonus}`, { fontSize: '9px', color: '#eecc00', fontFamily: 'sans-serif' });
+                    const bonusText = this.scene.add.text(8 + metaLeft.width, slotH - 18, `+${item.rainbowDmgBonus}`, Object.assign({}, metaStyle, { color: '#eecc00' }));
                     bonusText.setOrigin(0, 0);
+                    if (bonusText.setResolution) bonusText.setResolution(2);
                     container.add(bonusText);
                 }
             }
@@ -239,17 +242,20 @@ window.PhaserSidebar = class PhaserSidebar {
         if (isMain && item && (item.dmg != null || item.isRainbow)) {
             const baseDmg = item.dmg != null ? item.dmg : 0;
             const bonus = item.isRainbow && item.rainbowDmgBonus ? item.rainbowDmgBonus : 0;
-            const dmgStr = bonus ? `DMG: ${baseDmg} +${bonus}` : `DMG: ${baseDmg}`;
-            const dmgLabel = this.scene.add.text(8, 24, dmgStr, { fontSize: '10px', color: bonus ? '#cccc00' : TEXT_DIM, fontFamily: 'sans-serif' });
+            const dmgLineStyle = { fontSize: '10px', fontFamily: 'sans-serif' };
             if (bonus) {
-                const plainPart = this.scene.add.text(8, 24, `DMG: ${baseDmg} `, { fontSize: '10px', color: TEXT_DIM, fontFamily: 'sans-serif' });
+                const plainPart = this.scene.add.text(8, 24, `DMG: ${baseDmg} `, Object.assign({}, dmgLineStyle, { color: TEXT_DIM }));
                 plainPart.setOrigin(0, 0);
+                if (plainPart.setResolution) plainPart.setResolution(2);
                 container.add(plainPart);
-                const bonusPart = this.scene.add.text(8 + plainPart.width, 24, `+${bonus}`, { fontSize: '10px', color: '#eecc00', fontFamily: 'sans-serif' });
+                const bonusPart = this.scene.add.text(8 + plainPart.width, 24, `+${bonus}`, Object.assign({}, dmgLineStyle, { color: '#eecc00' }));
                 bonusPart.setOrigin(0, 0);
+                if (bonusPart.setResolution) bonusPart.setResolution(2);
                 container.add(bonusPart);
             } else {
+                const dmgLabel = this.scene.add.text(8, 24, `DMG: ${baseDmg}`, Object.assign({}, dmgLineStyle, { color: TEXT_DIM }));
                 dmgLabel.setOrigin(0, 0);
+                if (dmgLabel.setResolution) dmgLabel.setResolution(2);
                 container.add(dmgLabel);
             }
         }
