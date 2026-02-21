@@ -241,8 +241,13 @@ class Card extends Phaser.GameObjects.Container {
             if (count >= 3 && this.auraGraphics) {
                 this.auraGraphics.clear();
                 const baseOff = 8;
-                const pts = 100;
+                const pts = 140;
                 const colors = [0xffdd66, 0xffaa44, 0xff8844];
+                const vel = Math.sqrt((this.velocityX || 0) ** 2 + (this.velocityY || 0) ** 2);
+                const inertiaGain = Math.min(2, 1 + vel * 0.2);
+                const hoverGain = this.isHovering ? 1.35 : 1;
+                const dragGain = this.isDragging ? 1.5 : 1;
+                const response = inertiaGain * hoverGain * dragGain;
                 for (let j = 0; j < 3; j++) {
                     const off = baseOff + (j + 1) * 6;
                     const phase = t * 1.8 + j * 2.1;
@@ -252,9 +257,10 @@ class Card extends Phaser.GameObjects.Container {
                     const L = -70 - off, R = 70 + off, T = -100 - off, B = 100 + off;
                     const W = R - L, H = B - T;
                     const wave = (s) => {
-                        const soft = 2.5 * Math.sin(1.4 * s + phase) + 1.3 * Math.sin(2.1 * s + phase * 1.3);
-                        const prull = 0.55 * Math.sin(5.2 * s + t * 5) + 0.4 * Math.sin(7.3 * s + t * 7 + j);
-                        return soft + prull;
+                        const soft = 2.2 * Math.sin(1.4 * s + phase) + 1.1 * Math.sin(2.2 * s + phase * 1.3);
+                        const hi = 0.5 * Math.sin(8 * s + t * 6) + 0.38 * Math.sin(13 * s + t * 8 + j);
+                        const jelly = (0.32 * Math.sin(19 * s + t * 11) + 0.25 * Math.sin(26 * s + t * 9 + j * 1.7) + 0.18 * Math.sin(33 * s + t * 13 + j * 0.9)) * response;
+                        return soft + hi + jelly;
                     };
                     for (let i = 0; i <= pts; i++) {
                         const u = i / pts;
