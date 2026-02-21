@@ -266,8 +266,8 @@ class UnitView {
             if (typeof SKILL_STYLES !== 'undefined' && skillsArr.length > 0) {
                 const scaleFactor = 0.24;
                 const iconSize = 8;
-                const barBottomY = -43;
-                const yOffset = barBottomY + 4;
+                const skillY = barY + 2 + 3;
+                const yOffset = 0;
                 const spacing = 10;
                 let iconX = -((skillsArr.length - 1) * spacing) / 2;
 
@@ -275,7 +275,7 @@ class UnitView {
                     visual.skillContainer = this.scene.add.container(0, 0);
                     this.hpLayer.add(visual.skillContainer);
                 }
-                visual.skillContainer.setPosition(visual.container.x, visual.container.y);
+                visual.skillContainer.setPosition(visual.container.x, skillY);
                 visual.skillContainer.setScale(scaleFactor);
                 visual.skillContainer.removeAll(true);
 
