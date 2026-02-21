@@ -73,12 +73,12 @@ window.PhaserSidebar = class PhaserSidebar {
             } catch (e) { /* ignore */ }
         }
         if (this.scene.textures.exists(faceKey)) {
-            const face = this.scene.add.image(left, y, faceKey).setDisplaySize(64, 64);
+            const face = this.scene.add.image(left, y, faceKey).setDisplaySize(96, 96);
             face.setOrigin(0, 0);
             this.unitContent.add(face);
         }
 
-        const textLeft = left + 72;
+        const textLeft = left + 104;
         const nameText = this.scene.add.text(textLeft, y + 4, u.name, { fontSize: '14px', color: '#ffffff', fontFamily: 'sans-serif' });
         this.unitContent.add(nameText);
         const roleText = this.scene.add.text(textLeft, y + 24, (u.def && u.def.role) || '', { fontSize: '11px', color: '#ddaa44', fontFamily: 'monospace' });
@@ -87,7 +87,7 @@ window.PhaserSidebar = class PhaserSidebar {
         const skills = (u.skills && Array.isArray(u.skills)) ? [...new Set(u.skills)] : [];
         if (skills.length > 0 && typeof SKILLS !== 'undefined') {
             const skillLines = skills.map(sk => SKILLS[sk] ? `${SKILLS[sk].name}: ${SKILLS[sk].desc}` : sk).join('  |  ');
-            const skillText = this.scene.add.text(textLeft, y + 42, skillLines, { fontSize: '9px', color: TEXT_DIM, fontFamily: 'sans-serif', wordWrap: { width: sw - 88 } });
+            const skillText = this.scene.add.text(textLeft, y + 42, skillLines, { fontSize: '9px', color: TEXT_DIM, fontFamily: 'sans-serif', wordWrap: { width: sw - 120 } });
             this.unitContent.add(skillText);
             y += 60;
         } else {
@@ -377,10 +377,13 @@ window.PhaserSidebar = class PhaserSidebar {
     }
 
     onResize(w, h) {
+        const sw = window.getSidebarWidth();
         if (this.panelBg) {
-            const sw = window.getSidebarWidth();
             this.panelBg.setPosition(w - sw / 2, h / 2);
             this.panelBg.setSize(sw, h);
+        }
+        if (this.noSignalText) {
+            this.noSignalText.setPosition(w - sw / 2, h / 2 - 80);
         }
     }
 };

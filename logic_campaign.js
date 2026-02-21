@@ -39,17 +39,13 @@ class CampaignManager {
         box.innerHTML = '';
         this.setupSlots = [];
 
-        // デッキ生成
-        ['rifleman', 'scout', 'gunner', 'mortar_gunner'].forEach(k => {
+        // デッキ生成（各カードに portraitIndex 0..3 を固定割り当てし、選んだ顔がそのまま戦場の兵士になる）
+        ['rifleman', 'scout', 'gunner', 'mortar_gunner'].forEach((k, idx) => {
             const t = UNIT_TEMPLATES[k]; 
             const d = document.createElement('div'); d.className = 'card';
-            
-            let faceUrl = "";
-            try {
-                if (window.Renderer && typeof window.Renderer.generateFaceIcon === 'function') {
-                    faceUrl = window.Renderer.generateFaceIcon(Math.floor(Math.random() * 99999));
-                }
-            } catch(e) { console.warn("Renderer not ready"); }
+            d.dataset.portraitIndex = String(idx);
+            const portraitNum = String((idx % (typeof PORTRAIT_MAX !== 'undefined' ? PORTRAIT_MAX : 99)) + 1).padStart(3, '0');
+            const faceUrl = 'asset/portraits/inf_us_' + portraitNum + '.jpg';
             
             d.innerHTML = `
                 <div class="card-badge" style="display:none;">✔</div>
@@ -57,7 +53,7 @@ class CampaignManager {
                     <h3 style="color:#d84; font-size:14px; margin:0;">${t.name}</h3>
                 </div>
                 <div class="card-img-box" style="background:#111;">
-                    <img src="${faceUrl}" style="width:64px; height:64px; object-fit:cover;" onerror="this.style.display='none'">
+                    <img src="${faceUrl}" style="width:96px; height:96px; object-fit:cover;" onerror="this.style.display='none'">
                 </div>
                 <div class="card-body" style="font-size:10px; color:#aaa;">
                     AP:${t.ap}<br>${t.role}
@@ -65,15 +61,15 @@ class CampaignManager {
             `;
             
             d.onclick = () => { 
-                const idx = this.setupSlots.indexOf(k);
-                if (idx >= 0) { 
-                    this.setupSlots.splice(idx, 1); 
+                const slotIdx = this.setupSlots.findIndex(s => s.key === k);
+                if (slotIdx >= 0) { 
+                    this.setupSlots.splice(slotIdx, 1); 
                     d.classList.remove('selected'); 
                     d.querySelector('.card-badge').style.display = 'none'; 
                     d.style.borderColor = "#555"; 
                 } else { 
                     if (this.setupSlots.length < 3) { 
-                        this.setupSlots.push(k); 
+                        this.setupSlots.push({ key: k, portraitIndex: idx }); 
                         d.classList.add('selected'); 
                         d.querySelector('.card-badge').style.display = 'flex'; 
                         d.style.borderColor = "#d84"; 
@@ -121,12 +117,14 @@ class CampaignManager {
             // 位置リセット
             deployUnits.forEach(u => { u.q = -999; u.r = -999; });
         } 
-        // 2. 初回プレイならスロットから生成
+        // 2. 初回プレイならスロットから生成（選んだカードの portraitIndex をそのまま兵士に反映）
         else {
-            this.setupSlots.forEach(k => {
-                const u = this.createSoldier(k, 'player');
+            this.setupSlots.forEach(slot => {
+                const u = this.createSoldier(slot.key, 'player', null, slot.portraitIndex);
                 if (u) deployUnits.push(u);
             });
+            const maxPortraitUsed = this.setupSlots.length ? Math.max(...this.setupSlots.map(s => s.portraitIndex)) : -1;
+            this.nextPortraitIndex = maxPortraitUsed + 1;
         }
 
         // BattleLogic（logic_game.js）をインスタンス化
@@ -139,8 +137,15 @@ class CampaignManager {
         }
     }
 
+    /** デッキから増援カード追加時に呼ぶ。次のポートレート番号を返し、内部カウンタを進める。 */
+    getNextPortraitIndex() {
+        const idx = this.nextPortraitIndex % PORTRAIT_MAX;
+        this.nextPortraitIndex++;
+        return idx;
+    }
+
     // --- UNIT FACTORY ---
-    createSoldier(templateKey, team, fusionData) {
+    createSoldier(templateKey, team, fusionData, overridePortraitIndex) {
         const t = UNIT_TEMPLATES[templateKey]; 
         if (!t) { console.error("Template not found:", templateKey); return null; }
         
@@ -160,8 +165,12 @@ class CampaignManager {
             const first = FIRST_NAMES[Math.floor(Math.random() * FIRST_NAMES.length)]; 
             const last = LAST_NAMES[Math.floor(Math.random() * LAST_NAMES.length)]; 
             name = `${last} ${first}`; 
-            portraitIndex = this.nextPortraitIndex % PORTRAIT_MAX;
-            this.nextPortraitIndex++;
+            if (overridePortraitIndex !== undefined) {
+                portraitIndex = overridePortraitIndex;
+            } else {
+                portraitIndex = this.nextPortraitIndex % PORTRAIT_MAX;
+                this.nextPortraitIndex++;
+            }
         }
 
         let baseHp = t.hp || 80;

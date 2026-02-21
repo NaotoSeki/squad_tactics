@@ -1065,9 +1065,9 @@ window.BattleLogic = class BattleLogic {
     return true;
   }
 
-  deployUnit(targetHex, cardType, fusionData) {
+  deployUnit(targetHex, cardType, fusionData, portraitIndex) {
     if(!this.checkDeploy(targetHex)) { return; }
-    const u = this.campaign.createSoldier(cardType, 'player', fusionData);
+    const u = this.campaign.createSoldier(cardType, 'player', fusionData, portraitIndex);
     if(u) {
       u.q = targetHex.q; u.r = targetHex.r;
       this.units.push(u); this.cardsUsed++;

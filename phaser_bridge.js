@@ -18,8 +18,9 @@ function generateFusionData() {
   return { skills, hpBoost, apBonus };
 } 
 
-window.getCardTextureKey = function(scene, type) {
-    const key = `card_texture_${type}`;
+window.getCardTextureKey = function(scene, type, portraitIndex) {
+    const key = (portraitIndex !== undefined && portraitIndex !== null)
+        ? `card_texture_${type}_p${portraitIndex}` : `card_texture_${type}`;
     if (scene.textures.exists(key)) return key;
     if (typeof WPNS !== 'undefined' && WPNS[type]) {
         const w = WPNS[type];
@@ -51,10 +52,20 @@ window.getCardTextureKey = function(scene, type) {
     ctx.fillStyle = "#d84"; ctx.font = "bold 14px sans-serif"; ctx.textAlign = "center"; 
     ctx.fillText(template.name, 70, 22);
     ctx.fillStyle = "#000"; ctx.fillRect(20, 40, 100, 100);
-    const seed = type.length * 999; const rnd = function(s) { return Math.abs(Math.sin(s * 12.9898) * 43758.5453) % 1; };
-    const skinTones = ["#ffdbac", "#f1c27d", "#e0ac69"]; ctx.fillStyle = skinTones[Math.floor(rnd(seed) * skinTones.length)];
-    ctx.beginPath(); ctx.arc(70, 90, 30, 0, Math.PI*2); ctx.fill(); 
-    ctx.fillStyle = "#343"; ctx.beginPath(); ctx.arc(70, 80, 32, Math.PI, 0); ctx.lineTo(102, 80); ctx.lineTo(38, 80); ctx.fill(); 
+    const portraitKey = (portraitIndex !== undefined && portraitIndex !== null)
+        ? ('portrait_' + ((portraitIndex % (typeof PORTRAIT_MAX !== 'undefined' ? PORTRAIT_MAX : 99)) + 1)) : null;
+    if (portraitKey && scene.textures.exists(portraitKey)) {
+        try {
+            const src = scene.textures.get(portraitKey).getSourceImage();
+            if (src && src.width) ctx.drawImage(src, 20, 40, 100, 100);
+        } catch (e) { /* fallback to circle */ }
+    }
+    if (!portraitKey || !scene.textures.exists(portraitKey)) {
+        const seed = type.length * 999; const rnd = function(s) { return Math.abs(Math.sin(s * 12.9898) * 43758.5453) % 1; };
+        const skinTones = ["#ffdbac", "#f1c27d", "#e0ac69"]; ctx.fillStyle = skinTones[Math.floor(rnd(seed) * skinTones.length)];
+        ctx.beginPath(); ctx.arc(70, 90, 30, 0, Math.PI*2); ctx.fill(); 
+        ctx.fillStyle = "#343"; ctx.beginPath(); ctx.arc(70, 80, 32, Math.PI, 0); ctx.lineTo(102, 80); ctx.lineTo(38, 80); ctx.fill(); 
+    }
     ctx.fillStyle = "#888"; ctx.font = "10px sans-serif"; 
     ctx.fillText(template.role ? template.role.toUpperCase() : "UNIT", 70, 155);
     let wpnName = template.main || "-"; if (typeof WPNS !== 'undefined' && WPNS[template.main]) { wpnName = WPNS[template.main].name; }
@@ -160,10 +171,11 @@ class Card extends Phaser.GameObjects.Container {
         const isObj = typeof typeOrData === 'object' && typeOrData !== null;
         this.cardType = isObj ? typeOrData.type : typeOrData;
         this.fusionData = isObj && typeOrData.fusionData ? typeOrData.fusionData : null;
+        this.portraitIndex = isObj && typeOrData.portraitIndex !== undefined ? typeOrData.portraitIndex : undefined;
         // 武器カードの場合、実インスタンス（弾数などの状態を含む）を保持できる
         this.weaponData = isObj && typeOrData.weaponData ? typeOrData.weaponData : null;
         this.scene = scene; this.setSize(140, 200);
-        const texKey = window.getCardTextureKey(scene, this.cardType);
+        const texKey = window.getCardTextureKey(scene, this.cardType, this.portraitIndex);
         this.frameImage = scene.add.image(0, 0, texKey).setDisplaySize(140, 200);
         this.frameImage.setInteractive({ useHandCursor: true, draggable: true });
         const shadow = scene.add.rectangle(6, 6, 130, 190, 0x000000, 0.5); this.add(shadow); this.add(this.frameImage);
@@ -293,13 +305,13 @@ class Card extends Phaser.GameObjects.Container {
         if (canDeploy) this.burnAndConsume(hex); else this.returnToHand(); 
     }
     burnAndConsume(hex) { 
-        const type = this.cardType; const fusionData = this.fusionData;
+        const type = this.cardType; const fusionData = this.fusionData; const portraitIndex = this.portraitIndex;
         this.updatePhysics = () => {}; this.frameImage.setTint(0x552222); this.frameImage.disableInteractive(); 
         this.scene.tweens.add({ targets: this, alpha: 0, scale: 0.5, duration: 200, onComplete: () => { 
             this.scene.removeCard(this); this.destroy(); 
             try { 
                 if (type === 'aerial') { if (window.gameLogic) window.gameLogic.triggerBombardment(hex); } 
-                else if(window.gameLogic) { window.gameLogic.deployUnit(hex, type, fusionData); } 
+                else if(window.gameLogic) { window.gameLogic.deployUnit(hex, type, fusionData, portraitIndex); } 
             } catch(e) { console.error("Logic Error:", e); } 
         }}); 
     }
@@ -461,13 +473,22 @@ class UIScene extends Phaser.Scene {
         types.forEach((typeOrData, i) => { this.time.delayedCall(i * 150, () => { this.addCardToHand(typeOrData); }); });
         this.time.delayedCall(150 * types.length + 1000, () => { this.isHandDocked = true; });
     }
-    addCardToHand(typeOrData) { const card = new Card(this, 0, 0, typeOrData); this.handContainer.add(card); this.cards.push(card); card.physX = 600; card.physY = 300; card.setPosition(card.physX, card.physY); this.arrangeHand(); }
+    addCardToHand(typeOrData) {
+        let data = typeof typeOrData === 'object' && typeOrData !== null ? { ...typeOrData } : { type: typeOrData };
+        const isUnit = typeof UNIT_TEMPLATES !== 'undefined' && data.type && UNIT_TEMPLATES[data.type] && !(typeof WPNS !== 'undefined' && WPNS[data.type]);
+        if (isUnit && data.portraitIndex === undefined && window.campaign && typeof window.campaign.getNextPortraitIndex === 'function') {
+            data.portraitIndex = window.campaign.getNextPortraitIndex();
+        }
+        const card = new Card(this, 0, 0, data);
+        this.handContainer.add(card); this.cards.push(card); card.physX = 600; card.physY = 300; card.setPosition(card.physX, card.physY); this.arrangeHand();
+    }
     fuseCards(dragged, target) {
         const type = dragged.cardType;
         const fusionData = generateFusionData();
+        const portraitIndex = dragged.portraitIndex !== undefined ? dragged.portraitIndex : target.portraitIndex;
         this.removeCard(dragged); dragged.destroy();
         this.removeCard(target); target.destroy();
-        const card = new Card(this, 0, 0, { type, fusionData });
+        const card = new Card(this, 0, 0, { type, fusionData, portraitIndex });
         this.handContainer.add(card); this.cards.push(card);
         card.physX = (dragged.physX + target.physX) / 2; card.physY = (dragged.physY + target.physY) / 2;
         card.setPosition(card.physX, card.physY);
