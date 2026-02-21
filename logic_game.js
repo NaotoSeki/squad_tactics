@@ -216,18 +216,18 @@ window.BattleLogic = class BattleLogic {
 
     if (a.ap < w.ap) { this.ui.log("AP不足"); return; }
 
-    // M8 Rocket: 照準表示を維持したまま1発ずつ消費・描写（他兵装と統一）
+    // M8 Rocket: 照準確定後にMarch of antsを消してから攻撃描写
     if (w.code === 'm8_rocket' && isAreaAttack && targetHex) {
       const hasAmmo = a.hands[0] && a.hands[0].code === 'm8_rocket' && (a.hands[0].current || 0) > 0;
       if (!hasAmmo) { this.ui.log("M8 弾切れ"); return; }
       this.isExecutingAttack = true;
       a.ap -= w.ap;
       this.state = 'ANIM';
+      this.attackLine = [];
+      this.aimTargetUnit = null;
       await this.triggerM8Rocket(a, targetHex);
       this.isExecutingAttack = false;
       this.state = 'PLAY';
-      this.attackLine = [];
-      this.aimTargetUnit = null;
       this.setMode('SELECT');
       this.checkPhaseEnd();
       if (this.ui && this.ui.updateSidebar) this.ui.updateSidebar();
