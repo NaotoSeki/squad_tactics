@@ -290,6 +290,18 @@ window.BattleLogic = class BattleLogic {
       }
     }
 
+    let tankMg42ShotList = [];
+    if (w.tankMg42Slots && w.tankMg42Slots.length > 0) {
+      const burst = w.burst || 15;
+      const perGun = w.tankMg42Slots.map(o => Math.min(burst, (o.mg.reserve !== undefined ? o.mg.reserve : o.mg.current) || 0));
+      for (let r = 0; r < burst; r++) {
+        for (let g = 0; g < w.tankMg42Slots.length; g++) {
+          if (r < perGun[g]) tankMg42ShotList.push({ handIndex: w.tankMg42Slots[g].handIndex, gunIndex: g });
+        }
+      }
+      shots = tankMg42ShotList.length;
+    }
+
     if (w.indirect) { this.ui.log(`${a.name} 砲撃開始!`); }
     else { this.ui.log(`${a.name} 攻撃開始`); }
 
@@ -298,11 +310,19 @@ window.BattleLogic = class BattleLogic {
       const isMg42 = (w.code === 'mg42');
       const fireRate = isMg42 ? 30 : ((w.type === 'bullet') ? 60 : 300);
       const mg42Speed = 0.08;
+      const tankGunCount = (w.tankMg42Slots && w.tankMg42Slots.length) || 1;
 
       for (let i = 0; i < shots; i++) {
+        const shotInfo = tankMg42ShotList[i];
+        const gunIndex = shotInfo ? shotInfo.gunIndex : 0;
+        const muzzleOffsetX = (gunIndex - (tankGunCount - 1) * 0.5) * 24;
 
         if (!(a.def.isTank && w.type && w.type.includes('shell'))) {
-          game.consumeAmmo(a, w.code);
+          if (shotInfo && a.def.isTank && w.code === 'mg42') {
+            game.consumeAmmo(a, w.code, 1, shotInfo.handIndex);
+          } else {
+            game.consumeAmmo(a, w.code);
+          }
         }
         if (game.updateSidebar) {
           requestAnimationFrame(() => game.updateSidebar(a));
@@ -310,6 +330,8 @@ window.BattleLogic = class BattleLogic {
 
         const sPos = Renderer.hexToPx(a.q, a.r);
         const ePos = Renderer.hexToPx(targetHex.q, targetHex.r);
+        const sx = sPos.x + muzzleOffsetX;
+        const sy = sPos.y;
 
         const isMortar = (w.code === 'm2_mortar');
         const isShell = w.type.includes('shell');
@@ -326,13 +348,13 @@ window.BattleLogic = class BattleLogic {
         if (window.VFX) {
           if (isMg42) {
             for (let m = 0; m < 3; m++) {
-              const mfx = sPos.x - 15 + Math.random() * 30;
-              const mfy = sPos.y - 25 - Math.random() * 15;
+              const mfx = sx - 8 + Math.random() * 16;
+              const mfy = sy - 25 - Math.random() * 15;
               VFX.add({ x: mfx, y: mfy, vx: 1 + Math.random() * 2, vy: -2 - Math.random() * 2, life: 12, maxLife: 12, color: "#ffffaa", size: 4 + Math.random() * 2, type: 'spark' });
             }
           }
           VFX.addProj({
-            x: sPos.x, y: sPos.y, sx: sPos.x, sy: sPos.y, ex: tx, ey: ty,
+            x: sx, y: sy, sx: sx, sy: sy, ex: tx, ey: ty,
             type: w.type, speed: projSpeed,
             progress: 0,
             arcHeight: arc, isTracer: true,
@@ -489,7 +511,7 @@ window.BattleLogic = class BattleLogic {
     return null;
   }
 
-  consumeAmmo(u, weaponCode, count) {
+  consumeAmmo(u, weaponCode, count, handIndex) {
     const n = (count != null && count > 0) ? count : 1;
     if (weaponCode === 'm2_mortar') {
       const ammoBox = u.bag.find(i => i && i.code === 'mortar_shell_box' && i.current > 0);
@@ -498,6 +520,15 @@ window.BattleLogic = class BattleLogic {
     }
     if (weaponCode === 'mg42' && u.hands) {
       if (u.def?.isTank) {
+        if (handIndex !== undefined && u.hands[handIndex] && u.hands[handIndex].code === 'mg42') {
+          const mg = u.hands[handIndex];
+          if ((mg.reserve !== undefined ? mg.reserve : mg.current) > 0) {
+            if (mg.reserve !== undefined) mg.reserve = Math.max(0, mg.reserve - 1);
+            else if (mg.current > 0) mg.current--;
+            return true;
+          }
+          return false;
+        }
         const mgs = u.hands.filter(h => h && h.code === 'mg42' && (h.reserve !== undefined ? h.reserve > 0 : h.current > 0));
         for (let i = 0; i < n && mgs.length > 0; i++) {
           const mg = mgs.find(m => (m.reserve !== undefined ? m.reserve : m.current) > 0);
@@ -532,14 +563,14 @@ window.BattleLogic = class BattleLogic {
     const main = this.getVirtualWeapon(a);
     if (!main) return null;
     if (a.def.isTank && targetUnit && !targetUnit.def?.isTank) {
-      const mgs = (a.hands || []).filter(h => h && h.code === 'mg42');
-      const totalReserve = mgs.reduce((s, m) => s + (m.reserve !== undefined ? m.reserve : m.current || 0), 0);
-      if (mgs.length > 0 && totalReserve > 0) {
+      const tankMgSlots = (a.hands || []).map((h, idx) => (h && h.code === 'mg42') ? { handIndex: idx, mg: h } : null).filter(Boolean);
+      const totalReserve = tankMgSlots.reduce((s, o) => s + (o.mg.reserve !== undefined ? o.mg.reserve : o.mg.current || 0), 0);
+      if (tankMgSlots.length > 0 && totalReserve > 0) {
         const dist = this.hexDist(a, targetUnit);
-        const mg = mgs[0];
+        const mg = tankMgSlots[0].mg;
         const rng = mg.rng || 8; const minRng = mg.minRng || 0;
         if (dist >= minRng && dist <= rng && a.ap >= (mg.ap || 2)) {
-          return { ...mg, reserve: totalReserve, burst: (mg.burst || 15) * mgs.length };
+          return { ...mg, reserve: totalReserve, burst: mg.burst || 15, tankMg42Slots: tankMgSlots };
         }
       }
     }

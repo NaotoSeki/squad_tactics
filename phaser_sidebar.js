@@ -215,15 +215,24 @@ window.PhaserSidebar = class PhaserSidebar {
                     container.add(dot);
                 }
             } else if (item.cap > 0 && !item.partType && item.type !== 'ammo') {
-                for (let i = 0; i < (item.current || 0); i++) {
-                    const dot = this.scene.add.rectangle(10 + i * 5, slotH - 12, 2, 6, ACCENT);
-                    dot.setOrigin(0, 0);
-                    container.add(dot);
-                }
-                for (let i = (item.current || 0); i < item.cap; i++) {
-                    const dot = this.scene.add.rectangle(10 + i * 5, slotH - 12, 2, 6, 0x333333);
-                    dot.setOrigin(0, 0);
-                    container.add(dot);
+                const bulletW = 4;
+                const bulletH = 10;
+                const bulletTipH = 3;
+                const bulletGap = 2;
+                const step = bulletW + bulletGap;
+                const baseY = slotH - 12 - bulletH - bulletTipH;
+                for (let i = 0; i < item.cap; i++) {
+                    const filled = i < (item.current || 0);
+                    const col = filled ? ACCENT : 0x333333;
+                    const x = 10 + i * step;
+                    const tipY = baseY + bulletTipH / 2;
+                    const bodyY = baseY + bulletTipH;
+                    const tip = this.scene.add.ellipse(x + bulletW / 2, tipY, bulletW, bulletTipH, col);
+                    tip.setOrigin(0.5, 0.5);
+                    container.add(tip);
+                    const body = this.scene.add.rectangle(x, bodyY, bulletW, bulletH, col);
+                    body.setOrigin(0, 0);
+                    container.add(body);
                 }
             } else if (item.code === 'mortar_shell_box') {
                 for (let i = 0; i < (item.current || 0); i++) {
