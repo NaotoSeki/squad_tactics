@@ -6,6 +6,8 @@ function createCardIcon(type) {
     const c = document.createElement('canvas'); c.width = 1; c.height = 1; return c.toDataURL();
 }
 
+const PORTRAIT_COUNT = 7;
+
 class CampaignManager {
     constructor() {
         this.sector = 1;
@@ -13,6 +15,7 @@ class CampaignManager {
         this.setupSlots = [];
         this.isAutoMode = false;
         this.carriedCards = [];
+        this.nextPortraitIndex = 0;
         window.addEventListener('load', () => this.initSetupScreen());
     }
 
@@ -153,10 +156,13 @@ class CampaignManager {
         
         let name = t.name; 
         let faceSeed = Math.floor(Math.random() * 99999);
+        let portraitIndex = undefined;
         if (isPlayer && !t.isTank) { 
             const first = FIRST_NAMES[Math.floor(Math.random() * FIRST_NAMES.length)]; 
             const last = LAST_NAMES[Math.floor(Math.random() * LAST_NAMES.length)]; 
             name = `${last} ${first}`; 
+            portraitIndex = this.nextPortraitIndex % PORTRAIT_COUNT;
+            this.nextPortraitIndex++;
         }
 
         let baseHp = t.hp || 80;
@@ -231,7 +237,7 @@ class CampaignManager {
         const hp = baseHp;
         const maxAp = baseAp;
         return { 
-            id: Math.random(), team: team, q: 0, r: 0, def: t, name: name, rank: 0, faceSeed: faceSeed, stats: stats, hp: hp, maxHp: hp, ap: maxAp, maxAp: maxAp, hands: hands, bag: bag, stance: 'stand', skills: skills, sectorsSurvived: 0, deadProcessed: false 
+            id: Math.random(), team: team, q: 0, r: 0, def: t, name: name, rank: 0, faceSeed: faceSeed, portraitIndex: portraitIndex, stats: stats, hp: hp, maxHp: hp, ap: maxAp, maxAp: maxAp, hands: hands, bag: bag, stance: 'stand', skills: skills, sectorsSurvived: 0, deadProcessed: false 
         };
     }
 

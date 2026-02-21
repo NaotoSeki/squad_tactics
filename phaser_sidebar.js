@@ -59,15 +59,20 @@ window.PhaserSidebar = class PhaserSidebar {
         const left = w - sw + 12;
         let y = 12;
 
-        const faceKey = 'face_' + (u.faceSeed || u.id || 0);
-        const faceUrl = (typeof Renderer !== 'undefined' && Renderer && Renderer.generateFaceIcon) ? Renderer.generateFaceIcon(u.faceSeed || 0) : '';
+        const usePortrait = (u.team === 'player' && !u.def.isTank && u.portraitIndex !== undefined);
+        const portraitKey = usePortrait ? ('portrait_' + ((u.portraitIndex % 7) + 1)) : null;
+        const faceKey = portraitKey && this.scene.textures.exists(portraitKey) ? portraitKey : ('face_' + (u.faceSeed || u.id || 0));
+        let faceUrl = '';
+        if (faceKey.startsWith('face_') && typeof Renderer !== 'undefined' && Renderer && Renderer.generateFaceIcon) {
+            faceUrl = Renderer.generateFaceIcon(u.faceSeed || 0);
+        }
         if (faceUrl && !this.scene.textures.exists(faceKey)) {
             try {
                 const dataUrl = faceUrl.indexOf('data:') === 0 ? faceUrl : 'data:image/png;base64,' + (faceUrl.indexOf('base64,') >= 0 ? faceUrl.split('base64,')[1] : faceUrl);
                 this.scene.textures.addBase64(faceKey, dataUrl);
             } catch (e) { /* ignore */ }
         }
-        if (faceUrl && this.scene.textures.exists(faceKey)) {
+        if (this.scene.textures.exists(faceKey)) {
             const face = this.scene.add.image(left, y, faceKey).setDisplaySize(64, 64);
             face.setOrigin(0, 0);
             this.unitContent.add(face);
