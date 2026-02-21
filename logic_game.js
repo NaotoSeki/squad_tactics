@@ -216,13 +216,13 @@ window.BattleLogic = class BattleLogic {
 
     if (a.ap < w.ap) { this.ui.log("AP不足"); return; }
 
-    // M8 Rocket: 7ヘックス範囲に60発・煙・爆発・画面揺れ
+    // M8 Rocket: 照準表示を維持したまま1発ずつ消費・描写（他兵装と統一）
     if (w.code === 'm8_rocket' && isAreaAttack && targetHex) {
-      const ok = this.consumeAmmo(a, 'm8_rocket', 60);
-      if (!ok) { this.ui.log("M8 弾切れ"); this.isExecutingAttack = false; return; }
+      const hasAmmo = a.hands[0] && a.hands[0].code === 'm8_rocket' && (a.hands[0].current || 0) > 0;
+      if (!hasAmmo) { this.ui.log("M8 弾切れ"); return; }
+      this.isExecutingAttack = true;
       a.ap -= w.ap;
       this.state = 'ANIM';
-      this.updateSidebar();
       await this.triggerM8Rocket(a, targetHex);
       this.isExecutingAttack = false;
       this.state = 'PLAY';
@@ -812,6 +812,7 @@ window.BattleLogic = class BattleLogic {
 
   handleHover(p) {
     if (this.state !== 'PLAY') return;
+    if (this.isExecutingAttack) return;
     this.hoverHex = p;
     const u = this.selectedUnit;
     if (u && u.team === 'player') {
@@ -1196,6 +1197,8 @@ window.BattleLogic = class BattleLogic {
       const targetPos = typeof Renderer !== 'undefined' ? Renderer.hexToPx(hex.q, hex.r) : { x: 0, y: 0 };
       const delay = i * 55;
       setTimeout(() => {
+        if (!game.consumeAmmo(attacker, 'm8_rocket', 1)) return;
+        game.updateSidebar();
         if (window.VFX) {
           window.VFX.addRocket(tankPos.x, tankPos.y, targetPos.x, targetPos.y, () => {
             if (window.Sfx) Sfx.play('cannon');
