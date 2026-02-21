@@ -188,6 +188,7 @@ class Card extends Phaser.GameObjects.Container {
         this.portraitIndex = isObj && typeOrData.portraitIndex !== undefined ? typeOrData.portraitIndex : undefined;
         // 武器カードの場合、実インスタンス（弾数などの状態を含む）を保持できる
         this.weaponData = isObj && typeOrData.weaponData ? typeOrData.weaponData : null;
+        this.isRainbowWeapon = !!(this.weaponData && this.weaponData.isRainbow);
         this.scene = scene; this.setSize(140, 200);
         const texKey = window.getCardTextureKey(scene, this.cardType, this.portraitIndex);
         this.frameImage = scene.add.image(0, 0, texKey).setDisplaySize(140, 200);
@@ -216,11 +217,12 @@ class Card extends Phaser.GameObjects.Container {
             }
         }
         if (this.rainbowGraphics) {
-            if (this.fusionData) {
+            const showRainbow = this.fusionData || this.isRainbowWeapon;
+            if (showRainbow) {
             this.rainbowGraphics.clear();
             const t = (this.scene.time || { now: 0 }).now * 0.001;
-            const count = Math.max(2, this.fusionCount || 2);
-            const speed = count <= 2 ? 0.08 : 0.28;
+            const count = this.isRainbowWeapon ? 2 : Math.max(2, this.fusionCount || 2);
+            const speed = count <= 2 ? 0.08 : (count >= 4 ? 0.42 : 0.28);
             const w = 70; const h = 100; const pad = 2; const segs = 96;
             const colors = [0xff0000, 0xff4400, 0xff8800, 0xffcc00, 0xffff00, 0xaaff00, 0x00ff00, 0x00ff88, 0x0088ff, 0x4400ff, 0x8800ff];
             for (let i = 0; i < segs; i++) {
@@ -232,7 +234,9 @@ class Card extends Phaser.GameObjects.Container {
                 const g = ((c0 >> 8) & 0xff) * (1 - mix) + ((c1 >> 8) & 0xff) * mix;
                 const b = (c0 & 0xff) * (1 - mix) + (c1 & 0xff) * mix;
                 const blended = (r << 16) | (g << 8) | b;
-                this.rainbowGraphics.lineStyle(count >= 3 ? 3 : 2, blended, count >= 3 ? 0.95 : 0.88);
+                const lineW = count >= 4 ? 4 : (count >= 3 ? 3 : 2);
+                const alpha = count >= 4 ? 1 : (count >= 3 ? 0.95 : 0.88);
+                this.rainbowGraphics.lineStyle(lineW, blended, alpha);
                 const frac = i / segs; const nextFrac = (i + 1) / segs;
                 const rad = (f) => { let u2 = f * 4; if (u2 >= 4) u2 = 3.9999; const side = Math.floor(u2) % 4; const v = u2 - Math.floor(u2); let x, y; if (side === 0) { x = -w - pad + v * 2 * (w + pad); y = -h - pad; } else if (side === 1) { x = w + pad; y = -h - pad + v * 2 * (h + pad); } else if (side === 2) { x = w + pad - v * 2 * (w + pad); y = h + pad; } else { x = -w - pad; y = h + pad - v * 2 * (h + pad); } return { x, y }; };
                 const p1 = rad(frac); const p2 = rad(nextFrac);
@@ -267,19 +271,21 @@ class Card extends Phaser.GameObjects.Container {
                     neighborNear = Math.min(1.8, neighborNear * 0.35);
                 }
                 const response = inertiaGain * hoverGain * dragGain * (1 + 1.4 * cursorNear + 0.4 * neighborNear);
+                const is4Fusion = count >= 4;
                 const rhythm = 0.65 + 0.35 * Math.sin(t * 1.0) + 0.25 * Math.sin(t * 1.85);
+                const waveMult = is4Fusion ? 1.85 : 1;
                 for (let j = 0; j < 3; j++) {
                     const off = baseOff + (j + 1) * 2.5;
-                    const phase = t * 3.2 + j * 2.1;
+                    const phase = t * (is4Fusion ? 4.5 : 3.2) + j * 2.1;
                     const alpha = 0.32 + 0.28 * (1 - j * 0.28) * (0.5 + 0.5 * Math.sin(t * 2.2 + j * 0.8));
-                    this.auraGraphics.lineStyle(2, colors[j], alpha);
+                    this.auraGraphics.lineStyle(is4Fusion ? 3 : 2, colors[j], Math.min(1, alpha * (is4Fusion ? 1.2 : 1)));
                     this.auraGraphics.beginPath();
                     const L = -70 - off, R = 70 + off, T = -100 - off, B = 100 + off;
                     const W = R - L, H = B - T;
                     const wave = (s) => {
-                        const soft = 3.8 * Math.sin(1.4 * s + phase) + 2.2 * Math.sin(2.2 * s + phase * 1.3);
-                        const hi = (1.0 * Math.sin(8 * s + t * 12) + 0.85 * Math.sin(13 * s + t * 16 + j)) * rhythm;
-                        const jelly = (0.75 * Math.sin(19 * s + t * 20) + 0.6 * Math.sin(26 * s + t * 17 + j * 1.7) + 0.45 * Math.sin(33 * s + t * 24 + j * 0.9)) * response * rhythm;
+                        const soft = (3.8 * Math.sin(1.4 * s + phase) + 2.2 * Math.sin(2.2 * s + phase * 1.3)) * waveMult;
+                        const hi = (1.0 * Math.sin(8 * s + t * (is4Fusion ? 18 : 12)) + 0.85 * Math.sin(13 * s + t * (is4Fusion ? 22 : 16) + j)) * rhythm * waveMult;
+                        const jelly = (0.75 * Math.sin(19 * s + t * 20) + 0.6 * Math.sin(26 * s + t * 17 + j * 1.7) + 0.45 * Math.sin(33 * s + t * 24 + j * 0.9)) * response * rhythm * waveMult;
                         return soft + hi + jelly;
                     };
                     for (let i = 0; i <= pts; i++) {
@@ -299,7 +305,8 @@ class Card extends Phaser.GameObjects.Container {
                     this.auraGraphics.closePath(); this.auraGraphics.strokePath();
                 }
                 if (!this.sparklerParticles) this.sparklerParticles = [];
-                if (Math.random() < 0.08) {
+                const sparkChance = count >= 4 ? 0.28 : 0.08;
+                if (Math.random() < sparkChance) {
                     const side = Math.floor(Math.random() * 4);
                     const q = Math.random();
                     let sx, sy, nx, ny;
@@ -308,14 +315,15 @@ class Card extends Phaser.GameObjects.Container {
                     else if (side === 1) { sx = pad; sy = -padV + q * padV * 2; nx = 1; ny = 0; }
                     else if (side === 2) { sx = pad - q * pad * 2; sy = padV; nx = 0; ny = 1; }
                     else { sx = -pad; sy = padV - q * padV * 2; nx = -1; ny = 0; }
-                    const jitter = 0.3;
-                    const vx = nx * (1.2 + Math.random() * 2) + (Math.random() - 0.5) * jitter;
-                    const vy = ny * (1.2 + Math.random() * 2) + (Math.random() - 0.5) * jitter;
+                    const jitter = count >= 4 ? 0.6 : 0.3;
+                    const vel = count >= 4 ? (2.2 + Math.random() * 2.5) : (1.2 + Math.random() * 2);
+                    const vx = nx * vel + (Math.random() - 0.5) * jitter;
+                    const vy = ny * vel + (Math.random() - 0.5) * jitter - 0.3;
                     this.sparklerParticles.push({
                         x: sx, y: sy,
-                        vx: vx, vy: vy - 0.3,
+                        vx: vx, vy: vy,
                         life: 14 + Math.floor(Math.random() * 12), maxLife: 26,
-                        color: Math.random() > 0.4 ? 0xffaa00 : 0xffff88, size: 1.5 + Math.random() * 1.5
+                        color: Math.random() > 0.4 ? 0xffaa00 : 0xffff88, size: (count >= 4 ? 2.2 : 1.5) + Math.random() * 1.5
                     });
                 }
                 for (let i = this.sparklerParticles.length - 1; i >= 0; i--) {
@@ -331,7 +339,7 @@ class Card extends Phaser.GameObjects.Container {
                     this.auraGraphics.lineStyle(Math.max(1, p.size), p.color, alpha);
                     this.auraGraphics.beginPath(); this.auraGraphics.moveTo(p.x, p.y); this.auraGraphics.lineTo(tx, ty); this.auraGraphics.strokePath();
                 }
-                if (this.sparklerParticles.length > 80) this.sparklerParticles.splice(0, 20);
+                if (this.sparklerParticles.length > (count >= 4 ? 120 : 80)) this.sparklerParticles.splice(0, count >= 4 ? 35 : 20);
             }
             } else { this.rainbowGraphics.clear(); if (this.auraGraphics) this.auraGraphics.clear(); if (this.sparklerParticles) this.sparklerParticles.length = 0; }
         }

@@ -275,10 +275,20 @@ class CampaignManager {
             bag = []; 
         }
 
+        if (isPlayer && !t.isTank && fusionCount >= 2 && Math.random() < 0.45) {
+            const allWeapons = [...hands, ...bag].filter(it => it && (it.dmg || it.dmg === 0));
+            if (allWeapons.length > 0) {
+                const pick = allWeapons[Math.floor(Math.random() * allWeapons.length)];
+                pick.isRainbow = true;
+                pick.rainbowDmgBonus = 6 + Math.floor(Math.random() * 18);
+            }
+        }
+
         const hp = baseHp;
         const maxAp = baseAp;
+        const unitFusionCount = (isPlayer && fusionCount >= 2) ? fusionCount : undefined;
         return { 
-            id: Math.random(), team: team, q: 0, r: 0, def: t, name: name, rank: 0, faceSeed: faceSeed, portraitIndex: portraitIndex, stats: stats, hp: hp, maxHp: hp, ap: maxAp, maxAp: maxAp, hands: hands, bag: bag, stance: 'stand', skills: skills, sectorsSurvived: 0, deadProcessed: false 
+            id: Math.random(), team: team, q: 0, r: 0, def: t, name: name, rank: 0, faceSeed: faceSeed, portraitIndex: portraitIndex, stats: stats, hp: hp, maxHp: hp, ap: maxAp, maxAp: maxAp, hands: hands, bag: bag, stance: 'stand', skills: skills, sectorsSurvived: 0, deadProcessed: false, fusionCount: unitFusionCount 
         };
     }
 

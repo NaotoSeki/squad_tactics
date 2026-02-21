@@ -341,6 +341,7 @@ window.BattleLogic = class BattleLogic {
         }
 
         // 着弾処理 (非同期)
+        const getWeaponDmg = (weapon) => (weapon && (typeof weapon.dmg === 'number' ? weapon.dmg : 0) + (weapon && weapon.rainbowDmgBonus || 0)) || 0;
         setTimeout(() => {
           if (isMortar || isShell) {
             if (window.VFX) VFX.addExplosion(tx, ty, "#f55", 5);
@@ -353,16 +354,17 @@ window.BattleLogic = class BattleLogic {
             const neighbors = game.getNeighbors(targetHex.q, targetHex.r);
             const areaVictims = [];
             neighbors.forEach(n => { areaVictims.push(...game.getUnitsInHex(n.q, n.r)); });
+            const wDmg = getWeaponDmg(w);
             victims.forEach(v => {
               if ((Math.random() * 100) < 65 + 20 - dist * 2) {
-                game.applyDamage(v, w.dmg, "迫撃砲");
+                game.applyDamage(v, wDmg, "迫撃砲");
               } else {
                 game.ui.log(">> 至近弾！");
-                game.applyDamage(v, Math.floor(w.dmg / 3), "爆風");
+                game.applyDamage(v, Math.floor(wDmg / 3), "爆風");
               }
             });
             areaVictims.forEach(v => {
-              game.applyDamage(v, Math.floor(w.dmg / 4), "爆風");
+              game.applyDamage(v, Math.floor(wDmg / 4), "爆風");
             });
 
           } else if (isAreaAttack) {
@@ -370,9 +372,10 @@ window.BattleLogic = class BattleLogic {
             const baseChance = (w.type === 'bullet') ? 15 : 25;
             const distDrop = Math.min(10, dist * 1.5);
             const areaHitChance = Math.max(2, baseChance - distDrop);
+            const wDmg = getWeaponDmg(w);
             victims.forEach(v => {
               if ((Math.random() * 100) < areaHitChance) {
-                let dmg = Math.floor(w.dmg * (0.6 + Math.random() * 0.3));
+                let dmg = Math.floor(wDmg * (0.6 + Math.random() * 0.3));
                 if (a.skills && a.skills.includes('HighPower')) dmg = Math.floor(dmg * 1.2);
                 if (v.def.isTank && w.type === 'bullet') dmg = 0;
                 if (dmg > 0) {
@@ -383,7 +386,7 @@ window.BattleLogic = class BattleLogic {
             });
 
           } else {
-            const mainDmg = Math.floor(w.dmg * (0.8 + Math.random() * 0.4));
+            const mainDmg = Math.floor(getWeaponDmg(w) * (0.8 + Math.random() * 0.4));
             const dmgWithSkill = a.skills && a.skills.includes('HighPower') ? Math.floor(mainDmg * 1.2) : mainDmg;
             if (targetUnit && targetUnit.hp > 0) {
               if ((Math.random() * 100) < hitChance) {
@@ -1029,13 +1032,14 @@ window.BattleLogic = class BattleLogic {
   async actionMelee(a, d) {
     if (!a || a.ap < 2) return;
     if (a.q !== d.q || a.r !== d.r) return;
+    const getWeaponDmg = (w) => (w && (typeof w.dmg === 'number' ? w.dmg : 0) + (w && w.rainbowDmgBonus || 0)) || 0;
     let wpnName = "銃床"; let bonusDmg = 0;
     if (a.def.isTank) { wpnName = "体当たり"; bonusDmg = 15; }
     else {
       let bestWeapon = null;
       if (a.hands?.[0] && a.hands[0].type === 'melee') { bestWeapon = a.hands[0]; }
-      a.bag.forEach(item => { if (item && item.type === 'melee') { if (!bestWeapon || item.dmg > bestWeapon.dmg) { bestWeapon = item; } } });
-      if (bestWeapon) { wpnName = bestWeapon.name; bonusDmg = bestWeapon.dmg; }
+      a.bag.forEach(item => { if (item && item.type === 'melee') { if (!bestWeapon || getWeaponDmg(item) > getWeaponDmg(bestWeapon)) { bestWeapon = item; } } });
+      if (bestWeapon) { wpnName = bestWeapon.name; bonusDmg = getWeaponDmg(bestWeapon); }
     }
     a.ap -= 2;
     this.ui.log(`${a.name} 白兵攻撃`);

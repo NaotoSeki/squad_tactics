@@ -95,10 +95,10 @@ window.PhaserSidebar = class PhaserSidebar {
         }
         y += 10;
 
-        const hpText = this.scene.add.text(left, y, `HP  ${u.hp}/${u.maxHp}`, { fontSize: '11px', color: TEXT_COLOR, fontFamily: 'sans-serif' });
+        const hpText = this.scene.add.text(textLeft, y, `HP  ${u.hp}/${u.maxHp}`, { fontSize: '11px', color: TEXT_COLOR, fontFamily: 'sans-serif' });
         this.unitContent.add(hpText);
         y += 22;
-        const apText = this.scene.add.text(left, y, `AP  ${u.ap}/${u.maxAp}`, { fontSize: '11px', color: TEXT_COLOR, fontFamily: 'sans-serif' });
+        const apText = this.scene.add.text(textLeft, y, `AP  ${u.ap}/${u.maxAp}`, { fontSize: '11px', color: TEXT_COLOR, fontFamily: 'sans-serif' });
         this.unitContent.add(apText);
         y += 36;
 
@@ -162,7 +162,8 @@ window.PhaserSidebar = class PhaserSidebar {
         if (item) {
             label = (isMain ? '' : '') + (item.name || '');
             if (!item.type || item.type !== 'ammo') {
-                const meta = this.scene.add.text(8, slotH - 18, `RNG:${item.rng || '-'} DMG:${item.dmg || '-'}`, { fontSize: '9px', color: TEXT_DIM, fontFamily: 'sans-serif' });
+                const dmgDisplay = (item.dmg != null ? item.dmg : '-') + (item.isRainbow && item.rainbowDmgBonus ? '+' + item.rainbowDmgBonus : '');
+                const meta = this.scene.add.text(8, slotH - 18, `RNG:${item.rng || '-'} DMG:${dmgDisplay}`, { fontSize: '9px', color: TEXT_DIM, fontFamily: 'sans-serif' });
                 meta.setOrigin(0, 0);
                 container.add(meta);
             }
@@ -218,6 +219,24 @@ window.PhaserSidebar = class PhaserSidebar {
         nameLabel.setOrigin(0, 0);
         if (label.length > 18) nameLabel.setText(label.substring(0, 17) + '..');
         container.add(nameLabel);
+
+        if (isMain && item && (item.dmg != null || item.isRainbow)) {
+            const baseDmg = item.dmg != null ? item.dmg : 0;
+            const bonus = item.isRainbow && item.rainbowDmgBonus ? item.rainbowDmgBonus : 0;
+            const dmgStr = bonus ? `DMG: ${baseDmg} +${bonus}` : `DMG: ${baseDmg}`;
+            const dmgLabel = this.scene.add.text(8, 24, dmgStr, { fontSize: '10px', color: bonus ? '#cccc00' : TEXT_DIM, fontFamily: 'sans-serif' });
+            if (bonus) {
+                const plainPart = this.scene.add.text(8, 24, `DMG: ${baseDmg} `, { fontSize: '10px', color: TEXT_DIM, fontFamily: 'sans-serif' });
+                plainPart.setOrigin(0, 0);
+                container.add(plainPart);
+                const bonusPart = this.scene.add.text(8 + plainPart.width, 24, `+${bonus}`, { fontSize: '10px', color: '#eecc00', fontFamily: 'sans-serif' });
+                bonusPart.setOrigin(0, 0);
+                container.add(bonusPart);
+            } else {
+                dmgLabel.setOrigin(0, 0);
+                container.add(dmgLabel);
+            }
+        }
 
         if (isMain) {
             const inHands = this.scene.add.text(slotW - 12, 4, 'IN HANDS', { fontSize: '9px', color: '#ddaa44', fontFamily: 'sans-serif' });
