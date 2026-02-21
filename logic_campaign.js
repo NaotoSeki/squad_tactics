@@ -355,18 +355,63 @@ class CampaignManager {
         }); 
     }
 
-    resupplySurvivors() { 
-        this.survivingUnits.forEach(u => { 
-            if (u.hp < u.maxHp) u.hp = Math.floor(u.maxHp * 0.8); 
-            const parts = u.hands.map(i => i ? i.code : null);
-            const isMortar = parts.includes('mortar_barrel') && parts.includes('mortar_bipod') && parts.includes('mortar_plate');
-            if (isMortar) { u.bag.forEach(i => { if (i && i.code === 'mortar_shell_box') i.current = i.cap; }); } 
-            else if (u.hands[0] && u.hands[0].type && u.hands[0].type.includes('bullet')) { u.hands[0].current = u.hands[0].cap; } 
-            else if (u.def.isTank && u.hands) {
-                u.hands.forEach(h => { if (h && h.code === 'mg42' && h.reserve !== undefined) h.reserve = 300; });
-                if (u.hands[0] && u.hands[0].reserve !== undefined && u.hands[0].code !== 'mg42') u.hands[0].reserve = 12;
-            } 
-        }); 
+    resupplySurvivors() {
+        const BAG_SLOTS = 4;
+        this.survivingUnits.forEach(u => {
+            if (u.hp < u.maxHp) u.hp = Math.floor(u.maxHp * 0.8);
+
+            if (!u.hands) u.hands = [null, null, null];
+            if (!u.bag) u.bag = [];
+            while (u.bag.length < BAG_SLOTS) u.bag.push(null);
+
+            const w = (code) => (typeof WPNS !== 'undefined' && WPNS[code]) ? WPNS[code] : null;
+
+            u.hands.forEach(h => {
+                if (!h) return;
+                if (h.current !== undefined && h.cap !== undefined) h.current = h.cap;
+                if (h.reserve !== undefined) {
+                    if (h.code === 'mg42') h.reserve = 300;
+                    else h.reserve = 12;
+                }
+                if (h.code === 'm8_rocket') { h.current = 60; h.cap = 60; }
+            });
+
+            u.bag.forEach((item) => {
+                if (!item) return;
+                if (item.current !== undefined && item.cap !== undefined) item.current = item.cap;
+                if (item.reserve !== undefined && item.code !== 'mg42') item.reserve = 12;
+                if (item.code === 'm8_rocket') { item.current = 60; item.cap = 60; }
+            });
+
+            const mainWeapon = u.hands[0];
+            const mainCode = mainWeapon ? mainWeapon.code : (u.def && u.def.main) ? u.def.main : null;
+            const mainBase = mainCode ? w(mainCode) : null;
+            const optCode = (u.def && u.def.opt) ? u.def.opt : null;
+            const nadeBase = optCode === 'nade' ? w('nade') : null;
+
+            const emptySlots = [];
+            u.bag.forEach((item, i) => { if (!item) emptySlots.push(i); });
+
+            let slotIdx = 0;
+            if (mainBase && mainBase.type === 'bullet' && !u.def.isTank && mainBase.mag) {
+                const need = Math.min(emptySlots.length, mainBase.mag);
+                for (let k = 0; k < need && slotIdx < emptySlots.length; k++, slotIdx++) {
+                    u.bag[emptySlots[slotIdx]] = {
+                        type: 'ammo', name: (mainBase.magName || 'Clip'), ammoFor: mainCode,
+                        cap: mainBase.cap, code: 'mag', jam: mainBase.jam
+                    };
+                }
+            }
+            if (nadeBase && slotIdx < emptySlots.length) {
+                const need = Math.min(emptySlots.length - slotIdx, nadeBase.mag || 2);
+                for (let k = 0; k < need; k++, slotIdx++) {
+                    u.bag[emptySlots[slotIdx]] = {
+                        ...nadeBase, code: 'nade', id: Math.random(),
+                        current: 1, cap: 1, isConsumable: true
+                    };
+                }
+            }
+        });
     }
 }
 
