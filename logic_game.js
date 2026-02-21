@@ -172,7 +172,6 @@ window.BattleLogic = class BattleLogic {
 
   // --- COMBAT LOGIC ---
   async actionAttack(a, d) {
-    if (this.isExecutingAttack) return;
     if (!a) return;
     const targetUnitForWeapon = (d.hp !== undefined) ? d : (this.getUnitInHex(d.q, d.r));
 
@@ -228,7 +227,6 @@ window.BattleLogic = class BattleLogic {
       await this.triggerM8Rocket(a, targetHex);
       this.isExecutingAttack = false;
       this.state = 'PLAY';
-      this.setMode('SELECT');
       this.checkPhaseEnd();
       if (this.ui && this.ui.updateSidebar) this.ui.updateSidebar();
       return;
@@ -484,10 +482,7 @@ window.BattleLogic = class BattleLogic {
         }
         game.refreshUnitState(a);
         game.isExecutingAttack = false;
-        const weaponCost = wAfter ? wAfter.ap : 99;
-        if (a.ap < weaponCost || !wAfter || (wAfter.current <= 0 && (!wAfter.indirect || !a.bag.some(i => i && i.code === 'mortar_shell_box' && i.current > 0)))) {
-          game.setMode('SELECT');
-        }
+        game.state = 'PLAY';
         game.checkPhaseEnd();
         resolve();
       }, 500);
@@ -749,7 +744,7 @@ window.BattleLogic = class BattleLogic {
   }
 
   onUnitClick(u) {
-    if (this.state !== 'PLAY') return;
+    if (this.state !== 'PLAY' && this.state !== 'ANIM') return;
     if (u.team === 'player') {
       if (this.interactionMode !== 'SELECT') { this.setMode('SELECT'); }
       this.selectedUnit = u;
@@ -771,7 +766,7 @@ window.BattleLogic = class BattleLogic {
   }
 
   handleClick(p, pointerX, pointerY) {
-    if (this.state !== 'PLAY') return;
+    if (this.state !== 'PLAY' && this.state !== 'ANIM') return;
     if (this.interactionMode === 'SELECT') { this.clearSelection(); }
     else if (this.interactionMode === 'MOVE') {
       if (this.selectedUnit && this.isValidHex(p.q, p.r) && this.path.length > 0) {
@@ -811,8 +806,7 @@ window.BattleLogic = class BattleLogic {
   }
 
   handleHover(p) {
-    if (this.state !== 'PLAY') return;
-    if (this.isExecutingAttack) return;
+    if (this.state !== 'PLAY' && this.state !== 'ANIM') return;
     this.hoverHex = p;
     const u = this.selectedUnit;
     if (u && u.team === 'player') {
