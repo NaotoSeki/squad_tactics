@@ -240,7 +240,7 @@ class Card extends Phaser.GameObjects.Container {
             }
             if (count >= 3 && this.auraGraphics) {
                 this.auraGraphics.clear();
-                const baseOff = 8;
+                const baseOff = 2;
                 const pts = 140;
                 const colors = [0xffdd66, 0xffaa44, 0xff8844];
                 const vel = Math.sqrt((this.velocityX || 0) ** 2 + (this.velocityY || 0) ** 2);
@@ -256,7 +256,7 @@ class Card extends Phaser.GameObjects.Container {
                     const cx = inHand ? (hand.x + this.x) : this.x;
                     const cy = inHand ? (hand.y + this.y) : this.y;
                     const d = Math.hypot(ptr.x - cx, ptr.y - cy);
-                    cursorNear = 1 / (1 + d / 70);
+                    cursorNear = 1 / (1 + d / 45);
                 }
                 if (this.scene && this.scene.cards) {
                     this.scene.cards.forEach(function(c) {
@@ -266,10 +266,10 @@ class Card extends Phaser.GameObjects.Container {
                     }.bind(this));
                     neighborNear = Math.min(1.8, neighborNear * 0.35);
                 }
-                const response = inertiaGain * hoverGain * dragGain * (1 + 0.5 * cursorNear + 0.4 * neighborNear);
+                const response = inertiaGain * hoverGain * dragGain * (1 + 1.4 * cursorNear + 0.4 * neighborNear);
                 const rhythm = 0.65 + 0.35 * Math.sin(t * 1.0) + 0.25 * Math.sin(t * 1.85);
                 for (let j = 0; j < 3; j++) {
-                    const off = baseOff + (j + 1) * 6;
+                    const off = baseOff + (j + 1) * 2.5;
                     const phase = t * 3.2 + j * 2.1;
                     const alpha = 0.32 + 0.28 * (1 - j * 0.28) * (0.5 + 0.5 * Math.sin(t * 2.2 + j * 0.8));
                     this.auraGraphics.lineStyle(2, colors[j], alpha);
@@ -418,7 +418,8 @@ class Card extends Phaser.GameObjects.Container {
         if (canDeploy) this.burnAndConsume(hex); else this.returnToHand(); 
     }
     burnAndConsume(hex) { 
-        const type = this.cardType; const fusionData = this.fusionData; const portraitIndex = this.portraitIndex; const fusionCount = this.fusionCount || 0;
+        const type = this.cardType; const fusionData = this.fusionData; const portraitIndex = this.portraitIndex;
+        const fusionCount = Math.max(0, parseInt(this.fusionCount, 10) || (this.fusionData ? 2 : 0));
         this.updatePhysics = () => {}; this.frameImage.setTint(0x552222); this.frameImage.disableInteractive(); 
         this.scene.tweens.add({ targets: this, alpha: 0, scale: 0.5, duration: 200, onComplete: () => { 
             this.scene.removeCard(this); this.destroy(); 
