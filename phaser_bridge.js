@@ -198,6 +198,12 @@ class Card extends Phaser.GameObjects.Container {
         this.fusionCandidateGraphics = scene.add.graphics().setDepth(2);
         this.auraGraphics = scene.add.graphics().setDepth(2.5);
         this.glossGraphics = scene.add.graphics().setDepth(3);
+        this.glossMask = scene.make.graphics({ add: false });
+        this.glossMask.fillStyle(0xffffff, 1);
+        this.glossMask.fillRect(-70, -100, 140, 200);
+        this.glossMask.setVisible(false);
+        this.add(this.glossMask);
+        this.glossGraphics.setMask(this.glossMask.createGeometryMask());
         this.sparklerParticles = [];
         this.add(this.rainbowGraphics); this.add(this.fusionCandidateGraphics); this.add(this.auraGraphics); this.add(this.glossGraphics);
         this.setScrollFactor(0); this.baseX = x; this.baseY = y; this.physX = x; this.physY = y; this.velocityX = 0; this.velocityY = 0; this.velocityAngle = 0; this.targetX = x; this.targetY = y; this.dragOffsetX = 0; this.dragOffsetY = 0;
@@ -344,17 +350,34 @@ class Card extends Phaser.GameObjects.Container {
             }
             if (count >= 4 && this.glossGraphics) {
                 this.glossGraphics.clear();
-                const bandW = 50;
-                const cycle = 220;
-                const x1 = -70 + (t * 48 % cycle);
-                const x2 = -70 + ((t * 48 + cycle * 0.5) % cycle);
-                [x1, x2].forEach((bx, i) => {
-                    const fade = 0.08 + 0.12 * Math.sin(t * 2.5 + i * 2);
-                    this.glossGraphics.fillStyle(0xffffff, Math.min(0.28, fade));
-                    this.glossGraphics.fillRect(bx, -100, bandW, 200);
-                    this.glossGraphics.fillStyle(0xffffff, Math.min(0.12, fade * 0.5));
-                    this.glossGraphics.fillRect(bx - 8, -100, 8, 200);
-                    this.glossGraphics.fillRect(bx + bandW, -100, 8, 200);
+                const angle = Math.atan2(200, 140);
+                const bandLen = 260;
+                const bandW = 42;
+                const speed = 220;
+                const diagLen = Math.hypot(140, 200);
+                const cycle = diagLen + bandLen;
+                const d1 = (t * speed) % cycle;
+                const d2 = (t * speed + cycle * 0.5) % cycle;
+                const rot = (x, y, cx, cy, a) => ({ x: cx + x * Math.cos(a) - y * Math.sin(a), y: cy + x * Math.sin(a) + y * Math.cos(a) });
+                [d1, d2].forEach((d, i) => {
+                    const u = d / cycle;
+                    const cx = -70 + 140 * u;
+                    const cy = -100 + 200 * u;
+                    const fade = 0.1 + 0.14 * Math.sin(t * 2.8 + i * 2);
+                    const hw = bandLen / 2;
+                    const hh = bandW / 2;
+                    const p1 = rot(-hw, -hh, cx, cy, angle);
+                    const p2 = rot(hw, -hh, cx, cy, angle);
+                    const p3 = rot(hw, hh, cx, cy, angle);
+                    const p4 = rot(-hw, hh, cx, cy, angle);
+                    this.glossGraphics.fillStyle(0xffffff, Math.min(0.3, fade));
+                    this.glossGraphics.beginPath();
+                    this.glossGraphics.moveTo(p1.x, p1.y);
+                    this.glossGraphics.lineTo(p2.x, p2.y);
+                    this.glossGraphics.lineTo(p3.x, p3.y);
+                    this.glossGraphics.lineTo(p4.x, p4.y);
+                    this.glossGraphics.closePath();
+                    this.glossGraphics.fillPath();
                 });
             } else if (this.glossGraphics) this.glossGraphics.clear();
             } else { this.rainbowGraphics.clear(); if (this.auraGraphics) this.auraGraphics.clear(); if (this.glossGraphics) this.glossGraphics.clear(); if (this.sparklerParticles) this.sparklerParticles.length = 0; }
