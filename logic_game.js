@@ -1184,24 +1184,9 @@ window.BattleLogic = class BattleLogic {
     const pool = this.mapSystem ? this.mapSystem.getHexesInRange(centerHex.q, centerHex.r, 2) : [centerHex];
     const validPool = pool.filter(h => this.isValidHex(h.q, h.r));
     if (validPool.length === 0) return;
-    const centerDist = (h) => this.mapSystem ? this.mapSystem.hexDist(centerHex, h) : 0;
-    const byDist = { 0: [], 1: [], 2: [] };
-    validPool.forEach(h => {
-      const d = centerDist(h);
-      if (d <= 2) byDist[d].push(h);
-    });
     const hitHexes = [];
     for (let i = 0; i < 60; i++) {
-      const r = Math.random();
-      if (r < 0.45 && byDist[0].length) {
-        hitHexes.push(byDist[0][Math.floor(Math.random() * byDist[0].length)]);
-      } else if (r < 0.80 && byDist[1].length) {
-        hitHexes.push(byDist[1][Math.floor(Math.random() * byDist[1].length)]);
-      } else if (byDist[2].length) {
-        hitHexes.push(byDist[2][Math.floor(Math.random() * byDist[2].length)]);
-      } else if (validPool.length) {
-        hitHexes.push(validPool[Math.floor(Math.random() * validPool.length)]);
-      }
+      hitHexes.push(validPool[Math.floor(Math.random() * validPool.length)]);
     }
     const tankPos = typeof Renderer !== 'undefined' ? Renderer.hexToPx(attacker.q, attacker.r) : { x: 0, y: 0 };
     const dmg = 45;
