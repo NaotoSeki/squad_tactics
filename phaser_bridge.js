@@ -22,6 +22,7 @@ window.getCardTextureKey = function(scene, type, portraitIndex) {
     const key = (portraitIndex !== undefined && portraitIndex !== null)
         ? `card_texture_${type}_p${portraitIndex}` : `card_texture_${type}`;
     if (scene.textures.exists(key)) return key;
+    if (type === 'aerial' && scene.textures.exists('aerial_spt')) return 'aerial_spt';
     if (typeof WPNS !== 'undefined' && WPNS[type]) {
         const w = WPNS[type];
         const canvas = document.createElement('canvas'); canvas.width = 140 * 2; canvas.height = 200 * 2;
@@ -709,6 +710,7 @@ class MainScene extends Phaser.Scene {
         for (let i = 1; i <= (typeof PORTRAIT_AVAILABLE !== 'undefined' ? PORTRAIT_AVAILABLE : 7); i++) {
             this.load.image('portrait_' + i, 'asset/portraits/inf_us_' + String(i).padStart(3, '0') + '.jpg');
         }
+        this.load.image('aerial_spt', 'asset/portraits/aerial_spt.jpg');
     }
     create() {
         window.createHexTexture(this); this.cameras.main.setBackgroundColor('#0b0e0a'); 
