@@ -18,11 +18,10 @@ function generateFusionData() {
   return { skills, hpBoost, apBonus };
 } 
 
-window.getCardTextureKey = function(scene, type, portraitIndex) {
-    const key = (portraitIndex !== undefined && portraitIndex !== null)
-        ? `card_texture_${type}_p${portraitIndex}` : `card_texture_${type}`;
+window.getCardTextureKey = function(scene, type, portraitIndex, unitName) {
+    const key = (unitName ? `card_texture_${type}_p${portraitIndex}_n${unitName}` : ((portraitIndex !== undefined && portraitIndex !== null)
+        ? `card_texture_${type}_p${portraitIndex}` : `card_texture_${type}`));
     if (scene.textures.exists(key)) return key;
-    if (type === 'aerial' && scene.textures.exists('aerial_spt')) return 'aerial_spt';
     if (typeof WPNS !== 'undefined' && WPNS[type]) {
         const w = WPNS[type];
         const canvas = document.createElement('canvas'); canvas.width = 140 * 2; canvas.height = 200 * 2;
@@ -50,29 +49,39 @@ window.getCardTextureKey = function(scene, type, portraitIndex) {
     ctx.fillStyle = "#1a1a1a"; ctx.fillRect(0, 0, 140, 200);
     ctx.strokeStyle = "#555"; ctx.lineWidth = 2; ctx.strokeRect(0, 0, 140, 200);
     ctx.fillStyle = "#111"; ctx.fillRect(2, 2, 136, 30);
-    ctx.fillStyle = "#d84"; ctx.font = "bold 14px sans-serif"; ctx.textAlign = "center"; 
-    ctx.fillText(template.name, 70, 22);
+    ctx.fillStyle = "#d84"; ctx.font = "bold 14px sans-serif"; ctx.textAlign = "center";
+    const isInfantry = (template.role && String(template.role).toLowerCase() === 'infantry');
+    ctx.fillText((isInfantry && unitName) ? unitName : template.name, 70, 22);
     ctx.fillStyle = "#000"; ctx.fillRect(20, 40, 100, 100);
-    const portraitKey = (portraitIndex !== undefined && portraitIndex !== null)
-        ? ('portrait_' + ((portraitIndex % (typeof PORTRAIT_AVAILABLE !== 'undefined' ? PORTRAIT_AVAILABLE : 7)) + 1)) : null;
-    if (portraitKey && scene.textures.exists(portraitKey)) {
+    let portraitDrawn = false;
+    if (type === 'aerial' && scene.textures.exists('aerial_spt')) {
         try {
-            const src = scene.textures.get(portraitKey).getSourceImage();
-            if (src && src.width) ctx.drawImage(src, 20, 40, 100, 100);
-        } catch (e) { /* fallback to circle */ }
+            const src = scene.textures.get('aerial_spt').getSourceImage();
+            if (src && src.width) { ctx.drawImage(src, 20, 40, 100, 100); portraitDrawn = true; }
+        } catch (e) { }
     }
-    if (!portraitKey || !scene.textures.exists(portraitKey)) {
+    if (!portraitDrawn) {
+        const portraitKey = (portraitIndex !== undefined && portraitIndex !== null)
+            ? ('portrait_' + ((portraitIndex % (typeof PORTRAIT_AVAILABLE !== 'undefined' ? PORTRAIT_AVAILABLE : 7)) + 1)) : null;
+        if (portraitKey && scene.textures.exists(portraitKey)) {
+            try {
+                const src = scene.textures.get(portraitKey).getSourceImage();
+                if (src && src.width) { ctx.drawImage(src, 20, 40, 100, 100); portraitDrawn = true; }
+            } catch (e) { }
+        }
+    }
+    if (!portraitDrawn) {
         const seed = type.length * 999; const rnd = function(s) { return Math.abs(Math.sin(s * 12.9898) * 43758.5453) % 1; };
         const skinTones = ["#ffdbac", "#f1c27d", "#e0ac69"]; ctx.fillStyle = skinTones[Math.floor(rnd(seed) * skinTones.length)];
-        ctx.beginPath(); ctx.arc(70, 90, 30, 0, Math.PI*2); ctx.fill(); 
-        ctx.fillStyle = "#343"; ctx.beginPath(); ctx.arc(70, 80, 32, Math.PI, 0); ctx.lineTo(102, 80); ctx.lineTo(38, 80); ctx.fill(); 
+        ctx.beginPath(); ctx.arc(70, 90, 30, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = "#343"; ctx.beginPath(); ctx.arc(70, 80, 32, Math.PI, 0); ctx.lineTo(102, 80); ctx.lineTo(38, 80); ctx.fill();
     }
-    ctx.fillStyle = "#888"; ctx.font = "10px sans-serif"; 
-    ctx.fillText(template.role ? template.role.toUpperCase() : "UNIT", 70, 155);
+    ctx.fillStyle = "#888"; ctx.font = "10px sans-serif";
+    ctx.fillText(isInfantry ? template.name : (template.role ? template.role.toUpperCase() : "UNIT"), 70, 155);
     let wpnName = template.main || "-"; if (typeof WPNS !== 'undefined' && WPNS[template.main]) { wpnName = WPNS[template.main].name; }
-    ctx.fillStyle = "#ccc"; ctx.font = "11px monospace"; 
+    ctx.fillStyle = "#ccc"; ctx.font = "11px monospace";
     ctx.fillText(`HP:${template.hp||100} AP:${template.ap||4}`, 70, 175);
-    ctx.fillStyle = "#d84"; ctx.font = "10px sans-serif"; 
+    ctx.fillStyle = "#d84"; ctx.font = "10px sans-serif";
     ctx.fillText(wpnName, 70, 190);
     scene.textures.addCanvas(key, canvas); return key;
 };
@@ -190,8 +199,9 @@ class Card extends Phaser.GameObjects.Container {
         // 武器カードの場合、実インスタンス（弾数などの状態を含む）を保持できる
         this.weaponData = isObj && typeOrData.weaponData ? typeOrData.weaponData : null;
         this.isRainbowWeapon = !!(this.weaponData && this.weaponData.isRainbow);
+        this.unitName = isObj && typeOrData.name ? typeOrData.name : undefined;
         this.scene = scene; this.setSize(140, 200);
-        const texKey = window.getCardTextureKey(scene, this.cardType, this.portraitIndex);
+        const texKey = window.getCardTextureKey(scene, this.cardType, this.portraitIndex, this.unitName);
         this.frameImage = scene.add.image(0, 0, texKey).setDisplaySize(140, 200);
         this.frameImage.setInteractive({ useHandCursor: true, draggable: true });
         const shadow = scene.add.rectangle(6, 6, 130, 190, 0x000000, 0.5); this.add(shadow); this.add(this.frameImage);
