@@ -397,7 +397,7 @@ class UIManager {
         if (!ui) return;
         if (!u || u.hp <= 0) { ui.innerHTML = `<div style="text-align:center;color:#555;margin-top:80px;">// NO SIGNAL //</div>`; return; }
         const faceUrl = (u.team === 'player' && !u.def.isTank && u.portraitIndex !== undefined)
-            ? ('asset/portraits/inf_us_' + String((u.portraitIndex % PORTRAIT_MAX) + 1).padStart(3, '0') + '.jpg')
+            ? ('asset/portraits/inf_us_' + String((u.portraitIndex % (typeof PORTRAIT_AVAILABLE !== 'undefined' ? PORTRAIT_AVAILABLE : 7)) + 1).padStart(3, '0') + '.jpg')
             : ((Renderer.generateFaceIcon) ? Renderer.generateFaceIcon(u.faceSeed) : "");
         
         const virtualWpn = (window.gameLogic && window.gameLogic.getVirtualWeapon) ? window.gameLogic.getVirtualWeapon(u) : null;

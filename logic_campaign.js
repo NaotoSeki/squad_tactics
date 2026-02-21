@@ -49,7 +49,7 @@ class CampaignManager {
             btnStart.style.opacity = '0.8';
         }
 
-        const maxPortrait = typeof PORTRAIT_MAX !== 'undefined' ? PORTRAIT_MAX : 99;
+        const maxPortrait = typeof PORTRAIT_AVAILABLE !== 'undefined' ? PORTRAIT_AVAILABLE : 7;
         ['rifleman', 'scout', 'gunner', 'mortar_gunner'].forEach((k) => {
             const t = UNIT_TEMPLATES[k]; 
             const d = document.createElement('div'); d.className = 'card';
@@ -165,9 +165,9 @@ class CampaignManager {
         }
     }
 
-    /** デッキから増援カード追加時に呼ぶ。ランダムなポートレート番号を返す（ローグライクで毎回メンバーが変わる）。 */
+    /** デッキから増援カード追加時に呼ぶ。ランダムなポートレート番号を返す（存在する画像のみで 404 防止）。 */
     getRandomPortraitIndex() {
-        return Math.floor(Math.random() * (typeof PORTRAIT_MAX !== 'undefined' ? PORTRAIT_MAX : 99));
+        return Math.floor(Math.random() * (typeof PORTRAIT_AVAILABLE !== 'undefined' ? PORTRAIT_AVAILABLE : 7));
     }
 
     // --- UNIT FACTORY ---

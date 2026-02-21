@@ -53,7 +53,7 @@ window.getCardTextureKey = function(scene, type, portraitIndex) {
     ctx.fillText(template.name, 70, 22);
     ctx.fillStyle = "#000"; ctx.fillRect(20, 40, 100, 100);
     const portraitKey = (portraitIndex !== undefined && portraitIndex !== null)
-        ? ('portrait_' + ((portraitIndex % (typeof PORTRAIT_MAX !== 'undefined' ? PORTRAIT_MAX : 99)) + 1)) : null;
+        ? ('portrait_' + ((portraitIndex % (typeof PORTRAIT_AVAILABLE !== 'undefined' ? PORTRAIT_AVAILABLE : 7)) + 1)) : null;
     if (portraitKey && scene.textures.exists(portraitKey)) {
         try {
             const src = scene.textures.get(portraitKey).getSourceImage();
@@ -183,6 +183,7 @@ class Card extends Phaser.GameObjects.Container {
         this.rainbowGraphics = scene.add.graphics().setDepth(1);
         this.fusionCandidateGraphics = scene.add.graphics().setDepth(2);
         this.auraGraphics = scene.add.graphics().setDepth(2.5);
+        this.sparklerParticles = [];
         this.add(this.rainbowGraphics); this.add(this.fusionCandidateGraphics); this.add(this.auraGraphics);
         this.setScrollFactor(0); this.baseX = x; this.baseY = y; this.physX = x; this.physY = y; this.velocityX = 0; this.velocityY = 0; this.velocityAngle = 0; this.targetX = x; this.targetY = y; this.dragOffsetX = 0; this.dragOffsetY = 0;
         this.frameImage.on('pointerover', this.onHover, this); this.frameImage.on('pointerout', this.onHoverOut, this); this.frameImage.on('dragstart', this.onDragStart, this); this.frameImage.on('drag', this.onDrag, this); this.frameImage.on('dragend', this.onDragEnd, this);
@@ -226,22 +227,66 @@ class Card extends Phaser.GameObjects.Container {
             }
             if (count >= 3 && this.auraGraphics) {
                 this.auraGraphics.clear();
-                const pulse = 0.4 + 0.35 * Math.sin(t * 4);
+                const baseOff = 8;
+                const amp = 5;
+                const freq = 0.12;
+                const pts = 48;
+                const colors = [0xffdd66, 0xffaa44, 0xff8844];
                 for (let j = 0; j < 3; j++) {
-                    const off = (j + 1) * 6 + Math.sin(t * 3 + j) * 2;
-                    this.auraGraphics.lineStyle(2, 0xffaa44, pulse * (1 - j * 0.2));
-                    this.auraGraphics.strokeRect(-70 - off, -100 - off, 140 + off * 2, 200 + off * 2);
+                    const off = baseOff + (j + 1) * 6;
+                    const phase = t * 2.5 + j * 2.1;
+                    const alpha = 0.35 + 0.25 * (1 - j * 0.25) * (0.5 + 0.5 * Math.sin(t * 3 + j));
+                    this.auraGraphics.lineStyle(2, colors[j], alpha);
+                    this.auraGraphics.beginPath();
+                    const L = -70 - off, R = 70 + off, T = -100 - off, B = 100 + off;
+                    const W = R - L, H = B - T;
+                    for (let i = 0; i <= pts; i++) {
+                        const u = i / pts;
+                        let x, y;
+                        if (u < 0.25) {
+                            x = L + W * (u / 0.25);
+                            y = T + amp * Math.sin(freq * x + phase) + amp * 0.6 * Math.sin(freq * 2 * x + phase * 1.3);
+                        } else if (u < 0.5) {
+                            y = T + H * ((u - 0.25) / 0.25);
+                            x = R + amp * Math.sin(freq * y + phase * 0.7) + amp * 0.6 * Math.sin(freq * 2 * y + phase * 1.1);
+                        } else if (u < 0.75) {
+                            x = R - W * ((u - 0.5) / 0.25);
+                            y = B + amp * Math.sin(freq * x + phase * 1.2) + amp * 0.6 * Math.sin(freq * 2 * x + phase * 0.9);
+                        } else {
+                            y = B - H * ((u - 0.75) / 0.25);
+                            x = L + amp * Math.sin(freq * y + phase * 0.9) + amp * 0.6 * Math.sin(freq * 2 * y + phase * 1.5);
+                        }
+                        if (i === 0) this.auraGraphics.moveTo(x, y); else this.auraGraphics.lineTo(x, y);
+                    }
+                    this.auraGraphics.closePath(); this.auraGraphics.strokePath();
                 }
-                const spark = Math.sin(t * 12) * 0.5 + 0.5;
-                this.auraGraphics.lineStyle(1, 0xffff88, spark * 0.6);
-                for (let s = 0; s < 8; s++) {
-                    const a = (s / 8) * Math.PI * 2 + t * 2;
-                    const r = 95 + Math.sin(t * 8 + s) * 15;
-                    const x = Math.cos(a) * r; const y = Math.sin(a) * r;
-                    this.auraGraphics.beginPath(); this.auraGraphics.moveTo(0, 0); this.auraGraphics.lineTo(x, y); this.auraGraphics.strokePath();
+                if (!this.sparklerParticles) this.sparklerParticles = [];
+                if (Math.random() < 0.35) {
+                    const angle = Math.random() * Math.PI * 2;
+                    const speed = 1.2 + Math.random() * 2.5;
+                    this.sparklerParticles.push({
+                        x: (Math.random() - 0.5) * 20, y: (Math.random() - 0.5) * 20,
+                        vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed - 0.5,
+                        life: 12 + Math.floor(Math.random() * 14), maxLife: 26,
+                        color: Math.random() > 0.4 ? 0xffaa00 : 0xffff88, size: 1.5 + Math.random() * 1.5
+                    });
                 }
+                for (let i = this.sparklerParticles.length - 1; i >= 0; i--) {
+                    const p = this.sparklerParticles[i];
+                    p.x += p.vx; p.y += p.vy; p.vy += 0.08; p.vx *= 0.98; p.vy *= 0.98;
+                    p.life--;
+                    if (p.life <= 0) { this.sparklerParticles.splice(i, 1); continue; }
+                    const alpha = p.life / p.maxLife;
+                    const len = Math.max(4, Math.sqrt(p.vx * p.vx + p.vy * p.vy) * 1.2);
+                    const angle = Math.atan2(p.vy, p.vx);
+                    const tx = p.x - Math.cos(angle) * len;
+                    const ty = p.y - Math.sin(angle) * len;
+                    this.auraGraphics.lineStyle(Math.max(1, p.size), p.color, alpha);
+                    this.auraGraphics.beginPath(); this.auraGraphics.moveTo(p.x, p.y); this.auraGraphics.lineTo(tx, ty); this.auraGraphics.strokePath();
+                }
+                if (this.sparklerParticles.length > 80) this.sparklerParticles.splice(0, 20);
             }
-            } else { this.rainbowGraphics.clear(); if (this.auraGraphics) this.auraGraphics.clear(); }
+            } else { this.rainbowGraphics.clear(); if (this.auraGraphics) this.auraGraphics.clear(); if (this.sparklerParticles) this.sparklerParticles.length = 0; }
         }
         if (this.isDragging) { this.setAlpha(0.6); } else {
             const isWeapon = typeof WPNS !== 'undefined' && WPNS[this.cardType];
@@ -558,7 +603,7 @@ class MainScene extends Phaser.Scene {
         this.load.spritesheet('soldier_sheet', 'asset/soldier_sheet_1.png', { frameWidth: 128, frameHeight: 128 });
         this.load.spritesheet('tank_sheet', 'asset/tank_sheet_1.png', { frameWidth: 128, frameHeight: 128 });
         this.load.spritesheet('explosion_sheet', 'asset/explosion_sheet_1.png', { frameWidth: 64, frameHeight: 64 });
-        for (let i = 1; i <= (typeof PORTRAIT_MAX !== 'undefined' ? PORTRAIT_MAX : 7); i++) {
+        for (let i = 1; i <= (typeof PORTRAIT_AVAILABLE !== 'undefined' ? PORTRAIT_AVAILABLE : 7); i++) {
             this.load.image('portrait_' + i, 'asset/portraits/inf_us_' + String(i).padStart(3, '0') + '.jpg');
         }
     }

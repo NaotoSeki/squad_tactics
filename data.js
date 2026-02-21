@@ -6,6 +6,8 @@ const MAP_H = 20;
 
 /** 自軍ポートレート最大枚数（asset/portraits/inf_us_001.jpg 〜 inf_us_NNN.jpg）。画像を追加するときはこの数までファイルを置けばよい。 */
 const PORTRAIT_MAX = 99;
+/** 実際に存在するポートレート画像枚数（この範囲でランダム・preload するため 404 を防ぐ）。 */
+const PORTRAIT_AVAILABLE = 7;
 
 const ATTR = {
     MILITARY: 'Military forces', 

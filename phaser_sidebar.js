@@ -60,7 +60,7 @@ window.PhaserSidebar = class PhaserSidebar {
         let y = 12;
 
         const usePortrait = (u.team === 'player' && !u.def.isTank && u.portraitIndex !== undefined);
-        const portraitKey = usePortrait ? ('portrait_' + ((u.portraitIndex % (typeof PORTRAIT_MAX !== 'undefined' ? PORTRAIT_MAX : 7)) + 1)) : null;
+        const portraitKey = usePortrait ? ('portrait_' + ((u.portraitIndex % (typeof PORTRAIT_AVAILABLE !== 'undefined' ? PORTRAIT_AVAILABLE : 7)) + 1)) : null;
         const faceKey = portraitKey && this.scene.textures.exists(portraitKey) ? portraitKey : ('face_' + (u.faceSeed || u.id || 0));
         let faceUrl = '';
         if (faceKey.startsWith('face_') && typeof Renderer !== 'undefined' && Renderer && Renderer.generateFaceIcon) {
