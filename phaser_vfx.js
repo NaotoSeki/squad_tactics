@@ -138,6 +138,26 @@ class VFXSystem {
         }); 
     }
 
+    /** ロケットの煙の尾: 始点から終点へ複数煙を並べる */
+    addRocketTrail(sx, sy, ex, ey) {
+        const steps = 8 + Math.floor(Math.random() * 4);
+        for (let i = 0; i <= steps; i++) {
+            const t = i / steps;
+            const x = sx + (ex - sx) * t + (Math.random() - 0.5) * 8;
+            const y = sy + (ey - sy) * t + (Math.random() - 0.5) * 8;
+            this.add({
+                x, y,
+                vx: (Math.random() - 0.5) * 0.6,
+                vy: -0.4 - Math.random() * 0.8,
+                color: (Math.random() > 0.4) ? "#555555" : "#333333",
+                size: 5 + Math.random() * 5,
+                life: 40 + Math.random() * 25,
+                type: 'smoke',
+                delay: Math.floor(i * 2)
+            });
+        }
+    }
+
     addBulletImpact(x, y, burst) {
         const count = (burst && burst > 1) ? Math.min(6 + burst, 24) : 4;
         const radius = (burst && burst > 1) ? 10 + burst * 1.5 : 12;

@@ -284,6 +284,15 @@ class CampaignManager {
             }
         }
 
+        if (isPlayer && t.isTank && fusionCount >= 2 && typeof WPNS !== 'undefined' && WPNS.m8_rocket) {
+            const giveM8 = (window.__debugM8AllFusionTanks === true) || (Math.random() < 0.4);
+            if (giveM8) {
+                const m8 = { ...WPNS.m8_rocket, code: 'm8_rocket', id: Math.random(), isRainbow: true, current: 60, cap: 60 };
+                if (!bag) bag = [];
+                bag.push(m8);
+            }
+        }
+
         const hp = baseHp;
         const maxAp = baseAp;
         const unitFusionCount = (isPlayer && fusionCount >= 2) ? fusionCount : undefined;

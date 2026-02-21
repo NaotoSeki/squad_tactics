@@ -16,7 +16,10 @@ window.BattleLogic = class BattleLogic {
     this.aimTargetHex = null;
     this.hoverHex = null;
 
-    this.isAuto = campaign.isAutoMode || false;
+    this.isAuto = false;
+    if (this.campaign) this.campaign.isAutoMode = false;
+    const autoBtn = document.getElementById('auto-toggle');
+    if (autoBtn) autoBtn.classList.remove('active');
     this.isExecutingAttack = false;
     this.isProcessingTurn = false;
     this.interactionMode = 'SELECT';
@@ -45,6 +48,12 @@ window.BattleLogic = class BattleLogic {
   // --- INITIALIZATION ---
   init() {
     this.generateMap();
+
+    // SECTOR開始時にAUTOは常にOFF
+    this.isAuto = false;
+    if (this.campaign) this.campaign.isAutoMode = false;
+    const autoBtn = document.getElementById('auto-toggle');
+    if (autoBtn) autoBtn.classList.remove('active');
 
     // プレイヤー配置
     this.units.forEach(u => {
@@ -206,6 +215,20 @@ window.BattleLogic = class BattleLogic {
     }
 
     if (a.ap < w.ap) { this.ui.log("AP不足"); return; }
+
+    // M8 Rocket: 7ヘックス範囲に60発・煙・爆発・画面揺れ
+    if (w.code === 'm8_rocket' && isAreaAttack && targetHex) {
+      const ok = this.consumeAmmo(a, 'm8_rocket', 60);
+      if (!ok) { this.ui.log("M8 弾切れ"); this.isExecutingAttack = false; return; }
+      a.ap -= w.ap;
+      this.state = 'ANIM';
+      this.updateSidebar();
+      await this.triggerM8Rocket(a, targetHex);
+      this.isExecutingAttack = false;
+      this.setMode('SELECT');
+      this.checkPhaseEnd();
+      return;
+    }
 
     const dist = this.hexDist(a, targetHex);
     if (w.minRng && dist < w.minRng) { this.ui.log("目標が近すぎます！"); return; }
@@ -518,6 +541,16 @@ window.BattleLogic = class BattleLogic {
       if (ammoBox) { ammoBox.current--; return true; }
       return false;
     }
+    if (weaponCode === 'm8_rocket') {
+      const m8 = (u.bag || []).find(i => i && i.code === 'm8_rocket');
+      if (!m8 || (m8.current || 0) < (n > 0 ? n : 60)) return false;
+      m8.current = (m8.current || 60) - (n > 0 ? n : 60);
+      if (m8.current <= 0) {
+        const idx = u.bag.indexOf(m8);
+        if (idx >= 0) u.bag[idx] = null;
+      }
+      return true;
+    }
     if (weaponCode === 'mg42' && u.hands) {
       if (u.def?.isTank) {
         if (handIndex !== undefined && u.hands[handIndex] && u.hands[handIndex].code === 'mg42') {
@@ -543,6 +576,23 @@ window.BattleLogic = class BattleLogic {
       for (let i = 0; i < n && mg.current > 0; i++) mg.current--;
       return true;
     }
+    if (weaponCode === 'nade') {
+      for (let i = 0; i < (u.hands || []).length; i++) {
+        if (u.hands[i] && u.hands[i].code === 'nade') {
+          u.hands[i].current = (u.hands[i].current || 1) - 1;
+          if (u.hands[i].current <= 0) u.hands[i] = null;
+          return true;
+        }
+      }
+      for (let i = 0; i < (u.bag || []).length; i++) {
+        if (u.bag[i] && u.bag[i].code === 'nade') {
+          u.bag[i].current = (u.bag[i].current || 1) - 1;
+          if (u.bag[i].current <= 0) u.bag[i] = null;
+          return true;
+        }
+      }
+      return false;
+    }
     // 戦車主砲(shell_fast): reserve消費+即時装填（リロードAP不要）
     if (u.def?.isTank && u.hands[0] && u.hands[0].code === weaponCode && u.hands[0].type?.includes('shell') && u.hands[0].reserve !== undefined && u.hands[0].reserve > 0) {
       u.hands[0].reserve--;
@@ -562,6 +612,11 @@ window.BattleLogic = class BattleLogic {
   getAttackWeapon(a, targetUnit) {
     const main = this.getVirtualWeapon(a);
     if (!main) return null;
+    // 戦車がヘックス指定（範囲攻撃）のときは M8 Rocket を優先
+    if (a.def?.isTank && !targetUnit) {
+      const m8 = (a.bag || []).find(it => it && it.code === 'm8_rocket' && (it.current > 0 || it.cap > 0));
+      if (m8) return { ...m8, current: m8.current ?? m8.cap, cap: m8.cap };
+    }
     if (a.def.isTank && targetUnit && !targetUnit.def?.isTank) {
       const tankMgSlots = (a.hands || []).map((h, idx) => (h && h.code === 'mg42') ? { handIndex: idx, mg: h } : null).filter(Boolean);
       const totalReserve = tankMgSlots.reduce((s, o) => s + (o.mg.reserve !== undefined ? o.mg.reserve : o.mg.current || 0), 0);
@@ -1110,6 +1165,44 @@ window.BattleLogic = class BattleLogic {
       if(window.VFX) { const pos = Renderer.hexToPx(targetHex.q, targetHex.r); window.VFX.addSmoke(pos.x, pos.y); }
       this.updateSidebar();
     }
+  }
+
+  async triggerM8Rocket(attacker, centerHex) {
+    if (!this.isValidHex(centerHex.q, centerHex.r)) return;
+    const neighbors = this.getNeighbors(centerHex.q, centerHex.r);
+    const pool = [centerHex, ...neighbors].filter(h => this.isValidHex(h.q, h.r));
+    if (pool.length === 0) return;
+    // 60発を7ヘックスに重み付き分配（中心に多く）
+    const hitHexes = [];
+    const weights = pool.map((h, i) => i === 0 ? 22 : 6);
+    for (let i = 0; i < 60; i++) {
+      let r = Math.random() * weights.reduce((a, b) => a + b, 0);
+      for (let j = 0; j < pool.length; j++) {
+        r -= weights[j];
+        if (r <= 0) { hitHexes.push(pool[j]); break; }
+      }
+      if (r > 0) hitHexes.push(pool[0]);
+    }
+    const tankPos = typeof Renderer !== 'undefined' ? Renderer.hexToPx(attacker.q, attacker.r) : { x: 0, y: 0 };
+    const dmg = 45;
+    this.ui.log(`>> M8 Rocket 斉射`);
+    for (let i = 0; i < hitHexes.length; i++) {
+      const hex = hitHexes[i];
+      const targetPos = typeof Renderer !== 'undefined' ? Renderer.hexToPx(hex.q, hex.r) : { x: 0, y: 0 };
+      const delay = i * 55;
+      setTimeout(() => {
+        if (window.VFX) window.VFX.addRocketTrail(tankPos.x, tankPos.y, targetPos.x, targetPos.y);
+        setTimeout(() => {
+          if (window.Sfx) Sfx.play('cannon');
+          if (typeof Renderer !== 'undefined') Renderer.playExplosion(targetPos.x, targetPos.y);
+          if (window.VFX) { window.VFX.addSmoke(targetPos.x, targetPos.y); window.VFX.shakeRequest = 3; }
+          const units = this.getUnitsInHex(hex.q, hex.r);
+          units.forEach(u => { this.ui.log(`>> ロケット命中`); this.applyDamage(u, dmg, "M8 Rocket"); });
+          this.updateSidebar();
+        }, 120);
+      }, delay);
+    }
+    await new Promise(r => setTimeout(r, hitHexes.length * 55 + 400));
   }
 
   async triggerBombardment(centerHex) {
