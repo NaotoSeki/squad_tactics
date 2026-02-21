@@ -157,15 +157,31 @@ window.PhaserSidebar = class PhaserSidebar {
         if (isMain && isMortarActive && item && item.type === 'part') {
             bg.setStrokeStyle(2, 0x44ff44, 0.8);
         }
+        if (!isMain && item && item.isRainbow) {
+            const rainbowSlot = this.scene.add.graphics();
+            const rw = slotW + 4, rh = slotH + 4, ox = slotW / 2, oy = slotH / 2;
+            [0xff0000, 0xff8800, 0xffff00, 0x00ff88, 0x0088ff, 0x8800ff].forEach((col, i) => {
+                rainbowSlot.lineStyle(2, col, 0.9);
+                rainbowSlot.strokeRect(-ox - 2 + i * 0.3, -oy - 2 + i * 0.3, rw - i * 0.6, rh - i * 0.6);
+            });
+            rainbowSlot.setPosition(ox, oy);
+            container.add(rainbowSlot);
+        }
 
         let label = '[EMPTY]';
         if (item) {
             label = (isMain ? '' : '') + (item.name || '');
             if (!item.type || item.type !== 'ammo') {
-                const dmgDisplay = (item.dmg != null ? item.dmg : '-') + (item.isRainbow && item.rainbowDmgBonus ? '+' + item.rainbowDmgBonus : '');
-                const meta = this.scene.add.text(8, slotH - 18, `RNG:${item.rng || '-'} DMG:${dmgDisplay}`, { fontSize: '9px', color: TEXT_DIM, fontFamily: 'sans-serif' });
-                meta.setOrigin(0, 0);
-                container.add(meta);
+                const baseDmgStr = item.dmg != null ? String(item.dmg) : '-';
+                const hasBonus = item.isRainbow && item.rainbowDmgBonus;
+                const metaLeft = this.scene.add.text(8, slotH - 18, `RNG:${item.rng || '-'} DMG:${baseDmgStr}`, { fontSize: '9px', color: TEXT_DIM, fontFamily: 'sans-serif' });
+                metaLeft.setOrigin(0, 0);
+                container.add(metaLeft);
+                if (hasBonus) {
+                    const bonusText = this.scene.add.text(8 + metaLeft.width, slotH - 18, `+${item.rainbowDmgBonus}`, { fontSize: '9px', color: '#eecc00', fontFamily: 'sans-serif' });
+                    bonusText.setOrigin(0, 0);
+                    container.add(bonusText);
+                }
             }
             if (u.team === 'enemy') {
                 // 敵ユニットは弾丸ゲージ表示なし（はみ出し防止・弾切れは行動で表現）

@@ -208,6 +208,13 @@ class Card extends Phaser.GameObjects.Container {
         this.add(this.rainbowGraphics); this.add(this.fusionCandidateGraphics); this.add(this.auraGraphics); this.add(this.glossGraphics);
         this.setScrollFactor(0); this.baseX = x; this.baseY = y; this.physX = x; this.physY = y; this.velocityX = 0; this.velocityY = 0; this.velocityAngle = 0; this.targetX = x; this.targetY = y; this.dragOffsetX = 0; this.dragOffsetY = 0;
         this.frameImage.on('pointerover', this.onHover, this); this.frameImage.on('pointerout', this.onHoverOut, this); this.frameImage.on('dragstart', this.onDragStart, this); this.frameImage.on('drag', this.onDrag, this); this.frameImage.on('dragend', this.onDragEnd, this);
+        this.rainbowDmgText = null;
+        if (this.isRainbowWeapon && this.weaponData && this.weaponData.rainbowDmgBonus != null) {
+            this.rainbowDmgText = scene.add.text(28, 75, '+' + this.weaponData.rainbowDmgBonus, { fontSize: '12px', color: '#eecc00', fontFamily: 'sans-serif' });
+            this.rainbowDmgText.setOrigin(0, 0.5);
+            this.rainbowDmgText.setDepth(4);
+            this.add(this.rainbowDmgText);
+        }
         scene.add.existing(this);
     }
     updatePhysics() { 
