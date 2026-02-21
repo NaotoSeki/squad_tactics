@@ -244,22 +244,42 @@ class Card extends Phaser.GameObjects.Container {
                 const pts = 140;
                 const colors = [0xffdd66, 0xffaa44, 0xff8844];
                 const vel = Math.sqrt((this.velocityX || 0) ** 2 + (this.velocityY || 0) ** 2);
-                const inertiaGain = Math.min(2, 1 + vel * 0.2);
-                const hoverGain = this.isHovering ? 1.35 : 1;
-                const dragGain = this.isDragging ? 1.5 : 1;
-                const response = inertiaGain * hoverGain * dragGain;
+                const inertiaGain = Math.min(2.2, 1 + vel * 0.35);
+                const hoverGain = this.isHovering ? 1.5 : 1;
+                const dragGain = this.isDragging ? 1.7 : 1;
+                let cursorNear = 0;
+                let neighborNear = 0;
+                if (this.scene && this.scene.input && this.scene.input.activePointer) {
+                    const ptr = this.scene.input.activePointer;
+                    const hand = this.scene.handContainer;
+                    const inHand = hand && this.parentContainer === hand;
+                    const cx = inHand ? (hand.x + this.x) : this.x;
+                    const cy = inHand ? (hand.y + this.y) : this.y;
+                    const d = Math.hypot(ptr.x - cx, ptr.y - cy);
+                    cursorNear = 1 / (1 + d / 70);
+                }
+                if (this.scene && this.scene.cards) {
+                    this.scene.cards.forEach(function(c) {
+                        if (c === this || !c.active || c.parentContainer !== this.parentContainer) return;
+                        const dist = Math.hypot(this.x - c.x, this.y - c.y);
+                        if (dist < 200) neighborNear += 1 / (1 + dist / 55);
+                    }.bind(this));
+                    neighborNear = Math.min(1.8, neighborNear * 0.35);
+                }
+                const response = inertiaGain * hoverGain * dragGain * (1 + 0.5 * cursorNear + 0.4 * neighborNear);
+                const rhythm = 0.65 + 0.35 * Math.sin(t * 1.0) + 0.25 * Math.sin(t * 1.85);
                 for (let j = 0; j < 3; j++) {
                     const off = baseOff + (j + 1) * 6;
-                    const phase = t * 1.8 + j * 2.1;
+                    const phase = t * 3.2 + j * 2.1;
                     const alpha = 0.32 + 0.28 * (1 - j * 0.28) * (0.5 + 0.5 * Math.sin(t * 2.2 + j * 0.8));
                     this.auraGraphics.lineStyle(2, colors[j], alpha);
                     this.auraGraphics.beginPath();
                     const L = -70 - off, R = 70 + off, T = -100 - off, B = 100 + off;
                     const W = R - L, H = B - T;
                     const wave = (s) => {
-                        const soft = 2.2 * Math.sin(1.4 * s + phase) + 1.1 * Math.sin(2.2 * s + phase * 1.3);
-                        const hi = 0.5 * Math.sin(8 * s + t * 6) + 0.38 * Math.sin(13 * s + t * 8 + j);
-                        const jelly = (0.32 * Math.sin(19 * s + t * 11) + 0.25 * Math.sin(26 * s + t * 9 + j * 1.7) + 0.18 * Math.sin(33 * s + t * 13 + j * 0.9)) * response;
+                        const soft = 3.8 * Math.sin(1.4 * s + phase) + 2.2 * Math.sin(2.2 * s + phase * 1.3);
+                        const hi = (1.0 * Math.sin(8 * s + t * 12) + 0.85 * Math.sin(13 * s + t * 16 + j)) * rhythm;
+                        const jelly = (0.75 * Math.sin(19 * s + t * 20) + 0.6 * Math.sin(26 * s + t * 17 + j * 1.7) + 0.45 * Math.sin(33 * s + t * 24 + j * 0.9)) * response * rhythm;
                         return soft + hi + jelly;
                     };
                     for (let i = 0; i <= pts; i++) {
