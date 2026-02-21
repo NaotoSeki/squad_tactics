@@ -197,8 +197,9 @@ class Card extends Phaser.GameObjects.Container {
         this.rainbowGraphics = scene.add.graphics().setDepth(1);
         this.fusionCandidateGraphics = scene.add.graphics().setDepth(2);
         this.auraGraphics = scene.add.graphics().setDepth(2.5);
+        this.glossGraphics = scene.add.graphics().setDepth(3);
         this.sparklerParticles = [];
-        this.add(this.rainbowGraphics); this.add(this.fusionCandidateGraphics); this.add(this.auraGraphics);
+        this.add(this.rainbowGraphics); this.add(this.fusionCandidateGraphics); this.add(this.auraGraphics); this.add(this.glossGraphics);
         this.setScrollFactor(0); this.baseX = x; this.baseY = y; this.physX = x; this.physY = y; this.velocityX = 0; this.velocityY = 0; this.velocityAngle = 0; this.targetX = x; this.targetY = y; this.dragOffsetX = 0; this.dragOffsetY = 0;
         this.frameImage.on('pointerover', this.onHover, this); this.frameImage.on('pointerout', this.onHoverOut, this); this.frameImage.on('dragstart', this.onDragStart, this); this.frameImage.on('drag', this.onDrag, this); this.frameImage.on('dragend', this.onDragEnd, this);
         scene.add.existing(this);
@@ -341,7 +342,22 @@ class Card extends Phaser.GameObjects.Container {
                 }
                 if (this.sparklerParticles.length > (count >= 4 ? 120 : 80)) this.sparklerParticles.splice(0, count >= 4 ? 35 : 20);
             }
-            } else { this.rainbowGraphics.clear(); if (this.auraGraphics) this.auraGraphics.clear(); if (this.sparklerParticles) this.sparklerParticles.length = 0; }
+            if (count >= 4 && this.glossGraphics) {
+                this.glossGraphics.clear();
+                const bandW = 50;
+                const cycle = 220;
+                const x1 = -70 + (t * 48 % cycle);
+                const x2 = -70 + ((t * 48 + cycle * 0.5) % cycle);
+                [x1, x2].forEach((bx, i) => {
+                    const fade = 0.08 + 0.12 * Math.sin(t * 2.5 + i * 2);
+                    this.glossGraphics.fillStyle(0xffffff, Math.min(0.28, fade));
+                    this.glossGraphics.fillRect(bx, -100, bandW, 200);
+                    this.glossGraphics.fillStyle(0xffffff, Math.min(0.12, fade * 0.5));
+                    this.glossGraphics.fillRect(bx - 8, -100, 8, 200);
+                    this.glossGraphics.fillRect(bx + bandW, -100, 8, 200);
+                });
+            } else if (this.glossGraphics) this.glossGraphics.clear();
+            } else { this.rainbowGraphics.clear(); if (this.auraGraphics) this.auraGraphics.clear(); if (this.glossGraphics) this.glossGraphics.clear(); if (this.sparklerParticles) this.sparklerParticles.length = 0; }
         }
         if (this.isDragging) { this.setAlpha(0.6); } else {
             const isWeapon = typeof WPNS !== 'undefined' && WPNS[this.cardType];

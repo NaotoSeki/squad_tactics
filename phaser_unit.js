@@ -45,7 +45,7 @@ class UnitView {
             if (v.hpBar) v.hpBar.destroy();
             if (v.infoContainer) v.infoContainer.destroy();
             if (v.skillContainer) v.skillContainer.destroy();
-            if (v.rainbowRing) v.rainbowRing.destroy();
+            if (v.fusionGlowFx && v.sprite) { try { v.sprite.postFX.remove(v.fusionGlowFx); } catch(e){} }
         });
         this.visuals.clear();
     }
@@ -100,6 +100,10 @@ class UnitView {
                     const isSelected = (window.gameLogic.selectedUnit === u);
                     if (isSelected) {
                         if (this.unitLayer.exists(visual.container)) { this.unitLayer.remove(visual.container); this.hpLayer.add(visual.container); }
+                        if (visual.fusionGlowFx && visual.sprite) {
+                            visual.sprite.postFX.remove(visual.fusionGlowFx);
+                            visual.fusionGlowFx = null;
+                        }
                         if (!visual.glowFx && visual.sprite) {
                             visual.glowFx = visual.sprite.postFX.addGlow(0xffff00, 2, 0, false, 0.1, 12);
                         }
@@ -108,6 +112,14 @@ class UnitView {
                         if (visual.glowFx && visual.sprite) {
                             visual.sprite.postFX.remove(visual.glowFx);
                             visual.glowFx = null;
+                        }
+                        if (u.fusionCount >= 2 && visual.sprite) {
+                            if (!visual.fusionGlowFx) {
+                                visual.fusionGlowFx = visual.sprite.postFX.addGlow(0xffddaa, 1.4, 0, false, 0.06, 10);
+                            }
+                        } else if (visual.fusionGlowFx && visual.sprite) {
+                            visual.sprite.postFX.remove(visual.fusionGlowFx);
+                            visual.fusionGlowFx = null;
                         }
                     }
                 } catch(err) {
@@ -168,12 +180,6 @@ class UnitView {
 
         container.add([shadow, sprite]);
 
-        let rainbowRing = null;
-        if (u.fusionCount >= 2) {
-            rainbowRing = this.scene.add.graphics().setDepth(-0.5);
-            container.add(rainbowRing);
-        }
-
         const hpBg = this.scene.add.rectangle(0, 0, 20, 2, 0x000000).setOrigin(0, 0.5);
         const hpBar = this.scene.add.rectangle(0, 0, 20, 2, 0x00ff00).setOrigin(0, 0.5);
         const infoContainer = this.scene.add.container(0, 18);
@@ -182,7 +188,7 @@ class UnitView {
         this.hpLayer.add(hpBar);
         this.hpLayer.add(infoContainer);
 
-        const visual = { container, sprite, hpBg, hpBar, infoContainer, glowFx: null, rainbowRing };
+        const visual = { container, sprite, hpBg, hpBar, infoContainer, glowFx: null, fusionGlowFx: null };
         this.visuals.set(u.id, visual);
         
         if(typeof Renderer !== 'undefined') {
@@ -225,32 +231,6 @@ class UnitView {
         } else {
             visual.container.x = visual.targetX;
             visual.container.y = visual.targetY;
-        }
-
-        if (visual.rainbowRing && u.fusionCount >= 2) {
-            visual.rainbowRing.clear();
-            const t = (this.scene.time || { now: 0 }).now * 0.001;
-            const colors = [0xff0000, 0xff8800, 0xffff00, 0x00ff00, 0x0088ff, 0x8800ff];
-            const segs = 48;
-            const rx = 28;
-            const ry = 38;
-            const cy = -20;
-            for (let i = 0; i < segs; i++) {
-                const u_frac = (i / segs + t * 0.12) % 1;
-                const ci = Math.floor(u_frac * colors.length) % colors.length;
-                const c = colors[ci];
-                const a1 = (i / segs) * Math.PI * 2;
-                const a2 = ((i + 1) / segs) * Math.PI * 2;
-                const x1 = rx * Math.cos(a1);
-                const y1 = cy + ry * Math.sin(a1);
-                const x2 = rx * Math.cos(a2);
-                const y2 = cy + ry * Math.sin(a2);
-                visual.rainbowRing.lineStyle(2.5, c, 0.9);
-                visual.rainbowRing.beginPath();
-                visual.rainbowRing.moveTo(x1, y1);
-                visual.rainbowRing.lineTo(x2, y2);
-                visual.rainbowRing.strokePath();
-            }
         }
 
         if (!u.def.isTank && visual.sprite) {
@@ -328,12 +308,12 @@ class UnitView {
     }
 
     destroyVisual(visual) {
+        if(visual.fusionGlowFx && visual.sprite) { try { visual.sprite.postFX.remove(visual.fusionGlowFx); } catch(e){} }
         if(visual.container) visual.container.destroy();
         if(visual.hpBg) visual.hpBg.destroy();
         if(visual.hpBar) visual.hpBar.destroy();
         if(visual.infoContainer) visual.infoContainer.destroy();
         if(visual.skillContainer) visual.skillContainer.destroy();
-        if(visual.rainbowRing) visual.rainbowRing.destroy();
     }
 
     triggerAttack(attacker, target) {
