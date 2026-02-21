@@ -1191,18 +1191,17 @@ window.BattleLogic = class BattleLogic {
       if (d <= 2) byDist[d].push(h);
     });
     const hitHexes = [];
-    const nCenter = Math.round(60 * 0.45);
-    const nDist1 = Math.round(60 * 0.35);
-    const nDist2 = 60 - nCenter - nDist1;
-    for (let i = 0; i < nCenter && byDist[0].length; i++) hitHexes.push(byDist[0][0]);
-    for (let i = 0; i < nDist1; i++) {
-      if (byDist[1].length) hitHexes.push(byDist[1][i % byDist[1].length]);
-    }
-    for (let i = 0; i < nDist2; i++) {
-      if (byDist[2].length) hitHexes.push(byDist[2][i % byDist[2].length]);
-    }
-    while (hitHexes.length < 60 && validPool.length) {
-      hitHexes.push(validPool[Math.floor(Math.random() * validPool.length)]);
+    for (let i = 0; i < 60; i++) {
+      const r = Math.random();
+      if (r < 0.45 && byDist[0].length) {
+        hitHexes.push(byDist[0][Math.floor(Math.random() * byDist[0].length)]);
+      } else if (r < 0.80 && byDist[1].length) {
+        hitHexes.push(byDist[1][Math.floor(Math.random() * byDist[1].length)]);
+      } else if (byDist[2].length) {
+        hitHexes.push(byDist[2][Math.floor(Math.random() * byDist[2].length)]);
+      } else if (validPool.length) {
+        hitHexes.push(validPool[Math.floor(Math.random() * validPool.length)]);
+      }
     }
     const tankPos = typeof Renderer !== 'undefined' ? Renderer.hexToPx(attacker.q, attacker.r) : { x: 0, y: 0 };
     const dmg = 45;
@@ -1212,15 +1211,16 @@ window.BattleLogic = class BattleLogic {
       const targetPos = typeof Renderer !== 'undefined' ? Renderer.hexToPx(hex.q, hex.r) : { x: 0, y: 0 };
       const delay = i * 55;
       setTimeout(() => {
-        if (window.VFX) window.VFX.addRocketTrail(tankPos.x, tankPos.y, targetPos.x, targetPos.y);
-        setTimeout(() => {
-          if (window.Sfx) Sfx.play('cannon');
-          if (typeof Renderer !== 'undefined') Renderer.playExplosion(targetPos.x, targetPos.y);
-          if (window.VFX) { window.VFX.addSmoke(targetPos.x, targetPos.y); window.VFX.shakeRequest = 3; }
-          const units = game.getUnitsInHex(hex.q, hex.r);
-          units.forEach(u => { game.ui.log(`>> ロケット命中`); game.applyDamage(u, dmg, "M8 Rocket"); });
-          game.updateSidebar();
-        }, 120);
+        if (window.VFX) {
+          window.VFX.addRocket(tankPos.x, tankPos.y, targetPos.x, targetPos.y, () => {
+            if (window.Sfx) Sfx.play('cannon');
+            if (typeof Renderer !== 'undefined') Renderer.playExplosion(targetPos.x, targetPos.y);
+            if (window.VFX) { window.VFX.addSmoke(targetPos.x, targetPos.y); window.VFX.shakeRequest = 3; }
+            const units = game.getUnitsInHex(hex.q, hex.r);
+            units.forEach(u => { game.ui.log(`>> ロケット命中`); game.applyDamage(u, dmg, "M8 Rocket"); });
+            game.updateSidebar();
+          });
+        }
       }, delay);
     }
     await new Promise(r => setTimeout(r, hitHexes.length * 55 + 550));

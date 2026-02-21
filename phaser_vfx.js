@@ -34,6 +34,25 @@ class VFXSystem {
                     if (p.arcHeight > 0) p.prevY -= Math.sin((t-p.speed*0.5) * Math.PI) * p.arcHeight;
                 }
                 if (t >= 1) { if (typeof p.onHit === 'function') p.onHit(); p.life = 0; }
+            } else if (p.type === 'rocket') {
+                p.progress += p.speed;
+                let t = p.progress;
+                if (t >= 1) t = 1;
+                const dx = p.ex - p.sx; const dy = p.ey - p.sy;
+                p.prevX = p.x; p.prevY = p.y;
+                p.x = p.sx + dx * t; p.y = p.sy + dy * t;
+                if (p.arcHeight > 0) p.y -= Math.sin(t * Math.PI) * p.arcHeight;
+                if (t < 1) {
+                    for (let s = 0; s < 2; s++) {
+                        this.add({
+                            x: p.x + (Math.random() - 0.5) * 6, y: p.y + (Math.random() - 0.5) * 6,
+                            vx: (Math.random() - 0.5) * 0.6, vy: -0.5 - Math.random() * 0.8,
+                            color: (Math.random() > 0.35) ? "#5a5a5a" : "#404040",
+                            size: 5 + Math.random() * 7, life: 55 + Math.random() * 35, type: 'smoke'
+                        });
+                    }
+                }
+                if (t >= 1) { if (typeof p.onHit === 'function') p.onHit(); p.life = 0; }
             } else if (p.type === 'smoke') {
                 p.vx *= 0.95; p.vy *= 0.95; 
                 p.y -= 0.2; 
@@ -71,6 +90,16 @@ class VFXSystem {
                     graphics.lineStyle(1, 0xffffff, alpha + 0.3);
                     graphics.beginPath(); graphics.moveTo(p.prevX + (p.x-p.prevX)*0.6, p.prevY + (p.y-p.prevY)*0.6); graphics.lineTo(p.x, p.y); graphics.strokePath();
                 }
+            }
+            // ロケット (弧を描く飛翔＋煙の尾)
+            else if (p.type === 'rocket') {
+                const alpha = 0.95 - p.progress * 0.4;
+                graphics.lineStyle(4, 0xffaa44, alpha);
+                graphics.beginPath(); graphics.moveTo(p.prevX, p.prevY); graphics.lineTo(p.x, p.y); graphics.strokePath();
+                graphics.lineStyle(2, 0xffdd88, alpha + 0.2);
+                graphics.beginPath(); graphics.moveTo(p.prevX, p.prevY); graphics.lineTo(p.x, p.y); graphics.strokePath();
+                graphics.fillStyle(0xffcc66, alpha);
+                graphics.fillCircle(p.x, p.y, 3);
             }
             // 風
             else if (p.type === 'wind') {
@@ -138,7 +167,7 @@ class VFXSystem {
         }); 
     }
 
-    /** ロケットの煙の尾: 始点から終点へ複数煙を並べる */
+    /** ロケットの煙の尾: 始点から終点へ複数煙を並べる（レガシー・一括煙） */
     addRocketTrail(sx, sy, ex, ey) {
         const steps = 8 + Math.floor(Math.random() * 4);
         for (let i = 0; i <= steps; i++) {
@@ -156,6 +185,23 @@ class VFXSystem {
                 delay: Math.floor(i * 2)
             });
         }
+    }
+
+    /** ロケット弾: 弧を描いて飛翔し、飛行中に煙の尾を残す。着弾時に onHit() を呼ぶ。 */
+    addRocket(sx, sy, ex, ey, onHit) {
+        const dist = Math.hypot(ex - sx, ey - sy);
+        const arcHeight = Math.min(160, Math.max(70, dist * 0.28));
+        this.add({
+            type: 'rocket',
+            x: sx, y: sy, prevX: sx, prevY: sy,
+            sx, sy, ex, ey,
+            progress: 0,
+            speed: 0.038,
+            arcHeight,
+            life: 999,
+            maxLife: 999,
+            onHit: onHit || (() => {})
+        });
     }
 
     addBulletImpact(x, y, burst) {
