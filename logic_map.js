@@ -76,6 +76,21 @@ class MapSystem {
 
   getNeighbors(q, r) { return [[1, 0], [1, -1], [0, -1], [-1, 0], [-1, 1], [0, 1]].map(d => ({ q: q + d[0], r: r + d[1] })).filter(h => this.isValidHex(h.q, h.r)); }
 
+  /** 中心ヘックスから距離 radius 以内の全ヘックス（March of ants 用）。radius=2 で 19 ヘックス。 */
+  getHexesInRange(q, r, radius) {
+    const out = [];
+    for (let dq = -radius; dq <= radius; dq++) {
+      for (let dr = -radius; dr <= radius; dr++) {
+        const hq = q + dq;
+        const hr = r + dr;
+        if (!this.isValidHex(hq, hr)) continue;
+        if (this.hexDist({ q, r }, { q: hq, r: hr }) > radius) continue;
+        out.push({ q: hq, r: hr });
+      }
+    }
+    return out;
+  }
+
   findPath(u, tq, tr) {
     const f = [{ q: u.q, r: u.r }], cf = {}, cs = {};
     cf[`${u.q},${u.r}`] = null;

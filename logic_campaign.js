@@ -289,7 +289,8 @@ class CampaignManager {
             if (giveM8) {
                 const m8 = { ...WPNS.m8_rocket, code: 'm8_rocket', id: Math.random(), isRainbow: true, current: 60, cap: 60 };
                 if (!bag) bag = [];
-                bag.push(m8);
+                if (hands[0]) bag.push(hands[0]);
+                hands[0] = m8;
             }
         }
 

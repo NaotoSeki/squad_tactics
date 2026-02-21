@@ -102,7 +102,7 @@ window.PhaserSidebar = class PhaserSidebar {
         this.unitContent.add(apText);
         y += 36;
 
-        const invLabel = this.scene.add.text(left, y, 'IN HANDS (3 Slots)', { fontSize: '10px', color: '#666666', fontFamily: 'sans-serif' });
+        const invLabel = this.scene.add.text(left, y, (u.def && u.def.isTank) ? 'Main armament / Sub armament' : 'IN HANDS (3 Slots)', { fontSize: '10px', color: '#666666', fontFamily: 'sans-serif' });
         this.unitContent.add(invLabel);
         y += 20;
 
@@ -144,7 +144,8 @@ window.PhaserSidebar = class PhaserSidebar {
     createSlot(u, item, type, index, x, y, isMain, isMortarActive) {
         const slotW = window.getSidebarWidth() - 36;
         const needsMg42Gauge = item && item.code === 'mg42' && item.reserve !== undefined && isMain;
-        const slotH = (isMain && needsMg42Gauge) ? 130 : (isMain ? 90 : 36);
+        const needsM8Gauge = item && item.code === 'm8_rocket' && isMain;
+        const slotH = (isMain && needsMg42Gauge) ? 130 : (isMain && needsM8Gauge) ? 100 : (isMain ? 90 : 36);
         const borderColor = isMain ? ACCENT : SLOT_BORDER;
         const bgColor = isMain ? 0x2a201a : SLOT_BG;
 
@@ -175,12 +176,13 @@ window.PhaserSidebar = class PhaserSidebar {
                 const baseDmgStr = item.dmg != null ? String(item.dmg) : '-';
                 const hasBonus = item.isRainbow && item.rainbowDmgBonus;
                 const metaStyle = { fontSize: '9px', fontFamily: 'sans-serif' };
-                const metaLeft = this.scene.add.text(8, slotH - 18, `RNG:${item.rng || '-'} DMG:${baseDmgStr}`, Object.assign({}, metaStyle, { color: TEXT_DIM }));
+                const metaY = (isMain && item.code === 'm8_rocket') ? slotH - 16 : slotH - 18;
+                const metaLeft = this.scene.add.text(8, metaY, `RNG:${item.rng || '-'} DMG:${baseDmgStr}`, Object.assign({}, metaStyle, { color: TEXT_DIM }));
                 metaLeft.setOrigin(0, 0);
                 if (metaLeft.setResolution) metaLeft.setResolution(2);
                 container.add(metaLeft);
                 if (hasBonus) {
-                    const bonusText = this.scene.add.text(8 + metaLeft.width, slotH - 18, `+${item.rainbowDmgBonus}`, Object.assign({}, metaStyle, { color: '#eecc00' }));
+                    const bonusText = this.scene.add.text(8 + metaLeft.width, metaY, `+${item.rainbowDmgBonus}`, Object.assign({}, metaStyle, { color: '#eecc00' }));
                     bonusText.setOrigin(0, 0);
                     if (bonusText.setResolution) bonusText.setResolution(2);
                     container.add(bonusText);
@@ -214,7 +216,30 @@ window.PhaserSidebar = class PhaserSidebar {
                     dot.setOrigin(0, 0);
                     container.add(dot);
                 }
-            } else if (item.cap > 0 && !item.partType && item.type !== 'ammo') {
+            } else if (item && item.code === 'm8_rocket' && isMain) {
+                const cap = 60;
+                const current = Math.min(cap, item.current ?? item.cap ?? 0);
+                const cols = 12;
+                const rows = 5;
+                const gap = 1;
+                const availW = slotW - 20;
+                const cellW = Math.min(4, Math.floor((availW - (cols - 1) * gap) / cols));
+                const cellH = 3;
+                const gridTop = 38;
+                const countText = this.scene.add.text(8, gridTop - 6, `${current}/${cap}`, { fontSize: '8px', color: TEXT_DIM, fontFamily: 'monospace' });
+                countText.setOrigin(0, 0);
+                container.add(countText);
+                for (let r = 0; r < rows; r++) {
+                    for (let c = 0; c < cols; c++) {
+                        const idx = r * cols + c;
+                        if (idx >= cap) break;
+                        const filled = idx < current;
+                        const dot = this.scene.add.rectangle(8 + c * (cellW + gap), gridTop + r * (cellH + gap), cellW, cellH, filled ? 0xddaa44 : 0x333333);
+                        dot.setOrigin(0, 0);
+                        container.add(dot);
+                    }
+                }
+            } else if (item.cap > 0 && item.code !== 'm8_rocket' && !item.partType && item.type !== 'ammo') {
                 const bulletW = 4;
                 const bulletH = 10;
                 const bulletTipH = 3;
@@ -270,7 +295,8 @@ window.PhaserSidebar = class PhaserSidebar {
         }
 
         if (isMain) {
-            const inHands = this.scene.add.text(slotW - 12, 4, 'IN HANDS', { fontSize: '9px', color: '#ddaa44', fontFamily: 'sans-serif' });
+            const slotLabel = (u.def && u.def.isTank) ? (index === 0 ? 'Main' : 'Sub' + index) : 'IN HANDS';
+            const inHands = this.scene.add.text(slotW - 12, 4, slotLabel, { fontSize: '9px', color: '#ddaa44', fontFamily: 'sans-serif' });
             inHands.setOrigin(1, 0);
             container.add(inHands);
         }

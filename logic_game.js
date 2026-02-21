@@ -225,8 +225,12 @@ window.BattleLogic = class BattleLogic {
       this.updateSidebar();
       await this.triggerM8Rocket(a, targetHex);
       this.isExecutingAttack = false;
+      this.state = 'PLAY';
+      this.attackLine = [];
+      this.aimTargetUnit = null;
       this.setMode('SELECT');
       this.checkPhaseEnd();
+      if (this.ui && this.ui.updateSidebar) this.ui.updateSidebar();
       return;
     }
 
@@ -542,13 +546,12 @@ window.BattleLogic = class BattleLogic {
       return false;
     }
     if (weaponCode === 'm8_rocket') {
-      const m8 = (u.bag || []).find(i => i && i.code === 'm8_rocket');
-      if (!m8 || (m8.current || 0) < (n > 0 ? n : 60)) return false;
-      m8.current = (m8.current || 60) - (n > 0 ? n : 60);
-      if (m8.current <= 0) {
-        const idx = u.bag.indexOf(m8);
-        if (idx >= 0) u.bag[idx] = null;
-      }
+      const slot0 = u.hands && u.hands[0];
+      if (!slot0 || slot0.code !== 'm8_rocket') return false;
+      const need = n > 0 ? n : 60;
+      const cur = slot0.current ?? slot0.cap ?? 0;
+      if (cur < need) return false;
+      slot0.current = cur - need;
       return true;
     }
     if (weaponCode === 'mg42' && u.hands) {
@@ -612,10 +615,12 @@ window.BattleLogic = class BattleLogic {
   getAttackWeapon(a, targetUnit) {
     const main = this.getVirtualWeapon(a);
     if (!main) return null;
-    // 戦車がヘックス指定（範囲攻撃）のときは M8 Rocket を優先
+    // 戦車がヘックス指定（範囲攻撃）のときは Main armament が M8 の場合のみ M8 を使用
     if (a.def?.isTank && !targetUnit) {
-      const m8 = (a.bag || []).find(it => it && it.code === 'm8_rocket' && (it.current > 0 || it.cap > 0));
-      if (m8) return { ...m8, current: m8.current ?? m8.cap, cap: m8.cap };
+      const slot0 = a.hands && a.hands[0];
+      if (slot0 && slot0.code === 'm8_rocket' && (slot0.current > 0 || slot0.cap > 0)) {
+        return { ...slot0, current: slot0.current ?? slot0.cap, cap: slot0.cap };
+      }
     }
     if (a.def.isTank && targetUnit && !targetUnit.def?.isTank) {
       const tankMgSlots = (a.hands || []).map((h, idx) => (h && h.code === 'mg42') ? { handIndex: idx, mg: h } : null).filter(Boolean);
@@ -688,6 +693,10 @@ window.BattleLogic = class BattleLogic {
 
   calcAttackLine(u, tq, tr) {
     if (!this.mapSystem) return;
+    if (u && u.hands && u.hands[0] && u.hands[0].code === 'm8_rocket') {
+      this.attackLine = this.mapSystem.getHexesInRange(tq, tr, 2);
+      return;
+    }
     this.attackLine = this.mapSystem.calcAttackLine(u, tq, tr);
     const w = this.getVirtualWeapon(u);
     if (w && w.indirect && this.attackLine.length === 0) {
@@ -774,7 +783,9 @@ window.BattleLogic = class BattleLogic {
       if (this.selectedUnit) {
         const w = this.getVirtualWeapon(this.selectedUnit);
         const isIndirect = w && w.indirect;
-        if (isIndirect) {
+        if (w && w.code === 'm8_rocket') {
+          this.actionAttack(this.selectedUnit, p);
+        } else if (isIndirect) {
           this.actionAttack(this.selectedUnit, p);
         } else {
           let targetUnit = null;
@@ -1169,19 +1180,29 @@ window.BattleLogic = class BattleLogic {
 
   async triggerM8Rocket(attacker, centerHex) {
     if (!this.isValidHex(centerHex.q, centerHex.r)) return;
-    const neighbors = this.getNeighbors(centerHex.q, centerHex.r);
-    const pool = [centerHex, ...neighbors].filter(h => this.isValidHex(h.q, h.r));
-    if (pool.length === 0) return;
-    // 60発を7ヘックスに重み付き分配（中心に多く）
+    const game = this;
+    const pool = this.mapSystem ? this.mapSystem.getHexesInRange(centerHex.q, centerHex.r, 2) : [centerHex];
+    const validPool = pool.filter(h => this.isValidHex(h.q, h.r));
+    if (validPool.length === 0) return;
+    const centerDist = (h) => this.mapSystem ? this.mapSystem.hexDist(centerHex, h) : 0;
+    const byDist = { 0: [], 1: [], 2: [] };
+    validPool.forEach(h => {
+      const d = centerDist(h);
+      if (d <= 2) byDist[d].push(h);
+    });
     const hitHexes = [];
-    const weights = pool.map((h, i) => i === 0 ? 22 : 6);
-    for (let i = 0; i < 60; i++) {
-      let r = Math.random() * weights.reduce((a, b) => a + b, 0);
-      for (let j = 0; j < pool.length; j++) {
-        r -= weights[j];
-        if (r <= 0) { hitHexes.push(pool[j]); break; }
-      }
-      if (r > 0) hitHexes.push(pool[0]);
+    const nCenter = Math.round(60 * 0.45);
+    const nDist1 = Math.round(60 * 0.35);
+    const nDist2 = 60 - nCenter - nDist1;
+    for (let i = 0; i < nCenter && byDist[0].length; i++) hitHexes.push(byDist[0][0]);
+    for (let i = 0; i < nDist1; i++) {
+      if (byDist[1].length) hitHexes.push(byDist[1][i % byDist[1].length]);
+    }
+    for (let i = 0; i < nDist2; i++) {
+      if (byDist[2].length) hitHexes.push(byDist[2][i % byDist[2].length]);
+    }
+    while (hitHexes.length < 60 && validPool.length) {
+      hitHexes.push(validPool[Math.floor(Math.random() * validPool.length)]);
     }
     const tankPos = typeof Renderer !== 'undefined' ? Renderer.hexToPx(attacker.q, attacker.r) : { x: 0, y: 0 };
     const dmg = 45;
@@ -1196,13 +1217,13 @@ window.BattleLogic = class BattleLogic {
           if (window.Sfx) Sfx.play('cannon');
           if (typeof Renderer !== 'undefined') Renderer.playExplosion(targetPos.x, targetPos.y);
           if (window.VFX) { window.VFX.addSmoke(targetPos.x, targetPos.y); window.VFX.shakeRequest = 3; }
-          const units = this.getUnitsInHex(hex.q, hex.r);
-          units.forEach(u => { this.ui.log(`>> ロケット命中`); this.applyDamage(u, dmg, "M8 Rocket"); });
-          this.updateSidebar();
+          const units = game.getUnitsInHex(hex.q, hex.r);
+          units.forEach(u => { game.ui.log(`>> ロケット命中`); game.applyDamage(u, dmg, "M8 Rocket"); });
+          game.updateSidebar();
         }, 120);
       }, delay);
     }
-    await new Promise(r => setTimeout(r, hitHexes.length * 55 + 400));
+    await new Promise(r => setTimeout(r, hitHexes.length * 55 + 550));
   }
 
   async triggerBombardment(centerHex) {
