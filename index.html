@@ -177,6 +177,11 @@
     <div id="debug-window">
         <span class="debug-label">DEBUG</span>
         <label><input type="checkbox" id="debug-instant-kill"> Instant kill</label>
+        <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+            <span class="debug-label" style="flex-shrink:0;">手札融合:</span>
+            <input type="range" id="debug-fusion-slider" min="1" max="3" value="1" step="1" style="width:80px;">
+            <span id="debug-fusion-label" style="min-width:64px;">1枚</span>
+        </div>
     </div>
 
     <div id="context-menu"></div>
@@ -276,6 +281,17 @@
                 window.__debugInstantKill = this.checked;
             });
             window.__debugInstantKill = false;
+            var fusionSlider = document.getElementById('debug-fusion-slider');
+            var fusionLabel = document.getElementById('debug-fusion-label');
+            if (fusionSlider && fusionLabel) {
+                var labels = ['1枚', '2枚融合', '3枚融合'];
+                fusionSlider.addEventListener('input', function() {
+                    var v = parseInt(this.value, 10);
+                    fusionLabel.textContent = labels[v - 1] || this.value + '枚';
+                    if (window.setHandCardsFusionLevel) window.setHandCardsFusionLevel(v);
+                });
+                fusionLabel.textContent = labels[0];
+            }
             positionDebugWindow();
         })();
         (function initPhaserSidebarResizer() {

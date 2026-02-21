@@ -120,6 +120,19 @@ const Renderer = {
             if (window.phaserSidebar && window.phaserSidebar.onResize) window.phaserSidebar.onResize(w, h);
             if (window.gameLogic && window.gameLogic.updateSidebar) window.gameLogic.updateSidebar();
         };
+        window.setHandCardsFusionLevel = function(level) {
+            if (!phaserGame || !phaserGame.scene) return;
+            const ui = phaserGame.scene.getScene('UIScene');
+            if (!ui || !ui.cards) return;
+            const L = Math.max(1, Math.min(3, parseInt(level, 10) || 1));
+            ui.cards.forEach(function(card) {
+                const isUnit = card.cardType && typeof UNIT_TEMPLATES !== 'undefined' && UNIT_TEMPLATES[card.cardType] && !(typeof WPNS !== 'undefined' && WPNS[card.cardType]);
+                if (!isUnit) return;
+                card.fusionCount = L;
+                card.fusionData = L >= 2 ? generateFusionData() : null;
+                if (card.sparklerParticles) card.sparklerParticles.length = 0;
+            });
+        };
         window.addEventListener('resize', () => this.resize());
         const startAudio = () => { if(window.Sfx && window.Sfx.ctx && window.Sfx.ctx.state === 'suspended') { window.Sfx.ctx.resume(); } };
         document.addEventListener('click', startAudio); document.addEventListener('keydown', startAudio);
@@ -228,46 +241,54 @@ class Card extends Phaser.GameObjects.Container {
             if (count >= 3 && this.auraGraphics) {
                 this.auraGraphics.clear();
                 const baseOff = 8;
-                const amp = 5;
-                const freq = 0.12;
-                const pts = 48;
+                const pts = 100;
                 const colors = [0xffdd66, 0xffaa44, 0xff8844];
                 for (let j = 0; j < 3; j++) {
                     const off = baseOff + (j + 1) * 6;
-                    const phase = t * 2.5 + j * 2.1;
-                    const alpha = 0.35 + 0.25 * (1 - j * 0.25) * (0.5 + 0.5 * Math.sin(t * 3 + j));
+                    const phase = t * 1.8 + j * 2.1;
+                    const alpha = 0.32 + 0.28 * (1 - j * 0.28) * (0.5 + 0.5 * Math.sin(t * 2.2 + j * 0.8));
                     this.auraGraphics.lineStyle(2, colors[j], alpha);
                     this.auraGraphics.beginPath();
                     const L = -70 - off, R = 70 + off, T = -100 - off, B = 100 + off;
                     const W = R - L, H = B - T;
+                    const wave = (s) => {
+                        const soft = 2.5 * Math.sin(1.4 * s + phase) + 1.3 * Math.sin(2.1 * s + phase * 1.3);
+                        const prull = 0.55 * Math.sin(5.2 * s + t * 5) + 0.4 * Math.sin(7.3 * s + t * 7 + j);
+                        return soft + prull;
+                    };
                     for (let i = 0; i <= pts; i++) {
                         const u = i / pts;
-                        let x, y;
+                        let x, y, s;
                         if (u < 0.25) {
-                            x = L + W * (u / 0.25);
-                            y = T + amp * Math.sin(freq * x + phase) + amp * 0.6 * Math.sin(freq * 2 * x + phase * 1.3);
+                            s = u * 4; x = L + W * (u / 0.25); y = T + wave(s);
                         } else if (u < 0.5) {
-                            y = T + H * ((u - 0.25) / 0.25);
-                            x = R + amp * Math.sin(freq * y + phase * 0.7) + amp * 0.6 * Math.sin(freq * 2 * y + phase * 1.1);
+                            s = 1 + (u - 0.25) * 4; y = T + H * ((u - 0.25) / 0.25); x = R + wave(s);
                         } else if (u < 0.75) {
-                            x = R - W * ((u - 0.5) / 0.25);
-                            y = B + amp * Math.sin(freq * x + phase * 1.2) + amp * 0.6 * Math.sin(freq * 2 * x + phase * 0.9);
+                            s = 2 + (u - 0.5) * 4; x = R - W * ((u - 0.5) / 0.25); y = B + wave(s);
                         } else {
-                            y = B - H * ((u - 0.75) / 0.25);
-                            x = L + amp * Math.sin(freq * y + phase * 0.9) + amp * 0.6 * Math.sin(freq * 2 * y + phase * 1.5);
+                            s = 3 + (u - 0.75) * 4; y = B - H * ((u - 0.75) / 0.25); x = L + wave(s);
                         }
                         if (i === 0) this.auraGraphics.moveTo(x, y); else this.auraGraphics.lineTo(x, y);
                     }
                     this.auraGraphics.closePath(); this.auraGraphics.strokePath();
                 }
                 if (!this.sparklerParticles) this.sparklerParticles = [];
-                if (Math.random() < 0.35) {
-                    const angle = Math.random() * Math.PI * 2;
-                    const speed = 1.2 + Math.random() * 2.5;
+                if (Math.random() < 0.08) {
+                    const side = Math.floor(Math.random() * 4);
+                    const q = Math.random();
+                    let sx, sy, nx, ny;
+                    const pad = 75; const padV = 105;
+                    if (side === 0) { sx = -pad + q * pad * 2; sy = -padV; nx = 0; ny = -1; }
+                    else if (side === 1) { sx = pad; sy = -padV + q * padV * 2; nx = 1; ny = 0; }
+                    else if (side === 2) { sx = pad - q * pad * 2; sy = padV; nx = 0; ny = 1; }
+                    else { sx = -pad; sy = padV - q * padV * 2; nx = -1; ny = 0; }
+                    const jitter = 0.3;
+                    const vx = nx * (1.2 + Math.random() * 2) + (Math.random() - 0.5) * jitter;
+                    const vy = ny * (1.2 + Math.random() * 2) + (Math.random() - 0.5) * jitter;
                     this.sparklerParticles.push({
-                        x: (Math.random() - 0.5) * 20, y: (Math.random() - 0.5) * 20,
-                        vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed - 0.5,
-                        life: 12 + Math.floor(Math.random() * 14), maxLife: 26,
+                        x: sx, y: sy,
+                        vx: vx, vy: vy - 0.3,
+                        life: 14 + Math.floor(Math.random() * 12), maxLife: 26,
                         color: Math.random() > 0.4 ? 0xffaa00 : 0xffff88, size: 1.5 + Math.random() * 1.5
                     });
                 }
