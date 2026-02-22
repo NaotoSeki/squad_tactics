@@ -83,7 +83,7 @@ window.PhaserSidebar = class PhaserSidebar {
         const radarAreaW = contentW - faceSize - 8;
         const radarR = Math.min(130, Math.max(36, (radarAreaW / 2) - 12));
         const radarCx = left + faceSize + 4 + radarAreaW / 2;
-        const radarCy = y + 88 + (radarR > 48 ? (radarR - 48) * 0.5 : 0);
+        const radarCy = y + 108 + (radarR > 48 ? (radarR - 48) * 0.5 : 0);
         const params = u.params || (u.def && u.def.params) || {};
         const paramKeys = (typeof PARAM_KEYS !== 'undefined') ? PARAM_KEYS : ['action', 'speed', 'str', 'morale', 'aim', 'throw', 'melee', 'recon'];
         const paramLabels = (typeof PARAM_LABELS !== 'undefined') ? PARAM_LABELS : paramKeys.map(k => k.slice(0, 3));
@@ -147,22 +147,21 @@ window.PhaserSidebar = class PhaserSidebar {
         }
 
         const textLeft = left;
-        const headerBottom = y + Math.max(faceSize + 16, radarCy - y + radarR + labelOffset + 16);
-        const nameText = this.scene.add.text(textLeft, headerBottom, u.name, { fontSize: '14px', color: '#ffffff', fontFamily: 'sans-serif' });
+        const headerTop = y + faceSize + 6;
+        const nameText = this.scene.add.text(textLeft, headerTop, u.name, { fontSize: '14px', color: '#ffffff', fontFamily: 'sans-serif' });
         this.unitContent.add(nameText);
-        const roleText = this.scene.add.text(textLeft, headerBottom + 20, (u.def && u.def.role) || '', { fontSize: '11px', color: '#ddaa44', fontFamily: 'monospace' });
+        const roleText = this.scene.add.text(textLeft, headerTop + 18, (u.def && u.def.role) || '', { fontSize: '11px', color: '#ddaa44', fontFamily: 'monospace' });
         this.unitContent.add(roleText);
 
         const skills = (u.skills && Array.isArray(u.skills)) ? [...new Set(u.skills)] : [];
         if (skills.length > 0 && typeof SKILLS !== 'undefined') {
-            const skillLines = skills.map(sk => SKILLS[sk] ? `${SKILLS[sk].name}: ${SKILLS[sk].desc}` : sk).join('  |  ');
-            const skillText = this.scene.add.text(textLeft, headerBottom + 38, skillLines, { fontSize: '9px', color: TEXT_DIM, fontFamily: 'sans-serif', wordWrap: { width: sw - 24 } });
+            const skillText = this.scene.add.text(textLeft, headerTop + 36, skills.map(sk => SKILLS[sk] ? `${SKILLS[sk].name}: ${SKILLS[sk].desc}` : sk).join('  |  '), { fontSize: '9px', color: TEXT_DIM, fontFamily: 'sans-serif', wordWrap: { width: sw - 24 } });
             this.unitContent.add(skillText);
-            y = headerBottom + 56;
+            y = headerTop + 54;
         } else {
-            y = headerBottom + 38;
+            y = headerTop + 36;
         }
-        y += 10;
+        y += 8;
 
         const hpText = this.scene.add.text(textLeft, y, `HP  ${u.hp}/${u.maxHp}`, { fontSize: '11px', color: TEXT_COLOR, fontFamily: 'sans-serif' });
         this.unitContent.add(hpText);

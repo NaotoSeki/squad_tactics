@@ -174,8 +174,8 @@ window.BattleLogic = class BattleLogic {
   async actionAttack(a, d) {
     if (!a) return;
     const primary = this.getVirtualWeapon(a);
-    const isM8AreaClick = (d.hp === undefined) && primary && primary.code === 'm8_rocket';
-    const targetUnitForWeapon = (d.hp !== undefined) ? d : (isM8AreaClick ? null : this.getUnitInHex(d.q, d.r));
+    const forceM8Area = primary && primary.code === 'm8_rocket';
+    const targetUnitForWeapon = forceM8Area ? null : ((d.hp !== undefined) ? d : this.getUnitInHex(d.q, d.r));
 
     const game = this;
     let w = this.getAttackWeapon ? this.getAttackWeapon(a, targetUnitForWeapon) : null;
@@ -183,12 +183,15 @@ window.BattleLogic = class BattleLogic {
     if (!w) return;
     if (w.isBroken) { this.ui.log("武器故障中！修理が必要"); return; }
 
-    // ターゲット判定：ユニットクリック＝狙い撃ち、ヘックスクリック＝制圧射撃
-    // indirectは常にエリア射撃。直接武器はd.hpの有無で区別（ユニット指定なら狙い撃ち、ヘックスのみなら制圧）
+    // ターゲット判定：M8は常にエリア攻撃。それ以外はユニットクリック＝狙い撃ち、ヘックスクリック＝制圧
     let targetUnit = null;
     let targetHex = null;
     let isAreaAttack = false;
-    if (d.hp !== undefined) {
+    if (w.code === 'm8_rocket') {
+      targetHex = d.hp !== undefined ? { q: d.q, r: d.r } : d;
+      targetUnit = null;
+      isAreaAttack = true;
+    } else if (d.hp !== undefined) {
       targetUnit = d;
       targetHex = { q: d.q, r: d.r };
       if (w.indirect) { isAreaAttack = true; targetUnit = null; }
