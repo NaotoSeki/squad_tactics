@@ -18,38 +18,32 @@ class CampaignManager {
         window.addEventListener('load', () => this.initSetupScreen());
     }
 
-    /** 初期画面・カード用: canvas に能力値レーダーチャートを描画（8軸、ラベル付き）。サイズは canvas に合わせる */
+    /** 初期画面・カード用: canvas に能力値レーダーチャートを描画。getRadarPoints（data.js）で座標共通化。 */
     drawRadarCanvas(canvas, params) {
-        if (!canvas || !params || typeof PARAM_KEYS === 'undefined') return;
+        if (!canvas || !params || typeof PARAM_KEYS === 'undefined' || typeof getRadarPoints !== 'function') return;
         const ctx = canvas.getContext('2d');
         const cw = canvas.width;
         const ch = canvas.height;
         const cx = cw / 2;
         const cy = ch / 2;
-        const r = Math.min(cx, cy) - 12;
+        const RADAR_MARGIN = 12;
+        const r = Math.min(cx, cy) - RADAR_MARGIN;
         const keys = PARAM_KEYS;
         const labels = (typeof PARAM_LABELS !== 'undefined') ? PARAM_LABELS : keys.map(k => k.slice(0, 3));
-        const pts = [];
-        for (let i = 0; i < keys.length; i++) {
-            const angle = -Math.PI / 2 + (i / keys.length) * 2 * Math.PI;
-            const v = Math.max(0, Math.min(10, params[keys[i]] != null ? params[keys[i]] : 5));
-            const rr = (v / 10) * r;
-            pts.push({ x: cx + Math.cos(angle) * rr, y: cy + Math.sin(angle) * rr });
-        }
+        const { points, labelPositions, angles } = getRadarPoints(params, keys, r, 8);
         ctx.clearRect(0, 0, cw, ch);
-        for (let i = 0; i < keys.length; i++) {
-            const angle = -Math.PI / 2 + (i / keys.length) * 2 * Math.PI;
+        angles.forEach(angle => {
             ctx.strokeStyle = 'rgba(100,100,100,0.5)';
             ctx.lineWidth = 1;
             ctx.beginPath();
             ctx.moveTo(cx, cy);
             ctx.lineTo(cx + Math.cos(angle) * r, cy + Math.sin(angle) * r);
             ctx.stroke();
-        }
+        });
         ctx.fillStyle = 'rgba(221,170,68,0.25)';
         ctx.beginPath();
-        ctx.moveTo(pts[0].x, pts[0].y);
-        for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
+        ctx.moveTo(cx + points[0].x, cy + points[0].y);
+        for (let i = 1; i < points.length; i++) ctx.lineTo(cx + points[i].x, cy + points[i].y);
         ctx.closePath();
         ctx.fill();
         ctx.strokeStyle = 'rgba(221,170,68,0.9)';
@@ -60,12 +54,7 @@ class CampaignManager {
         ctx.font = fontPx + 'px sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        for (let i = 0; i < keys.length; i++) {
-            const angle = -Math.PI / 2 + (i / keys.length) * 2 * Math.PI;
-            const lx = cx + Math.cos(angle) * (r + 8);
-            const ly = cy + Math.sin(angle) * (r + 8);
-            ctx.fillText(labels[i] || '', lx, ly);
-        }
+        labelPositions.forEach((lp, i) => { ctx.fillText(labels[i] || '', cx + lp.x, cy + lp.y); });
     }
 
     // --- SETUP SCREEN LOGIC ---

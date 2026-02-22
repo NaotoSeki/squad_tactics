@@ -12,6 +12,25 @@ const ACCENT = 0xddaa44;
 const TEXT_COLOR = '#bbbbbb';
 const TEXT_DIM = '#888888';
 
+/** レーダーチャート（右ペイン）のレイアウト・表示しきい値 */
+const RADAR_R_MAX = 130;
+const RADAR_R_MIN = 36;
+const RADAR_OFFSET_BASE = 108;
+const RADAR_OFFSET_RADIUS_THRESHOLD = 48;
+const RADAR_OFFSET_RADIUS_FACTOR = 0.5;
+const RADAR_SHOW_GRID_AT = 44;
+const RADAR_SHOW_GRID_DETAIL_AT = 58;
+const RADAR_SHOW_VALUES_AT = 70;
+const RADAR_SHOW_FULL_GRID_AT = 82;
+const RADAR_LABEL_OFFSET_BASE = 10;
+const RADAR_LABEL_OFFSET_EXTRA = 4;
+const RADAR_LABEL_OFFSET_RADIUS_THRESHOLD = 56;
+const RADAR_VALUE_POS_RATIO = 0.7;
+const RADAR_BOTTOM_MARGIN = 16;
+const GAUGE_TOP = 38;
+const BAG_SLOT_H = 54;
+const END_TURN_BUTTON_BOTTOM_OFFSET = 48;
+
 window.PhaserSidebar = class PhaserSidebar {
     constructor(scene) {
         this.scene = scene;
@@ -43,7 +62,7 @@ window.PhaserSidebar = class PhaserSidebar {
         this.container.add(this.noSignalText);
 
         const left = w - sw + 12;
-        this.endTurnBtnContainer = this.createButton(left, h - 48, sw - 36, 32, 'End Turn', () => { if (window.gameLogic) window.gameLogic.endTurn(); }, 0x552222, 0xdd4444).container;
+        this.endTurnBtnContainer = this.createButton(left, h - END_TURN_BUTTON_BOTTOM_OFFSET, sw - 36, 32, 'End Turn', () => { if (window.gameLogic) window.gameLogic.endTurn(); }, 0x552222, 0xdd4444).container;
         this.container.add(this.endTurnBtnContainer);
     }
 
@@ -85,74 +104,89 @@ window.PhaserSidebar = class PhaserSidebar {
         }
 
         const radarAreaW = contentW - faceSize - 8;
-        const radarR = Math.min(130, Math.max(36, (radarAreaW / 2) - 12));
+        const radarR = Math.min(RADAR_R_MAX, Math.max(RADAR_R_MIN, (radarAreaW / 2) - 12));
         const radarCx = left + faceSize + 4 + radarAreaW / 2;
-        const radarCy = y + 108 + (radarR > 48 ? (radarR - 48) * 0.5 : 0);
+        const radarCy = y + RADAR_OFFSET_BASE + (radarR > RADAR_OFFSET_RADIUS_THRESHOLD ? (radarR - RADAR_OFFSET_RADIUS_THRESHOLD) * RADAR_OFFSET_RADIUS_FACTOR : 0);
         const params = u.params || (u.def && u.def.params) || {};
         const paramKeys = (typeof PARAM_KEYS !== 'undefined') ? PARAM_KEYS : ['action', 'speed', 'str', 'morale', 'aim', 'throw', 'melee', 'recon'];
         const paramLabels = (typeof PARAM_LABELS !== 'undefined') ? PARAM_LABELS : paramKeys.map(k => k.slice(0, 3));
+        const labelOffset = RADAR_LABEL_OFFSET_BASE + (radarR > RADAR_LABEL_OFFSET_RADIUS_THRESHOLD ? RADAR_LABEL_OFFSET_EXTRA : 0);
+        const radarData = (typeof getRadarPoints === 'function') ? getRadarPoints(params, paramKeys, radarR, labelOffset) : null;
+
         const radarG = this.scene.add.graphics();
         radarG.setPosition(radarCx, radarCy);
-        if (radarR >= 44) {
-            const levels = radarR >= 58 ? [0.25, 0.5, 0.75] : [0.5];
+        if (radarR >= RADAR_SHOW_GRID_AT) {
+            const levels = radarR >= RADAR_SHOW_GRID_DETAIL_AT ? [0.25, 0.5, 0.75] : [0.5];
             levels.forEach(ratio => {
                 radarG.lineStyle(1, 0x444444, 0.4);
                 radarG.strokeCircle(0, 0, radarR * ratio);
             });
         }
-        if (radarR >= 82) {
+        if (radarR >= RADAR_SHOW_FULL_GRID_AT) {
             for (let v = 2; v <= 10; v += 2) {
                 radarG.lineStyle(1, 0x555555, 0.35);
                 radarG.strokeCircle(0, 0, radarR * (v / 10));
             }
         }
-        for (let i = 0; i < paramKeys.length; i++) {
-            const angle = -Math.PI / 2 + (i / paramKeys.length) * 2 * Math.PI;
-            const v = Math.max(0, Math.min(10, params[paramKeys[i]] != null ? params[paramKeys[i]] : 5));
-            const r = (v / 10) * radarR;
-            const px = Math.cos(angle) * r;
-            const py = Math.sin(angle) * r;
-            if (i === 0) radarG.beginPath(); else radarG.lineTo(px, py);
-            if (i === 0) radarG.moveTo(px, py);
+        if (radarData && radarData.points.length > 0) {
+            radarG.beginPath();
+            radarG.moveTo(radarData.points[0].x, radarData.points[0].y);
+            for (let i = 1; i < radarData.points.length; i++) radarG.lineTo(radarData.points[i].x, radarData.points[i].y);
+            radarG.closePath();
+        } else {
+            for (let i = 0; i < paramKeys.length; i++) {
+                const angle = -Math.PI / 2 + (i / paramKeys.length) * 2 * Math.PI;
+                const v = Math.max(0, Math.min(10, params[paramKeys[i]] != null ? params[paramKeys[i]] : 5));
+                const r = (v / 10) * radarR;
+                const px = Math.cos(angle) * r, py = Math.sin(angle) * r;
+                if (i === 0) radarG.beginPath(); else radarG.lineTo(px, py);
+                if (i === 0) radarG.moveTo(px, py);
+            }
+            radarG.closePath();
         }
-        radarG.closePath();
         radarG.fillStyle(0xddaa44, 0.25);
         radarG.fillPath();
         radarG.lineStyle(2, 0xddaa44, 0.9);
         radarG.strokePath();
-        for (let i = 0; i < paramKeys.length; i++) {
-            const angle = -Math.PI / 2 + (i / paramKeys.length) * 2 * Math.PI;
+        const angles = radarData ? radarData.angles : paramKeys.map((_, i) => -Math.PI / 2 + (i / paramKeys.length) * 2 * Math.PI);
+        angles.forEach(angle => {
             radarG.lineStyle(1, 0x666666, 0.5);
-            radarG.beginPath(); radarG.moveTo(0, 0); radarG.lineTo(Math.cos(angle) * radarR, Math.sin(angle) * radarR); radarG.strokePath();
-        }
+            radarG.beginPath();
+            radarG.moveTo(0, 0);
+            radarG.lineTo(Math.cos(angle) * radarR, Math.sin(angle) * radarR);
+            radarG.strokePath();
+        });
         radarG.setPosition(0, 0);
         radarG.setDepth(0);
         this.unitContent.add(radarG);
         radarG.setPosition(radarCx, radarCy);
-        const labelOffset = 10 + (radarR > 56 ? 4 : 0);
-        const labelFontSize = radarR >= 70 ? '10px' : '9px';
-        for (let i = 0; i < paramLabels.length; i++) {
-            const angle = -Math.PI / 2 + (i / paramKeys.length) * 2 * Math.PI;
-            const tx = radarCx + Math.cos(angle) * (radarR + labelOffset);
-            const ty = radarCy + Math.sin(angle) * (radarR + labelOffset);
-            const labelText = this.scene.add.text(tx, ty, paramLabels[i] || '', { fontSize: labelFontSize, color: '#888', fontFamily: 'sans-serif' }).setOrigin(0.5, 0.5);
-            this.unitContent.add(labelText);
-        }
-        if (radarR >= 70) {
-            for (let i = 0; i < paramKeys.length; i++) {
+        const labelFontSize = radarR >= RADAR_SHOW_VALUES_AT ? '10px' : '9px';
+        if (radarData && radarData.labelPositions.length > 0) {
+            radarData.labelPositions.forEach((lp, i) => {
+                const labelText = this.scene.add.text(radarCx + lp.x, radarCy + lp.y, paramLabels[i] || '', { fontSize: labelFontSize, color: '#888', fontFamily: 'sans-serif' }).setOrigin(0.5, 0.5);
+                this.unitContent.add(labelText);
+            });
+        } else {
+            paramLabels.forEach((lbl, i) => {
                 const angle = -Math.PI / 2 + (i / paramKeys.length) * 2 * Math.PI;
-                const v = params[paramKeys[i]] != null ? params[paramKeys[i]] : 5;
-                const val = Math.max(0, Math.min(10, v));
-                const vx = radarCx + Math.cos(angle) * (radarR * (val / 10) * 0.7);
-                const vy = radarCy + Math.sin(angle) * (radarR * (val / 10) * 0.7);
-                const valText = this.scene.add.text(vx, vy, String(val), { fontSize: radarR >= 82 ? '10px' : '9px', color: '#ddaa44', fontFamily: 'sans-serif' }).setOrigin(0.5, 0.5);
+                const tx = radarCx + Math.cos(angle) * (radarR + labelOffset);
+                const ty = radarCy + Math.sin(angle) * (radarR + labelOffset);
+                this.unitContent.add(this.scene.add.text(tx, ty, lbl || '', { fontSize: labelFontSize, color: '#888', fontFamily: 'sans-serif' }).setOrigin(0.5, 0.5));
+            });
+        }
+        if (radarR >= RADAR_SHOW_VALUES_AT && radarData && radarData.points.length > 0) {
+            radarData.points.forEach((pt, i) => {
+                const val = Math.max(0, Math.min(10, params[paramKeys[i]] != null ? params[paramKeys[i]] : 5));
+                const vx = radarCx + pt.x * RADAR_VALUE_POS_RATIO;
+                const vy = radarCy + pt.y * RADAR_VALUE_POS_RATIO;
+                const valText = this.scene.add.text(vx, vy, String(val), { fontSize: radarR >= RADAR_SHOW_FULL_GRID_AT ? '10px' : '9px', color: '#ddaa44', fontFamily: 'sans-serif' }).setOrigin(0.5, 0.5);
                 this.unitContent.add(valText);
-            }
+            });
         }
 
         const textLeft = left;
         const headerTop = y + faceSize + 6;
-        const radarBottom = radarCy + radarR + labelOffset + 16;
+        const radarBottom = radarCy + radarR + labelOffset + RADAR_BOTTOM_MARGIN;
         const nameText = this.scene.add.text(textLeft, headerTop, u.name, { fontSize: '14px', color: '#ffffff', fontFamily: 'sans-serif' });
         this.unitContent.add(nameText);
         const roleText = this.scene.add.text(textLeft, headerTop + 18, (u.def && u.def.role) || '', { fontSize: '11px', color: '#ddaa44', fontFamily: 'monospace' });
@@ -216,11 +250,9 @@ window.PhaserSidebar = class PhaserSidebar {
         const slotW = window.getSidebarWidth() - 36;
         const needsMg42Gauge = item && item.code === 'mg42' && item.reserve !== undefined && isMain;
         const needsM8Gauge = item && item.code === 'm8_rocket' && isMain;
-        const bagSlotH = 54;
-        const slotH = (isMain && needsMg42Gauge) ? 130 : (isMain && needsM8Gauge) ? 100 : (isMain ? 90 : bagSlotH);
+        const slotH = (isMain && needsMg42Gauge) ? 130 : (isMain && needsM8Gauge) ? 100 : (isMain ? 90 : BAG_SLOT_H);
         const borderColor = isMain ? ACCENT : SLOT_BORDER;
         const bgColor = isMain ? 0x2a201a : SLOT_BG;
-        const gaugeTop = 38;
 
         const container = this.scene.add.container(x, y);
         const bg = this.scene.add.rectangle(slotW / 2, slotH / 2, slotW, slotH, item ? bgColor : 0x0a0a0a);
@@ -254,7 +286,7 @@ window.PhaserSidebar = class PhaserSidebar {
                 const availW = slotW - 16;
                 const cellW = Math.floor((availW - (cols - 1) * gap) / cols);
                 const cellH = 2;
-                const gridTop = 38;
+                const gridTop = GAUGE_TOP;
                 const countText = this.scene.add.text(8, gridTop - 6, `${reserve}/${maxRounds}`, { fontSize: '8px', color: TEXT_DIM, fontFamily: 'monospace' });
                 countText.setOrigin(0, 0);
                 container.add(countText);
@@ -269,7 +301,7 @@ window.PhaserSidebar = class PhaserSidebar {
             } else if (u.def.isTank && isMain && item.reserve !== undefined) {
                 const shellCount = Math.min(20, item.reserve || 0);
                 for (let i = 0; i < shellCount; i++) {
-                    const dot = this.scene.add.rectangle(10 + i * 6, gaugeTop, 4, 8, 0xdaa444);
+                    const dot = this.scene.add.rectangle(10 + i * 6, GAUGE_TOP, 4, 8, 0xdaa444);
                     dot.setOrigin(0, 0);
                     container.add(dot);
                 }
@@ -282,7 +314,7 @@ window.PhaserSidebar = class PhaserSidebar {
                 const availW = slotW - 20;
                 const cellW = Math.min(4, Math.floor((availW - (cols - 1) * gap) / cols));
                 const cellH = 3;
-                const gridTop = 38;
+                const gridTop = GAUGE_TOP;
                 const countText = this.scene.add.text(8, gridTop - 6, `${current}/${cap}`, { fontSize: '8px', color: TEXT_DIM, fontFamily: 'monospace' });
                 countText.setOrigin(0, 0);
                 container.add(countText);
@@ -302,7 +334,7 @@ window.PhaserSidebar = class PhaserSidebar {
                 const bulletTipH = 3;
                 const bulletGap = 2;
                 const step = bulletW + bulletGap;
-                const baseY = gaugeTop;
+                const baseY = GAUGE_TOP;
                 for (let i = 0; i < item.cap; i++) {
                     const filled = i < (item.current || 0);
                     const col = filled ? ACCENT : 0x333333;
@@ -317,7 +349,7 @@ window.PhaserSidebar = class PhaserSidebar {
                     container.add(body);
                 }
             } else if (item.code === 'mortar_shell_box') {
-                const boxY = isMain ? slotH - 12 : gaugeTop;
+                const boxY = isMain ? slotH - 12 : GAUGE_TOP;
                 for (let i = 0; i < (item.current || 0); i++) {
                     const dot = this.scene.add.rectangle(10 + i * 5, boxY, 3, 6, 0xffaa00);
                     dot.setOrigin(0, 0);
@@ -516,7 +548,7 @@ window.PhaserSidebar = class PhaserSidebar {
             this.noSignalText.setPosition(w - sw / 2, h / 2 - 80);
         }
         if (this.endTurnBtnContainer) {
-            this.endTurnBtnContainer.setPosition(w - sw + 12, h - 48);
+            this.endTurnBtnContainer.setPosition(w - sw + 12, h - END_TURN_BUTTON_BOTTOM_OFFSET);
         }
     }
 };

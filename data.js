@@ -81,6 +81,35 @@ const PARAM_KEYS = ['action', 'speed', 'str', 'morale', 'aim', 'throw', 'melee',
 /** レーダーチャート軸ラベル（PARAM_KEYS と同順） */
 const PARAM_LABELS = ['act', 'spd', 'str', 'mrl', 'aim', 'thw', 'mle', 'rcn'];
 
+/**
+ * レーダーチャート用の座標を共通計算（初期画面 canvas / 右ペイン Phaser で共用）。
+ * 中心は (0,0)、半径 r のローカル座標で返す。呼び出し側で (cx, cy) を足して使用。
+ * @param {Object} params - 能力値 { action, speed, ... }
+ * @param {string[]} paramKeys - キー順（通常 PARAM_KEYS）
+ * @param {number} radius - レーダー半径
+ * @param {number} [labelOffset=8] - ラベルを軸先から外す距離
+ * @returns {{ points: {x:number,y:number}[], labelPositions: {x:number,y:number}[], angles: number[] }}
+ */
+function getRadarPoints(params, paramKeys, radius, labelOffset) {
+    const offset = labelOffset != null ? labelOffset : 8;
+    const keys = paramKeys || PARAM_KEYS;
+    const points = [];
+    const labelPositions = [];
+    const angles = [];
+    for (let i = 0; i < keys.length; i++) {
+        const angle = -Math.PI / 2 + (i / keys.length) * 2 * Math.PI;
+        angles.push(angle);
+        const v = Math.max(0, Math.min(10, params[keys[i]] != null ? params[keys[i]] : 5));
+        const r = (v / 10) * radius;
+        points.push({ x: Math.cos(angle) * r, y: Math.sin(angle) * r });
+        labelPositions.push({
+            x: Math.cos(angle) * (radius + offset),
+            y: Math.sin(angle) * (radius + offset)
+        });
+    }
+    return { points, labelPositions, angles };
+}
+
 const UNIT_TEMPLATES = {
     rifleman: {
         name:"Rifleman", role:"infantry", main:"m1", sub:"m1911", opt:"nade",
