@@ -1233,12 +1233,12 @@ window.BattleLogic = class BattleLogic {
   async triggerM8Rocket(attacker, centerHex) {
     if (!this.canAttackHex(centerHex.q, centerHex.r)) return;
     const game = this;
-    const pool = this.mapSystem ? this.mapSystem.getHexesInRange(centerHex.q, centerHex.r, 2) : [centerHex];
-    const validPool = pool.filter(h => this.canAttackHex(h.q, h.r));
-    if (validPool.length === 0) return;
+    const fullPool = this.mapSystem ? this.mapSystem.getHexesInRange(centerHex.q, centerHex.r, 2) : [centerHex];
+    if (fullPool.length === 0) return;
+    // 海域・null も含む全ヘックスから抽選し、1ヘックスあたりの命中率を一定にする（有効な陸地のみ着弾時ダメージ）
     const hitHexes = [];
     for (let i = 0; i < 60; i++) {
-      hitHexes.push(validPool[Math.floor(Math.random() * validPool.length)]);
+      hitHexes.push(fullPool[Math.floor(Math.random() * fullPool.length)]);
     }
     const tankPos = typeof Renderer !== 'undefined' ? Renderer.hexToPx(attacker.q, attacker.r) : { x: 0, y: 0 };
     const dmg = 45;
@@ -1247,6 +1247,7 @@ window.BattleLogic = class BattleLogic {
       const hex = hitHexes[i];
       const targetPos = typeof Renderer !== 'undefined' ? Renderer.hexToPx(hex.q, hex.r) : { x: 0, y: 0 };
       const delay = i * 55;
+      const canHit = this.canAttackHex(hex.q, hex.r);
       setTimeout(() => {
         if (!game.consumeAmmo(attacker, 'm8_rocket', 1)) return;
         game.updateSidebar();
@@ -1255,8 +1256,10 @@ window.BattleLogic = class BattleLogic {
             if (window.Sfx) Sfx.play('cannon');
             if (typeof Renderer !== 'undefined') Renderer.playExplosion(targetPos.x, targetPos.y);
             if (window.VFX) { window.VFX.addSmoke(targetPos.x, targetPos.y); window.VFX.shakeRequest = 3; }
-            const units = game.getUnitsInHex(hex.q, hex.r);
-            units.forEach(u => { game.ui.log(`>> ロケット命中`); game.applyDamage(u, dmg, "M8 Rocket"); });
+            if (canHit) {
+              const units = game.getUnitsInHex(hex.q, hex.r);
+              units.forEach(u => { game.ui.log(`>> ロケット命中`); game.applyDamage(u, dmg, "M8 Rocket"); });
+            }
             game.updateSidebar();
           });
         }
@@ -1269,15 +1272,21 @@ window.BattleLogic = class BattleLogic {
     if (!this.isValidHex(centerHex.q, centerHex.r)) return;
     this.ui.log(`>> 航空支援要請`);
     const neighbors = this.getNeighbors(centerHex.q, centerHex.r);
-    const hits = []; const pool = [centerHex, ...neighbors].filter(h => this.isValidHex(h.q, h.r));
-    for (let i = 0; i < 3; i++) { if (pool.length === 0) break; const idx = Math.floor(Math.random() * pool.length); hits.push(pool[idx]); pool.splice(idx, 1); }
+    const fullPool = [centerHex, ...neighbors];
+    if (fullPool.length === 0) return;
+    // 海域・null も含む全ヘックスから抽選し、1ヘックスあたりの命中率を一定にする
+    const hits = [];
+    for (let i = 0; i < 3; i++) hits.push(fullPool[Math.floor(Math.random() * fullPool.length)]);
     for (const hex of hits) {
       const pos = Renderer.hexToPx(hex.q, hex.r);
+      const canHit = this.canAttackHex(hex.q, hex.r);
       setTimeout(() => {
         if (window.Sfx) { Sfx.play('cannon'); }
         if (typeof Renderer !== 'undefined') { Renderer.playExplosion(pos.x, pos.y); }
-        const units = this.getUnitsInHex(hex.q, hex.r);
-        units.forEach(u => { this.ui.log(`>> 爆撃命中`); this.applyDamage(u, 350, "爆撃"); });
+        if (canHit) {
+          const units = this.getUnitsInHex(hex.q, hex.r);
+          units.forEach(u => { this.ui.log(`>> 爆撃命中`); this.applyDamage(u, 350, "爆撃"); });
+        }
         this.updateSidebar();
         if (window.VFX) { VFX.addSmoke(pos.x, pos.y); }
       }, Math.random() * 800);
