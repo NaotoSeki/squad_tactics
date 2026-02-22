@@ -78,14 +78,30 @@ window.PhaserSidebar = class PhaserSidebar {
             this.unitContent.add(face);
         }
 
-        const radarCx = left + 98 + 50;
-        const radarCy = y + 50;
-        const radarR = 48;
+        const contentW = sw - 24;
+        const faceW = 96;
+        const radarAreaW = contentW - faceW;
+        const radarR = Math.min(90, Math.max(36, (radarAreaW / 2) - 14));
+        const radarCx = left + faceW + radarAreaW / 2;
+        const radarCy = y + 50 + (radarR > 48 ? (radarR - 48) / 2 : 0);
         const params = u.params || (u.def && u.def.params) || {};
         const paramKeys = (typeof PARAM_KEYS !== 'undefined') ? PARAM_KEYS : ['action', 'speed', 'str', 'morale', 'aim', 'throw', 'melee', 'recon'];
         const paramLabels = (typeof PARAM_LABELS !== 'undefined') ? PARAM_LABELS : paramKeys.map(k => k.slice(0, 3));
         const radarG = this.scene.add.graphics();
         radarG.setPosition(radarCx, radarCy);
+        if (radarR >= 44) {
+            const levels = radarR >= 58 ? [0.25, 0.5, 0.75] : [0.5];
+            levels.forEach(ratio => {
+                radarG.lineStyle(1, 0x444444, 0.4);
+                radarG.strokeCircle(0, 0, radarR * ratio);
+            });
+        }
+        if (radarR >= 82) {
+            for (let v = 2; v <= 10; v += 2) {
+                radarG.lineStyle(1, 0x555555, 0.35);
+                radarG.strokeCircle(0, 0, radarR * (v / 10));
+            }
+        }
         for (let i = 0; i < paramKeys.length; i++) {
             const angle = -Math.PI / 2 + (i / paramKeys.length) * 2 * Math.PI;
             const v = Math.max(0, Math.min(10, params[paramKeys[i]] != null ? params[paramKeys[i]] : 5));
@@ -109,16 +125,29 @@ window.PhaserSidebar = class PhaserSidebar {
         radarG.setDepth(0);
         this.unitContent.add(radarG);
         radarG.setPosition(radarCx, radarCy);
+        const labelOffset = 10 + (radarR > 56 ? 4 : 0);
+        const labelFontSize = radarR >= 70 ? '10px' : '9px';
         for (let i = 0; i < paramLabels.length; i++) {
             const angle = -Math.PI / 2 + (i / paramKeys.length) * 2 * Math.PI;
-            const tx = radarCx + Math.cos(angle) * (radarR + 10);
-            const ty = radarCy + Math.sin(angle) * (radarR + 10);
-            const labelText = this.scene.add.text(tx, ty, paramLabels[i] || '', { fontSize: '9px', color: '#888', fontFamily: 'sans-serif' }).setOrigin(0.5, 0.5);
+            const tx = radarCx + Math.cos(angle) * (radarR + labelOffset);
+            const ty = radarCy + Math.sin(angle) * (radarR + labelOffset);
+            const labelText = this.scene.add.text(tx, ty, paramLabels[i] || '', { fontSize: labelFontSize, color: '#888', fontFamily: 'sans-serif' }).setOrigin(0.5, 0.5);
             this.unitContent.add(labelText);
+        }
+        if (radarR >= 70) {
+            for (let i = 0; i < paramKeys.length; i++) {
+                const angle = -Math.PI / 2 + (i / paramKeys.length) * 2 * Math.PI;
+                const v = params[paramKeys[i]] != null ? params[paramKeys[i]] : 5;
+                const val = Math.max(0, Math.min(10, v));
+                const vx = radarCx + Math.cos(angle) * (radarR * (val / 10) * 0.7);
+                const vy = radarCy + Math.sin(angle) * (radarR * (val / 10) * 0.7);
+                const valText = this.scene.add.text(vx, vy, String(val), { fontSize: radarR >= 82 ? '10px' : '9px', color: '#ddaa44', fontFamily: 'sans-serif' }).setOrigin(0.5, 0.5);
+                this.unitContent.add(valText);
+            }
         }
 
         const textLeft = left;
-        const headerBottom = y + 100;
+        const headerBottom = y + Math.max(100, 50 + radarR + labelOffset + 12);
         const nameText = this.scene.add.text(textLeft, headerBottom, u.name, { fontSize: '14px', color: '#ffffff', fontFamily: 'sans-serif' });
         this.unitContent.add(nameText);
         const roleText = this.scene.add.text(textLeft, headerBottom + 20, (u.def && u.def.role) || '', { fontSize: '11px', color: '#ddaa44', fontFamily: 'monospace' });

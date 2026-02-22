@@ -18,11 +18,15 @@ class CampaignManager {
         window.addEventListener('load', () => this.initSetupScreen());
     }
 
-    /** 初期画面・カード用: canvas に能力値レーダーチャートを描画（8軸、ラベル付き） */
+    /** 初期画面・カード用: canvas に能力値レーダーチャートを描画（8軸、ラベル付き）。サイズは canvas に合わせる */
     drawRadarCanvas(canvas, params) {
         if (!canvas || !params || typeof PARAM_KEYS === 'undefined') return;
         const ctx = canvas.getContext('2d');
-        const cx = 50, cy = 50, r = 45;
+        const cw = canvas.width;
+        const ch = canvas.height;
+        const cx = cw / 2;
+        const cy = ch / 2;
+        const r = Math.min(cx, cy) - 12;
         const keys = PARAM_KEYS;
         const labels = (typeof PARAM_LABELS !== 'undefined') ? PARAM_LABELS : keys.map(k => k.slice(0, 3));
         const pts = [];
@@ -32,7 +36,7 @@ class CampaignManager {
             const rr = (v / 10) * r;
             pts.push({ x: cx + Math.cos(angle) * rr, y: cy + Math.sin(angle) * rr });
         }
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.clearRect(0, 0, cw, ch);
         for (let i = 0; i < keys.length; i++) {
             const angle = -Math.PI / 2 + (i / keys.length) * 2 * Math.PI;
             ctx.strokeStyle = 'rgba(100,100,100,0.5)';
@@ -51,8 +55,9 @@ class CampaignManager {
         ctx.strokeStyle = 'rgba(221,170,68,0.9)';
         ctx.lineWidth = 2;
         ctx.stroke();
+        const fontPx = Math.max(8, Math.min(12, Math.floor(r / 5)));
         ctx.fillStyle = '#aaa';
-        ctx.font = '9px sans-serif';
+        ctx.font = fontPx + 'px sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         for (let i = 0; i < keys.length; i++) {
@@ -117,10 +122,7 @@ class CampaignManager {
                     <img src="${faceUrl}" style="width:96px; height:96px; object-fit:cover;" onerror="this.style.display='none'">
                 </div>
                 <div class="card-radar-box" style="background:#0d0d0d; padding:4px 0; text-align:center;">
-                    <canvas class="unit-radar" width="100" height="100"></canvas>
-                </div>
-                <div class="card-body" style="font-size:10px; color:#aaa;">
-                    AP:${(t.params && t.params.action != null) ? t.params.action : t.ap}<br>${t.role}
+                    <canvas class="unit-radar" width="128" height="128"></canvas>
                 </div>
             `;
             const radarCanvas = d.querySelector('.unit-radar');
