@@ -18,6 +18,40 @@ class CampaignManager {
         window.addEventListener('load', () => this.initSetupScreen());
     }
 
+    /** 初期画面・カード用: canvas に能力値レーダーチャートを描画（8軸、中心50,50、半径45） */
+    drawRadarCanvas(canvas, params) {
+        if (!canvas || !params || typeof PARAM_KEYS === 'undefined') return;
+        const ctx = canvas.getContext('2d');
+        const cx = 50, cy = 50, r = 45;
+        const keys = PARAM_KEYS;
+        const pts = [];
+        for (let i = 0; i < keys.length; i++) {
+            const angle = -Math.PI / 2 + (i / keys.length) * 2 * Math.PI;
+            const v = Math.max(0, Math.min(10, params[keys[i]] != null ? params[keys[i]] : 5));
+            const rr = (v / 10) * r;
+            pts.push({ x: cx + Math.cos(angle) * rr, y: cy + Math.sin(angle) * rr });
+        }
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        for (let i = 0; i < keys.length; i++) {
+            const angle = -Math.PI / 2 + (i / keys.length) * 2 * Math.PI;
+            ctx.strokeStyle = 'rgba(100,100,100,0.5)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(cx, cy);
+            ctx.lineTo(cx + Math.cos(angle) * r, cy + Math.sin(angle) * r);
+            ctx.stroke();
+        }
+        ctx.fillStyle = 'rgba(221,170,68,0.25)';
+        ctx.beginPath();
+        ctx.moveTo(pts[0].x, pts[0].y);
+        for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
+        ctx.closePath();
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(221,170,68,0.9)';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+    }
+
     // --- SETUP SCREEN LOGIC ---
     initSetupScreen() {
         // ★修正: 起動直後はUIManagerがまだ存在しないため、直接DOMを操作してサイドバー一式を隠す
@@ -68,14 +102,18 @@ class CampaignManager {
                 <div style="background:#222; width:100%; text-align:center; padding:2px 0; border-bottom:1px solid #444; margin-bottom:5px;">
                     <h3 style="color:#d84; font-size:14px; margin:0;">${soldierName}</h3>
                 </div>
-                <div class="card-img-box" style="background:#111;">
-                    <img src="${faceUrl}" style="width:96px; height:96px; object-fit:cover;" onerror="this.style.display='none'">
+                <div class="card-img-box" style="background:#111; display:flex; align-items:flex-start; gap:4px; padding:4px;">
+                    <img src="${faceUrl}" style="width:96px; height:96px; object-fit:cover; flex-shrink:0;" onerror="this.style.display='none'">
+                    <canvas class="unit-radar" width="100" height="100" style="flex-shrink:0;"></canvas>
                 </div>
                 <div class="card-body" style="font-size:10px; color:#aaa;">
-                    AP:${t.ap}<br>${t.role}
+                    AP:${(t.params && t.params.action != null) ? t.params.action : t.ap}<br>${t.role}
                 </div>
             `;
-            
+            const radarCanvas = d.querySelector('.unit-radar');
+            if (radarCanvas && t.params && typeof PARAM_KEYS !== 'undefined') {
+                this.drawRadarCanvas(radarCanvas, t.params);
+            }
             d.onclick = () => { 
                 const slotIdx = this.setupSlots.findIndex(s => s.key === k);
                 if (slotIdx >= 0) { 
@@ -178,11 +216,18 @@ class CampaignManager {
         const isPlayer = (team === 'player'); 
         
         const stats = t.stats ? { ...t.stats } : { str:0, aim:0, mob:0, mor:0 };
-        if (isPlayer && !t.isTank) { 
+        if (isPlayer && !t.isTank) {
             ['str', 'aim', 'mob', 'mor'].forEach(k => {
                 stats[k] = (stats[k] || 0) + Math.floor(Math.random() * 3) - 1;
             });
         }
+        const baseParams = (t.params && typeof PARAM_KEYS !== 'undefined') ? { ...t.params } : { action:4, speed:4, str:5, morale:5, aim:5, throw:5, melee:5, recon:4 };
+        const params = {};
+        (typeof PARAM_KEYS !== 'undefined' ? PARAM_KEYS : Object.keys(baseParams)).forEach(k => {
+            let v = baseParams[k] != null ? baseParams[k] : 5;
+            if (isPlayer && !t.isTank) v = v + Math.floor(Math.random() * 3) - 1;
+            params[k] = Math.max(1, Math.min(10, v));
+        });
         
         let name = t.name; 
         let faceSeed = Math.floor(Math.random() * 99999);
@@ -203,7 +248,7 @@ class CampaignManager {
         }
 
         let baseHp = t.hp || 80;
-        let baseAp = t.ap || 4;
+        let baseAp = (t.ap != null ? t.ap : params.action);
         let skills = [];
         if (fusionData) {
             const count = Math.max(1, fusionCount || 1);
@@ -297,8 +342,9 @@ class CampaignManager {
         const hp = baseHp;
         const maxAp = baseAp;
         const unitFusionCount = (isPlayer && fusionCount >= 2) ? fusionCount : undefined;
-        return { 
-            id: Math.random(), team: team, q: 0, r: 0, def: t, name: name, rank: 0, faceSeed: faceSeed, portraitIndex: portraitIndex, stats: stats, hp: hp, maxHp: hp, ap: maxAp, maxAp: maxAp, hands: hands, bag: bag, stance: 'stand', skills: skills, sectorsSurvived: 0, deadProcessed: false, fusionCount: unitFusionCount 
+        return {
+            id: Math.random(), team: team, q: 0, r: 0, def: t, name: name, rank: 0, faceSeed: faceSeed, portraitIndex: portraitIndex,
+            stats: stats, params: params, hp: hp, maxHp: hp, ap: maxAp, maxAp: maxAp, hands: hands, bag: bag, stance: 'stand', skills: skills, sectorsSurvived: 0, deadProcessed: false, fusionCount: unitFusionCount
         };
     }
 

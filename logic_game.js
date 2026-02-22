@@ -254,7 +254,10 @@ window.BattleLogic = class BattleLogic {
     const overRange = Math.max(0, dist - (w.rng || 0));
     let hitChance = 0;
     if (!isAreaAttack && targetUnit) {
-      hitChance = (a.stats?.aim || 0) * 2 + w.acc - distPenalty - terrainCover;
+      const aimVal = (a.params && a.params.aim != null) ? a.params.aim : (a.stats?.aim || 0);
+      hitChance = aimVal * 2 + w.acc - distPenalty - terrainCover;
+      const moraleMod = (a.params && a.params.morale != null) ? (a.params.morale / 10) : 1;
+      hitChance = Math.round(hitChance * moraleMod);
       hitChance -= overRange * (w.overRangePenalty ?? 15);
       if (w.code === 'mg42') hitChance += 15;
       if (targetUnit.stance === 'prone') hitChance -= 20;
@@ -840,7 +843,12 @@ window.BattleLogic = class BattleLogic {
     if (dist > maxRange) return null;
     if (w.minRng && dist < w.minRng) return null;
     const terrainCover = this.map[targetHex.q][targetHex.r].cover;
-    let hit = (attacker.stats?.aim || 0) * 2 + (w.acc || 0) - (dist * (w.acc_drop || 5)) - terrainCover;
+    const aimVal = (attacker.params && attacker.params.aim != null) ? attacker.params.aim : (attacker.stats?.aim || 0);
+    const throwVal = (attacker.params && attacker.params.throw != null) ? attacker.params.throw : 5;
+    const baseAcc = (w.area && !targetUnit) ? throwVal * 2 : aimVal * 2;
+    let hit = baseAcc + (w.acc || 0) - (dist * (w.acc_drop || 5)) - terrainCover;
+    const moraleMod = (attacker.params && attacker.params.morale != null) ? (attacker.params.morale / 10) : 1;
+    hit = Math.round(hit * moraleMod);
     const overRange = Math.max(0, dist - (w.rng || 0));
     hit -= overRange * (w.overRangePenalty ?? 15);
     if (targetUnit) {
@@ -910,6 +918,7 @@ window.BattleLogic = class BattleLogic {
 
   calcReachableHexes(u) {
     this.reachableHexes = []; if (!u) return;
+    const maxCost = (u.params && u.params.speed != null) ? Math.max(1, Math.floor(u.ap * (u.params.speed / 5))) : u.ap;
     let frontier = [{ q: u.q, r: u.r, cost: 0 }], costSoFar = new Map(); costSoFar.set(`${u.q},${u.r}`, 0);
     while (frontier.length > 0) {
       let current = frontier.shift();
@@ -917,7 +926,7 @@ window.BattleLogic = class BattleLogic {
         if (this.getUnitsInHex(n.q, n.r).length >= 4) { return; }
         const cost = this.map[n.q][n.r].cost; if (cost >= 99) { return; }
         const nc = costSoFar.get(`${current.q},${current.r}`) + cost;
-        if (nc <= u.ap) {
+        if (nc <= maxCost) {
           const key = `${n.q},${n.r}`;
           if (!costSoFar.has(key) || nc < costSoFar.get(key)) { costSoFar.set(key, nc); frontier.push({ q: n.q, r: n.r }); this.reachableHexes.push({ q: n.q, r: n.r }); }
         }
@@ -1137,8 +1146,8 @@ window.BattleLogic = class BattleLogic {
     this.ui.log(`${a.name} 白兵攻撃`);
     if (typeof Renderer !== 'undefined' && Renderer.playAttackAnim) { Renderer.playAttackAnim(a, d); }
     await new Promise(r => setTimeout(r, 300));
-    let strVal = (a.stats && a.stats.str) ? a.stats.str : 0;
-    let totalDmg = 10 + (strVal * 3) + bonusDmg;
+    const meleeVal = (a.params && a.params.melee != null) ? a.params.melee : ((a.stats && a.stats.str) ? a.stats.str : 0);
+    let totalDmg = 10 + (meleeVal * 3) + bonusDmg;
     if (d.skills && d.skills.includes('CQC')) { this.ui.log(`>> カウンター！`); this.applyDamage(a, 15, "カウンター"); }
     if (window.Sfx) Sfx.play('hit');
     this.applyDamage(d, totalDmg, "白兵");

@@ -78,20 +78,52 @@ window.PhaserSidebar = class PhaserSidebar {
             this.unitContent.add(face);
         }
 
-        const textLeft = left + 104;
-        const nameText = this.scene.add.text(textLeft, y + 4, u.name, { fontSize: '14px', color: '#ffffff', fontFamily: 'sans-serif' });
+        const radarCx = left + 98 + 50;
+        const radarCy = y + 50;
+        const radarR = 48;
+        const params = u.params || (u.def && u.def.params) || {};
+        const paramKeys = (typeof PARAM_KEYS !== 'undefined') ? PARAM_KEYS : ['action', 'speed', 'str', 'morale', 'aim', 'throw', 'melee', 'recon'];
+        const radarG = this.scene.add.graphics();
+        radarG.setPosition(radarCx, radarCy);
+        for (let i = 0; i < paramKeys.length; i++) {
+            const angle = -Math.PI / 2 + (i / paramKeys.length) * 2 * Math.PI;
+            const v = Math.max(0, Math.min(10, params[paramKeys[i]] != null ? params[paramKeys[i]] : 5));
+            const r = (v / 10) * radarR;
+            const px = Math.cos(angle) * r;
+            const py = Math.sin(angle) * r;
+            if (i === 0) radarG.beginPath(); else radarG.lineTo(px, py);
+            if (i === 0) radarG.moveTo(px, py);
+        }
+        radarG.closePath();
+        radarG.fillStyle(0xddaa44, 0.25);
+        radarG.fillPath();
+        radarG.lineStyle(2, 0xddaa44, 0.9);
+        radarG.strokePath();
+        for (let i = 0; i < paramKeys.length; i++) {
+            const angle = -Math.PI / 2 + (i / paramKeys.length) * 2 * Math.PI;
+            radarG.lineStyle(1, 0x666666, 0.5);
+            radarG.beginPath(); radarG.moveTo(0, 0); radarG.lineTo(Math.cos(angle) * radarR, Math.sin(angle) * radarR); radarG.strokePath();
+        }
+        radarG.setPosition(0, 0);
+        radarG.setDepth(0);
+        this.unitContent.add(radarG);
+        radarG.setPosition(radarCx, radarCy);
+
+        const textLeft = left;
+        const headerBottom = y + 100;
+        const nameText = this.scene.add.text(textLeft, headerBottom, u.name, { fontSize: '14px', color: '#ffffff', fontFamily: 'sans-serif' });
         this.unitContent.add(nameText);
-        const roleText = this.scene.add.text(textLeft, y + 24, (u.def && u.def.role) || '', { fontSize: '11px', color: '#ddaa44', fontFamily: 'monospace' });
+        const roleText = this.scene.add.text(textLeft, headerBottom + 20, (u.def && u.def.role) || '', { fontSize: '11px', color: '#ddaa44', fontFamily: 'monospace' });
         this.unitContent.add(roleText);
 
         const skills = (u.skills && Array.isArray(u.skills)) ? [...new Set(u.skills)] : [];
         if (skills.length > 0 && typeof SKILLS !== 'undefined') {
             const skillLines = skills.map(sk => SKILLS[sk] ? `${SKILLS[sk].name}: ${SKILLS[sk].desc}` : sk).join('  |  ');
-            const skillText = this.scene.add.text(textLeft, y + 42, skillLines, { fontSize: '9px', color: TEXT_DIM, fontFamily: 'sans-serif', wordWrap: { width: sw - 120 } });
+            const skillText = this.scene.add.text(textLeft, headerBottom + 38, skillLines, { fontSize: '9px', color: TEXT_DIM, fontFamily: 'sans-serif', wordWrap: { width: sw - 24 } });
             this.unitContent.add(skillText);
-            y += 60;
+            y = headerBottom + 56;
         } else {
-            y += 42;
+            y = headerBottom + 38;
         }
         y += 10;
 
