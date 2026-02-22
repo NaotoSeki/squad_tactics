@@ -18,6 +18,20 @@ class CampaignManager {
         window.addEventListener('load', () => this.initSetupScreen());
     }
 
+    /** 初期画面用: テンプレートから createSoldier と同じ ±1 ばらつきでプレビュー用 params を生成（毎回新シード）。 */
+    getPreviewParams(t) {
+        if (!t || !t.params || typeof PARAM_KEYS === 'undefined') return t.params || {};
+        const baseParams = { ...t.params };
+        const params = {};
+        const isInfantry = !t.isTank;
+        PARAM_KEYS.forEach(k => {
+            let v = baseParams[k] != null ? baseParams[k] : 5;
+            if (isInfantry) v = v + Math.floor(Math.random() * 3) - 1;
+            params[k] = Math.max(1, Math.min(10, v));
+        });
+        return params;
+    }
+
     /** 初期画面・カード用: canvas に能力値レーダーチャートを描画。getRadarPoints（data.js）で座標共通化。 */
     drawRadarCanvas(canvas, params) {
         if (!canvas || !params || typeof PARAM_KEYS === 'undefined' || typeof getRadarPoints !== 'function') return;
@@ -118,7 +132,8 @@ class CampaignManager {
             `;
             const radarCanvas = d.querySelector('.unit-radar');
             if (radarCanvas && t.params && typeof PARAM_KEYS !== 'undefined') {
-                this.drawRadarCanvas(radarCanvas, t.params);
+                const previewParams = this.getPreviewParams(t);
+                this.drawRadarCanvas(radarCanvas, previewParams);
             }
             d.onclick = () => { 
                 const slotIdx = this.setupSlots.findIndex(s => s.key === k);
