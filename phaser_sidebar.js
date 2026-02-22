@@ -72,18 +72,18 @@ window.PhaserSidebar = class PhaserSidebar {
                 this.scene.textures.addBase64(faceKey, dataUrl);
             } catch (e) { /* ignore */ }
         }
+        const contentW = sw - 24;
+        const faceSize = Math.min(120, Math.max(72, Math.floor(contentW * 0.38)));
         if (this.scene.textures.exists(faceKey)) {
-            const face = this.scene.add.image(left, y, faceKey).setDisplaySize(96, 96);
+            const face = this.scene.add.image(left, y, faceKey).setDisplaySize(faceSize, faceSize);
             face.setOrigin(0, 0);
             this.unitContent.add(face);
         }
 
-        const contentW = sw - 24;
-        const faceW = 96;
-        const radarAreaW = contentW - faceW;
-        const radarR = Math.min(90, Math.max(36, (radarAreaW / 2) - 14));
-        const radarCx = left + faceW + radarAreaW / 2;
-        const radarCy = y + 62 + (radarR > 48 ? (radarR - 48) / 2 : 0);
+        const radarAreaW = contentW - faceSize - 8;
+        const radarR = Math.min(130, Math.max(36, (radarAreaW / 2) - 12));
+        const radarCx = left + faceSize + 4 + radarAreaW / 2;
+        const radarCy = y + 88 + (radarR > 48 ? (radarR - 48) * 0.5 : 0);
         const params = u.params || (u.def && u.def.params) || {};
         const paramKeys = (typeof PARAM_KEYS !== 'undefined') ? PARAM_KEYS : ['action', 'speed', 'str', 'morale', 'aim', 'throw', 'melee', 'recon'];
         const paramLabels = (typeof PARAM_LABELS !== 'undefined') ? PARAM_LABELS : paramKeys.map(k => k.slice(0, 3));
@@ -147,7 +147,7 @@ window.PhaserSidebar = class PhaserSidebar {
         }
 
         const textLeft = left;
-        const headerBottom = y + Math.max(100, 62 + radarR + labelOffset + 12);
+        const headerBottom = y + Math.max(faceSize + 16, radarCy - y + radarR + labelOffset + 16);
         const nameText = this.scene.add.text(textLeft, headerBottom, u.name, { fontSize: '14px', color: '#ffffff', fontFamily: 'sans-serif' });
         this.unitContent.add(nameText);
         const roleText = this.scene.add.text(textLeft, headerBottom + 20, (u.def && u.def.role) || '', { fontSize: '11px', color: '#ddaa44', fontFamily: 'monospace' });
