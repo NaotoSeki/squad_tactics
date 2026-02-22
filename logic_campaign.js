@@ -106,17 +106,19 @@ class CampaignManager {
             const portraitIndex = Math.floor(Math.random() * maxPortrait);
             const firstName = FIRST_NAMES[Math.floor(Math.random() * FIRST_NAMES.length)];
             const lastName = LAST_NAMES[Math.floor(Math.random() * LAST_NAMES.length)];
-            const soldierName = `${lastName} ${firstName}`;
+            const soldierName = `${firstName} ${lastName}`;
             d.dataset.portraitIndex = String(portraitIndex);
             d.dataset.soldierName = soldierName;
             d.dataset.key = k;
             const portraitNum = String(portraitIndex + 1).padStart(3, '0');
             const faceUrl = 'asset/portraits/inf_us_' + portraitNum + '.jpg';
             
+            const mainWeaponName = (t.main && typeof WPNS !== 'undefined' && WPNS[t.main]) ? WPNS[t.main].name : (t.loadout ? 'M2 Mortar' : '—');
             d.innerHTML = `
                 <div class="card-badge" style="display:none;">✔</div>
                 <div style="background:#222; width:100%; text-align:center; padding:2px 0; border-bottom:1px solid #444; margin-bottom:5px;">
                     <h3 style="color:#d84; font-size:14px; margin:0;">${soldierName}</h3>
+                    <div style="font-size:10px; color:#888; margin-top:2px;">${mainWeaponName}</div>
                 </div>
                 <div class="card-img-box" style="background:#111; text-align:center;">
                     <img src="${faceUrl}" style="width:96px; height:96px; object-fit:cover;" onerror="this.style.display='none'">
@@ -253,7 +255,7 @@ class CampaignManager {
             } else {
                 const first = FIRST_NAMES[Math.floor(Math.random() * FIRST_NAMES.length)]; 
                 const last = LAST_NAMES[Math.floor(Math.random() * LAST_NAMES.length)]; 
-                name = `${last} ${first}`; 
+                name = `${first} ${last}`; 
             }
             if (overridePortraitIndex !== undefined) {
                 portraitIndex = overridePortraitIndex;

@@ -83,7 +83,7 @@ window.PhaserSidebar = class PhaserSidebar {
         const radarAreaW = contentW - faceW;
         const radarR = Math.min(90, Math.max(36, (radarAreaW / 2) - 14));
         const radarCx = left + faceW + radarAreaW / 2;
-        const radarCy = y + 50 + (radarR > 48 ? (radarR - 48) / 2 : 0);
+        const radarCy = y + 62 + (radarR > 48 ? (radarR - 48) / 2 : 0);
         const params = u.params || (u.def && u.def.params) || {};
         const paramKeys = (typeof PARAM_KEYS !== 'undefined') ? PARAM_KEYS : ['action', 'speed', 'str', 'morale', 'aim', 'throw', 'melee', 'recon'];
         const paramLabels = (typeof PARAM_LABELS !== 'undefined') ? PARAM_LABELS : paramKeys.map(k => k.slice(0, 3));
@@ -147,7 +147,7 @@ window.PhaserSidebar = class PhaserSidebar {
         }
 
         const textLeft = left;
-        const headerBottom = y + Math.max(100, 50 + radarR + labelOffset + 12);
+        const headerBottom = y + Math.max(100, 62 + radarR + labelOffset + 12);
         const nameText = this.scene.add.text(textLeft, headerBottom, u.name, { fontSize: '14px', color: '#ffffff', fontFamily: 'sans-serif' });
         this.unitContent.add(nameText);
         const roleText = this.scene.add.text(textLeft, headerBottom + 20, (u.def && u.def.role) || '', { fontSize: '11px', color: '#ddaa44', fontFamily: 'monospace' });

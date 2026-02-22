@@ -173,7 +173,9 @@ window.BattleLogic = class BattleLogic {
   // --- COMBAT LOGIC ---
   async actionAttack(a, d) {
     if (!a) return;
-    const targetUnitForWeapon = (d.hp !== undefined) ? d : (this.getUnitInHex(d.q, d.r));
+    const primary = this.getVirtualWeapon(a);
+    const isM8AreaClick = (d.hp === undefined) && primary && primary.code === 'm8_rocket';
+    const targetUnitForWeapon = (d.hp !== undefined) ? d : (isM8AreaClick ? null : this.getUnitInHex(d.q, d.r));
 
     const game = this;
     let w = this.getAttackWeapon ? this.getAttackWeapon(a, targetUnitForWeapon) : null;
@@ -229,6 +231,10 @@ window.BattleLogic = class BattleLogic {
       this.state = 'PLAY';
       this.checkPhaseEnd();
       if (this.ui && this.ui.updateSidebar) this.ui.updateSidebar();
+      if (this.interactionMode === 'ATTACK' && this.selectedUnit === a && !this.canFireAgain(a)) {
+        this.setMode('SELECT');
+        this.attackLine = [];
+      }
       return;
     }
 
@@ -487,6 +493,10 @@ window.BattleLogic = class BattleLogic {
         game.isExecutingAttack = false;
         game.state = 'PLAY';
         game.checkPhaseEnd();
+        if (game.interactionMode === 'ATTACK' && game.selectedUnit === a && !game.canFireAgain(a)) {
+          game.setMode('SELECT');
+          game.attackLine = [];
+        }
         resolve();
       }, 500);
     });
@@ -635,6 +645,28 @@ window.BattleLogic = class BattleLogic {
     return main;
   }
 
+  /** ATTACKモード継続可否。AP・残弾を判定し、もう一発撃てないなら false */
+  canFireAgain(u) {
+    const w = this.getVirtualWeapon(u);
+    if (!w || w.isBroken) return false;
+    if (u.ap < (w.ap || 1)) return false;
+    if (w.code === 'm2_mortar') {
+      let total = 0;
+      (u.bag || []).forEach(i => { if (i && i.code === 'mortar_shell_box') total += (i.current || 0); });
+      return total > 0;
+    }
+    if (w.code === 'mg42' && w.reserve !== undefined) return w.reserve > 0;
+    if (w.code === 'm8_rocket') {
+      const slot = u.hands && u.hands[0];
+      return slot && slot.code === 'm8_rocket' && (slot.current || 0) > 0;
+    }
+    if (u.def?.isTank && w.type && w.type.includes('shell')) {
+      return (w.reserve !== undefined && w.reserve > 0) || (w.current !== undefined && w.current > 0);
+    }
+    if (w.isConsumable) return (w.current || 0) > 0;
+    return (w.current || 0) > 0;
+  }
+
   // --- HELPER METHODS ---
 
   /**
@@ -734,6 +766,7 @@ window.BattleLogic = class BattleLogic {
       if(indicator) indicator.style.display = 'none';
       this.path = [];
       this.attackLine = [];
+      this.reachableHexes = [];
       // ATTACK以外のモードに移行したら弾数指定はクリアしておく
       this.attackBurstOverride = null;
     } else {
