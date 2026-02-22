@@ -6,6 +6,7 @@ function createCardIcon(type) {
     const c = document.createElement('canvas'); c.width = 1; c.height = 1; return c.toDataURL();
 }
 
+
 class CampaignManager {
     constructor() {
         this.sector = 1;
@@ -13,6 +14,7 @@ class CampaignManager {
         this.setupSlots = [];
         this.isAutoMode = false;
         this.carriedCards = [];
+        this.nextPortraitIndex = 0;
         window.addEventListener('load', () => this.initSetupScreen());
     }
 
@@ -37,25 +39,37 @@ class CampaignManager {
         box.innerHTML = '';
         this.setupSlots = [];
 
-        // デッキ生成
-        ['rifleman', 'scout', 'gunner', 'mortar_gunner'].forEach(k => {
+        const btnStart = document.getElementById('btn-start');
+        if (btnStart) {
+            btnStart.style.display = 'inline-block';
+            btnStart.disabled = true;
+            btnStart.style.background = '#555';
+            btnStart.style.color = '#888';
+            btnStart.style.cursor = 'not-allowed';
+            btnStart.style.opacity = '0.8';
+        }
+
+        const maxPortrait = typeof PORTRAIT_AVAILABLE !== 'undefined' ? PORTRAIT_AVAILABLE : 7;
+        ['rifleman', 'scout', 'gunner', 'mortar_gunner'].forEach((k) => {
             const t = UNIT_TEMPLATES[k]; 
             const d = document.createElement('div'); d.className = 'card';
-            
-            let faceUrl = "";
-            try {
-                if (window.Renderer && typeof window.Renderer.generateFaceIcon === 'function') {
-                    faceUrl = window.Renderer.generateFaceIcon(Math.floor(Math.random() * 99999));
-                }
-            } catch(e) { console.warn("Renderer not ready"); }
+            const portraitIndex = Math.floor(Math.random() * maxPortrait);
+            const firstName = FIRST_NAMES[Math.floor(Math.random() * FIRST_NAMES.length)];
+            const lastName = LAST_NAMES[Math.floor(Math.random() * LAST_NAMES.length)];
+            const soldierName = `${lastName} ${firstName}`;
+            d.dataset.portraitIndex = String(portraitIndex);
+            d.dataset.soldierName = soldierName;
+            d.dataset.key = k;
+            const portraitNum = String(portraitIndex + 1).padStart(3, '0');
+            const faceUrl = 'asset/portraits/inf_us_' + portraitNum + '.jpg';
             
             d.innerHTML = `
                 <div class="card-badge" style="display:none;">✔</div>
                 <div style="background:#222; width:100%; text-align:center; padding:2px 0; border-bottom:1px solid #444; margin-bottom:5px;">
-                    <h3 style="color:#d84; font-size:14px; margin:0;">${t.name}</h3>
+                    <h3 style="color:#d84; font-size:14px; margin:0;">${soldierName}</h3>
                 </div>
                 <div class="card-img-box" style="background:#111;">
-                    <img src="${faceUrl}" style="width:64px; height:64px; object-fit:cover;" onerror="this.style.display='none'">
+                    <img src="${faceUrl}" style="width:96px; height:96px; object-fit:cover;" onerror="this.style.display='none'">
                 </div>
                 <div class="card-body" style="font-size:10px; color:#aaa;">
                     AP:${t.ap}<br>${t.role}
@@ -63,22 +77,36 @@ class CampaignManager {
             `;
             
             d.onclick = () => { 
-                const idx = this.setupSlots.indexOf(k);
-                if (idx >= 0) { 
-                    this.setupSlots.splice(idx, 1); 
+                const slotIdx = this.setupSlots.findIndex(s => s.key === k);
+                if (slotIdx >= 0) { 
+                    this.setupSlots.splice(slotIdx, 1); 
                     d.classList.remove('selected'); 
                     d.querySelector('.card-badge').style.display = 'none'; 
                     d.style.borderColor = "#555"; 
                 } else { 
                     if (this.setupSlots.length < 3) { 
-                        this.setupSlots.push(k); 
+                        this.setupSlots.push({ key: k, portraitIndex, name: soldierName }); 
                         d.classList.add('selected'); 
                         d.querySelector('.card-badge').style.display = 'flex'; 
                         d.style.borderColor = "#d84"; 
                     } 
                 }
                 const btn = document.getElementById('btn-start'); 
-                if (btn) btn.style.display = (this.setupSlots.length === 3) ? 'inline-block' : 'none';
+                if (btn) {
+                    if (this.setupSlots.length === 3) {
+                        btn.disabled = false;
+                        btn.style.background = '#d84';
+                        btn.style.color = '#000';
+                        btn.style.cursor = 'pointer';
+                        btn.style.opacity = '1';
+                    } else {
+                        btn.disabled = true;
+                        btn.style.background = '#555';
+                        btn.style.color = '#888';
+                        btn.style.cursor = 'not-allowed';
+                        btn.style.opacity = '0.8';
+                    }
+                }
             };
             box.appendChild(d);
         });
@@ -119,10 +147,10 @@ class CampaignManager {
             // 位置リセット
             deployUnits.forEach(u => { u.q = -999; u.r = -999; });
         } 
-        // 2. 初回プレイならスロットから生成
+        // 2. 初回プレイならスロットから生成（選んだカードの顔・名前をそのまま兵士インスタンスに）
         else {
-            this.setupSlots.forEach(k => {
-                const u = this.createSoldier(k, 'player');
+            this.setupSlots.forEach(slot => {
+                const u = this.createSoldier(slot.key, 'player', null, slot.portraitIndex, slot.name);
                 if (u) deployUnits.push(u);
             });
         }
@@ -137,8 +165,13 @@ class CampaignManager {
         }
     }
 
+    /** デッキから増援カード追加時に呼ぶ。ランダムなポートレート番号を返す（存在する画像のみで 404 防止）。 */
+    getRandomPortraitIndex() {
+        return Math.floor(Math.random() * (typeof PORTRAIT_AVAILABLE !== 'undefined' ? PORTRAIT_AVAILABLE : 7));
+    }
+
     // --- UNIT FACTORY ---
-    createSoldier(templateKey, team, fusionData) {
+    createSoldier(templateKey, team, fusionData, overridePortraitIndex, overrideName, fusionCount) {
         const t = UNIT_TEMPLATES[templateKey]; 
         if (!t) { console.error("Template not found:", templateKey); return null; }
         
@@ -153,18 +186,32 @@ class CampaignManager {
         
         let name = t.name; 
         let faceSeed = Math.floor(Math.random() * 99999);
+        let portraitIndex = undefined;
         if (isPlayer && !t.isTank) { 
-            const first = FIRST_NAMES[Math.floor(Math.random() * FIRST_NAMES.length)]; 
-            const last = LAST_NAMES[Math.floor(Math.random() * LAST_NAMES.length)]; 
-            name = `${last} ${first}`; 
+            if (overrideName) {
+                name = overrideName;
+            } else {
+                const first = FIRST_NAMES[Math.floor(Math.random() * FIRST_NAMES.length)]; 
+                const last = LAST_NAMES[Math.floor(Math.random() * LAST_NAMES.length)]; 
+                name = `${last} ${first}`; 
+            }
+            if (overridePortraitIndex !== undefined) {
+                portraitIndex = overridePortraitIndex;
+            } else {
+                portraitIndex = this.getRandomPortraitIndex();
+            }
         }
 
         let baseHp = t.hp || 80;
         let baseAp = t.ap || 4;
         let skills = [];
         if (fusionData) {
-            if (fusionData.hpBoost) baseHp = Math.floor(baseHp * (1 + fusionData.hpBoost));
-            if (fusionData.apBonus) baseAp = baseAp + fusionData.apBonus;
+            const count = Math.max(1, fusionCount || 1);
+            const scale = Math.pow(2, count - 1);
+            const hpBoost = (fusionData.hpBoost || 0) * scale;
+            const apBonus = (fusionData.apBonus || 0) * scale;
+            if (hpBoost) baseHp = Math.floor(baseHp * (1 + hpBoost));
+            if (apBonus) baseAp = baseAp + Math.floor(apBonus);
             if (Array.isArray(fusionData.skills)) skills = [...fusionData.skills];
         }
         const isFusedTank = !!(t.isTank && fusionData);
@@ -228,10 +275,30 @@ class CampaignManager {
             bag = []; 
         }
 
+        if (isPlayer && !t.isTank && fusionCount >= 2 && Math.random() < 0.45) {
+            const allWeapons = [...hands, ...bag].filter(it => it && (it.dmg || it.dmg === 0));
+            if (allWeapons.length > 0) {
+                const pick = allWeapons[Math.floor(Math.random() * allWeapons.length)];
+                pick.isRainbow = true;
+                pick.rainbowDmgBonus = 6 + Math.floor(Math.random() * 18);
+            }
+        }
+
+        if (isPlayer && t.isTank && fusionCount >= 2 && typeof WPNS !== 'undefined' && WPNS.m8_rocket) {
+            const giveM8 = (window.__debugM8AllFusionTanks === true) || (Math.random() < 0.4);
+            if (giveM8) {
+                const m8 = { ...WPNS.m8_rocket, code: 'm8_rocket', id: Math.random(), isRainbow: true, current: 60, cap: 60 };
+                if (!bag) bag = [];
+                if (hands[0]) bag.push(hands[0]);
+                hands[0] = m8;
+            }
+        }
+
         const hp = baseHp;
         const maxAp = baseAp;
+        const unitFusionCount = (isPlayer && fusionCount >= 2) ? fusionCount : undefined;
         return { 
-            id: Math.random(), team: team, q: 0, r: 0, def: t, name: name, rank: 0, faceSeed: faceSeed, stats: stats, hp: hp, maxHp: hp, ap: maxAp, maxAp: maxAp, hands: hands, bag: bag, stance: 'stand', skills: skills, sectorsSurvived: 0, deadProcessed: false 
+            id: Math.random(), team: team, q: 0, r: 0, def: t, name: name, rank: 0, faceSeed: faceSeed, portraitIndex: portraitIndex, stats: stats, hp: hp, maxHp: hp, ap: maxAp, maxAp: maxAp, hands: hands, bag: bag, stance: 'stand', skills: skills, sectorsSurvived: 0, deadProcessed: false, fusionCount: unitFusionCount 
         };
     }
 
@@ -288,18 +355,63 @@ class CampaignManager {
         }); 
     }
 
-    resupplySurvivors() { 
-        this.survivingUnits.forEach(u => { 
-            if (u.hp < u.maxHp) u.hp = Math.floor(u.maxHp * 0.8); 
-            const parts = u.hands.map(i => i ? i.code : null);
-            const isMortar = parts.includes('mortar_barrel') && parts.includes('mortar_bipod') && parts.includes('mortar_plate');
-            if (isMortar) { u.bag.forEach(i => { if (i && i.code === 'mortar_shell_box') i.current = i.cap; }); } 
-            else if (u.hands[0] && u.hands[0].type && u.hands[0].type.includes('bullet')) { u.hands[0].current = u.hands[0].cap; } 
-            else if (u.def.isTank && u.hands) {
-                u.hands.forEach(h => { if (h && h.code === 'mg42' && h.reserve !== undefined) h.reserve = 300; });
-                if (u.hands[0] && u.hands[0].reserve !== undefined && u.hands[0].code !== 'mg42') u.hands[0].reserve = 12;
-            } 
-        }); 
+    resupplySurvivors() {
+        const BAG_SLOTS = 4;
+        this.survivingUnits.forEach(u => {
+            if (u.hp < u.maxHp) u.hp = Math.floor(u.maxHp * 0.8);
+
+            if (!u.hands) u.hands = [null, null, null];
+            if (!u.bag) u.bag = [];
+            while (u.bag.length < BAG_SLOTS) u.bag.push(null);
+
+            const w = (code) => (typeof WPNS !== 'undefined' && WPNS[code]) ? WPNS[code] : null;
+
+            u.hands.forEach(h => {
+                if (!h) return;
+                if (h.current !== undefined && h.cap !== undefined) h.current = h.cap;
+                if (h.reserve !== undefined) {
+                    if (h.code === 'mg42') h.reserve = 300;
+                    else h.reserve = 12;
+                }
+                if (h.code === 'm8_rocket') { h.current = 60; h.cap = 60; }
+            });
+
+            u.bag.forEach((item) => {
+                if (!item) return;
+                if (item.current !== undefined && item.cap !== undefined) item.current = item.cap;
+                if (item.reserve !== undefined && item.code !== 'mg42') item.reserve = 12;
+                if (item.code === 'm8_rocket') { item.current = 60; item.cap = 60; }
+            });
+
+            const mainWeapon = u.hands[0];
+            const mainCode = mainWeapon ? mainWeapon.code : (u.def && u.def.main) ? u.def.main : null;
+            const mainBase = mainCode ? w(mainCode) : null;
+            const optCode = (u.def && u.def.opt) ? u.def.opt : null;
+            const nadeBase = optCode === 'nade' ? w('nade') : null;
+
+            const emptySlots = [];
+            u.bag.forEach((item, i) => { if (!item) emptySlots.push(i); });
+
+            let slotIdx = 0;
+            if (mainBase && mainBase.type === 'bullet' && !u.def.isTank && mainBase.mag) {
+                const need = Math.min(emptySlots.length, mainBase.mag);
+                for (let k = 0; k < need && slotIdx < emptySlots.length; k++, slotIdx++) {
+                    u.bag[emptySlots[slotIdx]] = {
+                        type: 'ammo', name: (mainBase.magName || 'Clip'), ammoFor: mainCode,
+                        cap: mainBase.cap, code: 'mag', jam: mainBase.jam
+                    };
+                }
+            }
+            if (nadeBase && slotIdx < emptySlots.length) {
+                const need = Math.min(emptySlots.length - slotIdx, nadeBase.mag || 2);
+                for (let k = 0; k < need; k++, slotIdx++) {
+                    u.bag[emptySlots[slotIdx]] = {
+                        ...nadeBase, code: 'nade', id: Math.random(),
+                        current: 1, cap: 1, isConsumable: true
+                    };
+                }
+            }
+        });
     }
 }
 

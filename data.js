@@ -4,6 +4,11 @@ const HEX_SIZE = 54;
 const MAP_W = 20;
 const MAP_H = 20;
 
+/** 自軍ポートレート最大枚数（asset/portraits/inf_us_001.jpg 〜 inf_us_NNN.jpg）。画像を追加するときはこの数までファイルを置けばよい。 */
+const PORTRAIT_MAX = 99;
+/** 実際に存在するポートレート画像枚数（この範囲でランダム・preload するため 404 を防ぐ）。 */
+const PORTRAIT_AVAILABLE = 7;
+
 const ATTR = {
     MILITARY: 'Military forces', 
     SUPPORT: 'Fire support',     
@@ -58,6 +63,7 @@ const WPNS = {
     luger: { name:"Luger P08", rng:3, acc:75, acc_drop:10, dmg:25, cap:8, mag:2, ap:2, rld:1, wgt:1, type:'bullet', burst:1, overRangePenalty:25, desc:"将校の拳銃。", weight: 1.9, attr: ATTR.WEAPON },
     knife: { name:"Combat Knife", rng:1, acc:90, dmg:35, cap:0, mag:0, ap:1, rld:0, wgt:0, type:'melee', burst:1, desc:"白兵戦用。", weight: 1, attr: ATTR.WEAPON },
     nade: { name:"Mk2 Grenade", rng:4, acc:60, dmg:80, cap:1, mag:2, ap:2, rld:0, wgt:1, type:'shell', area:true, desc:"破片手榴弾。", weight: 1.3, attr: ATTR.WEAPON },
+    m8_rocket: { name:"M8 Rocket", rng:12, acc:50, dmg:45, cap:60, current:60, mag:60, ap:3, rld:0, wgt:0, type:'rocket', area:true, areaHexes:7, desc:"カリオペ風ロケット斉射。", weight: 0, attr: ATTR.WEAPON },
     
     mg42: { name:"MG42", rng:8, acc:45, acc_drop:4, dmg:25, cap:50, mag:99, ap:2, rld:3, wgt:12, type:'bullet', burst:15, overRangePenalty:15, desc:"機関銃。", weight: 25, attr: ATTR.WEAPON },
     kwk: { name:"75mm KwK", rng:8, acc:70, acc_drop:2, dmg:150, cap:1, mag:99, ap:3, rld:0, wgt:0, type:'shell_fast', burst:1, overRangePenalty:4, desc:"戦車砲。", weight: 0, attr: ATTR.WEAPON },

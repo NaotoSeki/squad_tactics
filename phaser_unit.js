@@ -45,6 +45,7 @@ class UnitView {
             if (v.hpBar) v.hpBar.destroy();
             if (v.infoContainer) v.infoContainer.destroy();
             if (v.skillContainer) v.skillContainer.destroy();
+            if (v.fusionGlowFx && v.sprite) { try { v.sprite.postFX.remove(v.fusionGlowFx); } catch(e){} }
         });
         this.visuals.clear();
     }
@@ -99,6 +100,10 @@ class UnitView {
                     const isSelected = (window.gameLogic.selectedUnit === u);
                     if (isSelected) {
                         if (this.unitLayer.exists(visual.container)) { this.unitLayer.remove(visual.container); this.hpLayer.add(visual.container); }
+                        if (visual.fusionGlowFx && visual.sprite) {
+                            visual.sprite.postFX.remove(visual.fusionGlowFx);
+                            visual.fusionGlowFx = null;
+                        }
                         if (!visual.glowFx && visual.sprite) {
                             visual.glowFx = visual.sprite.postFX.addGlow(0xffff00, 2, 0, false, 0.1, 12);
                         }
@@ -107,6 +112,14 @@ class UnitView {
                         if (visual.glowFx && visual.sprite) {
                             visual.sprite.postFX.remove(visual.glowFx);
                             visual.glowFx = null;
+                        }
+                        if (u.fusionCount >= 2 && visual.sprite) {
+                            if (!visual.fusionGlowFx) {
+                                visual.fusionGlowFx = visual.sprite.postFX.addGlow(0xffddaa, 1.4, 0, false, 0.06, 10);
+                            }
+                        } else if (visual.fusionGlowFx && visual.sprite) {
+                            visual.sprite.postFX.remove(visual.fusionGlowFx);
+                            visual.fusionGlowFx = null;
                         }
                     }
                 } catch(err) {
@@ -175,7 +188,7 @@ class UnitView {
         this.hpLayer.add(hpBar);
         this.hpLayer.add(infoContainer);
 
-        const visual = { container, sprite, hpBg, hpBar, infoContainer, glowFx: null };
+        const visual = { container, sprite, hpBg, hpBar, infoContainer, glowFx: null, fusionGlowFx: null };
         this.visuals.set(u.id, visual);
         
         if(typeof Renderer !== 'undefined') {
@@ -266,8 +279,8 @@ class UnitView {
             if (typeof SKILL_STYLES !== 'undefined' && skillsArr.length > 0) {
                 const scaleFactor = 0.24;
                 const iconSize = 8;
-                const barBottomY = -43;
-                const yOffset = barBottomY + 4;
+                const skillY = barY + 2 + 3;
+                const yOffset = 0;
                 const spacing = 10;
                 let iconX = -((skillsArr.length - 1) * spacing) / 2;
 
@@ -275,7 +288,7 @@ class UnitView {
                     visual.skillContainer = this.scene.add.container(0, 0);
                     this.hpLayer.add(visual.skillContainer);
                 }
-                visual.skillContainer.setPosition(visual.container.x, visual.container.y);
+                visual.skillContainer.setPosition(visual.container.x, skillY);
                 visual.skillContainer.setScale(scaleFactor);
                 visual.skillContainer.removeAll(true);
 
@@ -295,6 +308,7 @@ class UnitView {
     }
 
     destroyVisual(visual) {
+        if(visual.fusionGlowFx && visual.sprite) { try { visual.sprite.postFX.remove(visual.fusionGlowFx); } catch(e){} }
         if(visual.container) visual.container.destroy();
         if(visual.hpBg) visual.hpBg.destroy();
         if(visual.hpBar) visual.hpBar.destroy();

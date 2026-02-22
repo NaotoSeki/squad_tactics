@@ -18,8 +18,9 @@ function generateFusionData() {
   return { skills, hpBoost, apBonus };
 } 
 
-window.getCardTextureKey = function(scene, type) {
-    const key = `card_texture_${type}`;
+window.getCardTextureKey = function(scene, type, portraitIndex, unitName) {
+    const key = (unitName ? `card_texture_${type}_p${portraitIndex}_n${unitName}` : ((portraitIndex !== undefined && portraitIndex !== null)
+        ? `card_texture_${type}_p${portraitIndex}` : `card_texture_${type}`));
     if (scene.textures.exists(key)) return key;
     if (typeof WPNS !== 'undefined' && WPNS[type]) {
         const w = WPNS[type];
@@ -48,19 +49,39 @@ window.getCardTextureKey = function(scene, type) {
     ctx.fillStyle = "#1a1a1a"; ctx.fillRect(0, 0, 140, 200);
     ctx.strokeStyle = "#555"; ctx.lineWidth = 2; ctx.strokeRect(0, 0, 140, 200);
     ctx.fillStyle = "#111"; ctx.fillRect(2, 2, 136, 30);
-    ctx.fillStyle = "#d84"; ctx.font = "bold 14px sans-serif"; ctx.textAlign = "center"; 
-    ctx.fillText(template.name, 70, 22);
+    ctx.fillStyle = "#d84"; ctx.font = "bold 14px sans-serif"; ctx.textAlign = "center";
+    const isInfantry = (template.role && String(template.role).toLowerCase() === 'infantry');
+    ctx.fillText((isInfantry && unitName) ? unitName : template.name, 70, 22);
     ctx.fillStyle = "#000"; ctx.fillRect(20, 40, 100, 100);
-    const seed = type.length * 999; const rnd = function(s) { return Math.abs(Math.sin(s * 12.9898) * 43758.5453) % 1; };
-    const skinTones = ["#ffdbac", "#f1c27d", "#e0ac69"]; ctx.fillStyle = skinTones[Math.floor(rnd(seed) * skinTones.length)];
-    ctx.beginPath(); ctx.arc(70, 90, 30, 0, Math.PI*2); ctx.fill(); 
-    ctx.fillStyle = "#343"; ctx.beginPath(); ctx.arc(70, 80, 32, Math.PI, 0); ctx.lineTo(102, 80); ctx.lineTo(38, 80); ctx.fill(); 
-    ctx.fillStyle = "#888"; ctx.font = "10px sans-serif"; 
-    ctx.fillText(template.role ? template.role.toUpperCase() : "UNIT", 70, 155);
+    let portraitDrawn = false;
+    if (type === 'aerial' && scene.textures.exists('aerial_spt')) {
+        try {
+            const src = scene.textures.get('aerial_spt').getSourceImage();
+            if (src && src.width) { ctx.drawImage(src, 20, 40, 100, 100); portraitDrawn = true; }
+        } catch (e) { }
+    }
+    if (!portraitDrawn) {
+        const portraitKey = (portraitIndex !== undefined && portraitIndex !== null)
+            ? ('portrait_' + ((portraitIndex % (typeof PORTRAIT_AVAILABLE !== 'undefined' ? PORTRAIT_AVAILABLE : 7)) + 1)) : null;
+        if (portraitKey && scene.textures.exists(portraitKey)) {
+            try {
+                const src = scene.textures.get(portraitKey).getSourceImage();
+                if (src && src.width) { ctx.drawImage(src, 20, 40, 100, 100); portraitDrawn = true; }
+            } catch (e) { }
+        }
+    }
+    if (!portraitDrawn) {
+        const seed = type.length * 999; const rnd = function(s) { return Math.abs(Math.sin(s * 12.9898) * 43758.5453) % 1; };
+        const skinTones = ["#ffdbac", "#f1c27d", "#e0ac69"]; ctx.fillStyle = skinTones[Math.floor(rnd(seed) * skinTones.length)];
+        ctx.beginPath(); ctx.arc(70, 90, 30, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = "#343"; ctx.beginPath(); ctx.arc(70, 80, 32, Math.PI, 0); ctx.lineTo(102, 80); ctx.lineTo(38, 80); ctx.fill();
+    }
+    ctx.fillStyle = "#888"; ctx.font = "10px sans-serif";
+    ctx.fillText(isInfantry ? template.name : (template.role ? template.role.toUpperCase() : "UNIT"), 70, 155);
     let wpnName = template.main || "-"; if (typeof WPNS !== 'undefined' && WPNS[template.main]) { wpnName = WPNS[template.main].name; }
-    ctx.fillStyle = "#ccc"; ctx.font = "11px monospace"; 
+    ctx.fillStyle = "#ccc"; ctx.font = "11px monospace";
     ctx.fillText(`HP:${template.hp||100} AP:${template.ap||4}`, 70, 175);
-    ctx.fillStyle = "#d84"; ctx.font = "10px sans-serif"; 
+    ctx.fillStyle = "#d84"; ctx.font = "10px sans-serif";
     ctx.fillText(wpnName, 70, 190);
     scene.textures.addCanvas(key, canvas); return key;
 };
@@ -109,6 +130,19 @@ const Renderer = {
             if (window.phaserSidebar && window.phaserSidebar.onResize) window.phaserSidebar.onResize(w, h);
             if (window.gameLogic && window.gameLogic.updateSidebar) window.gameLogic.updateSidebar();
         };
+        window.setHandCardsFusionLevel = function(level) {
+            if (!phaserGame || !phaserGame.scene) return;
+            const ui = phaserGame.scene.getScene('UIScene');
+            if (!ui || !ui.cards) return;
+            const L = Math.max(1, Math.min(3, parseInt(level, 10) || 1));
+            ui.cards.forEach(function(card) {
+                const isUnit = card.cardType && typeof UNIT_TEMPLATES !== 'undefined' && UNIT_TEMPLATES[card.cardType] && !(typeof WPNS !== 'undefined' && WPNS[card.cardType]);
+                if (!isUnit) return;
+                card.fusionCount = L;
+                card.fusionData = L >= 2 ? generateFusionData() : null;
+                if (card.sparklerParticles) card.sparklerParticles.length = 0;
+            });
+        };
         window.addEventListener('resize', () => this.resize());
         const startAudio = () => { if(window.Sfx && window.Sfx.ctx && window.Sfx.ctx.state === 'suspended') { window.Sfx.ctx.resume(); } };
         document.addEventListener('click', startAudio); document.addEventListener('keydown', startAudio);
@@ -124,7 +158,7 @@ const Renderer = {
     getFusedCardsFromHand() {
         const ui = this.game ? this.game.scene.getScene('UIScene') : null;
         if (!ui || !ui.cards) return [];
-        return ui.cards.filter(c => c.fusionData).map(c => ({ type: c.cardType, fusionData: c.fusionData }));
+        return ui.cards.filter(c => c.fusionData).map(c => ({ type: c.cardType, fusionData: c.fusionData, fusionCount: c.fusionCount }));
     },
     checkUIHover(x, y, pointerEvent) { 
         if (this.isCardDragging) return true;
@@ -160,18 +194,39 @@ class Card extends Phaser.GameObjects.Container {
         const isObj = typeof typeOrData === 'object' && typeOrData !== null;
         this.cardType = isObj ? typeOrData.type : typeOrData;
         this.fusionData = isObj && typeOrData.fusionData ? typeOrData.fusionData : null;
+        this.fusionCount = isObj && typeOrData.fusionCount != null ? typeOrData.fusionCount : (this.fusionData ? 2 : 0);
+        this.portraitIndex = isObj && typeOrData.portraitIndex !== undefined ? typeOrData.portraitIndex : undefined;
         // 武器カードの場合、実インスタンス（弾数などの状態を含む）を保持できる
         this.weaponData = isObj && typeOrData.weaponData ? typeOrData.weaponData : null;
+        this.isRainbowWeapon = !!(this.weaponData && this.weaponData.isRainbow);
+        this.unitName = isObj && typeOrData.name ? typeOrData.name : undefined;
         this.scene = scene; this.setSize(140, 200);
-        const texKey = window.getCardTextureKey(scene, this.cardType);
+        const texKey = window.getCardTextureKey(scene, this.cardType, this.portraitIndex, this.unitName);
         this.frameImage = scene.add.image(0, 0, texKey).setDisplaySize(140, 200);
         this.frameImage.setInteractive({ useHandCursor: true, draggable: true });
         const shadow = scene.add.rectangle(6, 6, 130, 190, 0x000000, 0.5); this.add(shadow); this.add(this.frameImage);
         this.rainbowGraphics = scene.add.graphics().setDepth(1);
         this.fusionCandidateGraphics = scene.add.graphics().setDepth(2);
-        this.add(this.rainbowGraphics); this.add(this.fusionCandidateGraphics);
+        this.auraGraphics = scene.add.graphics().setDepth(2.5);
+        this.glossGraphics = scene.add.graphics().setDepth(3);
+        this.glossMask = scene.make.graphics({ add: false });
+        this.glossMask.fillStyle(0xffffff, 1);
+        this.glossMask.fillRect(-70, -100, 140, 200);
+        this.glossMask.setVisible(false);
+        this.add(this.glossMask);
+        this.glossGraphics.setMask(this.glossMask.createGeometryMask());
+        this.sparklerParticles = [];
+        this.add(this.rainbowGraphics); this.add(this.fusionCandidateGraphics); this.add(this.auraGraphics); this.add(this.glossGraphics);
         this.setScrollFactor(0); this.baseX = x; this.baseY = y; this.physX = x; this.physY = y; this.velocityX = 0; this.velocityY = 0; this.velocityAngle = 0; this.targetX = x; this.targetY = y; this.dragOffsetX = 0; this.dragOffsetY = 0;
         this.frameImage.on('pointerover', this.onHover, this); this.frameImage.on('pointerout', this.onHoverOut, this); this.frameImage.on('dragstart', this.onDragStart, this); this.frameImage.on('drag', this.onDrag, this); this.frameImage.on('dragend', this.onDragEnd, this);
+        this.rainbowDmgText = null;
+        if (this.isRainbowWeapon && this.weaponData && this.weaponData.rainbowDmgBonus != null) {
+            this.rainbowDmgText = scene.add.text(32, 75, '+' + this.weaponData.rainbowDmgBonus, { fontSize: '11px', color: '#eecc00', fontFamily: 'monospace' });
+            this.rainbowDmgText.setOrigin(0, 0.5);
+            if (this.rainbowDmgText.setResolution) this.rainbowDmgText.setResolution(2);
+            this.rainbowDmgText.setDepth(4);
+            this.add(this.rainbowDmgText);
+        }
         scene.add.existing(this);
     }
     updatePhysics() { 
@@ -188,13 +243,16 @@ class Card extends Phaser.GameObjects.Container {
             }
         }
         if (this.rainbowGraphics) {
-            if (this.fusionData) {
+            const showRainbow = this.fusionData || this.isRainbowWeapon;
+            if (showRainbow) {
             this.rainbowGraphics.clear();
             const t = (this.scene.time || { now: 0 }).now * 0.001;
+            const count = this.isRainbowWeapon ? 2 : Math.max(2, this.fusionCount || 2);
+            const speed = count <= 2 ? 0.08 : (count >= 4 ? 0.42 : 0.28);
             const w = 70; const h = 100; const pad = 2; const segs = 96;
             const colors = [0xff0000, 0xff4400, 0xff8800, 0xffcc00, 0xffff00, 0xaaff00, 0x00ff00, 0x00ff88, 0x0088ff, 0x4400ff, 0x8800ff];
             for (let i = 0; i < segs; i++) {
-                const u = (i / segs + t * 0.15) % 1;
+                const u = (i / segs + t * speed) % 1;
                 const ci = Math.floor(u * colors.length) % colors.length;
                 const c0 = colors[ci]; const c1 = colors[(ci + 1) % colors.length];
                 const mix = (u * colors.length) % 1;
@@ -202,13 +260,146 @@ class Card extends Phaser.GameObjects.Container {
                 const g = ((c0 >> 8) & 0xff) * (1 - mix) + ((c1 >> 8) & 0xff) * mix;
                 const b = (c0 & 0xff) * (1 - mix) + (c1 & 0xff) * mix;
                 const blended = (r << 16) | (g << 8) | b;
-                this.rainbowGraphics.lineStyle(2, blended, 0.88);
+                const lineW = count >= 4 ? 4 : (count >= 3 ? 3 : 2);
+                const alpha = count >= 4 ? 1 : (count >= 3 ? 0.95 : 0.88);
+                this.rainbowGraphics.lineStyle(lineW, blended, alpha);
                 const frac = i / segs; const nextFrac = (i + 1) / segs;
                 const rad = (f) => { let u2 = f * 4; if (u2 >= 4) u2 = 3.9999; const side = Math.floor(u2) % 4; const v = u2 - Math.floor(u2); let x, y; if (side === 0) { x = -w - pad + v * 2 * (w + pad); y = -h - pad; } else if (side === 1) { x = w + pad; y = -h - pad + v * 2 * (h + pad); } else if (side === 2) { x = w + pad - v * 2 * (w + pad); y = h + pad; } else { x = -w - pad; y = h + pad - v * 2 * (h + pad); } return { x, y }; };
                 const p1 = rad(frac); const p2 = rad(nextFrac);
                 this.rainbowGraphics.beginPath(); this.rainbowGraphics.moveTo(p1.x, p1.y); this.rainbowGraphics.lineTo(p2.x, p2.y); this.rainbowGraphics.strokePath();
             }
-            } else { this.rainbowGraphics.clear(); }
+            if (count >= 3 && this.auraGraphics) {
+                this.auraGraphics.clear();
+                const baseOff = 2;
+                const pts = 140;
+                const colors = [0xffdd66, 0xffaa44, 0xff8844];
+                const vel = Math.sqrt((this.velocityX || 0) ** 2 + (this.velocityY || 0) ** 2);
+                const inertiaGain = Math.min(2.2, 1 + vel * 0.35);
+                const hoverGain = this.isHovering ? 1.5 : 1;
+                const dragGain = this.isDragging ? 1.7 : 1;
+                let cursorNear = 0;
+                let neighborNear = 0;
+                if (this.scene && this.scene.input && this.scene.input.activePointer) {
+                    const ptr = this.scene.input.activePointer;
+                    const hand = this.scene.handContainer;
+                    const inHand = hand && this.parentContainer === hand;
+                    const cx = inHand ? (hand.x + this.x) : this.x;
+                    const cy = inHand ? (hand.y + this.y) : this.y;
+                    const d = Math.hypot(ptr.x - cx, ptr.y - cy);
+                    cursorNear = 1 / (1 + d / 45);
+                }
+                if (this.scene && this.scene.cards) {
+                    this.scene.cards.forEach(function(c) {
+                        if (c === this || !c.active || c.parentContainer !== this.parentContainer) return;
+                        const dist = Math.hypot(this.x - c.x, this.y - c.y);
+                        if (dist < 200) neighborNear += 1 / (1 + dist / 55);
+                    }.bind(this));
+                    neighborNear = Math.min(1.8, neighborNear * 0.35);
+                }
+                const response = inertiaGain * hoverGain * dragGain * (1 + 1.4 * cursorNear + 0.4 * neighborNear);
+                const is4Fusion = count >= 4;
+                const rhythm = 0.65 + 0.35 * Math.sin(t * 1.0) + 0.25 * Math.sin(t * 1.85);
+                const waveMult = is4Fusion ? 1.85 : 1;
+                for (let j = 0; j < 3; j++) {
+                    const off = baseOff + (j + 1) * 2.5;
+                    const phase = t * (is4Fusion ? 4.5 : 3.2) + j * 2.1;
+                    const alpha = 0.32 + 0.28 * (1 - j * 0.28) * (0.5 + 0.5 * Math.sin(t * 2.2 + j * 0.8));
+                    this.auraGraphics.lineStyle(is4Fusion ? 3 : 2, colors[j], Math.min(1, alpha * (is4Fusion ? 1.2 : 1)));
+                    this.auraGraphics.beginPath();
+                    const L = -70 - off, R = 70 + off, T = -100 - off, B = 100 + off;
+                    const W = R - L, H = B - T;
+                    const wave = (s) => {
+                        const soft = (3.8 * Math.sin(1.4 * s + phase) + 2.2 * Math.sin(2.2 * s + phase * 1.3)) * waveMult;
+                        const hi = (1.0 * Math.sin(8 * s + t * (is4Fusion ? 18 : 12)) + 0.85 * Math.sin(13 * s + t * (is4Fusion ? 22 : 16) + j)) * rhythm * waveMult;
+                        const jelly = (0.75 * Math.sin(19 * s + t * 20) + 0.6 * Math.sin(26 * s + t * 17 + j * 1.7) + 0.45 * Math.sin(33 * s + t * 24 + j * 0.9)) * response * rhythm * waveMult;
+                        return soft + hi + jelly;
+                    };
+                    for (let i = 0; i <= pts; i++) {
+                        const u = i / pts;
+                        let x, y, s;
+                        if (u < 0.25) {
+                            s = u * 4; x = L + W * (u / 0.25); y = T + wave(s);
+                        } else if (u < 0.5) {
+                            s = 1 + (u - 0.25) * 4; y = T + H * ((u - 0.25) / 0.25); x = R + wave(s);
+                        } else if (u < 0.75) {
+                            s = 2 + (u - 0.5) * 4; x = R - W * ((u - 0.5) / 0.25); y = B + wave(s);
+                        } else {
+                            s = 3 + (u - 0.75) * 4; y = B - H * ((u - 0.75) / 0.25); x = L + wave(s);
+                        }
+                        if (i === 0) this.auraGraphics.moveTo(x, y); else this.auraGraphics.lineTo(x, y);
+                    }
+                    this.auraGraphics.closePath(); this.auraGraphics.strokePath();
+                }
+                if (!this.sparklerParticles) this.sparklerParticles = [];
+                const sparkChance = count >= 4 ? 0.28 : 0.08;
+                if (Math.random() < sparkChance) {
+                    const side = Math.floor(Math.random() * 4);
+                    const q = Math.random();
+                    let sx, sy, nx, ny;
+                    const pad = 75; const padV = 105;
+                    if (side === 0) { sx = -pad + q * pad * 2; sy = -padV; nx = 0; ny = -1; }
+                    else if (side === 1) { sx = pad; sy = -padV + q * padV * 2; nx = 1; ny = 0; }
+                    else if (side === 2) { sx = pad - q * pad * 2; sy = padV; nx = 0; ny = 1; }
+                    else { sx = -pad; sy = padV - q * padV * 2; nx = -1; ny = 0; }
+                    const jitter = count >= 4 ? 0.6 : 0.3;
+                    const vel = count >= 4 ? (2.2 + Math.random() * 2.5) : (1.2 + Math.random() * 2);
+                    const vx = nx * vel + (Math.random() - 0.5) * jitter;
+                    const vy = ny * vel + (Math.random() - 0.5) * jitter - 0.3;
+                    this.sparklerParticles.push({
+                        x: sx, y: sy,
+                        vx: vx, vy: vy,
+                        life: 14 + Math.floor(Math.random() * 12), maxLife: 26,
+                        color: Math.random() > 0.4 ? 0xffaa00 : 0xffff88, size: (count >= 4 ? 2.2 : 1.5) + Math.random() * 1.5
+                    });
+                }
+                for (let i = this.sparklerParticles.length - 1; i >= 0; i--) {
+                    const p = this.sparklerParticles[i];
+                    p.x += p.vx; p.y += p.vy; p.vy += 0.08; p.vx *= 0.98; p.vy *= 0.98;
+                    p.life--;
+                    if (p.life <= 0) { this.sparklerParticles.splice(i, 1); continue; }
+                    const alpha = p.life / p.maxLife;
+                    const len = Math.max(4, Math.sqrt(p.vx * p.vx + p.vy * p.vy) * 1.2);
+                    const angle = Math.atan2(p.vy, p.vx);
+                    const tx = p.x - Math.cos(angle) * len;
+                    const ty = p.y - Math.sin(angle) * len;
+                    this.auraGraphics.lineStyle(Math.max(1, p.size), p.color, alpha);
+                    this.auraGraphics.beginPath(); this.auraGraphics.moveTo(p.x, p.y); this.auraGraphics.lineTo(tx, ty); this.auraGraphics.strokePath();
+                }
+                if (this.sparklerParticles.length > (count >= 4 ? 120 : 80)) this.sparklerParticles.splice(0, count >= 4 ? 35 : 20);
+            }
+            if (count >= 4 && this.glossGraphics) {
+                this.glossGraphics.clear();
+                const angle = Math.atan2(200, 140);
+                const bandLen = 260;
+                const bandW = 42;
+                const speed = 220;
+                const diagLen = Math.hypot(140, 200);
+                const cycle = diagLen + bandLen;
+                const d1 = (t * speed) % cycle;
+                const d2 = (t * speed + cycle * 0.5) % cycle;
+                const rot = (x, y, cx, cy, a) => ({ x: cx + x * Math.cos(a) - y * Math.sin(a), y: cy + x * Math.sin(a) + y * Math.cos(a) });
+                [d1, d2].forEach((d, i) => {
+                    const u = d / cycle;
+                    const cx = -70 + 140 * u;
+                    const cy = -100 + 200 * u;
+                    const fade = 0.1 + 0.14 * Math.sin(t * 2.8 + i * 2);
+                    const hw = bandLen / 2;
+                    const hh = bandW / 2;
+                    const p1 = rot(-hw, -hh, cx, cy, angle);
+                    const p2 = rot(hw, -hh, cx, cy, angle);
+                    const p3 = rot(hw, hh, cx, cy, angle);
+                    const p4 = rot(-hw, hh, cx, cy, angle);
+                    this.glossGraphics.fillStyle(0xffffff, Math.min(0.3, fade));
+                    this.glossGraphics.beginPath();
+                    this.glossGraphics.moveTo(p1.x, p1.y);
+                    this.glossGraphics.lineTo(p2.x, p2.y);
+                    this.glossGraphics.lineTo(p3.x, p3.y);
+                    this.glossGraphics.lineTo(p4.x, p4.y);
+                    this.glossGraphics.closePath();
+                    this.glossGraphics.fillPath();
+                });
+            } else if (this.glossGraphics) this.glossGraphics.clear();
+            } else { this.rainbowGraphics.clear(); if (this.auraGraphics) this.auraGraphics.clear(); if (this.glossGraphics) this.glossGraphics.clear(); if (this.sparklerParticles) this.sparklerParticles.length = 0; }
         }
         if (this.isDragging) { this.setAlpha(0.6); } else {
             const isWeapon = typeof WPNS !== 'undefined' && WPNS[this.cardType];
@@ -293,13 +484,14 @@ class Card extends Phaser.GameObjects.Container {
         if (canDeploy) this.burnAndConsume(hex); else this.returnToHand(); 
     }
     burnAndConsume(hex) { 
-        const type = this.cardType; const fusionData = this.fusionData;
+        const type = this.cardType; const fusionData = this.fusionData; const portraitIndex = this.portraitIndex;
+        const fusionCount = Math.max(0, parseInt(this.fusionCount, 10) || (this.fusionData ? 2 : 0));
         this.updatePhysics = () => {}; this.frameImage.setTint(0x552222); this.frameImage.disableInteractive(); 
         this.scene.tweens.add({ targets: this, alpha: 0, scale: 0.5, duration: 200, onComplete: () => { 
             this.scene.removeCard(this); this.destroy(); 
             try { 
                 if (type === 'aerial') { if (window.gameLogic) window.gameLogic.triggerBombardment(hex); } 
-                else if(window.gameLogic) { window.gameLogic.deployUnit(hex, type, fusionData); } 
+                else if(window.gameLogic) { window.gameLogic.deployUnit(hex, type, fusionData, portraitIndex, fusionCount); } 
             } catch(e) { console.error("Logic Error:", e); } 
         }}); 
     }
@@ -461,13 +653,28 @@ class UIScene extends Phaser.Scene {
         types.forEach((typeOrData, i) => { this.time.delayedCall(i * 150, () => { this.addCardToHand(typeOrData); }); });
         this.time.delayedCall(150 * types.length + 1000, () => { this.isHandDocked = true; });
     }
-    addCardToHand(typeOrData) { const card = new Card(this, 0, 0, typeOrData); this.handContainer.add(card); this.cards.push(card); card.physX = 600; card.physY = 300; card.setPosition(card.physX, card.physY); this.arrangeHand(); }
+    addCardToHand(typeOrData) {
+        let data = typeof typeOrData === 'object' && typeOrData !== null ? { ...typeOrData } : { type: typeOrData };
+        const isUnit = typeof UNIT_TEMPLATES !== 'undefined' && data.type && UNIT_TEMPLATES[data.type] && !(typeof WPNS !== 'undefined' && WPNS[data.type]);
+        if (isUnit && data.portraitIndex === undefined && window.campaign && typeof window.campaign.getRandomPortraitIndex === 'function') {
+            data.portraitIndex = window.campaign.getRandomPortraitIndex();
+        }
+        const template = (typeof UNIT_TEMPLATES !== 'undefined' && data.type && UNIT_TEMPLATES[data.type]) ? UNIT_TEMPLATES[data.type] : null;
+        const isInfantry = template && template.role && String(template.role).toLowerCase() === 'infantry';
+        if (isInfantry && !data.name && typeof FIRST_NAMES !== 'undefined' && typeof LAST_NAMES !== 'undefined' && FIRST_NAMES.length && LAST_NAMES.length) {
+            data.name = LAST_NAMES[Math.floor(Math.random() * LAST_NAMES.length)] + ' ' + FIRST_NAMES[Math.floor(Math.random() * FIRST_NAMES.length)];
+        }
+        const card = new Card(this, 0, 0, data);
+        this.handContainer.add(card); this.cards.push(card); card.physX = 600; card.physY = 300; card.setPosition(card.physX, card.physY); this.arrangeHand();
+    }
     fuseCards(dragged, target) {
         const type = dragged.cardType;
         const fusionData = generateFusionData();
+        const portraitIndex = dragged.portraitIndex !== undefined ? dragged.portraitIndex : target.portraitIndex;
+        const fusionCount = (dragged.fusionCount || 1) + (target.fusionCount || 1);
         this.removeCard(dragged); dragged.destroy();
         this.removeCard(target); target.destroy();
-        const card = new Card(this, 0, 0, { type, fusionData });
+        const card = new Card(this, 0, 0, { type, fusionData, portraitIndex, fusionCount });
         this.handContainer.add(card); this.cards.push(card);
         card.physX = (dragged.physX + target.physX) / 2; card.physY = (dragged.physY + target.physY) / 2;
         card.setPosition(card.physX, card.physY);
@@ -515,6 +722,10 @@ class MainScene extends Phaser.Scene {
         this.load.spritesheet('soldier_sheet', 'asset/soldier_sheet_1.png', { frameWidth: 128, frameHeight: 128 });
         this.load.spritesheet('tank_sheet', 'asset/tank_sheet_1.png', { frameWidth: 128, frameHeight: 128 });
         this.load.spritesheet('explosion_sheet', 'asset/explosion_sheet_1.png', { frameWidth: 64, frameHeight: 64 });
+        for (let i = 1; i <= (typeof PORTRAIT_AVAILABLE !== 'undefined' ? PORTRAIT_AVAILABLE : 7); i++) {
+            this.load.image('portrait_' + i, 'asset/portraits/inf_us_' + String(i).padStart(3, '0') + '.jpg');
+        }
+        this.load.image('aerial_spt', 'asset/portraits/aerial_spt.jpg');
     }
     create() {
         window.createHexTexture(this); this.cameras.main.setBackgroundColor('#0b0e0a'); 

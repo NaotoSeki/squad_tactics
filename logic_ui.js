@@ -396,7 +396,9 @@ class UIManager {
         const ui = document.getElementById('unit-info');
         if (!ui) return;
         if (!u || u.hp <= 0) { ui.innerHTML = `<div style="text-align:center;color:#555;margin-top:80px;">// NO SIGNAL //</div>`; return; }
-        const faceUrl = (Renderer.generateFaceIcon) ? Renderer.generateFaceIcon(u.faceSeed) : "";
+        const faceUrl = (u.team === 'player' && !u.def.isTank && u.portraitIndex !== undefined)
+            ? ('asset/portraits/inf_us_' + String((u.portraitIndex % (typeof PORTRAIT_AVAILABLE !== 'undefined' ? PORTRAIT_AVAILABLE : 7)) + 1).padStart(3, '0') + '.jpg')
+            : ((Renderer.generateFaceIcon) ? Renderer.generateFaceIcon(u.faceSeed) : "");
         
         const virtualWpn = (window.gameLogic && window.gameLogic.getVirtualWeapon) ? window.gameLogic.getVirtualWeapon(u) : null;
         const isMortarActive = virtualWpn && virtualWpn.code === 'm2_mortar';
@@ -468,6 +470,7 @@ class UIManager {
             skillListHtml = `<div class="unit-skills" style="font-size:10px;color:#888;margin-top:4px;margin-bottom:6px;">${skillParts.join('  |  ')}</div>`;
         }
 
-        ui.innerHTML = `<div class="soldier-header"><div class="face-box"><img src="${faceUrl}" width="64" height="64"></div><div><div class="soldier-name">${u.name}</div><div class="soldier-rank">${u.def.role}</div>${skillListHtml}</div></div><div class="stat-grid"><div class="stat-row"><span>HP</span> <span>${u.hp}/${u.maxHp}</span></div><div class="stat-row"><span>AP</span> <span>${u.ap}/${u.maxAp}</span></div></div><div class="inv-header" style="padding:0 10px; margin-top:10px;">IN HANDS (3 Slots)</div><div class="loadout-container" style="display:flex;flex-direction:column;">${mainSlotsHtml}</div><div class="inv-header" style="padding:0 10px; margin-top:10px;">BACKPACK</div><div class="loadout-container">${subSlotsHtml}</div><div style="padding:0 10px;">${reloadBtn}</div><div style="padding:10px;"><button onclick="gameLogic.endTurn()" style="width:100%; background:#522; border-color:#d44; margin-top:15px; padding:5px; color:#fcc;">End Turn</button></div>`;
+        const onErr = (u.team === 'player' && u.portraitIndex !== undefined) ? ' onerror="this.style.display=\'none\'"' : '';
+        ui.innerHTML = `<div class="soldier-header"><div class="face-box"><img src="${faceUrl}" width="96" height="96"${onErr}></div><div><div class="soldier-name">${u.name}</div><div class="soldier-rank">${u.def.role}</div>${skillListHtml}</div></div><div class="stat-grid"><div class="stat-row"><span>HP</span> <span>${u.hp}/${u.maxHp}</span></div><div class="stat-row"><span>AP</span> <span>${u.ap}/${u.maxAp}</span></div></div><div class="inv-header" style="padding:0 10px; margin-top:10px;">${(u.def && u.def.isTank) ? 'Main armament / Sub armament' : 'IN HANDS (3 Slots)'}</div><div class="loadout-container" style="display:flex;flex-direction:column;">${mainSlotsHtml}</div><div class="inv-header" style="padding:0 10px; margin-top:10px;">BACKPACK</div><div class="loadout-container">${subSlotsHtml}</div><div style="padding:0 10px;">${reloadBtn}</div><div style="padding:10px;"><button onclick="gameLogic.endTurn()" style="width:100%; background:#522; border-color:#d44; margin-top:15px; padding:5px; color:#fcc;">End Turn</button></div>`;
     }
 }
