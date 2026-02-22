@@ -205,6 +205,12 @@ window.BattleLogic = class BattleLogic {
 
     if (!w.indirect && !targetUnit && !isAreaAttack) { this.setMode('SELECT'); return; }
 
+    // 虚空・水域ヘックスには攻撃不可（AP消費しない）
+    if (targetHex && !this.canAttackHex(targetHex.q, targetHex.r)) {
+      this.ui.log("虚空や水には攻撃できません");
+      return;
+    }
+
     // 弾薬チェック
     if (w.code === 'm2_mortar') {
       if (w.current <= 0) { this.ui.log("弾切れ！弾薬箱が空です"); return; }
@@ -626,11 +632,11 @@ window.BattleLogic = class BattleLogic {
   getAttackWeapon(a, targetUnit) {
     const main = this.getVirtualWeapon(a);
     if (!main) return null;
-    // 戦車がヘックス指定（範囲攻撃）のときは Main armament が M8 の場合のみ M8 を使用
+    // 戦車がヘックス指定（範囲攻撃）のときは Main armament が M8 の場合のみ M8 を使用（残弾ありのみ）
     if (a.def?.isTank && !targetUnit) {
       const slot0 = a.hands && a.hands[0];
-      if (slot0 && slot0.code === 'm8_rocket' && (slot0.current > 0 || slot0.cap > 0)) {
-        return { ...slot0, current: slot0.current ?? slot0.cap, cap: slot0.cap };
+      if (slot0 && slot0.code === 'm8_rocket' && (slot0.current || 0) > 0) {
+        return { ...slot0, current: slot0.current, cap: slot0.cap };
       }
     }
     if (a.def.isTank && targetUnit && !targetUnit.def?.isTank) {
@@ -720,6 +726,12 @@ window.BattleLogic = class BattleLogic {
   getUnitInHex(q, r) { return this.units.find(u => u.q === q && u.r === r && u.hp > 0); }
   getUnit(q, r) { return this.getUnitInHex(q, r); }
   isValidHex(q, r) { return this.mapSystem ? this.mapSystem.isValidHex(q, r) : false; }
+  /** 攻撃可能なヘックスか（有効かつ虚空・水域でない） */
+  canAttackHex(q, r) {
+    if (!this.isValidHex(q, r)) return false;
+    const tile = this.map[q] && this.map[q][r];
+    return tile && tile.id !== -1 && tile.id !== 5;
+  }
   hexDist(a, b) { return this.mapSystem ? this.mapSystem.hexDist(a, b) : 0; }
   getNeighbors(q, r) { return this.mapSystem ? this.mapSystem.getNeighbors(q, r) : []; }
   findPath(u, tq, tr) { return this.mapSystem ? this.mapSystem.findPath(u, tq, tr) : []; }
@@ -1219,10 +1231,10 @@ window.BattleLogic = class BattleLogic {
   }
 
   async triggerM8Rocket(attacker, centerHex) {
-    if (!this.isValidHex(centerHex.q, centerHex.r)) return;
+    if (!this.canAttackHex(centerHex.q, centerHex.r)) return;
     const game = this;
     const pool = this.mapSystem ? this.mapSystem.getHexesInRange(centerHex.q, centerHex.r, 2) : [centerHex];
-    const validPool = pool.filter(h => this.isValidHex(h.q, h.r));
+    const validPool = pool.filter(h => this.canAttackHex(h.q, h.r));
     if (validPool.length === 0) return;
     const hitHexes = [];
     for (let i = 0; i < 60; i++) {
