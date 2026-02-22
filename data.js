@@ -78,6 +78,8 @@ const WPNS = {
 
 /** 能力値8種（1〜10）。行動=AP, 速度=移動ヘックス, 筋力=装備重量, 士気=命中等, 射撃/投擲/白兵/索敵 */
 const PARAM_KEYS = ['action', 'speed', 'str', 'morale', 'aim', 'throw', 'melee', 'recon'];
+/** レーダーチャート軸ラベル（PARAM_KEYS と同順） */
+const PARAM_LABELS = ['act', 'spd', 'str', 'mrl', 'aim', 'thw', 'mle', 'rcn'];
 
 const UNIT_TEMPLATES = {
     rifleman: {

@@ -18,12 +18,13 @@ class CampaignManager {
         window.addEventListener('load', () => this.initSetupScreen());
     }
 
-    /** 初期画面・カード用: canvas に能力値レーダーチャートを描画（8軸、中心50,50、半径45） */
+    /** 初期画面・カード用: canvas に能力値レーダーチャートを描画（8軸、ラベル付き） */
     drawRadarCanvas(canvas, params) {
         if (!canvas || !params || typeof PARAM_KEYS === 'undefined') return;
         const ctx = canvas.getContext('2d');
         const cx = 50, cy = 50, r = 45;
         const keys = PARAM_KEYS;
+        const labels = (typeof PARAM_LABELS !== 'undefined') ? PARAM_LABELS : keys.map(k => k.slice(0, 3));
         const pts = [];
         for (let i = 0; i < keys.length; i++) {
             const angle = -Math.PI / 2 + (i / keys.length) * 2 * Math.PI;
@@ -50,6 +51,16 @@ class CampaignManager {
         ctx.strokeStyle = 'rgba(221,170,68,0.9)';
         ctx.lineWidth = 2;
         ctx.stroke();
+        ctx.fillStyle = '#aaa';
+        ctx.font = '9px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        for (let i = 0; i < keys.length; i++) {
+            const angle = -Math.PI / 2 + (i / keys.length) * 2 * Math.PI;
+            const lx = cx + Math.cos(angle) * (r + 8);
+            const ly = cy + Math.sin(angle) * (r + 8);
+            ctx.fillText(labels[i] || '', lx, ly);
+        }
     }
 
     // --- SETUP SCREEN LOGIC ---
@@ -102,9 +113,11 @@ class CampaignManager {
                 <div style="background:#222; width:100%; text-align:center; padding:2px 0; border-bottom:1px solid #444; margin-bottom:5px;">
                     <h3 style="color:#d84; font-size:14px; margin:0;">${soldierName}</h3>
                 </div>
-                <div class="card-img-box" style="background:#111; display:flex; align-items:flex-start; gap:4px; padding:4px;">
-                    <img src="${faceUrl}" style="width:96px; height:96px; object-fit:cover; flex-shrink:0;" onerror="this.style.display='none'">
-                    <canvas class="unit-radar" width="100" height="100" style="flex-shrink:0;"></canvas>
+                <div class="card-img-box" style="background:#111; text-align:center;">
+                    <img src="${faceUrl}" style="width:96px; height:96px; object-fit:cover;" onerror="this.style.display='none'">
+                </div>
+                <div class="card-radar-box" style="background:#0d0d0d; padding:4px 0; text-align:center;">
+                    <canvas class="unit-radar" width="100" height="100"></canvas>
                 </div>
                 <div class="card-body" style="font-size:10px; color:#aaa;">
                     AP:${(t.params && t.params.action != null) ? t.params.action : t.ap}<br>${t.role}

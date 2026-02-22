@@ -83,6 +83,7 @@ window.PhaserSidebar = class PhaserSidebar {
         const radarR = 48;
         const params = u.params || (u.def && u.def.params) || {};
         const paramKeys = (typeof PARAM_KEYS !== 'undefined') ? PARAM_KEYS : ['action', 'speed', 'str', 'morale', 'aim', 'throw', 'melee', 'recon'];
+        const paramLabels = (typeof PARAM_LABELS !== 'undefined') ? PARAM_LABELS : paramKeys.map(k => k.slice(0, 3));
         const radarG = this.scene.add.graphics();
         radarG.setPosition(radarCx, radarCy);
         for (let i = 0; i < paramKeys.length; i++) {
@@ -108,6 +109,13 @@ window.PhaserSidebar = class PhaserSidebar {
         radarG.setDepth(0);
         this.unitContent.add(radarG);
         radarG.setPosition(radarCx, radarCy);
+        for (let i = 0; i < paramLabels.length; i++) {
+            const angle = -Math.PI / 2 + (i / paramKeys.length) * 2 * Math.PI;
+            const tx = radarCx + Math.cos(angle) * (radarR + 10);
+            const ty = radarCy + Math.sin(angle) * (radarR + 10);
+            const labelText = this.scene.add.text(tx, ty, paramLabels[i] || '', { fontSize: '9px', color: '#888', fontFamily: 'sans-serif' }).setOrigin(0.5, 0.5);
+            this.unitContent.add(labelText);
+        }
 
         const textLeft = left;
         const headerBottom = y + 100;
