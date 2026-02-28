@@ -353,7 +353,7 @@ class EnvSystem {
     spawnGrass(scene, group, x, y) { const count = 60; const scaleFactor = 0.07; for(let i=0; i<count; i++) { const r = Math.random() * (HEX_SIZE * 1.0); const angle = Math.random() * Math.PI * 2; const ox = Math.cos(angle) * r; const oy = Math.sin(angle) * r * 0.866; const type = Math.random() > 0.5 ? 'A' : 'B'; const textureKey = type === 'A' ? 'hd_grass_0' : 'hd_grass_b_0'; const grass = scene.add.sprite(x+ox, y+oy, textureKey); grass.setOrigin(0.5, 1.0); const typeScale = type === 'A' ? 1.0 : 0.85; grass.setScale((0.8 + Math.random() * 0.4) * scaleFactor * typeScale); grass.setDepth(y+oy); grass.grassType = type; grass.currentWindValue = 0; grass.origX = x + ox; grass.origY = y + oy; grass.amp = 0.82 + Math.random() * 0.36; const tintVar = Math.floor(Math.random() * 40); grass.setTint(Phaser.Display.Color.GetColor(160 + tintVar, 170 + tintVar, 130 + tintVar)); group.add(grass); this.grassElements.push(grass); } }
     spawnGrassHexSheet(scene, group, x, y) {
         if (!scene.textures.exists('grass')) return;
-        const hexR = (typeof HEX_SIZE !== 'undefined' ? HEX_SIZE : 54) * 0.98;
+        const hexR = (typeof HEX_SIZE !== 'undefined' ? HEX_SIZE : 54);
         const g = scene.make.graphics({ x: 0, y: 0, add: false });
         g.fillStyle(0xffffff, 1);
         g.beginPath();
@@ -367,18 +367,15 @@ class EnvSystem {
         g.closePath();
         g.fillPath();
         const mask = g.createGeometryMask();
-        const sprite = scene.add.sprite(x, y, 'grass', Math.floor(Math.random() * 16)).setOrigin(0.5, 0.5);
         const frameW = 32;
-        const frameH = 512;
-        const bleed = 1.45;
-        const scaleX = (Math.sqrt(3) * HEX_SIZE * bleed) / frameW;
-        const scaleY = (2 * HEX_SIZE * bleed) / frameH;
-        sprite.setScale(scaleX, scaleY);
+        const sprite = scene.add.sprite(x, y, 'grass', Math.floor(Math.random() * 16)).setOrigin(0.5, 0.5);
+        const bleed = 1.65;
+        const hexW = Math.sqrt(3) * hexR;
+        const scale = (hexW * bleed) / frameW;
+        sprite.setScale(scale);
         sprite.setMask(mask);
         sprite.setDepth(y);
-        const jitterX = (Math.random() - 0.5) * 1.6;
-        const jitterY = (Math.random() - 0.5) * 1.6;
-        sprite.setPosition(x + jitterX, y + jitterY);
+        sprite.setPosition(x, y);
         g.setPosition(x, y);
         g.setVisible(false);
         group.add(g);
