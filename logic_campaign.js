@@ -18,6 +18,59 @@ class CampaignManager {
         window.addEventListener('load', () => this.initSetupScreen());
     }
 
+    /** 初期画面用: テンプレートから createSoldier と同じ ±1 ばらつきでプレビュー用 params を生成（毎回新シード）。 */
+    getPreviewParams(t) {
+        if (!t || !t.params || typeof PARAM_KEYS === 'undefined') return t.params || {};
+        const baseParams = { ...t.params };
+        const params = {};
+        const isInfantry = !t.isTank;
+        PARAM_KEYS.forEach(k => {
+            let v = baseParams[k] != null ? baseParams[k] : 5;
+            if (isInfantry) v = v + Math.floor(Math.random() * 3) - 1;
+            params[k] = Math.max(1, Math.min(10, v));
+        });
+        return params;
+    }
+
+    /** 初期画面・カード用: canvas に能力値レーダーチャートを描画。getRadarPoints（data.js）で座標共通化。 */
+    drawRadarCanvas(canvas, params) {
+        if (!canvas || !params || typeof PARAM_KEYS === 'undefined' || typeof getRadarPoints !== 'function') return;
+        const ctx = canvas.getContext('2d');
+        const cw = canvas.width;
+        const ch = canvas.height;
+        const cx = cw / 2;
+        const cy = ch / 2;
+        const RADAR_MARGIN = 12;
+        const r = Math.min(cx, cy) - RADAR_MARGIN;
+        const keys = PARAM_KEYS;
+        const labels = (typeof PARAM_LABELS !== 'undefined') ? PARAM_LABELS : keys.map(k => k.slice(0, 3));
+        const { points, labelPositions, angles } = getRadarPoints(params, keys, r, 8);
+        ctx.clearRect(0, 0, cw, ch);
+        angles.forEach(angle => {
+            ctx.strokeStyle = 'rgba(100,100,100,0.5)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(cx, cy);
+            ctx.lineTo(cx + Math.cos(angle) * r, cy + Math.sin(angle) * r);
+            ctx.stroke();
+        });
+        ctx.fillStyle = 'rgba(221,170,68,0.25)';
+        ctx.beginPath();
+        ctx.moveTo(cx + points[0].x, cy + points[0].y);
+        for (let i = 1; i < points.length; i++) ctx.lineTo(cx + points[i].x, cy + points[i].y);
+        ctx.closePath();
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(221,170,68,0.9)';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        const fontPx = Math.max(8, Math.min(12, Math.floor(r / 5)));
+        ctx.fillStyle = '#aaa';
+        ctx.font = fontPx + 'px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        labelPositions.forEach((lp, i) => { ctx.fillText(labels[i] || '', cx + lp.x, cy + lp.y); });
+    }
+
     // --- SETUP SCREEN LOGIC ---
     initSetupScreen() {
         // ★修正: 起動直後はUIManagerがまだ存在しないため、直接DOMを操作してサイドバー一式を隠す
@@ -56,26 +109,32 @@ class CampaignManager {
             const portraitIndex = Math.floor(Math.random() * maxPortrait);
             const firstName = FIRST_NAMES[Math.floor(Math.random() * FIRST_NAMES.length)];
             const lastName = LAST_NAMES[Math.floor(Math.random() * LAST_NAMES.length)];
-            const soldierName = `${lastName} ${firstName}`;
+            const soldierName = `${firstName} ${lastName}`;
             d.dataset.portraitIndex = String(portraitIndex);
             d.dataset.soldierName = soldierName;
             d.dataset.key = k;
             const portraitNum = String(portraitIndex + 1).padStart(3, '0');
             const faceUrl = 'asset/portraits/inf_us_' + portraitNum + '.jpg';
             
+            const mainWeaponName = (t.main && typeof WPNS !== 'undefined' && WPNS[t.main]) ? WPNS[t.main].name : (t.loadout ? 'M2 Mortar' : '—');
             d.innerHTML = `
                 <div class="card-badge" style="display:none;">✔</div>
                 <div style="background:#222; width:100%; text-align:center; padding:2px 0; border-bottom:1px solid #444; margin-bottom:5px;">
                     <h3 style="color:#d84; font-size:14px; margin:0;">${soldierName}</h3>
+                    <div style="font-size:10px; color:#888; margin-top:2px;">${mainWeaponName}</div>
                 </div>
-                <div class="card-img-box" style="background:#111;">
+                <div class="card-img-box" style="background:#111; text-align:center;">
                     <img src="${faceUrl}" style="width:96px; height:96px; object-fit:cover;" onerror="this.style.display='none'">
                 </div>
-                <div class="card-body" style="font-size:10px; color:#aaa;">
-                    AP:${t.ap}<br>${t.role}
+                <div class="card-radar-box" style="background:#0d0d0d; padding:4px 0; text-align:center;">
+                    <canvas class="unit-radar" width="128" height="128"></canvas>
                 </div>
             `;
-            
+            const radarCanvas = d.querySelector('.unit-radar');
+            if (radarCanvas && t.params && typeof PARAM_KEYS !== 'undefined') {
+                const previewParams = this.getPreviewParams(t);
+                this.drawRadarCanvas(radarCanvas, previewParams);
+            }
             d.onclick = () => { 
                 const slotIdx = this.setupSlots.findIndex(s => s.key === k);
                 if (slotIdx >= 0) { 
@@ -178,11 +237,18 @@ class CampaignManager {
         const isPlayer = (team === 'player'); 
         
         const stats = t.stats ? { ...t.stats } : { str:0, aim:0, mob:0, mor:0 };
-        if (isPlayer && !t.isTank) { 
+        if (isPlayer && !t.isTank) {
             ['str', 'aim', 'mob', 'mor'].forEach(k => {
                 stats[k] = (stats[k] || 0) + Math.floor(Math.random() * 3) - 1;
             });
         }
+        const baseParams = (t.params && typeof PARAM_KEYS !== 'undefined') ? { ...t.params } : { action:4, speed:4, str:5, morale:5, aim:5, throw:5, melee:5, recon:4 };
+        const params = {};
+        (typeof PARAM_KEYS !== 'undefined' ? PARAM_KEYS : Object.keys(baseParams)).forEach(k => {
+            let v = baseParams[k] != null ? baseParams[k] : 5;
+            if (isPlayer && !t.isTank) v = v + Math.floor(Math.random() * 3) - 1;
+            params[k] = Math.max(1, Math.min(10, v));
+        });
         
         let name = t.name; 
         let faceSeed = Math.floor(Math.random() * 99999);
@@ -193,7 +259,7 @@ class CampaignManager {
             } else {
                 const first = FIRST_NAMES[Math.floor(Math.random() * FIRST_NAMES.length)]; 
                 const last = LAST_NAMES[Math.floor(Math.random() * LAST_NAMES.length)]; 
-                name = `${last} ${first}`; 
+                name = `${first} ${last}`; 
             }
             if (overridePortraitIndex !== undefined) {
                 portraitIndex = overridePortraitIndex;
@@ -203,7 +269,7 @@ class CampaignManager {
         }
 
         let baseHp = t.hp || 80;
-        let baseAp = t.ap || 4;
+        let baseAp = (t.ap != null ? t.ap : params.action);
         let skills = [];
         if (fusionData) {
             const count = Math.max(1, fusionCount || 1);
@@ -297,8 +363,9 @@ class CampaignManager {
         const hp = baseHp;
         const maxAp = baseAp;
         const unitFusionCount = (isPlayer && fusionCount >= 2) ? fusionCount : undefined;
-        return { 
-            id: Math.random(), team: team, q: 0, r: 0, def: t, name: name, rank: 0, faceSeed: faceSeed, portraitIndex: portraitIndex, stats: stats, hp: hp, maxHp: hp, ap: maxAp, maxAp: maxAp, hands: hands, bag: bag, stance: 'stand', skills: skills, sectorsSurvived: 0, deadProcessed: false, fusionCount: unitFusionCount 
+        return {
+            id: Math.random(), team: team, q: 0, r: 0, def: t, name: name, rank: 0, faceSeed: faceSeed, portraitIndex: portraitIndex,
+            stats: stats, params: params, hp: hp, maxHp: hp, ap: maxAp, maxAp: maxAp, hands: hands, bag: bag, stance: 'stand', skills: skills, sectorsSurvived: 0, deadProcessed: false, fusionCount: unitFusionCount
         };
     }
 

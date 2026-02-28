@@ -173,7 +173,9 @@ window.BattleLogic = class BattleLogic {
   // --- COMBAT LOGIC ---
   async actionAttack(a, d) {
     if (!a) return;
-    const targetUnitForWeapon = (d.hp !== undefined) ? d : (this.getUnitInHex(d.q, d.r));
+    const primary = this.getVirtualWeapon(a);
+    const forceM8Area = primary && primary.code === 'm8_rocket';
+    const targetUnitForWeapon = forceM8Area ? null : ((d.hp !== undefined) ? d : this.getUnitInHex(d.q, d.r));
 
     const game = this;
     let w = this.getAttackWeapon ? this.getAttackWeapon(a, targetUnitForWeapon) : null;
@@ -181,12 +183,15 @@ window.BattleLogic = class BattleLogic {
     if (!w) return;
     if (w.isBroken) { this.ui.log("武器故障中！修理が必要"); return; }
 
-    // ターゲット判定：ユニットクリック＝狙い撃ち、ヘックスクリック＝制圧射撃
-    // indirectは常にエリア射撃。直接武器はd.hpの有無で区別（ユニット指定なら狙い撃ち、ヘックスのみなら制圧）
+    // ターゲット判定：M8は常にエリア攻撃。それ以外はユニットクリック＝狙い撃ち、ヘックスクリック＝制圧
     let targetUnit = null;
     let targetHex = null;
     let isAreaAttack = false;
-    if (d.hp !== undefined) {
+    if (w.code === 'm8_rocket') {
+      targetHex = d.hp !== undefined ? { q: d.q, r: d.r } : d;
+      targetUnit = null;
+      isAreaAttack = true;
+    } else if (d.hp !== undefined) {
       targetUnit = d;
       targetHex = { q: d.q, r: d.r };
       if (w.indirect) { isAreaAttack = true; targetUnit = null; }
@@ -199,6 +204,12 @@ window.BattleLogic = class BattleLogic {
     if (w.indirect) isAreaAttack = true;
 
     if (!w.indirect && !targetUnit && !isAreaAttack) { this.setMode('SELECT'); return; }
+
+    // 虚空・水域ヘックスには攻撃不可（AP消費しない）
+    if (targetHex && !this.canAttackHex(targetHex.q, targetHex.r)) {
+      this.ui.log("虚空や水には攻撃できません");
+      return;
+    }
 
     // 弾薬チェック
     if (w.code === 'm2_mortar') {
@@ -229,6 +240,10 @@ window.BattleLogic = class BattleLogic {
       this.state = 'PLAY';
       this.checkPhaseEnd();
       if (this.ui && this.ui.updateSidebar) this.ui.updateSidebar();
+      if (this.interactionMode === 'ATTACK' && this.selectedUnit === a && !this.canFireAgain(a)) {
+        this.setMode('SELECT');
+        this.attackLine = [];
+      }
       return;
     }
 
@@ -254,7 +269,10 @@ window.BattleLogic = class BattleLogic {
     const overRange = Math.max(0, dist - (w.rng || 0));
     let hitChance = 0;
     if (!isAreaAttack && targetUnit) {
-      hitChance = (a.stats?.aim || 0) * 2 + w.acc - distPenalty - terrainCover;
+      const aimVal = (a.params && a.params.aim != null) ? a.params.aim : (a.stats?.aim || 0);
+      hitChance = aimVal * 2 + w.acc - distPenalty - terrainCover;
+      const moraleMod = (a.params && a.params.morale != null) ? (a.params.morale / 10) : 1;
+      hitChance = Math.round(hitChance * moraleMod);
       hitChance -= overRange * (w.overRangePenalty ?? 15);
       if (w.code === 'mg42') hitChance += 15;
       if (targetUnit.stance === 'prone') hitChance -= 20;
@@ -484,6 +502,10 @@ window.BattleLogic = class BattleLogic {
         game.isExecutingAttack = false;
         game.state = 'PLAY';
         game.checkPhaseEnd();
+        if (game.interactionMode === 'ATTACK' && game.selectedUnit === a && !game.canFireAgain(a)) {
+          game.setMode('SELECT');
+          game.attackLine = [];
+        }
         resolve();
       }, 500);
     });
@@ -610,11 +632,11 @@ window.BattleLogic = class BattleLogic {
   getAttackWeapon(a, targetUnit) {
     const main = this.getVirtualWeapon(a);
     if (!main) return null;
-    // 戦車がヘックス指定（範囲攻撃）のときは Main armament が M8 の場合のみ M8 を使用
+    // 戦車がヘックス指定（範囲攻撃）のときは Main armament が M8 の場合のみ M8 を使用（残弾ありのみ）
     if (a.def?.isTank && !targetUnit) {
       const slot0 = a.hands && a.hands[0];
-      if (slot0 && slot0.code === 'm8_rocket' && (slot0.current > 0 || slot0.cap > 0)) {
-        return { ...slot0, current: slot0.current ?? slot0.cap, cap: slot0.cap };
+      if (slot0 && slot0.code === 'm8_rocket' && (slot0.current || 0) > 0) {
+        return { ...slot0, current: slot0.current, cap: slot0.cap };
       }
     }
     if (a.def.isTank && targetUnit && !targetUnit.def?.isTank) {
@@ -630,6 +652,28 @@ window.BattleLogic = class BattleLogic {
       }
     }
     return main;
+  }
+
+  /** ATTACKモード継続可否。AP・残弾を判定し、もう一発撃てないなら false */
+  canFireAgain(u) {
+    const w = this.getVirtualWeapon(u);
+    if (!w || w.isBroken) return false;
+    if (u.ap < (w.ap || 1)) return false;
+    if (w.code === 'm2_mortar') {
+      let total = 0;
+      (u.bag || []).forEach(i => { if (i && i.code === 'mortar_shell_box') total += (i.current || 0); });
+      return total > 0;
+    }
+    if (w.code === 'mg42' && w.reserve !== undefined) return w.reserve > 0;
+    if (w.code === 'm8_rocket') {
+      const slot = u.hands && u.hands[0];
+      return slot && slot.code === 'm8_rocket' && (slot.current || 0) > 0;
+    }
+    if (u.def?.isTank && w.type && w.type.includes('shell')) {
+      return (w.reserve !== undefined && w.reserve > 0) || (w.current !== undefined && w.current > 0);
+    }
+    if (w.isConsumable) return (w.current || 0) > 0;
+    return (w.current || 0) > 0;
   }
 
   // --- HELPER METHODS ---
@@ -682,6 +726,12 @@ window.BattleLogic = class BattleLogic {
   getUnitInHex(q, r) { return this.units.find(u => u.q === q && u.r === r && u.hp > 0); }
   getUnit(q, r) { return this.getUnitInHex(q, r); }
   isValidHex(q, r) { return this.mapSystem ? this.mapSystem.isValidHex(q, r) : false; }
+  /** 攻撃可能なヘックスか（有効かつ虚空・水域でない） */
+  canAttackHex(q, r) {
+    if (!this.isValidHex(q, r)) return false;
+    const tile = this.map[q] && this.map[q][r];
+    return tile && tile.id !== -1 && tile.id !== 5;
+  }
   hexDist(a, b) { return this.mapSystem ? this.mapSystem.hexDist(a, b) : 0; }
   getNeighbors(q, r) { return this.mapSystem ? this.mapSystem.getNeighbors(q, r) : []; }
   findPath(u, tq, tr) { return this.mapSystem ? this.mapSystem.findPath(u, tq, tr) : []; }
@@ -731,6 +781,7 @@ window.BattleLogic = class BattleLogic {
       if(indicator) indicator.style.display = 'none';
       this.path = [];
       this.attackLine = [];
+      this.reachableHexes = [];
       // ATTACK以外のモードに移行したら弾数指定はクリアしておく
       this.attackBurstOverride = null;
     } else {
@@ -840,7 +891,12 @@ window.BattleLogic = class BattleLogic {
     if (dist > maxRange) return null;
     if (w.minRng && dist < w.minRng) return null;
     const terrainCover = this.map[targetHex.q][targetHex.r].cover;
-    let hit = (attacker.stats?.aim || 0) * 2 + (w.acc || 0) - (dist * (w.acc_drop || 5)) - terrainCover;
+    const aimVal = (attacker.params && attacker.params.aim != null) ? attacker.params.aim : (attacker.stats?.aim || 0);
+    const throwVal = (attacker.params && attacker.params.throw != null) ? attacker.params.throw : 5;
+    const baseAcc = (w.area && !targetUnit) ? throwVal * 2 : aimVal * 2;
+    let hit = baseAcc + (w.acc || 0) - (dist * (w.acc_drop || 5)) - terrainCover;
+    const moraleMod = (attacker.params && attacker.params.morale != null) ? (attacker.params.morale / 10) : 1;
+    hit = Math.round(hit * moraleMod);
     const overRange = Math.max(0, dist - (w.rng || 0));
     hit -= overRange * (w.overRangePenalty ?? 15);
     if (targetUnit) {
@@ -910,6 +966,7 @@ window.BattleLogic = class BattleLogic {
 
   calcReachableHexes(u) {
     this.reachableHexes = []; if (!u) return;
+    const maxCost = (u.params && u.params.speed != null) ? Math.max(1, Math.floor(u.ap * (u.params.speed / 5))) : u.ap;
     let frontier = [{ q: u.q, r: u.r, cost: 0 }], costSoFar = new Map(); costSoFar.set(`${u.q},${u.r}`, 0);
     while (frontier.length > 0) {
       let current = frontier.shift();
@@ -917,7 +974,7 @@ window.BattleLogic = class BattleLogic {
         if (this.getUnitsInHex(n.q, n.r).length >= 4) { return; }
         const cost = this.map[n.q][n.r].cost; if (cost >= 99) { return; }
         const nc = costSoFar.get(`${current.q},${current.r}`) + cost;
-        if (nc <= u.ap) {
+        if (nc <= maxCost) {
           const key = `${n.q},${n.r}`;
           if (!costSoFar.has(key) || nc < costSoFar.get(key)) { costSoFar.set(key, nc); frontier.push({ q: n.q, r: n.r }); this.reachableHexes.push({ q: n.q, r: n.r }); }
         }
@@ -1137,8 +1194,8 @@ window.BattleLogic = class BattleLogic {
     this.ui.log(`${a.name} 白兵攻撃`);
     if (typeof Renderer !== 'undefined' && Renderer.playAttackAnim) { Renderer.playAttackAnim(a, d); }
     await new Promise(r => setTimeout(r, 300));
-    let strVal = (a.stats && a.stats.str) ? a.stats.str : 0;
-    let totalDmg = 10 + (strVal * 3) + bonusDmg;
+    const meleeVal = (a.params && a.params.melee != null) ? a.params.melee : ((a.stats && a.stats.str) ? a.stats.str : 0);
+    let totalDmg = 10 + (meleeVal * 3) + bonusDmg;
     if (d.skills && d.skills.includes('CQC')) { this.ui.log(`>> カウンター！`); this.applyDamage(a, 15, "カウンター"); }
     if (window.Sfx) Sfx.play('hit');
     this.applyDamage(d, totalDmg, "白兵");
@@ -1174,14 +1231,14 @@ window.BattleLogic = class BattleLogic {
   }
 
   async triggerM8Rocket(attacker, centerHex) {
-    if (!this.isValidHex(centerHex.q, centerHex.r)) return;
+    if (!this.canAttackHex(centerHex.q, centerHex.r)) return;
     const game = this;
-    const pool = this.mapSystem ? this.mapSystem.getHexesInRange(centerHex.q, centerHex.r, 2) : [centerHex];
-    const validPool = pool.filter(h => this.isValidHex(h.q, h.r));
-    if (validPool.length === 0) return;
+    const fullPool = this.mapSystem ? this.mapSystem.getHexesInRange(centerHex.q, centerHex.r, 2) : [centerHex];
+    if (fullPool.length === 0) return;
+    // 海域・null も含む全ヘックスから抽選し、1ヘックスあたりの命中率を一定にする（有効な陸地のみ着弾時ダメージ）
     const hitHexes = [];
     for (let i = 0; i < 60; i++) {
-      hitHexes.push(validPool[Math.floor(Math.random() * validPool.length)]);
+      hitHexes.push(fullPool[Math.floor(Math.random() * fullPool.length)]);
     }
     const tankPos = typeof Renderer !== 'undefined' ? Renderer.hexToPx(attacker.q, attacker.r) : { x: 0, y: 0 };
     const dmg = 45;
@@ -1190,6 +1247,7 @@ window.BattleLogic = class BattleLogic {
       const hex = hitHexes[i];
       const targetPos = typeof Renderer !== 'undefined' ? Renderer.hexToPx(hex.q, hex.r) : { x: 0, y: 0 };
       const delay = i * 55;
+      const canHit = this.canAttackHex(hex.q, hex.r);
       setTimeout(() => {
         if (!game.consumeAmmo(attacker, 'm8_rocket', 1)) return;
         game.updateSidebar();
@@ -1198,8 +1256,10 @@ window.BattleLogic = class BattleLogic {
             if (window.Sfx) Sfx.play('cannon');
             if (typeof Renderer !== 'undefined') Renderer.playExplosion(targetPos.x, targetPos.y);
             if (window.VFX) { window.VFX.addSmoke(targetPos.x, targetPos.y); window.VFX.shakeRequest = 3; }
-            const units = game.getUnitsInHex(hex.q, hex.r);
-            units.forEach(u => { game.ui.log(`>> ロケット命中`); game.applyDamage(u, dmg, "M8 Rocket"); });
+            if (canHit) {
+              const units = game.getUnitsInHex(hex.q, hex.r);
+              units.forEach(u => { game.ui.log(`>> ロケット命中`); game.applyDamage(u, dmg, "M8 Rocket"); });
+            }
             game.updateSidebar();
           });
         }
@@ -1212,15 +1272,21 @@ window.BattleLogic = class BattleLogic {
     if (!this.isValidHex(centerHex.q, centerHex.r)) return;
     this.ui.log(`>> 航空支援要請`);
     const neighbors = this.getNeighbors(centerHex.q, centerHex.r);
-    const hits = []; const pool = [centerHex, ...neighbors].filter(h => this.isValidHex(h.q, h.r));
-    for (let i = 0; i < 3; i++) { if (pool.length === 0) break; const idx = Math.floor(Math.random() * pool.length); hits.push(pool[idx]); pool.splice(idx, 1); }
+    const fullPool = [centerHex, ...neighbors];
+    if (fullPool.length === 0) return;
+    // 海域・null も含む全ヘックスから抽選し、1ヘックスあたりの命中率を一定にする
+    const hits = [];
+    for (let i = 0; i < 3; i++) hits.push(fullPool[Math.floor(Math.random() * fullPool.length)]);
     for (const hex of hits) {
       const pos = Renderer.hexToPx(hex.q, hex.r);
+      const canHit = this.canAttackHex(hex.q, hex.r);
       setTimeout(() => {
         if (window.Sfx) { Sfx.play('cannon'); }
         if (typeof Renderer !== 'undefined') { Renderer.playExplosion(pos.x, pos.y); }
-        const units = this.getUnitsInHex(hex.q, hex.r);
-        units.forEach(u => { this.ui.log(`>> 爆撃命中`); this.applyDamage(u, 350, "爆撃"); });
+        if (canHit) {
+          const units = this.getUnitsInHex(hex.q, hex.r);
+          units.forEach(u => { this.ui.log(`>> 爆撃命中`); this.applyDamage(u, 350, "爆撃"); });
+        }
         this.updateSidebar();
         if (window.VFX) { VFX.addSmoke(pos.x, pos.y); }
       }, Math.random() * 800);

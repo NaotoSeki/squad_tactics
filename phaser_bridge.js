@@ -662,7 +662,7 @@ class UIScene extends Phaser.Scene {
         const template = (typeof UNIT_TEMPLATES !== 'undefined' && data.type && UNIT_TEMPLATES[data.type]) ? UNIT_TEMPLATES[data.type] : null;
         const isInfantry = template && template.role && String(template.role).toLowerCase() === 'infantry';
         if (isInfantry && !data.name && typeof FIRST_NAMES !== 'undefined' && typeof LAST_NAMES !== 'undefined' && FIRST_NAMES.length && LAST_NAMES.length) {
-            data.name = LAST_NAMES[Math.floor(Math.random() * LAST_NAMES.length)] + ' ' + FIRST_NAMES[Math.floor(Math.random() * FIRST_NAMES.length)];
+            data.name = FIRST_NAMES[Math.floor(Math.random() * FIRST_NAMES.length)] + ' ' + LAST_NAMES[Math.floor(Math.random() * LAST_NAMES.length)];
         }
         const card = new Card(this, 0, 0, data);
         this.handContainer.add(card); this.cards.push(card); card.physX = 600; card.physY = 300; card.setPosition(card.physX, card.physY); this.arrangeHand();
@@ -823,7 +823,15 @@ class MainScene extends Phaser.Scene {
     }
     triggerExplosion(x, y) { const explosion = this.add.sprite(x, y, 'explosion_sheet'); explosion.setDepth(100); explosion.setScale(1.5); explosion.play('explosion_anim'); explosion.once('animationcomplete', () => { explosion.destroy(); }); }
     centerCamera(q, r) { const p = Renderer.hexToPx(q, r); this.cameras.main.centerOn(p.x, p.y); }
-    centerMap() { this.cameras.main.centerOn((MAP_W * HEX_SIZE * 1.5) / 2, (MAP_H * HEX_SIZE * 1.732) / 2); }
+    centerMap() {
+        const mapW = MAP_W * HEX_SIZE * 1.5;
+        const mapH = MAP_H * HEX_SIZE * 1.732;
+        this.cameras.main.centerOn(mapW / 2, mapH / 2);
+        const vw = this.cameras.main.width;
+        const vh = this.cameras.main.height;
+        const zoomFit = Math.min(vw / mapW, vh / mapH) * 0.92;
+        this.cameras.main.zoom = Phaser.Math.Clamp(zoomFit, 0.25, 4);
+    }
     createMap() { 
         if(!window.gameLogic || !window.gameLogic.map) return;
         const map = window.gameLogic.map; this.hexGroup.removeAll(true); this.decorGroup.removeAll(true); this.unitGroup.removeAll(true); if(this.rubbleFrontGroup) this.rubbleFrontGroup.removeAll(true); this.treeGroup.removeAll(true); this.hpGroup.removeAll(true); 

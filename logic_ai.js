@@ -65,15 +65,25 @@ class EnemyAI {
           continue;
         }
 
-        // 弾切れ時はリロード試行（成功したら次ループで射撃）
-        if (w && w.current <= 0 && (actor.def.isTank || !w.code.includes('mortar'))) {
+        // 弾切れ時はまず BACKPACK / Sub から残弾のある武器に持ち替え
+        if (w && (w.current === undefined || w.current <= 0)) {
+          const switched = this.trySwitchToWeaponWithAmmo(actor);
+          if (switched) {
+            acted = true;
+            await new Promise(r => setTimeout(r, 50));
+            continue;
+          }
+        }
+
+        // 持ち替えできなかったらリロード試行（成功したら次ループで射撃）
+        if (w && (w.current === undefined || w.current <= 0) && (actor.def.isTank || !w.code.includes('mortar'))) {
           this.game.reloadWeapon(actor, false);
           await new Promise(r => setTimeout(r, 50));
           w = this.game.getVirtualWeapon(actor);
           if (w && w.current > 0) { acted = true; continue; }
         }
 
-        // 武器なし・弾切れ・射程外: 移動（接近 or 退却）または隣接時は次のターンで白兵するため接近
+        // 武器なし・弾切れ・射程外: 射程内に入るよう接近（または隣接で次ターン白兵）
         if (actor.ap >= 1) {
           const path = this.game.findPath(actor, target.q, target.r);
           if (path.length > 0) {
@@ -116,6 +126,39 @@ class EnemyAI {
       if (window.Sfx) window.Sfx.play('swap');
       await new Promise(r => setTimeout(r, 50));
     }
+  }
+
+  /**
+   * 残弾のある武器を BACKPACK または Sub からメインに持ち替える。
+   * @returns {boolean} 持ち替えに成功したか
+   */
+  trySwitchToWeaponWithAmmo(actor) {
+    if (!actor.hands || !Array.isArray(actor.hands) || actor.hands.length < 3) return false;
+    const game = this.game;
+    const attrWeapon = typeof ATTR !== 'undefined' ? ATTR.WEAPON : 'Weaponry';
+
+    const trySlot = (srcType, srcIndex) => {
+      const item = srcType === 'bag' ? actor.bag[srcIndex] : actor.hands[srcIndex];
+      if (!item || !item.code || item.type === 'part') return false;
+      if (typeof WPNS !== 'undefined' && WPNS[item.code] && WPNS[item.code].attr !== attrWeapon) return false;
+      game.swapEquipment({ type: 'main', index: 0 }, { type: srcType, index: srcIndex }, actor);
+      const w = game.getVirtualWeapon(actor);
+      const hasAmmo = w && ((w.current !== undefined && w.current > 0) || (w.reserve !== undefined && w.reserve > 0));
+      if (hasAmmo) {
+        if (window.Sfx) window.Sfx.play('swap');
+        return true;
+      }
+      game.swapEquipment({ type: 'main', index: 0 }, { type: srcType, index: srcIndex }, actor);
+      return false;
+    };
+
+    for (let i = 0; actor.bag && i < actor.bag.length; i++) {
+      if (trySlot('bag', i)) return true;
+    }
+    for (let idx of [1, 2]) {
+      if (actor.hands[idx] && trySlot('main', idx)) return true;
+    }
+    return false;
   }
 
   async executeTurn(units) {

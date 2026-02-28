@@ -76,27 +76,83 @@ const WPNS = {
     'mortar_shell_box': { name: "60mm Ammo Box", type: "ammo", ammoFor: "m2_mortar", cap: 12, current: 12, desc: "迫撃砲弾。", weight: 20, attr: ATTR.WEAPON, isConsumable: false }
 };
 
-const UNIT_TEMPLATES = {
-    rifleman: { name:"Rifleman", role:"infantry", main:"m1", sub:"m1911", opt:"nade", stats:{str:5, aim:5, mob:5, mor:5}, weight: null, attr: ATTR.MILITARY },
-    scout:    { name:"Scout", role:"infantry", main:"thompson", sub:"knife", opt:"nade", stats:{str:4, aim:4, mob:8, mor:6}, weight: null, attr: ATTR.MILITARY },
-    gunner:   { name:"Gunner", role:"infantry", main:"bar", sub:"m1911", opt:null, stats:{str:8, aim:4, mob:3, mor:5}, weight: null, attr: ATTR.MILITARY },
-    sniper:   { name:"Sniper", role:"infantry", main:"k98_scope", sub:"m1911", opt:null, stats:{str:3, aim:9, mob:4, mor:4}, weight: null, attr: ATTR.MILITARY },
-    
-    // 迫撃砲兵 (初期装備: パーツ3点 + 弾薬箱)
-    mortar_gunner: { 
-        name: "Mortar Gunner", 
-        role: "infantry", 
-        main: null,
-        loadout: ['mortar_barrel', 'mortar_bipod', 'mortar_plate'],
-        sub: "mortar_shell_box", 
-        opt: "m1911", 
-        stats: {str:6, aim:4, mob:3, mor:5}, 
-        weight: null, 
-        attr: ATTR.MILITARY 
-    },
+/** 能力値8種（1〜10）。行動=AP, 速度=移動ヘックス, 筋力=装備重量, 士気=命中等, 射撃/投擲/白兵/索敵 */
+const PARAM_KEYS = ['action', 'speed', 'str', 'morale', 'aim', 'throw', 'melee', 'recon'];
+/** レーダーチャート軸ラベル（PARAM_KEYS と同順） */
+const PARAM_LABELS = ['act', 'spd', 'str', 'mrl', 'aim', 'thw', 'mle', 'rcn'];
 
-    tank_pz4: { name:"Panzer IV", role:"tank", main:"kwk", sub:"mg42", opt:null, hp:600, ap:5, isTank:true, weight: null, attr: ATTR.MILITARY },
-    tank_tiger: { name:"Tiger I", role:"tank", main:"kwk88", sub:"mg42", opt:null, hp:1200, ap:4, isTank:true, isBoss:true, weight: null, attr: ATTR.MILITARY },
+/**
+ * レーダーチャート用の座標を共通計算（初期画面 canvas / 右ペイン Phaser で共用）。
+ * 中心は (0,0)、半径 r のローカル座標で返す。呼び出し側で (cx, cy) を足して使用。
+ * @param {Object} params - 能力値 { action, speed, ... }
+ * @param {string[]} paramKeys - キー順（通常 PARAM_KEYS）
+ * @param {number} radius - レーダー半径
+ * @param {number} [labelOffset=8] - ラベルを軸先から外す距離
+ * @returns {{ points: {x:number,y:number}[], labelPositions: {x:number,y:number}[], angles: number[] }}
+ */
+function getRadarPoints(params, paramKeys, radius, labelOffset) {
+    const offset = labelOffset != null ? labelOffset : 8;
+    const keys = paramKeys || PARAM_KEYS;
+    const points = [];
+    const labelPositions = [];
+    const angles = [];
+    for (let i = 0; i < keys.length; i++) {
+        const angle = -Math.PI / 2 + (i / keys.length) * 2 * Math.PI;
+        angles.push(angle);
+        const v = Math.max(0, Math.min(10, params[keys[i]] != null ? params[keys[i]] : 5));
+        const r = (v / 10) * radius;
+        points.push({ x: Math.cos(angle) * r, y: Math.sin(angle) * r });
+        labelPositions.push({
+            x: Math.cos(angle) * (radius + offset),
+            y: Math.sin(angle) * (radius + offset)
+        });
+    }
+    return { points, labelPositions, angles };
+}
+
+const UNIT_TEMPLATES = {
+    rifleman: {
+        name:"Rifleman", role:"infantry", main:"m1", sub:"m1911", opt:"nade",
+        stats:{str:5, aim:5, mob:5, mor:5},
+        params: { action:5, speed:5, str:5, morale:5, aim:5, throw:5, melee:5, recon:4 },
+        weight: null, attr: ATTR.MILITARY
+    },
+    scout: {
+        name:"Scout", role:"infantry", main:"thompson", sub:"knife", opt:"nade",
+        stats:{str:4, aim:4, mob:8, mor:6},
+        params: { action:4, speed:8, str:4, morale:6, aim:4, throw:5, melee:4, recon:7 },
+        weight: null, attr: ATTR.MILITARY
+    },
+    gunner: {
+        name:"Gunner", role:"infantry", main:"bar", sub:"m1911", opt:null,
+        stats:{str:8, aim:4, mob:3, mor:5},
+        params: { action:4, speed:3, str:8, morale:5, aim:4, throw:4, melee:6, recon:3 },
+        weight: null, attr: ATTR.MILITARY
+    },
+    sniper: {
+        name:"Sniper", role:"infantry", main:"k98_scope", sub:"m1911", opt:null,
+        stats:{str:3, aim:9, mob:4, mor:4},
+        params: { action:4, speed:4, str:3, morale:4, aim:9, throw:4, melee:3, recon:6 },
+        weight: null, attr: ATTR.MILITARY
+    },
+    mortar_gunner: {
+        name: "Mortar Gunner", role: "infantry", main: null,
+        loadout: ['mortar_barrel', 'mortar_bipod', 'mortar_plate'],
+        sub: "mortar_shell_box", opt: "m1911",
+        stats: {str:6, aim:4, mob:3, mor:5},
+        params: { action:4, speed:3, str:6, morale:5, aim:4, throw:5, melee:4, recon:4 },
+        weight: null, attr: ATTR.MILITARY
+    },
+    tank_pz4: {
+        name:"Panzer IV", role:"tank", main:"kwk", sub:"mg42", opt:null, hp:600, ap:5, isTank:true,
+        params: { action:5, speed:4, str:10, morale:6, aim:6, throw:0, melee:0, recon:5 },
+        weight: null, attr: ATTR.MILITARY
+    },
+    tank_tiger: {
+        name:"Tiger I", role:"tank", main:"kwk88", sub:"mg42", opt:null, hp:1200, ap:4, isTank:true, isBoss:true,
+        params: { action:4, speed:3, str:10, morale:6, aim:7, throw:0, melee:0, recon:5 },
+        weight: null, attr: ATTR.MILITARY
+    },
     aerial: { name:"AERIAL SPT", role:"TACTIC", main:null, sub:null, opt:null, hp:"N/A", ap:0, weight: null, attr: ATTR.SUPPORT }
 };
 

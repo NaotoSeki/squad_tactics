@@ -98,12 +98,13 @@ class MapSystem {
     while (f.length > 0) {
       const c = f.shift();
       if (c.q === tq && c.r === tr) { break; }
+      const maxCost = (u.params && u.params.speed != null) ? Math.max(1, Math.floor(u.ap * (u.params.speed / 5))) : u.ap;
       this.getNeighbors(c.q, c.r).forEach(n => {
         if (this.game.getUnitsInHex(n.q, n.r).length >= 4 && (n.q !== tq || n.r !== tr)) { return; }
         const cost = this.game.map[n.q][n.r].cost;
         if (cost >= 99) { return; }
         const nc = cs[`${c.q},${c.r}`] + cost;
-        if (nc <= u.ap) {
+        if (nc <= maxCost) {
           const k = `${n.q},${n.r}`;
           if (!(k in cs) || nc < cs[k]) { cs[k] = nc; f.push(n); cf[k] = c; }
         }
