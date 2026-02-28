@@ -353,8 +353,9 @@ class EnvSystem {
     spawnGrass(scene, group, x, y) { const count = 60; const scaleFactor = 0.07; for(let i=0; i<count; i++) { const r = Math.random() * (HEX_SIZE * 1.0); const angle = Math.random() * Math.PI * 2; const ox = Math.cos(angle) * r; const oy = Math.sin(angle) * r * 0.866; const type = Math.random() > 0.5 ? 'A' : 'B'; const textureKey = type === 'A' ? 'hd_grass_0' : 'hd_grass_b_0'; const grass = scene.add.sprite(x+ox, y+oy, textureKey); grass.setOrigin(0.5, 1.0); const typeScale = type === 'A' ? 1.0 : 0.85; grass.setScale((0.8 + Math.random() * 0.4) * scaleFactor * typeScale); grass.setDepth(y+oy); grass.grassType = type; grass.currentWindValue = 0; grass.origX = x + ox; grass.origY = y + oy; grass.amp = 0.82 + Math.random() * 0.36; const tintVar = Math.floor(Math.random() * 40); grass.setTint(Phaser.Display.Color.GetColor(160 + tintVar, 170 + tintVar, 130 + tintVar)); group.add(grass); this.grassElements.push(grass); } }
     spawnTrees(scene, group, x, y) {
         const count = 4 + Math.floor(Math.random() * 3);
-        const scaleFactor = 0.22;
-        const FIR_FRAMES = 16;
+        const scaleFactor = 0.66;
+        const FIR_FRAMES_WEAK = 16;
+        const FIR_FRAMES_STRONG = 16;
         for (let i = 0; i < count; i++) {
             const r = Math.random() * (HEX_SIZE * 0.85);
             const angle = Math.random() * Math.PI * 2;
@@ -367,7 +368,7 @@ class EnvSystem {
             group.add(shadow);
             const treeContainer = scene.add.container(x + ox, y + oy);
             treeContainer.setDepth(y + oy + 20);
-            const firSprite = scene.add.sprite(0, 0, 'fir_tree', Math.floor(Math.random() * FIR_FRAMES)).setOrigin(0.5, 0.95);
+            const firSprite = scene.add.sprite(0, 0, 'fir_tree', Math.floor(Math.random() * FIR_FRAMES_WEAK)).setOrigin(0.5, 0.95);
             firSprite.setScale(scaleX, scaleY);
             const tintR = 0xc0 + Math.floor(Math.random() * 0x30);
             const tintG = 0xd8 + Math.floor(Math.random() * 0x28);
@@ -380,7 +381,7 @@ class EnvSystem {
             treeContainer.origY = y + oy;
             treeContainer.swayOffset = (Math.random() - 0.5) * Math.PI * 0.6;
             treeContainer.amp = 0.88 + Math.random() * 0.24;
-            treeContainer.frameOffset = Math.floor(Math.random() * FIR_FRAMES);
+            treeContainer.frameOffset = Math.floor(Math.random() * FIR_FRAMES_WEAK);
             group.add(treeContainer);
             this.treeElements.push(treeContainer);
         }
@@ -454,7 +455,9 @@ class EnvSystem {
         }
 
         this.treeElements = this.treeElements.filter(tr => tr.scene);
-        const FIR_FRAMES = 16;
+        const FIR_FRAMES_WEAK = 16;
+        const strongWind = this.treeGust > 0.35;
+        const frameBase = strongWind ? 16 : 0;
         for (let i = 0; i < this.treeElements.length; i++) {
             const tr = this.treeElements[i];
             if (bounds && !bounds.contains(tr.origX, tr.origY)) { tr.visible = false; continue; }
@@ -469,9 +472,9 @@ class EnvSystem {
             tr.currentSkew += (targetSkew - tr.currentSkew) * stiffness;
             if (tr.firSprite) {
                 tr.firSprite.skewX = tr.currentSkew * 0.5;
-                const framePhase = (wavePhase * 0.4 + (tr.frameOffset || 0) / FIR_FRAMES * Math.PI * 2) % 1;
-                const frameIdx = (Math.floor(framePhase * FIR_FRAMES) + (tr.frameOffset || 0)) % FIR_FRAMES;
-                tr.firSprite.setFrame(Phaser.Math.Clamp(frameIdx, 0, FIR_FRAMES - 1));
+                const framePhase = (wavePhase * 0.4 + (tr.frameOffset || 0) / FIR_FRAMES_WEAK * Math.PI * 2) % 1;
+                const subFrame = (Math.floor(framePhase * FIR_FRAMES_WEAK) + (tr.frameOffset || 0)) % FIR_FRAMES_WEAK;
+                tr.firSprite.setFrame(Phaser.Math.Clamp(frameBase + subFrame, 0, 31));
             }
         }
     }
