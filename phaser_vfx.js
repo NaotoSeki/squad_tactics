@@ -351,6 +351,42 @@ class EnvSystem {
     generateGrassFrames(scene, keyPrefix, bladeDefs, w, h, scale, windSens) { for (let frame = 0; frame < this.TOTAL_GRASS_FRAMES; frame++) { const g = scene.make.graphics({x:0, y:0, add:false}); g.fillStyle(0x2a331a, 0.8); g.fillEllipse(w/2, h, h/4, h/10); const bendFactor = frame / (this.TOTAL_GRASS_FRAMES - 1.0); for(let b of bladeDefs) { g.lineStyle(1.5 * scale, b.col, 1.0); const startX = b.startX; const startY = h; const windX = bendFactor * (h * windSens); const windY = Math.abs(windX) * 0.2; const endX = startX + b.lean + windX; const endY = startY - b.len + windY; const ctrlX = startX + (b.lean * 0.1) + (windX * 0.5) + b.ctrlOff; const ctrlY = startY - (b.len * 0.5); const curve = new Phaser.Curves.QuadraticBezier(new Phaser.Math.Vector2(startX, startY), new Phaser.Math.Vector2(ctrlX, ctrlY), new Phaser.Math.Vector2(endX, endY)); curve.draw(g); } g.generateTexture(`${keyPrefix}_${frame}`, w, h); } }
     clear() { this.grassElements = []; this.treeElements = []; }
     spawnGrass(scene, group, x, y) { const count = 60; const scaleFactor = 0.07; for(let i=0; i<count; i++) { const r = Math.random() * (HEX_SIZE * 1.0); const angle = Math.random() * Math.PI * 2; const ox = Math.cos(angle) * r; const oy = Math.sin(angle) * r * 0.866; const type = Math.random() > 0.5 ? 'A' : 'B'; const textureKey = type === 'A' ? 'hd_grass_0' : 'hd_grass_b_0'; const grass = scene.add.sprite(x+ox, y+oy, textureKey); grass.setOrigin(0.5, 1.0); const typeScale = type === 'A' ? 1.0 : 0.85; grass.setScale((0.8 + Math.random() * 0.4) * scaleFactor * typeScale); grass.setDepth(y+oy); grass.grassType = type; grass.currentWindValue = 0; grass.origX = x + ox; grass.origY = y + oy; grass.amp = 0.82 + Math.random() * 0.36; const tintVar = Math.floor(Math.random() * 40); grass.setTint(Phaser.Display.Color.GetColor(160 + tintVar, 170 + tintVar, 130 + tintVar)); group.add(grass); this.grassElements.push(grass); } }
+    spawnGrassHexSheet(scene, group, x, y) {
+        if (!scene.textures.exists('grass')) return;
+        const hexR = (typeof HEX_SIZE !== 'undefined' ? HEX_SIZE : 54) * 0.98;
+        const g = scene.make.graphics({ x: 0, y: 0, add: false });
+        g.fillStyle(0xffffff, 1);
+        g.beginPath();
+        for (let i = 0; i < 6; i++) {
+            const a = Math.PI / 180 * (90 + 60 * i);
+            const px = hexR * Math.cos(a);
+            const py = hexR * Math.sin(a);
+            if (i === 0) g.moveTo(px, py);
+            else g.lineTo(px, py);
+        }
+        g.closePath();
+        g.fillPath();
+        const mask = g.createGeometryMask();
+        const sprite = scene.add.sprite(x, y, 'grass', Math.floor(Math.random() * 16)).setOrigin(0.5, 0.5);
+        const scaleX = (Math.sqrt(3) * HEX_SIZE * 1.1) / 128;
+        const scaleY = (2 * HEX_SIZE * 1.1) / 128;
+        sprite.setScale(scaleX, scaleY);
+        sprite.setMask(mask);
+        sprite.setDepth(y);
+        g.setPosition(x, y);
+        g.setVisible(false);
+        group.add(g);
+        group.add(sprite);
+        if (!scene.anims.exists('grass_sway')) {
+            scene.anims.create({
+                key: 'grass_sway',
+                frames: scene.anims.generateFrameNumbers('grass', { start: 0, end: 15 }),
+                frameRate: 8,
+                repeat: -1
+            });
+        }
+        sprite.play('grass_sway');
+    }
     spawnTrees(scene, group, x, y) {
         const count = 4 + Math.floor(Math.random() * 3);
         const scaleFactor = 0.66;
