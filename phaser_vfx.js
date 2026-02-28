@@ -1,4 +1,10 @@
-/** PHASER VFX & ENV: Spark Only (No Debris/Rects) */
+/** PHASER VFX & ENV: Spark Only (No Debris/Rects)
+ * 森林: ベクター描画(hd_tree_trunk + hd_tree_leaves_0/1/2)を廃止し、
+ * asset/environment/fir_tree.png (128x128 x16) のスプライトシートに置換。
+ * 軽減率試算: 1本あたり描画オブジェクト 4→1、テクスチャバッチ 4種→1種、
+ * 毎フレーム更新 4オブジェクト→1オブジェクト。ロード時のベクター生成(幹+葉3枚)削除。
+ * → 森林まわりの描画コール・CPU更新はおおよそ 70〜80% 削減想定。
+ */
 
 class VFXSystem {
     constructor() {
@@ -253,9 +259,7 @@ class EnvSystem {
         const palettes = [0x4a5d23, 0x5b6e34, 0x3a4d13, 0x6c7a44, 0x554e33];
         if (!scene.textures.exists('hd_grass_0')) { const bladeDefsA = []; for(let i=0; i<45; i++) { bladeDefsA.push({ col: palettes[Math.floor(Math.random() * palettes.length)], startX: canvasW/2 + (Math.random()-0.5) * (canvasH * 0.15), len: (canvasH * 0.5) + Math.random() * (canvasH * 0.5), lean: (Math.random() - 0.5) * (canvasH * 0.9), ctrlOff: (Math.random() - 0.5) * (canvasH * 0.2) }); } this.generateGrassFrames(scene, 'hd_grass', bladeDefsA, canvasW, canvasH, TEXTURE_SCALE, 0.7); }
         if (!scene.textures.exists('hd_grass_b_0')) { const bladeDefsB = []; for(let i=0; i<55; i++) { bladeDefsB.push({ col: palettes[Math.floor(Math.random() * palettes.length)], startX: canvasW/2 + (Math.random()-0.5) * (canvasH * 0.6), len: (canvasH * 0.3) + Math.random() * (canvasH * 0.3), lean: (Math.random() - 0.5) * (canvasH * 1.5), ctrlOff: (Math.random() - 0.5) * (canvasH * 0.5) }); } this.generateGrassFrames(scene, 'hd_grass_b', bladeDefsB, canvasW, canvasH, TEXTURE_SCALE, 0.4); }
-        const treeW = 100 * TEXTURE_SCALE; const treeH = 170 * TEXTURE_SCALE;
-        if (!scene.textures.exists('hd_tree_trunk')) { const g = scene.make.graphics({x:0, y:0, add:false}); g.fillStyle(0x332211); g.beginPath(); const bW = treeW * 0.12; const tW = treeW * 0.02; const cx = treeW/2; g.moveTo(cx - bW/2, treeH * 0.95); g.lineTo(cx + bW/2, treeH * 0.95); g.lineTo(cx + tW/2, treeH * 0.1); g.lineTo(cx - tW/2, treeH * 0.1); g.closePath(); g.fill(); g.generateTexture('hd_tree_trunk', treeW, treeH); }
-        const layers = 3; const baseColors = [ { r: 10, g: 31, b: 11 }, { r: 22, g: 51, b: 24 }, { r: 34, g: 68, b: 34 } ];
+        // 森林は fir_tree スプライトシート（asset/environment/fir_tree.png）で描画。ベクター生成は廃止。
         if (!scene.textures.exists('rubble_chunk_0')) {
             const RSC = 2.0; // 瓦礫1つ1つのサイズ縮小（影・ひび割れ付き）
             const rubbleColors = [0x9a958c, 0x8c877e, 0xa29d94, 0x7e796e, 0xb0aaa0];
@@ -343,12 +347,44 @@ class EnvSystem {
                 g.generateTexture(`rubble_chunk_${idx}`, w + 10, h + 12);
             });
         }
-        for(let l=0; l<layers; l++) { const key = `hd_tree_leaves_${l}`; if (scene.textures.exists(key)) continue; const g = scene.make.graphics({x:0, y:0, add:false}); const startH = 0.9 - (l * 0.25); const endH = startH - 0.4; const branches = 80 + l * 30; const baseCol = baseColors[l]; for(let i=0; i<branches; i++) { const progress = i / branches; const rndH = startH - (startH - endH) * Math.random(); const layerY = treeH * rndH; const widthRatio = (rndH - 0.1) / 0.8; const layerWidth = treeW * 0.95 * widthRatio; const rVar = Math.floor((Math.random() - 0.5) * 20); const gVar = Math.floor((Math.random() - 0.5) * 30); const bVar = Math.floor((Math.random() - 0.5) * 20); const highlight = (Math.random() < (0.1 + l * 0.2)) ? 20 : 0; const r = Phaser.Math.Clamp(baseCol.r + rVar + highlight, 0, 255); const gVal = Phaser.Math.Clamp(baseCol.g + gVar + highlight, 0, 255); const b = Phaser.Math.Clamp(baseCol.b + bVar + highlight, 0, 255); const color = Phaser.Display.Color.GetColor(r, gVal, b); g.lineStyle((2.0 + Math.random()) * TEXTURE_SCALE, color, 0.9); const cx = treeW/2; const side = Math.random() > 0.5 ? 1 : -1; const length = layerWidth * 0.5 * (0.5 + Math.random()*0.6); const startX = cx + (Math.random()-0.5) * (treeW*0.08); const startY = layerY + (Math.random()-0.5) * (treeH*0.02); const endX = startX + (side * length); const droop = (length * 0.3) + Math.random() * (treeH * 0.08); const endY = startY + droop; const ctrlX = startX + (side * length * 0.3) + (Math.random()-0.5)*10; const ctrlY = startY - (length * 0.15) + (Math.random()-0.5)*10; const curve = new Phaser.Curves.QuadraticBezier( new Phaser.Math.Vector2(startX, startY), new Phaser.Math.Vector2(ctrlX, ctrlY), new Phaser.Math.Vector2(endX, endY) ); curve.draw(g); if (Math.random() < 0.3) { g.lineStyle(1.0 * TEXTURE_SCALE, Phaser.Display.Color.GetColor(r+20, gVal+20, b+10), 0.6); curve.draw(g); } } g.generateTexture(key, treeW, treeH); }
     }
     generateGrassFrames(scene, keyPrefix, bladeDefs, w, h, scale, windSens) { for (let frame = 0; frame < this.TOTAL_GRASS_FRAMES; frame++) { const g = scene.make.graphics({x:0, y:0, add:false}); g.fillStyle(0x2a331a, 0.8); g.fillEllipse(w/2, h, h/4, h/10); const bendFactor = frame / (this.TOTAL_GRASS_FRAMES - 1.0); for(let b of bladeDefs) { g.lineStyle(1.5 * scale, b.col, 1.0); const startX = b.startX; const startY = h; const windX = bendFactor * (h * windSens); const windY = Math.abs(windX) * 0.2; const endX = startX + b.lean + windX; const endY = startY - b.len + windY; const ctrlX = startX + (b.lean * 0.1) + (windX * 0.5) + b.ctrlOff; const ctrlY = startY - (b.len * 0.5); const curve = new Phaser.Curves.QuadraticBezier(new Phaser.Math.Vector2(startX, startY), new Phaser.Math.Vector2(ctrlX, ctrlY), new Phaser.Math.Vector2(endX, endY)); curve.draw(g); } g.generateTexture(`${keyPrefix}_${frame}`, w, h); } }
     clear() { this.grassElements = []; this.treeElements = []; }
     spawnGrass(scene, group, x, y) { const count = 60; const scaleFactor = 0.07; for(let i=0; i<count; i++) { const r = Math.random() * (HEX_SIZE * 1.0); const angle = Math.random() * Math.PI * 2; const ox = Math.cos(angle) * r; const oy = Math.sin(angle) * r * 0.866; const type = Math.random() > 0.5 ? 'A' : 'B'; const textureKey = type === 'A' ? 'hd_grass_0' : 'hd_grass_b_0'; const grass = scene.add.sprite(x+ox, y+oy, textureKey); grass.setOrigin(0.5, 1.0); const typeScale = type === 'A' ? 1.0 : 0.85; grass.setScale((0.8 + Math.random() * 0.4) * scaleFactor * typeScale); grass.setDepth(y+oy); grass.grassType = type; grass.currentWindValue = 0; grass.origX = x + ox; grass.origY = y + oy; grass.amp = 0.82 + Math.random() * 0.36; const tintVar = Math.floor(Math.random() * 40); grass.setTint(Phaser.Display.Color.GetColor(160 + tintVar, 170 + tintVar, 130 + tintVar)); group.add(grass); this.grassElements.push(grass); } }
-    spawnTrees(scene, group, x, y) { const count = 4 + Math.floor(Math.random() * 3); const scaleFactor = 0.18; for(let i=0; i<count; i++) { const r = Math.random() * (HEX_SIZE * 0.85); const angle = Math.random() * Math.PI * 2; const ox = Math.cos(angle) * r; const oy = Math.sin(angle) * r * 0.866; const scale = (0.7 + Math.random() * 0.6) * scaleFactor; const shadow = scene.add.ellipse(x+ox, y+oy+3, 40*scale, 15*scale, 0x000000, 0.5); group.add(shadow); const treeContainer = scene.add.container(x+ox, y+oy); treeContainer.setDepth(y+oy + 20); treeContainer.setScale(scale); const trunk = scene.add.image(0, 0, 'hd_tree_trunk').setOrigin(0.5, 0.95); treeContainer.add(trunk); const leaves = []; for(let l=0; l<3; l++) { const leaf = scene.add.image(0, 0, `hd_tree_leaves_${l}`).setOrigin(0.5, 0.95); treeContainer.add(leaf); leaves.push(leaf); } treeContainer.trunk = trunk; treeContainer.leaves = leaves; treeContainer.currentSkew = 0; treeContainer.baseSkew = 0; treeContainer.origX = x + ox; treeContainer.origY = y + oy; treeContainer.swayOffset = (Math.random() - 0.5) * Math.PI * 0.6; treeContainer.amp = 0.88 + Math.random() * 0.24; group.add(treeContainer); this.treeElements.push(treeContainer); } }
+    spawnTrees(scene, group, x, y) {
+        const count = 4 + Math.floor(Math.random() * 3);
+        const scaleFactor = 0.22;
+        const FIR_FRAMES = 16;
+        for (let i = 0; i < count; i++) {
+            const r = Math.random() * (HEX_SIZE * 0.85);
+            const angle = Math.random() * Math.PI * 2;
+            const ox = Math.cos(angle) * r;
+            const oy = Math.sin(angle) * r * 0.866;
+            const scaleBase = (0.7 + Math.random() * 0.6) * scaleFactor;
+            const scaleX = scaleBase * (0.92 + Math.random() * 0.16);
+            const scaleY = scaleBase * (0.88 + Math.random() * 0.24);
+            const shadow = scene.add.ellipse(x + ox, y + oy + 3, 40 * scaleBase, 15 * scaleBase, 0x000000, 0.5);
+            group.add(shadow);
+            const treeContainer = scene.add.container(x + ox, y + oy);
+            treeContainer.setDepth(y + oy + 20);
+            const firSprite = scene.add.sprite(0, 0, 'fir_tree', Math.floor(Math.random() * FIR_FRAMES)).setOrigin(0.5, 0.95);
+            firSprite.setScale(scaleX, scaleY);
+            const tintR = 0xc0 + Math.floor(Math.random() * 0x30);
+            const tintG = 0xd8 + Math.floor(Math.random() * 0x28);
+            const tintB = 0xb0 + Math.floor(Math.random() * 0x40);
+            firSprite.setTint(Phaser.Display.Color.GetColor(tintR, tintG, tintB));
+            treeContainer.add(firSprite);
+            treeContainer.firSprite = firSprite;
+            treeContainer.currentSkew = 0;
+            treeContainer.origX = x + ox;
+            treeContainer.origY = y + oy;
+            treeContainer.swayOffset = (Math.random() - 0.5) * Math.PI * 0.6;
+            treeContainer.amp = 0.88 + Math.random() * 0.24;
+            treeContainer.frameOffset = Math.floor(Math.random() * FIR_FRAMES);
+            group.add(treeContainer);
+            this.treeElements.push(treeContainer);
+        }
+    }
     spawnRubble(scene, x, y, decorGroup, rubbleFrontGroup) {
         const countBack = 6 + Math.floor(Math.random() * 4);
         const countFront = 6 + Math.floor(Math.random() * 4);
@@ -418,6 +454,7 @@ class EnvSystem {
         }
 
         this.treeElements = this.treeElements.filter(tr => tr.scene);
+        const FIR_FRAMES = 16;
         for (let i = 0; i < this.treeElements.length; i++) {
             const tr = this.treeElements[i];
             if (bounds && !bounds.contains(tr.origX, tr.origY)) { tr.visible = false; continue; }
@@ -430,20 +467,11 @@ class EnvSystem {
             const targetSkew = mainSway + subSway + gust;
             const stiffness = 0.018;
             tr.currentSkew += (targetSkew - tr.currentSkew) * stiffness;
-            const s = tr.currentSkew;
-            tr.trunk.skewX = s * 0.38;
-            tr.trunk.angle = s * 1.4;
-            if (tr.leaves) {
-                const phase1 = wavePhase - 0.25;
-                const phase2 = wavePhase - 0.5;
-                const s1 = (Math.sin(phase1) * 0.022 + Math.sin(phase1 * 1.5) * 0.008 + gust * 0.5);
-                const s2 = (Math.sin(phase2) * 0.02 + Math.sin(phase2 * 1.4) * 0.006 + gust * 0.7);
-                tr.leaves[0].skewX = tr.leaves[0].skewX * 0.94 + s1 * 0.7;
-                tr.leaves[0].x = tr.leaves[0].x * 0.94 + s1 * 4;
-                tr.leaves[1].skewX = tr.leaves[1].skewX * 0.92 + s1 * 1.0;
-                tr.leaves[1].x = tr.leaves[1].x * 0.92 + s1 * 12;
-                tr.leaves[2].skewX = tr.leaves[2].skewX * 0.90 + s2 * 1.2;
-                tr.leaves[2].x = tr.leaves[2].x * 0.90 + s2 * 20;
+            if (tr.firSprite) {
+                tr.firSprite.skewX = tr.currentSkew * 0.5;
+                const framePhase = (wavePhase * 0.4 + (tr.frameOffset || 0) / FIR_FRAMES * Math.PI * 2) % 1;
+                const frameIdx = (Math.floor(framePhase * FIR_FRAMES) + (tr.frameOffset || 0)) % FIR_FRAMES;
+                tr.firSprite.setFrame(Phaser.Math.Clamp(frameIdx, 0, FIR_FRAMES - 1));
             }
         }
     }

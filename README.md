@@ -58,6 +58,7 @@ No build step is required. Since the project uses ES6 features and fetches local
 * **Renderer Global**: The `Renderer` object in `phaser_bridge.js` is exposed globally to allow `BattleLogic` to trigger visual events (Animations, Camera movement).
 * **AI Pathfinding**: Uses A* algorithm located in `logic_map.js`.
 * **Map Generation**: Currently procedural based on sector difficulty.
+* **Forest (terrain id=2)**: Rendered with sprite sheet `asset/environment/fir_tree.png` (128×128px ×16 frames). Replaces previous vector-drawn trees for lower CPU/GPU load (estimated ~70–80% fewer draw/update operations per tree).
 
 ---
 *Development status: v1.0 Heroic Update (Active)*
