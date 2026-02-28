@@ -724,8 +724,8 @@ class MainScene extends Phaser.Scene {
         this.load.spritesheet('explosion_sheet', 'asset/explosion_sheet_1.png', { frameWidth: 64, frameHeight: 64 });
         // fir_tree: 128x128 x32コマ。レイアウト 16列x2行（0-15=弱い揺れ、16-31=強風）
         this.load.spritesheet('fir_tree', 'asset/environment/fir_tree.png', { frameWidth: 128, frameHeight: 128, endFrame: 31 });
-        // grass: 512x512 16コマ（4x4）。草原ヘックス用・ヘックスマスクで表示
-        this.load.spritesheet('grass', 'asset/environment/grass.png', { frameWidth: 128, frameHeight: 128, endFrame: 15 });
+        // grass: 512x512 16コマ（16x1）。草原ヘックス用・ヘックスマスクで表示
+        this.load.spritesheet('grass', 'asset/environment/grass.png', { frameWidth: 32, frameHeight: 512, endFrame: 15 });
         for (let i = 1; i <= (typeof PORTRAIT_AVAILABLE !== 'undefined' ? PORTRAIT_AVAILABLE : 7); i++) {
             this.load.image('portrait_' + i, 'asset/portraits/inf_us_' + String(i).padStart(3, '0') + '.jpg');
         }
