@@ -97,11 +97,11 @@ window.createGradientTexture = function(scene) {
 window.createHexTexture = function(scene) {
     if (scene.textures.exists('hex_base')) return;
     const g = scene.make.graphics({x: 0, y: 0, add: false});
-    const baseSize = (typeof HEX_SIZE !== 'undefined' ? HEX_SIZE : 54); 
+    const baseSize = (typeof HEX_SIZE !== 'undefined' ? HEX_SIZE : 54);
     const size = baseSize * window.HIGH_RES_SCALE * 1.02;
-    const w = size * 2; const h = size * Math.sqrt(3);
+    const w = size * Math.sqrt(3); const h = size * 2;
     g.fillStyle(0xffffff); g.beginPath();
-    for (let i = 0; i < 6; i++) { const angle_deg = 60 * i; const angle_rad = Math.PI / 180 * angle_deg; const px = w/2 + size * Math.cos(angle_rad); const py = h/2 + size * Math.sin(angle_rad); if (i === 0) g.moveTo(px, py); else g.lineTo(px, py); }
+    for (let i = 0; i < 6; i++) { const angle_deg = 90 + 60 * i; const angle_rad = Math.PI / 180 * angle_deg; const px = w/2 + size * Math.cos(angle_rad); const py = h/2 + size * Math.sin(angle_rad); if (i === 0) g.moveTo(px, py); else g.lineTo(px, py); }
     g.closePath(); g.fillPath(); g.generateTexture('hex_base', w, h);
 };
 
@@ -148,8 +148,8 @@ const Renderer = {
         document.addEventListener('click', startAudio); document.addEventListener('keydown', startAudio);
     },
     resize() { if(this.game) this.game.scale.resize(document.getElementById('game-view').clientWidth, document.getElementById('game-view').clientHeight); },
-    hexToPx(q, r) { return { x: HEX_SIZE * 3/2 * q, y: HEX_SIZE * Math.sqrt(3) * (r + q/2) }; },
-    pxToHex(mx, my) { const main = phaserGame.scene.getScene('MainScene'); if(!main) return {q:0, r:0}; const w = main.cameras.main.getWorldPoint(mx, my); return this.roundHex((2/3*w.x)/HEX_SIZE, (-1/3*w.x+Math.sqrt(3)/3*w.y)/HEX_SIZE); },
+    hexToPx(q, r) { return { x: HEX_SIZE * Math.sqrt(3) * (q + r/2), y: HEX_SIZE * (3/2) * r }; },
+    pxToHex(mx, my) { const main = phaserGame.scene.getScene('MainScene'); if(!main) return {q:0, r:0}; const w = main.cameras.main.getWorldPoint(mx, my); return this.roundHex((Math.sqrt(3)/3*w.x - w.y/3)/HEX_SIZE, (2/3*w.y)/HEX_SIZE); },
     roundHex(q,r) { let rq=Math.round(q), rr=Math.round(r), rs=Math.round(-q-r); const dq=Math.abs(rq-q), dr=Math.abs(rr-r), ds=Math.abs(rs-(-q-r)); if(dq>dr&&dq>ds) rq=-rr-rs; else if(dr>ds) rr=-rq-rs; return {q:rq, r:rr}; },
     centerOn(q, r) { const main = this.game.scene.getScene('MainScene'); if (main && main.centerCamera) main.centerCamera(q, r); },
     centerMap() { const main = this.game.scene.getScene('MainScene'); if (main && main.centerMap) main.centerMap(); },
@@ -722,6 +722,7 @@ class MainScene extends Phaser.Scene {
         this.load.spritesheet('soldier_sheet', 'asset/soldier_sheet_1.png', { frameWidth: 128, frameHeight: 128 });
         this.load.spritesheet('tank_sheet', 'asset/tank_sheet_1.png', { frameWidth: 128, frameHeight: 128 });
         this.load.spritesheet('explosion_sheet', 'asset/explosion_sheet_1.png', { frameWidth: 64, frameHeight: 64 });
+        // fir_tree: 128x128 x32コマ。レイアウト 16列x2行（0-15=弱い揺れ、16-31=強風）
         this.load.spritesheet('fir_tree', 'asset/environment/fir_tree.png', { frameWidth: 128, frameHeight: 128, endFrame: 31 });
         for (let i = 1; i <= (typeof PORTRAIT_AVAILABLE !== 'undefined' ? PORTRAIT_AVAILABLE : 7); i++) {
             this.load.image('portrait_' + i, 'asset/portraits/inf_us_' + String(i).padStart(3, '0') + '.jpg');
@@ -825,8 +826,8 @@ class MainScene extends Phaser.Scene {
     triggerExplosion(x, y) { const explosion = this.add.sprite(x, y, 'explosion_sheet'); explosion.setDepth(100); explosion.setScale(1.5); explosion.play('explosion_anim'); explosion.once('animationcomplete', () => { explosion.destroy(); }); }
     centerCamera(q, r) { const p = Renderer.hexToPx(q, r); this.cameras.main.centerOn(p.x, p.y); }
     centerMap() {
-        const mapW = MAP_W * HEX_SIZE * 1.5;
-        const mapH = MAP_H * HEX_SIZE * 1.732;
+        const mapW = MAP_W * HEX_SIZE * Math.sqrt(3);
+        const mapH = MAP_H * HEX_SIZE * 1.5;
         this.cameras.main.centerOn(mapW / 2, mapH / 2);
         const vw = this.cameras.main.width;
         const vh = this.cameras.main.height;
@@ -968,9 +969,9 @@ class MainScene extends Phaser.Scene {
             }
         }
     }
-    drawHexOutline(g, q, r) { const c = Renderer.hexToPx(q, r); g.beginPath(); for(let i=0; i<6; i++) { const a = Math.PI/180*60*i; g.lineTo(c.x+HEX_SIZE*0.9*Math.cos(a), c.y+HEX_SIZE*0.9*Math.sin(a)); } g.closePath(); g.strokePath(); }
+    drawHexOutline(g, q, r) { const c = Renderer.hexToPx(q, r); g.beginPath(); for(let i=0; i<6; i++) { const a = Math.PI/180*(90+60*i); g.lineTo(c.x+HEX_SIZE*0.9*Math.cos(a), c.y+HEX_SIZE*0.9*Math.sin(a)); } g.closePath(); g.strokePath(); }
     drawDashedHexOutline(g, q, r, timeOffset = 0) {
-        const c = Renderer.hexToPx(q, r); const pts = []; for(let i=0; i<6; i++) { const a = Math.PI/180*60*i; pts.push({ x: c.x+HEX_SIZE*0.9*Math.cos(a), y: c.y+HEX_SIZE*0.9*Math.sin(a) }); }
+        const c = Renderer.hexToPx(q, r); const pts = []; for(let i=0; i<6; i++) { const a = Math.PI/180*(90+60*i); pts.push({ x: c.x+HEX_SIZE*0.9*Math.cos(a), y: c.y+HEX_SIZE*0.9*Math.sin(a) }); }
         const dashLen = 6; const gapLen = 4; const period = dashLen + gapLen; let currentDistInPath = -timeOffset; 
         for(let i=0; i<6; i++) {
             const p1 = pts[i]; const p2 = pts[(i+1)%6]; const dist = Phaser.Math.Distance.Between(p1.x, p1.y, p2.x, p2.y); const dx = (p2.x - p1.x) / dist; const dy = (p2.y - p1.y) / dist;
