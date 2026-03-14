@@ -6,8 +6,12 @@ soldier_crawl_64.png として保存する。Phaser の load.spritesheet 用。
 画像が 2048×2048 未満の場合は、透明で 2048×2048 にパディングして保存する
 （本番用は Blender で 2048×7680 を出力してから実行すること）。
 
-使い方: プロジェクトルートで
-  python scripts/crop_soldier_crawl_64.py
+使い方:
+  【方法1】Windows: scripts/crop_soldier_crawl_64.cmd をダブルクリック
+  【方法2】ターミナルでプロジェクトルートに移動してから:
+    cd c:\\Projects\\squad_tactics
+    python scripts/crop_soldier_crawl_64.py
+  初回のみ: pip install Pillow
 """
 import os
 import sys
