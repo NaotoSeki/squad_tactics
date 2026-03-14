@@ -737,7 +737,7 @@ class MainScene extends Phaser.Scene {
         window.createHexTexture(this); this.cameras.main.setBackgroundColor('#0b0e0a'); 
         this.updateSidebarViewport();
         this.scale.on('resize', () => this.updateSidebarViewport());
-        // 匍匐: 元画像の上 2048×2048（8行＝64コマ）だけをキャンバスに描き、スプライトシートとして登録（高さ制限対策）
+        // 匍匐: 元画像の上 2048×2048 をキャンバスに描き、256×256 のフレームを 64 枚手動で登録（addSpriteSheet のキャンバス分割不具合対策）
         if (!this.textures.exists('soldier_crawl')) {
             const img = this.textures.get('soldier_crawl_img').getSourceImage();
             const w = 2048, h = 2048;
@@ -746,7 +746,15 @@ class MainScene extends Phaser.Scene {
             canvas.height = h;
             const ctx = canvas.getContext('2d');
             ctx.drawImage(img, 0, 0, w, h, 0, 0, w, h);
-            this.textures.addSpriteSheet('soldier_crawl', canvas, { frameWidth: 256, frameHeight: 256 });
+            this.textures.addCanvas('soldier_crawl', canvas);
+            const tex = this.textures.get('soldier_crawl');
+            if (tex.frames && tex.frames['__BASE']) { delete tex.frames['__BASE']; }
+            const fw = 256, fh = 256;
+            for (let i = 0; i < 64; i++) {
+                const col = i % 8, row = Math.floor(i / 8);
+                tex.add(i, 0, col * fw, row * fh, fw, fh);
+            }
+            if (typeof tex.refresh === 'function') tex.refresh();
         }
         this.hexGroup = this.add.layer(); this.hexGroup.setDepth(0);
         this.decorGroup = this.add.layer(); this.decorGroup.setDepth(0.5);
