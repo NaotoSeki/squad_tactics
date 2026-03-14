@@ -719,8 +719,8 @@ class MainScene extends Phaser.Scene {
         if(window.EnvSystem) window.EnvSystem.preload(this);
         if (window.Sfx && window.Sfx.preload) { window.Sfx.preload(this); }
         this.load.spritesheet('us_soldier', 'asset/us-soldier-back-sheet.png', { frameWidth: 128, frameHeight: 128 });
-        // 匍匐前進: 画像をいったん image で読み込み、create で 256×256 スプライトシートに切り出す
-        this.load.image('soldier_crawl_img', 'asset/soldier_crawl.png');
+        // 匍匐前進: 256×256 で 128 コマ（8方向×16フレーム）。load.spritesheet で直接読み込み
+        this.load.spritesheet('soldier_crawl', 'asset/soldier_crawl.png', { frameWidth: 256, frameHeight: 256, endFrame: 127 });
         this.load.spritesheet('soldier_sheet', 'asset/soldier_sheet_1.png', { frameWidth: 128, frameHeight: 128 });
         this.load.spritesheet('tank_sheet', 'asset/tank_sheet_1.png', { frameWidth: 128, frameHeight: 128 });
         this.load.spritesheet('explosion_sheet', 'asset/explosion_sheet_1.png', { frameWidth: 64, frameHeight: 64 });
@@ -737,11 +737,6 @@ class MainScene extends Phaser.Scene {
         window.createHexTexture(this); this.cameras.main.setBackgroundColor('#0b0e0a'); 
         this.updateSidebarViewport();
         this.scale.on('resize', () => this.updateSidebarViewport());
-        // 匍匐スプライト: 256×256 で 128 コマに切り出し（Phaser 3.60 は 128 フレーム超で未作成になるため 8方向×16フレームに制限）
-        if (!this.textures.exists('soldier_crawl')) {
-            const src = this.textures.get('soldier_crawl_img').getSourceImage();
-            this.textures.addSpriteSheet('soldier_crawl', src, { frameWidth: 256, frameHeight: 256, startFrame: 0, endFrame: 127 });
-        }
         this.hexGroup = this.add.layer(); this.hexGroup.setDepth(0);
         this.decorGroup = this.add.layer(); this.decorGroup.setDepth(0.5);
         this.unitGroup = this.add.layer(); this.unitGroup.setDepth(1);
