@@ -13,10 +13,10 @@ class UnitView {
         const anims = this.scene.anims;
         if (anims.exists('anim_crawl_0')) return; // 匍匐8方向スプライト用
 
-        // soldier_crawl: 8方向×30フレーム。横=方向(0..7)、縦=時間。frameIndex = col + row*8
+        // soldier_crawl: 8方向×16フレーム（0-127 の 128 コマのみ。Phaser が 128 超を生成しないため）
         for (let d = 0; d < 8; d++) {
             const frames = [];
-            for (let row = 0; row < 30; row++) frames.push(d + row * 8);
+            for (let row = 0; row < 16; row++) frames.push(d + row * 8);
             anims.create({
                 key: 'anim_crawl_' + d,
                 frames: anims.generateFrameNumbers('soldier_crawl', { frames }),

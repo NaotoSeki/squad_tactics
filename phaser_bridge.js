@@ -737,10 +737,10 @@ class MainScene extends Phaser.Scene {
         window.createHexTexture(this); this.cameras.main.setBackgroundColor('#0b0e0a'); 
         this.updateSidebarViewport();
         this.scale.on('resize', () => this.updateSidebarViewport());
-        // 匍匐スプライト: 画像を 256×256 で 240 コマに切り出し（load.spritesheet が巨大画像でコマ不足になるため）
+        // 匍匐スプライト: 256×256 で 128 コマに切り出し（Phaser 3.60 は 128 フレーム超で未作成になるため 8方向×16フレームに制限）
         if (!this.textures.exists('soldier_crawl')) {
             const src = this.textures.get('soldier_crawl_img').getSourceImage();
-            this.textures.addSpriteSheet('soldier_crawl', src, { frameWidth: 256, frameHeight: 256, endFrame: 239 });
+            this.textures.addSpriteSheet('soldier_crawl', src, { frameWidth: 256, frameHeight: 256, startFrame: 0, endFrame: 127 });
         }
         this.hexGroup = this.add.layer(); this.hexGroup.setDepth(0);
         this.decorGroup = this.add.layer(); this.decorGroup.setDepth(0.5);
