@@ -719,8 +719,8 @@ class MainScene extends Phaser.Scene {
         if(window.EnvSystem) window.EnvSystem.preload(this);
         if (window.Sfx && window.Sfx.preload) { window.Sfx.preload(this); }
         this.load.spritesheet('us_soldier', 'asset/us-soldier-back-sheet.png', { frameWidth: 128, frameHeight: 128 });
-        // 匍匐前進: 256×256 で 128 コマ（8方向×16フレーム）。load.spritesheet で直接読み込み
-        this.load.spritesheet('soldier_crawl', 'asset/soldier_crawl.png', { frameWidth: 256, frameHeight: 256, endFrame: 127 });
+        // 匍匐前進: 元画像は 2048×7680。テクスチャ高さ制限を避けるため image で読み、create で上 2048×2048 を切り出して 64 コマ化
+        this.load.image('soldier_crawl_img', 'asset/soldier_crawl.png');
         this.load.spritesheet('soldier_sheet', 'asset/soldier_sheet_1.png', { frameWidth: 128, frameHeight: 128 });
         this.load.spritesheet('tank_sheet', 'asset/tank_sheet_1.png', { frameWidth: 128, frameHeight: 128 });
         this.load.spritesheet('explosion_sheet', 'asset/explosion_sheet_1.png', { frameWidth: 64, frameHeight: 64 });
@@ -737,6 +737,17 @@ class MainScene extends Phaser.Scene {
         window.createHexTexture(this); this.cameras.main.setBackgroundColor('#0b0e0a'); 
         this.updateSidebarViewport();
         this.scale.on('resize', () => this.updateSidebarViewport());
+        // 匍匐: 元画像の上 2048×2048（8行＝64コマ）だけをキャンバスに描き、スプライトシートとして登録（高さ制限対策）
+        if (!this.textures.exists('soldier_crawl')) {
+            const img = this.textures.get('soldier_crawl_img').getSourceImage();
+            const w = 2048, h = 2048;
+            const canvas = document.createElement('canvas');
+            canvas.width = w;
+            canvas.height = h;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, w, h, 0, 0, w, h);
+            this.textures.addSpriteSheet('soldier_crawl', canvas, { frameWidth: 256, frameHeight: 256 });
+        }
         this.hexGroup = this.add.layer(); this.hexGroup.setDepth(0);
         this.decorGroup = this.add.layer(); this.decorGroup.setDepth(0.5);
         this.unitGroup = this.add.layer(); this.unitGroup.setDepth(1);
