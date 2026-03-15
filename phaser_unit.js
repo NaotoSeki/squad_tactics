@@ -135,9 +135,9 @@ class UnitView {
         
         let sprite;
         if (u.def.name === "Rifleman" || u.def.role === "infantry" || !u.def.isTank) {
-            // Blender 2048×7680 をスライスした soldier_crawl_0..7（crop スクリプトで生成）を使用
+            // Blender 2048×7680 を 256×256 でスライスした soldier_crawl_0..7 を使用
             sprite = this.scene.add.sprite(0, -20, 'soldier_crawl_0');
-            sprite.setScale(0.25);
+            sprite.setScale(0.125); // 256px → 32px
             if (u.team === 'player') sprite.setTint(0xeeeeff); else sprite.setTint(0x9955ff);
         } else if (u.def.isTank) {
             sprite = this.scene.add.sprite(0, -10, 'tank_sheet');
