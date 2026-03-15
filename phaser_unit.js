@@ -142,12 +142,12 @@ class UnitView {
         // container.setInteractive({ useHandCursor: true });
         // container.on('pointerdown', ...) も削除
 
-        const shadow = this.scene.add.ellipse(0, -4, 20, 10, 0x000000, 0.5);
+        const shadow = this.scene.add.ellipse(0, -12, 20, 10, 0x000000, 0.5);
         
         let sprite;
         if (u.def.name === "Rifleman" || u.def.role === "infantry" || !u.def.isTank) {
             sprite = this.scene.add.sprite(0, -20, 'soldier_crawl', 0);
-            sprite.setScale(0.125); // 256px → 32px
+            sprite.setScale(0.15); // 256px → 約38px（気持ち大きめ）
             sprite.play('anim_crawl_0');
             if (u.team === 'player') sprite.setTint(0xeeeeff); else sprite.setTint(0x9955ff);
         } else if (u.def.isTank) {
