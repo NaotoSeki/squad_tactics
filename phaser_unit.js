@@ -142,7 +142,7 @@ class UnitView {
         // container.setInteractive({ useHandCursor: true });
         // container.on('pointerdown', ...) も削除
 
-        const shadow = this.scene.add.ellipse(0, -12, 20, 10, 0x000000, 0.5);
+        const shadow = this.scene.add.ellipse(0, -15, 20, 10, 0x000000, 0.5);
         
         let sprite;
         if (u.def.name === "Rifleman" || u.def.role === "infantry" || !u.def.isTank) {
@@ -218,13 +218,19 @@ class UnitView {
         const dy = visual.targetY - visual.container.y;
         const dist = Math.sqrt(dx*dx + dy*dy);
         const isInfantry = !u.def.isTank && (u.def.role === 'infantry' || u.def.name === 'Rifleman');
-        const speed = isInfantry ? 0.015 : 0.06;
-        const arriveThreshold = isInfantry ? 0.15 : 1; // 匍匐はほぼピタリで止めてピクつきを抑える
+        const arriveThreshold = isInfantry ? 0.15 : 1;
         
         let isMoving = false;
         if (dist > arriveThreshold) {
-            visual.container.x += dx * speed;
-            visual.container.y += dy * speed;
+            if (isInfantry) {
+                const crawlPxPerFrame = 0.9; // 一定速度でじわじわ（加速しない）
+                const step = Math.min(crawlPxPerFrame, dist);
+                visual.container.x += (dx / dist) * step;
+                visual.container.y += (dy / dist) * step;
+            } else {
+                visual.container.x += dx * 0.06;
+                visual.container.y += dy * 0.06;
+            }
             isMoving = true;
             visual.lastDx = dx;
             visual.lastDy = dy;
