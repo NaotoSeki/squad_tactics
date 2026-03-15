@@ -142,7 +142,7 @@ class UnitView {
         // container.setInteractive({ useHandCursor: true });
         // container.on('pointerdown', ...) も削除
 
-        const shadow = this.scene.add.ellipse(0, -6, 20, 10, 0x000000, 0.5);
+        const shadow = this.scene.add.ellipse(0, 2, 20, 10, 0x000000, 0.5);
         
         let sprite;
         if (u.def.name === "Rifleman" || u.def.role === "infantry" || !u.def.isTank) {
@@ -218,10 +218,11 @@ class UnitView {
         const dy = visual.targetY - visual.container.y;
         const dist = Math.sqrt(dx*dx + dy*dy);
         const isInfantry = !u.def.isTank && (u.def.role === 'infantry' || u.def.name === 'Rifleman');
-        const speed = isInfantry ? 0.015 : 0.06; // 匍匐はじわじわ移動
+        const speed = isInfantry ? 0.015 : 0.06;
+        const arriveThreshold = isInfantry ? 0.4 : 1; // 匍匐はほぼ到達してから止めてピクつきを抑える
         
         let isMoving = false;
-        if (dist > 1) {
+        if (dist > arriveThreshold) {
             visual.container.x += dx * speed;
             visual.container.y += dy * speed;
             isMoving = true;
@@ -239,7 +240,7 @@ class UnitView {
             if (d < 0) d += 8;
             const crawlAnim = 'anim_crawl_' + d;
             if (isMoving) {
-                visual.crawlStopDelay = 18; // 移動終了後もこのフレーム数だけアニメ継続してから止める
+                visual.crawlStopDelay = 9; // 移動終了後 9 フレームだけ再生してから止める
                 visual.sprite.play(crawlAnim, true); // 毎フレーム play でアニメ抜けを防ぐ
             } else {
                 if (visual.crawlStopDelay > 0) {
