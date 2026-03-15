@@ -11,7 +11,18 @@ class UnitView {
 
     defineAnimations() {
         const anims = this.scene.anims;
-        // 匍匐は単体画像 soldier_crawl_0..7 を setTexture で切り替えるためアニメ未使用
+        if (anims.exists('anim_crawl_0')) return;
+        // soldier_crawl: 8方向×30フレーム。横=方向(0..7)、縦=時間。frameIndex = col + row*8
+        for (let d = 0; d < 8; d++) {
+            const frames = [];
+            for (let row = 0; row < 30; row++) frames.push(d + row * 8);
+            anims.create({
+                key: 'anim_crawl_' + d,
+                frames: anims.generateFrameNumbers('soldier_crawl', { frames }),
+                frameRate: 10,
+                repeat: -1
+            });
+        }
         if (!anims.exists('tank_idle')) { anims.create({ key: 'tank_idle', frames: anims.generateFrameNumbers('tank_sheet', { frames: [7, 6, 5, 6, 7, 5] }), frameRate: 10, repeat: -1 }); }
         if (!anims.exists('explosion_anim')) { 
             anims.create({ 
@@ -135,9 +146,9 @@ class UnitView {
         
         let sprite;
         if (u.def.name === "Rifleman" || u.def.role === "infantry" || !u.def.isTank) {
-            // Blender 2048×7680 を 256×256 でスライスした soldier_crawl_0..7 を使用
-            sprite = this.scene.add.sprite(0, -20, 'soldier_crawl_0');
+            sprite = this.scene.add.sprite(0, -20, 'soldier_crawl', 0);
             sprite.setScale(0.125); // 256px → 32px
+            sprite.play('anim_crawl_0');
             if (u.team === 'player') sprite.setTint(0xeeeeff); else sprite.setTint(0x9955ff);
         } else if (u.def.isTank) {
             sprite = this.scene.add.sprite(0, -10, 'tank_sheet');
@@ -225,8 +236,10 @@ class UnitView {
             const dy_ = visual.lastDy || 0;
             let d = Math.round(Math.atan2(-dy_, dx_) / (2 * Math.PI) * 8) % 8;
             if (d < 0) d += 8;
-            const texKey = 'soldier_crawl_' + d;
-            if (visual.sprite.texture.key !== texKey) visual.sprite.setTexture(texKey);
+            const crawlAnim = 'anim_crawl_' + d;
+            if (!visual.sprite.anims.currentAnim || visual.sprite.anims.currentAnim.key !== crawlAnim) {
+                visual.sprite.play(crawlAnim, true);
+            }
         }
 
         if (visual.hpBg && visual.hpBar && visual.infoContainer) {
