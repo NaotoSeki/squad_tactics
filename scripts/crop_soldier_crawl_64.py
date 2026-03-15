@@ -1,10 +1,10 @@
 # SPDX-License-Identifier: MIT
 """
-soldier_crawl.png の上 2048×2048（8列×8行＝64コマ）を切り出し、
-soldier_crawl_64.png として保存する。Phaser の load.spritesheet 用。
+soldier_crawl.png から以下を生成する。Phaser の load.spritesheet 用。
+・soldier_crawl_64.png … 2048×2048（256pxセル×8×8）
+・soldier_crawl_128.png … 1024×1024（128pxセル×8×8）※ゲームはこちらを使用
 
-画像が 2048×2048 未満の場合は、透明で 2048×2048 にパディングして保存する
-（本番用は Blender で 2048×7680 を出力してから実行すること）。
+画像が 2048×2048 未満の場合は透明パディングする（本番は Blender で 2048×7680 出力後に実行）。
 
 使い方:
   【方法1】Windows: scripts/crop_soldier_crawl_64.cmd をダブルクリック
@@ -16,12 +16,14 @@ soldier_crawl_64.png として保存する。Phaser の load.spritesheet 用。
 import os
 import sys
 
-CROP_W, CROP_H = 2048, 2048
+CROP_64_W, CROP_64_H = 2048, 2048  # 64コマ用（256pxセル）
+SHEET_128_SIZE = 1024  # 128pxセル x 8x8 = 64コマ（tank_sheet と同じセルサイズで互換性重視）
 
 def main():
     root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     src = os.path.join(root, "asset", "soldier_crawl.png")
-    dst = os.path.join(root, "asset", "soldier_crawl_64.png")
+    dst64 = os.path.join(root, "asset", "soldier_crawl_64.png")
+    dst128 = os.path.join(root, "asset", "soldier_crawl_128.png")
     if not os.path.isfile(src):
         print("Error: not found:", src, file=sys.stderr)
         sys.exit(1)
@@ -32,13 +34,17 @@ def main():
         sys.exit(1)
     img = Image.open(src).convert("RGBA")
     w, h = img.size
-    if w >= CROP_W and h >= CROP_H:
-        out = img.crop((0, 0, CROP_W, CROP_H))
+    if w >= CROP_64_W and h >= CROP_64_H:
+        out64 = img.crop((0, 0, CROP_64_W, CROP_64_H))
     else:
-        out = Image.new("RGBA", (CROP_W, CROP_H), (0, 0, 0, 0))
-        out.paste(img, (0, 0))
-    out.save(dst, "PNG")
-    print("Saved:", dst)
+        out64 = Image.new("RGBA", (CROP_64_W, CROP_64_H), (0, 0, 0, 0))
+        out64.paste(img, (0, 0))
+    out64.save(dst64, "PNG")
+    print("Saved:", dst64)
+    # 128pxセル版: 1024x1024（ゲームはこちらを利用。load.spritesheet で1コマずつ確実に表示するため）
+    out128 = out64.resize((SHEET_128_SIZE, SHEET_128_SIZE), Image.Resampling.LANCZOS)
+    out128.save(dst128, "PNG")
+    print("Saved:", dst128)
 
 if __name__ == "__main__":
     main()

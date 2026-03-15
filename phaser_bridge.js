@@ -719,8 +719,8 @@ class MainScene extends Phaser.Scene {
         if(window.EnvSystem) window.EnvSystem.preload(this);
         if (window.Sfx && window.Sfx.preload) { window.Sfx.preload(this); }
         this.load.spritesheet('us_soldier', 'asset/us-soldier-back-sheet.png', { frameWidth: 128, frameHeight: 128 });
-        // 匍匐前進: 2048×2048 の 64 コマ（scripts/crop_soldier_crawl_64.py で soldier_crawl.png から生成）
-        this.load.spritesheet('soldier_crawl', 'asset/soldier_crawl_64.png', { frameWidth: 256, frameHeight: 256 });
+        // 匍匐前進: 1024×1024 の 64 コマ・128pxセル（tank_sheet と同形式で1コマずつ表示するため soldier_crawl_128.png を使用）
+        this.load.spritesheet('soldier_crawl', 'asset/soldier_crawl_128.png', { frameWidth: 128, frameHeight: 128 });
         this.load.spritesheet('soldier_sheet', 'asset/soldier_sheet_1.png', { frameWidth: 128, frameHeight: 128 });
         this.load.spritesheet('tank_sheet', 'asset/tank_sheet_1.png', { frameWidth: 128, frameHeight: 128 });
         this.load.spritesheet('explosion_sheet', 'asset/explosion_sheet_1.png', { frameWidth: 64, frameHeight: 64 });

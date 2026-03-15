@@ -148,8 +148,9 @@ class UnitView {
         
         let sprite;
         if (u.def.name === "Rifleman" || u.def.role === "infantry" || !u.def.isTank) {
-            sprite = this.scene.add.sprite(0, -20, 'soldier_crawl', 0); // 第4引数で初期フレーム(0=1コマ目)を指定
-            sprite.setScale(0.125); // 256px → 32px (旧128*0.25と同程度)
+            sprite = this.scene.add.sprite(0, -20, 'soldier_crawl', 0);
+            sprite.setFrame(0); // 1コマだけ表示するよう明示（シート全体が出る不具合対策）
+            sprite.setScale(0.25); // 128pxセル → 32px（tank_sheet と同形式）
             sprite.play('anim_crawl_0');
             if (u.team === 'player') sprite.setTint(0xeeeeff); else sprite.setTint(0x9955ff);
         } else if (u.def.isTank) {
