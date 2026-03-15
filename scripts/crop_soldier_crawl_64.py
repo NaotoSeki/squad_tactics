@@ -1,8 +1,8 @@
 # SPDX-License-Identifier: MIT
 """
-soldier_crawl.png から以下を生成する。Phaser の load.spritesheet 用。
-・soldier_crawl_64.png … 2048×2048（256pxセル×8×8）
-・soldier_crawl_128.png … 1024×1024（128pxセル×8×8）※ゲームはこちらを使用
+soldier_crawl.png から以下を生成する。
+・soldier_crawl_64.png / soldier_crawl_128.png … スプライトシート（参考用）
+・soldier_crawl_0.png ～ soldier_crawl_7.png … 8方向の単体画像（128×128）。ゲームはこちらを load.image で使用。
 
 画像が 2048×2048 未満の場合は透明パディングする（本番は Blender で 2048×7680 出力後に実行）。
 
@@ -41,10 +41,19 @@ def main():
         out64.paste(img, (0, 0))
     out64.save(dst64, "PNG")
     print("Saved:", dst64)
-    # 128pxセル版: 1024x1024（ゲームはこちらを利用。load.spritesheet で1コマずつ確実に表示するため）
+    # 128pxセル版: 1024x1024
     out128 = out64.resize((SHEET_128_SIZE, SHEET_128_SIZE), Image.Resampling.LANCZOS)
     out128.save(dst128, "PNG")
     print("Saved:", dst128)
+    # 8方向の単体画像（128x128）。スプライトシートが1枚で出る不具合を避け load.image + setTexture で使用
+    cell = 128
+    asset_dir = os.path.join(root, "asset")
+    for d in range(8):
+        x, y = d * cell, 0
+        cell_img = out128.crop((x, y, x + cell, y + cell))
+        out_path = os.path.join(asset_dir, "soldier_crawl_{}.png".format(d))
+        cell_img.save(out_path, "PNG")
+    print("Saved: soldier_crawl_0.png .. soldier_crawl_7.png")
 
 if __name__ == "__main__":
     main()

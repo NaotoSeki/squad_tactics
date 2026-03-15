@@ -11,20 +11,7 @@ class UnitView {
 
     defineAnimations() {
         const anims = this.scene.anims;
-        if (anims.exists('anim_crawl_0')) return; // 匍匐8方向スプライト用
-
-        // soldier_crawl: 8方向×8フレーム（0-63。元画像の上 2048×2048 のみ使用してテクスチャ制限を回避）
-        for (let d = 0; d < 8; d++) {
-            const frames = [];
-            for (let row = 0; row < 8; row++) frames.push(d + row * 8);
-            anims.create({
-                key: 'anim_crawl_' + d,
-                frames: anims.generateFrameNumbers('soldier_crawl', { frames }),
-                frameRate: 10,
-                repeat: -1
-            });
-        }
-
+        // 匍匐は単体画像 soldier_crawl_0..7 を setTexture で切り替えるためアニメ未使用
         if (!anims.exists('tank_idle')) { anims.create({ key: 'tank_idle', frames: anims.generateFrameNumbers('tank_sheet', { frames: [7, 6, 5, 6, 7, 5] }), frameRate: 10, repeat: -1 }); }
         if (!anims.exists('explosion_anim')) { 
             anims.create({ 
@@ -148,10 +135,8 @@ class UnitView {
         
         let sprite;
         if (u.def.name === "Rifleman" || u.def.role === "infantry" || !u.def.isTank) {
-            sprite = this.scene.add.sprite(0, -20, 'soldier_crawl', 0);
-            sprite.setFrame(0); // 1コマだけ表示するよう明示（シート全体が出る不具合対策）
-            sprite.setScale(0.25); // 128pxセル → 32px（tank_sheet と同形式）
-            sprite.play('anim_crawl_0');
+            sprite = this.scene.add.sprite(0, -20, 'soldier_crawl_0'); // 単体画像で1コマずつ確実に表示
+            sprite.setScale(0.25); // 128px → 32px
             if (u.team === 'player') sprite.setTint(0xeeeeff); else sprite.setTint(0x9955ff);
         } else if (u.def.isTank) {
             sprite = this.scene.add.sprite(0, -10, 'tank_sheet');
@@ -239,10 +224,8 @@ class UnitView {
             const dy_ = visual.lastDy || 0;
             let d = Math.round(Math.atan2(-dy_, dx_) / (2 * Math.PI) * 8) % 8;
             if (d < 0) d += 8;
-            const crawlAnim = 'anim_crawl_' + d;
-            if (visual.sprite.anims.currentAnim && visual.sprite.anims.currentAnim.key !== crawlAnim) {
-                visual.sprite.play(crawlAnim, true);
-            }
+            const texKey = 'soldier_crawl_' + d;
+            if (visual.sprite.texture.key !== texKey) visual.sprite.setTexture(texKey);
         }
 
         if (visual.hpBg && visual.hpBar && visual.infoContainer) {
