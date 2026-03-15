@@ -135,8 +135,9 @@ class UnitView {
         
         let sprite;
         if (u.def.name === "Rifleman" || u.def.role === "infantry" || !u.def.isTank) {
-            sprite = this.scene.add.sprite(0, -20, 'soldier_crawl_0'); // 単体画像で1コマずつ確実に表示
-            sprite.setScale(0.25); // 128px → 32px
+            // 匍匐アセット(soldier_crawl_*)は未整備時に黒く出るため、表示は soldier_sheet で行う
+            sprite = this.scene.add.sprite(0, -20, 'soldier_sheet', 0);
+            sprite.setScale(0.25);
             if (u.team === 'player') sprite.setTint(0xeeeeff); else sprite.setTint(0x9955ff);
         } else if (u.def.isTank) {
             sprite = this.scene.add.sprite(0, -10, 'tank_sheet');
@@ -219,14 +220,7 @@ class UnitView {
             visual.container.y = visual.targetY;
         }
 
-        if (!u.def.isTank && visual.sprite) {
-            const dx_ = visual.lastDx || 0;
-            const dy_ = visual.lastDy || 0;
-            let d = Math.round(Math.atan2(-dy_, dx_) / (2 * Math.PI) * 8) % 8;
-            if (d < 0) d += 8;
-            const texKey = 'soldier_crawl_' + d;
-            if (visual.sprite.texture.key !== texKey) visual.sprite.setTexture(texKey);
-        }
+        // 歩兵向き切り替えは soldier_sheet 利用時は未使用（匍匐アセット整備時に soldier_crawl_* + setTexture で復活可）
 
         if (visual.hpBg && visual.hpBar && visual.infoContainer) {
             const barY = visual.container.y - 45; 
