@@ -45,19 +45,21 @@ def main():
         out64.paste(img, (0, 0))
     out64.save(dst64, "PNG")
     print("Saved:", dst64)
-    # 128pxセル版: 1024x1024
+    # 128pxセル版: 1024x1024（参考用）
     out128 = out64.resize((SHEET_128_SIZE, SHEET_128_SIZE), Image.Resampling.LANCZOS)
     out128.save(dst128, "PNG")
     print("Saved:", dst128)
-    # 8方向の単体画像（128x128）。スプライトシートが1枚で出る不具合を避け load.image + setTexture で使用
-    cell = 128
+    # 8方向を「1コマずつ」確実にスライス: 元画像の1行目から 256x256 を切り出し → 128x128 にリサイズして保存
+    cell_src = 256  # 元シートの1セル
+    cell_dst = 128  # ゲーム用サイズ
     asset_dir = os.path.join(root, "asset")
     for d in range(8):
-        x, y = d * cell, 0
-        cell_img = out128.crop((x, y, x + cell, y + cell))
+        x1, y1 = d * cell_src, 0
+        one_cell = out64.crop((x1, y1, x1 + cell_src, y1 + cell_src))
+        one_cell = one_cell.resize((cell_dst, cell_dst), Image.Resampling.LANCZOS)
         out_path = os.path.join(asset_dir, "soldier_crawl_{}.png".format(d))
-        cell_img.save(out_path, "PNG")
-    print("Saved: soldier_crawl_0.png .. soldier_crawl_7.png")
+        one_cell.save(out_path, "PNG")
+    print("Saved: soldier_crawl_0.png .. soldier_crawl_7.png (each 128x128, one cell only)")
 
 if __name__ == "__main__":
     main()
