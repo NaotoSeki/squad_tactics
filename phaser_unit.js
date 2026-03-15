@@ -12,14 +12,14 @@ class UnitView {
     defineAnimations() {
         const anims = this.scene.anims;
         if (anims.exists('anim_crawl_0')) return;
-        // soldier_crawl: 8方向×30フレーム。横=方向(0..7)、縦=時間。frameIndex = col + row*8
+        // soldier_crawl: 8方向×30フレーム。並びは左から NW,W,SW,S,SE,E,NE,N。匍匐っぽくゆっくり
         for (let d = 0; d < 8; d++) {
             const frames = [];
             for (let row = 0; row < 30; row++) frames.push(d + row * 8);
             anims.create({
                 key: 'anim_crawl_' + d,
                 frames: anims.generateFrameNumbers('soldier_crawl', { frames }),
-                frameRate: 10,
+                frameRate: 6,
                 repeat: -1
             });
         }
@@ -217,7 +217,8 @@ class UnitView {
         const dx = visual.targetX - visual.container.x;
         const dy = visual.targetY - visual.container.y;
         const dist = Math.sqrt(dx*dx + dy*dy);
-        const speed = 0.06; 
+        const isInfantry = !u.def.isTank && (u.def.role === 'infantry' || u.def.name === 'Rifleman');
+        const speed = isInfantry ? 0.03 : 0.06; // 匍匐はゆっくり移動
         
         let isMoving = false;
         if (dist > 1) {
@@ -234,7 +235,8 @@ class UnitView {
         if (!u.def.isTank && visual.sprite) {
             const dx_ = visual.lastDx || 0;
             const dy_ = visual.lastDy || 0;
-            let d = Math.round(Math.atan2(-dy_, dx_) / (2 * Math.PI) * 8) % 8;
+            // スプライト並び: 0=NW, 1=W, 2=SW, 3=S, 4=SE, 5=E, 6=NE, 7=N に合わせる
+            let d = Math.round((Math.atan2(-dy_, dx_) + 5 * Math.PI / 4) / (2 * Math.PI) * 8) % 8;
             if (d < 0) d += 8;
             const crawlAnim = 'anim_crawl_' + d;
             if (!visual.sprite.anims.currentAnim || visual.sprite.anims.currentAnim.key !== crawlAnim) {
