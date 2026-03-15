@@ -1,10 +1,14 @@
 # SPDX-License-Identifier: MIT
 """
-soldier_crawl.png から以下を生成する。
-・soldier_crawl_64.png / soldier_crawl_128.png … スプライトシート（参考用）
-・soldier_crawl_0.png ～ soldier_crawl_7.png … 8方向の単体画像（128×128）。ゲームはこちらを load.image で使用。
+Blender 出力の soldier_crawl.png（2048×7680 = 8列×30行・256pxセル）をスライスしてゲーム用に変換する。
 
-画像が 2048×2048 未満の場合は透明パディングする（本番は Blender で 2048×7680 出力後に実行）。
+想定: Blender で 2048×7680 を asset/soldier_crawl.png に出力 → このスクリプト実行。
+
+生成物:
+・上 2048×2048（先頭8行）→ soldier_crawl_64.png / soldier_crawl_128.png（参考用シート）
+・1行目を8方向にスライス（各128×128）→ soldier_crawl_0.png ～ soldier_crawl_7.png（ゲームで使用）
+
+画像が 2048×2048 未満の場合は透明パディングしてから同様に処理（未配置時用）。
 
 使い方:
   【方法1】Windows: scripts/crop_soldier_crawl_64.cmd をダブルクリック

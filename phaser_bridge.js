@@ -719,7 +719,7 @@ class MainScene extends Phaser.Scene {
         if(window.EnvSystem) window.EnvSystem.preload(this);
         if (window.Sfx && window.Sfx.preload) { window.Sfx.preload(this); }
         this.load.spritesheet('us_soldier', 'asset/us-soldier-back-sheet.png', { frameWidth: 128, frameHeight: 128 });
-        // 匍匐前進: 8方向を単体画像で読み込み（スプライトシートが1枚で出る不具合を回避）
+        // 匍匐前進: Blender 2048×7680 を scripts/crop_soldier_crawl_64.py でスライスした 8 枚を読み込み
         for (let i = 0; i < 8; i++) this.load.image('soldier_crawl_' + i, 'asset/soldier_crawl_' + i + '.png');
         this.load.spritesheet('soldier_sheet', 'asset/soldier_sheet_1.png', { frameWidth: 128, frameHeight: 128 });
         this.load.spritesheet('tank_sheet', 'asset/tank_sheet_1.png', { frameWidth: 128, frameHeight: 128 });
