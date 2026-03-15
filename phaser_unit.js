@@ -185,7 +185,7 @@ class UnitView {
         this.hpLayer.add(hpBar);
         this.hpLayer.add(infoContainer);
 
-        const visual = { container, sprite, hpBg, hpBar, infoContainer, glowFx: null, fusionGlowFx: null, lastDx: 0, lastDy: 0 };
+        const visual = { container, sprite, hpBg, hpBar, infoContainer, glowFx: null, fusionGlowFx: null, lastDx: 0, lastDy: 0, crawlStopDelay: 0 };
         this.visuals.set(u.id, visual);
         
         if(typeof Renderer !== 'undefined') {
@@ -235,17 +235,19 @@ class UnitView {
         if (!u.def.isTank && visual.sprite) {
             const dx_ = visual.lastDx || 0;
             const dy_ = visual.lastDy || 0;
-            // スプライト並び: 0=NW, 1=W, 2=SW, 3=S, 4=SE, 5=E, 6=NE, 7=N に合わせる
             let d = Math.round((Math.atan2(-dy_, dx_) + 5 * Math.PI / 4) / (2 * Math.PI) * 8) % 8;
             if (d < 0) d += 8;
+            const crawlAnim = 'anim_crawl_' + d;
             if (isMoving) {
-                const crawlAnim = 'anim_crawl_' + d;
-                if (!visual.sprite.anims.currentAnim || visual.sprite.anims.currentAnim.key !== crawlAnim) {
-                    visual.sprite.play(crawlAnim, true);
-                }
+                visual.crawlStopDelay = 18; // 移動終了後もこのフレーム数だけアニメ継続してから止める
+                visual.sprite.play(crawlAnim, true); // 毎フレーム play でアニメ抜けを防ぐ
             } else {
-                visual.sprite.anims.stop();
-                visual.sprite.setFrame(d); // 待機はその方向の1コマ目で止める
+                if (visual.crawlStopDelay > 0) {
+                    visual.crawlStopDelay--;
+                    visual.sprite.play(crawlAnim, true); // 制止までアニメをゆっくり続ける
+                } else {
+                    visual.sprite.anims.stop(); // 現在のフレームで止める（setFrame しないのでピクつかない）
+                }
             }
         }
 
