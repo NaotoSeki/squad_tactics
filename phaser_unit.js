@@ -11,21 +11,18 @@ class UnitView {
 
     defineAnimations() {
         const anims = this.scene.anims;
-        if (anims.exists('anim_idle')) return; 
-
-        anims.create({ key: 'anim_idle', frames: anims.generateFrameNumbers('us_soldier', { start: 0, end: 7 }), frameRate: 8, repeat: -1 });
-        anims.create({ key: 'anim_crouch', frames: anims.generateFrameNumbers('us_soldier', { start: 8, end: 15 }), frameRate: 15, repeat: 0 });
-        anims.create({ key: 'anim_prone', frames: anims.generateFrameNumbers('us_soldier', { start: 24, end: 31 }), frameRate: 15, repeat: 0 });
-        anims.create({ key: 'anim_crouch_idle', frames: anims.generateFrameNumbers('us_soldier', { frames: [15] }), frameRate: 1, repeat: -1 });
-        anims.create({ key: 'anim_prone_idle', frames: anims.generateFrameNumbers('us_soldier', { frames: [33, 33, 33, 33, 33, 34, 33, 33, 33, 33, 38, 39, 38, 33, 33]}), frameRate: 6, repeat: -1 });
-        anims.create({ key: 'anim_crouch_shoot', frames: anims.generateFrameNumbers('us_soldier', { start: 16, end: 23 }), frameRate: 15, repeat: 0 });
-        anims.create({ key: 'anim_prone_shoot', frames: anims.generateFrameNumbers('us_soldier', { start: 32, end: 39 }), frameRate: 15, repeat: 0 });
-        anims.create({ key: 'anim_shoot', frames: anims.generateFrameNumbers('us_soldier', { start: 40, end: 47 }), frameRate: 15, repeat: 0 });
-        anims.create({ key: 'anim_walk', frames: anims.generateFrameNumbers('us_soldier', { start: 48, end: 55 }), frameRate: 10, repeat: -1 });
-        anims.create({ key: 'anim_crouch_walk', frames: anims.generateFrameNumbers('us_soldier', { start: 56, end: 63 }), frameRate: 8, repeat: -1 });
-        anims.create({ key: 'anim_crawl', frames: anims.generateFrameNumbers('us_soldier', { start: 64, end: 71 }), frameRate: 6, repeat: -1 });
-        anims.create({ key: 'anim_melee', frames: anims.generateFrameNumbers('us_soldier', { start: 72, end: 79 }), frameRate: 15, repeat: 0 });
-
+        if (anims.exists('anim_crawl_0')) return;
+        // soldier_crawl: 8方向×30フレーム。移動中は30fpsで蠢く、待機は止める
+        for (let d = 0; d < 8; d++) {
+            const frames = [];
+            for (let row = 0; row < 30; row++) frames.push(d + row * 8);
+            anims.create({
+                key: 'anim_crawl_' + d,
+                frames: anims.generateFrameNumbers('soldier_crawl', { frames }),
+                frameRate: 30,
+                repeat: -1
+            });
+        }
         if (!anims.exists('tank_idle')) { anims.create({ key: 'tank_idle', frames: anims.generateFrameNumbers('tank_sheet', { frames: [7, 6, 5, 6, 7, 5] }), frameRate: 10, repeat: -1 }); }
         if (!anims.exists('explosion_anim')) { 
             anims.create({ 
@@ -145,13 +142,13 @@ class UnitView {
         // container.setInteractive({ useHandCursor: true });
         // container.on('pointerdown', ...) も削除
 
-        const shadow = this.scene.add.ellipse(0, -4, 20, 10, 0x000000, 0.5);
+        const shadow = this.scene.add.ellipse(0, -15, 20, 10, 0x000000, 0.5);
         
         let sprite;
-        if (u.def.name === "Rifleman" || u.def.role === "infantry" || !u.def.isTank) { 
-            sprite = this.scene.add.sprite(0, -20, 'us_soldier'); 
-            sprite.setScale(0.25); 
-            sprite.play('anim_idle');
+        if (u.def.name === "Rifleman" || u.def.role === "infantry" || !u.def.isTank) {
+            sprite = this.scene.add.sprite(0, -20, 'soldier_crawl', 0);
+            sprite.setScale(0.15); // 256px → 約38px（気持ち大きめ）
+            sprite.play('anim_crawl_0');
             if (u.team === 'player') sprite.setTint(0xeeeeff); else sprite.setTint(0x9955ff);
         } else if (u.def.isTank) {
             sprite = this.scene.add.sprite(0, -10, 'tank_sheet');
@@ -188,7 +185,7 @@ class UnitView {
         this.hpLayer.add(hpBar);
         this.hpLayer.add(infoContainer);
 
-        const visual = { container, sprite, hpBg, hpBar, infoContainer, glowFx: null, fusionGlowFx: null };
+        const visual = { container, sprite, hpBg, hpBar, infoContainer, glowFx: null, fusionGlowFx: null, lastDx: 0, lastDy: 0, crawlStopDelay: 0 };
         this.visuals.set(u.id, visual);
         
         if(typeof Renderer !== 'undefined') {
@@ -220,34 +217,43 @@ class UnitView {
         const dx = visual.targetX - visual.container.x;
         const dy = visual.targetY - visual.container.y;
         const dist = Math.sqrt(dx*dx + dy*dy);
-        const speed = 0.06; 
+        const isInfantry = !u.def.isTank && (u.def.role === 'infantry' || u.def.name === 'Rifleman');
+        const arriveThreshold = isInfantry ? 0.15 : 1;
         
         let isMoving = false;
-        if (dist > 1) {
-            visual.container.x += dx * speed;
-            visual.container.y += dy * speed;
+        if (dist > arriveThreshold) {
+            if (isInfantry) {
+                const crawlPxPerFrame = 0.9; // 一定速度でじわじわ（加速しない）
+                const step = Math.min(crawlPxPerFrame, dist);
+                visual.container.x += (dx / dist) * step;
+                visual.container.y += (dy / dist) * step;
+            } else {
+                visual.container.x += dx * 0.06;
+                visual.container.y += dy * 0.06;
+            }
             isMoving = true;
-            if (Math.abs(dx) > 0.1) visual.sprite.setFlipX(dx < 0);
+            visual.lastDx = dx;
+            visual.lastDy = dy;
         } else {
             visual.container.x = visual.targetX;
             visual.container.y = visual.targetY;
         }
 
         if (!u.def.isTank && visual.sprite) {
-            const currentAnim = visual.sprite.anims.currentAnim ? visual.sprite.anims.currentAnim.key : '';
-            const isAttacking = currentAnim.includes('shoot') || currentAnim.includes('melee');
-            
+            const dx_ = visual.lastDx || 0;
+            const dy_ = visual.lastDy || 0;
+            let d = Math.round((Math.atan2(-dy_, dx_) + 5 * Math.PI / 4) / (2 * Math.PI) * 8) % 8;
+            if (d < 0) d += 8;
+            const crawlAnim = 'anim_crawl_' + d;
             if (isMoving) {
-                let moveAnim = 'anim_walk';
-                if (u.stance === 'crouch') moveAnim = 'anim_crouch_walk';
-                if (u.stance === 'prone') moveAnim = 'anim_crawl';
-                if (currentAnim !== moveAnim) visual.sprite.play(moveAnim, true);
+                visual.crawlStopDelay = 4; // 移動終了後 4 フレームだけ再生してから止める
+                visual.sprite.play(crawlAnim, true); // 毎フレーム play でアニメ抜けを防ぐ
             } else {
-                if (!isAttacking || !visual.sprite.anims.isPlaying) {
-                    let idleAnim = 'anim_idle';
-                    if (u.stance === 'crouch') idleAnim = 'anim_crouch_idle'; 
-                    if (u.stance === 'prone') idleAnim = 'anim_prone_idle';
-                    if (currentAnim !== idleAnim) visual.sprite.play(idleAnim, true);
+                if (visual.crawlStopDelay > 0) {
+                    visual.crawlStopDelay--;
+                    visual.sprite.play(crawlAnim, true); // 制止までアニメをゆっくり続ける
+                } else {
+                    visual.sprite.anims.stop(); // 現在のフレームで止める（setFrame しないのでピクつかない）
                 }
             }
         }
@@ -319,32 +325,19 @@ class UnitView {
     triggerAttack(attacker, target) {
         const visual = this.visuals.get(attacker.id);
         if (!visual || !visual.sprite) return;
-        if (attacker.def.isTank) return; 
+        if (attacker.def.isTank) return;
+        if (typeof Renderer === 'undefined') return;
 
-        let animKey = 'anim_shoot'; 
-        if(typeof Renderer === 'undefined') return;
         const start = Renderer.hexToPx(attacker.q, attacker.r);
         const end = Renderer.hexToPx(target.q, target.r);
-        const dist = Phaser.Math.Distance.Between(start.x, start.y, end.x, end.y);
-        
-        if (dist < 60) {
-            animKey = 'anim_melee';
-        } else {
-            if (attacker.stance === 'crouch') animKey = 'anim_crouch_shoot';
-            if (attacker.stance === 'prone') animKey = 'anim_prone_shoot';
-        }
+        const dx = end.x - start.x;
+        const dy = end.y - start.y;
+        let d = Math.round(Math.atan2(-dy, dx) / (2 * Math.PI) * 8) % 8;
+        if (d < 0) d += 8;
+        visual.lastDx = dx;
+        visual.lastDy = dy;
 
-        const isRight = end.x >= start.x;
-        visual.sprite.setFlipX(!isRight);
-
-        visual.sprite.play(animKey);
-        visual.sprite.once('animationcomplete', () => {
-            if(visual.sprite) {
-                let idleAnim = 'anim_idle';
-                if (attacker.stance === 'crouch') idleAnim = 'anim_crouch_idle';
-                if (attacker.stance === 'prone') idleAnim = 'anim_prone_idle';
-                visual.sprite.play(idleAnim, true);
-            }
-        });
+        const crawlAnim = 'anim_crawl_' + d;
+        visual.sprite.play(crawlAnim, true);
     }
 }
