@@ -211,7 +211,7 @@ window.PhaserSidebar = class PhaserSidebar {
 
         const contentAfterAp = y;
         y = Math.max(contentAfterAp, radarBottom);
-        const invLabel = this.scene.add.text(left, y, (u.def && u.def.isTank) ? 'Main armament / Sub armament' : 'IN HANDS (3 Slots)', { fontSize: '10px', color: '#666666', fontFamily: 'sans-serif' });
+        const invLabel = this.scene.add.text(left, y, (u.def && u.def.isTank) ? 'Main armament / Sub armament' : 'LOADOUT', { fontSize: '10px', color: '#666666', fontFamily: 'sans-serif' });
         this.unitContent.add(invLabel);
         y += 20;
 
@@ -272,6 +272,28 @@ window.PhaserSidebar = class PhaserSidebar {
             });
             rainbowSlot.setPosition(ox, oy);
             container.add(rainbowSlot);
+        }
+
+        if (item && item.cbeNameIndex != null && !item.partType && typeof window.plCbeWeaponIconPath === 'function') {
+            const iconKey = window.plCbeWeaponIconKey(item.cbeNameIndex);
+            const iconPath = window.plCbeWeaponIconPath(item.cbeNameIndex);
+            if (!this.scene.textures.exists(iconKey)) {
+                const img = new Image();
+                img.onload = () => {
+                    if (!this.scene || !this.scene.textures) return;
+                    this.scene.textures.addImage(iconKey, img);
+                    const icon = this.scene.add.image(slotW / 2, slotH / 2, iconKey);
+                    const fitScale = Math.min((slotW - 8) / icon.width, (slotH - 8) / icon.height);
+                    icon.setScale(fitScale).setAlpha(0.7);
+                    container.addAt(icon, 1);
+                };
+                img.src = iconPath;
+            } else {
+                const icon = this.scene.add.image(slotW / 2, slotH / 2, iconKey);
+                const fitScale = Math.min((slotW - 8) / icon.width, (slotH - 8) / icon.height);
+                icon.setScale(fitScale).setAlpha(0.7);
+                container.addAt(icon, 1);
+            }
         }
 
         let label = '[EMPTY]';
@@ -380,11 +402,11 @@ window.PhaserSidebar = class PhaserSidebar {
             }
         }
 
-        if (isMain) {
-            const slotLabel = (u.def && u.def.isTank) ? (index === 0 ? 'Main' : 'Sub' + index) : 'IN HANDS';
-            const inHands = this.scene.add.text(slotW - 12, 4, slotLabel, { fontSize: '9px', color: '#ddaa44', fontFamily: 'sans-serif' });
-            inHands.setOrigin(1, 0);
-            container.add(inHands);
+        if (isMain && u.def && u.def.isTank) {
+            const slotLabel = (index === 0 ? 'Main' : 'Sub' + index);
+            const tankLabel = this.scene.add.text(slotW - 12, 4, slotLabel, { fontSize: '9px', color: '#ddaa44', fontFamily: 'sans-serif' });
+            tankLabel.setOrigin(1, 0);
+            container.add(tankLabel);
         }
 
         const self = this;

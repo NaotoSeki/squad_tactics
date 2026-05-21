@@ -24,7 +24,7 @@ SQUAD TACTICS の起動フロー・主要モジュール・グローバル依存
 
 ## サイドバー（右ペイン）
 
-- PhaserSidebar (phaser_sidebar.js) がユニット情報・レーダー・IN HANDS / BACKPACK・End Turn を描画
+- PhaserSidebar (phaser_sidebar.js) がユニット情報・レーダー・LOADOUT / BACKPACK・End Turn を描画
 - 幅: window.getSidebarWidth() / __sidebarWidth。リサイザーで更新
 - End Turn は常に最下部固定、ユニット未選択時も表示
 

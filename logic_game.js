@@ -541,7 +541,13 @@ window.BattleLogic = class BattleLogic {
 
     // スロット0が通常武器の場合（attr がなくても code で WPNS 一致すれば武器扱い）
     const slot0 = u.hands[0];
-    const isWeapon = slot0 && slot0.type !== 'part' && (slot0.attr === (typeof ATTR !== 'undefined' ? ATTR.WEAPON : 'Weaponry') || (slot0.code && typeof WPNS !== 'undefined' && WPNS[slot0.code] && WPNS[slot0.code].attr === (typeof ATTR !== 'undefined' ? ATTR.WEAPON : 'Weaponry')));
+    const weaponAttr = typeof ATTR !== 'undefined' ? ATTR.WEAPON : 'Weaponry';
+    const recoveryAttr = typeof ATTR !== 'undefined' ? ATTR.RECOVERY : 'Recovery';
+    const master0 = slot0 && slot0.code && typeof WPNS !== 'undefined' ? WPNS[slot0.code] : null;
+    /** マスタが補助装備（三脚等）なら type 欠落時も主兵装にしない */
+    const slot0IsRecoveryGear = master0 && master0.attr === recoveryAttr;
+    const isWeapon = slot0 && !slot0IsRecoveryGear && slot0.type !== 'part'
+      && (slot0.attr === weaponAttr || (slot0.code && master0 && master0.attr === weaponAttr));
     if (isWeapon) return slot0;
 
     // 迫撃砲パーツ3種揃い → 仮想 m2_mortar
@@ -1132,8 +1138,15 @@ window.BattleLogic = class BattleLogic {
     const cost = w.rld || 1;
     if (u.ap < cost) { this.ui.log("AP不足"); return; }
 
-    const magIndex = u.bag.findIndex(i => i && i.type === 'ammo' && i.ammoFor === w.code);
-    if (magIndex === -1) { this.ui.log("予備弾なし"); return; }
+    const canLoad = typeof isSpareAmmoCompatible === 'function'
+      ? (i) => isSpareAmmoCompatible(w, i)
+      : (i) => i && i.type === 'ammo' && i.ammoFor === w.code;
+    const magIndex = u.bag.findIndex(i => canLoad(i));
+    if (magIndex === -1) {
+      const hasWrongMag = u.bag.some(i => i && i.type === 'ammo' && i.ammoFor === w.code);
+      this.ui.log(hasWrongMag ? "この武器に合う予備弾がありません" : "予備弾なし");
+      return;
+    }
 
     u.bag[magIndex] = null;
     u.ap -= cost;

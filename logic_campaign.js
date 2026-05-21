@@ -2,6 +2,39 @@
 
 const AVAILABLE_CARDS = ['rifleman', 'scout', 'gunner', 'sniper', 'mortar_gunner', 'aerial', 'tank_pz4', 'tank_tiger'];
 
+/**
+ * PL マスタで plCategory が rifle になっているが実体は弾薬行／パンツァーファウスト／火炎放射器などの誤分類を除外し、
+ * ランダム主装備は「実銃」のみにする。
+ */
+function isPlausibleInfantryMainWeapon(k) {
+    const w = typeof WPNS !== 'undefined' ? WPNS[k] : null;
+    if (!w || w.partType || w.type !== 'bullet') return false;
+    if (typeof ATTR !== 'undefined' && w.attr === ATTR.RECOVERY) return false;
+    if (!((w.cap || 0) > 0)) return false;
+    const validCats = ['rifle', 'carbine', 'smg', 'auto_rifle', 'sniper', 'mg'];
+    if (!validCats.includes(w.plCategory)) return false;
+    const n = (w.name || '').trim();
+    if (/^45ACP/i.test(n)) return false;
+    if (/^PF/i.test(n)) return false;
+    if (/^GrB/i.test(n)) return false;
+    if (/^FmW/i.test(n)) return false;
+    if (/^AN-M/i.test(n)) return false;
+    if (/^30Cbn|^3006-|^7\.92-|^6\.5-|^7\.5-|^8mm/i.test(n)) return false;
+    return true;
+}
+
+/** 主兵装コード → 対応三脚架／架座（WPNS キー。値は type:part / RECOVERY のみ。pl_114 は小銃 Sch08 のため三脚に使わない） */
+const TRIPOD_CODE_FOR_MAIN = {
+    pl_24: 'pl_31', pl_398: 'pl_31',
+    pl_22: 'pl_32',
+    pl_23: 'pl_33',
+    pl_87: 'pl_113', pl_88: 'pl_113',
+    pl_90: 'pl_112',
+    pl_91: 'pl_112', pl_92: 'pl_112', pl_93: 'pl_112',
+    pl_94: 'pl_113',
+    pl_95: 'pl_113',
+};
+
 function createCardIcon(type) {
     const c = document.createElement('canvas'); c.width = 1; c.height = 1; return c.toDataURL();
 }
@@ -214,6 +247,19 @@ class CampaignManager {
             });
         }
 
+        if (typeof refreshAmmoItemLabel === 'function') {
+            deployUnits.forEach(u => {
+                const main = u.hands && u.hands[0];
+                if (main && main.code && typeof WPNS !== 'undefined' && WPNS[main.code]) {
+                    const master = WPNS[main.code];
+                    if (master.acceptsAmmo) main.acceptsAmmo = master.acceptsAmmo.slice();
+                    if (master.plCompat) main.plCompat = { ...master.plCompat };
+                }
+                const weapon = main || (main && main.code && WPNS[main.code]) || (u.def && u.def.main && WPNS[u.def.main]);
+                if (weapon) (u.bag || []).forEach(item => refreshAmmoItemLabel(item, weapon));
+            });
+        }
+
         // BattleLogic（logic_game.js）をインスタンス化
         if (window.BattleLogic) {
             window.gameLogic = new BattleLogic(this, deployUnits, this.sector);
@@ -286,6 +332,10 @@ class CampaignManager {
             if (!key || !WPNS[key]) return null;
             let base = WPNS[key]; 
             let item = { ...base, code: key, id: Math.random(), isBroken: false };
+            if (key.startsWith('pl_') && item.cbeNameIndex == null) {
+                const n = parseInt(key.slice(3));
+                if (!isNaN(n)) item.cbeNameIndex = n;
+            }
             
             if (base.type === 'bullet' || base.type === 'shell_fast') {
                 item.current = item.cap;
@@ -305,7 +355,12 @@ class CampaignManager {
         if (t.loadout) {
             t.loadout.forEach((k, i) => { if (i < 3) hands[i] = createItem(k); });
         } else if (t.main) {
-            hands[0] = createItem(t.main);
+            let mainKey = t.main;
+            if (isPlayer && !t.isTank && window.WPNS_PL_INFANTRY_MAIN_CODES && window.WPNS_PL_INFANTRY_MAIN_CODES.length) {
+                const pool = window.WPNS_PL_INFANTRY_MAIN_CODES.filter(isPlausibleInfantryMainWeapon);
+                if (pool.length) mainKey = pool[Math.floor(Math.random() * pool.length)];
+            }
+            hands[0] = createItem(mainKey);
             if (t.isTank && t.sub) {
                 hands[1] = createItem(t.sub);
                 if (isFusedTank) {
@@ -323,17 +378,50 @@ class CampaignManager {
         }
 
         let bag = [];
-        if (t.sub && !t.isTank) { bag.push(createItem(t.sub)); }
+        if (t.sub && !t.isTank) {
+            let subKey = t.sub;
+            if (isPlayer && window.WPNS_PL_INFANTRY_SUB_CODES && window.WPNS_PL_INFANTRY_SUB_CODES.length) {
+                const subPool = window.WPNS_PL_INFANTRY_SUB_CODES.filter(k => WPNS[k] && (WPNS[k].plCategory === 'pistol' || WPNS[k].plCategory === 'melee'));
+                if (subPool.length) subKey = subPool[Math.floor(Math.random() * subPool.length)];
+            }
+            bag.push(createItem(subKey));
+        }
         if (t.opt) { 
             const optBase = WPNS[t.opt]; const count = optBase.mag || 1; 
             for (let i = 0; i < count; i++) { bag.push(createItem(t.opt)); }
         }
         
-        if (hands[0] && hands[0].type === 'bullet' && !t.isTank) { 
-            for (let i = 0; i < hands[0].mag; i++) { 
+        if (hands[0] && hands[0].type === 'bullet' && !t.isTank && hands[0].mag
+            && hands[0].acceptsAmmo && hands[0].acceptsAmmo.length) {
+            for (let i = 0; i < hands[0].mag; i++) {
                 if (bag.length >= 4) break;
-                bag.push({ type: 'ammo', name: (hands[0].magName || 'Clip'), ammoFor: hands[0].code, cap: hands[0].cap, jam: hands[0].jam, code: 'mag' }); 
-            } 
+                if (typeof buildSpareAmmoItem === 'function') {
+                    bag.push(buildSpareAmmoItem(hands[0]));
+                } else {
+                    bag.push({
+                        type: 'ammo', name: hands[0].magName || 'Mag', ammoFor: hands[0].code,
+                        cap: hands[0].cap, current: hands[0].cap, jam: hands[0].jam, code: 'mag'
+                    });
+                }
+            }
+        }
+
+        if (isPlayer && !t.isTank && hands[0] && hands[0].code) {
+            const tripCode = TRIPOD_CODE_FOR_MAIN[hands[0].code];
+            if (tripCode && WPNS[tripCode]) {
+                const hasTripod = bag.some(it => it && it.code === tripCode);
+                if (!hasTripod) {
+                    const tripod = createItem(tripCode);
+                    let ins = 0;
+                    if (bag.length > 0 && bag[0] && bag[0].type !== 'ammo') ins = 1;
+                    while (bag.length >= 4) {
+                        const last = bag[bag.length - 1];
+                        if (last && last.type === 'ammo') bag.pop();
+                        else break;
+                    }
+                    if (bag.length < 4) bag.splice(ins, 0, tripod);
+                }
+            }
         }
         
         if (!isPlayer) { 
@@ -443,16 +531,20 @@ class CampaignManager {
                 if (h.code === 'm8_rocket') { h.current = 60; h.cap = 60; }
             });
 
+            let mainWeapon = u.hands[0];
+            const mainCode = mainWeapon ? mainWeapon.code : (u.def && u.def.main) ? u.def.main : null;
+            if (mainWeapon && mainCode && typeof WPNS !== 'undefined' && WPNS[mainCode] && WPNS[mainCode].acceptsAmmo) {
+                mainWeapon.acceptsAmmo = WPNS[mainCode].acceptsAmmo.slice();
+            }
+            const mainBase = mainCode ? w(mainCode) : null;
+            if (!mainWeapon && mainBase) mainWeapon = mainBase;
+
             u.bag.forEach((item) => {
                 if (!item) return;
                 if (item.current !== undefined && item.cap !== undefined) item.current = item.cap;
                 if (item.reserve !== undefined && item.code !== 'mg42') item.reserve = 12;
                 if (item.code === 'm8_rocket') { item.current = 60; item.cap = 60; }
             });
-
-            const mainWeapon = u.hands[0];
-            const mainCode = mainWeapon ? mainWeapon.code : (u.def && u.def.main) ? u.def.main : null;
-            const mainBase = mainCode ? w(mainCode) : null;
             const optCode = (u.def && u.def.opt) ? u.def.opt : null;
             const nadeBase = optCode === 'nade' ? w('nade') : null;
 
@@ -460,13 +552,19 @@ class CampaignManager {
             u.bag.forEach((item, i) => { if (!item) emptySlots.push(i); });
 
             let slotIdx = 0;
-            if (mainBase && mainBase.type === 'bullet' && !u.def.isTank && mainBase.mag) {
+            if (mainBase && mainBase.type === 'bullet' && !u.def.isTank && mainBase.mag
+                && mainWeapon && mainWeapon.acceptsAmmo && mainWeapon.acceptsAmmo.length) {
+                const weaponForAmmo = mainWeapon || mainBase;
                 const need = Math.min(emptySlots.length, mainBase.mag);
                 for (let k = 0; k < need && slotIdx < emptySlots.length; k++, slotIdx++) {
-                    u.bag[emptySlots[slotIdx]] = {
-                        type: 'ammo', name: (mainBase.magName || 'Clip'), ammoFor: mainCode,
-                        cap: mainBase.cap, code: 'mag', jam: mainBase.jam
-                    };
+                    if (typeof buildSpareAmmoItem === 'function') {
+                        u.bag[emptySlots[slotIdx]] = buildSpareAmmoItem({ ...weaponForAmmo, code: mainCode });
+                    } else {
+                        u.bag[emptySlots[slotIdx]] = {
+                            type: 'ammo', name: (mainBase.magName || 'Clip'), ammoFor: mainCode,
+                            cap: mainBase.cap, current: mainBase.cap, code: 'mag', jam: mainBase.jam
+                        };
+                    }
                 }
             }
             if (nadeBase && slotIdx < emptySlots.length) {
@@ -477,6 +575,10 @@ class CampaignManager {
                         current: 1, cap: 1, isConsumable: true
                     };
                 }
+            }
+
+            if (typeof refreshAmmoItemLabel === 'function' && mainWeapon) {
+                u.bag.forEach(item => refreshAmmoItemLabel(item, mainWeapon));
             }
         });
     }
