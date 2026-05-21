@@ -271,7 +271,7 @@ class Card extends Phaser.GameObjects.Container {
             if (count >= 3 && this.auraGraphics) {
                 this.auraGraphics.clear();
                 const baseOff = 2;
-                const pts = 140;
+                const pts = 50;
                 const colors = [0xffdd66, 0xffaa44, 0xff8844];
                 const vel = Math.sqrt((this.velocityX || 0) ** 2 + (this.velocityY || 0) ** 2);
                 const inertiaGain = Math.min(2.2, 1 + vel * 0.35);
@@ -566,24 +566,30 @@ class UIScene extends Phaser.Scene {
         } catch (e) {}
     }
     drawWavyHaloLine(g, t, colors, x1, y1, x2, y2, isVertical, segments, haloSpread, cycleMult, phaseOffset) {
+        segments = Math.min(segments, 30);
         const k = typeof cycleMult === 'number' ? cycleMult : 1;
         const phase = typeof phaseOffset === 'number' ? phaseOffset : 0;
         const wave = (i, s) => Math.sin((i / segments) * 4 * k * Math.PI + t * 2 + s + phase) * 6 + Math.sin((i / segments) * 2 * k * Math.PI + t * 1.2 + s * 0.7 + phase) * 4;
-        for (let layer = 0; layer < 5; layer++) {
-            const phase = layer * 0.4 + t * 0.5;
+        
+        // Draw 3 layers instead of 5
+        for (let layer = 0; layer < 3; layer++) {
+            const phaseVal = layer * 0.4 + t * 0.5;
             const col = colors[layer % colors.length];
             const a = 0.12 * (0.6 + 0.4 * Math.sin(t * 2 + layer));
             g.lineStyle(3 + Math.sin(t + layer) * 1.5, col, Math.max(0.03, a));
             g.beginPath();
             for (let i = 0; i <= segments; i++) {
                 const u = i / segments;
-                const x = x1 + (x2 - x1) * u + (isVertical ? wave(i, phase) : 0);
-                const y = y1 + (y2 - y1) * u + (isVertical ? 0 : wave(i, phase));
+                const x = x1 + (x2 - x1) * u + (isVertical ? wave(i, phaseVal) : 0);
+                const y = y1 + (y2 - y1) * u + (isVertical ? 0 : wave(i, phaseVal));
                 if (i === 0) g.moveTo(x, y); else g.lineTo(x, y);
             }
             g.strokePath();
         }
-        for (let o = -haloSpread; o <= haloSpread; o += 4) {
+        
+        // Draw with step = 12 instead of 4, reducing iterations by 3x
+        const step = 12;
+        for (let o = -haloSpread; o <= haloSpread; o += step) {
             const fade = 1 - (Math.abs(o) / haloSpread) * (Math.abs(o) / haloSpread);
             const col = colors[Math.abs(Math.floor(o * 0.2 + t * 3)) % colors.length];
             g.lineStyle(2, col, Math.max(0.01, 0.1 * fade * (0.7 + 0.3 * Math.sin(t + o * 0.05))));

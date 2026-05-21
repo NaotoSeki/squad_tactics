@@ -492,7 +492,11 @@ class EnvSystem {
             const frameIdx = Math.floor(floatFrame);
             const prefix = (g.grassType === 'B') ? 'hd_grass_b_' : 'hd_grass_';
             const safeFrame = Phaser.Math.Clamp(frameIdx, 0, maxFrames);
-            g.setTexture(`${prefix}${safeFrame}`);
+            const textureKey = `${prefix}${safeFrame}`;
+            if (g.lastTextureKey !== textureKey) {
+                g.setTexture(textureKey);
+                g.lastTextureKey = textureKey;
+            }
             const remainder = floatFrame - frameIdx;
             g.skewX = remainder * 0.05;
         }
@@ -517,7 +521,11 @@ class EnvSystem {
                 tr.firSprite.skewX = tr.currentSkew * 0.5;
                 const framePhase = (wavePhase * 0.4 + (tr.frameOffset || 0) / FIR_FRAMES_WEAK * Math.PI * 2) % 1;
                 const subFrame = (Math.floor(framePhase * FIR_FRAMES_WEAK) + (tr.frameOffset || 0)) % FIR_FRAMES_WEAK;
-                tr.firSprite.setFrame(Phaser.Math.Clamp(frameBase + subFrame, 0, 31));
+                const targetFrame = Phaser.Math.Clamp(frameBase + subFrame, 0, 31);
+                if (tr.firSprite.lastFrame !== targetFrame) {
+                    tr.firSprite.setFrame(targetFrame);
+                    tr.firSprite.lastFrame = targetFrame;
+                }
             }
         }
     }
