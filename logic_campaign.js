@@ -2,27 +2,6 @@
 
 const AVAILABLE_CARDS = ['rifleman', 'scout', 'gunner', 'sniper', 'mortar_gunner', 'aerial', 'tank_pz4', 'tank_tiger'];
 
-/**
- * PL マスタで plCategory が rifle になっているが実体は弾薬行／パンツァーファウスト／火炎放射器などの誤分類を除外し、
- * ランダム主装備は「実銃」のみにする。
- */
-function isPlausibleInfantryMainWeapon(k) {
-    const w = typeof WPNS !== 'undefined' ? WPNS[k] : null;
-    if (!w || w.partType || w.type !== 'bullet') return false;
-    if (typeof ATTR !== 'undefined' && w.attr === ATTR.RECOVERY) return false;
-    if (!((w.cap || 0) > 0)) return false;
-    const validCats = ['rifle', 'carbine', 'smg', 'auto_rifle', 'sniper', 'mg'];
-    if (!validCats.includes(w.plCategory)) return false;
-    const n = (w.name || '').trim();
-    if (/^45ACP/i.test(n)) return false;
-    if (/^PF/i.test(n)) return false;
-    if (/^GrB/i.test(n)) return false;
-    if (/^FmW/i.test(n)) return false;
-    if (/^AN-M/i.test(n)) return false;
-    if (/^30Cbn|^3006-|^7\.92-|^6\.5-|^7\.5-|^8mm/i.test(n)) return false;
-    return true;
-}
-
 /** 主兵装コード → 対応三脚架／架座（WPNS キー。値は type:part / RECOVERY のみ。pl_114 は小銃 Sch08 のため三脚に使わない） */
 const TRIPOD_CODE_FOR_MAIN = {
     pl_24: 'pl_31', pl_398: 'pl_31',
@@ -410,7 +389,8 @@ class CampaignManager {
         } else if (t.main) {
             let mainKey = t.main;
             if (isPlayer && !t.isTank && window.WPNS_PL_INFANTRY_MAIN_CODES && window.WPNS_PL_INFANTRY_MAIN_CODES.length) {
-                const pool = window.WPNS_PL_INFANTRY_MAIN_CODES.filter(isPlausibleInfantryMainWeapon);
+                const filterMain = window.isPlausibleInfantryMainWeapon || function () { return false; };
+                const pool = window.WPNS_PL_INFANTRY_MAIN_CODES.filter(filterMain);
                 if (pool.length) mainKey = pool[Math.floor(Math.random() * pool.length)];
             }
             hands[0] = createItem(mainKey);
