@@ -1,0 +1,2592 @@
+{
+  "_meta": {
+    "source_csv": "data/wpns_pl_master_table.csv",
+    "goal": "scripts/pl_decoded/GOAL_pl_weapon_sprites_ja.md",
+    "note": "image_rgba はリポ内の相対パス推奨。例: asset/pl_weapons/by_cbe/NNN.png"
+  },
+  "weapons": [
+    {
+      "wpns_code": "pl_0",
+      "cbeNameIndex": 0,
+      "plCategory": "pistol",
+      "name": "M1911A1",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_1",
+      "cbeNameIndex": 1,
+      "plCategory": "pistol",
+      "name": "M1917 S&W",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_2",
+      "cbeNameIndex": 2,
+      "plCategory": "pistol",
+      "name": "M1917 Colt",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_3",
+      "cbeNameIndex": 3,
+      "plCategory": "gear",
+      "name": "OSS",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_4",
+      "cbeNameIndex": 4,
+      "plCategory": "grenade",
+      "name": "AN-M8",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_5",
+      "cbeNameIndex": 5,
+      "plCategory": "rifle",
+      "name": "M1903A1",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_6",
+      "cbeNameIndex": 6,
+      "plCategory": "sniper",
+      "name": "M1903A4",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_7",
+      "cbeNameIndex": 7,
+      "plCategory": "auto_rifle",
+      "name": "M1918A2 BAR",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_8",
+      "cbeNameIndex": 8,
+      "plCategory": "rifle",
+      "name": "M1 Rifle",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_9",
+      "cbeNameIndex": 9,
+      "plCategory": "rifle",
+      "name": "M1C Rifle",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_10",
+      "cbeNameIndex": 10,
+      "plCategory": "rifle",
+      "name": "M1D Rifle",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_11",
+      "cbeNameIndex": 11,
+      "plCategory": "rifle",
+      "name": "M1941 Rifle",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_12",
+      "cbeNameIndex": 12,
+      "plCategory": "carbine",
+      "name": "M1 Cbn",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_13",
+      "cbeNameIndex": 13,
+      "plCategory": "carbine",
+      "name": "M1A1 Cbn",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_14",
+      "cbeNameIndex": 14,
+      "plCategory": "carbine",
+      "name": "M2 Cbn",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_15",
+      "cbeNameIndex": 15,
+      "plCategory": "smg",
+      "name": "M1928A1 SMG",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_16",
+      "cbeNameIndex": 16,
+      "plCategory": "smg",
+      "name": "M1 SMG",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_17",
+      "cbeNameIndex": 17,
+      "plCategory": "smg",
+      "name": "M1A1 SMG",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_18",
+      "cbeNameIndex": 18,
+      "plCategory": "smg",
+      "name": "M3 SMG",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_19",
+      "cbeNameIndex": 19,
+      "plCategory": "smg",
+      "name": "M3A1 SMG",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_20",
+      "cbeNameIndex": 20,
+      "plCategory": "mg",
+      "name": "M1919A6 LMG",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_21",
+      "cbeNameIndex": 21,
+      "plCategory": "mg",
+      "name": "M1941   LMG",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_22",
+      "cbeNameIndex": 22,
+      "plCategory": "mg",
+      "name": "M1917A1 MMG",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_23",
+      "cbeNameIndex": 23,
+      "plCategory": "mg",
+      "name": "M1919A4 MMG",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_24",
+      "cbeNameIndex": 24,
+      "plCategory": "mg",
+      "name": "M2 HB HMG",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_25",
+      "cbeNameIndex": 25,
+      "plCategory": "rocket",
+      "name": "M1 RL",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_26",
+      "cbeNameIndex": 26,
+      "plCategory": "rocket",
+      "name": "M1A1 RL",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_27",
+      "cbeNameIndex": 27,
+      "plCategory": "rocket",
+      "name": "M9 RL",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_28",
+      "cbeNameIndex": 28,
+      "plCategory": "flamethrower",
+      "name": "E1R1 Fl",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_29",
+      "cbeNameIndex": 29,
+      "plCategory": "flamethrower",
+      "name": "M1A1 Fl",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_30",
+      "cbeNameIndex": 30,
+      "plCategory": "flamethrower",
+      "name": "M2A1-7 Fl",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_31",
+      "cbeNameIndex": 31,
+      "plCategory": "gear",
+      "name": "M2 Tripod",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_32",
+      "cbeNameIndex": 32,
+      "plCategory": "gear",
+      "name": "M1917 Tripod",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_33",
+      "cbeNameIndex": 33,
+      "plCategory": "gear",
+      "name": "M3 Tripod",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_34",
+      "cbeNameIndex": 34,
+      "plCategory": "gear",
+      "name": "M1 Ammobox",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_35",
+      "cbeNameIndex": 35,
+      "plCategory": "gear",
+      "name": "M2HB Ammobox",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_36",
+      "cbeNameIndex": 36,
+      "plCategory": "gear",
+      "name": "M3 Binocular",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_37",
+      "cbeNameIndex": 37,
+      "plCategory": "gear",
+      "name": "SCR536",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_38",
+      "cbeNameIndex": 38,
+      "plCategory": "gear",
+      "name": "Med Bag",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_39",
+      "cbeNameIndex": 39,
+      "plCategory": "gear",
+      "name": "Film",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_40",
+      "cbeNameIndex": 40,
+      "plCategory": "gear",
+      "name": "Map Case",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_41",
+      "cbeNameIndex": 41,
+      "plCategory": "pistol",
+      "name": "C/96",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_42",
+      "cbeNameIndex": 42,
+      "plCategory": "pistol",
+      "name": "C/96M712",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_43",
+      "cbeNameIndex": 43,
+      "plCategory": "pistol",
+      "name": "P08",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_44",
+      "cbeNameIndex": 44,
+      "plCategory": "pistol",
+      "name": "M1934",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_45",
+      "cbeNameIndex": 45,
+      "plCategory": "pistol",
+      "name": "Beholla",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_46",
+      "cbeNameIndex": 46,
+      "plCategory": "pistol",
+      "name": "M38H",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_47",
+      "cbeNameIndex": 47,
+      "plCategory": "pistol",
+      "name": "PP",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_48",
+      "cbeNameIndex": 48,
+      "plCategory": "pistol",
+      "name": "PPK",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_49",
+      "cbeNameIndex": 49,
+      "plCategory": "pistol",
+      "name": "HSc",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_50",
+      "cbeNameIndex": 50,
+      "plCategory": "pistol",
+      "name": "P38",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_51",
+      "cbeNameIndex": 51,
+      "plCategory": "launcher_27",
+      "name": "27mmLeuP",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_52",
+      "cbeNameIndex": 52,
+      "plCategory": "launcher_27",
+      "name": "27mmP42",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_53",
+      "cbeNameIndex": 53,
+      "plCategory": "launcher_27",
+      "name": "27mmKpfP",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_54",
+      "cbeNameIndex": 54,
+      "plCategory": "launcher_27",
+      "name": "27mmStuP",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_55",
+      "cbeNameIndex": 55,
+      "plCategory": "rifle",
+      "name": "Gew98",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_56",
+      "cbeNameIndex": 56,
+      "plCategory": "rifle",
+      "name": "Kar98b",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_57",
+      "cbeNameIndex": 57,
+      "plCategory": "rifle",
+      "name": "Kar98k",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_58",
+      "cbeNameIndex": 58,
+      "plCategory": "sniper",
+      "name": "Kar98k svw",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_59",
+      "cbeNameIndex": 59,
+      "plCategory": "rifle",
+      "name": "Gew29/40",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_60",
+      "cbeNameIndex": 60,
+      "plCategory": "rifle",
+      "name": "Gew33/40",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_61",
+      "cbeNameIndex": 61,
+      "plCategory": "rifle",
+      "name": "Gew98/40",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_62",
+      "cbeNameIndex": 62,
+      "plCategory": "rifle",
+      "name": "VG-1",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_63",
+      "cbeNameIndex": 63,
+      "plCategory": "rifle",
+      "name": "VG-2",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_64",
+      "cbeNameIndex": 64,
+      "plCategory": "rifle",
+      "name": "VK-98",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_65",
+      "cbeNameIndex": 65,
+      "plCategory": "rifle",
+      "name": "Gew41(W)",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_66",
+      "cbeNameIndex": 66,
+      "plCategory": "rifle",
+      "name": "Gew41(M)",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_67",
+      "cbeNameIndex": 67,
+      "plCategory": "rifle",
+      "name": "Gew43",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_68",
+      "cbeNameIndex": 68,
+      "plCategory": "rifle",
+      "name": "Kar43",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_69",
+      "cbeNameIndex": 69,
+      "plCategory": "sniper",
+      "name": "Zf Kar98k",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_70",
+      "cbeNameIndex": 70,
+      "plCategory": "sniper",
+      "name": "Zf Gew43",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_71",
+      "cbeNameIndex": 71,
+      "plCategory": "auto_rifle",
+      "name": "FG42/1",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_72",
+      "cbeNameIndex": 72,
+      "plCategory": "auto_rifle",
+      "name": "FG42/2",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_73",
+      "cbeNameIndex": 73,
+      "plCategory": "rifle",
+      "name": "MKb42(W)",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_74",
+      "cbeNameIndex": 74,
+      "plCategory": "rifle",
+      "name": "MKb42(H)",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_75",
+      "cbeNameIndex": 75,
+      "plCategory": "rifle",
+      "name": "MP43",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_76",
+      "cbeNameIndex": 76,
+      "plCategory": "rifle",
+      "name": "StG44",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_77",
+      "cbeNameIndex": 77,
+      "plCategory": "rifle",
+      "name": "VG1-5",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_78",
+      "cbeNameIndex": 78,
+      "plCategory": "smg",
+      "name": "MP28/2",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_79",
+      "cbeNameIndex": 79,
+      "plCategory": "smg",
+      "name": "MP35/1",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_80",
+      "cbeNameIndex": 80,
+      "plCategory": "smg",
+      "name": "EMP",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_81",
+      "cbeNameIndex": 81,
+      "plCategory": "smg",
+      "name": "MP38",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_82",
+      "cbeNameIndex": 82,
+      "plCategory": "smg",
+      "name": "MP40",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_83",
+      "cbeNameIndex": 83,
+      "plCategory": "smg",
+      "name": "MP40/2",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_84",
+      "cbeNameIndex": 84,
+      "plCategory": "smg",
+      "name": "MP41",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_85",
+      "cbeNameIndex": 85,
+      "plCategory": "rifle",
+      "name": "Ger Potsdam",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_86",
+      "cbeNameIndex": 86,
+      "plCategory": "smg",
+      "name": "MP3008",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_87",
+      "cbeNameIndex": 87,
+      "plCategory": "mg",
+      "name": "MG08/15",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_88",
+      "cbeNameIndex": 88,
+      "plCategory": "mg",
+      "name": "MG08/18",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_89",
+      "cbeNameIndex": 89,
+      "plCategory": "mg",
+      "name": "MG13",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_90",
+      "cbeNameIndex": 90,
+      "plCategory": "mg",
+      "name": "MG15",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_91",
+      "cbeNameIndex": 91,
+      "plCategory": "mg",
+      "name": "MG34",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_92",
+      "cbeNameIndex": 92,
+      "plCategory": "mg",
+      "name": "MG34S",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_93",
+      "cbeNameIndex": 93,
+      "plCategory": "mg",
+      "name": "MG34/41",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_94",
+      "cbeNameIndex": 94,
+      "plCategory": "mg",
+      "name": "MG42",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_95",
+      "cbeNameIndex": 95,
+      "plCategory": "mg",
+      "name": "MG08",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_96",
+      "cbeNameIndex": 96,
+      "plCategory": "anti_tank",
+      "name": "PzB38",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_97",
+      "cbeNameIndex": 97,
+      "plCategory": "anti_tank",
+      "name": "PzB39",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_98",
+      "cbeNameIndex": 98,
+      "plCategory": "rifle",
+      "name": "GrB39",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_99",
+      "cbeNameIndex": 99,
+      "plCategory": "anti_tank",
+      "name": "PzBSS41",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_100",
+      "cbeNameIndex": 100,
+      "plCategory": "anti_tank",
+      "name": "PzB41",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_101",
+      "cbeNameIndex": 101,
+      "plCategory": "rifle",
+      "name": "PF30mK",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_102",
+      "cbeNameIndex": 102,
+      "plCategory": "rifle",
+      "name": "PF30mG",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_103",
+      "cbeNameIndex": 103,
+      "plCategory": "rifle",
+      "name": "PF60m",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_104",
+      "cbeNameIndex": 104,
+      "plCategory": "rifle",
+      "name": "PF100m",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_105",
+      "cbeNameIndex": 105,
+      "plCategory": "anti_tank",
+      "name": "RPzB43",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_106",
+      "cbeNameIndex": 106,
+      "plCategory": "anti_tank",
+      "name": "RPzB54",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_107",
+      "cbeNameIndex": 107,
+      "plCategory": "anti_tank",
+      "name": "RPzB54/1",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_108",
+      "cbeNameIndex": 108,
+      "plCategory": "rifle",
+      "name": "FmW35",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_109",
+      "cbeNameIndex": 109,
+      "plCategory": "rifle",
+      "name": "FmW40",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_110",
+      "cbeNameIndex": 110,
+      "plCategory": "rifle",
+      "name": "FmW41",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_111",
+      "cbeNameIndex": 111,
+      "plCategory": "rifle",
+      "name": "FmW42",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_112",
+      "cbeNameIndex": 112,
+      "plCategory": "gear",
+      "name": "Laf34",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_113",
+      "cbeNameIndex": 113,
+      "plCategory": "gear",
+      "name": "Laf42",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_114",
+      "cbeNameIndex": 114,
+      "plCategory": "rifle",
+      "name": "Sch08",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_115",
+      "cbeNameIndex": 115,
+      "plCategory": "rifle",
+      "name": "PatrK41",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_116",
+      "cbeNameIndex": 116,
+      "plCategory": "rifle",
+      "name": "PatrK15",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_117",
+      "cbeNameIndex": 117,
+      "plCategory": "gear",
+      "name": "Fernglas",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_118",
+      "cbeNameIndex": 118,
+      "plCategory": "gear",
+      "name": "Feldfu.b",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_119",
+      "cbeNameIndex": 119,
+      "plCategory": "gear",
+      "name": "SaniTo34",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_120",
+      "cbeNameIndex": 120,
+      "plCategory": "gear",
+      "name": "Mkt35",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_121",
+      "cbeNameIndex": 121,
+      "plCategory": "pistol",
+      "name": "Bodeo mod89",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_122",
+      "cbeNameIndex": 122,
+      "plCategory": "pistol",
+      "name": "Glisenti m10",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_123",
+      "cbeNameIndex": 123,
+      "plCategory": "pistol",
+      "name": "Beretta m34",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_124",
+      "cbeNameIndex": 124,
+      "plCategory": "rifle",
+      "name": "F. mod91",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_125",
+      "cbeNameIndex": 125,
+      "plCategory": "rifle",
+      "name": "M. mod91",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_126",
+      "cbeNameIndex": 126,
+      "plCategory": "rifle",
+      "name": "M. mod91/TS",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_127",
+      "cbeNameIndex": 127,
+      "plCategory": "rifle",
+      "name": "F. mod38",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_128",
+      "cbeNameIndex": 128,
+      "plCategory": "rifle",
+      "name": "M. mod38",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_129",
+      "cbeNameIndex": 129,
+      "plCategory": "rifle",
+      "name": "M. mod38/TS",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_130",
+      "cbeNameIndex": 130,
+      "plCategory": "rifle",
+      "name": "F. mod38",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_131",
+      "cbeNameIndex": 131,
+      "plCategory": "rifle",
+      "name": "M. mod38",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_132",
+      "cbeNameIndex": 132,
+      "plCategory": "rifle",
+      "name": "M. mod38/TS",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_133",
+      "cbeNameIndex": 133,
+      "plCategory": "smg",
+      "name": "MAB mod38A",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_134",
+      "cbeNameIndex": 134,
+      "plCategory": "smg",
+      "name": "MAB mod38/42",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_135",
+      "cbeNameIndex": 135,
+      "plCategory": "rifle",
+      "name": "Breda mod30",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_136",
+      "cbeNameIndex": 136,
+      "plCategory": "rifle",
+      "name": "FR mod14",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_137",
+      "cbeNameIndex": 137,
+      "plCategory": "rifle",
+      "name": "FR mod14/35",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_138",
+      "cbeNameIndex": 138,
+      "plCategory": "rifle",
+      "name": "Breda mod37",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_139",
+      "cbeNameIndex": 139,
+      "plCategory": "rifle",
+      "name": "T. FR mod14",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_140",
+      "cbeNameIndex": 140,
+      "plCategory": "rifle",
+      "name": "T. Breda m37",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_141",
+      "cbeNameIndex": 141,
+      "plCategory": "rifle",
+      "name": "CM. FR 14/35",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_142",
+      "cbeNameIndex": 142,
+      "plCategory": "gear",
+      "name": "Binocolo",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_143",
+      "cbeNameIndex": 143,
+      "plCategory": "rifle",
+      "name": "Lebel 92",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_144",
+      "cbeNameIndex": 144,
+      "plCategory": "pistol",
+      "name": "Unique Mle17",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_145",
+      "cbeNameIndex": 145,
+      "plCategory": "rifle",
+      "name": "Mle1935A",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_146",
+      "cbeNameIndex": 146,
+      "plCategory": "rifle",
+      "name": "Mle1935S",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_147",
+      "cbeNameIndex": 147,
+      "plCategory": "rifle",
+      "name": "F. Mle86/93",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_148",
+      "cbeNameIndex": 148,
+      "plCategory": "rifle",
+      "name": "M. Mle92/27",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_149",
+      "cbeNameIndex": 149,
+      "plCategory": "mg",
+      "name": "F. Mle07/15",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_150",
+      "cbeNameIndex": 150,
+      "plCategory": "rifle",
+      "name": "F. Mle16",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_151",
+      "cbeNameIndex": 151,
+      "plCategory": "rifle",
+      "name": "M. Mle16/27",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_152",
+      "cbeNameIndex": 152,
+      "plCategory": "pistol",
+      "name": "F. MAS36",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_153",
+      "cbeNameIndex": 153,
+      "plCategory": "rifle",
+      "name": "F. MAS36CR39",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_154",
+      "cbeNameIndex": 154,
+      "plCategory": "pistol",
+      "name": "MAS38",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_155",
+      "cbeNameIndex": 155,
+      "plCategory": "mg",
+      "name": "MAC24/29",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_156",
+      "cbeNameIndex": 156,
+      "plCategory": "rifle",
+      "name": "Mle1914",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_157",
+      "cbeNameIndex": 157,
+      "plCategory": "rifle",
+      "name": "T. Mle1914",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_158",
+      "cbeNameIndex": 158,
+      "plCategory": "gear",
+      "name": "Jumelles",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_159",
+      "cbeNameIndex": 159,
+      "plCategory": "sniper",
+      "name": "No1 Mk4",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_160",
+      "cbeNameIndex": 160,
+      "plCategory": "pistol",
+      "name": "No2 Mk2",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_161",
+      "cbeNameIndex": 161,
+      "plCategory": "pistol",
+      "name": "No2 Mk1*",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_162",
+      "cbeNameIndex": 162,
+      "plCategory": "pistol",
+      "name": "No2 Mk1**",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_163",
+      "cbeNameIndex": 163,
+      "plCategory": "pistol",
+      "name": "Webley Mk4",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_164",
+      "cbeNameIndex": 164,
+      "plCategory": "rifle",
+      "name": "S&W No2",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_165",
+      "cbeNameIndex": 165,
+      "plCategory": "grenade",
+      "name": "Very",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_166",
+      "cbeNameIndex": 166,
+      "plCategory": "rifle",
+      "name": "No1 Mk3",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_167",
+      "cbeNameIndex": 167,
+      "plCategory": "rifle",
+      "name": "No1 Mk3*",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_168",
+      "cbeNameIndex": 168,
+      "plCategory": "sniper",
+      "name": "No4 Mk1",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_169",
+      "cbeNameIndex": 169,
+      "plCategory": "sniper",
+      "name": "No4 Mk1*",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_170",
+      "cbeNameIndex": 170,
+      "plCategory": "sniper",
+      "name": "No4 Mk1(T)",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_171",
+      "cbeNameIndex": 171,
+      "plCategory": "sniper",
+      "name": "No3 Mk1*(T)",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_172",
+      "cbeNameIndex": 172,
+      "plCategory": "smg",
+      "name": "Sten Mk2",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_173",
+      "cbeNameIndex": 173,
+      "plCategory": "smg",
+      "name": "Sten Mk3",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_174",
+      "cbeNameIndex": 174,
+      "plCategory": "smg",
+      "name": "Sten Mk5",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_175",
+      "cbeNameIndex": 175,
+      "plCategory": "rifle",
+      "name": "Lewis Mk1",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_176",
+      "cbeNameIndex": 176,
+      "plCategory": "mg",
+      "name": "Bren Mk1",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_177",
+      "cbeNameIndex": 177,
+      "plCategory": "mg",
+      "name": "Bren Mk2",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_178",
+      "cbeNameIndex": 178,
+      "plCategory": "mg",
+      "name": "Bren Mk3",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_179",
+      "cbeNameIndex": 179,
+      "plCategory": "mg",
+      "name": "Vickers Mk1",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_180",
+      "cbeNameIndex": 180,
+      "plCategory": "anti_tank",
+      "name": "Boys Mk1",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_181",
+      "cbeNameIndex": 181,
+      "plCategory": "anti_tank",
+      "name": "PIAT",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_182",
+      "cbeNameIndex": 182,
+      "plCategory": "rifle",
+      "name": "No1 Mk1",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_183",
+      "cbeNameIndex": 183,
+      "plCategory": "gear",
+      "name": "Tripod Mk2",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_184",
+      "cbeNameIndex": 184,
+      "plCategory": "gear",
+      "name": "Tripod Mk4",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_185",
+      "cbeNameIndex": 185,
+      "plCategory": "mortar",
+      "name": "No8 Mk1",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_186",
+      "cbeNameIndex": 186,
+      "plCategory": "gear",
+      "name": "Binocular",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_187",
+      "cbeNameIndex": 187,
+      "plCategory": "gear",
+      "name": "Note",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_188",
+      "cbeNameIndex": 188,
+      "plCategory": "rifle",
+      "name": "obr1895g",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_189",
+      "cbeNameIndex": 189,
+      "plCategory": "pistol",
+      "name": "TT33",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_190",
+      "cbeNameIndex": 190,
+      "plCategory": "rifle",
+      "name": "obr1891/30g",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_191",
+      "cbeNameIndex": 191,
+      "plCategory": "rifle",
+      "name": "obr1938g",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_192",
+      "cbeNameIndex": 192,
+      "plCategory": "sniper",
+      "name": "obr91/30g-PU",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_193",
+      "cbeNameIndex": 193,
+      "plCategory": "rifle",
+      "name": "obr1944g",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_194",
+      "cbeNameIndex": 194,
+      "plCategory": "rifle",
+      "name": "SVT40",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_195",
+      "cbeNameIndex": 195,
+      "plCategory": "smg",
+      "name": "PPD40",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_196",
+      "cbeNameIndex": 196,
+      "plCategory": "smg",
+      "name": "PPSh41",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_197",
+      "cbeNameIndex": 197,
+      "plCategory": "smg",
+      "name": "PPS43",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_198",
+      "cbeNameIndex": 198,
+      "plCategory": "mg",
+      "name": "DP",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_199",
+      "cbeNameIndex": 199,
+      "plCategory": "mg",
+      "name": "PM1910",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_200",
+      "cbeNameIndex": 200,
+      "plCategory": "rifle",
+      "name": "DShK",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_201",
+      "cbeNameIndex": 201,
+      "plCategory": "rifle",
+      "name": "pat.1910",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_202",
+      "cbeNameIndex": 202,
+      "plCategory": "rifle",
+      "name": "pat.DShK",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_203",
+      "cbeNameIndex": 203,
+      "plCategory": "rifle",
+      "name": "SP M12",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_204",
+      "cbeNameIndex": 204,
+      "plCategory": "smg",
+      "name": "MP34(o)",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_205",
+      "cbeNameIndex": 205,
+      "plCategory": "rifle",
+      "name": "M30",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_206",
+      "cbeNameIndex": 206,
+      "plCategory": "rifle",
+      "name": "M07/12",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_207",
+      "cbeNameIndex": 207,
+      "plCategory": "rifle",
+      "name": "M07 Laf",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_208",
+      "cbeNameIndex": 208,
+      "plCategory": "rifle",
+      "name": "M07 PatrK",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_209",
+      "cbeNameIndex": 209,
+      "plCategory": "rifle",
+      "name": "Mle1903",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_210",
+      "cbeNameIndex": 210,
+      "plCategory": "rifle",
+      "name": "Mle10/22",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_211",
+      "cbeNameIndex": 211,
+      "plCategory": "rifle",
+      "name": "GP35",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_212",
+      "cbeNameIndex": 212,
+      "plCategory": "pistol",
+      "name": "CZ vz24",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_213",
+      "cbeNameIndex": 213,
+      "plCategory": "pistol",
+      "name": "CZ vz27",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_214",
+      "cbeNameIndex": 214,
+      "plCategory": "rifle",
+      "name": "CZ vz38",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_215",
+      "cbeNameIndex": 215,
+      "plCategory": "rifle",
+      "name": "ZK383",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_216",
+      "cbeNameIndex": 216,
+      "plCategory": "rifle",
+      "name": "lk ZB vz26",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_217",
+      "cbeNameIndex": 217,
+      "plCategory": "rifle",
+      "name": "tk ZB vz37",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_218",
+      "cbeNameIndex": 218,
+      "plCategory": "rifle",
+      "name": "ZB206",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_219",
+      "cbeNameIndex": 219,
+      "plCategory": "rifle",
+      "name": "ZB308",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_220",
+      "cbeNameIndex": 220,
+      "plCategory": "pistol",
+      "name": "VIS wz35",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_221",
+      "cbeNameIndex": 221,
+      "plCategory": "rifle",
+      "name": "wz35",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_222",
+      "cbeNameIndex": 222,
+      "plCategory": "pistol",
+      "name": "Astra400",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_223",
+      "cbeNameIndex": 223,
+      "plCategory": "pistol",
+      "name": "Astra903",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_224",
+      "cbeNameIndex": 224,
+      "plCategory": "anti_tank",
+      "name": "S-18/100",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_228",
+      "cbeNameIndex": 228,
+      "plCategory": "grenade",
+      "name": "AN-M8-1",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_234",
+      "cbeNameIndex": 234,
+      "plCategory": "rifle",
+      "name": "45ACP20T",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_235",
+      "cbeNameIndex": 235,
+      "plCategory": "rifle",
+      "name": "45ACP30T",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_236",
+      "cbeNameIndex": 236,
+      "plCategory": "rifle",
+      "name": "45ACP50T",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_237",
+      "cbeNameIndex": 237,
+      "plCategory": "rifle",
+      "name": "45ACP30G",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_242",
+      "cbeNameIndex": 242,
+      "plCategory": "rocket",
+      "name": "M6A1 HR",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_243",
+      "cbeNameIndex": 243,
+      "plCategory": "rocket",
+      "name": "M6A5 HR",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_244",
+      "cbeNameIndex": 244,
+      "plCategory": "rocket",
+      "name": "M9A1 RfG",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_245",
+      "cbeNameIndex": 245,
+      "plCategory": "rocket",
+      "name": "Mk2 GPA",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_246",
+      "cbeNameIndex": 246,
+      "plCategory": "rocket",
+      "name": "Mk2 Grd",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_247",
+      "cbeNameIndex": 247,
+      "plCategory": "rocket",
+      "name": "Mk3A1Grd",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_248",
+      "cbeNameIndex": 248,
+      "plCategory": "rifle",
+      "name": "M1 CDB",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_249",
+      "cbeNameIndex": 249,
+      "plCategory": "rocket",
+      "name": "WP M15",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_250",
+      "cbeNameIndex": 250,
+      "plCategory": "rifle",
+      "name": "M1905Byt",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_251",
+      "cbeNameIndex": 251,
+      "plCategory": "melee",
+      "name": "John Byt",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_252",
+      "cbeNameIndex": 252,
+      "plCategory": "melee",
+      "name": "M4 Byt",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_253",
+      "cbeNameIndex": 253,
+      "plCategory": "rifle",
+      "name": "Mk1 TKnf",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_254",
+      "cbeNameIndex": 254,
+      "plCategory": "melee",
+      "name": "M3 T.Knf",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_266",
+      "cbeNameIndex": 266,
+      "plCategory": "rifle",
+      "name": "FLeut41",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_267",
+      "cbeNameIndex": 267,
+      "plCategory": "grenade",
+      "name": "Wkor361",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_268",
+      "cbeNameIndex": 268,
+      "plCategory": "rifle",
+      "name": "Wgrp326",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_269",
+      "cbeNameIndex": 269,
+      "plCategory": "rifle",
+      "name": "FLeut.Z",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_271",
+      "cbeNameIndex": 271,
+      "plCategory": "anti_tank",
+      "name": "Pzwk42",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_287",
+      "cbeNameIndex": 287,
+      "plCategory": "rifle",
+      "name": "Pk16-100",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_288",
+      "cbeNameIndex": 288,
+      "plCategory": "rifle",
+      "name": "7.92f100",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_289",
+      "cbeNameIndex": 289,
+      "plCategory": "rifle",
+      "name": "7.92f250",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_291",
+      "cbeNameIndex": 291,
+      "plCategory": "rifle",
+      "name": "Pt13-75",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_292",
+      "cbeNameIndex": 292,
+      "plCategory": "rifle",
+      "name": "Dt15-75",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_293",
+      "cbeNameIndex": 293,
+      "plCategory": "rifle",
+      "name": "Gt34-50",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_294",
+      "cbeNameIndex": 294,
+      "plCategory": "rifle",
+      "name": "Pt34-75",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_296",
+      "cbeNameIndex": 296,
+      "plCategory": "rifle",
+      "name": "7.92m250",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_297",
+      "cbeNameIndex": 297,
+      "plCategory": "rifle",
+      "name": "Pa318-1",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_298",
+      "cbeNameIndex": 298,
+      "plCategory": "rifle",
+      "name": "Pa318-10",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_303",
+      "cbeNameIndex": 303,
+      "plCategory": "anti_tank",
+      "name": "GPzgr",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_304",
+      "cbeNameIndex": 304,
+      "plCategory": "rifle",
+      "name": "GSprgr",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_305",
+      "cbeNameIndex": 305,
+      "plCategory": "rifle",
+      "name": "StiGr24",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_306",
+      "cbeNameIndex": 306,
+      "plCategory": "rifle",
+      "name": "StiGr39",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_307",
+      "cbeNameIndex": 307,
+      "plCategory": "rifle",
+      "name": "StiGr43",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_308",
+      "cbeNameIndex": 308,
+      "plCategory": "rifle",
+      "name": "EihGr39",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_309",
+      "cbeNameIndex": 309,
+      "plCategory": "rifle",
+      "name": "GebLad",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_310",
+      "cbeNameIndex": 310,
+      "plCategory": "rocket",
+      "name": "Haft-Hl3",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_311",
+      "cbeNameIndex": 311,
+      "plCategory": "rifle",
+      "name": "GebLad 3",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_312",
+      "cbeNameIndex": 312,
+      "plCategory": "rocket",
+      "name": "NbK39",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_313",
+      "cbeNameIndex": 313,
+      "plCategory": "melee",
+      "name": "S84/92",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_314",
+      "cbeNameIndex": 314,
+      "plCategory": "melee",
+      "name": "Messer",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_328",
+      "cbeNameIndex": 328,
+      "plCategory": "grenade",
+      "name": "SRCM m35",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_329",
+      "cbeNameIndex": 329,
+      "plCategory": "grenade",
+      "name": "Breda 35",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_330",
+      "cbeNameIndex": 330,
+      "plCategory": "grenade",
+      "name": "OTO m35",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_331",
+      "cbeNameIndex": 331,
+      "plCategory": "grenade",
+      "name": "SB.mod91",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_332",
+      "cbeNameIndex": 332,
+      "plCategory": "smg",
+      "name": "BP.MAB38",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_333",
+      "cbeNameIndex": 333,
+      "plCategory": "rifle",
+      "name": "P. mod39",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_334",
+      "cbeNameIndex": 334,
+      "plCategory": "rifle",
+      "name": "8M92-1",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_337",
+      "cbeNameIndex": 337,
+      "plCategory": "rifle",
+      "name": "8M86-1",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_338",
+      "cbeNameIndex": 338,
+      "plCategory": "rifle",
+      "name": "8M86-3",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_339",
+      "cbeNameIndex": 339,
+      "plCategory": "rifle",
+      "name": "8M86-5",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_343",
+      "cbeNameIndex": 343,
+      "plCategory": "rifle",
+      "name": "8M86-24",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_344",
+      "cbeNameIndex": 344,
+      "plCategory": "rifle",
+      "name": "8M86-30",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_345",
+      "cbeNameIndex": 345,
+      "plCategory": "rocket",
+      "name": "Grd F1",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_346",
+      "cbeNameIndex": 346,
+      "plCategory": "rocket",
+      "name": "Grd O.F.",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_347",
+      "cbeNameIndex": 347,
+      "plCategory": "rifle",
+      "name": "Mle86/35",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_348",
+      "cbeNameIndex": 348,
+      "plCategory": "mg",
+      "name": "Mle92/15",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_349",
+      "cbeNameIndex": 349,
+      "plCategory": "rifle",
+      "name": "41 CONON",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_358",
+      "cbeNameIndex": 358,
+      "plCategory": "rifle",
+      "name": "303Br250",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_359",
+      "cbeNameIndex": 359,
+      "plCategory": "anti_tank",
+      "name": "55Boys-5",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_360",
+      "cbeNameIndex": 360,
+      "plCategory": "anti_tank",
+      "name": "PIAT-1",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_361",
+      "cbeNameIndex": 361,
+      "plCategory": "rifle",
+      "name": "No36M",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_362",
+      "cbeNameIndex": 362,
+      "plCategory": "rifle",
+      "name": "No1 Mk1",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_363",
+      "cbeNameIndex": 363,
+      "plCategory": "rifle",
+      "name": "No3 Mk1",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_364",
+      "cbeNameIndex": 364,
+      "plCategory": "sniper",
+      "name": "No4 Mk2",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_369",
+      "cbeNameIndex": 369,
+      "plCategory": "rifle",
+      "name": "7.62T71D",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_370",
+      "cbeNameIndex": 370,
+      "plCategory": "rifle",
+      "name": "7.62T35h",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_371",
+      "cbeNameIndex": 371,
+      "plCategory": "rifle",
+      "name": "7.62T71h",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_372",
+      "cbeNameIndex": 372,
+      "plCategory": "rifle",
+      "name": "7.62T35S",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_376",
+      "cbeNameIndex": 376,
+      "plCategory": "rifle",
+      "name": "sht.1891",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_377",
+      "cbeNameIndex": 377,
+      "plCategory": "rifle",
+      "name": "sht.1940",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_385",
+      "cbeNameIndex": 385,
+      "plCategory": "rifle",
+      "name": "380ACP8A",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_387",
+      "cbeNameIndex": 387,
+      "plCategory": "rifle",
+      "name": "380ACP8B",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_395",
+      "cbeNameIndex": 395,
+      "plCategory": "mg",
+      "name": "M1919A4 MMG",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_396",
+      "cbeNameIndex": 396,
+      "plCategory": "mg",
+      "name": "M1919A4 MMG",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_397",
+      "cbeNameIndex": 397,
+      "plCategory": "mg",
+      "name": "M1919A5 MMG",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_398",
+      "cbeNameIndex": 398,
+      "plCategory": "mg",
+      "name": "M2 HB HMG",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_399",
+      "cbeNameIndex": 399,
+      "plCategory": "smg",
+      "name": "MP40",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_400",
+      "cbeNameIndex": 400,
+      "plCategory": "mg",
+      "name": "MG34",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_401",
+      "cbeNameIndex": 401,
+      "plCategory": "mg",
+      "name": "sMG34",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_402",
+      "cbeNameIndex": 402,
+      "plCategory": "mg",
+      "name": "MG42",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_403",
+      "cbeNameIndex": 403,
+      "plCategory": "mg",
+      "name": "sMG42",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_404",
+      "cbeNameIndex": 404,
+      "plCategory": "mg",
+      "name": "MG37(t)",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_405",
+      "cbeNameIndex": 405,
+      "plCategory": "rifle",
+      "name": "FR mod35",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_406",
+      "cbeNameIndex": 406,
+      "plCategory": "rifle",
+      "name": "Breda mod38",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_407",
+      "cbeNameIndex": 407,
+      "plCategory": "rifle",
+      "name": "MAC1931A",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_408",
+      "cbeNameIndex": 408,
+      "plCategory": "mg",
+      "name": "Vickers Mk1",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_409",
+      "cbeNameIndex": 409,
+      "plCategory": "rifle",
+      "name": "Besa Mk1",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_410",
+      "cbeNameIndex": 410,
+      "plCategory": "mg",
+      "name": "37mmGun M5",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_411",
+      "cbeNameIndex": 411,
+      "plCategory": "mg",
+      "name": "37mmGun M5",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_412",
+      "cbeNameIndex": 412,
+      "plCategory": "mg",
+      "name": "37mmGun M6",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_413",
+      "cbeNameIndex": 413,
+      "plCategory": "mg",
+      "name": "37mmGun M6",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_414",
+      "cbeNameIndex": 414,
+      "plCategory": "mg",
+      "name": "57mmGun M1",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_415",
+      "cbeNameIndex": 415,
+      "plCategory": "rifle",
+      "name": "75mm M1897",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_416",
+      "cbeNameIndex": 416,
+      "plCategory": "mg",
+      "name": "75mmGun M2",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_417",
+      "cbeNameIndex": 417,
+      "plCategory": "mg",
+      "name": "75mmGun M3",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_418",
+      "cbeNameIndex": 418,
+      "plCategory": "mg",
+      "name": "75mmGun M5/6",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_419",
+      "cbeNameIndex": 419,
+      "plCategory": "rifle",
+      "name": "75mmHow M2/3",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_420",
+      "cbeNameIndex": 420,
+      "plCategory": "mg",
+      "name": "76mmGun M1A1",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_421",
+      "cbeNameIndex": 421,
+      "plCategory": "rifle",
+      "name": "3inGun M5",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_422",
+      "cbeNameIndex": 422,
+      "plCategory": "rifle",
+      "name": "3inGun M7",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_423",
+      "cbeNameIndex": 423,
+      "plCategory": "mg",
+      "name": "90mmGun M3",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_424",
+      "cbeNameIndex": 424,
+      "plCategory": "rifle",
+      "name": "105mmHow T8",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_425",
+      "cbeNameIndex": 425,
+      "plCategory": "rifle",
+      "name": "20mm KwK30",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_426",
+      "cbeNameIndex": 426,
+      "plCategory": "rifle",
+      "name": "20mm KwK38",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_427",
+      "cbeNameIndex": 427,
+      "plCategory": "rifle",
+      "name": "50mm KwK39",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_428",
+      "cbeNameIndex": 428,
+      "plCategory": "rifle",
+      "name": "75mm KwK37",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_429",
+      "cbeNameIndex": 429,
+      "plCategory": "rifle",
+      "name": "75mm StK37",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_430",
+      "cbeNameIndex": 430,
+      "plCategory": "rifle",
+      "name": "75mm KwK40",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_431",
+      "cbeNameIndex": 431,
+      "plCategory": "rifle",
+      "name": "75mm KwK40",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_432",
+      "cbeNameIndex": 432,
+      "plCategory": "rifle",
+      "name": "75mm PaK39",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_433",
+      "cbeNameIndex": 433,
+      "plCategory": "rifle",
+      "name": "75mm PaK40",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_434",
+      "cbeNameIndex": 434,
+      "plCategory": "rifle",
+      "name": "75mm StK40",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_435",
+      "cbeNameIndex": 435,
+      "plCategory": "rifle",
+      "name": "75mm KwK42",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_436",
+      "cbeNameIndex": 436,
+      "plCategory": "rifle",
+      "name": "75mm PaK42",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_437",
+      "cbeNameIndex": 437,
+      "plCategory": "rifle",
+      "name": "80mm GrW34",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_438",
+      "cbeNameIndex": 438,
+      "plCategory": "flamethrower",
+      "name": "88mm FlaK36",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_439",
+      "cbeNameIndex": 439,
+      "plCategory": "rifle",
+      "name": "88mm KwK36",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_440",
+      "cbeNameIndex": 440,
+      "plCategory": "rifle",
+      "name": "88mm KwK43",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_441",
+      "cbeNameIndex": 441,
+      "plCategory": "rifle",
+      "name": "88mm PaK43",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_442",
+      "cbeNameIndex": 442,
+      "plCategory": "rifle",
+      "name": "105mm StH42",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_443",
+      "cbeNameIndex": 443,
+      "plCategory": "rifle",
+      "name": "128mm PaK44",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_444",
+      "cbeNameIndex": 444,
+      "plCategory": "rifle",
+      "name": "150mm StH43",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_445",
+      "cbeNameIndex": 445,
+      "plCategory": "rifle",
+      "name": "20mm M35",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_446",
+      "cbeNameIndex": 446,
+      "plCategory": "rifle",
+      "name": "37/40 Cann.",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_447",
+      "cbeNameIndex": 447,
+      "plCategory": "rifle",
+      "name": "47/32 Cann.",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_448",
+      "cbeNameIndex": 448,
+      "plCategory": "mg",
+      "name": "75/18 Obice",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_449",
+      "cbeNameIndex": 449,
+      "plCategory": "rifle",
+      "name": "37mm SA18",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_450",
+      "cbeNameIndex": 450,
+      "plCategory": "rifle",
+      "name": "6pdrGun Mk2",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_451",
+      "cbeNameIndex": 451,
+      "plCategory": "rifle",
+      "name": "6pdrGun Mk3",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_452",
+      "cbeNameIndex": 452,
+      "plCategory": "mg",
+      "name": "75mmGun Mk5",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_453",
+      "cbeNameIndex": 453,
+      "plCategory": "rifle",
+      "name": "3inGun Mk1",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_454",
+      "cbeNameIndex": 454,
+      "plCategory": "rifle",
+      "name": "37mmPaK35/36",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_455",
+      "cbeNameIndex": 455,
+      "plCategory": "rifle",
+      "name": "(end)",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_458",
+      "cbeNameIndex": 458,
+      "plCategory": "rifle",
+      "name": "x辻",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_459",
+      "cbeNameIndex": 459,
+      "plCategory": "rifle",
+      "name": "|弟",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_466",
+      "cbeNameIndex": 466,
+      "plCategory": "rifle",
+      "name": "イエス・サー！",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_467",
+      "cbeNameIndex": 467,
+      "plCategory": "rifle",
+      "name": "誰か？",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_468",
+      "cbeNameIndex": 468,
+      "plCategory": "rifle",
+      "name": "………チッ！",
+      "image_rgba": null
+    },
+    {
+      "wpns_code": "pl_481",
+      "cbeNameIndex": 481,
+      "plCategory": "rifle",
+      "name": "%s",
+      "image_rgba": null
+    }
+  ]
+}

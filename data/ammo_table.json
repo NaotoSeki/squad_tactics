@@ -1,0 +1,2195 @@
+[
+  {
+    "cbeNameIndex": 225,
+    "name": "45ACP-7",
+    "category_code": 18,
+    "purchase_cost": 10,
+    "accepted_by": [],
+    "accepted_by_count": 0
+  },
+  {
+    "cbeNameIndex": 226,
+    "name": "45ACP-3",
+    "category_code": 18,
+    "purchase_cost": 3,
+    "accepted_by": [
+      {
+        "cbeNameIndex": 0,
+        "name": "M1911A1",
+        "category_name": "pistol"
+      }
+    ],
+    "accepted_by_count": 1
+  },
+  {
+    "cbeNameIndex": 227,
+    "name": "45ACP-1",
+    "category_code": 18,
+    "purchase_cost": 1,
+    "accepted_by": [
+      {
+        "cbeNameIndex": 1,
+        "name": "M1917 S&W",
+        "category_name": "pistol"
+      },
+      {
+        "cbeNameIndex": 2,
+        "name": "M1917 Colt",
+        "category_name": "pistol"
+      }
+    ],
+    "accepted_by_count": 2
+  },
+  {
+    "cbeNameIndex": 228,
+    "name": "AN-M8-1",
+    "category_code": 18,
+    "purchase_cost": 10,
+    "accepted_by": [
+      {
+        "cbeNameIndex": 3,
+        "name": "OSS",
+        "category_name": "pistol"
+      }
+    ],
+    "accepted_by_count": 1
+  },
+  {
+    "cbeNameIndex": 229,
+    "name": "3006-5",
+    "category_code": 18,
+    "purchase_cost": 11,
+    "accepted_by": [
+      {
+        "cbeNameIndex": 4,
+        "name": "AN-M8",
+        "category_name": "smoke_grenade"
+      }
+    ],
+    "accepted_by_count": 1
+  },
+  {
+    "cbeNameIndex": 230,
+    "name": "3006-20B",
+    "category_code": 18,
+    "purchase_cost": 56,
+    "accepted_by": [
+      {
+        "cbeNameIndex": 5,
+        "name": "M1903A1",
+        "category_name": "rifle"
+      },
+      {
+        "cbeNameIndex": 6,
+        "name": "M1903A4",
+        "category_name": "rifle"
+      },
+      {
+        "cbeNameIndex": 11,
+        "name": "M1941 Rifle",
+        "category_name": "rifle"
+      }
+    ],
+    "accepted_by_count": 3
+  },
+  {
+    "cbeNameIndex": 231,
+    "name": "3006-8",
+    "category_code": 18,
+    "purchase_cost": 18,
+    "accepted_by": [
+      {
+        "cbeNameIndex": 7,
+        "name": "M1918A2 BAR",
+        "category_name": "lmg"
+      }
+    ],
+    "accepted_by_count": 1
+  },
+  {
+    "cbeNameIndex": 232,
+    "name": "30Cbn-15",
+    "category_code": 18,
+    "purchase_cost": 32,
+    "accepted_by": [
+      {
+        "cbeNameIndex": 8,
+        "name": "M1 Rifle",
+        "category_name": "rifle"
+      },
+      {
+        "cbeNameIndex": 9,
+        "name": "M1C Rifle",
+        "category_name": "rifle"
+      },
+      {
+        "cbeNameIndex": 10,
+        "name": "M1D Rifle",
+        "category_name": "rifle"
+      }
+    ],
+    "accepted_by_count": 3
+  },
+  {
+    "cbeNameIndex": 233,
+    "name": "30Cbn-30",
+    "category_code": 18,
+    "purchase_cost": 79,
+    "accepted_by": [
+      {
+        "cbeNameIndex": 12,
+        "name": "M1 Cbn",
+        "category_name": "rifle"
+      },
+      {
+        "cbeNameIndex": 13,
+        "name": "M1A1 Cbn",
+        "category_name": "rifle"
+      },
+      {
+        "cbeNameIndex": 14,
+        "name": "M2 Cbn",
+        "category_name": "rifle"
+      }
+    ],
+    "accepted_by_count": 3
+  },
+  {
+    "cbeNameIndex": 234,
+    "name": "45ACP20T",
+    "category_code": 18,
+    "purchase_cost": 28,
+    "accepted_by": [
+      {
+        "cbeNameIndex": 12,
+        "name": "M1 Cbn",
+        "category_name": "rifle"
+      },
+      {
+        "cbeNameIndex": 13,
+        "name": "M1A1 Cbn",
+        "category_name": "rifle"
+      },
+      {
+        "cbeNameIndex": 14,
+        "name": "M2 Cbn",
+        "category_name": "rifle"
+      }
+    ],
+    "accepted_by_count": 3
+  },
+  {
+    "cbeNameIndex": 235,
+    "name": "45ACP30T",
+    "category_code": 18,
+    "purchase_cost": 53,
+    "accepted_by": [
+      {
+        "cbeNameIndex": 15,
+        "name": "M1928A1 SMG",
+        "category_name": "smg"
+      },
+      {
+        "cbeNameIndex": 16,
+        "name": "M1 SMG",
+        "category_name": "smg"
+      },
+      {
+        "cbeNameIndex": 17,
+        "name": "M1A1 SMG",
+        "category_name": "smg"
+      }
+    ],
+    "accepted_by_count": 3
+  },
+  {
+    "cbeNameIndex": 236,
+    "name": "45ACP50T",
+    "category_code": 18,
+    "purchase_cost": 113,
+    "accepted_by": [
+      {
+        "cbeNameIndex": 15,
+        "name": "M1928A1 SMG",
+        "category_name": "smg"
+      },
+      {
+        "cbeNameIndex": 16,
+        "name": "M1 SMG",
+        "category_name": "smg"
+      },
+      {
+        "cbeNameIndex": 17,
+        "name": "M1A1 SMG",
+        "category_name": "smg"
+      }
+    ],
+    "accepted_by_count": 3
+  },
+  {
+    "cbeNameIndex": 237,
+    "name": "45ACP30G",
+    "category_code": 18,
+    "purchase_cost": 42,
+    "accepted_by": [
+      {
+        "cbeNameIndex": 15,
+        "name": "M1928A1 SMG",
+        "category_name": "smg"
+      }
+    ],
+    "accepted_by_count": 1
+  },
+  {
+    "cbeNameIndex": 238,
+    "name": "3006-20J",
+    "category_code": 18,
+    "purchase_cost": 56,
+    "accepted_by": [
+      {
+        "cbeNameIndex": 18,
+        "name": "M3 SMG",
+        "category_name": "smg"
+      },
+      {
+        "cbeNameIndex": 19,
+        "name": "M3A1 SMG",
+        "category_name": "smg"
+      }
+    ],
+    "accepted_by_count": 2
+  },
+  {
+    "cbeNameIndex": 239,
+    "name": "3006-200",
+    "category_code": 18,
+    "purchase_cost": 520,
+    "accepted_by": [
+      {
+        "cbeNameIndex": 21,
+        "name": "M1941   LMG",
+        "category_name": "lmg"
+      }
+    ],
+    "accepted_by_count": 1
+  },
+  {
+    "cbeNameIndex": 240,
+    "name": "3006-250",
+    "category_code": 18,
+    "purchase_cost": 600,
+    "accepted_by": [
+      {
+        "cbeNameIndex": 34,
+        "name": "M1 Ammobox",
+        "category_name": "ammo_box"
+      }
+    ],
+    "accepted_by_count": 1
+  },
+  {
+    "cbeNameIndex": 241,
+    "name": "50M2-110",
+    "category_code": 18,
+    "purchase_cost": 572,
+    "accepted_by": [
+      {
+        "cbeNameIndex": 34,
+        "name": "M1 Ammobox",
+        "category_name": "ammo_box"
+      }
+    ],
+    "accepted_by_count": 1
+  },
+  {
+    "cbeNameIndex": 242,
+    "name": "M6A1 HR",
+    "category_code": 18,
+    "purchase_cost": 100,
+    "accepted_by": [
+      {
+        "cbeNameIndex": 35,
+        "name": "M2HB Ammobox",
+        "category_name": "ammo_box"
+      }
+    ],
+    "accepted_by_count": 1
+  },
+  {
+    "cbeNameIndex": 243,
+    "name": "M6A5 HR",
+    "category_code": 18,
+    "purchase_cost": 130,
+    "accepted_by": [
+      {
+        "cbeNameIndex": 25,
+        "name": "M1 RL",
+        "category_name": "rocket_launcher"
+      },
+      {
+        "cbeNameIndex": 26,
+        "name": "M1A1 RL",
+        "category_name": "rocket_launcher"
+      },
+      {
+        "cbeNameIndex": 27,
+        "name": "M9 RL",
+        "category_name": "rocket_launcher"
+      }
+    ],
+    "accepted_by_count": 3
+  },
+  {
+    "cbeNameIndex": 255,
+    "name": "7.63-10c",
+    "category_code": 18,
+    "purchase_cost": 11,
+    "accepted_by": [],
+    "accepted_by_count": 0
+  },
+  {
+    "cbeNameIndex": 256,
+    "name": "7.63-10b",
+    "category_code": 18,
+    "purchase_cost": 18,
+    "accepted_by": [
+      {
+        "cbeNameIndex": 41,
+        "name": "C/96",
+        "category_name": "pistol"
+      },
+      {
+        "cbeNameIndex": 42,
+        "name": "C/96M712",
+        "category_name": "pistol"
+      },
+      {
+        "cbeNameIndex": 223,
+        "name": "Astra903",
+        "category_name": "pistol"
+      }
+    ],
+    "accepted_by_count": 3
+  },
+  {
+    "cbeNameIndex": 257,
+    "name": "7.63-20b",
+    "category_code": 18,
+    "purchase_cost": 42,
+    "accepted_by": [
+      {
+        "cbeNameIndex": 42,
+        "name": "C/96M712",
+        "category_name": "pistol"
+      },
+      {
+        "cbeNameIndex": 223,
+        "name": "Astra903",
+        "category_name": "pistol"
+      }
+    ],
+    "accepted_by_count": 2
+  },
+  {
+    "cbeNameIndex": 258,
+    "name": "9Pb-8L",
+    "category_code": 18,
+    "purchase_cost": 11,
+    "accepted_by": [
+      {
+        "cbeNameIndex": 42,
+        "name": "C/96M712",
+        "category_name": "pistol"
+      },
+      {
+        "cbeNameIndex": 223,
+        "name": "Astra903",
+        "category_name": "pistol"
+      }
+    ],
+    "accepted_by_count": 2
+  },
+  {
+    "cbeNameIndex": 259,
+    "name": "32ACP-8M",
+    "category_code": 18,
+    "purchase_cost": 11,
+    "accepted_by": [
+      {
+        "cbeNameIndex": 43,
+        "name": "P08",
+        "category_name": "pistol"
+      }
+    ],
+    "accepted_by_count": 1
+  },
+  {
+    "cbeNameIndex": 260,
+    "name": "32ACP-7B",
+    "category_code": 18,
+    "purchase_cost": 10,
+    "accepted_by": [
+      {
+        "cbeNameIndex": 44,
+        "name": "M1934",
+        "category_name": "pistol"
+      }
+    ],
+    "accepted_by_count": 1
+  },
+  {
+    "cbeNameIndex": 261,
+    "name": "32ACP-8S",
+    "category_code": 18,
+    "purchase_cost": 11,
+    "accepted_by": [
+      {
+        "cbeNameIndex": 45,
+        "name": "Beholla",
+        "category_name": "pistol"
+      }
+    ],
+    "accepted_by_count": 1
+  },
+  {
+    "cbeNameIndex": 262,
+    "name": "32ACP-8W",
+    "category_code": 18,
+    "purchase_cost": 11,
+    "accepted_by": [
+      {
+        "cbeNameIndex": 46,
+        "name": "M38H",
+        "category_name": "pistol"
+      }
+    ],
+    "accepted_by_count": 1
+  },
+  {
+    "cbeNameIndex": 263,
+    "name": "32ACP-7W",
+    "category_code": 18,
+    "purchase_cost": 10,
+    "accepted_by": [
+      {
+        "cbeNameIndex": 47,
+        "name": "PP",
+        "category_name": "pistol"
+      }
+    ],
+    "accepted_by_count": 1
+  },
+  {
+    "cbeNameIndex": 264,
+    "name": "32ACP-8H",
+    "category_code": 18,
+    "purchase_cost": 11,
+    "accepted_by": [
+      {
+        "cbeNameIndex": 48,
+        "name": "PPK",
+        "category_name": "pistol"
+      }
+    ],
+    "accepted_by_count": 1
+  },
+  {
+    "cbeNameIndex": 265,
+    "name": "9Pb-8W",
+    "category_code": 18,
+    "purchase_cost": 11,
+    "accepted_by": [
+      {
+        "cbeNameIndex": 49,
+        "name": "HSc",
+        "category_name": "pistol"
+      }
+    ],
+    "accepted_by_count": 1
+  },
+  {
+    "cbeNameIndex": 266,
+    "name": "FLeut41",
+    "category_code": 18,
+    "purchase_cost": 10,
+    "accepted_by": [
+      {
+        "cbeNameIndex": 50,
+        "name": "P38",
+        "category_name": "pistol"
+      }
+    ],
+    "accepted_by_count": 1
+  },
+  {
+    "cbeNameIndex": 269,
+    "name": "FLeut.Z",
+    "category_code": 18,
+    "purchase_cost": 15,
+    "accepted_by": [
+      {
+        "cbeNameIndex": 51,
+        "name": "27mmLeuP",
+        "category_name": "smoke_grenade"
+      },
+      {
+        "cbeNameIndex": 52,
+        "name": "27mmP42",
+        "category_name": "smoke_grenade"
+      },
+      {
+        "cbeNameIndex": 54,
+        "name": "27mmStuP",
+        "category_name": "grenade_launcher_ammo"
+      }
+    ],
+    "accepted_by_count": 3
+  },
+  {
+    "cbeNameIndex": 272,
+    "name": "7.92-5",
+    "category_code": 18,
+    "purchase_cost": 11,
+    "accepted_by": [
+      {
+        "cbeNameIndex": 54,
+        "name": "27mmStuP",
+        "category_name": "grenade_launcher_ammo"
+      }
+    ],
+    "accepted_by_count": 1
+  },
+  {
+    "cbeNameIndex": 273,
+    "name": "7.92-10G",
+    "category_code": 18,
+    "purchase_cost": 35,
+    "accepted_by": [
+      {
+        "cbeNameIndex": 55,
+        "name": "Gew98",
+        "category_name": "rifle"
+      },
+      {
+        "cbeNameIndex": 56,
+        "name": "Kar98b",
+        "category_name": "rifle"
+      },
+      {
+        "cbeNameIndex": 57,
+        "name": "Kar98k",
+        "category_name": "rifle"
+      },
+      {
+        "cbeNameIndex": 58,
+        "name": "Kar98k svw",
+        "category_name": "rifle"
+      },
+      {
+        "cbeNameIndex": 59,
+        "name": "Gew29/40",
+        "category_name": "rifle"
+      },
+      {
+        "cbeNameIndex": 60,
+        "name": "Gew33/40",
+        "category_name": "rifle"
+      },
+      {
+        "cbeNameIndex": 61,
+        "name": "Gew98/40",
+        "category_name": "rifle"
+      },
+      {
+        "cbeNameIndex": 64,
+        "name": "VK-98",
+        "category_name": "rifle"
+      },
+      {
+        "cbeNameIndex": 65,
+        "name": "Gew41(W)",
+        "category_name": "rifle"
+      },
+      {
+        "cbeNameIndex": 66,
+        "name": "Gew41(M)",
+        "category_name": "rifle"
+      },
+      {
+        "cbeNameIndex": 67,
+        "name": "Gew43",
+        "category_name": "rifle"
+      },
+      {
+        "cbeNameIndex": 68,
+        "name": "Kar43",
+        "category_name": "rifle"
+      },
+      {
+        "cbeNameIndex": 69,
+        "name": "Zf Kar98k",
+        "category_name": "rifle"
+      },
+      {
+        "cbeNameIndex": 70,
+        "name": "Zf Gew43",
+        "category_name": "rifle"
+      }
+    ],
+    "accepted_by_count": 14
+  },
+  {
+    "cbeNameIndex": 274,
+    "name": "7.92-101",
+    "category_code": 18,
+    "purchase_cost": 28,
+    "accepted_by": [
+      {
+        "cbeNameIndex": 62,
+        "name": "VG-1",
+        "category_name": "rifle"
+      },
+      {
+        "cbeNameIndex": 63,
+        "name": "VG-2",
+        "category_name": "rifle"
+      },
+      {
+        "cbeNameIndex": 67,
+        "name": "Gew43",
+        "category_name": "rifle"
+      },
+      {
+        "cbeNameIndex": 68,
+        "name": "Kar43",
+        "category_name": "rifle"
+      },
+      {
+        "cbeNameIndex": 70,
+        "name": "Zf Gew43",
+        "category_name": "rifle"
+      }
+    ],
+    "accepted_by_count": 5
+  },
+  {
+    "cbeNameIndex": 275,
+    "name": "7.92-201",
+    "category_code": 18,
+    "purchase_cost": 70,
+    "accepted_by": [
+      {
+        "cbeNameIndex": 71,
+        "name": "FG42/1",
+        "category_name": "lmg"
+      }
+    ],
+    "accepted_by_count": 1
+  },
+  {
+    "cbeNameIndex": 276,
+    "name": "7.92-202",
+    "category_code": 18,
+    "purchase_cost": 56,
+    "accepted_by": [
+      {
+        "cbeNameIndex": 71,
+        "name": "FG42/1",
+        "category_name": "lmg"
+      }
+    ],
+    "accepted_by_count": 1
+  },
+  {
+    "cbeNameIndex": 277,
+    "name": "7.92k-30",
+    "category_code": 18,
+    "purchase_cost": 63,
+    "accepted_by": [
+      {
+        "cbeNameIndex": 72,
+        "name": "FG42/2",
+        "category_name": "lmg"
+      }
+    ],
+    "accepted_by_count": 1
+  },
+  {
+    "cbeNameIndex": 278,
+    "name": "9Pb-20S",
+    "category_code": 18,
+    "purchase_cost": 28,
+    "accepted_by": [
+      {
+        "cbeNameIndex": 73,
+        "name": "MKb42(W)",
+        "category_name": "rifle"
+      },
+      {
+        "cbeNameIndex": 74,
+        "name": "MKb42(H)",
+        "category_name": "rifle"
+      },
+      {
+        "cbeNameIndex": 75,
+        "name": "MP43",
+        "category_name": "rifle"
+      },
+      {
+        "cbeNameIndex": 76,
+        "name": "StG44",
+        "category_name": "rifle"
+      },
+      {
+        "cbeNameIndex": 77,
+        "name": "VG1-5",
+        "category_name": "rifle"
+      }
+    ],
+    "accepted_by_count": 5
+  },
+  {
+    "cbeNameIndex": 279,
+    "name": "9Pb-32S",
+    "category_code": 18,
+    "purchase_cost": 56,
+    "accepted_by": [
+      {
+        "cbeNameIndex": 78,
+        "name": "MP28/2",
+        "category_name": "smg"
+      }
+    ],
+    "accepted_by_count": 1
+  },
+  {
+    "cbeNameIndex": 280,
+    "name": "9Pb-50S",
+    "category_code": 18,
+    "purchase_cost": 105,
+    "accepted_by": [
+      {
+        "cbeNameIndex": 78,
+        "name": "MP28/2",
+        "category_name": "smg"
+      }
+    ],
+    "accepted_by_count": 1
+  },
+  {
+    "cbeNameIndex": 281,
+    "name": "9Pb-20E",
+    "category_code": 18,
+    "purchase_cost": 28,
+    "accepted_by": [
+      {
+        "cbeNameIndex": 78,
+        "name": "MP28/2",
+        "category_name": "smg"
+      }
+    ],
+    "accepted_by_count": 1
+  },
+  {
+    "cbeNameIndex": 282,
+    "name": "9Pb-32E",
+    "category_code": 18,
+    "purchase_cost": 56,
+    "accepted_by": [
+      {
+        "cbeNameIndex": 80,
+        "name": "EMP",
+        "category_name": "smg"
+      }
+    ],
+    "accepted_by_count": 1
+  },
+  {
+    "cbeNameIndex": 283,
+    "name": "9Pb-24B",
+    "category_code": 18,
+    "purchase_cost": 34,
+    "accepted_by": [
+      {
+        "cbeNameIndex": 80,
+        "name": "EMP",
+        "category_name": "smg"
+      }
+    ],
+    "accepted_by_count": 1
+  },
+  {
+    "cbeNameIndex": 284,
+    "name": "9Pb-32B",
+    "category_code": 18,
+    "purchase_cost": 56,
+    "accepted_by": [
+      {
+        "cbeNameIndex": 79,
+        "name": "MP35/1",
+        "category_name": "smg"
+      }
+    ],
+    "accepted_by_count": 1
+  },
+  {
+    "cbeNameIndex": 285,
+    "name": "9Pb-32M",
+    "category_code": 18,
+    "purchase_cost": 45,
+    "accepted_by": [
+      {
+        "cbeNameIndex": 79,
+        "name": "MP35/1",
+        "category_name": "smg"
+      }
+    ],
+    "accepted_by_count": 1
+  },
+  {
+    "cbeNameIndex": 286,
+    "name": "9Pb-32P",
+    "category_code": 18,
+    "purchase_cost": 45,
+    "accepted_by": [
+      {
+        "cbeNameIndex": 81,
+        "name": "MP38",
+        "category_name": "smg"
+      },
+      {
+        "cbeNameIndex": 82,
+        "name": "MP40",
+        "category_name": "smg"
+      },
+      {
+        "cbeNameIndex": 83,
+        "name": "MP40/2",
+        "category_name": "smg"
+      },
+      {
+        "cbeNameIndex": 84,
+        "name": "MP41",
+        "category_name": "smg"
+      },
+      {
+        "cbeNameIndex": 86,
+        "name": "MP3008",
+        "category_name": "smg"
+      }
+    ],
+    "accepted_by_count": 5
+  },
+  {
+    "cbeNameIndex": 287,
+    "name": "Pk16-100",
+    "category_code": 18,
+    "purchase_cost": 280,
+    "accepted_by": [
+      {
+        "cbeNameIndex": 85,
+        "name": "Ger Potsdam",
+        "category_name": "smg"
+      },
+      {
+        "cbeNameIndex": 172,
+        "name": "Sten Mk2",
+        "category_name": "smg"
+      },
+      {
+        "cbeNameIndex": 173,
+        "name": "Sten Mk3",
+        "category_name": "smg"
+      },
+      {
+        "cbeNameIndex": 174,
+        "name": "Sten Mk5",
+        "category_name": "smg"
+      }
+    ],
+    "accepted_by_count": 4
+  },
+  {
+    "cbeNameIndex": 288,
+    "name": "7.92f100",
+    "category_code": 18,
+    "purchase_cost": 240,
+    "accepted_by": [
+      {
+        "cbeNameIndex": 87,
+        "name": "MG08/15",
+        "category_name": "lmg"
+      },
+      {
+        "cbeNameIndex": 88,
+        "name": "MG08/18",
+        "category_name": "lmg"
+      }
+    ],
+    "accepted_by_count": 2
+  },
+  {
+    "cbeNameIndex": 289,
+    "name": "7.92f250",
+    "category_code": 18,
+    "purchase_cost": 675,
+    "accepted_by": [
+      {
+        "cbeNameIndex": 116,
+        "name": "PatrK15",
+        "category_name": "ammo_box"
+      }
+    ],
+    "accepted_by_count": 1
+  },
+  {
+    "cbeNameIndex": 290,
+    "name": "7.92-25",
+    "category_code": 18,
+    "purchase_cost": 70,
+    "accepted_by": [
+      {
+        "cbeNameIndex": 116,
+        "name": "PatrK15",
+        "category_name": "ammo_box"
+      }
+    ],
+    "accepted_by_count": 1
+  },
+  {
+    "cbeNameIndex": 291,
+    "name": "Pt13-75",
+    "category_code": 18,
+    "purchase_cost": 281,
+    "accepted_by": [
+      {
+        "cbeNameIndex": 89,
+        "name": "MG13",
+        "category_name": "lmg"
+      }
+    ],
+    "accepted_by_count": 1
+  },
+  {
+    "cbeNameIndex": 292,
+    "name": "Dt15-75",
+    "category_code": 18,
+    "purchase_cost": 225,
+    "accepted_by": [
+      {
+        "cbeNameIndex": 89,
+        "name": "MG13",
+        "category_name": "lmg"
+      }
+    ],
+    "accepted_by_count": 1
+  },
+  {
+    "cbeNameIndex": 293,
+    "name": "Gt34-50",
+    "category_code": 18,
+    "purchase_cost": 140,
+    "accepted_by": [
+      {
+        "cbeNameIndex": 90,
+        "name": "MG15",
+        "category_name": "lmg"
+      }
+    ],
+    "accepted_by_count": 1
+  },
+  {
+    "cbeNameIndex": 294,
+    "name": "Pt34-75",
+    "category_code": 18,
+    "purchase_cost": 281,
+    "accepted_by": [
+      {
+        "cbeNameIndex": 91,
+        "name": "MG34",
+        "category_name": "lmg"
+      },
+      {
+        "cbeNameIndex": 92,
+        "name": "MG34S",
+        "category_name": "lmg"
+      },
+      {
+        "cbeNameIndex": 93,
+        "name": "MG34/41",
+        "category_name": "lmg"
+      },
+      {
+        "cbeNameIndex": 94,
+        "name": "MG42",
+        "category_name": "lmg"
+      }
+    ],
+    "accepted_by_count": 4
+  },
+  {
+    "cbeNameIndex": 295,
+    "name": "7.92-50",
+    "category_code": 18,
+    "purchase_cost": 130,
+    "accepted_by": [
+      {
+        "cbeNameIndex": 91,
+        "name": "MG34",
+        "category_name": "lmg"
+      },
+      {
+        "cbeNameIndex": 92,
+        "name": "MG34S",
+        "category_name": "lmg"
+      },
+      {
+        "cbeNameIndex": 93,
+        "name": "MG34/41",
+        "category_name": "lmg"
+      }
+    ],
+    "accepted_by_count": 3
+  },
+  {
+    "cbeNameIndex": 296,
+    "name": "7.92m250",
+    "category_code": 18,
+    "purchase_cost": 813,
+    "accepted_by": [
+      {
+        "cbeNameIndex": 115,
+        "name": "PatrK41",
+        "category_name": "ammo_box"
+      }
+    ],
+    "accepted_by_count": 1
+  },
+  {
+    "cbeNameIndex": 297,
+    "name": "Pa318-1",
+    "category_code": 18,
+    "purchase_cost": 3,
+    "accepted_by": [
+      {
+        "cbeNameIndex": 115,
+        "name": "PatrK41",
+        "category_name": "ammo_box"
+      }
+    ],
+    "accepted_by_count": 1
+  },
+  {
+    "cbeNameIndex": 298,
+    "name": "Pa318-10",
+    "category_code": 18,
+    "purchase_cost": 42,
+    "accepted_by": [
+      {
+        "cbeNameIndex": 96,
+        "name": "PzB38",
+        "category_name": "at_rifle"
+      },
+      {
+        "cbeNameIndex": 97,
+        "name": "PzB39",
+        "category_name": "at_rifle"
+      }
+    ],
+    "accepted_by_count": 2
+  },
+  {
+    "cbeNameIndex": 299,
+    "name": "20LS-5",
+    "category_code": 18,
+    "purchase_cost": 35,
+    "accepted_by": [
+      {
+        "cbeNameIndex": 99,
+        "name": "PzBSS41",
+        "category_name": "at_rifle"
+      }
+    ],
+    "accepted_by_count": 1
+  },
+  {
+    "cbeNameIndex": 300,
+    "name": "20LS-10",
+    "category_code": 18,
+    "purchase_cost": 88,
+    "accepted_by": [
+      {
+        "cbeNameIndex": 100,
+        "name": "PzB41",
+        "category_name": "at_rifle"
+      }
+    ],
+    "accepted_by_count": 1
+  },
+  {
+    "cbeNameIndex": 301,
+    "name": "RPzB4322",
+    "category_code": 18,
+    "purchase_cost": 200,
+    "accepted_by": [
+      {
+        "cbeNameIndex": 100,
+        "name": "PzB41",
+        "category_name": "at_rifle"
+      }
+    ],
+    "accepted_by_count": 1
+  },
+  {
+    "cbeNameIndex": 302,
+    "name": "RPzB4992",
+    "category_code": 18,
+    "purchase_cost": 250,
+    "accepted_by": [
+      {
+        "cbeNameIndex": 105,
+        "name": "RPzB43",
+        "category_name": "rocket_launcher"
+      },
+      {
+        "cbeNameIndex": 106,
+        "name": "RPzB54",
+        "category_name": "rocket_launcher"
+      }
+    ],
+    "accepted_by_count": 2
+  },
+  {
+    "cbeNameIndex": 315,
+    "name": "10.35-1",
+    "category_code": 18,
+    "purchase_cost": 1,
+    "accepted_by": [],
+    "accepted_by_count": 0
+  },
+  {
+    "cbeNameIndex": 316,
+    "name": "9Gli-7",
+    "category_code": 18,
+    "purchase_cost": 10,
+    "accepted_by": [
+      {
+        "cbeNameIndex": 121,
+        "name": "Bodeo mod89",
+        "category_name": "pistol"
+      }
+    ],
+    "accepted_by_count": 1
+  },
+  {
+    "cbeNameIndex": 317,
+    "name": "380ACP-7",
+    "category_code": 18,
+    "purchase_cost": 10,
+    "accepted_by": [
+      {
+        "cbeNameIndex": 122,
+        "name": "Glisenti m10",
+        "category_name": "pistol"
+      }
+    ],
+    "accepted_by_count": 1
+  },
+  {
+    "cbeNameIndex": 318,
+    "name": "6.5-6",
+    "category_code": 18,
+    "purchase_cost": 10,
+    "accepted_by": [
+      {
+        "cbeNameIndex": 123,
+        "name": "Beretta m34",
+        "category_name": "pistol"
+      }
+    ],
+    "accepted_by_count": 1
+  },
+  {
+    "cbeNameIndex": 319,
+    "name": "7.35-6",
+    "category_code": 18,
+    "purchase_cost": 13,
+    "accepted_by": [
+      {
+        "cbeNameIndex": 124,
+        "name": "F. mod91",
+        "category_name": "rifle"
+      },
+      {
+        "cbeNameIndex": 125,
+        "name": "M. mod91",
+        "category_name": "rifle"
+      },
+      {
+        "cbeNameIndex": 126,
+        "name": "M. mod91/TS",
+        "category_name": "rifle"
+      },
+      {
+        "cbeNameIndex": 130,
+        "name": "F. mod38",
+        "category_name": "rifle"
+      },
+      {
+        "cbeNameIndex": 131,
+        "name": "M. mod38",
+        "category_name": "rifle"
+      },
+      {
+        "cbeNameIndex": 132,
+        "name": "M. mod38/TS",
+        "category_name": "rifle"
+      },
+      {
+        "cbeNameIndex": 135,
+        "name": "Breda mod30",
+        "category_name": "lmg"
+      }
+    ],
+    "accepted_by_count": 7
+  },
+  {
+    "cbeNameIndex": 320,
+    "name": "9Pb-10",
+    "category_code": 18,
+    "purchase_cost": 14,
+    "accepted_by": [
+      {
+        "cbeNameIndex": 127,
+        "name": "F. mod38",
+        "category_name": "rifle"
+      },
+      {
+        "cbeNameIndex": 128,
+        "name": "M. mod38",
+        "category_name": "rifle"
+      },
+      {
+        "cbeNameIndex": 129,
+        "name": "M. mod38/TS",
+        "category_name": "rifle"
+      }
+    ],
+    "accepted_by_count": 3
+  },
+  {
+    "cbeNameIndex": 321,
+    "name": "9Pb-20",
+    "category_code": 18,
+    "purchase_cost": 35,
+    "accepted_by": [
+      {
+        "cbeNameIndex": 133,
+        "name": "MAB mod38A",
+        "category_name": "smg"
+      }
+    ],
+    "accepted_by_count": 1
+  },
+  {
+    "cbeNameIndex": 322,
+    "name": "9Pb-30",
+    "category_code": 18,
+    "purchase_cost": 63,
+    "accepted_by": [
+      {
+        "cbeNameIndex": 133,
+        "name": "MAB mod38A",
+        "category_name": "smg"
+      },
+      {
+        "cbeNameIndex": 134,
+        "name": "MAB mod38/42",
+        "category_name": "smg"
+      }
+    ],
+    "accepted_by_count": 2
+  },
+  {
+    "cbeNameIndex": 323,
+    "name": "9Pb-40",
+    "category_code": 18,
+    "purchase_cost": 98,
+    "accepted_by": [
+      {
+        "cbeNameIndex": 134,
+        "name": "MAB mod38/42",
+        "category_name": "smg"
+      }
+    ],
+    "accepted_by_count": 1
+  },
+  {
+    "cbeNameIndex": 324,
+    "name": "6.5-20",
+    "category_code": 18,
+    "purchase_cost": 33,
+    "accepted_by": [
+      {
+        "cbeNameIndex": 133,
+        "name": "MAB mod38A",
+        "category_name": "smg"
+      },
+      {
+        "cbeNameIndex": 134,
+        "name": "MAB mod38/42",
+        "category_name": "smg"
+      }
+    ],
+    "accepted_by_count": 2
+  },
+  {
+    "cbeNameIndex": 325,
+    "name": "6.5-50",
+    "category_code": 18,
+    "purchase_cost": 105,
+    "accepted_by": [
+      {
+        "cbeNameIndex": 135,
+        "name": "Breda mod30",
+        "category_name": "lmg"
+      }
+    ],
+    "accepted_by_count": 1
+  },
+  {
+    "cbeNameIndex": 326,
+    "name": "8Brd-20",
+    "category_code": 18,
+    "purchase_cost": 52,
+    "accepted_by": [
+      {
+        "cbeNameIndex": 136,
+        "name": "FR mod14",
+        "category_name": "mmg"
+      }
+    ],
+    "accepted_by_count": 1
+  },
+  {
+    "cbeNameIndex": 327,
+    "name": "8Brd-50",
+    "category_code": 18,
+    "purchase_cost": 130,
+    "accepted_by": [
+      {
+        "cbeNameIndex": 138,
+        "name": "Breda mod37",
+        "category_name": "mmg"
+      }
+    ],
+    "accepted_by_count": 1
+  },
+  {
+    "cbeNameIndex": 334,
+    "name": "8M92-1",
+    "category_code": 18,
+    "purchase_cost": 1,
+    "accepted_by": [],
+    "accepted_by_count": 0
+  },
+  {
+    "cbeNameIndex": 335,
+    "name": "32ACP-9",
+    "category_code": 18,
+    "purchase_cost": 13,
+    "accepted_by": [
+      {
+        "cbeNameIndex": 143,
+        "name": "Lebel 92",
+        "category_name": "pistol"
+      }
+    ],
+    "accepted_by_count": 1
+  },
+  {
+    "cbeNameIndex": 336,
+    "name": "7.65-8",
+    "category_code": 18,
+    "purchase_cost": 11,
+    "accepted_by": [
+      {
+        "cbeNameIndex": 144,
+        "name": "Unique Mle17",
+        "category_name": "pistol"
+      }
+    ],
+    "accepted_by_count": 1
+  },
+  {
+    "cbeNameIndex": 337,
+    "name": "8M86-1",
+    "category_code": 18,
+    "purchase_cost": 2,
+    "accepted_by": [
+      {
+        "cbeNameIndex": 145,
+        "name": "Mle1935A",
+        "category_name": "pistol"
+      },
+      {
+        "cbeNameIndex": 146,
+        "name": "Mle1935S",
+        "category_name": "pistol"
+      }
+    ],
+    "accepted_by_count": 2
+  },
+  {
+    "cbeNameIndex": 338,
+    "name": "8M86-3",
+    "category_code": 18,
+    "purchase_cost": 7,
+    "accepted_by": [
+      {
+        "cbeNameIndex": 147,
+        "name": "F. Mle86/93",
+        "category_name": "rifle"
+      }
+    ],
+    "accepted_by_count": 1
+  },
+  {
+    "cbeNameIndex": 339,
+    "name": "8M86-5",
+    "category_code": 18,
+    "purchase_cost": 11,
+    "accepted_by": [
+      {
+        "cbeNameIndex": 148,
+        "name": "M. Mle92/27",
+        "category_name": "rifle"
+      },
+      {
+        "cbeNameIndex": 149,
+        "name": "F. Mle07/15",
+        "category_name": "rifle"
+      }
+    ],
+    "accepted_by_count": 2
+  },
+  {
+    "cbeNameIndex": 340,
+    "name": "7.5-5",
+    "category_code": 18,
+    "purchase_cost": 11,
+    "accepted_by": [
+      {
+        "cbeNameIndex": 150,
+        "name": "F. Mle16",
+        "category_name": "rifle"
+      },
+      {
+        "cbeNameIndex": 151,
+        "name": "M. Mle16/27",
+        "category_name": "rifle"
+      }
+    ],
+    "accepted_by_count": 2
+  },
+  {
+    "cbeNameIndex": 341,
+    "name": "7.65-32",
+    "category_code": 18,
+    "purchase_cost": 59,
+    "accepted_by": [
+      {
+        "cbeNameIndex": 152,
+        "name": "F. MAS36",
+        "category_name": "rifle"
+      },
+      {
+        "cbeNameIndex": 153,
+        "name": "F. MAS36CR39",
+        "category_name": "rifle"
+      }
+    ],
+    "accepted_by_count": 2
+  },
+  {
+    "cbeNameIndex": 342,
+    "name": "7.5-25",
+    "category_code": 18,
+    "purchase_cost": 70,
+    "accepted_by": [
+      {
+        "cbeNameIndex": 154,
+        "name": "MAS38",
+        "category_name": "smg"
+      }
+    ],
+    "accepted_by_count": 1
+  },
+  {
+    "cbeNameIndex": 343,
+    "name": "8M86-24",
+    "category_code": 18,
+    "purchase_cost": 62,
+    "accepted_by": [
+      {
+        "cbeNameIndex": 155,
+        "name": "MAC24/29",
+        "category_name": "lmg"
+      }
+    ],
+    "accepted_by_count": 1
+  },
+  {
+    "cbeNameIndex": 344,
+    "name": "8M86-30",
+    "category_code": 18,
+    "purchase_cost": 98,
+    "accepted_by": [
+      {
+        "cbeNameIndex": 156,
+        "name": "Mle1914",
+        "category_name": "mmg"
+      }
+    ],
+    "accepted_by_count": 1
+  },
+  {
+    "cbeNameIndex": 350,
+    "name": "455Web-1",
+    "category_code": 18,
+    "purchase_cost": 1,
+    "accepted_by": [],
+    "accepted_by_count": 0
+  },
+  {
+    "cbeNameIndex": 351,
+    "name": "380Mk2-1",
+    "category_code": 18,
+    "purchase_cost": 1,
+    "accepted_by": [
+      {
+        "cbeNameIndex": 159,
+        "name": "No1 Mk4",
+        "category_name": "pistol"
+      }
+    ],
+    "accepted_by_count": 1
+  },
+  {
+    "cbeNameIndex": 352,
+    "name": "Very-1",
+    "category_code": 18,
+    "purchase_cost": 10,
+    "accepted_by": [
+      {
+        "cbeNameIndex": 160,
+        "name": "No2 Mk2",
+        "category_name": "pistol"
+      },
+      {
+        "cbeNameIndex": 161,
+        "name": "No2 Mk1*",
+        "category_name": "pistol"
+      },
+      {
+        "cbeNameIndex": 162,
+        "name": "No2 Mk1**",
+        "category_name": "pistol"
+      },
+      {
+        "cbeNameIndex": 163,
+        "name": "Webley Mk4",
+        "category_name": "pistol"
+      },
+      {
+        "cbeNameIndex": 164,
+        "name": "S&W No2",
+        "category_name": "pistol"
+      }
+    ],
+    "accepted_by_count": 5
+  },
+  {
+    "cbeNameIndex": 353,
+    "name": "303Br-10",
+    "category_code": 18,
+    "purchase_cost": 28,
+    "accepted_by": [
+      {
+        "cbeNameIndex": 165,
+        "name": "Very",
+        "category_name": "smoke_grenade"
+      }
+    ],
+    "accepted_by_count": 1
+  },
+  {
+    "cbeNameIndex": 354,
+    "name": "303Br-5",
+    "category_code": 18,
+    "purchase_cost": 11,
+    "accepted_by": [],
+    "accepted_by_count": 0
+  },
+  {
+    "cbeNameIndex": 355,
+    "name": "9Pb-32R",
+    "category_code": 18,
+    "purchase_cost": 45,
+    "accepted_by": [
+      {
+        "cbeNameIndex": 166,
+        "name": "No1 Mk3",
+        "category_name": "rifle"
+      },
+      {
+        "cbeNameIndex": 167,
+        "name": "No1 Mk3*",
+        "category_name": "rifle"
+      },
+      {
+        "cbeNameIndex": 168,
+        "name": "No4 Mk1",
+        "category_name": "rifle"
+      },
+      {
+        "cbeNameIndex": 169,
+        "name": "No4 Mk1*",
+        "category_name": "rifle"
+      },
+      {
+        "cbeNameIndex": 170,
+        "name": "No4 Mk1(T)",
+        "category_name": "rifle"
+      },
+      {
+        "cbeNameIndex": 171,
+        "name": "No3 Mk1*(T)",
+        "category_name": "rifle"
+      }
+    ],
+    "accepted_by_count": 6
+  },
+  {
+    "cbeNameIndex": 356,
+    "name": "303Br-47",
+    "category_code": 18,
+    "purchase_cost": 141,
+    "accepted_by": [
+      {
+        "cbeNameIndex": 85,
+        "name": "Ger Potsdam",
+        "category_name": "smg"
+      },
+      {
+        "cbeNameIndex": 172,
+        "name": "Sten Mk2",
+        "category_name": "smg"
+      },
+      {
+        "cbeNameIndex": 173,
+        "name": "Sten Mk3",
+        "category_name": "smg"
+      },
+      {
+        "cbeNameIndex": 174,
+        "name": "Sten Mk5",
+        "category_name": "smg"
+      }
+    ],
+    "accepted_by_count": 4
+  },
+  {
+    "cbeNameIndex": 357,
+    "name": "303Br-30",
+    "category_code": 18,
+    "purchase_cost": 84,
+    "accepted_by": [
+      {
+        "cbeNameIndex": 175,
+        "name": "Lewis Mk1",
+        "category_name": "lmg"
+      }
+    ],
+    "accepted_by_count": 1
+  },
+  {
+    "cbeNameIndex": 358,
+    "name": "303Br250",
+    "category_code": 18,
+    "purchase_cost": 600,
+    "accepted_by": [
+      {
+        "cbeNameIndex": 176,
+        "name": "Bren Mk1",
+        "category_name": "lmg"
+      },
+      {
+        "cbeNameIndex": 177,
+        "name": "Bren Mk2",
+        "category_name": "lmg"
+      },
+      {
+        "cbeNameIndex": 178,
+        "name": "Bren Mk3",
+        "category_name": "lmg"
+      }
+    ],
+    "accepted_by_count": 3
+  },
+  {
+    "cbeNameIndex": 359,
+    "name": "55Boys-5",
+    "category_code": 18,
+    "purchase_cost": 28,
+    "accepted_by": [
+      {
+        "cbeNameIndex": 185,
+        "name": "No8 Mk1",
+        "category_name": "ammo_box"
+      }
+    ],
+    "accepted_by_count": 1
+  },
+  {
+    "cbeNameIndex": 360,
+    "name": "PIAT-1",
+    "category_code": 18,
+    "purchase_cost": 20,
+    "accepted_by": [
+      {
+        "cbeNameIndex": 180,
+        "name": "Boys Mk1",
+        "category_name": "at_rifle"
+      }
+    ],
+    "accepted_by_count": 1
+  },
+  {
+    "cbeNameIndex": 365,
+    "name": "7.62N-1",
+    "category_code": 18,
+    "purchase_cost": 1,
+    "accepted_by": [
+      {
+        "cbeNameIndex": 168,
+        "name": "No4 Mk1",
+        "category_name": "rifle"
+      },
+      {
+        "cbeNameIndex": 169,
+        "name": "No4 Mk1*",
+        "category_name": "rifle"
+      },
+      {
+        "cbeNameIndex": 170,
+        "name": "No4 Mk1(T)",
+        "category_name": "rifle"
+      },
+      {
+        "cbeNameIndex": 174,
+        "name": "Sten Mk5",
+        "category_name": "smg"
+      }
+    ],
+    "accepted_by_count": 4
+  },
+  {
+    "cbeNameIndex": 366,
+    "name": "7.62T-8",
+    "category_code": 18,
+    "purchase_cost": 11,
+    "accepted_by": [
+      {
+        "cbeNameIndex": 188,
+        "name": "obr1895g",
+        "category_name": "pistol"
+      }
+    ],
+    "accepted_by_count": 1
+  },
+  {
+    "cbeNameIndex": 367,
+    "name": "7.62-5",
+    "category_code": 18,
+    "purchase_cost": 11,
+    "accepted_by": [
+      {
+        "cbeNameIndex": 189,
+        "name": "TT33",
+        "category_name": "pistol"
+      }
+    ],
+    "accepted_by_count": 1
+  },
+  {
+    "cbeNameIndex": 368,
+    "name": "7.62-10",
+    "category_code": 18,
+    "purchase_cost": 28,
+    "accepted_by": [
+      {
+        "cbeNameIndex": 190,
+        "name": "obr1891/30g",
+        "category_name": "rifle"
+      },
+      {
+        "cbeNameIndex": 191,
+        "name": "obr1938g",
+        "category_name": "rifle"
+      },
+      {
+        "cbeNameIndex": 192,
+        "name": "obr91/30g-PU",
+        "category_name": "rifle"
+      },
+      {
+        "cbeNameIndex": 193,
+        "name": "obr1944g",
+        "category_name": "rifle"
+      },
+      {
+        "cbeNameIndex": 194,
+        "name": "SVT40",
+        "category_name": "rifle"
+      }
+    ],
+    "accepted_by_count": 5
+  },
+  {
+    "cbeNameIndex": 369,
+    "name": "7.62T71D",
+    "category_code": 18,
+    "purchase_cost": 107,
+    "accepted_by": [
+      {
+        "cbeNameIndex": 194,
+        "name": "SVT40",
+        "category_name": "rifle"
+      }
+    ],
+    "accepted_by_count": 1
+  },
+  {
+    "cbeNameIndex": 370,
+    "name": "7.62T35h",
+    "category_code": 18,
+    "purchase_cost": 49,
+    "accepted_by": [
+      {
+        "cbeNameIndex": 195,
+        "name": "PPD40",
+        "category_name": "smg"
+      }
+    ],
+    "accepted_by_count": 1
+  },
+  {
+    "cbeNameIndex": 371,
+    "name": "7.62T71h",
+    "category_code": 18,
+    "purchase_cost": 134,
+    "accepted_by": [
+      {
+        "cbeNameIndex": 196,
+        "name": "PPSh41",
+        "category_name": "smg"
+      }
+    ],
+    "accepted_by_count": 1
+  },
+  {
+    "cbeNameIndex": 372,
+    "name": "7.62T35S",
+    "category_code": 18,
+    "purchase_cost": 49,
+    "accepted_by": [
+      {
+        "cbeNameIndex": 196,
+        "name": "PPSh41",
+        "category_name": "smg"
+      }
+    ],
+    "accepted_by_count": 1
+  },
+  {
+    "cbeNameIndex": 373,
+    "name": "7.62-47",
+    "category_code": 18,
+    "purchase_cost": 141,
+    "accepted_by": [
+      {
+        "cbeNameIndex": 197,
+        "name": "PPS43",
+        "category_name": "smg"
+      }
+    ],
+    "accepted_by_count": 1
+  },
+  {
+    "cbeNameIndex": 374,
+    "name": "7.62-250",
+    "category_code": 18,
+    "purchase_cost": 600,
+    "accepted_by": [
+      {
+        "cbeNameIndex": 198,
+        "name": "DP",
+        "category_name": "lmg"
+      }
+    ],
+    "accepted_by_count": 1
+  },
+  {
+    "cbeNameIndex": 375,
+    "name": "12.7-50",
+    "category_code": 18,
+    "purchase_cost": 260,
+    "accepted_by": [
+      {
+        "cbeNameIndex": 201,
+        "name": "pat.1910",
+        "category_name": "ammo_box"
+      }
+    ],
+    "accepted_by_count": 1
+  },
+  {
+    "cbeNameIndex": 378,
+    "name": "9Pb-8s",
+    "category_code": 18,
+    "purchase_cost": 9,
+    "accepted_by": [
+      {
+        "cbeNameIndex": 194,
+        "name": "SVT40",
+        "category_name": "rifle"
+      }
+    ],
+    "accepted_by_count": 1
+  },
+  {
+    "cbeNameIndex": 379,
+    "name": "9Pb-32s",
+    "category_code": 18,
+    "purchase_cost": 45,
+    "accepted_by": [
+      {
+        "cbeNameIndex": 203,
+        "name": "SP M12",
+        "category_name": "pistol"
+      }
+    ],
+    "accepted_by_count": 1
+  },
+  {
+    "cbeNameIndex": 380,
+    "name": "8Aut-25",
+    "category_code": 18,
+    "purchase_cost": 70,
+    "accepted_by": [
+      {
+        "cbeNameIndex": 204,
+        "name": "MP34(o)",
+        "category_name": "smg"
+      }
+    ],
+    "accepted_by_count": 1
+  },
+  {
+    "cbeNameIndex": 381,
+    "name": "8Aut-250",
+    "category_code": 18,
+    "purchase_cost": 600,
+    "accepted_by": [
+      {
+        "cbeNameIndex": 205,
+        "name": "M30",
+        "category_name": "lmg"
+      }
+    ],
+    "accepted_by_count": 1
+  },
+  {
+    "cbeNameIndex": 382,
+    "name": "9BLg-7",
+    "category_code": 18,
+    "purchase_cost": 10,
+    "accepted_by": [
+      {
+        "cbeNameIndex": 208,
+        "name": "M07 PatrK",
+        "category_name": "ammo_box"
+      }
+    ],
+    "accepted_by_count": 1
+  },
+  {
+    "cbeNameIndex": 383,
+    "name": "32ACP-9B",
+    "category_code": 18,
+    "purchase_cost": 13,
+    "accepted_by": [
+      {
+        "cbeNameIndex": 209,
+        "name": "Mle1903",
+        "category_name": "pistol"
+      }
+    ],
+    "accepted_by_count": 1
+  },
+  {
+    "cbeNameIndex": 384,
+    "name": "9Pb-13",
+    "category_code": 18,
+    "purchase_cost": 18,
+    "accepted_by": [
+      {
+        "cbeNameIndex": 210,
+        "name": "Mle10/22",
+        "category_name": "pistol"
+      }
+    ],
+    "accepted_by_count": 1
+  },
+  {
+    "cbeNameIndex": 385,
+    "name": "380ACP8A",
+    "category_code": 18,
+    "purchase_cost": 11,
+    "accepted_by": [
+      {
+        "cbeNameIndex": 211,
+        "name": "GP35",
+        "category_name": "pistol"
+      }
+    ],
+    "accepted_by_count": 1
+  },
+  {
+    "cbeNameIndex": 386,
+    "name": "32ACP-8C",
+    "category_code": 18,
+    "purchase_cost": 11,
+    "accepted_by": [
+      {
+        "cbeNameIndex": 212,
+        "name": "CZ vz24",
+        "category_name": "pistol"
+      }
+    ],
+    "accepted_by_count": 1
+  },
+  {
+    "cbeNameIndex": 387,
+    "name": "380ACP8B",
+    "category_code": 18,
+    "purchase_cost": 11,
+    "accepted_by": [
+      {
+        "cbeNameIndex": 213,
+        "name": "CZ vz27",
+        "category_name": "pistol"
+      }
+    ],
+    "accepted_by_count": 1
+  },
+  {
+    "cbeNameIndex": 388,
+    "name": "9Pb-30Z",
+    "category_code": 18,
+    "purchase_cost": 42,
+    "accepted_by": [
+      {
+        "cbeNameIndex": 214,
+        "name": "CZ vz38",
+        "category_name": "pistol"
+      }
+    ],
+    "accepted_by_count": 1
+  },
+  {
+    "cbeNameIndex": 389,
+    "name": "7.92-20Z",
+    "category_code": 18,
+    "purchase_cost": 56,
+    "accepted_by": [
+      {
+        "cbeNameIndex": 215,
+        "name": "ZK383",
+        "category_name": "smg"
+      }
+    ],
+    "accepted_by_count": 1
+  },
+  {
+    "cbeNameIndex": 390,
+    "name": "9Pb-8R",
+    "category_code": 18,
+    "purchase_cost": 11,
+    "accepted_by": [
+      {
+        "cbeNameIndex": 216,
+        "name": "lk ZB vz26",
+        "category_name": "lmg"
+      }
+    ],
+    "accepted_by_count": 1
+  },
+  {
+    "cbeNameIndex": 391,
+    "name": "8Mrzk-5",
+    "category_code": 18,
+    "purchase_cost": 17,
+    "accepted_by": [
+      {
+        "cbeNameIndex": 220,
+        "name": "VIS wz35",
+        "category_name": "pistol"
+      }
+    ],
+    "accepted_by_count": 1
+  },
+  {
+    "cbeNameIndex": 392,
+    "name": "9Largo-8",
+    "category_code": 18,
+    "purchase_cost": 11,
+    "accepted_by": [
+      {
+        "cbeNameIndex": 221,
+        "name": "wz35",
+        "category_name": "at_rifle"
+      }
+    ],
+    "accepted_by_count": 1
+  },
+  {
+    "cbeNameIndex": 393,
+    "name": "20SS-5",
+    "category_code": 18,
+    "purchase_cost": 35,
+    "accepted_by": [
+      {
+        "cbeNameIndex": 222,
+        "name": "Astra400",
+        "category_name": "pistol"
+      }
+    ],
+    "accepted_by_count": 1
+  },
+  {
+    "cbeNameIndex": 394,
+    "name": "20SS-10",
+    "category_code": 18,
+    "purchase_cost": 88,
+    "accepted_by": [
+      {
+        "cbeNameIndex": 224,
+        "name": "S-18/100",
+        "category_name": "at_rifle"
+      }
+    ],
+    "accepted_by_count": 1
+  }
+]

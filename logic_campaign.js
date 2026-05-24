@@ -202,6 +202,20 @@ class CampaignManager {
             };
             box.appendChild(d);
         });
+
+        if (typeof location !== 'undefined' && new URLSearchParams(location.search).has('autodeploy')) {
+            const run = () => {
+                const cards = box.querySelectorAll('.card');
+                for (let i = 0; i < 3 && i < cards.length; i++) cards[i].click();
+                const btn = document.getElementById('btn-start');
+                if (btn && !btn.disabled && window.gameLogic && window.gameLogic.startCampaign) {
+                    window.gameLogic.startCampaign();
+                } else {
+                    setTimeout(run, 80);
+                }
+            };
+            setTimeout(run, 200);
+        }
     }
 
     // --- DEPLOYMENT (Game Logicへの引き渡し) ---
@@ -246,6 +260,7 @@ class CampaignManager {
                 if (u) deployUnits.push(u);
             });
         }
+        deployUnits.forEach(u => this.repairMortarGunnerLoadout(u));
 
         if (typeof refreshAmmoItemLabel === 'function') {
             deployUnits.forEach(u => {
@@ -276,6 +291,44 @@ class CampaignManager {
     }
 
     // --- UNIT FACTORY ---
+    isMortarGunnerUnit(u) {
+        if (!u || !u.hands) return false;
+        const codes = u.hands.map(h => h && h.code);
+        return codes.includes('mortar_barrel') && codes.includes('mortar_bipod') && codes.includes('mortar_plate');
+    }
+
+    /** 迫撃砲兵: bag[0]=弾薬箱, bag[1]=拳銃1丁（PL差し替え・M1911×3 を修復） */
+    repairMortarGunnerLoadout(u) {
+        if (!this.isMortarGunnerUnit(u)) return;
+        const w = (code) => (typeof WPNS !== 'undefined' && WPNS[code]) ? WPNS[code] : null;
+        const boxBase = w('mortar_shell_box');
+        if (!boxBase) return;
+
+        let box = (u.bag || []).find(i => i && i.code === 'mortar_shell_box');
+        if (!box) {
+            box = {
+                ...boxBase, code: 'mortar_shell_box', id: Math.random(),
+                current: boxBase.current != null ? boxBase.current : boxBase.cap, cap: boxBase.cap
+            };
+        } else if (!box.current || box.current <= 0) {
+            box.current = boxBase.cap;
+        }
+
+        const sidearmCode = (u.def && u.def.opt) || 'm1911';
+        const sideBase = w(sidearmCode);
+        let sidearm = (u.bag || []).find(i => i && i.code === sidearmCode);
+        if (!sidearm && sideBase) {
+            sidearm = {
+                ...sideBase, code: sidearmCode, id: Math.random(),
+                current: sideBase.cap, cap: sideBase.cap, isBroken: false
+            };
+        } else if (sidearm && sideBase && sidearm.current == null) {
+            sidearm.current = sideBase.cap;
+        }
+
+        u.bag = [box, sidearm || null, null, null];
+    }
+
     createSoldier(templateKey, team, fusionData, overridePortraitIndex, overrideName, fusionCount) {
         const t = UNIT_TEMPLATES[templateKey]; 
         if (!t) { console.error("Template not found:", templateKey); return null; }
@@ -378,17 +431,26 @@ class CampaignManager {
         }
 
         let bag = [];
-        if (t.sub && !t.isTank) {
-            let subKey = t.sub;
-            if (isPlayer && window.WPNS_PL_INFANTRY_SUB_CODES && window.WPNS_PL_INFANTRY_SUB_CODES.length) {
-                const subPool = window.WPNS_PL_INFANTRY_SUB_CODES.filter(k => WPNS[k] && (WPNS[k].plCategory === 'pistol' || WPNS[k].plCategory === 'melee'));
-                if (subPool.length) subKey = subPool[Math.floor(Math.random() * subPool.length)];
+        const isMortarTemplate = !!(t.loadout && t.sub === 'mortar_shell_box' && !t.isTank);
+        if (isMortarTemplate) {
+            bag.push(createItem('mortar_shell_box'));
+            if (t.opt) bag.push(createItem(t.opt));
+        } else {
+            if (t.sub && !t.isTank) {
+                let subKey = t.sub;
+                const subDef = WPNS[subKey];
+                const keepSubFixed = !!(t.loadout || (subDef && (subDef.type === 'ammo' || subDef.ammoFor)));
+                if (isPlayer && !keepSubFixed && window.WPNS_PL_INFANTRY_SUB_CODES && window.WPNS_PL_INFANTRY_SUB_CODES.length) {
+                    const subPool = window.WPNS_PL_INFANTRY_SUB_CODES.filter(k => WPNS[k] && (WPNS[k].plCategory === 'pistol' || WPNS[k].plCategory === 'melee'));
+                    if (subPool.length) subKey = subPool[Math.floor(Math.random() * subPool.length)];
+                }
+                bag.push(createItem(subKey));
             }
-            bag.push(createItem(subKey));
-        }
-        if (t.opt) { 
-            const optBase = WPNS[t.opt]; const count = optBase.mag || 1; 
-            for (let i = 0; i < count; i++) { bag.push(createItem(t.opt)); }
+            if (t.opt) {
+                const optBase = WPNS[t.opt];
+                const count = optBase.mag || 1;
+                for (let i = 0; i < count; i++) { bag.push(createItem(t.opt)); }
+            }
         }
         
         if (hands[0] && hands[0].type === 'bullet' && !t.isTank && hands[0].mag
@@ -451,10 +513,12 @@ class CampaignManager {
         const hp = baseHp;
         const maxAp = baseAp;
         const unitFusionCount = (isPlayer && fusionCount >= 2) ? fusionCount : undefined;
-        return {
+        const unit = {
             id: Math.random(), team: team, q: 0, r: 0, def: t, name: name, rank: 0, faceSeed: faceSeed, portraitIndex: portraitIndex,
             stats: stats, params: params, hp: hp, maxHp: hp, ap: maxAp, maxAp: maxAp, hands: hands, bag: bag, stance: 'stand', skills: skills, sectorsSurvived: 0, deadProcessed: false, fusionCount: unitFusionCount
         };
+        if (t.loadout) this.repairMortarGunnerLoadout(unit);
+        return unit;
     }
 
     // --- MISSION END HANDLERS ---
@@ -580,12 +644,30 @@ class CampaignManager {
             if (typeof refreshAmmoItemLabel === 'function' && mainWeapon) {
                 u.bag.forEach(item => refreshAmmoItemLabel(item, mainWeapon));
             }
+            this.repairMortarGunnerLoadout(u);
         });
     }
 }
 
 // キャンペーンマネージャーを起動
 window.campaign = new CampaignManager();
+
+(function scheduleAutodeploy() {
+    if (typeof location === 'undefined' || !new URLSearchParams(location.search).has('autodeploy')) return;
+    const box = document.getElementById('setup-cards');
+    const cards = box ? box.querySelectorAll('.card') : [];
+    if (cards.length < 3) {
+        setTimeout(scheduleAutodeploy, 60);
+        return;
+    }
+    for (let i = 0; i < 3; i++) cards[i].click();
+    const btn = document.getElementById('btn-start');
+    if (btn && !btn.disabled && window.gameLogic && window.gameLogic.startCampaign) {
+        window.gameLogic.startCampaign();
+    } else {
+        setTimeout(scheduleAutodeploy, 80);
+    }
+})();
 
 // ★重要: 初期化段階での gameLogic のダミー (Phaser側のエラー回避用)
 window.gameLogic = {
@@ -610,3 +692,32 @@ window.gameLogic = {
     getNeighbors: () => [],
     checkDeploy: () => false
 };
+
+/** ?mapdebug=1 — 地形確認用: セットアップを飛ばしてマップだけ表示 */
+if (typeof location !== 'undefined' && new URLSearchParams(location.search).has('mapdebug')) {
+    const bootMapDebug = () => {
+        ['setup-screen', 'gameover-screen', 'reward-screen'].forEach((id) => {
+            const el = document.getElementById(id);
+            if (el) el.style.display = 'none';
+        });
+        ['sidebar', 'resizer', 'sidebar-toggle'].forEach((id) => {
+            const el = document.getElementById(id);
+            if (el) el.style.display = 'none';
+        });
+        const app = document.getElementById('app');
+        if (app) app.classList.add('phaser-sidebar');
+        window.campaign.survivingUnits = [];
+        window.campaign.setupSlots = [
+            { key: 'rifleman', portraitIndex: 1, name: 'Debug A' },
+            { key: 'rifleman', portraitIndex: 2, name: 'Debug B' },
+            { key: 'rifleman', portraitIndex: 3, name: 'Debug C' }
+        ];
+        window.campaign.startMission();
+        setTimeout(() => {
+            if (typeof Renderer !== 'undefined') Renderer.centerMap();
+        }, 400);
+    };
+    const runBoot = () => setTimeout(bootMapDebug, window.BattleLogic ? 200 : 1200);
+    if (document.readyState === 'complete') runBoot();
+    else window.addEventListener('load', runBoot);
+}

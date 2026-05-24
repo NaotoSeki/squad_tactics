@@ -1,0 +1,44 @@
+{
+  "_meta": {
+    "description": "弾薬互換の手動正本。build_wpns_pl_master.py と装填判定の両方で weapon_ammo_map.json より優先。",
+    "note": "CBE 抽出の誤リンク（StG 系→9Pb-20S 等）を補正。インデックスは cbeNameIndex / PL_AMMO_DATA キー。"
+  },
+  "byCbeWeaponIndex": {
+    "20": {
+      "acceptsAmmoPlIndices": [230, 238, 239, 240],
+      "plAmmoLabel": ".30-06 ベルト（M1919A6）"
+    },
+    "22": {
+      "acceptsAmmoPlIndices": [230, 238, 239, 240],
+      "plAmmoLabel": ".30-06 ベルト（M1917A1）"
+    },
+    "23": {
+      "acceptsAmmoPlIndices": [230, 238, 239, 240],
+      "plAmmoLabel": ".30-06 ベルト（M1919A4）"
+    },
+    "24": {
+      "acceptsAmmoPlIndices": [241, 239, 240],
+      "plAmmoLabel": ".50 BMG / .30 ベルト（M2HB）"
+    },
+    "73": {
+      "acceptsAmmoPlIndices": [277],
+      "plAmmoLabel": "7.92x33 Kurz — 7.92k-30"
+    },
+    "74": {
+      "acceptsAmmoPlIndices": [277],
+      "plAmmoLabel": "7.92x33 Kurz — 7.92k-30"
+    },
+    "75": {
+      "acceptsAmmoPlIndices": [277],
+      "plAmmoLabel": "7.92x33 Kurz — 7.92k-30"
+    },
+    "76": {
+      "acceptsAmmoPlIndices": [277],
+      "plAmmoLabel": "7.92x33 Kurz — 7.92k-30"
+    },
+    "77": {
+      "acceptsAmmoPlIndices": [277],
+      "plAmmoLabel": "7.92x33 Kurz — 7.92k-30"
+    }
+  }
+}

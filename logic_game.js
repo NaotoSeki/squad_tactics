@@ -63,10 +63,18 @@ window.BattleLogic = class BattleLogic {
 
     // 敵生成（FactoryはCampaignから借りる）
     this.spawnEnemies();
+    this.spawnAlliedReinforcements();
+
+    if (this.campaign && this.campaign.repairMortarGunnerLoadout) {
+      this.units.filter(u => u.team === 'player').forEach(u => this.campaign.repairMortarGunnerLoadout(u));
+    }
 
     this.state = 'PLAY';
     this._victoryProcessed = false;
-    this.ui.log(`SECTOR ${this.sector} ENGAGEMENT START`);
+    const allyN = this.units.filter(u => u.team === 'player').length;
+    const foeN = this.units.filter(u => u.team === 'enemy').length;
+    const preset = (typeof BATTLE_SCALE !== 'undefined' && BATTLE_SCALE._preset) ? BATTLE_SCALE._preset : 'chaos';
+    this.ui.log(`SECTOR ${this.sector} [${preset}] — ${allyN} vs ${foeN}`);
 
     const secCounter = document.getElementById('sector-counter');
     if(secCounter) secCounter.innerText = `SECTOR: ${this.sector.toString().padStart(2, '0')}`;
@@ -100,19 +108,72 @@ window.BattleLogic = class BattleLogic {
 
   generateMap() { if(this.mapSystem) this.mapSystem.generate(); }
 
-  spawnEnemies() {
-    const c = 4 + Math.floor(this.sector * 0.7);
-    for (let i = 0; i < c; i++) {
-      let k = 'rifleman'; const r = Math.random();
-      if (r < 0.1 + this.sector * 0.1) k = 'tank_pz4'; else if (r < 0.4) k = 'gunner'; else if (r < 0.6) k = 'sniper';
+  getHexUnitCap() {
+    return (typeof BATTLE_SCALE !== 'undefined' && BATTLE_SCALE.HEX_UNIT_CAP) || 5;
+  }
 
-      // CampaignのFactoryを使用
-      const e = this.campaign.createSoldier(k, 'enemy');
-      if (e) {
-        const p = this.getSafeSpawnPos('enemy');
-        if (p) { e.q = p.q; e.r = p.r; this.units.push(e); }
-      }
+  getHexMoveBlock() {
+    return (typeof BATTLE_SCALE !== 'undefined' && BATTLE_SCALE.HEX_MOVE_BLOCK) || 4;
+  }
+
+  getDeployCardMax() {
+    return (typeof BATTLE_SCALE !== 'undefined' && BATTLE_SCALE.DEPLOY_CARD_MAX) || 2;
+  }
+
+  getEnemySpawnCount() {
+    const base = (typeof BATTLE_SCALE !== 'undefined' && BATTLE_SCALE.ENEMY_BASE) || 4;
+    const per = (typeof BATTLE_SCALE !== 'undefined' && BATTLE_SCALE.ENEMY_PER_SECTOR) || 0.7;
+    return base + Math.floor(this.sector * per);
+  }
+
+  pickEnemyTemplate() {
+    const cfg = (typeof BATTLE_SCALE !== 'undefined') ? BATTLE_SCALE : {};
+    const s = this.sector;
+    const tigerP = (cfg.ENEMY_TIGER_CHANCE || 0) + s * (cfg.ENEMY_TIGER_CHANCE_PER_SECTOR || 0);
+    const tankP = (cfg.ENEMY_TANK_CHANCE || 0.02) + s * (cfg.ENEMY_TANK_CHANCE_PER_SECTOR || 0);
+    const r = Math.random();
+    if (r < tigerP) return 'tank_tiger';
+    if (r < tigerP + tankP) return 'tank_pz4';
+    if (r < tigerP + tankP + 0.23) return 'gunner';
+    if (r < tigerP + tankP + 0.43) return 'sniper';
+    return 'rifleman';
+  }
+
+  pickAlliedTemplate() {
+    const pool = ['rifleman', 'rifleman', 'scout', 'gunner', 'gunner', 'rifleman'];
+    return pool[Math.floor(Math.random() * pool.length)];
+  }
+
+  spawnUnitAt(team, templateKey) {
+    const u = this.campaign.createSoldier(templateKey, team);
+    if (!u) return false;
+    const p = this.getSafeSpawnPos(team);
+    if (!p) return false;
+    u.q = p.q;
+    u.r = p.r;
+    this.units.push(u);
+    if (window.VFX && typeof Renderer !== 'undefined' && Renderer.hexToPx) {
+      const pos = Renderer.hexToPx(p.q, p.r);
+      window.VFX.addSmoke(pos.x, pos.y);
     }
+    return true;
+  }
+
+  spawnEnemies() {
+    const c = this.getEnemySpawnCount();
+    for (let i = 0; i < c; i++) {
+      this.spawnUnitAt('enemy', this.pickEnemyTemplate());
+    }
+  }
+
+  spawnAlliedReinforcements() {
+    const n = (typeof BATTLE_SCALE !== 'undefined' && BATTLE_SCALE.ALLIED_REINFORCEMENTS) || 0;
+    if (n <= 0) return;
+    let ok = 0;
+    for (let i = 0; i < n; i++) {
+      if (this.spawnUnitAt('player', this.pickAlliedTemplate())) ok++;
+    }
+    if (ok > 0) this.ui.log(`増援 ${ok} 名到着`);
   }
 
   // --- GAME LOOP & TURN ---
@@ -351,7 +412,11 @@ window.BattleLogic = class BattleLogic {
     // パフォーマンス改善: UI更新をループ外へ
     await new Promise(async (resolve) => {
       const isMg42 = (w.code === 'mg42');
+      const isMortarWpn = (w.code === 'm2_mortar');
+      const isShellWpn = w.type && w.type.includes('shell');
       const fireRate = isMg42 ? 30 : ((w.type === 'bullet') ? 60 : 300);
+      const lastFlightTime = isMortarWpn ? 1000 : (isShellWpn ? 300 : (isMg42 ? dist * 50 : dist * 30));
+      const animEndMs = Math.max(500, shots * fireRate + lastFlightTime);
       const mg42Speed = 0.08;
       const tankGunCount = (w.tankMg42Slots && w.tankMg42Slots.length) || 1;
 
@@ -393,10 +458,10 @@ window.BattleLogic = class BattleLogic {
             for (let m = 0; m < 3; m++) {
               const mfx = sx - 8 + Math.random() * 16;
               const mfy = sy - 25 - Math.random() * 15;
-              VFX.add({ x: mfx, y: mfy, vx: 1 + Math.random() * 2, vy: -2 - Math.random() * 2, life: 12, maxLife: 12, color: "#ffffaa", size: 4 + Math.random() * 2, type: 'spark' });
+              window.VFX.add({ x: mfx, y: mfy, vx: 1 + Math.random() * 2, vy: -2 - Math.random() * 2, life: 12, maxLife: 12, color: "#ffffaa", size: 4 + Math.random() * 2, type: 'spark' });
             }
           }
-          VFX.addProj({
+          window.VFX.addProj({
             x: sx, y: sy, sx: sx, sy: sy, ex: tx, ey: ty,
             type: w.type, speed: projSpeed,
             progress: 0,
@@ -409,7 +474,7 @@ window.BattleLogic = class BattleLogic {
         const getWeaponDmg = (weapon) => (weapon && (typeof weapon.dmg === 'number' ? weapon.dmg : 0) + (weapon && weapon.rainbowDmgBonus || 0)) || 0;
         setTimeout(() => {
           if (isMortar || isShell) {
-            if (window.VFX) VFX.addExplosion(tx, ty, "#f55", 5);
+            if (window.VFX) window.VFX.addExplosion(tx, ty, "#f55", 5);
             if (window.Sfx) Sfx.play('death');
             if (isShell && window.Sfx) setTimeout(() => Sfx.play('tank_reload'), 200);
           }
@@ -458,7 +523,7 @@ window.BattleLogic = class BattleLogic {
                 let dmg = targetUnit.def.isTank && w.type === 'bullet' ? 0 : dmgWithSkill;
                 if (dmg > 0) {
                   if (window.Sfx) Sfx.play('soft_hit');
-                  if (!isShell && window.VFX) VFX.add({ x: tx, y: ty, vx: 0, vy: -5, life: 10, maxLife: 10, color: "#fff", size: 2, type: 'spark' });
+                  if (!isShell && window.VFX) window.VFX.add({ x: tx, y: ty, vx: 0, vy: -5, life: 10, maxLife: 10, color: "#fff", size: 2, type: 'spark' });
                   game.applyDamage(targetUnit, dmg, w.name);
                 } else {
                   if (window.Sfx) Sfx.play('hard_hit');
@@ -466,12 +531,12 @@ window.BattleLogic = class BattleLogic {
                 }
               } else {
                 if (window.VFX) {
-                  VFX.add({ x: tx, y: ty, vx: 0, vy: 0, life: 10, maxLife: 10, color: "#aaa", size: 2, type: 'smoke' });
-                  if (!isShell && w.type === 'bullet') VFX.addBulletImpact(tx, ty, 1);
+                  window.VFX.add({ x: tx, y: ty, vx: 0, vy: 0, life: 10, maxLife: 10, color: "#aaa", size: 2, type: 'smoke' });
+                  if (!isShell && w.type === 'bullet') window.VFX.addBulletImpact(tx, ty, 1);
                 }
               }
             } else if (!isShell && w.type === 'bullet' && window.VFX) {
-              VFX.addBulletImpact(tx, ty, 1);
+              window.VFX.addBulletImpact(tx, ty, 1);
             }
             const sameHexUnits = game.getUnitsInHex(targetHex.q, targetHex.r).filter(u => u !== targetUnit && u.team !== a.team && u.hp > 0);
             const splashChance = (w.type === 'bullet') ? 5 : 10;
@@ -507,7 +572,7 @@ window.BattleLogic = class BattleLogic {
           game.attackLine = [];
         }
         resolve();
-      }, 500);
+      }, animEndMs);
     });
   }
 
@@ -519,7 +584,7 @@ window.BattleLogic = class BattleLogic {
       target.deadProcessed = true;
       this.ui.log(`>> ${target.name} を撃破！`);
       if (window.Sfx) { Sfx.play('death'); }
-      if (window.VFX) { const p = Renderer.hexToPx(target.q, target.r); VFX.addUnitDebris(p.x, p.y); }
+      if (window.VFX) { const p = Renderer.hexToPx(target.q, target.r); window.VFX.addUnitDebris(p.x, p.y); }
 
       if (target.team === 'enemy') {
         this.checkWin();
@@ -773,7 +838,7 @@ window.BattleLogic = class BattleLogic {
       const r = Math.floor(Math.random() * MAP_H);
       if (team === 'player' && r < cy) { continue; }
       if (team === 'enemy' && r >= cy) { continue; }
-      if (this.isValidHex(q, r) && this.getUnitsInHex(q, r).length < 5 && this.map[q][r].id !== -1 && this.map[q][r].id !== 5) { return { q, r }; }
+      if (this.isValidHex(q, r) && this.getUnitsInHex(q, r).length < this.getHexUnitCap() && this.map[q][r].id !== -1 && this.map[q][r].id !== 5) { return { q, r }; }
     }
     return null;
   }
@@ -870,7 +935,7 @@ window.BattleLogic = class BattleLogic {
       if (this.interactionMode === 'MOVE') {
         const isReachable = this.reachableHexes.some(h => h.q === p.q && h.r === p.r);
         const targetUnits = this.getUnitsInHex(p.q, p.r);
-        if (isReachable && targetUnits.length < 5) {
+        if (isReachable && targetUnits.length < this.getHexUnitCap()) {
           this.path = this.findPath(u, p.q, p.r);
         } else {
           this.path = [];
@@ -977,7 +1042,7 @@ window.BattleLogic = class BattleLogic {
     while (frontier.length > 0) {
       let current = frontier.shift();
       this.getNeighbors(current.q, current.r).forEach(n => {
-        if (this.getUnitsInHex(n.q, n.r).length >= 4) { return; }
+        if (this.getUnitsInHex(n.q, n.r).length >= this.getHexMoveBlock()) { return; }
         const cost = this.map[n.q][n.r].cost; if (cost >= 99) { return; }
         const nc = costSoFar.get(`${current.q},${current.r}`) + cost;
         if (nc <= maxCost) {
@@ -1219,15 +1284,15 @@ window.BattleLogic = class BattleLogic {
   toggleAuto() { this.isAuto = !this.isAuto; const b = document.getElementById('auto-toggle'); if(b) b.classList.toggle('active'); if(this.isAuto && this.state==='PLAY') this.runAuto(); }
   async runAuto() { if(this.state!=='PLAY') return; this.ui.log(":: Auto ::"); this.clearSelection(); this.isAutoProcessing = true; await this.ai.execute(this.units, 'player'); this.isAutoProcessing = false; if(this.state==='WIN') return; if(this.isAuto && this.state==='PLAY') this.endTurn(); }
   async actionMove(u, p) { this.state = 'ANIM'; const stepMs = (this.isAuto || this.isAutoProcessing) ? 60 : 180; for(let s of p){u.ap-=this.map[s.q][s.r].cost; u.q=s.q; u.r=s.r; if(window.Sfx) Sfx.play('move'); await new Promise(r => setTimeout(r, stepMs)); } this.checkReactionFire(u); this.state = 'PLAY'; this.refreshUnitState(u); this.checkPhaseEnd(); }
-  checkReactionFire(u) { this.units.filter(e => e.team !== u.team && e.hp > 0 && e.def.isTank && this.hexDist(u, e) <= 1).forEach(t => { this.ui.log("防御射撃"); this.applyDamage(u, 15, "防御"); if(window.VFX) VFX.addExplosion(Renderer.hexToPx(u.q, u.r).x, Renderer.hexToPx(u.q, u.r).y, "#fa0", 5); }); }
+  checkReactionFire(u) { this.units.filter(e => e.team !== u.team && e.hp > 0 && e.def.isTank && this.hexDist(u, e) <= 1).forEach(t => { this.ui.log("防御射撃"); this.applyDamage(u, 15, "防御"); if(window.VFX) window.VFX.addExplosion(Renderer.hexToPx(u.q, u.r).x, Renderer.hexToPx(u.q, u.r).y, "#fa0", 5); }); }
   checkPhaseEnd() { if (this.units.filter(u => u.team === 'player' && u.hp > 0 && u.ap > 0).length === 0 && this.state === 'PLAY') { this.endTurn(); } }
 
   // --- UTILS ---
   checkDeploy(targetHex) {
     if(!this.isValidHex(targetHex.q, targetHex.r) || this.map[targetHex.q][targetHex.r].id === -1) return false;
     if(this.map[targetHex.q][targetHex.r].id === 5) return false;
-    if (this.getUnitsInHex(targetHex.q, targetHex.r).length >= 5) return false;
-    if (this.cardsUsed >= 2) return false;
+    if (this.getUnitsInHex(targetHex.q, targetHex.r).length >= this.getHexUnitCap()) return false;
+    if (this.cardsUsed >= this.getDeployCardMax()) return false;
     return true;
   }
 
@@ -1301,7 +1366,7 @@ window.BattleLogic = class BattleLogic {
           units.forEach(u => { this.ui.log(`>> 爆撃命中`); this.applyDamage(u, 350, "爆撃"); });
         }
         this.updateSidebar();
-        if (window.VFX) { VFX.addSmoke(pos.x, pos.y); }
+        if (window.VFX) { window.VFX.addSmoke(pos.x, pos.y); }
       }, Math.random() * 800);
     }
   }

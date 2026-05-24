@@ -4,6 +4,52 @@ const HEX_SIZE = 54;
 const MAP_W = 20;
 const MAP_H = 20;
 
+/**
+ * バトルスケール切替（詳細は BATTLE_SCALE_NOTES.md）
+ * 'chaos' = ドンパチ / 'classic' = 従来の小規模戦
+ */
+const BATTLE_SCALE_PRESET = 'chaos';
+
+const BATTLE_SCALE_PRESETS = {
+  classic: {
+    HEX_UNIT_CAP: 5,
+    HEX_MOVE_BLOCK: 4,
+    ENEMY_BASE: 4,
+    ENEMY_PER_SECTOR: 0.7,
+    ALLIED_REINFORCEMENTS: 0,
+    DEPLOY_CARD_MAX: 2,
+    AUTO_ATTACKS_PER_ACTOR: 1,
+    ENEMY_ATTACKS_IN_AUTO: 1,
+    ENEMY_TANK_CHANCE: 0.1,
+    ENEMY_TANK_CHANCE_PER_SECTOR: 0.1,
+    ENEMY_TIGER_CHANCE: 0,
+    ENEMY_TIGER_CHANCE_PER_SECTOR: 0,
+  },
+  chaos: {
+    HEX_UNIT_CAP: 10,
+    HEX_MOVE_BLOCK: 8,
+    ENEMY_BASE: 14,
+    ENEMY_PER_SECTOR: 1.2,
+    ALLIED_REINFORCEMENTS: 8,
+    DEPLOY_CARD_MAX: 8,
+    AUTO_ATTACKS_PER_ACTOR: 3,
+    ENEMY_ATTACKS_IN_AUTO: 2,
+    ENEMY_TANK_CHANCE: 0.02,
+    ENEMY_TANK_CHANCE_PER_SECTOR: 0.012,
+    ENEMY_TIGER_CHANCE: 0.004,
+    ENEMY_TIGER_CHANCE_PER_SECTOR: 0.003,
+  },
+};
+
+function resolveBattleScale() {
+  const key = (typeof BATTLE_SCALE_PRESET === 'string' && BATTLE_SCALE_PRESETS[BATTLE_SCALE_PRESET])
+    ? BATTLE_SCALE_PRESET
+    : 'chaos';
+  return Object.assign({ _preset: key }, BATTLE_SCALE_PRESETS[key]);
+}
+
+const BATTLE_SCALE = resolveBattleScale();
+
 /** 自軍ポートレート最大枚数（asset/portraits/inf_us_001.jpg 〜 inf_us_NNN.jpg）。画像を追加するときはこの数までファイルを置けばよい。 */
 const PORTRAIT_MAX = 99;
 /** 実際に存在するポートレート画像枚数（この範囲でランダム・preload するため 404 を防ぐ）。 */
@@ -21,6 +67,7 @@ const TERRAIN = {
     DIRT:   { id: 0,  name: "荒地", cost: 1,  cover: 0 },
     GRASS:  { id: 1,  name: "草原", cost: 1,  cover: 10 },
     FOREST: { id: 2,  name: "森林", cost: 2,  cover: 25 },
+    ROAD:   { id: 3,  name: "道路", cost: 1,  cover: 0 },
     TOWN:   { id: 4,  name: "廃墟", cost: 1,  cover: 40 },
     WATER:  { id: 5,  name: "水域", cost: 99, cover: 0 }
 };

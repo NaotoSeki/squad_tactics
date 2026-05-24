@@ -388,6 +388,9 @@ class UIManager {
     }
 
     updateSidebar(u, state, tankAutoReload) {
+        if (u && window.campaign && window.campaign.repairMortarGunnerLoadout) {
+            window.campaign.repairMortarGunnerLoadout(u);
+        }
         if (window.phaserSidebar && document.getElementById('app') && document.getElementById('app').classList.contains('phaser-sidebar')) {
             window.phaserSidebar.updateSidebar(u, state, tankAutoReload);
             if (window.gameLogic && window.gameLogic.selectedUnit) this.refreshCommandMenuState(window.gameLogic.selectedUnit);

@@ -203,12 +203,12 @@ class UnitView {
         
         let offsetX = 0, offsetY = 0;
         if (count > 1) {
-            const spread = 20; 
-            if (index === 0) { offsetX = -spread; offsetY = -spread; }
-            else if (index === 1) { offsetX = spread; offsetY = -spread; }
-            else if (index === 2) { offsetX = -spread; offsetY = spread; }
-            else if (index === 3) { offsetX = spread; offsetY = spread; }
-            else if (index === 4) { offsetX = 0; offsetY = 0; }
+            const spread = 18;
+            const angle = (index / count) * Math.PI * 2 - Math.PI / 2;
+            const ring = Math.floor(index / 8);
+            const radius = spread * (0.85 + ring * 0.55);
+            offsetX = Math.cos(angle) * radius;
+            offsetY = Math.sin(angle) * radius;
         }
         
         visual.targetX = basePos.x + offsetX;

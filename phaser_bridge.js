@@ -115,7 +115,7 @@ const Renderer = {
     draggedCard: null,
 
     init(canvasElement) {
-        const config = { type: Phaser.AUTO, parent: 'game-view', width: document.getElementById('game-view').clientWidth, height: document.getElementById('game-view').clientHeight, backgroundColor: '#0b0e0a', pixelArt: false, scene: [MainScene, UIScene], fps: { target: 30 }, physics: { default: 'arcade', arcade: { debug: false } }, input: { activePointers: 1 } };
+        const config = { type: Phaser.AUTO, parent: 'game-view', width: document.getElementById('game-view').clientWidth, height: document.getElementById('game-view').clientHeight, backgroundColor: '#2a2824', pixelArt: false, scene: [MainScene, UIScene], fps: { target: 30 }, physics: { default: 'arcade', arcade: { debug: false } }, input: { activePointers: 1 } };
         this.game = new Phaser.Game(config); 
         phaserGame = this.game;
         window.phaserGame = this.game;
@@ -403,7 +403,8 @@ class Card extends Phaser.GameObjects.Container {
         }
         if (this.isDragging) { this.setAlpha(0.6); } else {
             const isWeapon = typeof WPNS !== 'undefined' && WPNS[this.cardType];
-            const isDisabled = !isWeapon && (window.gameLogic && window.gameLogic.cardsUsed >= 2);
+            const deployMax = (window.gameLogic && window.gameLogic.getDeployCardMax) ? window.gameLogic.getDeployCardMax() : 2;
+            const isDisabled = !isWeapon && (window.gameLogic && window.gameLogic.cardsUsed >= deployMax);
             if (isDisabled) { this.frameImage.setTint(0x555555); this.setAlpha(0.6); } else { this.frameImage.clearTint(); this.setAlpha(1.0); }
         }
         if (!this.isDragging && !this.scene.isReturning) {
@@ -423,7 +424,8 @@ class Card extends Phaser.GameObjects.Container {
     onDragStart(pointer) { 
         if(Renderer.isMapDragging) return;
         const isWeapon = typeof WPNS !== 'undefined' && WPNS[this.cardType];
-        if (!isWeapon && window.gameLogic && window.gameLogic.cardsUsed >= 2) return; 
+        const deployMax = (window.gameLogic && window.gameLogic.getDeployCardMax) ? window.gameLogic.getDeployCardMax() : 2;
+        if (!isWeapon && window.gameLogic && window.gameLogic.cardsUsed >= deployMax) return; 
         this.isDragging = true; Renderer.isCardDragging = true; Renderer.draggedCardType = this.cardType; Renderer.draggedCardFusionData = this.fusionData; Renderer.draggedCard = this;
         this.setAlpha(0.6); this.setScale(1.1); 
         const hand = this.parentContainer; const worldPos = hand.getLocalTransformMatrix().transformPoint(this.x, this.y); hand.remove(this); this.scene.add.existing(this); this.physX = worldPos.x; this.physY = worldPos.y; this.targetX = this.physX; this.targetY = this.physY; this.setDepth(9999); this.dragOffsetX = this.physX - pointer.x; this.dragOffsetY = this.physY - pointer.y; 
@@ -722,6 +724,7 @@ class UIScene extends Phaser.Scene {
 class MainScene extends Phaser.Scene {
     constructor() { super({ key: 'MainScene' }); this.hexGroup=null; this.decorGroup=null; this.unitGroup=null; this.treeGroup=null; this.hpGroup=null; this.vfxGraphics=null; this.overlayGraphics=null; this.mapGenerated=false; this.dragHighlightHex=null; this.crosshairGroup=null; this.unitView = null; }
     preload() { 
+        if (window.TerrainRender) window.TerrainRender.preload(this);
         if(window.EnvSystem) window.EnvSystem.preload(this);
         if (window.Sfx && window.Sfx.preload) { window.Sfx.preload(this); }
         this.load.spritesheet('us_soldier', 'asset/us-soldier-back-sheet.png', { frameWidth: 128, frameHeight: 128 });
@@ -740,19 +743,20 @@ class MainScene extends Phaser.Scene {
         this.load.image('aerial_spt', 'asset/portraits/aerial_spt.jpg');
     }
     create() {
-        window.createHexTexture(this); this.cameras.main.setBackgroundColor('#0b0e0a'); 
+        window.createHexTexture(this); this.cameras.main.setBackgroundColor('#141210'); 
         this.updateSidebarViewport();
         this.scale.on('resize', () => this.updateSidebarViewport());
         this.hexGroup = this.add.layer(); this.hexGroup.setDepth(0);
-        this.decorGroup = this.add.layer(); this.decorGroup.setDepth(0.5);
-        this.unitGroup = this.add.layer(); this.unitGroup.setDepth(1);
-        this.rubbleFrontGroup = this.add.layer(); this.rubbleFrontGroup.setDepth(1.5);
-        this.treeGroup = this.add.layer(); this.treeGroup.setDepth(2);
+        this.roadGraphics = this.add.graphics().setDepth(1.6);
+        this.decorGroup = this.add.container(0, 0); this.decorGroup.setDepth(8);
+        this.unitGroup = this.add.layer(); this.unitGroup.setDepth(20);
+        this.rubbleFrontGroup = this.add.layer(); this.rubbleFrontGroup.setDepth(21);
+        this.treeGroup = this.add.container(0, 0); this.treeGroup.setDepth(9);
         this.hpGroup = this.add.layer(); this.hpGroup.setDepth(10);
         this.crosshairGroup = this.add.graphics().setDepth(200);
         this.hitChanceText = this.add.text(0, 0, '', { fontSize: '14px', fontFamily: 'sans-serif', color: '#e8e8f0' }).setScrollFactor(0).setDepth(300).setVisible(false);
-        this.vfxGraphics = this.add.graphics().setDepth(100); 
-        this.overlayGraphics = this.add.graphics().setDepth(50); 
+        this.vfxGraphics = this.add.graphics().setDepth(2000).setScrollFactor(1);
+        this.overlayGraphics = this.add.graphics().setDepth(1500).setScrollFactor(1); 
         if(window.EnvSystem) window.EnvSystem.clear();
         this.scene.launch('UIScene'); 
         this.unitView = new UnitView(this, this.unitGroup, this.hpGroup);
@@ -833,7 +837,13 @@ class MainScene extends Phaser.Scene {
             this.cameras.main.setViewport(0, 0, this.scale.width, this.scale.height);
         }
     }
-    triggerExplosion(x, y) { const explosion = this.add.sprite(x, y, 'explosion_sheet'); explosion.setDepth(100); explosion.setScale(1.5); explosion.play('explosion_anim'); explosion.once('animationcomplete', () => { explosion.destroy(); }); }
+    triggerExplosion(x, y) {
+        const explosion = this.add.sprite(x, y, 'explosion_sheet');
+        explosion.setDepth(1999);
+        explosion.setScale(1.5);
+        explosion.play('explosion_anim');
+        explosion.once('animationcomplete', () => { explosion.destroy(); });
+    }
     centerCamera(q, r) { const p = Renderer.hexToPx(q, r); this.cameras.main.centerOn(p.x, p.y); }
     centerMap() {
         const mapW = MAP_W * HEX_SIZE * Math.sqrt(3);
@@ -848,28 +858,56 @@ class MainScene extends Phaser.Scene {
         if(!window.gameLogic || !window.gameLogic.map) return;
         const map = window.gameLogic.map; this.hexGroup.removeAll(true); this.decorGroup.removeAll(true); this.unitGroup.removeAll(true); if(this.rubbleFrontGroup) this.rubbleFrontGroup.removeAll(true); this.treeGroup.removeAll(true); this.hpGroup.removeAll(true); 
         if(this.unitView) this.unitView.clear();
+        const useTileTerrain = window.TerrainRender && window.TerrainRender.enabled;
+        if (useTileTerrain) {
+            window.TerrainRender.buildMap(this, this.hexGroup, map, this.decorGroup, this.roadGraphics);
+        } else if (this.roadGraphics) {
+            this.roadGraphics.clear();
+        }
+        this.centerMap();
         for(let q=0; q<MAP_W; q++) { 
             for(let r=0; r<MAP_H; r++) { 
                 const t = map[q][r]; if(t.id===-1)continue; const pos = Renderer.hexToPx(q, r); 
-                const hex = this.add.image(pos.x, pos.y, 'hex_base').setScale(1/window.HIGH_RES_SCALE); 
-                let tint = 0x555555; if(t.id===0) tint=0x5a5245; else if(t.id===1) tint=0x335522; else if(t.id===2) tint=0x112211; else if(t.id===4) tint=0x504540; else if(t.id===5) { tint=0x303840; if(window.EnvSystem) window.EnvSystem.registerWater(hex, pos.y, q, r, this.decorGroup); }
-                if(window.EnvSystem) {
-                    if(t.id === 1) window.EnvSystem.spawnGrass(this, this.decorGroup, pos.x, pos.y);
-                    if(t.id === 2) window.EnvSystem.spawnTrees(this, this.treeGroup, pos.x, pos.y);
-                    if(t.id === 4) window.EnvSystem.spawnRubble(this, pos.x, pos.y, this.decorGroup, this.rubbleFrontGroup);
+                const decorId = (t.id === 3 && t.underId != null) ? t.underId : t.id;
+                if (!useTileTerrain) {
+                    const hex = this.add.image(pos.x, pos.y, 'hex_base').setScale(1/window.HIGH_RES_SCALE); 
+                    let tint = 0x555555; if(t.id===0) tint=0x5a5245; else if(t.id===1) tint=0x335522; else if(t.id===2) tint=0x112211; else if(t.id===3) tint=0x4a4845; else if(t.id===4) tint=0x504540; else if(t.id===5) { tint=0x303840; if(window.EnvSystem) window.EnvSystem.registerWater(hex, pos.y, q, r, this.decorGroup); }
+                    hex.setTint(tint); this.hexGroup.add(hex);
                 }
-                hex.setTint(tint); this.hexGroup.add(hex); 
+                if(window.EnvSystem) {
+                    const v1 = useTileTerrain && window.TerrainRender.useV1Tiles;
+                    if (decorId === 1) {
+                        if (v1) {
+                            window.EnvSystem.spawnGrassSparse(this, this.decorGroup, pos.x, pos.y, q, r);
+                        } else if (!useTileTerrain) {
+                            window.EnvSystem.spawnGrass(this, this.decorGroup, pos.x, pos.y);
+                        }
+                    }
+                    if (decorId === 2) {
+                        if (v1) window.EnvSystem.spawnTreesSparse(this, this.treeGroup, pos.x, pos.y, q, r);
+                        else window.EnvSystem.spawnTrees(this, this.treeGroup, pos.x, pos.y);
+                    }
+                    if(decorId === 4) window.EnvSystem.spawnRubble(this, pos.x, pos.y, this.decorGroup, this.rubbleFrontGroup);
+                }
             } 
-        } 
-        this.centerMap(); 
+        }
     }
     update(time, delta) {
         // ★修正: gameLogicが準備できていない、またはマップデータが無い場合は何もしない
         if (!window.gameLogic || !window.gameLogic.map) return;
         
-        if(window.VFX && window.VFX.shakeRequest > 0) { this.cameras.main.shake(100, window.VFX.shakeRequest * 0.001); window.VFX.shakeRequest = 0; }
-        if(window.EnvSystem) window.EnvSystem.update(time);
-        if(window.VFX) { window.VFX.update(); this.vfxGraphics.clear(); window.VFX.draw(this.vfxGraphics); }
+        if (window.VFX && window.VFX.shakeRequest > 0) {
+            this.cameras.main.shake(100, window.VFX.shakeRequest * 0.001);
+            window.VFX.shakeRequest = 0;
+        }
+        if (window.VFX) {
+            window.VFX.update();
+            this.vfxGraphics.clear();
+            window.VFX.draw(this.vfxGraphics);
+        }
+        if (window.EnvSystem) {
+            try { window.EnvSystem.update(time); } catch (e) { console.error('EnvSystem.update', e); }
+        }
         
         if (window.gameLogic.map.length > 0 && !this.mapGenerated) { this.createMap(); this.mapGenerated = true; }
         if(this.unitView) this.unitView.update(time, delta);
@@ -887,7 +925,8 @@ class MainScene extends Phaser.Scene {
             } else {
                 let isValid = false;
                 if (window.gameLogic && window.gameLogic.checkDeploy) {
-                    isValid = window.gameLogic.isValidHex(h.q, h.r) && window.gameLogic.map[h.q][h.r].id !== -1 && window.gameLogic.getUnitsInHex(h.q, h.r).length < 5;
+                    const hexCap = window.gameLogic.getHexUnitCap ? window.gameLogic.getHexUnitCap() : 5;
+                    isValid = window.gameLogic.isValidHex(h.q, h.r) && window.gameLogic.map[h.q][h.r].id !== -1 && window.gameLogic.getUnitsInHex(h.q, h.r).length < hexCap;
                 }
                 const color = isValid ? 0x00ffff : 0xff0000;
                 this.overlayGraphics.lineStyle(3, color, 0.8);

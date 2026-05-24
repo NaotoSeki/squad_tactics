@@ -39,7 +39,7 @@ SQUAD TACTICS の起動フロー・主要モジュール・グローバル依存
 
 ## ファイル責務
 
-- data.js: 定数・テンプレート・getRadarPoints
+- data.js: 定数・テンプレート・getRadarPoints・**BATTLE_SCALE**（`BATTLE_SCALE_PRESET` で classic/chaos 切替。詳細は `BATTLE_SCALE_NOTES.md`）
 - logic_campaign.js: セットアップ・createSoldier・startMission
 - logic_game.js: 戦闘・ターン・攻撃・移動
 - logic_map.js: MapSystem（経路・距離）

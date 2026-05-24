@@ -28,6 +28,7 @@ const RADAR_LABEL_OFFSET_RADIUS_THRESHOLD = 56;
 const RADAR_VALUE_POS_RATIO = 0.7;
 const RADAR_BOTTOM_MARGIN = 16;
 const GAUGE_TOP = 38;
+const GAUGE_BOTTOM_PAD = 6;
 const BAG_SLOT_H = 54;
 const END_TURN_BUTTON_BOTTOM_OFFSET = 48;
 
@@ -251,6 +252,7 @@ window.PhaserSidebar = class PhaserSidebar {
         const needsMg42Gauge = item && item.code === 'mg42' && item.reserve !== undefined && isMain;
         const needsM8Gauge = item && item.code === 'm8_rocket' && isMain;
         const slotH = (isMain && needsMg42Gauge) ? 130 : (isMain && needsM8Gauge) ? 100 : (isMain ? 90 : BAG_SLOT_H);
+        const mainGaugeTop = (contentH) => slotH - contentH - GAUGE_BOTTOM_PAD;
         const borderColor = isMain ? ACCENT : SLOT_BORDER;
         const bgColor = isMain ? 0x2a201a : SLOT_BG;
 
@@ -282,14 +284,14 @@ window.PhaserSidebar = class PhaserSidebar {
                 img.onload = () => {
                     if (!this.scene || !this.scene.textures) return;
                     this.scene.textures.addImage(iconKey, img);
-                    const icon = this.scene.add.image(slotW / 2, slotH / 2, iconKey);
+                    const icon = this.scene.add.image(slotW / 2, isMain ? slotH * 0.44 : slotH / 2, iconKey);
                     const fitScale = Math.min((slotW - 8) / icon.width, (slotH - 8) / icon.height);
                     icon.setScale(fitScale).setAlpha(0.7);
                     container.addAt(icon, 1);
                 };
                 img.src = iconPath;
             } else {
-                const icon = this.scene.add.image(slotW / 2, slotH / 2, iconKey);
+                const icon = this.scene.add.image(slotW / 2, isMain ? slotH * 0.44 : slotH / 2, iconKey);
                 const fitScale = Math.min((slotW - 8) / icon.width, (slotH - 8) / icon.height);
                 icon.setScale(fitScale).setAlpha(0.7);
                 container.addAt(icon, 1);
@@ -308,8 +310,9 @@ window.PhaserSidebar = class PhaserSidebar {
                 const availW = slotW - 16;
                 const cellW = Math.floor((availW - (cols - 1) * gap) / cols);
                 const cellH = 2;
-                const gridTop = GAUGE_TOP;
-                const countText = this.scene.add.text(8, gridTop - 6, `${reserve}/${maxRounds}`, { fontSize: '8px', color: TEXT_DIM, fontFamily: 'monospace' });
+                const gridH = rows * (cellH + gap) - gap;
+                const gridTop = isMain ? mainGaugeTop(gridH + 8) + 8 : GAUGE_TOP;
+                const countText = this.scene.add.text(8, gridTop - 8, `${reserve}/${maxRounds}`, { fontSize: '8px', color: TEXT_DIM, fontFamily: 'monospace' });
                 countText.setOrigin(0, 0);
                 container.add(countText);
                 for (let r = 0; r < rows; r++) {
@@ -322,8 +325,9 @@ window.PhaserSidebar = class PhaserSidebar {
                 }
             } else if (u.def.isTank && isMain && item.reserve !== undefined) {
                 const shellCount = Math.min(20, item.reserve || 0);
+                const shellY = isMain ? mainGaugeTop(8) : GAUGE_TOP;
                 for (let i = 0; i < shellCount; i++) {
-                    const dot = this.scene.add.rectangle(10 + i * 6, GAUGE_TOP, 4, 8, 0xdaa444);
+                    const dot = this.scene.add.rectangle(10 + i * 6, shellY, 4, 8, 0xdaa444);
                     dot.setOrigin(0, 0);
                     container.add(dot);
                 }
@@ -336,8 +340,9 @@ window.PhaserSidebar = class PhaserSidebar {
                 const availW = slotW - 20;
                 const cellW = Math.min(4, Math.floor((availW - (cols - 1) * gap) / cols));
                 const cellH = 3;
-                const gridTop = GAUGE_TOP;
-                const countText = this.scene.add.text(8, gridTop - 6, `${current}/${cap}`, { fontSize: '8px', color: TEXT_DIM, fontFamily: 'monospace' });
+                const gridH = rows * (cellH + gap) - gap;
+                const gridTop = isMain ? mainGaugeTop(gridH + 8) + 8 : GAUGE_TOP;
+                const countText = this.scene.add.text(8, gridTop - 8, `${current}/${cap}`, { fontSize: '8px', color: TEXT_DIM, fontFamily: 'monospace' });
                 countText.setOrigin(0, 0);
                 container.add(countText);
                 for (let r = 0; r < rows; r++) {
@@ -356,7 +361,8 @@ window.PhaserSidebar = class PhaserSidebar {
                 const bulletTipH = 3;
                 const bulletGap = 2;
                 const step = bulletW + bulletGap;
-                const baseY = GAUGE_TOP;
+                const bulletBlockH = bulletTipH + bulletH;
+                const baseY = isMain ? mainGaugeTop(bulletBlockH) : GAUGE_TOP;
                 for (let i = 0; i < item.cap; i++) {
                     const filled = i < (item.current || 0);
                     const col = filled ? ACCENT : 0x333333;

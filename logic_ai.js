@@ -34,13 +34,43 @@ class EnemyAI {
 
       let acted = true;
       let loopCount = 0;
-      let hasAttacked = false;
+      let attackCount = 0;
+      const watchAuto = this.game.isAuto || this.game.isAutoProcessing;
+      const maxAttacks = (team === 'player' && watchAuto)
+        ? ((typeof BATTLE_SCALE !== 'undefined' && BATTLE_SCALE.AUTO_ATTACKS_PER_ACTOR) || 3)
+        : (team === 'enemy' && watchAuto)
+          ? ((typeof BATTLE_SCALE !== 'undefined' && BATTLE_SCALE.ENEMY_ATTACKS_IN_AUTO) || 2)
+          : 1;
+      const maxLoops = watchAuto ? 12 : 5;
+      const actorDelay = watchAuto ? 8 : 30;
 
-      while (acted && actor.ap > 0 && loopCount < 5) {
+      const pickTarget = () => {
+        const live = units.filter(u => u.team === targetTeam && u.hp > 0);
+        if (live.length === 0) return null;
+        let best = live[0];
+        let bestScore = -9999;
+        const wpn = this.game.getVirtualWeapon(actor);
+        const preferSoft = wpn && wpn.type === 'bullet' && !wpn.type.includes('shell');
+        live.forEach(t => {
+          const dist = this.game.hexDist(actor, t);
+          const inRange = wpn && dist >= (wpn.minRng || 0) && dist <= wpn.rng;
+          let score = -dist * 2 - t.hp;
+          if (preferSoft && !t.def?.isTank) score += 200;
+          if (inRange) score += 100;
+          if (score > bestScore) { bestScore = score; best = t; }
+        });
+        return best;
+      };
+
+      while (acted && actor.ap > 0 && loopCount < maxLoops) {
         acted = false;
         loopCount++;
-        if (actor.hp <= 0 || target.hp <= 0) break;
-        if (hasAttacked) break;
+        if (actor.hp <= 0) break;
+        if (!target || target.hp <= 0) {
+          target = pickTarget();
+          if (!target) break;
+        }
+        if (attackCount >= maxAttacks) break;
 
         w = this.game.getVirtualWeapon(actor);
         const dist = this.game.hexDist(actor, target);
@@ -51,7 +81,7 @@ class EnemyAI {
         if (dist === 0 && actor.ap >= 2) {
           await this.game.actionMelee(actor, target);
           acted = true;
-          hasAttacked = true;
+          attackCount++;
           if (target.hp <= 0) break;
           continue;
         }
@@ -60,7 +90,7 @@ class EnemyAI {
         if (canShoot) {
           await this.game.actionAttack(actor, target);
           acted = true;
-          hasAttacked = true;
+          attackCount++;
           if (target.hp <= 0) break;
           continue;
         }
@@ -92,13 +122,13 @@ class EnemyAI {
             if (actor.ap >= cost) {
               await this.game.actionMove(actor, [next]);
               acted = true;
-              await new Promise(r => setTimeout(r, 30));
+              await new Promise(r => setTimeout(r, actorDelay));
               continue;
             }
           }
         }
       }
-      await new Promise(r => setTimeout(r, 30));
+      await new Promise(r => setTimeout(r, actorDelay));
     }
   }
 

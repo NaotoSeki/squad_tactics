@@ -1,0 +1,1234 @@
+{
+  "US": [
+    {
+      "cbeNameIndex": 0,
+      "name": "M1911A1",
+      "category_name": "pistol",
+      "purchase_cost": 200
+    },
+    {
+      "cbeNameIndex": 1,
+      "name": "M1917 S&W",
+      "category_name": "pistol",
+      "purchase_cost": 100
+    },
+    {
+      "cbeNameIndex": 2,
+      "name": "M1917 Colt",
+      "category_name": "pistol",
+      "purchase_cost": 100
+    },
+    {
+      "cbeNameIndex": 3,
+      "name": "OSS",
+      "category_name": "pistol",
+      "purchase_cost": 50
+    },
+    {
+      "cbeNameIndex": 222,
+      "name": "Astra400",
+      "category_name": "pistol",
+      "purchase_cost": 220
+    },
+    {
+      "cbeNameIndex": 223,
+      "name": "Astra903",
+      "category_name": "pistol",
+      "purchase_cost": 400
+    },
+    {
+      "cbeNameIndex": 4,
+      "name": "AN-M8",
+      "category_name": "smoke_grenade",
+      "purchase_cost": 300
+    },
+    {
+      "cbeNameIndex": 5,
+      "name": "M1903A1",
+      "category_name": "rifle",
+      "purchase_cost": 700
+    },
+    {
+      "cbeNameIndex": 6,
+      "name": "M1903A4",
+      "category_name": "rifle",
+      "purchase_cost": 1050
+    },
+    {
+      "cbeNameIndex": 8,
+      "name": "M1 Rifle",
+      "category_name": "rifle",
+      "purchase_cost": 900
+    },
+    {
+      "cbeNameIndex": 9,
+      "name": "M1C Rifle",
+      "category_name": "rifle",
+      "purchase_cost": 1350
+    },
+    {
+      "cbeNameIndex": 10,
+      "name": "M1D Rifle",
+      "category_name": "rifle",
+      "purchase_cost": 1350
+    },
+    {
+      "cbeNameIndex": 11,
+      "name": "M1941 Rifle",
+      "category_name": "rifle",
+      "purchase_cost": 1100
+    },
+    {
+      "cbeNameIndex": 12,
+      "name": "M1 Cbn",
+      "category_name": "rifle",
+      "purchase_cost": 600
+    },
+    {
+      "cbeNameIndex": 13,
+      "name": "M1A1 Cbn",
+      "category_name": "rifle",
+      "purchase_cost": 700
+    },
+    {
+      "cbeNameIndex": 14,
+      "name": "M2 Cbn",
+      "category_name": "rifle",
+      "purchase_cost": 1350
+    },
+    {
+      "cbeNameIndex": 7,
+      "name": "M1918A2 BAR",
+      "category_name": "lmg",
+      "purchase_cost": 3600
+    },
+    {
+      "cbeNameIndex": 20,
+      "name": "M1919A6 LMG",
+      "category_name": "lmg",
+      "purchase_cost": 7600
+    },
+    {
+      "cbeNameIndex": 15,
+      "name": "M1928A1 SMG",
+      "category_name": "smg",
+      "purchase_cost": 700
+    },
+    {
+      "cbeNameIndex": 16,
+      "name": "M1 SMG",
+      "category_name": "smg",
+      "purchase_cost": 600
+    },
+    {
+      "cbeNameIndex": 17,
+      "name": "M1A1 SMG",
+      "category_name": "smg",
+      "purchase_cost": 500
+    },
+    {
+      "cbeNameIndex": 18,
+      "name": "M3 SMG",
+      "category_name": "smg",
+      "purchase_cost": 400
+    },
+    {
+      "cbeNameIndex": 19,
+      "name": "M3A1 SMG",
+      "category_name": "smg",
+      "purchase_cost": 400
+    },
+    {
+      "cbeNameIndex": 22,
+      "name": "M1917A1 MMG",
+      "category_name": "mmg",
+      "purchase_cost": 4400
+    },
+    {
+      "cbeNameIndex": 23,
+      "name": "M1919A4 MMG",
+      "category_name": "mmg",
+      "purchase_cost": 5800
+    },
+    {
+      "cbeNameIndex": 24,
+      "name": "M2 HB HMG",
+      "category_name": "mmg",
+      "purchase_cost": 8700
+    },
+    {
+      "cbeNameIndex": 28,
+      "name": "E1R1 Fl",
+      "category_name": "flamethrower",
+      "purchase_cost": 2400
+    },
+    {
+      "cbeNameIndex": 29,
+      "name": "M1A1 Fl",
+      "category_name": "flamethrower",
+      "purchase_cost": 2400
+    },
+    {
+      "cbeNameIndex": 30,
+      "name": "M2A1-7 Fl",
+      "category_name": "flamethrower",
+      "purchase_cost": 3600
+    },
+    {
+      "cbeNameIndex": 25,
+      "name": "M1 RL",
+      "category_name": "rocket_launcher",
+      "purchase_cost": 1400
+    },
+    {
+      "cbeNameIndex": 26,
+      "name": "M1A1 RL",
+      "category_name": "rocket_launcher",
+      "purchase_cost": 1800
+    },
+    {
+      "cbeNameIndex": 27,
+      "name": "M9 RL",
+      "category_name": "rocket_launcher",
+      "purchase_cost": 2300
+    },
+    {
+      "cbeNameIndex": 31,
+      "name": "M2 Tripod",
+      "category_name": "tripod",
+      "purchase_cost": 1200
+    },
+    {
+      "cbeNameIndex": 32,
+      "name": "M1917 Tripod",
+      "category_name": "tripod",
+      "purchase_cost": 900
+    },
+    {
+      "cbeNameIndex": 33,
+      "name": "M3 Tripod",
+      "category_name": "tripod",
+      "purchase_cost": 1500
+    }
+  ],
+  "OTHER": [
+    {
+      "cbeNameIndex": 41,
+      "name": "C/96",
+      "category_name": "pistol",
+      "purchase_cost": 340
+    },
+    {
+      "cbeNameIndex": 42,
+      "name": "C/96M712",
+      "category_name": "pistol",
+      "purchase_cost": 450
+    },
+    {
+      "cbeNameIndex": 121,
+      "name": "Bodeo mod89",
+      "category_name": "pistol",
+      "purchase_cost": 180
+    },
+    {
+      "cbeNameIndex": 122,
+      "name": "Glisenti m10",
+      "category_name": "pistol",
+      "purchase_cost": 200
+    },
+    {
+      "cbeNameIndex": 144,
+      "name": "Unique Mle17",
+      "category_name": "pistol",
+      "purchase_cost": 180
+    },
+    {
+      "cbeNameIndex": 145,
+      "name": "Mle1935A",
+      "category_name": "pistol",
+      "purchase_cost": 280
+    },
+    {
+      "cbeNameIndex": 146,
+      "name": "Mle1935S",
+      "category_name": "pistol",
+      "purchase_cost": 220
+    },
+    {
+      "cbeNameIndex": 159,
+      "name": "No1 Mk4",
+      "category_name": "pistol",
+      "purchase_cost": 250
+    },
+    {
+      "cbeNameIndex": 160,
+      "name": "No2 Mk2",
+      "category_name": "pistol",
+      "purchase_cost": 200
+    },
+    {
+      "cbeNameIndex": 161,
+      "name": "No2 Mk1*",
+      "category_name": "pistol",
+      "purchase_cost": 180
+    },
+    {
+      "cbeNameIndex": 162,
+      "name": "No2 Mk1**",
+      "category_name": "pistol",
+      "purchase_cost": 180
+    },
+    {
+      "cbeNameIndex": 163,
+      "name": "Webley Mk4",
+      "category_name": "pistol",
+      "purchase_cost": 190
+    },
+    {
+      "cbeNameIndex": 164,
+      "name": "S&W No2",
+      "category_name": "pistol",
+      "purchase_cost": 195
+    },
+    {
+      "cbeNameIndex": 203,
+      "name": "SP M12",
+      "category_name": "pistol",
+      "purchase_cost": 280
+    },
+    {
+      "cbeNameIndex": 209,
+      "name": "Mle1903",
+      "category_name": "pistol",
+      "purchase_cost": 230
+    },
+    {
+      "cbeNameIndex": 210,
+      "name": "Mle10/22",
+      "category_name": "pistol",
+      "purchase_cost": 180
+    },
+    {
+      "cbeNameIndex": 211,
+      "name": "GP35",
+      "category_name": "pistol",
+      "purchase_cost": 290
+    },
+    {
+      "cbeNameIndex": 212,
+      "name": "CZ vz24",
+      "category_name": "pistol",
+      "purchase_cost": 100
+    },
+    {
+      "cbeNameIndex": 213,
+      "name": "CZ vz27",
+      "category_name": "pistol",
+      "purchase_cost": 110
+    },
+    {
+      "cbeNameIndex": 214,
+      "name": "CZ vz38",
+      "category_name": "pistol",
+      "purchase_cost": 130
+    },
+    {
+      "cbeNameIndex": 220,
+      "name": "VIS wz35",
+      "category_name": "pistol",
+      "purchase_cost": 240
+    },
+    {
+      "cbeNameIndex": 165,
+      "name": "Very",
+      "category_name": "smoke_grenade",
+      "purchase_cost": 350
+    },
+    {
+      "cbeNameIndex": 59,
+      "name": "Gew29/40",
+      "category_name": "rifle",
+      "purchase_cost": 700
+    },
+    {
+      "cbeNameIndex": 60,
+      "name": "Gew33/40",
+      "category_name": "rifle",
+      "purchase_cost": 750
+    },
+    {
+      "cbeNameIndex": 64,
+      "name": "VK-98",
+      "category_name": "rifle",
+      "purchase_cost": 400
+    },
+    {
+      "cbeNameIndex": 68,
+      "name": "Kar43",
+      "category_name": "rifle",
+      "purchase_cost": 1800
+    },
+    {
+      "cbeNameIndex": 77,
+      "name": "VG1-5",
+      "category_name": "rifle",
+      "purchase_cost": 1200
+    },
+    {
+      "cbeNameIndex": 124,
+      "name": "F. mod91",
+      "category_name": "rifle",
+      "purchase_cost": 800
+    },
+    {
+      "cbeNameIndex": 125,
+      "name": "M. mod91",
+      "category_name": "rifle",
+      "purchase_cost": 1000
+    },
+    {
+      "cbeNameIndex": 126,
+      "name": "M. mod91/TS",
+      "category_name": "rifle",
+      "purchase_cost": 800
+    },
+    {
+      "cbeNameIndex": 127,
+      "name": "F. mod38",
+      "category_name": "rifle",
+      "purchase_cost": 1000
+    },
+    {
+      "cbeNameIndex": 128,
+      "name": "M. mod38",
+      "category_name": "rifle",
+      "purchase_cost": 1300
+    },
+    {
+      "cbeNameIndex": 129,
+      "name": "M. mod38/TS",
+      "category_name": "rifle",
+      "purchase_cost": 1000
+    },
+    {
+      "cbeNameIndex": 130,
+      "name": "F. mod38",
+      "category_name": "rifle",
+      "purchase_cost": 900
+    },
+    {
+      "cbeNameIndex": 131,
+      "name": "M. mod38",
+      "category_name": "rifle",
+      "purchase_cost": 1200
+    },
+    {
+      "cbeNameIndex": 132,
+      "name": "M. mod38/TS",
+      "category_name": "rifle",
+      "purchase_cost": 900
+    },
+    {
+      "cbeNameIndex": 147,
+      "name": "F. Mle86/93",
+      "category_name": "rifle",
+      "purchase_cost": 500
+    },
+    {
+      "cbeNameIndex": 148,
+      "name": "M. Mle92/27",
+      "category_name": "rifle",
+      "purchase_cost": 650
+    },
+    {
+      "cbeNameIndex": 149,
+      "name": "F. Mle07/15",
+      "category_name": "rifle",
+      "purchase_cost": 600
+    },
+    {
+      "cbeNameIndex": 150,
+      "name": "F. Mle16",
+      "category_name": "rifle",
+      "purchase_cost": 800
+    },
+    {
+      "cbeNameIndex": 151,
+      "name": "M. Mle16/27",
+      "category_name": "rifle",
+      "purchase_cost": 850
+    },
+    {
+      "cbeNameIndex": 152,
+      "name": "F. MAS36",
+      "category_name": "rifle",
+      "purchase_cost": 1000
+    },
+    {
+      "cbeNameIndex": 153,
+      "name": "F. MAS36CR39",
+      "category_name": "rifle",
+      "purchase_cost": 1400
+    },
+    {
+      "cbeNameIndex": 166,
+      "name": "No1 Mk3",
+      "category_name": "rifle",
+      "purchase_cost": 600
+    },
+    {
+      "cbeNameIndex": 167,
+      "name": "No1 Mk3*",
+      "category_name": "rifle",
+      "purchase_cost": 700
+    },
+    {
+      "cbeNameIndex": 168,
+      "name": "No4 Mk1",
+      "category_name": "rifle",
+      "purchase_cost": 800
+    },
+    {
+      "cbeNameIndex": 169,
+      "name": "No4 Mk1*",
+      "category_name": "rifle",
+      "purchase_cost": 750
+    },
+    {
+      "cbeNameIndex": 170,
+      "name": "No4 Mk1(T)",
+      "category_name": "rifle",
+      "purchase_cost": 1100
+    },
+    {
+      "cbeNameIndex": 171,
+      "name": "No3 Mk1*(T)",
+      "category_name": "rifle",
+      "purchase_cost": 1050
+    },
+    {
+      "cbeNameIndex": 192,
+      "name": "obr91/30g-PU",
+      "category_name": "rifle",
+      "purchase_cost": 1000
+    },
+    {
+      "cbeNameIndex": 21,
+      "name": "M1941   LMG",
+      "category_name": "lmg",
+      "purchase_cost": 4500
+    },
+    {
+      "cbeNameIndex": 89,
+      "name": "MG13",
+      "category_name": "lmg",
+      "purchase_cost": 7400
+    },
+    {
+      "cbeNameIndex": 155,
+      "name": "MAC24/29",
+      "category_name": "lmg",
+      "purchase_cost": 3600
+    },
+    {
+      "cbeNameIndex": 205,
+      "name": "M30",
+      "category_name": "lmg",
+      "purchase_cost": 6500
+    },
+    {
+      "cbeNameIndex": 216,
+      "name": "lk ZB vz26",
+      "category_name": "lmg",
+      "purchase_cost": 6000
+    },
+    {
+      "cbeNameIndex": 79,
+      "name": "MP35/1",
+      "category_name": "smg",
+      "purchase_cost": 1000
+    },
+    {
+      "cbeNameIndex": 80,
+      "name": "EMP",
+      "category_name": "smg",
+      "purchase_cost": 900
+    },
+    {
+      "cbeNameIndex": 84,
+      "name": "MP41",
+      "category_name": "smg",
+      "purchase_cost": 700
+    },
+    {
+      "cbeNameIndex": 133,
+      "name": "MAB mod38A",
+      "category_name": "smg",
+      "purchase_cost": 600
+    },
+    {
+      "cbeNameIndex": 134,
+      "name": "MAB mod38/42",
+      "category_name": "smg",
+      "purchase_cost": 500
+    },
+    {
+      "cbeNameIndex": 215,
+      "name": "ZK383",
+      "category_name": "smg",
+      "purchase_cost": 1200
+    },
+    {
+      "cbeNameIndex": 206,
+      "name": "M07/12",
+      "category_name": "mmg",
+      "purchase_cost": 4000
+    },
+    {
+      "cbeNameIndex": 217,
+      "name": "tk ZB vz37",
+      "category_name": "mmg",
+      "purchase_cost": 7800
+    },
+    {
+      "cbeNameIndex": 180,
+      "name": "Boys Mk1",
+      "category_name": "at_rifle",
+      "purchase_cost": 1400
+    },
+    {
+      "cbeNameIndex": 221,
+      "name": "wz35",
+      "category_name": "at_rifle",
+      "purchase_cost": 1400
+    },
+    {
+      "cbeNameIndex": 224,
+      "name": "S-18/100",
+      "category_name": "at_rifle",
+      "purchase_cost": 3200
+    },
+    {
+      "cbeNameIndex": 110,
+      "name": "FmW41",
+      "category_name": "flamethrower",
+      "purchase_cost": 1600
+    },
+    {
+      "cbeNameIndex": 182,
+      "name": "No1 Mk1",
+      "category_name": "flamethrower",
+      "purchase_cost": 2400
+    },
+    {
+      "cbeNameIndex": 183,
+      "name": "Tripod Mk2",
+      "category_name": "tripod",
+      "purchase_cost": 800
+    },
+    {
+      "cbeNameIndex": 184,
+      "name": "Tripod Mk4",
+      "category_name": "tripod",
+      "purchase_cost": 1000
+    },
+    {
+      "cbeNameIndex": 207,
+      "name": "M07 Laf",
+      "category_name": "tripod",
+      "purchase_cost": 900
+    },
+    {
+      "cbeNameIndex": 218,
+      "name": "ZB206",
+      "category_name": "tripod",
+      "purchase_cost": 800
+    },
+    {
+      "cbeNameIndex": 219,
+      "name": "ZB308",
+      "category_name": "tripod",
+      "purchase_cost": 1000
+    }
+  ],
+  "GER": [
+    {
+      "cbeNameIndex": 43,
+      "name": "P08",
+      "category_name": "pistol",
+      "purchase_cost": 300
+    },
+    {
+      "cbeNameIndex": 44,
+      "name": "M1934",
+      "category_name": "pistol",
+      "purchase_cost": 130
+    },
+    {
+      "cbeNameIndex": 45,
+      "name": "Beholla",
+      "category_name": "pistol",
+      "purchase_cost": 120
+    },
+    {
+      "cbeNameIndex": 46,
+      "name": "M38H",
+      "category_name": "pistol",
+      "purchase_cost": 180
+    },
+    {
+      "cbeNameIndex": 47,
+      "name": "PP",
+      "category_name": "pistol",
+      "purchase_cost": 180
+    },
+    {
+      "cbeNameIndex": 48,
+      "name": "PPK",
+      "category_name": "pistol",
+      "purchase_cost": 140
+    },
+    {
+      "cbeNameIndex": 49,
+      "name": "HSc",
+      "category_name": "pistol",
+      "purchase_cost": 170
+    },
+    {
+      "cbeNameIndex": 50,
+      "name": "P38",
+      "category_name": "pistol",
+      "purchase_cost": 260
+    },
+    {
+      "cbeNameIndex": 53,
+      "name": "27mmKpfP",
+      "category_name": "grenade_launcher_ammo",
+      "purchase_cost": 800
+    },
+    {
+      "cbeNameIndex": 54,
+      "name": "27mmStuP",
+      "category_name": "grenade_launcher_ammo",
+      "purchase_cost": 1500
+    },
+    {
+      "cbeNameIndex": 51,
+      "name": "27mmLeuP",
+      "category_name": "smoke_grenade",
+      "purchase_cost": 650
+    },
+    {
+      "cbeNameIndex": 52,
+      "name": "27mmP42",
+      "category_name": "smoke_grenade",
+      "purchase_cost": 450
+    },
+    {
+      "cbeNameIndex": 55,
+      "name": "Gew98",
+      "category_name": "rifle",
+      "purchase_cost": 600
+    },
+    {
+      "cbeNameIndex": 56,
+      "name": "Kar98b",
+      "category_name": "rifle",
+      "purchase_cost": 900
+    },
+    {
+      "cbeNameIndex": 57,
+      "name": "Kar98k",
+      "category_name": "rifle",
+      "purchase_cost": 800
+    },
+    {
+      "cbeNameIndex": 58,
+      "name": "Kar98k svw",
+      "category_name": "rifle",
+      "purchase_cost": 600
+    },
+    {
+      "cbeNameIndex": 61,
+      "name": "Gew98/40",
+      "category_name": "rifle",
+      "purchase_cost": 700
+    },
+    {
+      "cbeNameIndex": 62,
+      "name": "VG-1",
+      "category_name": "rifle",
+      "purchase_cost": 650
+    },
+    {
+      "cbeNameIndex": 63,
+      "name": "VG-2",
+      "category_name": "rifle",
+      "purchase_cost": 600
+    },
+    {
+      "cbeNameIndex": 65,
+      "name": "Gew41(W)",
+      "category_name": "rifle",
+      "purchase_cost": 3600
+    },
+    {
+      "cbeNameIndex": 66,
+      "name": "Gew41(M)",
+      "category_name": "rifle",
+      "purchase_cost": 3200
+    },
+    {
+      "cbeNameIndex": 67,
+      "name": "Gew43",
+      "category_name": "rifle",
+      "purchase_cost": 2400
+    },
+    {
+      "cbeNameIndex": 69,
+      "name": "Zf Kar98k",
+      "category_name": "rifle",
+      "purchase_cost": 1200
+    },
+    {
+      "cbeNameIndex": 70,
+      "name": "Zf Gew43",
+      "category_name": "rifle",
+      "purchase_cost": 3600
+    },
+    {
+      "cbeNameIndex": 73,
+      "name": "MKb42(W)",
+      "category_name": "rifle",
+      "purchase_cost": 4800
+    },
+    {
+      "cbeNameIndex": 74,
+      "name": "MKb42(H)",
+      "category_name": "rifle",
+      "purchase_cost": 4400
+    },
+    {
+      "cbeNameIndex": 75,
+      "name": "MP43",
+      "category_name": "rifle",
+      "purchase_cost": 3200
+    },
+    {
+      "cbeNameIndex": 76,
+      "name": "StG44",
+      "category_name": "rifle",
+      "purchase_cost": 2000
+    },
+    {
+      "cbeNameIndex": 71,
+      "name": "FG42/1",
+      "category_name": "lmg",
+      "purchase_cost": 4800
+    },
+    {
+      "cbeNameIndex": 72,
+      "name": "FG42/2",
+      "category_name": "lmg",
+      "purchase_cost": 4000
+    },
+    {
+      "cbeNameIndex": 87,
+      "name": "MG08/15",
+      "category_name": "lmg",
+      "purchase_cost": 5600
+    },
+    {
+      "cbeNameIndex": 88,
+      "name": "MG08/18",
+      "category_name": "lmg",
+      "purchase_cost": 6800
+    },
+    {
+      "cbeNameIndex": 90,
+      "name": "MG15",
+      "category_name": "lmg",
+      "purchase_cost": 8000
+    },
+    {
+      "cbeNameIndex": 91,
+      "name": "MG34",
+      "category_name": "lmg",
+      "purchase_cost": 8800
+    },
+    {
+      "cbeNameIndex": 92,
+      "name": "MG34S",
+      "category_name": "lmg",
+      "purchase_cost": 9800
+    },
+    {
+      "cbeNameIndex": 93,
+      "name": "MG34/41",
+      "category_name": "lmg",
+      "purchase_cost": 9400
+    },
+    {
+      "cbeNameIndex": 94,
+      "name": "MG42",
+      "category_name": "lmg",
+      "purchase_cost": 7200
+    },
+    {
+      "cbeNameIndex": 78,
+      "name": "MP28/2",
+      "category_name": "smg",
+      "purchase_cost": 800
+    },
+    {
+      "cbeNameIndex": 81,
+      "name": "MP38",
+      "category_name": "smg",
+      "purchase_cost": 600
+    },
+    {
+      "cbeNameIndex": 82,
+      "name": "MP40",
+      "category_name": "smg",
+      "purchase_cost": 500
+    },
+    {
+      "cbeNameIndex": 83,
+      "name": "MP40/2",
+      "category_name": "smg",
+      "purchase_cost": 900
+    },
+    {
+      "cbeNameIndex": 85,
+      "name": "Ger Potsdam",
+      "category_name": "smg",
+      "purchase_cost": 500
+    },
+    {
+      "cbeNameIndex": 86,
+      "name": "MP3008",
+      "category_name": "smg",
+      "purchase_cost": 400
+    },
+    {
+      "cbeNameIndex": 204,
+      "name": "MP34(o)",
+      "category_name": "smg",
+      "purchase_cost": 950
+    },
+    {
+      "cbeNameIndex": 95,
+      "name": "MG08",
+      "category_name": "mmg",
+      "purchase_cost": 4800
+    },
+    {
+      "cbeNameIndex": 96,
+      "name": "PzB38",
+      "category_name": "at_rifle",
+      "purchase_cost": 1600
+    },
+    {
+      "cbeNameIndex": 97,
+      "name": "PzB39",
+      "category_name": "at_rifle",
+      "purchase_cost": 1200
+    },
+    {
+      "cbeNameIndex": 98,
+      "name": "GrB39",
+      "category_name": "at_rifle",
+      "purchase_cost": 1000
+    },
+    {
+      "cbeNameIndex": 99,
+      "name": "PzBSS41",
+      "category_name": "at_rifle",
+      "purchase_cost": 2400
+    },
+    {
+      "cbeNameIndex": 100,
+      "name": "PzB41",
+      "category_name": "at_rifle",
+      "purchase_cost": 3200
+    },
+    {
+      "cbeNameIndex": 108,
+      "name": "FmW35",
+      "category_name": "flamethrower",
+      "purchase_cost": 2400
+    },
+    {
+      "cbeNameIndex": 109,
+      "name": "FmW40",
+      "category_name": "flamethrower",
+      "purchase_cost": 2000
+    },
+    {
+      "cbeNameIndex": 111,
+      "name": "FmW42",
+      "category_name": "flamethrower",
+      "purchase_cost": 1800
+    },
+    {
+      "cbeNameIndex": 105,
+      "name": "RPzB43",
+      "category_name": "rocket_launcher",
+      "purchase_cost": 2400
+    },
+    {
+      "cbeNameIndex": 106,
+      "name": "RPzB54",
+      "category_name": "rocket_launcher",
+      "purchase_cost": 2800
+    },
+    {
+      "cbeNameIndex": 107,
+      "name": "RPzB54/1",
+      "category_name": "rocket_launcher",
+      "purchase_cost": 3600
+    },
+    {
+      "cbeNameIndex": 101,
+      "name": "PF30mK",
+      "category_name": "panzerfaust",
+      "purchase_cost": 400
+    },
+    {
+      "cbeNameIndex": 102,
+      "name": "PF30mG",
+      "category_name": "panzerfaust",
+      "purchase_cost": 600
+    },
+    {
+      "cbeNameIndex": 103,
+      "name": "PF60m",
+      "category_name": "panzerfaust",
+      "purchase_cost": 700
+    },
+    {
+      "cbeNameIndex": 104,
+      "name": "PF100m",
+      "category_name": "panzerfaust",
+      "purchase_cost": 800
+    },
+    {
+      "cbeNameIndex": 112,
+      "name": "Laf34",
+      "category_name": "tripod",
+      "purchase_cost": 1200
+    },
+    {
+      "cbeNameIndex": 113,
+      "name": "Laf42",
+      "category_name": "tripod",
+      "purchase_cost": 1200
+    },
+    {
+      "cbeNameIndex": 114,
+      "name": "Sch08",
+      "category_name": "tripod",
+      "purchase_cost": 1000
+    }
+  ],
+  "ITA": [
+    {
+      "cbeNameIndex": 123,
+      "name": "Beretta m34",
+      "category_name": "pistol",
+      "purchase_cost": 220
+    },
+    {
+      "cbeNameIndex": 135,
+      "name": "Breda mod30",
+      "category_name": "lmg",
+      "purchase_cost": 4000
+    },
+    {
+      "cbeNameIndex": 138,
+      "name": "Breda mod37",
+      "category_name": "mmg",
+      "purchase_cost": 6000
+    },
+    {
+      "cbeNameIndex": 140,
+      "name": "T. Breda m37",
+      "category_name": "tripod",
+      "purchase_cost": 1200
+    }
+  ],
+  "FR": [
+    {
+      "cbeNameIndex": 143,
+      "name": "Lebel 92",
+      "category_name": "pistol",
+      "purchase_cost": 180
+    },
+    {
+      "cbeNameIndex": 154,
+      "name": "MAS38",
+      "category_name": "smg",
+      "purchase_cost": 600
+    },
+    {
+      "cbeNameIndex": 136,
+      "name": "FR mod14",
+      "category_name": "mmg",
+      "purchase_cost": 3800
+    },
+    {
+      "cbeNameIndex": 137,
+      "name": "FR mod14/35",
+      "category_name": "mmg",
+      "purchase_cost": 4600
+    },
+    {
+      "cbeNameIndex": 156,
+      "name": "Mle1914",
+      "category_name": "mmg",
+      "purchase_cost": 4500
+    },
+    {
+      "cbeNameIndex": 139,
+      "name": "T. FR mod14",
+      "category_name": "tripod",
+      "purchase_cost": 900
+    },
+    {
+      "cbeNameIndex": 157,
+      "name": "T. Mle1914",
+      "category_name": "tripod",
+      "purchase_cost": 900
+    }
+  ],
+  "UK": [
+    {
+      "cbeNameIndex": 175,
+      "name": "Lewis Mk1",
+      "category_name": "lmg",
+      "purchase_cost": 5000
+    },
+    {
+      "cbeNameIndex": 176,
+      "name": "Bren Mk1",
+      "category_name": "lmg",
+      "purchase_cost": 6000
+    },
+    {
+      "cbeNameIndex": 177,
+      "name": "Bren Mk2",
+      "category_name": "lmg",
+      "purchase_cost": 6600
+    },
+    {
+      "cbeNameIndex": 178,
+      "name": "Bren Mk3",
+      "category_name": "lmg",
+      "purchase_cost": 7400
+    },
+    {
+      "cbeNameIndex": 172,
+      "name": "Sten Mk2",
+      "category_name": "smg",
+      "purchase_cost": 450
+    },
+    {
+      "cbeNameIndex": 173,
+      "name": "Sten Mk3",
+      "category_name": "smg",
+      "purchase_cost": 400
+    },
+    {
+      "cbeNameIndex": 174,
+      "name": "Sten Mk5",
+      "category_name": "smg",
+      "purchase_cost": 500
+    },
+    {
+      "cbeNameIndex": 179,
+      "name": "Vickers Mk1",
+      "category_name": "mmg",
+      "purchase_cost": 7000
+    },
+    {
+      "cbeNameIndex": 181,
+      "name": "PIAT",
+      "category_name": "rocket_launcher",
+      "purchase_cost": 1800
+    }
+  ],
+  "SOV": [
+    {
+      "cbeNameIndex": 188,
+      "name": "obr1895g",
+      "category_name": "pistol",
+      "purchase_cost": 100
+    },
+    {
+      "cbeNameIndex": 189,
+      "name": "TT33",
+      "category_name": "pistol",
+      "purchase_cost": 190
+    },
+    {
+      "cbeNameIndex": 190,
+      "name": "obr1891/30g",
+      "category_name": "rifle",
+      "purchase_cost": 500
+    },
+    {
+      "cbeNameIndex": 191,
+      "name": "obr1938g",
+      "category_name": "rifle",
+      "purchase_cost": 450
+    },
+    {
+      "cbeNameIndex": 193,
+      "name": "obr1944g",
+      "category_name": "rifle",
+      "purchase_cost": 550
+    },
+    {
+      "cbeNameIndex": 194,
+      "name": "SVT40",
+      "category_name": "rifle",
+      "purchase_cost": 950
+    },
+    {
+      "cbeNameIndex": 198,
+      "name": "DP",
+      "category_name": "lmg",
+      "purchase_cost": 4400
+    },
+    {
+      "cbeNameIndex": 195,
+      "name": "PPD40",
+      "category_name": "smg",
+      "purchase_cost": 900
+    },
+    {
+      "cbeNameIndex": 196,
+      "name": "PPSh41",
+      "category_name": "smg",
+      "purchase_cost": 650
+    },
+    {
+      "cbeNameIndex": 197,
+      "name": "PPS43",
+      "category_name": "smg",
+      "purchase_cost": 400
+    },
+    {
+      "cbeNameIndex": 199,
+      "name": "PM1910",
+      "category_name": "mmg",
+      "purchase_cost": 5200
+    },
+    {
+      "cbeNameIndex": 200,
+      "name": "DShK",
+      "category_name": "mmg",
+      "purchase_cost": 8000
+    }
+  ]
+}
