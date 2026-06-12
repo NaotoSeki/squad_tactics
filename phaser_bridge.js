@@ -851,7 +851,7 @@ class MainScene extends Phaser.Scene {
         this.input.keyboard.on('keydown-TAB', (event) => {
             if (window.gameLogic && window.gameLogic.state === 'PLAY' && window.gameLogic.selectNextUnit) {
                 event.preventDefault();
-                window.gameLogic.selectNextUnit();
+                window.gameLogic.selectNextUnit(event.shiftKey ? -1 : 1);
             }
         });
     }

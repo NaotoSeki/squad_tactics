@@ -82,6 +82,10 @@ window.BattleLogic = class BattleLogic {
       if (typeof sanitizeUnitSpareAmmo === 'function') sanitizeUnitSpareAmmo(u);
       else if (typeof sanitizeUnitBagAmmo === 'function') sanitizeUnitBagAmmo(u);
       if (typeof LoadoutWeight !== 'undefined') LoadoutWeight.refreshUnitLoadout(u);
+      // REALISM_PACK.WOUNDED_STATE: 前セクター持ち越しのHPで重傷判定（演出無し）
+      if (typeof REALISM_PACK !== 'undefined' && REALISM_PACK.WOUNDED_STATE && !u.def?.isTank && u.maxHp) {
+        u.wounded = u.hp > 0 && u.hp < u.maxHp * 0.25;
+      }
     });
 
     this.state = 'PLAY';
@@ -209,8 +213,14 @@ window.BattleLogic = class BattleLogic {
     if (e) e.style.opacity = 1;
 
     // ターン経過処理
+    // Mechanic スキル: 毎ターンHP回復（REALISM_PACK: パワーインフレ回避のため+20→+10）
     this.units.filter(u => u.team === 'player' && u.hp > 0 && u.skills.includes("Mechanic")).forEach(u => {
-      if (u.hp < u.maxHp) { u.hp = Math.min(u.maxHp, u.hp + 20); this.ui.log("修理"); }
+      const mechanicHeal = 10;
+      if (u.hp < u.maxHp) {
+        u.hp = Math.min(u.maxHp, u.hp + mechanicHeal);
+        this.ui.log("修理");
+        this.refreshWoundedState(u);
+      }
     });
 
     const rtDelay = (typeof BATTLE_SCALE !== 'undefined' && BATTLE_SCALE.RT_TURN_DELAY_MS) || null;
@@ -221,7 +231,13 @@ window.BattleLogic = class BattleLogic {
 
       if (this.checkWin()) { this.isProcessingTurn = false; return; }
 
-      this.units.forEach(u => { if (u.team === 'player') u.ap = u.maxAp; });
+      // AP回復。REALISM_PACK.WOUNDED_STATE: 重傷状態の自軍ユニットは最大AP-1
+      this.units.forEach(u => {
+        if (u.team !== 'player') return;
+        const woundedAp = (typeof REALISM_PACK !== 'undefined' && REALISM_PACK.WOUNDED_STATE && u.wounded)
+          ? Math.max(0, u.maxAp - 1) : u.maxAp;
+        u.ap = woundedAp;
+      });
       await this.processMarchOrders();
       this.ui.log("-- PLAYER PHASE --");
       this.state = 'PLAY';
@@ -505,6 +521,8 @@ window.BattleLogic = class BattleLogic {
         const atkPin = window.BattleCloud.getIntruderPressure(a);
         if (atkPin > 0) hitChance -= Math.floor(atkPin * 14);
       }
+      // REALISM_PACK.WOUNDED_STATE: 重傷状態は命中率-10%
+      if (typeof REALISM_PACK !== 'undefined' && REALISM_PACK.WOUNDED_STATE && a.wounded) hitChance -= 10;
       const rtCfg = this.getRtTacticsCfg();
       if (rtCfg && rtCfg.RT_HIT_PENALTY) hitChance -= rtCfg.RT_HIT_PENALTY;
     }
@@ -732,6 +750,32 @@ window.BattleLogic = class BattleLogic {
     }
   }
 
+  /**
+   * REALISM_PACK.WOUNDED_STATE: HP が maxHp の25%未満なら「重傷」、25%以上に回復したら解除。
+   * 重傷時: AP回復時に最大AP-1、命中率-10%（actionAttack / getEstimatedHitChance 両方で適用）。
+   */
+  refreshWoundedState(u) {
+    if (!u || u.hp <= 0 || !u.maxHp) return;
+    if (!(typeof REALISM_PACK !== 'undefined' && REALISM_PACK.WOUNDED_STATE)) return;
+    if (u.def && u.def.isTank) return;
+    const threshold = u.maxHp * 0.25;
+    if (u.hp < threshold) {
+      if (!u.wounded) {
+        u.wounded = true;
+        this.ui.log(`${u.name} 重傷！`);
+        if (typeof Renderer !== 'undefined' && Renderer.game && Renderer.showFloatText) {
+          try {
+            Renderer.showFloatText(u.q, u.r, '重傷！', '#ffdd33');
+          } catch (e) {
+            console.warn("Renderer not ready for showFloatText (Skipped):", e);
+          }
+        }
+      }
+    } else if (u.wounded) {
+      u.wounded = false;
+    }
+  }
+
   applyDamage(target, damage, sourceName = "攻撃") {
     if (!target || target.hp <= 0) return;
     if (target.skills && target.skills.includes('Armor')) damage = Math.max(0, damage - 5);
@@ -746,6 +790,7 @@ window.BattleLogic = class BattleLogic {
       }
     }
     target.hp -= damage;
+    this.refreshWoundedState(target);
     if (target.hp <= 0 && !target.deadProcessed) {
       target.deadProcessed = true;
       this.ui.log(`>> ${target.name} を撃破！`);
@@ -804,6 +849,18 @@ window.BattleLogic = class BattleLogic {
     return null;
   }
 
+  /**
+   * 弾薬の緊張感: BATTLE_SCALE.ammoBurnMult（0.85〜1.95程度）に応じて、
+   * 通常弾の消費に追加で1発分の余剰消費が発生する確率を返す。
+   * ターン制/RT問わず適用（getRtTacticsCfg() のRT限定ゲートを介さない）。
+   */
+  _extraAmmoBurnRoll() {
+    const mult = (typeof BATTLE_SCALE !== 'undefined' && BATTLE_SCALE.ammoBurnMult) || 1;
+    const extra = mult - 1;
+    if (extra <= 0) return 0;
+    return Math.random() < extra ? 1 : 0;
+  }
+
   consumeAmmo(u, weaponCode, count, handIndex) {
     const n = (count != null && count > 0) ? count : 1;
     if (weaponCode === 'm2_mortar') {
@@ -846,7 +903,8 @@ window.BattleLogic = class BattleLogic {
       }
       const mg = u.hands.find(h => h && h.code === weaponCode);
       if (!mg) return false;
-      for (let i = 0; i < n; i++) {
+      const burnCount = n + this._extraAmmoBurnRoll();
+      for (let i = 0; i < burnCount; i++) {
         if (mg.current <= 0 && (mg.reserve || 0) > 0) {
           const fill = Math.min(mg.cap || 50, mg.reserve);
           mg.current = fill;
@@ -884,7 +942,8 @@ window.BattleLogic = class BattleLogic {
     if (!w) return false;
     const primarySlot = u.hands[0];
     if (primarySlot && primarySlot.code === w.code) {
-      primarySlot.current--;
+      primarySlot.current -= (1 + this._extraAmmoBurnRoll());
+      if (primarySlot.current < 0) primarySlot.current = 0;
       return true;
     }
     return false;
@@ -1265,12 +1324,12 @@ window.BattleLogic = class BattleLogic {
     this.selectedUnit = u; this.refreshUnitState(u); this.ui.hideActionMenu();
   }
 
-  /** Tabキー: 行動可能な自軍兵を順番に選択し、カメラを寄せる */
-  selectNextUnit() {
+  /** Tabキー: 行動可能な自軍兵を順番に選択し、カメラを寄せる（dir=-1 で逆順 / Shift+Tab） */
+  selectNextUnit(dir = 1) {
     const candidates = this.units.filter(u => u.team === 'player' && u.hp > 0 && u.ap > 0);
     if (candidates.length === 0) return;
     const curIdx = this.selectedUnit ? candidates.indexOf(this.selectedUnit) : -1;
-    const next = candidates[(curIdx + 1) % candidates.length];
+    const next = candidates[(curIdx + dir + candidates.length) % candidates.length];
     this.onUnitClick(next);
     if (typeof Renderer !== 'undefined' && Renderer.game && Renderer.centerOn) {
       try {
@@ -1373,36 +1432,31 @@ window.BattleLogic = class BattleLogic {
     const coverMult = (typeof BATTLE_SCALE !== 'undefined' && BATTLE_SCALE.coverMult) || 1;
     const aimVal = (attacker.params && attacker.params.aim != null) ? attacker.params.aim : (attacker.stats?.aim || 0);
     const throwVal = (attacker.params && attacker.params.throw != null) ? attacker.params.throw : 5;
-    const baseAcc = (w.area && !targetUnit) ? throwVal * 2 : aimVal * 2;
-    let hit = baseAcc + (w.acc || 0) - (dist * (w.acc_drop || 5)) - terrainCover * coverMult;
     const moraleMod = (attacker.params && attacker.params.morale != null) ? (attacker.params.morale / 10) : 1;
-    hit = Math.round(hit * moraleMod);
-    const overRange = Math.max(0, dist - (w.rng || 0));
-    hit -= overRange * (w.overRangePenalty ?? 15);
-    if (targetUnit) {
-      if (targetUnit.stance === 'prone') hit -= 20;
-      if (targetUnit.stance === 'crouch') hit -= 10;
-      const rtCfg = this.getRtTacticsCfg();
-      if (rtCfg && rtCfg.RT_HIT_PENALTY) hit -= rtCfg.RT_HIT_PENALTY;
-    } else if (w.area) {
-      hit += 20;
-    }
+    const rtCfg = this.getRtTacticsCfg();
+    const rtHitPenalty = (rtCfg && rtCfg.RT_HIT_PENALTY) ? rtCfg.RT_HIT_PENALTY : 0;
+    // REALISM_PACK.WOUNDED_STATE: 重傷状態は命中率-10%
+    const wounded = !!(typeof REALISM_PACK !== 'undefined' && REALISM_PACK.WOUNDED_STATE && attacker.wounded);
 
     // ATTACK MODE で弾数撃ち分けを指定済みなら、概算命中率にも反映
     const overrideInfo = (this.attackBurstOverride &&
       this.attackBurstOverride.unitId === attacker.id &&
       this.attackBurstOverride.weaponCode === w.code) ? this.attackBurstOverride : null;
+    let applyBurstPenalty = false;
     if (overrideInfo) {
       const cfg = this.getBurstSelectionConfigForWeapon(w, attacker);
       if (cfg && cfg.modes && cfg.modes.length >= 2) {
         const maxMode = Math.max.apply(null, cfg.modes);
         if (overrideInfo.shots >= maxMode) {
-          hit -= 5;
+          applyBurstPenalty = true;
         }
       }
     }
-    hit = Math.max(0, Math.min(100, Math.round(hit)));
-    return { hit, isArea: !!w.area && !targetUnit };
+
+    return computeHitChance({
+      dist, w, terrainCover, coverMult, aimVal, throwVal, moraleMod,
+      targetUnit, rtHitPenalty, wounded, applyBurstPenalty
+    });
   }
 
   handleRightClick(mx, my, hex) {
@@ -1738,6 +1792,7 @@ window.BattleLogic = class BattleLogic {
     u.ap -= 2;
     const healAmount = 30;
     target.hp = Math.min(target.maxHp, target.hp + healAmount);
+    this.refreshWoundedState(target);
     this.ui.log(`${u.name} が ${target.name} を治療`);
     if (window.VFX) { const p = Renderer.hexToPx(u.q, u.r); window.VFX.add({ x: p.x, y: p.y - 20, vx: 0, vy: -1, life: 30, maxLife: 30, color: "#0f0", size: 4, type: 'spark' }); }
     this.refreshUnitState(u);

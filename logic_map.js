@@ -264,7 +264,7 @@ class MapSystem {
 
   isValidHex(q, r) { return q >= 0 && q < MAP_W && r >= 0 && r < MAP_H; }
 
-  hexDist(a, b) { return (Math.abs(a.q - b.q) + Math.abs(a.q + a.r - b.q - b.r) + Math.abs(a.r - b.r)) / 2; }
+  hexDist(a, b) { return hexDist(a, b); }
 
   getNeighbors(q, r) { return [[1, 0], [1, -1], [0, -1], [-1, 0], [-1, 1], [0, 1]].map(d => ({ q: q + d[0], r: r + d[1] })).filter(h => this.isValidHex(h.q, h.r)); }
 

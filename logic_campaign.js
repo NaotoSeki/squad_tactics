@@ -122,7 +122,7 @@ class CampaignManager {
             const portraitNum = String(portraitIndex + 1).padStart(3, '0');
             const faceUrl = 'asset/portraits/inf_us_' + portraitNum + '.jpg';
             
-            const mainWeaponName = (t.main && typeof WPNS !== 'undefined' && WPNS[t.main]) ? WPNS[t.main].name : (t.loadout ? 'M2 Mortar' : '—');
+            const mainWeaponName = getTemplateMainWeaponName(k);
             d.innerHTML = `
                 <div class="card-badge" style="display:none;">✔</div>
                 <div style="background:#222; width:100%; text-align:center; padding:2px 0; border-bottom:1px solid #444; margin-bottom:5px;">
@@ -329,7 +329,7 @@ class CampaignManager {
         }
         const baseParams = (t.params && typeof PARAM_KEYS !== 'undefined') ? { ...t.params } : { action:4, speed:4, str:5, morale:5, aim:5, throw:5, melee:5, recon:4 };
         const params = {};
-        (typeof PARAM_KEYS !== 'undefined' ? PARAM_KEYS : Object.keys(baseParams)).forEach(k => {
+        window.getParamKeys().forEach(k => {
             let v = baseParams[k] != null ? baseParams[k] : 5;
             if (isPlayer && !t.isTank) v = v + Math.floor(Math.random() * 3) - 1;
             params[k] = Math.max(1, Math.min(10, v));
@@ -492,6 +492,21 @@ class CampaignManager {
                         bag.push(buildSpareAmmoItem(hands[0]));
                     }
                 }
+            } else if (typeof REALISM_PACK !== 'undefined' && REALISM_PACK.ENEMY_FINITE_AMMO) {
+                // REALISM_PACK.ENEMY_FINITE_AMMO: 敵も有限弾（携行マガジン3本相当 = 本体満タン + 予備2本）
+                if (t.isTank) {
+                    if (hands[0] && !hands[0].partType) { hands[0].current = hands[0].cap || 1; }
+                } else if (hands[0] && !hands[0].partType && hands[0].cap) {
+                    hands[0].current = hands[0].cap;
+                    if (typeof buildSpareAmmoItem === 'function') {
+                        const spareN = (hands[0].plCategory === 'mg') ? 3 : 2;
+                        for (let si = 0; si < spareN && bag.length < 4; si++) {
+                            bag.push(buildSpareAmmoItem(hands[0]));
+                        }
+                    }
+                } else if (hands[0] && !hands[0].partType) {
+                    hands[0].current = 999;
+                }
             } else {
                 if (hands[0] && !hands[0].partType) { hands[0].current = 999; }
                 bag = [];
@@ -545,24 +560,40 @@ class CampaignManager {
         const b = document.getElementById('reward-cards'); 
         b.innerHTML = ''; 
         
-        [{k:'rifleman',t:'新兵'}, {k:'mortar_gunner',t:'迫撃砲兵'}, {k:'tank_pz4',t:'鹵獲戦車'}, {k:'supply',t:'補給'}].forEach(o => { 
-            const d = document.createElement('div'); d.className = 'card'; 
-            const iconType = o.k === 'supply' ? 'heal' : 'infantry'; 
+        const replacementHint = (typeof REALISM_PACK !== 'undefined' && REALISM_PACK.REPLACEMENT_PENALTY) ? '（経験不足）' : '';
+        [{k:'rifleman',t:'新兵' + replacementHint}, {k:'mortar_gunner',t:'迫撃砲兵' + replacementHint}, {k:'tank_pz4',t:'鹵獲戦車'}, {k:'supply',t:'補給'}].forEach(o => {
+            const d = document.createElement('div'); d.className = 'card';
+            const iconType = o.k === 'supply' ? 'heal' : 'infantry';
             d.innerHTML = `<div class="card-img-box"><img src="${createCardIcon(iconType)}"></div><div class="card-body"><p>${o.t}</p></div>`;
-            d.onclick = () => { 
-                if (o.k === 'supply') { 
-                    this.resupplySurvivors(); 
-                } else { 
+            d.onclick = () => {
+                if (o.k === 'supply') {
+                    this.resupplySurvivors();
+                } else {
                     const newUnit = this.createSoldier(o.k, 'player');
+                    // REALISM_PACK.REPLACEMENT_PENALTY: 補充兵は経験不足で各能力値-1（下限1）
+                    if (typeof REALISM_PACK !== 'undefined' && REALISM_PACK.REPLACEMENT_PENALTY
+                        && newUnit && !newUnit.def?.isTank) {
+                        newUnit.isReplacement = true;
+                        if (newUnit.params) {
+                            Object.keys(newUnit.params).forEach(pk => {
+                                if (typeof newUnit.params[pk] === 'number') {
+                                    newUnit.params[pk] = Math.max(1, newUnit.params[pk] - 1);
+                                }
+                            });
+                        }
+                        if (newUnit.name && newUnit.name.indexOf('(新)') === -1) {
+                            newUnit.name = `${newUnit.name} (新)`;
+                        }
+                    }
                     if(window.gameLogic && window.gameLogic.addReinforcement) {
                         window.gameLogic.addReinforcement(newUnit);
                     }
                     this.survivingUnits.push(newUnit);
                 }
-                this.sector++; 
-                this.startMission(); 
-            }; 
-            b.appendChild(d); 
+                this.sector++;
+                this.startMission();
+            };
+            b.appendChild(d);
         });
         if (window.Sfx) Sfx.play('win');
     }
@@ -571,25 +602,27 @@ class CampaignManager {
         document.getElementById('gameover-screen').style.display = 'flex';
     }
 
-    promoteSurvivors() { 
-        this.survivingUnits.forEach(u => { 
+    promoteSurvivors() {
+        this.survivingUnits.forEach(u => {
             u.sectorsSurvived = (u.sectorsSurvived || 0) + 1;
             if (!u.skills) u.skills = [];
             if (u.sectorsSurvived === 5) { u.skills.push("Hero"); u.maxAp = (u.maxAp || 4) + 1; }
             u.rank = Math.min(5, (u.rank||0) + 1);
             u.maxHp = (u.maxHp || 80) + 30; u.hp = (u.hp || u.maxHp) + 30;
             if (u.hp > u.maxHp) u.hp = u.maxHp;
-            if (u.skills.length < 8 && Math.random() < 0.7) { 
+            if (u.skills.length < 8 && Math.random() < 0.7) {
                 const k = Object.keys(typeof SKILLS !== 'undefined' ? SKILLS : {}).filter(z => z !== "Hero");
                 if (k.length) u.skills.push(k[Math.floor(Math.random() * k.length)]);
             }
-        }); 
+            if (window.gameLogic && window.gameLogic.refreshWoundedState) window.gameLogic.refreshWoundedState(u);
+        });
     }
 
     resupplySurvivors() {
         const BAG_SLOTS = 4;
         this.survivingUnits.forEach(u => {
             if (u.hp < u.maxHp) u.hp = Math.floor(u.maxHp * 0.8);
+            if (window.gameLogic && window.gameLogic.refreshWoundedState) window.gameLogic.refreshWoundedState(u);
 
             if (!u.hands) u.hands = [null, null, null];
             if (!u.bag) u.bag = [];

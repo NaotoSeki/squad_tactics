@@ -210,7 +210,7 @@ class UIManager {
         setEnabled(btnMove, u.ap >= 1);
         
         // 射撃可能条件: ①AP足りる ②InHandsにWeaponry(or仮想迫撃砲) ③残弾あり（戦車は予備弾があれば可）
-        const w = window.gameLogic && window.gameLogic.getVirtualWeapon ? window.gameLogic.getVirtualWeapon(u) : null;
+        const w = window.getCurrentWeapon(u);
         const weaponCost = w ? w.ap : 99;
         const hasAmmo = w && (
             (w.current || 0) > 0
@@ -350,7 +350,7 @@ class UIManager {
         const grpStance = menu.querySelector('.cmd-group');
         const setEnabled = (btn, enabled) => { if (btn) { if (enabled) btn.classList.remove('disabled'); else btn.classList.add('disabled'); } };
         setEnabled(btnMove, u.ap >= 1);
-        const w = window.gameLogic && window.gameLogic.getVirtualWeapon ? window.gameLogic.getVirtualWeapon(u) : null;
+        const w = window.getCurrentWeapon(u);
         const weaponCost = w ? w.ap : 99;
         const hasAmmo = w && (
             (w.current || 0) > 0
@@ -408,7 +408,7 @@ class UIManager {
             ? ('asset/portraits/inf_us_' + String((u.portraitIndex % (typeof PORTRAIT_AVAILABLE !== 'undefined' ? PORTRAIT_AVAILABLE : 7)) + 1).padStart(3, '0') + '.jpg')
             : ((Renderer.generateFaceIcon) ? Renderer.generateFaceIcon(u.faceSeed) : "");
         
-        const virtualWpn = (window.gameLogic && window.gameLogic.getVirtualWeapon) ? window.gameLogic.getVirtualWeapon(u) : null;
+        const virtualWpn = window.getCurrentWeapon(u);
         const isMortarActive = virtualWpn && virtualWpn.code === 'm2_mortar';
 
         const makeSlot = (item, type, index) => { 
@@ -461,7 +461,7 @@ class UIManager {
                     mainCode = Object.keys(tripMap).find(k => tripMap[k] === item.code);
                 }
                 if (mainCode && typeof WPNS !== 'undefined' && WPNS[mainCode]) {
-                    partMeta = `<div class="slot-meta" style="position:relative;z-index:1;color:#8ab;">架台（${WPNS[mainCode].name}用・主装備+弾薬）</div>`;
+                    partMeta = `<div class="slot-meta" style="position:relative;z-index:1;color:#8ab;">架台（${getWeaponName(mainCode)}用・主装備+弾薬）</div>`;
                 } else {
                     partMeta = `<div class="slot-meta" style="position:relative;z-index:1;color:#888;">補助装備</div>`;
                 }

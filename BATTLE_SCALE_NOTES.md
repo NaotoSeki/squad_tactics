@@ -9,19 +9,24 @@
 `data.js` の1行を変更してリロードしてください。
 
 ```javascript
-const BATTLE_SCALE_PRESET = 'chaos';   // ドンパチ（現行デフォルト）
+const BATTLE_SCALE_PRESET = 'standard'; // classicとchaosの中間（現行デフォルト）
+// const BATTLE_SCALE_PRESET = 'chaos';   // ドンパチに戻す
 // const BATTLE_SCALE_PRESET = 'classic'; // 従来の小規模戦に戻す
 ```
 
-| 項目 | `classic`（従来） | `chaos`（ドンパチ） |
-|------|-------------------|---------------------|
-| 開戦時の敵数 | 4 + sector×0.7 | 14 + sector×1.2 |
-| 開戦時の味方増援 | なし | +8名 |
-| 1ヘックス上限 | 5体 | 10体 |
-| カード増援 | 2回 | 8回 |
-| AUTO 1兵士あたり攻撃 | 1回 | 3回 |
-| 敵戦車（Pz4）基礎確率 | 10% + sector×10% | **2%** + sector×1.2% |
-| 敵タイガー | なし | **0.4%** + sector×0.3% |
+| 項目 | `classic`（従来） | `standard`（既定） | `chaos`（ドンパチ） |
+|------|-------------------|---------------------|---------------------|
+| 開戦時の敵数 | 4 + sector×0.7 | 8 + sector×0.9 | 14 + sector×1.2 |
+| 開戦時の味方増援 | なし | +4名 | +8名 |
+| 1ヘックス上限 | 5体 | 7体 | 10体 |
+| カード増援 | 2回 | 4回 | 8回 |
+| AUTO 1兵士あたり攻撃 | 1回 | 2回 | 3回 |
+| 敵戦車（Pz4）基礎確率 | 10% + sector×10% | **2%** + sector×1.2% | **2%** + sector×1.2% |
+| 敵タイガー | なし | **0.4%** + sector×0.3% | **0.4%** + sector×0.3% |
+
+`standard` は `classic`/`chaos` のちょうど lerp ではなく、`BATTLE_SCALE_PRESETS.standard` に
+個別定義した値をそのまま採用します（`resolveBattleScale()` 参照）。RT混戦層（`RT_*`）は
+`chaos` と同じ設定を継続します。
 
 ※ ターン途中のウェーブ増援は廃止済み（開戦時スポーンのみ）。
 

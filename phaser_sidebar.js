@@ -116,7 +116,7 @@ window.PhaserSidebar = class PhaserSidebar {
             : (u.params || (u.def && u.def.params) || {});
         const hasLoadDebuff = !!(params._loadDebuff && params._baseSpeed != null);
         const baseParamsForRadar = hasLoadDebuff ? { ...params, speed: params._baseSpeed } : null;
-        const paramKeys = (typeof PARAM_KEYS !== 'undefined') ? PARAM_KEYS : ['action', 'speed', 'str', 'morale', 'aim', 'throw', 'melee', 'recon'];
+        const paramKeys = window.getParamKeys();
         const paramLabels = (typeof PARAM_LABELS !== 'undefined') ? PARAM_LABELS : paramKeys.map(k => k.slice(0, 3));
         const labelOffset = RADAR_LABEL_OFFSET_BASE + (radarR > RADAR_LABEL_OFFSET_RADIUS_THRESHOLD ? RADAR_LABEL_OFFSET_EXTRA : 0);
         const radarData = (typeof getRadarPoints === 'function') ? getRadarPoints(params, paramKeys, radarR, labelOffset) : null;
@@ -237,7 +237,8 @@ window.PhaserSidebar = class PhaserSidebar {
         }
         y += 8;
 
-        const hpText = this.scene.add.text(textLeft, y, `HP  ${u.hp}/${u.maxHp}`, { fontSize: '11px', color: TEXT_COLOR, fontFamily: 'sans-serif' });
+        const hpLabel = u.wounded ? `HP  ${u.hp}/${u.maxHp}  重傷` : `HP  ${u.hp}/${u.maxHp}`;
+        const hpText = this.scene.add.text(textLeft, y, hpLabel, { fontSize: '11px', color: u.wounded ? '#ffdd33' : TEXT_COLOR, fontFamily: 'sans-serif' });
         this.unitContent.add(hpText);
         y += 22;
         const apText = this.scene.add.text(textLeft, y, `AP  ${u.ap}/${u.maxAp}`, { fontSize: '11px', color: TEXT_COLOR, fontFamily: 'sans-serif' });
@@ -252,7 +253,7 @@ window.PhaserSidebar = class PhaserSidebar {
         this.unitContent.add(invLabel);
         y += 20;
 
-        const virtualWpn = (window.gameLogic && window.gameLogic.getVirtualWeapon) ? window.gameLogic.getVirtualWeapon(u) : null;
+        const virtualWpn = window.getCurrentWeapon(u);
         const isMortarActive = virtualWpn && virtualWpn.code === 'm2_mortar';
 
         this.slots = [];

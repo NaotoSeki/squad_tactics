@@ -1,14 +1,29 @@
 /** DATA: US Army Loadout & Mortar Definitions */
 
+/**
+ * REALISM PACK — 「1兵の重み」「楽しい制約」「パワーインフレ回避」のための再調整フラグ群。
+ * 個別に true/false で切替可能（false にすれば元の挙動にロールバック）。
+ */
+const REALISM_PACK = {
+    /** 補充兵（セクター報酬の新兵）に経験不足ペナルティを与える */
+    REPLACEMENT_PENALTY: true,
+    /** HP 25%未満で「重傷」状態（最大AP-1, 命中-10%） */
+    WOUNDED_STATE: true,
+    /** 敵の主武器も有限弾（999発の無限弾を廃止） */
+    ENEMY_FINITE_AMMO: true,
+};
+
 const HEX_SIZE = 54;
 const MAP_W = 20;
 const MAP_H = 20;
 
 /**
  * バトルスケール切替（詳細は BATTLE_SCALE_NOTES.md）
- * 'chaos' = ドンパチ / 'classic' = 従来の小規模戦
+ * 'standard' = 標準（classicとchaosの中間, 既定） / 'chaos' = ドンパチ / 'classic' = 従来の小規模戦
  */
-const BATTLE_SCALE_PRESET = 'chaos';
+const BATTLE_SCALE_PRESET = 'standard';
+// const BATTLE_SCALE_PRESET = 'chaos';   // ドンパチに戻す
+// const BATTLE_SCALE_PRESET = 'classic'; // 従来の小規模戦に戻す
 
 /** Phase 0: 知略ダイヤル morph（false = 従来の離散プリセットのみ） */
 const FEATURE_TACTICS_MORPH = true;
@@ -41,6 +56,39 @@ const BATTLE_SCALE_PRESETS = {
     ENEMY_TANK_CHANCE_PER_SECTOR: 0.1,
     ENEMY_TIGER_CHANCE: 0,
     ENEMY_TIGER_CHANCE_PER_SECTOR: 0,
+  },
+  /**
+   * classic と chaos の中間（既定）。敵8体規模で「1兵の重み」を残しつつ、
+   * RT混戦層は維持する。戦車レアリティは chaos寄りの低確率を維持。
+   */
+  standard: {
+    HEX_UNIT_CAP: 7,
+    HEX_MOVE_BLOCK: 6,
+    ENEMY_BASE: 8,
+    ENEMY_PER_SECTOR: 0.9,
+    ALLIED_REINFORCEMENTS: 4,
+    DEPLOY_CARD_MAX: 4,
+    AUTO_ATTACKS_PER_ACTOR: 2,
+    ENEMY_ATTACKS_IN_AUTO: 2,
+    ENEMY_TANK_CHANCE: 0.02,
+    ENEMY_TANK_CHANCE_PER_SECTOR: 0.012,
+    ENEMY_TIGER_CHANCE: 0.004,
+    ENEMY_TIGER_CHANCE_PER_SECTOR: 0.003,
+    /** feat/rt-tactics-fusion: 混戦リアルタイム層（chaosと同じ設定を継続） */
+    RT_SIMULTANEOUS_AI: true,
+    RT_DEFAULT_STANCE: 'prone',
+    RT_DAMAGE_MULT: 0.72,
+    RT_HIT_PENALTY: 14,
+    RT_AI_WAVES: 5,
+    RT_PARALLEL_FIRE_RATE: 14,
+    RT_MOVE_STEP_MS: 22,
+    RT_WAVE_GAP_MS: 35,
+    RT_TURN_DELAY_MS: 500,
+    RT_STAGGER_MIN_MS: 90,
+    RT_STAGGER_MAX_MS: 480,
+    RT_LOW_AMMO_RATIO: 0.35,
+    /** 弾薬の緊張感（consumeAmmoで適用、ターン制/RT共通） */
+    ammoBurnMult: 1.1,
   },
   chaos: {
     HEX_UNIT_CAP: 10,
@@ -75,6 +123,13 @@ function resolveBattleScale() {
   const key = (typeof BATTLE_SCALE_PRESET === 'string' && BATTLE_SCALE_PRESETS[BATTLE_SCALE_PRESET])
     ? BATTLE_SCALE_PRESET
     : 'chaos';
+
+  // 'standard' など classic/chaos 以外のプリセットは、ダイヤル明示値が無い限り
+  // morphBattleScale（常に classic↔chaos間で補間）を経由せず定義値をそのまま採用する。
+  const hasExplicitDial = (typeof TACTICS_DIAL !== 'undefined' && TACTICS_DIAL !== null);
+  if (key !== 'classic' && key !== 'chaos' && !hasExplicitDial) {
+    return Object.assign({ _preset: key }, BATTLE_SCALE_PRESETS[key]);
+  }
 
   if (typeof FEATURE_TACTICS_MORPH !== 'undefined' && FEATURE_TACTICS_MORPH
       && typeof morphWithResonance === 'function') {
@@ -202,6 +257,47 @@ const WPNS = {
 const PARAM_KEYS = ['action', 'speed', 'str', 'morale', 'aim', 'throw', 'melee', 'recon'];
 /** レーダーチャート軸ラベル（PARAM_KEYS と同順） */
 const PARAM_LABELS = ['act', 'spd', 'str', 'mrl', 'aim', 'thw', 'mle', 'rcn'];
+
+/**
+ * PARAM_KEYS の参照を統一するヘルパー。data.js 未読込時のみフォールバック配列を返す。
+ * フォールバック配列はここ1箇所のみに定義。
+ * @returns {string[]}
+ */
+window.getParamKeys = function() {
+    return (typeof PARAM_KEYS !== 'undefined') ? PARAM_KEYS : ['action', 'speed', 'str', 'morale', 'aim', 'throw', 'melee', 'recon'];
+};
+
+/**
+ * window.gameLogic.getVirtualWeapon への参照を統一するヘルパー。
+ * gameLogic 未初期化時やメソッド未定義時は null を返す。
+ * @param {Object} u - ユニット
+ * @returns {Object|null}
+ */
+window.getCurrentWeapon = (u) => (window.gameLogic && window.gameLogic.getVirtualWeapon) ? window.gameLogic.getVirtualWeapon(u) : null;
+
+/**
+ * 武器名を返す薄いAPI。WPNS未定義/code未登録なら code（あれば）か '—' を返す。
+ * 表示用途限定（戦闘ロジック内の WPNS 直接参照は対象外）。
+ * @param {string} code - 武器コード
+ * @returns {string}
+ */
+function getWeaponName(code) {
+    if (typeof WPNS === 'undefined' || !code || !WPNS[code]) return code || '—';
+    return WPNS[code].name;
+}
+
+/**
+ * ユニットテンプレートの主武器名を返す薄いAPI。
+ * main が未設定でも loadout（迫撃砲一式）がある場合は 'M2 Mortar'、それ以外は '—'。
+ * @param {string} templateKey - UNIT_TEMPLATES のキー
+ * @returns {string}
+ */
+function getTemplateMainWeaponName(templateKey) {
+    const t = UNIT_TEMPLATES[templateKey];
+    if (!t) return '—';
+    if (t.main) return getWeaponName(t.main);
+    return t.loadout ? 'M2 Mortar' : '—';
+}
 
 /**
  * レーダーチャート用の座標を共通計算（初期画面 canvas / 右ペイン Phaser で共用）。
