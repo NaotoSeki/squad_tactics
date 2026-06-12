@@ -11,4 +11,8 @@
   window.plCbeWeaponIconPath = function (cbeNameIndex) {
     return window.PL_WEAPON_ICON_BASE + '/item_' + String(cbeNameIndex + 1).padStart(4, '0') + '.png';
   };
+  /** cbeNameIndex があれば ITEML スプライトを表示（三脚・装備パーツ含む） */
+  window.plItemHasWeaponIcon = function (item) {
+    return !!(item && item.cbeNameIndex != null);
+  };
 })();

@@ -2,6 +2,8 @@
 
 SQUAD TACTICS の起動フロー・主要モジュール・グローバル依存のメモです。
 
+**設計方針・課題ロードマップ**: [docs/DESIGN_DIRECTION.md](docs/DESIGN_DIRECTION.md)（**ランタイムは静的 data のみ** — CBE 直読みはビルド時）
+
 ## 起動フロー
 
 1. **index.html**  

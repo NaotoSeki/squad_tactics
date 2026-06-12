@@ -19,6 +19,13 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "scripts"))
+from pl_ammo_cbe_filters import (  # noqa: E402
+    effective_ammo_for_weapon,
+    load_category_map,
+    load_json_from_js,
+    load_stats_by_cbe,
+)
 PL_JSON = ROOT / "scripts" / "pl_decoded" / "pl_item_compatibility.json"
 EXPLICIT = ROOT / "scripts" / "pl_decoded" / "cbe_weapon_ammo_explicit.json"
 OUT = ROOT / "data" / "wpns_pl_master.js"
@@ -31,6 +38,7 @@ AMMO_COMPAT_JSON = ROOT / "data" / "ammo_compat_full.json"
 WEAPON_AMMO_MAP_JSON = ROOT / "data" / "weapon_ammo_map.json"
 WEAPON_AMMO_OVERRIDES_JSON = ROOT / "data" / "weapon_ammo_overrides.json"
 LOADOUT_TEMPLATES_JSON = ROOT / "data" / "loadout_templates.json"
+MAG_SHAPE_JS = ROOT / "data" / "pl_cbe_mag_shape.js"
 
 # --- テンプレ（data.js WPNS から。ATTR はランタイム参照）---
 T = {
@@ -104,7 +112,8 @@ T = {
 
 # 厳密 / 仮: 7.92 帯, 9mm 帯, 30-06, 30 カービン, 45, 7.63 等
 AMMO_792 = [272, 273, 274, 275, 276, 277, 288, 289, 290, 295, 296, 389]  # mg42 block
-AMMO_9 = [258, 265, 278, 279, 280, 281, 282, 283, 284, 285, 286, 320, 321, 322, 323, 355, 378, 379, 384, 388, 390]  # luger block
+AMMO_303BR = [353, 354, 355, 356, 357, 358]
+AMMO_9 = [258, 265, 278, 279, 280, 281, 282, 283, 284, 285, 286, 320, 321, 322, 323, 378, 379, 384, 388, 390]  # 9mm Para（355=Enfield専用は AMMO_303BR）
 AMMO_3006 = [229, 230, 231, 238, 239, 240]  # 弾行（クリップ+ボール）
 AMMO_30CBN = [232, 233]
 AMMO_45 = [225, 226, 234, 235, 236, 237]
@@ -199,13 +208,13 @@ def is_pistolish(name: str) -> bool:
     if "PISTOL" in n or re.search(
         r"(?:(?<![A-Z/])P38(?![0-9/])|P08|1911|1917 S&W|1917 COLT|C/96|LUGER|"
         r"WALTHER|MAUSER|ASTRA|BODEO|GLISENTI|BERETTA|UNIQUE|TT33|HSC|PPK|"
-        r"WEBLEY|S\.W No2|NO2 MK|BAYARD|ASTRA|VIS WZ|CZ VZ2|BHP|HSc)",
+        r"WEBLEY|S\.W No2|NO2 MK|BAYARD|ASTRA|VIS WZ|CZ VZ|BHP|HSc|GP35)",
         n,
     ):
         return True
     if n.startswith("M1911A1") or n == "M1911A1":
         return True
-    if n in ("PP", "PPK", "M1934", "BEHOLLA", "M38H", "F. MAS36", "MAS38", "GLOSSENTI"):
+    if n in ("PP", "PPK", "M1934", "BEHOLLA", "M38H", "MAS38", "GLOSSENTI"):
         return True
     if re.search(r"^\s*(PP|PPK|P38)\s*$", name, re.I):
         return True
@@ -374,6 +383,39 @@ def is_9mm_smg_ammo_name(name: str) -> bool:
     ):
         return True
     return False
+
+
+def wclass_from_cbe_category(category_name: str | None) -> str | None:
+    """CBE category_name → stat 雛形。名称ヒューリスティクスより優先。"""
+    m = {
+        "pistol": "m1911",
+        "rifle": "m1",
+        "smg": "smg_9mm",
+        "lmg": "bar",
+        "mmg": "mg42",
+        "rocket_launcher": "m8_rocket",
+        "flamethrower": "flame",
+        "bayonet_knife": "melee",
+        "hand_grenade": "nade",
+        "rifle_grenade": "m8_rocket",
+    }
+    return m.get(category_name or "")
+
+
+def pl_category_from_cbe(category_name: str | None) -> str | None:
+    m = {
+        "pistol": "pistol",
+        "rifle": "rifle",
+        "smg": "smg",
+        "lmg": "lmg",
+        "mmg": "mg",
+        "rocket_launcher": "rocket",
+        "flamethrower": "flamethrower",
+        "bayonet_knife": "melee",
+        "hand_grenade": "grenade",
+        "rifle_grenade": "rocket",
+    }
+    return m.get(category_name or "")
 
 
 def pl_display_category(
@@ -629,15 +671,59 @@ def plcompat_for_index(
     map_ammo: dict[int, list[int]],
     overrides: dict[int, dict],
     valid_ammo: set[int],
+    filter_ctx: dict | None = None,
 ) -> dict:
+    n = (name or "").strip()
+
+    # 0. 実機確認済み例外（CBE 静的 ammo_indices より優先）
+    if i in overrides and overrides[i].get("acceptsAmmoPlIndices"):
+        row = overrides[i].copy()
+        row["plWeaponName"] = n or row.get("plWeaponName", "")
+        row["plCbeWeaponIndex"] = i
+        eff = [x for x in row["acceptsAmmoPlIndices"] if x in valid_ammo]
+        if eff:
+            row["acceptsAmmoPlIndices"] = eff
+            row["plAmmoLabel"] = row.get("plAmmoLabel") or format_ammo_label_from_indices(eff, valid_ammo)
+            return row
+
+    # 1. CBE stats ammo_indices + cat18 + u27（正本）
+    if filter_ctx is not None and wclass not in (
+        "nade",
+        "m8_rocket",
+        "flame",
+        "mortarish",
+        "melee",
+        "part_gear",
+    ):
+        eff = effective_ammo_for_weapon(
+            i,
+            explicit=filter_ctx.get("explicit_raw"),
+            stats_by_cbe=filter_ctx.get("stats_by_cbe"),
+            cat_map=filter_ctx.get("cat_map"),
+            w_shape=filter_ctx.get("w_shape"),
+            a_shape=filter_ctx.get("a_shape"),
+            include_composite=True,
+        )
+        eff = [x for x in eff if x in valid_ammo]
+        if eff:
+            return {
+                "plCbeWeaponIndex": i,
+                "plWeaponName": n,
+                "acceptsAmmoPlIndices": eff,
+                "plAmmoLabel": format_ammo_label_from_indices(eff, valid_ammo),
+            }
+
+    # 2. 手検証 explicit（CBE 空の武器のみ — mg42 クラスタ等は使わない）
     if i in cbe_to_pc:
         return cbe_to_pc[i].copy()
-    n = (name or "").strip()
+
+    # 3. weapon_ammo_overrides.json（CBE 空の米国 MG 等）
     if i in overrides:
         row = overrides[i].copy()
         row["plWeaponName"] = n or row.get("plWeaponName", "")
         row["plCbeWeaponIndex"] = i
         return row
+
     if i in map_ammo:
         indices = [x for x in map_ammo[i] if x in valid_ammo]
         if indices:
@@ -671,6 +757,15 @@ def plcompat_for_index(
                 "acceptsAmmoPlIndices": indices,
                 "plAmmoLabel": ".30-06 ベルト仮（米国 MG）",
             }
+        st = (filter_ctx or {}).get("stats_by_cbe", {}).get(i) or {}
+        raw_slots = [int(x) for x in (st.get("ammo_indices") or []) if x]
+        if raw_slots:
+            return {
+                "plCbeWeaponIndex": i,
+                "plWeaponName": n,
+                "acceptsAmmoPlIndices": [],
+                "plAmmoLabel": "CBE 行あり・フィルタ後空 — mag_type RE 待ち",
+            }
         return {
             "plCbeWeaponIndex": i,
             "plWeaponName": n,
@@ -678,6 +773,26 @@ def plcompat_for_index(
             "plAmmoLabel": "7.92 帯仮",
         }
     if is_sturmgewehr_kurz(n):
+        st = (filter_ctx or {}).get("stats_by_cbe", {}).get(i) or {}
+        kurz = [int(x) for x in (st.get("ammo_indices") or []) if x]
+        if kurz:
+            eff_k = effective_ammo_for_weapon(
+                i,
+                explicit=filter_ctx.get("explicit_raw") if filter_ctx else None,
+                stats_by_cbe=filter_ctx.get("stats_by_cbe") if filter_ctx else None,
+                cat_map=filter_ctx.get("cat_map") if filter_ctx else None,
+                w_shape=filter_ctx.get("w_shape") if filter_ctx else None,
+                a_shape=filter_ctx.get("a_shape") if filter_ctx else None,
+                include_composite=False,
+                use_mission_pool=True,
+            )
+            if eff_k:
+                return {
+                    "plCbeWeaponIndex": i,
+                    "plWeaponName": n,
+                    "acceptsAmmoPlIndices": eff_k,
+                    "plAmmoLabel": format_ammo_label_from_indices(eff_k, valid_ammo),
+                }
         return {
             "plCbeWeaponIndex": i,
             "plWeaponName": n,
@@ -972,6 +1087,26 @@ def main() -> int:
     overrides = load_weapon_ammo_overrides()
     stats_by_code = load_stats_by_code()
 
+    explicit_raw: dict[int, list[int]] = {}
+    for e in ex.get("edges") or []:
+        wi = e.get("cbeWeaponIndex")
+        if wi is not None:
+            explicit_raw[int(wi)] = [int(x) for x in (e.get("acceptsAmmoPlIndices") or [])]
+    for key in ("mg42", "luger"):
+        block = ex.get(key)
+        if block and block.get("cbeWeaponIndex") is not None:
+            explicit_raw[int(block["cbeWeaponIndex"])] = [
+                int(x) for x in (block.get("acceptsAmmoPlIndices") or [])
+            ]
+
+    filter_ctx = {
+        "explicit_raw": explicit_raw,
+        "stats_by_cbe": load_stats_by_cbe(),
+        "cat_map": load_category_map(),
+        "w_shape": load_json_from_js(MAG_SHAPE_JS, "PL_CBE_MAG_SHAPE_WEAPONS"),
+        "a_shape": load_json_from_js(MAG_SHAPE_JS, "PL_CBE_MAG_SHAPE_AMMO"),
+    }
+
     # 弾薬 JS と ロードアウトテンプレート JS を先に生成
     if AMMO_COMPAT_JSON.exists():
         ammo_compat = json.loads(AMMO_COMPAT_JSON.read_text(encoding="utf-8"))
@@ -998,7 +1133,28 @@ def main() -> int:
             continue
         name = raw_name.strip() or f"pl_{i}"
         code = f"pl_{i}"
-        wc = wclassify(
+        st = stats_by_code.get(code) or filter_ctx["stats_by_cbe"].get(i) or {}
+        category_code = st.get("category_code")
+        cbe_cat = None
+        code_to_name = {
+            1: "pistol",
+            4: "rifle",
+            5: "lmg",
+            6: "smg",
+            7: "mmg",
+            8: "at_rifle",
+            9: "flamethrower",
+            10: "rocket_launcher",
+            11: "panzerfaust",
+            12: "tripod",
+            13: "ammo_box",
+        }
+        if category_code in code_to_name:
+            cbe_cat = code_to_name[category_code]
+        else:
+            cbe_cat = st.get("category_name")
+
+        wc = wclass_from_cbe_category(cbe_cat) or wclassify(
             name,
         )
         wtemplate = T.get(
@@ -1016,6 +1172,7 @@ def main() -> int:
             map_ammo,
             overrides,
             valid_ammo,
+            filter_ctx,
         )
         accepts_ammo = plc.get("acceptsAmmoPlIndices") or []
         wbase["plCompat"] = {
@@ -1035,15 +1192,38 @@ def main() -> int:
         }
         wbase["plCbeWeaponIndex"] = i
         wbase["statTemplate"] = wc
-        wbase["plCategory"] = pl_display_category(
-            wc,
-            name,
+        wbase["plCategory"] = (
+            pl_category_from_cbe(cbe_cat)
+            or pl_display_category(
+                wc,
+                name,
+            )
         )
         # CBE 解析ステータスフィールド（wpns_pl_stats_decoded.json から）
-        st = stats_by_code.get(code, {})
         wbase["malfRate"] = st.get("malfunction_rate", 0)
         wbase["magCap"] = st.get("magazine_capacity", wbase.get("cap", 1))
         wbase["autoFire"] = bool(st.get("auto_fire", False))
+
+        # shots_per_action からバースト値 (burst) を決定（0x8000 フラグをマスク）
+        raw_burst = st.get("shots_per_action")
+        if raw_burst is not None and raw_burst > 0:
+            real_burst = raw_burst & 0x7FFF
+            if 0 < real_burst < 100:
+                wbase["burst"] = real_burst
+                # 拳銃かつマシンピストル（Astra 903, C/96M712）以外なら強制的に 1 にする
+                if category_code == 1 and not re.search(r"M712|903|Astra", name, re.I):
+                    wbase["burst"] = 1
+        wh = st.get("weight_100g")
+        if wh is not None and wh > 0:
+            wbase["weight"] = round(wh / 10, 1)
+            wbase["wgt"] = round(wh / 10, 1)
+        mc = st.get("magazine_capacity")
+        if (
+            mc is not None
+            and wbase.get("type") == "bullet"
+            and wc in ("m1", "k98_scope", "bar", "at_rifle", "carbine", "smg_9mm", "mg42")
+        ):
+            wbase["cap"] = mc
         # acceptsAmmo: plCompat.acceptsAmmoPlIndices のショートハンド
         wbase["acceptsAmmo"] = accepts_ammo
         wpn_objects.append(

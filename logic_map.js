@@ -91,13 +91,13 @@ class MapSystem {
     if (towns.length >= 2) {
       const t = shuffle(towns.slice());
       pairs.push([t[0], t[1]]);
-      if (t.length >= 3 && Math.random() < 0.6) pairs.push([t[1], t[2]]);
+      if (t.length >= 3 && Math.random() < 0.25) pairs.push([t[1], t[2]]);
     } else if (towns.length === 1) {
       const others = anchors.filter((a) => !a.isTown);
       if (others.length) pairs.push([towns[0], pick(others)]);
     }
 
-    const spread = this.pickSpreadAnchors(anchors, 3);
+    const spread = this.pickSpreadAnchors(anchors, 2);
     for (let i = 0; i + 1 < spread.length; i++) {
       pairs.push([spread[i], spread[i + 1]]);
     }
@@ -117,7 +117,7 @@ class MapSystem {
       }
     }
     shuffle(branchStarts);
-    const branchCount = Math.random() < 0.3 ? 0 : (Math.random() < 0.55 ? 1 : 2);
+    const branchCount = Math.random() < 0.75 ? 0 : 1;
     for (let i = 0; i < branchCount && i < branchStarts.length; i++) {
       const goal = pick(towns) || pick(anchors);
       if (!goal) break;
@@ -197,6 +197,12 @@ class MapSystem {
     cost += waterAdj * 2.8;
 
     cost += Math.sin(q * 0.61 + r * 0.47) * 0.45 + Math.cos(q * 0.29 - r * 0.53) * 0.4;
+
+    // Add cost penalty if adjacent to an existing road, to avoid parallel roads
+    const hasRoadNeighbor = this.getNeighbors(q, r).some((n) => this.game.map[n.q][n.r].id === 3);
+    if (hasRoadNeighbor) {
+      cost += 3.5;
+    }
 
     if (fromDir != null && toDir != null) {
       if (fromDir === toDir) cost += 0.22;
@@ -278,17 +284,22 @@ class MapSystem {
   }
 
   findPath(u, tq, tr) {
+    const maxCost = this.game.getMovementBudget ? this.game.getMovementBudget(u) : u.ap;
+    return this.findPathWithMaxCost(u, tq, tr, maxCost);
+  }
+
+  findPathWithMaxCost(u, tq, tr, maxCost) {
     const f = [{ q: u.q, r: u.r }], cf = {}, cs = {};
     cf[`${u.q},${u.r}`] = null;
     cs[`${u.q},${u.r}`] = 0;
     while (f.length > 0) {
       const c = f.shift();
       if (c.q === tq && c.r === tr) { break; }
-      const maxCost = (u.params && u.params.speed != null) ? Math.max(1, Math.floor(u.ap * (u.params.speed / 5))) : u.ap;
       this.getNeighbors(c.q, c.r).forEach(n => {
-        if (this.game.getUnitsInHex(n.q, n.r).length >= 4 && (n.q !== tq || n.r !== tr)) { return; }
-        const cost = this.game.map[n.q][n.r].cost;
-        if (cost >= 99) { return; }
+        const hexCap = this.game.getHexMoveBlock ? this.game.getHexMoveBlock() : 4;
+        if (this.game.getUnitsInHex(n.q, n.r).length >= hexCap && (n.q !== tq || n.r !== tr)) { return; }
+        const cost = this.game.getTerrainMoveCost ? this.game.getTerrainMoveCost(u, n.q, n.r) : this.game.map[n.q][n.r].cost;
+        if (this.game.map[n.q][n.r].cost >= 99) { return; }
         const nc = cs[`${c.q},${c.r}`] + cost;
         if (nc <= maxCost) {
           const k = `${n.q},${n.r}`;

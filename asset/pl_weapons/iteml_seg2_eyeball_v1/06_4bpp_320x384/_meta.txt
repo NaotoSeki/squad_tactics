@@ -1,0 +1,2 @@
+4bpp DIB 320x384
+tiles=20

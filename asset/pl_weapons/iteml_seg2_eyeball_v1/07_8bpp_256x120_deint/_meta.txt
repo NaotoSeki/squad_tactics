@@ -1,0 +1,3 @@
+deinterlace_maxpair from 8bpp 256x240
+8bpp 256x120
+tiles=20

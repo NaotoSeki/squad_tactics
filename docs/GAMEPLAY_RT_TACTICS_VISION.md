@@ -41,9 +41,9 @@ flowchart TB
 | **`feat/rt-tactics-fusion`**（新規） | リアルタイム弾幕＋知略融合の試作 |
 | `main` | 安定マージ先（従来どおり PR 経由） |
 
-**Phase 0（すぐ）**: 歩兵装備フィルタ（KwK 等除外）— `pl_infantry_loadout.js`  
-**Phase 1**: ターン中も味方 AI が指定ルールで射撃継続（`isAuto` 拡張）  
-**Phase 2**: 小隊「弾幕」— 同一ヘックス／隣接からの連続 tracer、压制デバフ  
+**Phase 0（済）**: 歩兵装備フィルタ（KwK 等除外）— `pl_infantry_loadout.js`  
+**Phase 1（試作中）**: `BATTLE_SCALE.RT_SIMULTANEOUS_AI` — 敵味方 AI が波状に**同時射撃・同時1歩移動**（`logic_ai.executeSimultaneous`）。被弾軽減・命中率ペナルティ・デフォルト伏せ。  
+**Phase 2**: 小隊「弾幕」演出強化、压制デバフ  
 **Phase 3**: 作戦カードと RT の切り替え UI（ポーズ／作戦モード）
 
 ---

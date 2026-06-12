@@ -498,18 +498,34 @@
             if(data && window.gameLogic) { try { const src = JSON.parse(data); window.gameLogic.swapEquipment(src, {type: targetType, index: targetIndex}); } catch(err) { console.error(err); } }
         }
     </script>
+    <script src="tactics_morph.js"></script>
     <script src="data.js"></script>
     <script src="data/wpns_pl_master.js"></script>
     <script src="pl_infantry_loadout.js"></script>
     <script src="data/pl_ammo_data.js"></script>
+    <script src="data/pl_cbe_mag_shape.js"></script>
+    <script src="data/pl_cbe_item_categories.js"></script>
+    <script src="data/pl_cbe_weapon_slots.js"></script>
+    <script src="data/pl_cbe_weapon_ammo_canonical.js"></script>
+    <script src="data/pl_cbe_mission_pool.js"></script>
+    <script src="data/pl_composite_links.js"></script>
+    <script src="data/pl_cbe_equip_columns.js"></script>
+    <script src="data/pl_cbe_pool_map.js"></script>
+    <script src="data/pl_cbe_aux_compat.js"></script>
+    <script src="data/pl_ammo_compat_overrides.js"></script>
     <script src="data/pl_ammo_resolve.js"></script>
+    <script src="data/pl_mg_tripod.js"></script>
+    <script src="loadout_weight.js"></script>
     <script src="pl_weapon_icon.js"></script>
     <script src="phaser_sidebar.js"></script>
     <script src="phaser_sound.js"></script> 
     <script src="phaser_vfx.js?v=terrain-v1-6"></script> 
     <script src="phaser_terrain_v1_bake.js?v=terrain-v1-6"></script>
     <script src="phaser_terrain.js?v=terrain-v1-6"></script>
-    <script src="phaser_unit.js"></script> 
+    <script src="phaser_unit.js"></script>
+    <script src="battle_cloud.js"></script>
+    <script src="battle_cloud_tactics.js"></script>
+    <script src="phaser_battle_cloud.js"></script>
     <script src="phaser_bridge.js?v=terrain-v1-6"></script>
     <script src="logic_ui.js"></script>
     <script src="logic_ai.js"></script>

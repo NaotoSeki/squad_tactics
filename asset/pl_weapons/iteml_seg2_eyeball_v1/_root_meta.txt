@@ -1,0 +1,4 @@
+目視: まず **compare_sheet_eyeball.png** を1枚で比較。
+良さそうな解はサブフォルダ名（01_.. 07_..）で選び、その中の tile を確認。
+源: D:\PL\ITEML.DLL seg2, INTERMIS パレット (GUNIW 由来、本番 ITEMPAL 非)
+設定: pl_decoded/iteml_seg2_likely_layouts.json human_suggested 準拠 + deint 追加

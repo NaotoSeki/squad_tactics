@@ -12,7 +12,7 @@ window.TerrainRender = {
 
     useV1Tiles: true,
 
-    useCurveOverlay: true,
+    useCurveOverlay: false,
 
 
 
@@ -64,9 +64,9 @@ window.TerrainRender = {
 
         ['grass', 'water'],
 
-        ['grass', 'dirt'],
+        ['grass', 'dirt']
 
-        ['forest', 'water']
+        // ['forest', 'water'] — PNG 未生成のため除外（hex_trans_forest_water_d*.png なし）
 
     ],
 
@@ -89,9 +89,25 @@ window.TerrainRender = {
 
 
     roadMaskKey(mask) {
-
         return `hex_road_m${mask.toString(16).padStart(2, '0')}`;
+    },
 
+    roadMaskBaseAndAngle(mask) {
+        let minVal = mask;
+        let rot = 0;
+        for (let i = 1; i < 6; i++) {
+            const r = ((mask >> i) | (mask << (6 - i))) & 0x3f;
+            if (r < minVal) {
+                minVal = r;
+                rot = i;
+            }
+        }
+        // rot represents counter-clockwise steps.
+        // Clockwise rotation angle for Phaser: rot * -60 (which is rot * 300)
+        // Since Phaser setAngle takes degrees (positive = clockwise), rot * -60 is correct.
+        const angle = rot * -60;
+        const key = this.roadMaskKey(minVal);
+        return { key, angle };
     },
 
 
@@ -263,53 +279,30 @@ window.TerrainRender = {
             });
 
             this.V1_TRANSITIONS.forEach(([a, b]) => {
-
                 for (let d = 0; d < 6; d++) {
-
                     const key = `hex_trans_${a}_${b}_d${d}`;
-
                     if (!scene.textures.exists(key)) {
-
                         scene.load.image(key, `${base}/${key}.png`);
-
                     }
-
                 }
-
             });
-
-            return;
-
+        } else {
+            const names = ['hex_dirt', 'hex_grass', 'hex_forest', 'hex_town'];
+            names.forEach((key) => {
+                if (!scene.textures.exists(key)) {
+                    scene.load.image(key, `${base}/${key}.png`);
+                }
+            });
         }
 
-
-
-        const names = ['hex_dirt', 'hex_grass', 'hex_forest', 'hex_town'];
-
-        names.forEach((key) => {
-
-            if (!scene.textures.exists(key)) {
-
-                scene.load.image(key, `${base}/${key}.png`);
-
-            }
-
-        });
-
         if (!this.useCurveOverlay) {
-
-            for (let m = 0; m < 64; m++) {
-
+            const baseMasks = [0x00, 0x01, 0x03, 0x05, 0x07, 0x09, 0x0b, 0x0d, 0x0f, 0x15, 0x17, 0x1b, 0x1f, 0x3f];
+            baseMasks.forEach((m) => {
                 const key = this.roadMaskKey(m);
-
                 if (!scene.textures.exists(key)) {
-
                     scene.load.image(key, `${base}/roads/m${m.toString(16).padStart(2, '0')}.png`);
-
                 }
-
-            }
-
+            });
         }
 
     },
@@ -385,11 +378,8 @@ window.TerrainRender = {
         }
 
         if (terrainId === 3) {
-
             const mask = this.roadNeighborMask(map, q, r);
-
-            return { key: this.roadMaskKey(mask), angle: 0 };
-
+            return this.roadMaskBaseAndAngle(mask);
         }
 
         const key = this.BASE_TEXTURES[terrainId] || 'hex_dirt';
@@ -426,6 +416,21 @@ window.TerrainRender = {
 
 
 
+    /** 曲線パスをストローク */
+    _strokeRoadPath(g, pts, width, color, alpha) {
+        if (!pts || pts.length < 2) return;
+        g.lineStyle(width, color, alpha);
+        g.beginPath();
+        g.moveTo(pts[0].x, pts[0].y);
+        for (let i = 1; i < pts.length; i++) g.lineTo(pts[i].x, pts[i].y);
+        g.strokePath();
+    },
+
+    /** 法線方向にオフセットした平行パス */
+    _offsetRoadPath(pts, nx, ny, dist) {
+        return pts.map((p) => ({ x: p.x + nx * dist, y: p.y + ny * dist }));
+    },
+
     drawRoadNetwork(roadGraphics, map) {
 
         if (!roadGraphics || !window.Renderer) return;
@@ -433,10 +438,11 @@ window.TerrainRender = {
         roadGraphics.clear();
 
         const edges = new Set();
+        const junctions = [];
 
         const hexSize = typeof HEX_SIZE !== 'undefined' ? HEX_SIZE : 54;
 
-        const roadW = hexSize * 0.44;
+        const roadW = hexSize * 0.38;
 
         let segCount = 0;
 
@@ -447,6 +453,8 @@ window.TerrainRender = {
             for (let r = 0; r < MAP_H; r++) {
 
                 if (!this.isRoadCell(map, q, r)) continue;
+
+                junctions.push(Renderer.hexToPx(q, r));
 
                 this.ROAD_DIR_DELTAS.forEach((d) => {
 
@@ -480,15 +488,19 @@ window.TerrainRender = {
 
                     const len = Math.hypot(dx, dy) || 1;
 
+                    const nx = -dy / len;
+
+                    const ny = dx / len;
+
                     const seed = this.edgeCurveSeed(q, r, nq, nr);
 
                     const side = (seed & 1) ? 1 : -1;
 
-                    const bend = hexSize * (0.1 + (seed % 80) / 800);
+                    const bend = hexSize * (0.025 + (seed % 40) / 2000);
 
-                    const cx = mx + side * (-dy / len) * bend;
+                    const cx = mx + side * nx * bend;
 
-                    const cy = my + side * (dx / len) * bend;
+                    const cy = my + side * ny * bend;
 
 
 
@@ -502,47 +514,45 @@ window.TerrainRender = {
 
                     );
 
-                    const pts = curve.getPoints(16);
+                    const pts = curve.getPoints(20);
 
-                    roadGraphics.lineStyle(roadW + 5, 0x1a1814, 0.45);
-
-                    roadGraphics.beginPath();
-
-                    roadGraphics.moveTo(pts[0].x, pts[0].y);
-
-                    for (let i = 1; i < pts.length; i++) roadGraphics.lineTo(pts[i].x, pts[i].y);
-
-                    roadGraphics.strokePath();
+                    const wallOff = roadW * 0.62;
 
 
 
-                    roadGraphics.lineStyle(roadW, 0x8a8278, 0.96);
+                    this._strokeRoadPath(roadGraphics, pts, roadW + 16, 0x0e0c0a, 0.62);
 
-                    roadGraphics.beginPath();
+                    this._strokeRoadPath(roadGraphics, this._offsetRoadPath(pts, nx, ny, wallOff), 4, 0x2a2418, 0.75);
 
-                    roadGraphics.moveTo(pts[0].x, pts[0].y);
+                    this._strokeRoadPath(roadGraphics, this._offsetRoadPath(pts, nx, ny, -wallOff), 4, 0x2a2418, 0.75);
 
-                    for (let i = 1; i < pts.length; i++) roadGraphics.lineTo(pts[i].x, pts[i].y);
+                    this._strokeRoadPath(roadGraphics, pts, roadW * 0.78, 0x5c5448, 0.94);
 
-                    roadGraphics.strokePath();
+                    this._strokeRoadPath(roadGraphics, pts, roadW * 0.42, 0x7a7264, 0.55);
 
-
-
-                    roadGraphics.lineStyle(Math.max(2, roadW * 0.12), 0xc8beb0, 0.35);
-
-                    roadGraphics.beginPath();
-
-                    roadGraphics.moveTo(pts[0].x, pts[0].y);
-
-                    for (let i = 1; i < pts.length; i++) roadGraphics.lineTo(pts[i].x, pts[i].y);
-
-                    roadGraphics.strokePath();
+                    this._strokeRoadPath(roadGraphics, pts, Math.max(2, roadW * 0.1), 0xa09888, 0.28);
 
                 });
 
             }
 
         }
+
+
+
+        junctions.forEach((jp) => {
+
+            roadGraphics.fillStyle(0x4a4438, 0.88);
+
+            roadGraphics.fillCircle(jp.x, jp.y, roadW * 0.42);
+
+            roadGraphics.fillStyle(0x6a6254, 0.5);
+
+            roadGraphics.fillCircle(jp.x, jp.y, roadW * 0.22);
+
+        });
+
+
 
         roadGraphics.setVisible(segCount > 0);
 
@@ -586,9 +596,28 @@ window.TerrainRender = {
 
         }
 
+        if (terrainId === 3 && !this.useCurveOverlay) {
+            const baseId = this.baseTerrainId(map, q, r, terrainId);
+            const baseHex = this.spawnHex(scene, group, worldX, worldY, q, r, baseId, decorGroup, map);
+            
+            const picked = this.textureForCell(map, q, r, terrainId);
+            const roadKey = picked.key;
+            const roadAngle = picked.angle;
+            
+            if (scene.textures.exists(roadKey)) {
+                const roadHex = scene.add.image(worldX, worldY, roadKey);
+                roadHex.setOrigin(0.5, 0.5);
+                roadHex.setScale(this.hexDisplayScale());
+                if (roadAngle) roadHex.setAngle(roadAngle);
+                roadHex.setDepth(baseHex.depth + 0.005);
+                group.add(roadHex);
+            }
+            return baseHex;
+        }
+
         let key;
         let angle = 0;
-        if (this.useV1Tiles && map && window.TerrainRenderV1Bake) {
+        if (this.useV1Tiles && map && window.TerrainRenderV1Bake && (terrainId !== 3 || this.useCurveOverlay)) {
             key = window.TerrainRenderV1Bake.textureKey(scene, map, q, r, terrainId);
         } else {
             const picked = this.textureForCell(map, q, r, terrainId);

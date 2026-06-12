@@ -1,18 +1,15 @@
-# Hex terrain tiles (v1.0)
-
-Imported from `v1.0.zip` via `scripts/import_v1_terrain.py`.
-
-## Files
-- `hex_{terrain}_{0-5}.png` — grass / forest / water / dirt variants
-- `hex_trans_{a}_{b}_d{0-5}.png` — boundary transitions (higher-priority neighbor)
-- `hex_{terrain}.png` — alias of variant 0
-
-## Regenerate source tiles
+# Hex terrain tile parts
+ 
+## Base terrain (`hex_*.png`)
+dirt / grass / forest / town / water
+ 
+## Roads / Trenches (`roads/m00.png` … `roads/m3f.png`)
+**14 rotation base variants** from 6-bit neighbor mask (dir order = `logic_map.getNeighbors`).
+Other 50 patterns are rotated at runtime in Phaser client.
+ 
+Regenerate:
 ```powershell
-pip install numpy pillow opensimplex
-python scripts/terrain_v1/generate_tiles.py
-python scripts/import_v1_terrain.py
+python scripts/build_hex_tile_parts.py
 ```
-
-In-game: `TerrainRender.useV1Tiles = true` in `phaser_terrain.js`.
-Size: 202×233 px, scale `1/HIGH_RES_SCALE`.
+ 
+Size: 202×233px, scale `1/HIGH_RES_SCALE`.

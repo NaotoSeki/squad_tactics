@@ -1,44 +1,141 @@
 {
   "_meta": {
-    "description": "弾薬互換の手動正本。build_wpns_pl_master.py と装填判定の両方で weapon_ammo_map.json より優先。",
-    "note": "CBE 抽出の誤リンク（StG 系→9Pb-20S 等）を補正。インデックスは cbeNameIndex / PL_AMMO_DATA キー。"
+    "description": "CBE ammo_indices が空の武器のみ暫定定義。CBE に行がある武器は stats+フィルタが正本（上書きしない）。",
+    "note": "StG/Kar98 系の旧 override は撤回（2026-05-31 包括監査）。274=7.92-101 は FG42/1 専用（G43/Kar43 系 CBE 逆引きは誤り）。"
   },
   "byCbeWeaponIndex": {
-    "20": {
-      "acceptsAmmoPlIndices": [230, 238, 239, 240],
-      "plAmmoLabel": ".30-06 ベルト（M1919A6）"
+    "3": {
+      "acceptsAmmoPlIndices": [385, 387],
+      "plAmmoLabel": "380ACP8A / 380ACP8B",
+      "skipCanonicalFilter": true
     },
-    "22": {
-      "acceptsAmmoPlIndices": [230, 238, 239, 240],
-      "plAmmoLabel": ".30-06 ベルト（M1917A1）"
+    "18": {
+      "acceptsAmmoPlIndices": [237, 235, 234],
+      "plAmmoLabel": "45ACP30G / 45ACP30T",
+      "skipCanonicalFilter": true
     },
-    "23": {
-      "acceptsAmmoPlIndices": [230, 238, 239, 240],
-      "plAmmoLabel": ".30-06 ベルト（M1919A4）"
+    "19": {
+      "acceptsAmmoPlIndices": [237, 235, 234],
+      "plAmmoLabel": "45ACP30G / 45ACP30T",
+      "skipCanonicalFilter": true
     },
-    "24": {
-      "acceptsAmmoPlIndices": [241, 239, 240],
-      "plAmmoLabel": ".50 BMG / .30 ベルト（M2HB）"
+    "50": {
+      "acceptsAmmoPlIndices": [265],
+      "plAmmoLabel": "9Pb-8W",
+      "skipCanonicalFilter": true
     },
-    "73": {
-      "acceptsAmmoPlIndices": [277],
-      "plAmmoLabel": "7.92x33 Kurz — 7.92k-30"
+    "62": {
+      "acceptsAmmoPlIndices": [273, 272],
+      "plAmmoLabel": "7.92-10G / 7.92-5",
+      "skipCanonicalFilter": true
+    },
+    "63": {
+      "acceptsAmmoPlIndices": [273, 272],
+      "plAmmoLabel": "7.92-10G / 7.92-5",
+      "skipCanonicalFilter": true
+    },
+    "67": {
+      "acceptsAmmoPlIndices": [273, 272],
+      "plAmmoLabel": "7.92-10G / 7.92-5",
+      "skipCanonicalFilter": true
+    },
+    "68": {
+      "acceptsAmmoPlIndices": [273, 272],
+      "plAmmoLabel": "7.92-10G / 7.92-5",
+      "skipCanonicalFilter": true
+    },
+    "70": {
+      "acceptsAmmoPlIndices": [273, 272],
+      "plAmmoLabel": "7.92-10G / 7.92-5",
+      "skipCanonicalFilter": true
+    },
+    "71": {
+      "acceptsAmmoPlIndices": [274, 275, 276],
+      "plAmmoLabel": "7.92-101 / 7.92-201 / 7.92-202（FG42/1）",
+      "skipCanonicalFilter": true
     },
     "74": {
       "acceptsAmmoPlIndices": [277],
-      "plAmmoLabel": "7.92x33 Kurz — 7.92k-30"
+      "plAmmoLabel": "7.92k-30",
+      "skipCanonicalFilter": true
+    },
+    "127": {
+      "acceptsAmmoPlIndices": [318],
+      "plAmmoLabel": "6.5-6",
+      "skipCanonicalFilter": true
+    },
+    "130": {
+      "acceptsAmmoPlIndices": [319],
+      "plAmmoLabel": "7.35-6",
+      "skipCanonicalFilter": true
+    },
+    "160": {
+      "acceptsAmmoPlIndices": [351],
+      "plAmmoLabel": "380Mk2-1",
+      "skipCanonicalFilter": true
+    },
+    "161": {
+      "acceptsAmmoPlIndices": [351],
+      "plAmmoLabel": "380Mk2-1",
+      "skipCanonicalFilter": true
+    },
+    "162": {
+      "acceptsAmmoPlIndices": [351],
+      "plAmmoLabel": "380Mk2-1",
+      "skipCanonicalFilter": true
+    },
+    "163": {
+      "acceptsAmmoPlIndices": [351],
+      "plAmmoLabel": "380Mk2-1",
+      "skipCanonicalFilter": true
+    },
+    "164": {
+      "acceptsAmmoPlIndices": [262],
+      "plAmmoLabel": "32ACP-8W",
+      "skipCanonicalFilter": true
     },
     "75": {
       "acceptsAmmoPlIndices": [277],
-      "plAmmoLabel": "7.92x33 Kurz — 7.92k-30"
+      "plAmmoLabel": "7.92k-30",
+      "skipCanonicalFilter": true
     },
     "76": {
       "acceptsAmmoPlIndices": [277],
-      "plAmmoLabel": "7.92x33 Kurz — 7.92k-30"
+      "plAmmoLabel": "7.92k-30",
+      "skipCanonicalFilter": true
     },
     "77": {
       "acceptsAmmoPlIndices": [277],
-      "plAmmoLabel": "7.92x33 Kurz — 7.92k-30"
+      "plAmmoLabel": "7.92k-30",
+      "skipCanonicalFilter": true
+    },
+    "20": {
+      "acceptsAmmoPlIndices": [230, 238, 239, 240],
+      "plAmmoLabel": ".30-06 ベルト（M1919A6 — CBE 空、要実機）"
+    },
+    "22": {
+      "acceptsAmmoPlIndices": [230, 238, 239, 240],
+      "plAmmoLabel": ".30-06 ベルト（M1917A1 — CBE 空、要実機）"
+    },
+    "23": {
+      "acceptsAmmoPlIndices": [230, 238, 239, 240],
+      "plAmmoLabel": ".30-06 ベルト（M1919A4 — CBE 空、要実機）"
+    },
+    "24": {
+      "acceptsAmmoPlIndices": [241],
+      "plAmmoLabel": "50M2-110（M2 HB — CBE ammo_indices 空）"
+    }
+  },
+  "byCbeAmmoIndex": {
+    "236": {
+      "note": "50発ドラム — u27 形状フィルタで M1928A1 のみ"
+    },
+    "287": {
+      "note": "9mm 100発パン（Ger Potsdam／Sten 系）"
+    },
+    "274": {
+      "note": "7.92-101（10発）— FG42/1 専用。CBE 逆引きの G43/Kar43/VG 行は誤リンク",
+      "weaponCbeIndices": [71]
     }
   }
 }

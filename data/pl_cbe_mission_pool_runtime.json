@@ -1,0 +1,18 @@
+{
+  "_readme": "DOSBox dump → pool_270 に u16 index 列（0xFFFF まで）。export_pl_cbe_mission_pool.py が seg132 より優先 merge。手順: docs/PL_CBE_RUNTIME_POOL_DUMP.md",
+  "generated": null,
+  "dumps": [
+    {
+      "_template": true,
+      "cbe": 81,
+      "name": "MP38",
+      "pool_270": [],
+      "pool_1ec": null,
+      "ui_note": "装填 UI に見えた弾名",
+      "scenario": "ミッション名",
+      "dumped": null
+    }
+  ],
+  "gap_count": 139,
+  "gap_hint": "seg132 未登録の火器。dump 1 本追加するたび gap が減る。"
+}

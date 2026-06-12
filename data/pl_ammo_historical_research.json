@@ -1,0 +1,623 @@
+{
+  "_meta": {
+    "description": "【凍結 2026-05-31】Wikipedia 史実提案 — 誤りが多いため新規追記禁止。正本: docs/PL_CBE_AMMO_TRUTH.md",
+    "status": "deprecated",
+    "updated": "2026-05-31",
+    "indexLegend": {
+      "272": "7.92-5 (5発クリップ)",
+      "273": "7.92-10G (10発)",
+      "274": "7.92-101 (10発・Gew43系)",
+      "275": "7.92-201 (20発)",
+      "276": "7.92-202 (20発)",
+      "277": "7.92k-30 (Kurz 30発・FG42/2)",
+      "278": "9Pb-20S (Kurz/StG — PL 命名)",
+      "355": ".303 クリップ (CBE名 9Pb-32R)",
+      "357": "303Br-30",
+      "358": "303Br250 ベルト",
+      "225": "45ACP-3",
+      "226": "45ACP-1",
+      "234": "45ACP20T",
+      "235": "45ACP30T",
+      "236": "45ACP50T",
+      "237": "45ACP30G",
+      "229": "3006-5",
+      "230": "3006-20B",
+      "238": "3006-20J",
+      "239": "3006-200",
+      "240": "3006-250",
+      "241": "50M2-110",
+      "259": "32ACP-8M (CBE P08)",
+      "258": "9Pb-8L"
+    }
+  },
+  "weapons": {
+    "43": {
+      "historicalPlIndices": [
+        259
+      ],
+      "summary": "P08: CBE は 32ACP-8M(259) のみ。史実の標準 P08 は 9×19mm Parabellum。PL/CBE は意図的別口径の可能性 — 実機優先。",
+      "sources": [
+        "https://en.wikipedia.org/wiki/Luger_pistol",
+        "https://en.wikipedia.org/wiki/9mm_Parabellum"
+      ],
+      "notes": "史実 9mm → PL 258/320 等と混同注意。CBE 正本 259 を維持。"
+    },
+    "57": {
+      "historicalPlIndices": [
+        272,
+        273
+      ],
+      "summary": "Kar98k: 7.92×57mm、5発ストリッパークリップ(272) + 10発相当(273)。特殊弾(GSprgr等)は別枠。",
+      "sources": [
+        "https://en.wikipedia.org/wiki/Karabiner_98k"
+      ],
+      "notes": "CBE raw [273,304,305,314] — 272 は 4 スロット外。第3フィルタ/拡張 RE。"
+    },
+    "58": {
+      "historicalPlIndices": [
+        272,
+        273
+      ],
+      "summary": "Kar98k svw: Kar98k 同型。5発クリップ + 7.92×57。",
+      "sources": [
+        "https://en.wikipedia.org/wiki/Karabiner_98k"
+      ],
+      "notes": "監査: effective に 272 のみ — CBE 解釈要確認。"
+    },
+    "68": {
+      "historicalPlIndices": [
+        272,
+        273
+      ],
+      "summary": "Kar43/G43: 7.92×57、10発ボックス + 5発ストリッパー。274(7.92-101)は Gew43 系 CBE リンクだが史実上 Kurz/FG42 用ではない。",
+      "sources": [
+        "https://en.wikipedia.org/wiki/Gewehr_43"
+      ],
+      "notes": "CBE [273,274] — 史実は 272+273。274 除外は mag_type RE 候補。"
+    },
+    "67": {
+      "historicalPlIndices": [
+        272,
+        273,
+        274
+      ],
+      "summary": "Gew43: 7.92×57 10発マガジン。Kar43 と同系。",
+      "sources": [
+        "https://en.wikipedia.org/wiki/Gewehr_43"
+      ],
+      "notes": "CBE [273,274] — 272 追加は Kar98 系パターン。"
+    },
+    "71": {
+      "historicalPlIndices": [
+        272,
+        273,
+        275,
+        276
+      ],
+      "summary": "FG42/1: 7.92×57 フルパワー。10/20発ボックス + 5発クリップ。CBE 275/276 に対応。",
+      "sources": [
+        "https://en.wikipedia.org/wiki/FG_42"
+      ],
+      "notes": "u27 フィルタで effective 空 — 形状 RE 要。"
+    },
+    "72": {
+      "historicalPlIndices": [
+        277
+      ],
+      "summary": "FG42/2: CBE 277(7.92k-30) のみ。後期型 Kurz 系の可能性 — 要 PL 実機。",
+      "sources": [
+        "https://en.wikipedia.org/wiki/FG_42"
+      ],
+      "notes": "CBE と史実の口径差 — CONFLICT 候補。"
+    },
+    "73": {
+      "historicalPlIndices": [
+        278
+      ],
+      "summary": "MKb42(W)/StG 系: 7.92×33mm Kurz。CBE 278(9Pb-20S) = Pistolenpatrone M43 相当。277 は FG42/2 用。",
+      "sources": [
+        "https://en.wikipedia.org/wiki/StG_44",
+        "https://en.wikipedia.org/wiki/7.92x33mm_Kurz"
+      ],
+      "notes": "旧 override 277 は誤り。CBE 278 が正。"
+    },
+    "75": {
+      "historicalPlIndices": [
+        278
+      ],
+      "summary": "MP43/StG44: 7.92×33 Kurz 30発箱。CBE 278。",
+      "sources": [
+        "https://en.wikipedia.org/wiki/StG_44"
+      ]
+    },
+    "76": {
+      "historicalPlIndices": [
+        278
+      ],
+      "summary": "StG44: 7.92×33 Kurz。CBE 278(9Pb-20S)。",
+      "sources": [
+        "https://en.wikipedia.org/wiki/StG_44"
+      ]
+    },
+    "77": {
+      "historicalPlIndices": [
+        278
+      ],
+      "summary": "VG1-5: Kurz 系。CBE 278。",
+      "sources": [
+        "https://en.wikipedia.org/wiki/7.92x33mm_Kurz"
+      ]
+    },
+    "15": {
+      "historicalPlIndices": [
+        234,
+        235,
+        236
+      ],
+      "summary": "M1928A1: .45 ACP。20/30/50 発（ドラム可）。",
+      "sources": [
+        "https://en.wikipedia.org/wiki/Thompson_submachine_gun"
+      ]
+    },
+    "16": {
+      "historicalPlIndices": [
+        235
+      ],
+      "summary": "M1 SMG: .45 ACP 30発箱のみ。ドラム不可（u27 一致）。",
+      "sources": [
+        "https://en.wikipedia.org/wiki/Thompson_submachine_gun"
+      ]
+    },
+    "17": {
+      "historicalPlIndices": [
+        235,
+        237
+      ],
+      "summary": "M1A1 SMG: .45 ACP 30発 + 30G。ドラム/20T 不可。",
+      "sources": [
+        "https://en.wikipedia.org/wiki/Thompson_submachine_gun"
+      ]
+    },
+    "171": {
+      "historicalPlIndices": [
+        355
+      ],
+      "summary": "No3 Mk1*(T): .303 British クリップ装填。CBE 355(名称 9Pb-32R)。",
+      "sources": [
+        "https://en.wikipedia.org/wiki/Rifle_No_4",
+        "https://en.wikipedia.org/wiki/Stripper_clip"
+      ]
+    },
+    "169": {
+      "historicalPlIndices": [
+        355
+      ],
+      "summary": "No4 Mk1*: .303 2×5 発チャージャー。",
+      "sources": [
+        "https://en.wikipedia.org/wiki/Rifle_No_4"
+      ]
+    },
+    "175": {
+      "historicalPlIndices": [
+        357
+      ],
+      "summary": "Lewis Mk1: .303 British 47/97 発パン。PL 357(303Br-30) が近傍。",
+      "sources": [
+        "https://en.wikipedia.org/wiki/Lewis_gun"
+      ]
+    },
+    "176": {
+      "historicalPlIndices": [
+        357
+      ],
+      "summary": "Bren Mk1: .303 30発湾曲箱。250 発ベルト(358)は歩兵 Bren 標準ではない。",
+      "sources": [
+        "https://en.wikipedia.org/wiki/Bren"
+      ]
+    },
+    "177": {
+      "historicalPlIndices": [
+        357
+      ],
+      "summary": "Bren Mk2: .303 30発箱マガジン。CBE 358(303Br250) はベルト/持続射撃系 — 史実と CONFLICT。",
+      "sources": [
+        "https://en.wikipedia.org/wiki/Bren"
+      ],
+      "notes": "PL 実機で 357 vs 358 要確認。override 禁止。"
+    },
+    "178": {
+      "historicalPlIndices": [
+        357
+      ],
+      "summary": "Bren Mk3: 同 Bren 系 .303 30 発箱。",
+      "sources": [
+        "https://en.wikipedia.org/wiki/Bren"
+      ]
+    },
+    "179": {
+      "historicalPlIndices": [
+        358
+      ],
+      "summary": "Vickers Mk1: .303 ベルト給弾。CBE 空 — 358(250 ベルト) が妥当候補。",
+      "sources": [
+        "https://en.wikipedia.org/wiki/Vickers_machine_gun"
+      ],
+      "notes": "CBE_EMPTY — 史実は暫定候補。"
+    },
+    "20": {
+      "historicalPlIndices": [
+        230,
+        238,
+        239,
+        240
+      ],
+      "summary": "M1919A6: .30-06 Springfield 250 発布/金属リンクベルト。",
+      "sources": [
+        "https://en.wikipedia.org/wiki/M1919_Browning_machine_gun"
+      ],
+      "notes": "CBE 空 — override JSON 暫定と一致。"
+    },
+    "22": {
+      "historicalPlIndices": [
+        230,
+        238,
+        239,
+        240
+      ],
+      "summary": "M1917A1 MMG: .30-06 ベルト。",
+      "sources": [
+        "https://en.wikipedia.org/wiki/M1919_Browning_machine_gun"
+      ]
+    },
+    "23": {
+      "historicalPlIndices": [
+        230,
+        238,
+        239,
+        240
+      ],
+      "summary": "M1919A4: .30-06 ベルト。",
+      "sources": [
+        "https://en.wikipedia.org/wiki/M1919_Browning_machine_gun"
+      ]
+    },
+    "24": {
+      "historicalPlIndices": [
+        241,
+        239,
+        240
+      ],
+      "summary": "M2 HB: .50 BMG(241) + .30 ベルト系。CBE 空。",
+      "sources": [
+        "https://en.wikipedia.org/wiki/M2_Browning"
+      ]
+    },
+    "0": {
+      "historicalPlIndices": [
+        226
+      ],
+      "summary": "M1911A1: .45 ACP 7 発箱。PL 226(45ACP-1) — u27 で 225 除外要 RE。",
+      "sources": [
+        "https://en.wikipedia.org/wiki/M1911_pistol"
+      ]
+    },
+    "8": {
+      "historicalPlIndices": [
+        232
+      ],
+      "summary": "M1 Garand: .30-06 8 発 en-bloc。PL 232(30Cbn-15)。",
+      "sources": [
+        "https://en.wikipedia.org/wiki/M1_Garand"
+      ]
+    },
+    "55": {
+      "historicalPlIndices": [
+        272,
+        273
+      ],
+      "summary": "Gew98: 7.92×57 5 発クリップ。",
+      "sources": [
+        "https://en.wikipedia.org/wiki/Gewehr_98"
+      ]
+    },
+    "91": {
+      "historicalPlIndices": [
+        294,
+        295
+      ],
+      "summary": "MG34: 7.92×57 75 発/50 発ベルト。CBE 294/295。",
+      "sources": [
+        "https://en.wikipedia.org/wiki/MG_34"
+      ]
+    },
+    "94": {
+      "historicalPlIndices": [
+        294
+      ],
+      "summary": "MG42: 7.92×57 ベルト。CBE 294。",
+      "sources": [
+        "https://en.wikipedia.org/wiki/MG_42"
+      ]
+    },
+    "95": {
+      "historicalPlIndices": [
+        358,
+        273
+      ],
+      "summary": "MG08: 7.92×57 250 発ベルト。CBE 空 — 289/358 系候補。",
+      "sources": [
+        "https://en.wikipedia.org/wiki/MG_08"
+      ],
+      "notes": "CBE_EMPTY — 7.92 クラスタ fallback 撤去後要正本。"
+    },
+    "42": {
+      "historicalPlIndices": [
+        258,
+        256,
+        257
+      ],
+      "summary": "C/96M712: 9mm(258) / 7.63mm(256,257)。CBE 一致。u27 で effective 空 — RE。",
+      "sources": [
+        "https://en.wikipedia.org/wiki/Mauser_C96"
+      ]
+    },
+    "49": {
+      "historicalPlIndices": [
+        265
+      ],
+      "summary": "HSc: 7.65mm/.32 ACP 系。CBE 265(9Pb-8W)。",
+      "sources": [
+        "https://en.wikipedia.org/wiki/Heckler_%26_Koch_HSc"
+      ]
+    },
+    "1": {
+      "historicalPlIndices": [],
+      "summary": "M1917 S&W: ",
+      "sources": [
+        "https://en.wikipedia.org/wiki/M1917_S%26W"
+      ],
+      "notes": "Auto-crawl 2026-05-31. Indices は口径ヒューリスティクス — 人手確認。",
+      "wikipediaTitle": "M1917 S&W",
+      "cartridgeLine": ""
+    },
+    "2": {
+      "historicalPlIndices": [],
+      "summary": "M1917 Colt: ",
+      "sources": [
+        "https://en.wikipedia.org/wiki/M1917_Colt"
+      ],
+      "notes": "Auto-crawl 2026-05-31. Indices は口径ヒューリスティクス — 人手確認。",
+      "wikipediaTitle": "M1917 Colt",
+      "cartridgeLine": ""
+    },
+    "3": {
+      "historicalPlIndices": [],
+      "summary": "OSS: OSS or Oss may refer to:",
+      "sources": [
+        "https://en.wikipedia.org/wiki/OSS"
+      ],
+      "notes": "Auto-crawl 2026-05-31. Indices は口径ヒューリスティクス — 人手確認。",
+      "wikipediaTitle": "OSS",
+      "cartridgeLine": ""
+    },
+    "4": {
+      "historicalPlIndices": [],
+      "summary": "AN-M8: ",
+      "sources": [
+        "https://en.wikipedia.org/wiki/AN-M8"
+      ],
+      "notes": "Auto-crawl 2026-05-31. Indices は口径ヒューリスティクス — 人手確認。",
+      "wikipediaTitle": "AN-M8",
+      "cartridgeLine": ""
+    },
+    "5": {
+      "historicalPlIndices": [],
+      "summary": "M1903A1: ",
+      "sources": [
+        "https://en.wikipedia.org/wiki/M1903A1"
+      ],
+      "notes": "Auto-crawl 2026-05-31. Indices は口径ヒューリスティクス — 人手確認。",
+      "wikipediaTitle": "M1903A1",
+      "cartridgeLine": ""
+    },
+    "6": {
+      "historicalPlIndices": [],
+      "summary": "M1903A4: ",
+      "sources": [
+        "https://en.wikipedia.org/wiki/M1903A4"
+      ],
+      "notes": "Auto-crawl 2026-05-31. Indices は口径ヒューリスティクス — 人手確認。",
+      "wikipediaTitle": "M1903A4",
+      "cartridgeLine": ""
+    },
+    "7": {
+      "historicalPlIndices": [],
+      "summary": "M1918A2 BAR: ",
+      "sources": [
+        "https://en.wikipedia.org/wiki/M1918A2_BAR"
+      ],
+      "notes": "Auto-crawl 2026-05-31. Indices は口径ヒューリスティクス — 人手確認。",
+      "wikipediaTitle": "M1918A2 BAR",
+      "cartridgeLine": ""
+    },
+    "9": {
+      "historicalPlIndices": [],
+      "summary": "M1C Rifle: ",
+      "sources": [
+        "https://en.wikipedia.org/wiki/M1C_Rifle"
+      ],
+      "notes": "Auto-crawl 2026-05-31. Indices は口径ヒューリスティクス — 人手確認。",
+      "wikipediaTitle": "M1C Rifle",
+      "cartridgeLine": ""
+    },
+    "10": {
+      "historicalPlIndices": [],
+      "summary": "M1D Rifle: ",
+      "sources": [
+        "https://en.wikipedia.org/wiki/M1D_Rifle"
+      ],
+      "notes": "Auto-crawl 2026-05-31. Indices は口径ヒューリスティクス — 人手確認。",
+      "wikipediaTitle": "M1D Rifle",
+      "cartridgeLine": ""
+    },
+    "11": {
+      "historicalPlIndices": [],
+      "summary": "M1941 Rifle: ",
+      "sources": [
+        "https://en.wikipedia.org/wiki/M1941_Rifle"
+      ],
+      "notes": "Auto-crawl 2026-05-31. Indices は口径ヒューリスティクス — 人手確認。",
+      "wikipediaTitle": "M1941 Rifle",
+      "cartridgeLine": ""
+    },
+    "12": {
+      "historicalPlIndices": [],
+      "summary": "M1 Cbn: ",
+      "sources": [
+        "https://en.wikipedia.org/wiki/M1_Cbn"
+      ],
+      "notes": "Auto-crawl 2026-05-31. Indices は口径ヒューリスティクス — 人手確認。",
+      "wikipediaTitle": "M1 Cbn",
+      "cartridgeLine": ""
+    },
+    "13": {
+      "historicalPlIndices": [],
+      "summary": "M1A1 Cbn: ",
+      "sources": [
+        "https://en.wikipedia.org/wiki/M1A1_Cbn"
+      ],
+      "notes": "Auto-crawl 2026-05-31. Indices は口径ヒューリスティクス — 人手確認。",
+      "wikipediaTitle": "M1A1 Cbn",
+      "cartridgeLine": ""
+    },
+    "14": {
+      "historicalPlIndices": [],
+      "summary": "M2 Cbn: ",
+      "sources": [
+        "https://en.wikipedia.org/wiki/M2_Cbn"
+      ],
+      "notes": "Auto-crawl 2026-05-31. Indices は口径ヒューリスティクス — 人手確認。",
+      "wikipediaTitle": "M2 Cbn",
+      "cartridgeLine": ""
+    },
+    "18": {
+      "historicalPlIndices": [],
+      "summary": "M3 SMG: ",
+      "sources": [
+        "https://en.wikipedia.org/wiki/M3_SMG"
+      ],
+      "notes": "Auto-crawl 2026-05-31. Indices は口径ヒューリスティクス — 人手確認。",
+      "wikipediaTitle": "M3 SMG",
+      "cartridgeLine": ""
+    },
+    "19": {
+      "historicalPlIndices": [],
+      "summary": "M3A1 SMG: ",
+      "sources": [
+        "https://en.wikipedia.org/wiki/M3A1_SMG"
+      ],
+      "notes": "Auto-crawl 2026-05-31. Indices は口径ヒューリスティクス — 人手確認。",
+      "wikipediaTitle": "M3A1 SMG",
+      "cartridgeLine": ""
+    },
+    "21": {
+      "historicalPlIndices": [],
+      "summary": "M1941   LMG: ",
+      "sources": [
+        "https://en.wikipedia.org/wiki/M1941_LMG"
+      ],
+      "notes": "Auto-crawl 2026-05-31. Indices は口径ヒューリスティクス — 人手確認。",
+      "wikipediaTitle": "M1941   LMG",
+      "cartridgeLine": ""
+    },
+    "25": {
+      "historicalPlIndices": [],
+      "summary": "M1 RL: ",
+      "sources": [
+        "https://en.wikipedia.org/wiki/M1_RL"
+      ],
+      "notes": "Auto-crawl 2026-05-31. Indices は口径ヒューリスティクス — 人手確認。",
+      "wikipediaTitle": "M1 RL",
+      "cartridgeLine": ""
+    },
+    "26": {
+      "historicalPlIndices": [],
+      "summary": "M1A1 RL: ",
+      "sources": [
+        "https://en.wikipedia.org/wiki/M1A1_RL"
+      ],
+      "notes": "Auto-crawl 2026-05-31. Indices は口径ヒューリスティクス — 人手確認。",
+      "wikipediaTitle": "M1A1 RL",
+      "cartridgeLine": ""
+    },
+    "27": {
+      "historicalPlIndices": [],
+      "summary": "M9 RL: ",
+      "sources": [
+        "https://en.wikipedia.org/wiki/M9_RL"
+      ],
+      "notes": "Auto-crawl 2026-05-31. Indices は口径ヒューリスティクス — 人手確認。",
+      "wikipediaTitle": "M9 RL",
+      "cartridgeLine": ""
+    },
+    "28": {
+      "historicalPlIndices": [],
+      "summary": "E1R1 Fl: ",
+      "sources": [
+        "https://en.wikipedia.org/wiki/E1R1_Fl"
+      ],
+      "notes": "Auto-crawl 2026-05-31. Indices は口径ヒューリスティクス — 人手確認。",
+      "wikipediaTitle": "E1R1 Fl",
+      "cartridgeLine": ""
+    },
+    "41": {
+      "historicalPlIndices": [],
+      "summary": "C/96: ",
+      "sources": [
+        "https://en.wikipedia.org/wiki/C/96"
+      ],
+      "notes": "Auto-crawl 2026-05-31. Indices は口径ヒューリスティクス — 人手確認。",
+      "wikipediaTitle": "C/96",
+      "cartridgeLine": ""
+    },
+    "44": {
+      "historicalPlIndices": [],
+      "summary": "M1934: ",
+      "sources": [
+        "https://en.wikipedia.org/wiki/M1934"
+      ],
+      "notes": "Auto-crawl 2026-05-31. Indices は口径ヒューリスティクス — 人手確認。",
+      "wikipediaTitle": "M1934",
+      "cartridgeLine": ""
+    },
+    "45": {
+      "historicalPlIndices": [],
+      "summary": "Beholla: ",
+      "sources": [
+        "https://en.wikipedia.org/wiki/Beholla"
+      ],
+      "notes": "Auto-crawl 2026-05-31. Indices は口径ヒューリスティクス — 人手確認。",
+      "wikipediaTitle": "Beholla",
+      "cartridgeLine": ""
+    },
+    "132": {
+      "historicalPlIndices": [319],
+      "auxSlotIndices": [331],
+      "summary": "M. mod38/TS: イタリア製カルカノ系。主弾 7.35×51mm (PL 7.35-6)。付属銃剣 SB.mod91。",
+      "sources": [
+        "https://en.wikipedia.org/wiki/Carcano",
+        "user_playtest_memory"
+      ],
+      "notes": "主弾 319 は CBE と一致。付属スロット: CBE +50=332(BP.MAB38) だがユーザー期待は 331(SB.mod91)。332 はベレッタ MAB 系名称でカルカノ銃剣と不整合 — PL 実機要確認。"
+    },
+    "214": {
+      "historicalPlIndices": [387],
+      "summary": "CZ vz.38: チェコ製拳銃。.380 ACP (9×17mm Browning Short)。vz27 同系の 380ACP 行。",
+      "sources": [
+        "https://en.wikipedia.org/wiki/%C4%8CZ_vz._38",
+        "user_playtest_memory"
+      ],
+      "notes": "CBE raw [388]=9Pb-30Z は PL 命名上 9mm Para に見えるが史実は .380。vz27→387(380ACP8B)、GP35→385(380ACP8A)。388 は vz38 専用 CBE リンク — 口径は .380 系の可能性（Z=チェコ?）だが PL 実機装填 UI 確認必須。override 禁止。"
+    }
+  }
+}

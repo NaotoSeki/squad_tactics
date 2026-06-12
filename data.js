@@ -10,6 +10,23 @@ const MAP_H = 20;
  */
 const BATTLE_SCALE_PRESET = 'chaos';
 
+/** Phase 0: 知略ダイヤル morph（false = 従来の離散プリセットのみ） */
+const FEATURE_TACTICS_MORPH = true;
+
+/**
+ * ダイヤル明示値。null のとき BATTLE_SCALE_PRESET から TACTICS_DIAL_FROM_PRESET へ。
+ * d1: 0=classic … 1=chaos | d2: 0=defence … 1=attack | d3: 0=冷静 … 1=狂気
+ */
+const TACTICS_DIAL = null;
+
+/** Phase A: 同一ヘックス装備渡し（false = 無効化してロールバック） */
+const FEATURE_SAME_HEX_TRANSFER = true;
+
+/** 複数ターン行軍プラン（森など移動力不足時）。false = 従来（1ターン到達のみ） */
+const FEATURE_EXTENDED_MARCH = true;
+/** 行軍プラン表示・移動の最大ターン数 */
+const MARCH_PLAN_MAX_TURNS = 5;
+
 const BATTLE_SCALE_PRESETS = {
   classic: {
     HEX_UNIT_CAP: 5,
@@ -38,6 +55,19 @@ const BATTLE_SCALE_PRESETS = {
     ENEMY_TANK_CHANCE_PER_SECTOR: 0.012,
     ENEMY_TIGER_CHANCE: 0.004,
     ENEMY_TIGER_CHANCE_PER_SECTOR: 0.003,
+    /** feat/rt-tactics-fusion: 混戦リアルタイム層 */
+    RT_SIMULTANEOUS_AI: true,
+    RT_DEFAULT_STANCE: 'prone',
+    RT_DAMAGE_MULT: 0.72,
+    RT_HIT_PENALTY: 14,
+    RT_AI_WAVES: 5,
+    RT_PARALLEL_FIRE_RATE: 14,
+    RT_MOVE_STEP_MS: 22,
+    RT_WAVE_GAP_MS: 35,
+    RT_TURN_DELAY_MS: 500,
+    RT_STAGGER_MIN_MS: 90,
+    RT_STAGGER_MAX_MS: 480,
+    RT_LOW_AMMO_RATIO: 0.35,
   },
 };
 
@@ -45,6 +75,15 @@ function resolveBattleScale() {
   const key = (typeof BATTLE_SCALE_PRESET === 'string' && BATTLE_SCALE_PRESETS[BATTLE_SCALE_PRESET])
     ? BATTLE_SCALE_PRESET
     : 'chaos';
+
+  if (typeof FEATURE_TACTICS_MORPH !== 'undefined' && FEATURE_TACTICS_MORPH
+      && typeof morphWithResonance === 'function') {
+    const dial = (typeof resolveTacticsDial === 'function')
+      ? resolveTacticsDial(TACTICS_DIAL, key)
+      : { d1: 1, d2: 0.5, d3: 0.5 };
+    return morphWithResonance(dial.d1, dial.d2, dial.d3, BATTLE_SCALE_PRESETS);
+  }
+
   return Object.assign({ _preset: key }, BATTLE_SCALE_PRESETS[key]);
 }
 
@@ -67,14 +106,50 @@ const TERRAIN = {
     DIRT:   { id: 0,  name: "荒地", cost: 1,  cover: 0 },
     GRASS:  { id: 1,  name: "草原", cost: 1,  cover: 10 },
     FOREST: { id: 2,  name: "森林", cost: 2,  cover: 25 },
-    ROAD:   { id: 3,  name: "道路", cost: 1,  cover: 0 },
+    ROAD:   { id: 3,  name: "道路", cost: 1,  cover: 35 },
     TOWN:   { id: 4,  name: "廃墟", cost: 1,  cover: 40 },
     WATER:  { id: 5,  name: "水域", cost: 99, cover: 0 }
 };
 
 const RANKS = ["Pvt", "Pfc", "Cpl", "Sgt", "SSgt", "Lt", "Cpt"];
-const FIRST_NAMES = ["John", "Mike", "Robert", "James", "William", "David", "Richard", "Joseph", "Thomas", "Charles", "Daniel", "Matthew", "Donald", "Paul", "George"];
-const LAST_NAMES = ["Smith", "Johnson", "Williams", "Jones", "Brown", "Davis", "Miller", "Wilson", "Moore", "Taylor", "Anderson", "Thomas", "Jackson", "White", "Harris"];
+const FIRST_NAMES = [
+    "John", "Mike", "Robert", "James", "William", "David", "Richard", "Joseph", "Thomas", "Charles",
+    "Daniel", "Matthew", "Donald", "Paul", "George", "Edward", "Frank", "Henry", "Jack", "Raymond",
+    "Walter", "Harold", "Albert", "Arthur", "Eugene", "Ralph", "Howard", "Carl", "Louis", "Roy",
+    "Samuel", "Ernest", "Lawrence", "Stanley", "Norman", "Russell", "Fred", "Clarence", "Herman", "Chester",
+    "Leonard", "Lloyd", "Leo", "Victor", "Benjamin", "Sam", "Philip", "Milton", "Alfred", "Vincent",
+    "Francis", "Marvin", "Anthony", "Gerald", "Kenneth", "Ray", "Gordon", "Warren", "Billy", "Bobby"
+];
+const MIDDLE_NAMES = [
+    "Lee", "Ray", "Dean", "Earl", "Alan", "Wayne", "Gene", "Dale", "Glen", "Jay",
+    "Roy", "Allen", "Edwin", "Fred", "Grant", "Hugh", "Ira", "Kent", "Lynn", "Max",
+    "Neil", "Owen", "Reed", "Scott", "Troy", "Wade", "Bruce", "Clyde", "Dwight", "Ellis",
+    "Floyd", "Guy", "Homer", "Ivan", "Jesse", "Keith", "Lance", "Miles", "Noah", "Otis"
+];
+const LAST_NAMES = [
+    "Smith", "Johnson", "Williams", "Jones", "Brown", "Davis", "Miller", "Wilson", "Moore", "Taylor",
+    "Anderson", "Thomas", "Jackson", "White", "Harris", "Martin", "Thompson", "Garcia", "Robinson", "Clark",
+    "Rodriguez", "Lewis", "Lee", "Walker", "Hall", "Allen", "Young", "King", "Wright", "Scott",
+    "Green", "Baker", "Adams", "Nelson", "Carter", "Mitchell", "Roberts", "Turner", "Phillips", "Campbell",
+    "Parker", "Evans", "Edwards", "Collins", "Stewart", "Morris", "Murphy", "Cook", "Rogers", "Morgan",
+    "Peterson", "Cooper", "Reed", "Bailey", "Bell", "Gomez", "Kelly", "Howard", "Ward", "Cox"
+];
+
+/** ミドルネーム付きになる確率（残りは「名 姓」の2語のみ） */
+const MIDDLE_NAME_CHANCE = 0.38;
+
+/** ランダムな兵士名。ミドルネーム無し（例: John Smith）も混在する */
+function generateSoldierName() {
+    const first = FIRST_NAMES[Math.floor(Math.random() * FIRST_NAMES.length)];
+    const last = LAST_NAMES[Math.floor(Math.random() * LAST_NAMES.length)];
+    if (typeof MIDDLE_NAMES !== 'undefined' && MIDDLE_NAMES.length && Math.random() < MIDDLE_NAME_CHANCE) {
+        const mid = MIDDLE_NAMES[Math.floor(Math.random() * MIDDLE_NAMES.length)];
+        if (Math.random() < 0.35) return `${first} ${mid.charAt(0)}. ${last}`;
+        return `${first} ${mid} ${last}`;
+    }
+    return `${first} ${last}`;
+}
+if (typeof window !== 'undefined') window.generateSoldierName = generateSoldierName;
 
 const SKILLS = {
     "Precision": { name: "精密", desc: "命中+15%" },
@@ -112,7 +187,7 @@ const WPNS = {
     nade: { name:"Mk2 Grenade", rng:4, acc:60, dmg:80, cap:1, mag:2, ap:2, rld:0, wgt:1, type:'shell', area:true, desc:"破片手榴弾。", weight: 1.3, attr: ATTR.WEAPON },
     m8_rocket: { name:"M8 Rocket", rng:12, acc:50, dmg:45, cap:60, current:60, mag:60, ap:3, rld:0, wgt:0, type:'rocket', area:true, areaHexes:7, desc:"カリオペ風ロケット斉射。", weight: 0, attr: ATTR.WEAPON },
     
-    mg42: { name:"MG42", rng:8, acc:45, acc_drop:4, dmg:25, cap:50, mag:99, ap:2, rld:3, wgt:12, type:'bullet', burst:15, overRangePenalty:15, desc:"機関銃。", weight: 25, attr: ATTR.WEAPON },
+    mg42: { name:"MG42", rng:8, acc:45, acc_drop:4, dmg:25, cap:50, mag:99, ap:2, rld:3, wgt:12, type:'bullet', burst:10, modes:[2, 10], overRangePenalty:15, desc:"機関銃。", weight: 25, attr: ATTR.WEAPON },
     kwk: { name:"75mm KwK", rng:8, acc:70, acc_drop:2, dmg:150, cap:1, mag:99, ap:3, rld:0, wgt:0, type:'shell_fast', burst:1, overRangePenalty:4, desc:"戦車砲。", weight: 0, attr: ATTR.WEAPON },
     kwk88: { name:"88mm KwK36", rng:10, acc:85, acc_drop:1, dmg:250, cap:1, mag:99, ap:3, rld:0, wgt:0, type:'shell_fast', burst:1, overRangePenalty:3, desc:"重戦車砲。", weight: 0, attr: ATTR.WEAPON },
 
