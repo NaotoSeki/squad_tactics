@@ -11,6 +11,7 @@ window.BattleLogic = class BattleLogic {
     this.state = 'INIT';
     this.path = [];
     this.reachableHexes = [];
+    this.marchReachableHexes = [];
     this.attackLine = [];
     this.aimTargetUnit = null;
     this.aimTargetHex = null;
@@ -21,6 +22,7 @@ window.BattleLogic = class BattleLogic {
     const autoBtn = document.getElementById('auto-toggle');
     if (autoBtn) autoBtn.classList.remove('active');
     this.isExecutingAttack = false;
+    this._attackAnimDepth = 0;
     this.isProcessingTurn = false;
     this.interactionMode = 'SELECT';
     this.selectedUnit = null;
@@ -66,15 +68,31 @@ window.BattleLogic = class BattleLogic {
     this.spawnAlliedReinforcements();
 
     if (this.campaign && this.campaign.repairMortarGunnerLoadout) {
-      this.units.filter(u => u.team === 'player').forEach(u => this.campaign.repairMortarGunnerLoadout(u));
+      this.units.filter(u => u.team === 'player').forEach(u => this.campaign.repairMortarGunnerLoadout(u, { ensureMissing: true }));
     }
+
+    const rtStance = (typeof BATTLE_SCALE !== 'undefined' && BATTLE_SCALE.RT_DEFAULT_STANCE) || null;
+    if (rtStance) {
+      this.units.forEach(u => {
+        if (!u.def?.isTank) u.stance = rtStance;
+      });
+    }
+
+    this.units.forEach(u => {
+      if (typeof sanitizeUnitSpareAmmo === 'function') sanitizeUnitSpareAmmo(u);
+      else if (typeof sanitizeUnitBagAmmo === 'function') sanitizeUnitBagAmmo(u);
+      if (typeof LoadoutWeight !== 'undefined') LoadoutWeight.refreshUnitLoadout(u);
+    });
 
     this.state = 'PLAY';
     this._victoryProcessed = false;
     const allyN = this.units.filter(u => u.team === 'player').length;
     const foeN = this.units.filter(u => u.team === 'enemy').length;
     const preset = (typeof BATTLE_SCALE !== 'undefined' && BATTLE_SCALE._preset) ? BATTLE_SCALE._preset : 'chaos';
-    this.ui.log(`SECTOR ${this.sector} [${preset}] — ${allyN} vs ${foeN}`);
+    const dialLabel = (typeof formatTacticsDialLabel === 'function')
+      ? formatTacticsDialLabel(BATTLE_SCALE)
+      : preset;
+    this.ui.log(`SECTOR ${this.sector} [${dialLabel}] — ${allyN} vs ${foeN}`);
 
     const secCounter = document.getElementById('sector-counter');
     if(secCounter) secCounter.innerText = `SECTOR: ${this.sector.toString().padStart(2, '0')}`;
@@ -195,14 +213,16 @@ window.BattleLogic = class BattleLogic {
       if (u.hp < u.maxHp) { u.hp = Math.min(u.maxHp, u.hp + 20); this.ui.log("修理"); }
     });
 
-    const turnDelay = this.isAuto ? 300 : 1200;
+    const rtDelay = (typeof BATTLE_SCALE !== 'undefined' && BATTLE_SCALE.RT_TURN_DELAY_MS) || null;
+    const turnDelay = rtDelay != null ? rtDelay : (this.isAuto ? 300 : 1200);
     setTimeout(async () => {
       if (e) e.style.opacity = 0;
       await this.ai.executeTurn(this.units);
 
-      if (this.checkWin()) return;
+      if (this.checkWin()) { this.isProcessingTurn = false; return; }
 
       this.units.forEach(u => { if (u.team === 'player') u.ap = u.maxAp; });
+      await this.processMarchOrders();
       this.ui.log("-- PLAYER PHASE --");
       this.state = 'PLAY';
       this.isProcessingTurn = false;
@@ -231,9 +251,148 @@ window.BattleLogic = class BattleLogic {
     }
   }
 
+  getRtTacticsCfg() {
+    return (typeof BATTLE_SCALE !== 'undefined' && BATTLE_SCALE.RT_SIMULTANEOUS_AI) ? BATTLE_SCALE : null;
+  }
+
+  _beginAttackAnim(parallel) {
+    if (parallel) return;
+    this._attackAnimDepth = (this._attackAnimDepth || 0) + 1;
+    this.isExecutingAttack = true;
+    this.state = 'ANIM';
+  }
+
+  _endAttackAnim(parallel) {
+    if (parallel) return;
+    this._attackAnimDepth = Math.max(0, (this._attackAnimDepth || 1) - 1);
+    if (this._attackAnimDepth === 0) {
+      this.isExecutingAttack = false;
+      this.state = 'PLAY';
+    }
+  }
+
+  _ammoCtx() {
+    return typeof window !== 'undefined' ? window : {};
+  }
+
+  /** 主兵装に装填可能な予備弾（acceptsAmmo 厳密・全銃種） */
+  _canLoadSpareAmmo(weapon, ammoItem) {
+    const fn = this._ammoCtx().isSpareAmmoCompatible;
+    if (typeof fn === 'function') return fn(weapon, ammoItem);
+    return ammoItem && ammoItem.type === 'ammo' && ammoItem.ammoFor === weapon.code;
+  }
+
+  _findCompatibleSpareMagSlot(u, w) {
+    const fn = this._ammoCtx().findCompatibleSpareMagSlot;
+    if (typeof fn === 'function') return fn(u, w);
+    return null;
+  }
+
+  _clearSpareMagSlot(u, where, index) {
+    const fn = this._ammoCtx().clearSpareMagSlot;
+    if (typeof fn === 'function') fn(u, where, index);
+  }
+
+  _applySpareMagToPrimary(primary, weapon, mag) {
+    const fn = this._ammoCtx().applySpareMagToPrimary;
+    if (typeof fn === 'function') fn(primary, weapon, mag);
+    else if (primary && mag) primary.current = primary.cap;
+  }
+
+  countCompatibleSpareMags(u, w) {
+    const fn = this._ammoCtx().countCompatibleSpareMags;
+    if (typeof fn === 'function') return fn(u, w);
+    return 0;
+  }
+
+  _enrichCombatWeapon(u, w) {
+    if (!w) return w;
+    return (typeof PlMgTripod !== 'undefined') ? PlMgTripod.enrichWeaponForCombat(u, w) : w;
+  }
+
+  /** 弾倉残量比率（0〜1） */
+  getMagazineRatio(u, w) {
+    if (!w) return 0;
+    if (w.code === 'm2_mortar') {
+      const fn = this._ammoCtx().findMortarShellTotal;
+      const t = typeof fn === 'function' ? fn(u) : 0;
+      return t > 0 ? 1 : 0;
+    }
+    const belt = typeof PlMgTripod !== 'undefined' && PlMgTripod.usesBeltReserve(w.code) && w.reserve !== undefined;
+    if (belt) {
+      const cap = w.cap || 50;
+      const inGun = (w.current || 0) + (w.reserve || 0);
+      return Math.min(1, inGun / Math.max(1, cap));
+    }
+    const cap = w.cap || 1;
+    return Math.min(1, (w.current || 0) / cap);
+  }
+
+  /**
+   * 弾切れ時: 銃種に適合する予備弾のみ消費してリロード（AI/自動用）。
+   * @returns {boolean}
+   */
+  tryAutoReloadWeapon(u, options = {}) {
+    const silent = !!options.silent;
+    if (!u) return false;
+    const w = this.getVirtualWeapon(u);
+    if (!w) return false;
+
+    if (w.code === 'm2_mortar') {
+      const fn = this._ammoCtx().findMortarShellTotal;
+      return typeof fn === 'function' ? fn(u) > 0 : false;
+    }
+
+    if (u.def?.isTank) {
+      const slot0 = u.hands[0];
+      if (!slot0) return false;
+      if (slot0.type && slot0.type.includes('shell')) {
+        if ((slot0.current || 0) > 0) return true;
+        if ((slot0.reserve || 0) <= 0) return false;
+        if (u.ap < 1) return false;
+        u.ap -= 1;
+        slot0.current = 1;
+        slot0.reserve -= 1;
+        if (!silent) this.ui.log(`${u.name} 装填`);
+        if (window.Sfx) Sfx.play('tank_reload');
+        return true;
+      }
+    }
+
+    const primary = u.hands[0];
+    if (!primary || primary.code !== w.code) return false;
+    if ((primary.current || 0) > 0) return true;
+
+    if (typeof PlMgTripod !== 'undefined' && PlMgTripod.usesBeltReserve(w.code)
+        && primary.reserve !== undefined && (primary.reserve || 0) > 0) {
+      const fill = Math.min(primary.cap || w.cap || 50, primary.reserve);
+      primary.current = fill;
+      primary.reserve = Math.max(0, (primary.reserve || 0) - fill);
+      return true;
+    }
+
+    const cost = w.rld || 1;
+    if (u.ap < cost) return false;
+
+    const magSlot = this._findCompatibleSpareMagSlot(u, w);
+    if (!magSlot) return false;
+
+    const mag = magSlot.item;
+    this._clearSpareMagSlot(u, magSlot.where, magSlot.index);
+    u.ap -= cost;
+
+    this._applySpareMagToPrimary(primary, w, mag);
+    if (!silent) this.ui.log(`${u.name} リロード (${mag.name || '予備弾'})`);
+    if (window.Sfx) Sfx.play('reload');
+    this.refreshUnitState(u);
+    return true;
+  }
+
   // --- COMBAT LOGIC ---
-  async actionAttack(a, d) {
-    if (!a) return;
+  async actionAttack(a, d, opts) {
+    const parallel = !!(opts && opts.parallel);
+    if (!a || a.hp <= 0) return;
+    this.clearUnitMarch(a);
     const primary = this.getVirtualWeapon(a);
     const forceM8Area = primary && primary.code === 'm8_rocket';
     const targetUnitForWeapon = forceM8Area ? null : ((d.hp !== undefined) ? d : this.getUnitInHex(d.q, d.r));
@@ -272,34 +431,33 @@ window.BattleLogic = class BattleLogic {
       return;
     }
 
-    // 弾薬チェック
+    // 弾薬チェック（弾切れログは出さない）
     if (w.code === 'm2_mortar') {
-      if (w.current <= 0) { this.ui.log("弾切れ！弾薬箱が空です"); return; }
-    } else if (w.code === 'mg42' && w.reserve !== undefined) {
-      if (w.reserve <= 0) { this.ui.log("弾切れ！MG42ベルトが空です"); return; }
+      if (w.current <= 0) return;
+    } else if (typeof PlMgTripod !== 'undefined' && PlMgTripod.usesBeltReserve(w.code) && w.reserve !== undefined) {
+      if (w.reserve <= 0 && (w.current || 0) <= 0) return;
     } else {
-      if (w.isConsumable && w.current <= 0) { this.ui.log("使用済みです"); return; }
+      if (w.isConsumable && w.current <= 0) return;
       if (w.current <= 0) {
-        this.reloadWeapon(a, false);
-        if (this.getVirtualWeapon(a)?.current <= 0) return;
+        if (!this.tryAutoReloadWeapon(a, { silent: true })) return;
+        w = this.getVirtualWeapon(a);
+        if (!w || w.current <= 0) return;
       }
     }
 
-    if (a.ap < w.ap) { this.ui.log("AP不足"); return; }
+    if (a.ap < w.ap) { this.rejectAction("AP不足"); return; }
 
     // M8 Rocket: 照準確定後にMarch of antsを消してから攻撃描写
     if (w.code === 'm8_rocket' && isAreaAttack && targetHex) {
       const hasAmmo = a.hands[0] && a.hands[0].code === 'm8_rocket' && (a.hands[0].current || 0) > 0;
-      if (!hasAmmo) { this.ui.log("M8 弾切れ"); return; }
-      this.isExecutingAttack = true;
+      if (!hasAmmo) return;
+      this._beginAttackAnim(parallel);
       a.ap -= w.ap;
-      this.state = 'ANIM';
       this.attackLine = [];
       this.aimTargetUnit = null;
       await this.triggerM8Rocket(a, targetHex);
-      this.isExecutingAttack = false;
-      this.state = 'PLAY';
-      this.checkPhaseEnd();
+      this._endAttackAnim(parallel);
+      if (!parallel) this.checkPhaseEnd();
       if (this.ui && this.ui.updateSidebar) this.ui.updateSidebar();
       if (this.interactionMode === 'ATTACK' && this.selectedUnit === a && !this.canFireAgain(a)) {
         this.setMode('SELECT');
@@ -309,13 +467,12 @@ window.BattleLogic = class BattleLogic {
     }
 
     const dist = this.hexDist(a, targetHex);
-    if (w.minRng && dist < w.minRng) { this.ui.log("目標が近すぎます！"); return; }
+    if (w.minRng && dist < w.minRng) { this.rejectAction("目標が近すぎます！"); return; }
     const maxRange = Math.ceil((w.rng || 1) * 2);
-    if (dist > maxRange) { this.ui.log("射程外"); return; }
+    if (dist > maxRange) { this.rejectAction("射程外"); return; }
 
-    this.isExecutingAttack = true;
+    this._beginAttackAnim(parallel);
     a.ap -= w.ap;
-    this.state = 'ANIM';
 
     if (a.def.isTank && w.type && w.type.includes('shell')) {
       this.consumeAmmo(a, w.code);
@@ -326,20 +483,30 @@ window.BattleLogic = class BattleLogic {
     if (typeof Renderer !== 'undefined' && Renderer.playAttackAnim) Renderer.playAttackAnim(a, animTarget);
 
     const terrainCover = this.map[targetHex.q][targetHex.r].cover;
+    const coverMult = (typeof BATTLE_SCALE !== 'undefined' && BATTLE_SCALE.coverMult) || 1;
     const distPenalty = dist * (w.acc_drop || 5);
     const overRange = Math.max(0, dist - (w.rng || 0));
     let hitChance = 0;
     if (!isAreaAttack && targetUnit) {
       const aimVal = (a.params && a.params.aim != null) ? a.params.aim : (a.stats?.aim || 0);
-      hitChance = aimVal * 2 + w.acc - distPenalty - terrainCover;
+      hitChance = aimVal * 2 + w.acc - distPenalty - terrainCover * coverMult;
       const moraleMod = (a.params && a.params.morale != null) ? (a.params.morale / 10) : 1;
       hitChance = Math.round(hitChance * moraleMod);
       hitChance -= overRange * (w.overRangePenalty ?? 15);
-      if (w.code === 'mg42') hitChance += 15;
+      if (w._hitBonus) hitChance += w._hitBonus;
+      if (w._hitPenalty) hitChance -= w._hitPenalty;
       if (targetUnit.stance === 'prone') hitChance -= 20;
       if (targetUnit.stance === 'crouch') hitChance -= 10;
       if (targetUnit.skills && targetUnit.skills.includes('Ambush')) hitChance -= 15;
       if (a.skills && a.skills.includes('Precision')) hitChance += 15;
+      if (typeof window.BattleCloud !== 'undefined') {
+        const pin = window.BattleCloud.getIntruderPressure(targetUnit);
+        if (pin > 0) hitChance += Math.floor(pin * 16);
+        const atkPin = window.BattleCloud.getIntruderPressure(a);
+        if (atkPin > 0) hitChance -= Math.floor(atkPin * 14);
+      }
+      const rtCfg = this.getRtTacticsCfg();
+      if (rtCfg && rtCfg.RT_HIT_PENALTY) hitChance -= rtCfg.RT_HIT_PENALTY;
     }
 
     // 弾数撃ち分けによる命中率ペナルティ（多弾発射側を選んだとき）
@@ -347,7 +514,7 @@ window.BattleLogic = class BattleLogic {
       this.attackBurstOverride.unitId === a.id &&
       this.attackBurstOverride.weaponCode === w.code) ? this.attackBurstOverride : null;
     if (!isAreaAttack && targetUnit && overrideInfo) {
-      const cfg = this.getBurstSelectionConfigForWeapon(w);
+      const cfg = this.getBurstSelectionConfigForWeapon(w, a);
       if (cfg && cfg.modes && cfg.modes.length >= 2) {
         const maxMode = Math.max.apply(null, cfg.modes);
         if (overrideInfo.shots >= maxMode) {
@@ -357,41 +524,11 @@ window.BattleLogic = class BattleLogic {
       }
     }
 
-    // --- 発射弾数計算（弾数撃ち分け対応） ---
-    let shots;
-    if (w.code === 'mg42' && w.reserve !== undefined) {
-      shots = Math.min(w.burst || 15, w.reserve);
-    } else if (a.def.isTank && w.type && w.type.includes('shell')) {
-      shots = 1;
-    } else if (w.code === 'm2_mortar') {
-      // M2 迫撃砲は仮想武器。弾薬箱残数に応じて最大発射数を制限
-      let totalAmmo = 0;
-      a.bag.forEach(item => {
-        if (item && item.code === 'mortar_shell_box') totalAmmo += (item.current || 0);
-      });
-      shots = Math.min(w.burst || 1, totalAmmo);
-      if (shots <= 0) shots = 1;
-    } else if (w.isConsumable) {
-      shots = 1;
-    } else {
-      shots = Math.min(w.burst || 1, w.current);
-    }
+    // --- 発射弾数計算（弾数撃ち分け: 選択値を優先、w.burst では cap しない） ---
+    let shots = this._resolveAttackShots(a, w, overrideInfo);
 
-    // 弾数撃ち分けの上書き（BAR / SMG / Mortar のみ）
-    if (overrideInfo) {
-      let maxByAmmo = shots;
-      if (w.code === 'm2_mortar') {
-        let totalAmmo = 0;
-        a.bag.forEach(item => {
-          if (item && item.code === 'mortar_shell_box') totalAmmo += (item.current || 0);
-        });
-        maxByAmmo = totalAmmo;
-      } else if (!w.isConsumable && !(a.def.isTank && w.type && w.type.includes('shell'))) {
-        maxByAmmo = w.current;
-      }
-      if (maxByAmmo > 0) {
-        shots = Math.max(1, Math.min(overrideInfo.shots, maxByAmmo));
-      }
+    if (opts && opts.maxShots != null && shots > 0) {
+      shots = Math.max(1, Math.min(shots, opts.maxShots));
     }
 
     let tankMg42ShotList = [];
@@ -411,10 +548,12 @@ window.BattleLogic = class BattleLogic {
 
     // パフォーマンス改善: UI更新をループ外へ
     await new Promise(async (resolve) => {
-      const isMg42 = (w.code === 'mg42');
+      const isMg42 = (typeof PlMgTripod !== 'undefined' && PlMgTripod.usesBeltReserve(w.code));
       const isMortarWpn = (w.code === 'm2_mortar');
       const isShellWpn = w.type && w.type.includes('shell');
-      const fireRate = isMg42 ? 30 : ((w.type === 'bullet') ? 60 : 300);
+      const rtCfg = game.getRtTacticsCfg();
+      const rtFire = (parallel && rtCfg && rtCfg.RT_PARALLEL_FIRE_RATE) ? rtCfg.RT_PARALLEL_FIRE_RATE : null;
+      const fireRate = rtFire != null ? rtFire : (isMg42 ? 30 : ((w.type === 'bullet') ? 60 : 300));
       const lastFlightTime = isMortarWpn ? 1000 : (isShellWpn ? 300 : (isMg42 ? dist * 50 : dist * 30));
       const animEndMs = Math.max(500, shots * fireRate + lastFlightTime);
       const mg42Speed = 0.08;
@@ -426,7 +565,7 @@ window.BattleLogic = class BattleLogic {
         const muzzleOffsetX = (gunIndex - (tankGunCount - 1) * 0.5) * 24;
 
         if (!(a.def.isTank && w.type && w.type.includes('shell'))) {
-          if (shotInfo && a.def.isTank && w.code === 'mg42') {
+          if (shotInfo && a.def.isTank && typeof PlMgTripod !== 'undefined' && PlMgTripod.usesBeltReserve(w.code)) {
             game.consumeAmmo(a, w.code, 1, shotInfo.handIndex);
           } else {
             game.consumeAmmo(a, w.code);
@@ -501,7 +640,9 @@ window.BattleLogic = class BattleLogic {
             const victims = game.getUnitsInHex(targetHex.q, targetHex.r).filter(v => v.team !== a.team);
             const baseChance = (w.type === 'bullet') ? 15 : 25;
             const distDrop = Math.min(10, dist * 1.5);
-            const areaHitChance = Math.max(2, baseChance - distDrop);
+            let areaHitChance = Math.max(2, baseChance - distDrop);
+            const rtArea = game.getRtTacticsCfg();
+            if (rtArea && rtArea.RT_HIT_PENALTY) areaHitChance = Math.max(1, areaHitChance - Math.floor(rtArea.RT_HIT_PENALTY * 0.5));
             const wDmg = getWeaponDmg(w);
             victims.forEach(v => {
               if ((Math.random() * 100) < areaHitChance) {
@@ -521,6 +662,10 @@ window.BattleLogic = class BattleLogic {
             if (targetUnit && targetUnit.hp > 0) {
               if ((Math.random() * 100) < hitChance) {
                 let dmg = targetUnit.def.isTank && w.type === 'bullet' ? 0 : dmgWithSkill;
+                if (dmg > 0 && typeof window.BattleCloud !== 'undefined'
+                    && window.BattleCloud.getOutgoingDamageMultiplier) {
+                  dmg = Math.max(1, Math.floor(dmg * window.BattleCloud.getOutgoingDamageMultiplier(a)));
+                }
                 if (dmg > 0) {
                   if (window.Sfx) Sfx.play('soft_hit');
                   if (!isShell && window.VFX) window.VFX.add({ x: tx, y: ty, vx: 0, vy: -5, life: 10, maxLife: 10, color: "#fff", size: 2, type: 'spark' });
@@ -554,19 +699,17 @@ window.BattleLogic = class BattleLogic {
       }
 
       setTimeout(() => {
-        game.state = 'PLAY';
         game.updateSidebar(a);
 
         const wAfter = game.getVirtualWeapon(a);
-        const lastWeaponWasMg42 = (w && w.code === 'mg42');
+        const lastWeaponWasMg42 = (w && typeof PlMgTripod !== 'undefined' && PlMgTripod.usesBeltReserve(w.code));
         const lastWeaponWasShell = (w && w.type && w.type.includes('shell'));
         if (!lastWeaponWasMg42 && !lastWeaponWasShell && a.def.isTank && wAfter && wAfter.current === 0 && wAfter.reserve > 0 && game.tankAutoReload && a.ap >= 1) {
           game.reloadWeapon(a, false);
         }
         game.refreshUnitState(a);
-        game.isExecutingAttack = false;
-        game.state = 'PLAY';
-        game.checkPhaseEnd();
+        game._endAttackAnim(parallel);
+        if (!parallel) game.checkPhaseEnd();
         if (game.interactionMode === 'ATTACK' && game.selectedUnit === a && !game.canFireAgain(a)) {
           game.setMode('SELECT');
           game.attackLine = [];
@@ -576,13 +719,45 @@ window.BattleLogic = class BattleLogic {
     });
   }
 
+  /** 拒否理由をログ＋選択ユニット位置にフロート表示する */
+  rejectAction(text) {
+    this.ui.log(text);
+    const u = this.selectedUnit;
+    if (u && typeof Renderer !== 'undefined' && Renderer.game && Renderer.showFloatText) {
+      try {
+        Renderer.showFloatText(u.q, u.r, text, '#ff5555');
+      } catch(e) {
+        console.warn("Renderer not ready for showFloatText (Skipped):", e);
+      }
+    }
+  }
+
   applyDamage(target, damage, sourceName = "攻撃") {
     if (!target || target.hp <= 0) return;
     if (target.skills && target.skills.includes('Armor')) damage = Math.max(0, damage - 5);
+    const rtCfg = this.getRtTacticsCfg();
+    if (rtCfg && rtCfg.RT_DAMAGE_MULT != null && damage > 0) {
+      damage = Math.max(1, Math.floor(damage * rtCfg.RT_DAMAGE_MULT));
+    }
+    if (typeof window.BattleCloud !== 'undefined' && damage > 0) {
+      damage = Math.max(1, Math.floor(damage * window.BattleCloud.getDefenseMultiplier(target)));
+      if (window.BattleCloud.getDamageTakenMultiplier) {
+        damage = Math.max(1, Math.floor(damage * window.BattleCloud.getDamageTakenMultiplier(target)));
+      }
+    }
     target.hp -= damage;
     if (target.hp <= 0 && !target.deadProcessed) {
       target.deadProcessed = true;
       this.ui.log(`>> ${target.name} を撃破！`);
+      if (target.team === 'player' && !target.def?.isTank) {
+        const sectors = target.sectorsSurvived || 0;
+        const skillTxt = (target.skills && target.skills.length) ? `（${target.skills.join(', ')}）` : '';
+        if (sectors > 0) {
+          this.ui.log(`☠ ${target.name}${skillTxt} 戦死 — ${sectors}セクターを生き抜いた古参兵だった`);
+        } else {
+          this.ui.log(`☠ ${target.name} 戦死`);
+        }
+      }
       if (window.Sfx) { Sfx.play('death'); }
       if (window.VFX) { const p = Renderer.hexToPx(target.q, target.r); window.VFX.addUnitDebris(p.x, p.y); }
 
@@ -613,14 +788,17 @@ window.BattleLogic = class BattleLogic {
     const slot0IsRecoveryGear = master0 && master0.attr === recoveryAttr;
     const isWeapon = slot0 && !slot0IsRecoveryGear && slot0.type !== 'part'
       && (slot0.attr === weaponAttr || (slot0.code && master0 && master0.attr === weaponAttr));
-    if (isWeapon) return slot0;
+    if (isWeapon) {
+      if (typeof syncWeaponAcceptsAmmo === 'function') syncWeaponAcceptsAmmo(slot0);
+      return this._enrichCombatWeapon(u, slot0);
+    }
 
     // 迫撃砲パーツ3種揃い → 仮想 m2_mortar
     const parts = u.hands.map(i => i ? i.code : null);
     if (parts.includes('mortar_barrel') && parts.includes('mortar_bipod') && parts.includes('mortar_plate')) {
       const base = WPNS['m2_mortar'];
-      let totalAmmo = 0;
-      u.bag.forEach(item => { if (item && item.code === 'mortar_shell_box') totalAmmo += item.current; });
+      const fn = this._ammoCtx().findMortarShellTotal;
+      const totalAmmo = typeof fn === 'function' ? fn(u) : 0;
       return { ...base, code: 'm2_mortar', current: totalAmmo > 0 ? 1 : 0, cap: 1, isVirtual: true };
     }
     return null;
@@ -629,6 +807,10 @@ window.BattleLogic = class BattleLogic {
   consumeAmmo(u, weaponCode, count, handIndex) {
     const n = (count != null && count > 0) ? count : 1;
     if (weaponCode === 'm2_mortar') {
+      for (let i = 0; i < 3; i++) {
+        const h = u.hands && u.hands[i];
+        if (h && h.code === 'mortar_shell_box' && h.current > 0) { h.current--; return true; }
+      }
       const ammoBox = u.bag.find(i => i && i.code === 'mortar_shell_box' && i.current > 0);
       if (ammoBox) { ammoBox.current--; return true; }
       return false;
@@ -642,9 +824,9 @@ window.BattleLogic = class BattleLogic {
       slot0.current = cur - need;
       return true;
     }
-    if (weaponCode === 'mg42' && u.hands) {
+    if (typeof PlMgTripod !== 'undefined' && PlMgTripod.usesBeltReserve(weaponCode) && u.hands) {
       if (u.def?.isTank) {
-        if (handIndex !== undefined && u.hands[handIndex] && u.hands[handIndex].code === 'mg42') {
+        if (handIndex !== undefined && u.hands[handIndex] && u.hands[handIndex].code === weaponCode) {
           const mg = u.hands[handIndex];
           if ((mg.reserve !== undefined ? mg.reserve : mg.current) > 0) {
             if (mg.reserve !== undefined) mg.reserve = Math.max(0, mg.reserve - 1);
@@ -653,7 +835,7 @@ window.BattleLogic = class BattleLogic {
           }
           return false;
         }
-        const mgs = u.hands.filter(h => h && h.code === 'mg42' && (h.reserve !== undefined ? h.reserve > 0 : h.current > 0));
+        const mgs = u.hands.filter(h => h && h.code === weaponCode && (h.reserve !== undefined ? h.reserve > 0 : h.current > 0));
         for (let i = 0; i < n && mgs.length > 0; i++) {
           const mg = mgs.find(m => (m.reserve !== undefined ? m.reserve : m.current) > 0);
           if (!mg) break;
@@ -662,9 +844,17 @@ window.BattleLogic = class BattleLogic {
         }
         return true;
       }
-      const mg = u.hands.find(h => h && h.code === 'mg42');
+      const mg = u.hands.find(h => h && h.code === weaponCode);
       if (!mg) return false;
-      for (let i = 0; i < n && mg.current > 0; i++) mg.current--;
+      for (let i = 0; i < n; i++) {
+        if (mg.current <= 0 && (mg.reserve || 0) > 0) {
+          const fill = Math.min(mg.cap || 50, mg.reserve);
+          mg.current = fill;
+          mg.reserve = Math.max(0, mg.reserve - fill);
+        }
+        if (mg.current > 0) mg.current--;
+        else return i > 0;
+      }
       return true;
     }
     if (weaponCode === 'nade') {
@@ -711,7 +901,9 @@ window.BattleLogic = class BattleLogic {
       }
     }
     if (a.def.isTank && targetUnit && !targetUnit.def?.isTank) {
-      const tankMgSlots = (a.hands || []).map((h, idx) => (h && h.code === 'mg42') ? { handIndex: idx, mg: h } : null).filter(Boolean);
+      const tankMgSlots = (a.hands || []).map((h, idx) => (
+        h && typeof PlMgTripod !== 'undefined' && PlMgTripod.usesBeltReserve(h.code)
+      ) ? { handIndex: idx, mg: h } : null).filter(Boolean);
       const totalReserve = tankMgSlots.reduce((s, o) => s + (o.mg.reserve !== undefined ? o.mg.reserve : o.mg.current || 0), 0);
       if (tankMgSlots.length > 0 && totalReserve > 0) {
         const dist = this.hexDist(a, targetUnit);
@@ -735,7 +927,9 @@ window.BattleLogic = class BattleLogic {
       (u.bag || []).forEach(i => { if (i && i.code === 'mortar_shell_box') total += (i.current || 0); });
       return total > 0;
     }
-    if (w.code === 'mg42' && w.reserve !== undefined) return w.reserve > 0;
+    if (typeof PlMgTripod !== 'undefined' && PlMgTripod.usesBeltReserve(w.code) && w.reserve !== undefined) {
+      return (w.reserve > 0) || ((w.current || 0) > 0);
+    }
     if (w.code === 'm8_rocket') {
       const slot = u.hands && u.hands[0];
       return slot && slot.code === 'm8_rocket' && (slot.current || 0) > 0;
@@ -749,21 +943,56 @@ window.BattleLogic = class BattleLogic {
 
   // --- HELPER METHODS ---
 
+  _resolveAttackShots(a, w, overrideInfo) {
+    if (!w) return 1;
+    if (w.isConsumable) return 1;
+    if (a.def?.isTank && w.type && w.type.includes('shell')) return 1;
+
+    let ammoCap = 0;
+    if (w.code === 'm2_mortar') {
+      (a.bag || []).forEach((item) => {
+        if (item && item.code === 'mortar_shell_box') ammoCap += (item.current || 0);
+      });
+    } else if (typeof PlMgTripod !== 'undefined' && PlMgTripod.usesBeltReserve(w.code) && w.reserve !== undefined) {
+      ammoCap = (w.current || 0) + (w.reserve || 0);
+    } else {
+      ammoCap = w.current || 0;
+    }
+
+    let requested = w.burst || 1;
+    if (overrideInfo && overrideInfo.weaponCode === w.code && overrideInfo.shots > 0) {
+      requested = overrideInfo.shots;
+    }
+
+    if (ammoCap <= 0) return 0;
+    return Math.max(1, Math.min(requested, ammoCap));
+  }
+
   /**
-   * 指定武器が弾数撃ち分けUIの対象かどうかと、そのモード情報を返す。
-   * 現状は BAR / M1A1 SMG / M2 Mortar のみ対象。
+   * 弾数撃ち分けUIの対象かどうかとモード情報を返す。
    * @param {Object} w - getVirtualWeapon / getAttackWeapon が返す武器オブジェクト
    * @returns {{ weaponCode: string, modes: number[] }|null}
    */
-  getBurstSelectionConfigForWeapon(w) {
+  getBurstSelectionConfigForWeapon(w, u) {
     if (!w || !w.code) return null;
-    const supported = ['bar', 'thompson', 'm2_mortar'];
-    if (supported.indexOf(w.code) === -1) return null;
-    if (!Array.isArray(w.modes) || w.modes.length < 2) return null;
-    return {
-      weaponCode: w.code,
-      modes: w.modes.slice()
-    };
+    const unit = u || this.selectedUnit;
+    let modes = null;
+    if (typeof PlMgTripod !== 'undefined') {
+      modes = PlMgTripod.getFireModes(w, unit);
+      if (!modes && PlMgTripod.normalizeFireModes) {
+        modes = PlMgTripod.normalizeFireModes(w.modes);
+      }
+    } else if (Array.isArray(w.modes)) {
+      modes = w.modes.slice();
+    }
+    if (typeof PlMgTripod !== 'undefined' && PlMgTripod.normalizeFireModes) {
+      modes = PlMgTripod.normalizeFireModes(modes);
+    } else if (modes) {
+      modes = [...new Set(modes.filter((n) => Number(n) > 0))].sort((a, b) => a - b);
+      if (modes.length < 2) modes = null;
+    }
+    if (!modes) return null;
+    return { weaponCode: w.code, modes };
   }
 
   /**
@@ -775,7 +1004,7 @@ window.BattleLogic = class BattleLogic {
     const u = this.selectedUnit;
     if (!u || !shots || shots <= 0) return;
     const w = this.getVirtualWeapon ? this.getVirtualWeapon(u) : null;
-    const cfg = this.getBurstSelectionConfigForWeapon(w);
+    const cfg = this.getBurstSelectionConfigForWeapon(w, u);
     if (!w || !cfg) return;
     this.attackBurstOverride = {
       unitId: u.id,
@@ -794,6 +1023,78 @@ window.BattleLogic = class BattleLogic {
   showContext(mx, my, hex) { this.ui.showContext(mx, my, hex); }
   hideActionMenu() { this.ui.hideActionMenu(); }
   getUnitsInHex(q, r) { return this.units.filter(u => u.q === q && u.r === r && u.hp > 0); }
+
+  /** 同ヘックスの味方（装備渡し UI 用） */
+  getSameHexSquadMembers(unit) {
+    if (!unit || unit.hp <= 0) return [];
+    return this.getUnitsInHex(unit.q, unit.r).filter(u => u.team === 'player' && u.hp > 0);
+  }
+
+  canTransferEquipmentBetween(fromUnit, toUnit) {
+    if (typeof FEATURE_SAME_HEX_TRANSFER !== 'undefined' && !FEATURE_SAME_HEX_TRANSFER) return false;
+    if (!fromUnit || !toUnit || fromUnit === toUnit) return false;
+    if (this.state !== 'PLAY') return false;
+    if (fromUnit.team !== 'player' || toUnit.team !== 'player') return false;
+    if (fromUnit.q !== toUnit.q || fromUnit.r !== toUnit.r) return false;
+    if (fromUnit.hp <= 0 || toUnit.hp <= 0) return false;
+    if (fromUnit.def && fromUnit.def.isTank) return false;
+    if (toUnit.def && toUnit.def.isTank) return false;
+    return true;
+  }
+
+  /**
+   * 同一ヘックスの味方へ装備を渡す（src スロット ↔ tgt スロットを swap）。
+   * @returns {boolean}
+   */
+  transferEquipment(fromUnit, toUnit, src, tgt) {
+    if (!this.canTransferEquipmentBetween(fromUnit, toUnit)) {
+      this.ui.log('同ヘックスの味方歩兵にのみ渡せます');
+      return false;
+    }
+    const srcIdx = src.type === 'main' ? (src.index ?? 0) : src.index;
+    const tgtIdx = tgt.type === 'main' ? (tgt.index ?? 0) : tgt.index;
+    const item1 = src.type === 'main' ? fromUnit.hands[srcIdx] : fromUnit.bag[srcIdx];
+    const item2 = tgt.type === 'main' ? toUnit.hands[tgtIdx] : toUnit.bag[tgtIdx];
+    if (!item1 && !item2) return false;
+    const changed = (item1 !== item2) || (item1 && item2 && (item1.code !== item2.code || item1.id !== item2.id));
+    if (!changed) return false;
+
+    if (typeof PlMgTripod !== 'undefined' && PlMgTripod.validateItemPlacement) {
+      const vFrom = PlMgTripod.validateItemPlacement(fromUnit, src.type, srcIdx, item2);
+      const vTo = PlMgTripod.validateItemPlacement(toUnit, tgt.type, tgtIdx, item1);
+      if (!vFrom.ok || !vTo.ok) {
+        this.ui.log((vFrom.reason || vTo.reason) || '装備配置不可');
+        return false;
+      }
+    }
+
+    if (src.type === 'main') fromUnit.hands[srcIdx] = item2; else fromUnit.bag[srcIdx] = item2;
+    if (tgt.type === 'main') toUnit.hands[tgtIdx] = item1; else toUnit.bag[tgtIdx] = item1;
+
+    if (typeof LoadoutWeight !== 'undefined') {
+      LoadoutWeight.refreshUnitLoadout(fromUnit);
+      LoadoutWeight.refreshUnitLoadout(toUnit);
+    }
+    this.updateSidebar();
+    if (fromUnit === this.selectedUnit || toUnit === this.selectedUnit) {
+      this.ui.refreshCommandMenuState(this.selectedUnit);
+    }
+    if (window.Sfx) Sfx.play('swap');
+    const itemName = item1 ? (item1.name || item1.code) : (item2 ? item2.name || item2.code : '装備');
+    this.ui.log(`${fromUnit.name} → ${toUnit.name}: ${itemName}`);
+    return true;
+  }
+
+  /** サイドバー SQUAD 行: 同ヘックス味方の LOADOUT 表示対象を切替 */
+  selectSquadMember(u) {
+    if (!u || u.team !== 'player' || u.hp <= 0) return;
+    if (this.interactionMode !== 'SELECT') this.setMode('SELECT');
+    this.selectedUnit = u;
+    this.refreshUnitState(u);
+    this.updateSidebar(u);
+    if (window.Sfx) Sfx.play('click');
+  }
+
   getUnitInHex(q, r) { return this.units.find(u => u.q === q && u.r === r && u.hp > 0); }
   getUnit(q, r) { return this.getUnitInHex(q, r); }
   isValidHex(q, r) { return this.mapSystem ? this.mapSystem.isValidHex(q, r) : false; }
@@ -806,6 +1107,82 @@ window.BattleLogic = class BattleLogic {
   hexDist(a, b) { return this.mapSystem ? this.mapSystem.hexDist(a, b) : 0; }
   getNeighbors(q, r) { return this.mapSystem ? this.mapSystem.getNeighbors(q, r) : []; }
   findPath(u, tq, tr) { return this.mapSystem ? this.mapSystem.findPath(u, tq, tr) : []; }
+
+  findMarchPath(u, tq, tr) {
+    if (!this.mapSystem || !this.mapSystem.findPathWithMaxCost) return this.findPath(u, tq, tr);
+    const budget = this.getMovementBudget(u);
+    const maxTurns = (typeof MARCH_PLAN_MAX_TURNS !== 'undefined') ? MARCH_PLAN_MAX_TURNS : 5;
+    const maxCost = budget * Math.max(1, maxTurns);
+    return this.mapSystem.findPathWithMaxCost(u, tq, tr, maxCost);
+  }
+
+  clearUnitMarch(u) {
+    if (!u) return;
+    delete u.marchActive;
+  }
+
+  /** 黄色ヘックス: 行軍予約のみ（今ターン移動なし） */
+  actionReserveMarch(u, dest, turns) {
+    if (!u || !dest || turns == null) return;
+    u.marchActive = {
+      destQ: dest.q,
+      destR: dest.r,
+      turnsTotal: Math.max(2, Number(turns) || 2),
+      turnsElapsed: 0,
+    };
+    u.ap = 0;
+    this.ui.log(`${u.name} 行軍予約 → (${dest.q},${dest.r}) 約${u.marchActive.turnsTotal}ターン`);
+    this.refreshUnitState(u);
+    this.checkPhaseEnd();
+  }
+
+  /** プレイヤーフェーズ開始時: 行軍中ユニットを1ターン分だけ進める */
+  async processMarchOrders() {
+    if (typeof FEATURE_EXTENDED_MARCH !== 'undefined' && !FEATURE_EXTENDED_MARCH) return;
+    const marchers = this.units.filter(u =>
+      u.team === 'player' && u.hp > 0 && u.marchActive && u.ap > 0
+    );
+    if (!marchers.length) return;
+    this.state = 'ANIM';
+    for (let i = 0; i < marchers.length; i++) {
+      await this.executeMarchStep(marchers[i]);
+    }
+    this.state = 'PLAY';
+  }
+
+  async executeMarchStep(u) {
+    const m = u.marchActive;
+    if (!m || u.ap <= 0) return;
+    const path = this.findMarchPath(u, m.destQ, m.destR);
+    if (!path.length) {
+      this.ui.log(`${u.name} 行軍: 経路なし — 予約解除`);
+      this.clearUnitMarch(u);
+      return;
+    }
+    const budget = this.getMovementBudget(u);
+    const steps = [];
+    let spent = 0;
+    for (let i = 0; i < path.length; i++) {
+      const s = path[i];
+      const c = this.getTerrainMoveCost(u, s.q, s.r);
+      if (spent + c > budget) break;
+      steps.push(s);
+      spent += c;
+    }
+    if (steps.length === 0) {
+      this.ui.log(`${u.name} 行軍: 移動力不足 — 待機`);
+      return;
+    }
+    m.turnsElapsed = (m.turnsElapsed || 0) + 1;
+    await this.actionMove(u, steps, { parallel: false });
+    if (u.q === m.destQ && u.r === m.destR) {
+      this.ui.log(`${u.name} 行軍完了`);
+      this.clearUnitMarch(u);
+    } else if (m.turnsElapsed >= m.turnsTotal) {
+      this.ui.log(`${u.name} 行軍: 予定ターン到達（未到着）`);
+      this.clearUnitMarch(u);
+    }
+  }
 
   calcAttackLine(u, tq, tr) {
     if (!this.mapSystem) return;
@@ -853,6 +1230,7 @@ window.BattleLogic = class BattleLogic {
       this.path = [];
       this.attackLine = [];
       this.reachableHexes = [];
+      this.marchReachableHexes = [];
       // ATTACK以外のモードに移行したら弾数指定はクリアしておく
       this.attackBurstOverride = null;
     } else {
@@ -887,13 +1265,39 @@ window.BattleLogic = class BattleLogic {
     this.selectedUnit = u; this.refreshUnitState(u); this.ui.hideActionMenu();
   }
 
+  /** Tabキー: 行動可能な自軍兵を順番に選択し、カメラを寄せる */
+  selectNextUnit() {
+    const candidates = this.units.filter(u => u.team === 'player' && u.hp > 0 && u.ap > 0);
+    if (candidates.length === 0) return;
+    const curIdx = this.selectedUnit ? candidates.indexOf(this.selectedUnit) : -1;
+    const next = candidates[(curIdx + 1) % candidates.length];
+    this.onUnitClick(next);
+    if (typeof Renderer !== 'undefined' && Renderer.game && Renderer.centerOn) {
+      try {
+        Renderer.centerOn(next.q, next.r);
+      } catch(e) {
+        console.warn("Renderer not ready for centerOn (Skipped):", e);
+      }
+    }
+  }
+
   handleClick(p, pointerX, pointerY) {
     if (this.state !== 'PLAY' && this.state !== 'ANIM') return;
     if (this.interactionMode === 'SELECT') { this.clearSelection(); }
     else if (this.interactionMode === 'MOVE') {
       if (this.selectedUnit && this.isValidHex(p.q, p.r) && this.path.length > 0) {
         const last = this.path[this.path.length - 1];
-        if (last.q === p.q && last.r === p.r) { this.actionMove(this.selectedUnit, this.path); this.setMode('SELECT'); }
+        if (last.q === p.q && last.r === p.r) {
+          const u = this.selectedUnit;
+          const isThisTurn = this.reachableHexes.some(h => h.q === p.q && h.r === p.r);
+          const marchHit = this.marchReachableHexes && this.marchReachableHexes.find(h => h.q === p.q && h.r === p.r);
+          if (isThisTurn) {
+            this.actionMove(u, this.path);
+          } else if (marchHit) {
+            this.actionReserveMarch(u, p, marchHit.turns);
+          }
+          this.setMode('SELECT');
+        }
       } else { this.setMode('SELECT'); }
     }
     else if (this.interactionMode === 'ATTACK') {
@@ -934,9 +1338,13 @@ window.BattleLogic = class BattleLogic {
     if (u && u.team === 'player') {
       if (this.interactionMode === 'MOVE') {
         const isReachable = this.reachableHexes.some(h => h.q === p.q && h.r === p.r);
+        const marchHit = this.marchReachableHexes && this.marchReachableHexes.some(h => h.q === p.q && h.r === p.r);
         const targetUnits = this.getUnitsInHex(p.q, p.r);
-        if (isReachable && targetUnits.length < this.getHexUnitCap()) {
-          this.path = this.findPath(u, p.q, p.r);
+        const canEnter = targetUnits.length < this.getHexUnitCap();
+        if (canEnter && (isReachable || marchHit)) {
+          this.path = marchHit && !isReachable
+            ? this.findMarchPath(u, p.q, p.r)
+            : this.findPath(u, p.q, p.r);
         } else {
           this.path = [];
         }
@@ -962,10 +1370,11 @@ window.BattleLogic = class BattleLogic {
     if (dist > maxRange) return null;
     if (w.minRng && dist < w.minRng) return null;
     const terrainCover = this.map[targetHex.q][targetHex.r].cover;
+    const coverMult = (typeof BATTLE_SCALE !== 'undefined' && BATTLE_SCALE.coverMult) || 1;
     const aimVal = (attacker.params && attacker.params.aim != null) ? attacker.params.aim : (attacker.stats?.aim || 0);
     const throwVal = (attacker.params && attacker.params.throw != null) ? attacker.params.throw : 5;
     const baseAcc = (w.area && !targetUnit) ? throwVal * 2 : aimVal * 2;
-    let hit = baseAcc + (w.acc || 0) - (dist * (w.acc_drop || 5)) - terrainCover;
+    let hit = baseAcc + (w.acc || 0) - (dist * (w.acc_drop || 5)) - terrainCover * coverMult;
     const moraleMod = (attacker.params && attacker.params.morale != null) ? (attacker.params.morale / 10) : 1;
     hit = Math.round(hit * moraleMod);
     const overRange = Math.max(0, dist - (w.rng || 0));
@@ -973,6 +1382,8 @@ window.BattleLogic = class BattleLogic {
     if (targetUnit) {
       if (targetUnit.stance === 'prone') hit -= 20;
       if (targetUnit.stance === 'crouch') hit -= 10;
+      const rtCfg = this.getRtTacticsCfg();
+      if (rtCfg && rtCfg.RT_HIT_PENALTY) hit -= rtCfg.RT_HIT_PENALTY;
     } else if (w.area) {
       hit += 20;
     }
@@ -982,7 +1393,7 @@ window.BattleLogic = class BattleLogic {
       this.attackBurstOverride.unitId === attacker.id &&
       this.attackBurstOverride.weaponCode === w.code) ? this.attackBurstOverride : null;
     if (overrideInfo) {
-      const cfg = this.getBurstSelectionConfigForWeapon(w);
+      const cfg = this.getBurstSelectionConfigForWeapon(w, attacker);
       if (cfg && cfg.modes && cfg.modes.length >= 2) {
         const maxMode = Math.max.apply(null, cfg.modes);
         if (overrideInfo.shots >= maxMode) {
@@ -1017,6 +1428,7 @@ window.BattleLogic = class BattleLogic {
   clearSelection() {
     this.selectedUnit = null;
     this.reachableHexes = [];
+    this.marchReachableHexes = [];
     this.attackLine = [];
     this.aimTargetUnit = null;
     this.path = [];
@@ -1035,19 +1447,49 @@ window.BattleLogic = class BattleLogic {
     this.updateSidebar();
   }
 
+  getMovementBudget(u, apOverride) {
+    if (typeof LoadoutWeight !== 'undefined') {
+      return LoadoutWeight.getMovementBudget(u, apOverride != null ? apOverride : u.ap);
+    }
+    const spd = (u.params && u.params.speed != null) ? u.params.speed : 5;
+    const ap = apOverride != null ? apOverride : u.ap;
+    return Math.max(1, Math.floor(ap * (spd / 5)));
+  }
+
+  getTerrainMoveCost(u, q, r) {
+    const base = this.map[q][r].cost;
+    const mult = (typeof LoadoutWeight !== 'undefined') ? LoadoutWeight.getTerrainCostMultiplier(u) : 1;
+    return Math.max(1, Math.ceil(base * mult));
+  }
+
   calcReachableHexes(u) {
-    this.reachableHexes = []; if (!u) return;
-    const maxCost = (u.params && u.params.speed != null) ? Math.max(1, Math.floor(u.ap * (u.params.speed / 5))) : u.ap;
-    let frontier = [{ q: u.q, r: u.r, cost: 0 }], costSoFar = new Map(); costSoFar.set(`${u.q},${u.r}`, 0);
+    this.reachableHexes = [];
+    this.marchReachableHexes = [];
+    if (!u) return;
+    const maxCost = this.getMovementBudget(u);
+    const extMarch = typeof FEATURE_EXTENDED_MARCH !== 'undefined' && FEATURE_EXTENDED_MARCH;
+    const maxTurns = (typeof MARCH_PLAN_MAX_TURNS !== 'undefined') ? MARCH_PLAN_MAX_TURNS : 5;
+    const planMax = extMarch ? maxCost * Math.max(1, maxTurns) : maxCost;
+    const frontier = [{ q: u.q, r: u.r, cost: 0 }];
+    const costSoFar = new Map();
+    costSoFar.set(`${u.q},${u.r}`, 0);
     while (frontier.length > 0) {
-      let current = frontier.shift();
+      const current = frontier.shift();
       this.getNeighbors(current.q, current.r).forEach(n => {
         if (this.getUnitsInHex(n.q, n.r).length >= this.getHexMoveBlock()) { return; }
-        const cost = this.map[n.q][n.r].cost; if (cost >= 99) { return; }
-        const nc = costSoFar.get(`${current.q},${current.r}`) + cost;
+        const stepCost = this.getTerrainMoveCost(u, n.q, n.r);
+        if (this.map[n.q][n.r].cost >= 99) { return; }
+        const nc = costSoFar.get(`${current.q},${current.r}`) + stepCost;
+        if (nc > planMax) return;
+        const key = `${n.q},${n.r}`;
+        if (costSoFar.has(key) && nc >= costSoFar.get(key)) return;
+        costSoFar.set(key, nc);
+        frontier.push({ q: n.q, r: n.r, cost: nc });
         if (nc <= maxCost) {
-          const key = `${n.q},${n.r}`;
-          if (!costSoFar.has(key) || nc < costSoFar.get(key)) { costSoFar.set(key, nc); frontier.push({ q: n.q, r: n.r }); this.reachableHexes.push({ q: n.q, r: n.r }); }
+          this.reachableHexes.push({ q: n.q, r: n.r });
+        } else if (extMarch && maxCost > 0) {
+          const turns = Math.max(2, Math.ceil(nc / maxCost));
+          this.marchReachableHexes.push({ q: n.q, r: n.r, turns, cost: nc });
         }
       });
     }
@@ -1057,7 +1499,7 @@ window.BattleLogic = class BattleLogic {
     const u = this.selectedUnit; if (!u || u.def.isTank) return;
     if (u.stance === s) return;
     let cost = 0; if (u.stance === 'prone' && (s === 'stand' || s === 'crouch')) { cost = 1; }
-    if (u.ap < cost) { this.ui.log("AP不足"); return; }
+    if (u.ap < cost) { this.rejectAction("AP不足"); return; }
     u.ap -= cost; u.stance = s; this.refreshUnitState(u); this.ui.hideActionMenu(); if (window.Sfx) Sfx.play('click');
   }
 
@@ -1082,13 +1524,44 @@ window.BattleLogic = class BattleLogic {
     const changed = (item1 !== item2) || (item1 && item2 && (item1.code !== item2.code || item1.id !== item2.id));
     if (!changed) return;
 
+    if (typeof PlMgTripod !== 'undefined' && PlMgTripod.validateEquipmentSwap) {
+      const v = PlMgTripod.validateEquipmentSwap(u, src, tgt, item1, item2);
+      if (!v.ok) {
+        this.ui.log(v.reason || '装備配置不可');
+        if (window.Sfx) Sfx.play('click');
+        return;
+      }
+    }
+
     if (src.type === 'main') u.hands[srcIdx] = item2; else u.bag[srcIdx] = item2;
     if (tgt.type === 'main') u.hands[tgtIdx] = item1; else u.bag[tgtIdx] = item1;
 
     this.updateSidebar();
     if (u === this.selectedUnit) this.ui.refreshCommandMenuState(u);
     if (window.Sfx) Sfx.play('click');
+    if (typeof LoadoutWeight !== 'undefined') LoadoutWeight.refreshUnitLoadout(u);
     this.ui.log(`${u.name} 装備変更`);
+  }
+
+  /** 装備スロットからデッキへ戻せるアイテムか */
+  _canMoveItemToDeck(item) {
+    if (!item || !item.code || typeof WPNS === 'undefined' || !WPNS[item.code]) return false;
+    const m = WPNS[item.code];
+    if (typeof PlMgTripod !== 'undefined' && PlMgTripod.isTripodCode(item.code)) return true;
+    if (item.code === 'mortar_shell_box' || item.code === 'mag') return true;
+    if (m.type === 'part' && m.partType) return true;
+    if (m.attr === ATTR.WEAPON || m.attr === ATTR.RECOVERY) return true;
+    return false;
+  }
+
+  /** デッキカードを LOADOUT / BACKPACK スロットへ装備できるか（UI D&D 用） */
+  canEquipItemFromDeck(source) {
+    if (!source) return false;
+    if (typeof source === 'string') {
+      if (typeof WPNS === 'undefined' || !WPNS[source]) return false;
+      return this._canMoveItemToDeck({ code: source });
+    }
+    return this._canMoveItemToDeck(source);
   }
 
   moveWeaponToDeck(src) {
@@ -1096,15 +1569,15 @@ window.BattleLogic = class BattleLogic {
     if (!u) return;
     const idx = src.type === 'main' ? src.index : src.index;
     const item = src.type === 'main' ? u.hands[idx] : u.bag[idx];
-    if (!item || !item.code || !WPNS[item.code] || WPNS[item.code].attr !== ATTR.WEAPON) return;
-    // ユニットからは取り外し、弾数などの状態を保持したままカード化する
+    if (!this._canMoveItemToDeck(item)) return;
     if (src.type === 'main') u.hands[idx] = null; else u.bag[idx] = null;
     if (typeof Renderer !== 'undefined' && Renderer.dealCard) {
       Renderer.dealCard({ type: item.code, weaponData: item });
     }
     this.updateSidebar();
+    if (typeof LoadoutWeight !== 'undefined') LoadoutWeight.refreshUnitLoadout(u);
     if (window.Sfx) Sfx.play('click');
-    this.ui.log(`${u.name} 装備解除: ${item.name}`);
+    this.ui.log(`${u.name} 装備解除: ${item.name || item.code}`);
   }
 
   /**
@@ -1121,19 +1594,25 @@ window.BattleLogic = class BattleLogic {
 
     if (typeof weaponSource === 'string') {
       const weaponCode = weaponSource;
-      if (!WPNS[weaponCode] || WPNS[weaponCode].attr !== ATTR.WEAPON) return;
+      if (!WPNS[weaponCode]) return;
+      const isTripod = typeof PlMgTripod !== 'undefined' && PlMgTripod.isTripodCode(weaponCode);
+      if (!isTripod && WPNS[weaponCode].attr !== ATTR.WEAPON && WPNS[weaponCode].attr !== ATTR.RECOVERY) return;
       base = WPNS[weaponCode];
-      // 従来どおりの「新品」生成パス
       newItem = { ...base, code: weaponCode, id: Math.random(), isBroken: false };
       if (base.type === 'bullet' || base.type === 'shell_fast') newItem.current = newItem.cap;
       else if (base.type === 'shell' || base.area) { newItem.current = 1; newItem.isConsumable = true; }
       else if (base.type === 'ammo') newItem.current = base.current || base.cap;
       if (u.def && u.def.isTank && !base.type.includes('part') && !base.type.includes('ammo')) {
         newItem.current = 1; newItem.cap = 1;
-        newItem.reserve = newItem.reserve || (weaponCode === 'mg42' ? 300 : 12);
+        newItem.reserve = newItem.reserve || (
+          (typeof PlMgTripod !== 'undefined' && PlMgTripod.usesBeltReserve(weaponCode))
+            ? PlMgTripod.getDefaultBeltReserve(weaponCode) : 12
+        );
+      } else if (typeof PlMgTripod !== 'undefined') {
+        PlMgTripod.applyItemDefaults(newItem, weaponCode, false);
       }
-    } else if (weaponSource && weaponSource.code && WPNS[weaponSource.code] && WPNS[weaponSource.code].attr === ATTR.WEAPON) {
-      // 実インスタンスから装備（弾数などの状態を保持）
+    } else if (weaponSource && weaponSource.code && WPNS[weaponSource.code]) {
+      if (!this._canMoveItemToDeck(weaponSource)) return;
       newItem = weaponSource;
       base = WPNS[newItem.code];
     } else {
@@ -1141,31 +1620,41 @@ window.BattleLogic = class BattleLogic {
     }
 
     const tgtIdx = slotTarget.type === 'main' ? slotTarget.index : slotTarget.index;
+    if (typeof PlMgTripod !== 'undefined' && PlMgTripod.validateItemPlacement) {
+      const v = PlMgTripod.validateItemPlacement(u, slotTarget.type, tgtIdx, newItem);
+      if (!v.ok) {
+        this.ui.log(v.reason || '装備配置不可');
+        return;
+      }
+    }
+
     const oldItem = slotTarget.type === 'main' ? u.hands[tgtIdx] : u.bag[tgtIdx];
     if (slotTarget.type === 'main') u.hands[tgtIdx] = newItem; else u.bag[tgtIdx] = newItem;
 
-    // 既にそのスロットにあった武器は、状態を保持したままデッキへ送る
-    if (oldItem && oldItem.code && WPNS[oldItem.code] && WPNS[oldItem.code].attr === ATTR.WEAPON && typeof Renderer !== 'undefined' && Renderer.dealCard) {
+    if (oldItem && this._canMoveItemToDeck(oldItem) && typeof Renderer !== 'undefined' && Renderer.dealCard) {
       Renderer.dealCard({ type: oldItem.code, weaponData: oldItem });
     }
     this.updateSidebar();
+    if (typeof LoadoutWeight !== 'undefined') LoadoutWeight.refreshUnitLoadout(u);
     if (window.Sfx) Sfx.play('click');
-    this.ui.log(`${u.name} 装備: ${newItem.name}`);
+    this.ui.log(`${u.name} 装備: ${newItem.name || newItem.code}`);
   }
 
   toggleFireMode() {
     const u = this.selectedUnit;
     if (!u || !u.hands || !Array.isArray(u.hands)) return;
     const slot0 = u.hands[0];
-    if (slot0 && slot0.modes) {
-      const modes = slot0.modes;
-      const currentBurst = slot0.burst;
-      let nextIndex = modes.indexOf(currentBurst) + 1;
-      if (nextIndex >= modes.length) nextIndex = 0;
-      slot0.burst = modes[nextIndex];
-      if (window.Sfx) Sfx.play('click');
-      this.updateSidebar();
-    }
+    if (!slot0) return;
+    const modes = (typeof PlMgTripod !== 'undefined' && PlMgTripod.normalizeFireModes)
+      ? PlMgTripod.normalizeFireModes(slot0.modes)
+      : null;
+    if (!modes) return;
+    const currentBurst = slot0.burst;
+    let nextIndex = modes.indexOf(currentBurst) + 1;
+    if (nextIndex >= modes.length) nextIndex = 0;
+    slot0.burst = modes[nextIndex];
+    if (window.Sfx) Sfx.play('click');
+    this.updateSidebar();
   }
 
   /**
@@ -1201,23 +1690,22 @@ window.BattleLogic = class BattleLogic {
 
     // 歩兵: マガジン交換
     const cost = w.rld || 1;
-    if (u.ap < cost) { this.ui.log("AP不足"); return; }
+    if (u.ap < cost) { this.rejectAction("AP不足"); return; }
 
-    const canLoad = typeof isSpareAmmoCompatible === 'function'
-      ? (i) => isSpareAmmoCompatible(w, i)
-      : (i) => i && i.type === 'ammo' && i.ammoFor === w.code;
-    const magIndex = u.bag.findIndex(i => canLoad(i));
-    if (magIndex === -1) {
-      const hasWrongMag = u.bag.some(i => i && i.type === 'ammo' && i.ammoFor === w.code);
-      this.ui.log(hasWrongMag ? "この武器に合う予備弾がありません" : "予備弾なし");
+    const magSlot = this._findCompatibleSpareMagSlot(u, w);
+    if (!magSlot) {
+      const hasAmmo = (u.hands || []).slice(1).some(i => i && i.type === 'ammo')
+        || (u.bag || []).some(i => i && i.type === 'ammo');
+      this.ui.log(hasAmmo ? "この武器に合う予備弾がありません" : "予備弾なし");
       return;
     }
 
-    u.bag[magIndex] = null;
+    const mag = magSlot.item;
+    this._clearSpareMagSlot(u, magSlot.where, magSlot.index);
     u.ap -= cost;
     const primarySlot = u.hands[0];
     if (primarySlot && primarySlot.code === w.code) {
-      primarySlot.current = primarySlot.cap;
+      this._applySpareMagToPrimary(primarySlot, w, mag);
     }
     this.ui.log("リロード完了");
     if (window.Sfx) Sfx.play('reload');
@@ -1256,8 +1744,9 @@ window.BattleLogic = class BattleLogic {
     this.ui.hideActionMenu();
   }
 
-  async actionMelee(a, d) {
-    if (!a || a.ap < 2) return;
+  async actionMelee(a, d, opts) {
+    const parallel = !!(opts && opts.parallel);
+    if (!a || a.ap < 2 || a.hp <= 0 || !d || d.hp <= 0) return;
     if (a.q !== d.q || a.r !== d.r) return;
     const getWeaponDmg = (w) => (w && (typeof w.dmg === 'number' ? w.dmg : 0) + (w && w.rainbowDmgBonus || 0)) || 0;
     let wpnName = "銃床"; let bonusDmg = 0;
@@ -1271,7 +1760,7 @@ window.BattleLogic = class BattleLogic {
     a.ap -= 2;
     this.ui.log(`${a.name} 白兵攻撃`);
     if (typeof Renderer !== 'undefined' && Renderer.playAttackAnim) { Renderer.playAttackAnim(a, d); }
-    await new Promise(r => setTimeout(r, 300));
+    await new Promise(r => setTimeout(r, parallel ? 60 : 300));
     const meleeVal = (a.params && a.params.melee != null) ? a.params.melee : ((a.stats && a.stats.str) ? a.stats.str : 0);
     let totalDmg = 10 + (meleeVal * 3) + bonusDmg;
     if (d.skills && d.skills.includes('CQC')) { this.ui.log(`>> カウンター！`); this.applyDamage(a, 15, "カウンター"); }
@@ -1282,8 +1771,26 @@ window.BattleLogic = class BattleLogic {
   }
 
   toggleAuto() { this.isAuto = !this.isAuto; const b = document.getElementById('auto-toggle'); if(b) b.classList.toggle('active'); if(this.isAuto && this.state==='PLAY') this.runAuto(); }
-  async runAuto() { if(this.state!=='PLAY') return; this.ui.log(":: Auto ::"); this.clearSelection(); this.isAutoProcessing = true; await this.ai.execute(this.units, 'player'); this.isAutoProcessing = false; if(this.state==='WIN') return; if(this.isAuto && this.state==='PLAY') this.endTurn(); }
-  async actionMove(u, p) { this.state = 'ANIM'; const stepMs = (this.isAuto || this.isAutoProcessing) ? 60 : 180; for(let s of p){u.ap-=this.map[s.q][s.r].cost; u.q=s.q; u.r=s.r; if(window.Sfx) Sfx.play('move'); await new Promise(r => setTimeout(r, stepMs)); } this.checkReactionFire(u); this.state = 'PLAY'; this.refreshUnitState(u); this.checkPhaseEnd(); }
+  async runAuto() { if(this.state!=='PLAY') return; if (this.isAutoProcessing) return; this.ui.log(":: Auto ::"); this.clearSelection(); this.isAutoProcessing = true; await this.ai.execute(this.units, 'player'); this.isAutoProcessing = false; if(this.state==='WIN') return; if(this.isAuto && this.state==='PLAY') this.endTurn(); }
+  async actionMove(u, p, opts) {
+    if (!u || u.hp <= 0) return;
+    const parallel = !!(opts && opts.parallel);
+    const rtCfg = this.getRtTacticsCfg();
+    const rtStep = (parallel && rtCfg && rtCfg.RT_MOVE_STEP_MS) ? rtCfg.RT_MOVE_STEP_MS : null;
+    const stepMs = rtStep != null ? rtStep : ((this.isAuto || this.isAutoProcessing) ? 60 : 180);
+    if (!parallel) this.state = 'ANIM';
+    for (const s of p) {
+      u.ap -= this.getTerrainMoveCost(u, s.q, s.r);
+      u.q = s.q;
+      u.r = s.r;
+      if (window.Sfx) Sfx.play('move');
+      await new Promise(r => setTimeout(r, stepMs));
+    }
+    if (!parallel) this.checkReactionFire(u);
+    if (!parallel) this.state = 'PLAY';
+    this.refreshUnitState(u);
+    if (!parallel) this.checkPhaseEnd();
+  }
   checkReactionFire(u) { this.units.filter(e => e.team !== u.team && e.hp > 0 && e.def.isTank && this.hexDist(u, e) <= 1).forEach(t => { this.ui.log("防御射撃"); this.applyDamage(u, 15, "防御"); if(window.VFX) window.VFX.addExplosion(Renderer.hexToPx(u.q, u.r).x, Renderer.hexToPx(u.q, u.r).y, "#fa0", 5); }); }
   checkPhaseEnd() { if (this.units.filter(u => u.team === 'player' && u.hp > 0 && u.ap > 0).length === 0 && this.state === 'PLAY') { this.endTurn(); } }
 
@@ -1296,9 +1803,9 @@ window.BattleLogic = class BattleLogic {
     return true;
   }
 
-  deployUnit(targetHex, cardType, fusionData, portraitIndex, fusionCount) {
+  deployUnit(targetHex, cardType, fusionData, portraitIndex, fusionCount, unitName) {
     if(!this.checkDeploy(targetHex)) { return; }
-    const u = this.campaign.createSoldier(cardType, 'player', fusionData, portraitIndex, undefined, fusionCount);
+    const u = this.campaign.createSoldier(cardType, 'player', fusionData, portraitIndex, unitName, fusionCount);
     if(u) {
       u.q = targetHex.q; u.r = targetHex.r;
       this.units.push(u); this.cardsUsed++;

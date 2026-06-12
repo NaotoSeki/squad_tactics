@@ -42,6 +42,7 @@ window.PhaserSidebar = class PhaserSidebar {
         this.dragSrc = null;
         this.dragGhost = null;
         this.currentUnit = null;
+        this.squadChips = [];
     }
 
     init() {
@@ -68,8 +69,10 @@ window.PhaserSidebar = class PhaserSidebar {
     }
 
     updateSidebar(u, state, tankAutoReload) {
+        if (typeof hideLoadoutCompatTooltip === 'function') hideLoadoutCompatTooltip();
         this.unitContent.removeAll(true);
         this.currentUnit = u;
+        this.squadChips = [];
 
         if (!u || u.hp <= 0) {
             this.noSignalText.setVisible(true);
@@ -108,11 +111,17 @@ window.PhaserSidebar = class PhaserSidebar {
         const radarR = Math.min(RADAR_R_MAX, Math.max(RADAR_R_MIN, (radarAreaW / 2) - 12));
         const radarCx = left + faceSize + 4 + radarAreaW / 2;
         const radarCy = y + RADAR_OFFSET_BASE + (radarR > RADAR_OFFSET_RADIUS_THRESHOLD ? (radarR - RADAR_OFFSET_RADIUS_THRESHOLD) * RADAR_OFFSET_RADIUS_FACTOR : 0);
-        const params = u.params || (u.def && u.def.params) || {};
+        const params = (typeof LoadoutWeight !== 'undefined' && LoadoutWeight.getRadarDisplayParams)
+            ? LoadoutWeight.getRadarDisplayParams(u)
+            : (u.params || (u.def && u.def.params) || {});
+        const hasLoadDebuff = !!(params._loadDebuff && params._baseSpeed != null);
+        const baseParamsForRadar = hasLoadDebuff ? { ...params, speed: params._baseSpeed } : null;
         const paramKeys = (typeof PARAM_KEYS !== 'undefined') ? PARAM_KEYS : ['action', 'speed', 'str', 'morale', 'aim', 'throw', 'melee', 'recon'];
         const paramLabels = (typeof PARAM_LABELS !== 'undefined') ? PARAM_LABELS : paramKeys.map(k => k.slice(0, 3));
         const labelOffset = RADAR_LABEL_OFFSET_BASE + (radarR > RADAR_LABEL_OFFSET_RADIUS_THRESHOLD ? RADAR_LABEL_OFFSET_EXTRA : 0);
         const radarData = (typeof getRadarPoints === 'function') ? getRadarPoints(params, paramKeys, radarR, labelOffset) : null;
+        const baseRadarData = (hasLoadDebuff && baseParamsForRadar && typeof getRadarPoints === 'function')
+            ? getRadarPoints(baseParamsForRadar, paramKeys, radarR, labelOffset) : null;
 
         const radarG = this.scene.add.graphics();
         radarG.setPosition(radarCx, radarCy);
@@ -128,6 +137,16 @@ window.PhaserSidebar = class PhaserSidebar {
                 radarG.lineStyle(1, 0x555555, 0.35);
                 radarG.strokeCircle(0, 0, radarR * (v / 10));
             }
+        }
+        if (baseRadarData && baseRadarData.points.length > 0) {
+            radarG.beginPath();
+            radarG.moveTo(baseRadarData.points[0].x, baseRadarData.points[0].y);
+            for (let i = 1; i < baseRadarData.points.length; i++) radarG.lineTo(baseRadarData.points[i].x, baseRadarData.points[i].y);
+            radarG.closePath();
+            radarG.fillStyle(0x888888, 0.12);
+            radarG.fillPath();
+            radarG.lineStyle(1, 0x888888, 0.45);
+            radarG.strokePath();
         }
         if (radarData && radarData.points.length > 0) {
             radarG.beginPath();
@@ -176,13 +195,28 @@ window.PhaserSidebar = class PhaserSidebar {
             });
         }
         if (radarR >= RADAR_SHOW_VALUES_AT && radarData && radarData.points.length > 0) {
+            const speedIdx = paramKeys.indexOf('speed');
             radarData.points.forEach((pt, i) => {
                 const val = Math.max(0, Math.min(10, params[paramKeys[i]] != null ? params[paramKeys[i]] : 5));
+                const isSpdDebuff = hasLoadDebuff && i === speedIdx;
+                let label = String(val);
+                if (isSpdDebuff && params._baseSpeed != null && params._baseSpeed !== val) {
+                    label = `${val}(${params._baseSpeed})`;
+                }
                 const vx = radarCx + pt.x * RADAR_VALUE_POS_RATIO;
                 const vy = radarCy + pt.y * RADAR_VALUE_POS_RATIO;
-                const valText = this.scene.add.text(vx, vy, String(val), { fontSize: radarR >= RADAR_SHOW_FULL_GRID_AT ? '10px' : '9px', color: '#ddaa44', fontFamily: 'sans-serif' }).setOrigin(0.5, 0.5);
+                const valText = this.scene.add.text(vx, vy, label, {
+                    fontSize: radarR >= RADAR_SHOW_FULL_GRID_AT ? '10px' : '9px',
+                    color: isSpdDebuff ? '#ff8866' : '#ddaa44',
+                    fontFamily: 'sans-serif'
+                }).setOrigin(0.5, 0.5);
                 this.unitContent.add(valText);
             });
+        }
+        if (hasLoadDebuff && params._carriedWeightKg != null) {
+            const wHint = this.scene.add.text(radarCx, radarCy + radarR + labelOffset + 2,
+                `${params._carriedWeightKg}kg`, { fontSize: '9px', color: '#aa7766', fontFamily: 'sans-serif' }).setOrigin(0.5, 0);
+            this.unitContent.add(wHint);
         }
 
         const textLeft = left;
@@ -209,6 +243,8 @@ window.PhaserSidebar = class PhaserSidebar {
         const apText = this.scene.add.text(textLeft, y, `AP  ${u.ap}/${u.maxAp}`, { fontSize: '11px', color: TEXT_COLOR, fontFamily: 'sans-serif' });
         this.unitContent.add(apText);
         y += 36;
+
+        y = this.renderSameHexSquadRow(u, left, y, sw);
 
         const contentAfterAp = y;
         y = Math.max(contentAfterAp, radarBottom);
@@ -241,17 +277,89 @@ window.PhaserSidebar = class PhaserSidebar {
 
         if (virtualWpn && !u.def.isTank && !virtualWpn.partType && virtualWpn.code !== 'm2_mortar' && virtualWpn.current < virtualWpn.cap) {
             y += 10;
-            const reloadBtn = this.createButton(left, y, sw - 36, 28, 'RELOAD', () => { if (window.gameLogic) window.gameLogic.reloadWeapon(); });
+            const reloadBtn = this.createButton(left, y, sw - 36, 28, 'RELOAD', () => { if (window.gameLogic) window.gameLogic.reloadWeapon(true); });
             this.unitContent.add(reloadBtn.container);
             y += 38;
         }
     }
 
+    renderSameHexSquadRow(u, left, y, sw) {
+        const enabled = typeof FEATURE_SAME_HEX_TRANSFER !== 'undefined' && FEATURE_SAME_HEX_TRANSFER;
+        const gl = window.gameLogic;
+        if (!enabled || !gl || !gl.getSameHexSquadMembers || u.team !== 'player' || (u.def && u.def.isTank)) {
+            return y;
+        }
+        const members = gl.getSameHexSquadMembers(u);
+        if (members.length <= 1) return y;
+
+        const squadLabel = this.scene.add.text(left, y, 'SQUAD (同ヘックス)', {
+            fontSize: '10px', color: '#668866', fontFamily: 'sans-serif',
+        });
+        this.unitContent.add(squadLabel);
+        y += 16;
+
+        const gap = 4;
+        const chipW = Math.max(48, Math.min(80, Math.floor((sw - 24 - (members.length - 1) * gap) / members.length)));
+        const chipH = 26;
+        let cx = left;
+        const self = this;
+        members.forEach(function (m) {
+            const isActive = m.id === u.id;
+            const shortName = (m.name || 'Unit').split(/\s+/)[0];
+            const label = shortName.length > 8 ? shortName.substring(0, 7) + '…' : shortName;
+            const container = self.scene.add.container(cx, y);
+            const bg = self.scene.add.rectangle(chipW / 2, chipH / 2, chipW, chipH, isActive ? 0x2a3020 : 0x151515);
+            bg.setStrokeStyle(isActive ? 2 : 1, isActive ? ACCENT : 0x446644, 1);
+            bg.setInteractive({ useHandCursor: true });
+            const text = self.scene.add.text(chipW / 2, chipH / 2, label, {
+                fontSize: '10px', color: isActive ? '#ddcc88' : '#889988', fontFamily: 'sans-serif',
+            });
+            text.setOrigin(0.5, 0.5);
+            container.add(bg);
+            container.add(text);
+            bg.on('pointerup', function () {
+                if (self.dragSrc || self.dragGhost) return;
+                if (window.gameLogic && window.gameLogic.selectSquadMember) {
+                    window.gameLogic.selectSquadMember(m);
+                }
+            });
+            self.unitContent.add(container);
+            self.squadChips.push({ unit: m, container: container, bg: bg, isActive: isActive });
+            cx += chipW + gap;
+        });
+        return y + chipH + 10;
+    }
+
+    hitTestSquadChip(px, py) {
+        if (!this.squadChips || !this.squadChips.length || !this.currentUnit) return null;
+        for (let i = 0; i < this.squadChips.length; i++) {
+            const chip = this.squadChips[i];
+            if (!chip.container || !chip.unit || chip.unit.id === this.currentUnit.id) continue;
+            const bounds = chip.container.getBounds();
+            if (bounds.contains(px, py)) return chip.unit;
+        }
+        return null;
+    }
+
+    updateSquadChipHighlight(px, py) {
+        if (!this.squadChips) return;
+        for (let i = 0; i < this.squadChips.length; i++) {
+            const chip = this.squadChips[i];
+            if (!chip.bg) continue;
+            const isDrop = this.dragSrc && chip.unit && this.currentUnit
+                && chip.unit.id !== this.currentUnit.id
+                && chip.container.getBounds().contains(px, py);
+            const isActive = chip.isActive;
+            chip.bg.setStrokeStyle(isDrop ? 3 : (isActive ? 2 : 1), isDrop ? ACCENT : (isActive ? ACCENT : 0x446644), 1);
+        }
+    }
+
     createSlot(u, item, type, index, x, y, isMain, isMortarActive) {
         const slotW = window.getSidebarWidth() - 36;
-        const needsMg42Gauge = item && item.code === 'mg42' && item.reserve !== undefined && isMain;
+        const needsBeltGauge = item && isMain && item.reserve !== undefined
+            && typeof PlMgTripod !== 'undefined' && PlMgTripod.usesBeltReserve(item.code);
         const needsM8Gauge = item && item.code === 'm8_rocket' && isMain;
-        const slotH = (isMain && needsMg42Gauge) ? 130 : (isMain && needsM8Gauge) ? 100 : (isMain ? 90 : BAG_SLOT_H);
+        const slotH = (isMain && needsBeltGauge) ? 130 : (isMain && needsM8Gauge) ? 100 : (isMain ? 90 : BAG_SLOT_H);
         const mainGaugeTop = (contentH) => slotH - contentH - GAUGE_BOTTOM_PAD;
         const borderColor = isMain ? ACCENT : SLOT_BORDER;
         const bgColor = isMain ? 0x2a201a : SLOT_BG;
@@ -276,14 +384,18 @@ window.PhaserSidebar = class PhaserSidebar {
             container.add(rainbowSlot);
         }
 
-        if (item && item.cbeNameIndex != null && !item.partType && typeof window.plCbeWeaponIconPath === 'function') {
+        if (item && typeof window.plItemHasWeaponIcon === 'function' && window.plItemHasWeaponIcon(item)
+            && typeof window.plCbeWeaponIconPath === 'function') {
             const iconKey = window.plCbeWeaponIconKey(item.cbeNameIndex);
             const iconPath = window.plCbeWeaponIconPath(item.cbeNameIndex);
             if (!this.scene.textures.exists(iconKey)) {
                 const img = new Image();
+                img.onerror = () => { /* スプライト未配置 — 404 ログ抑制 */ };
                 img.onload = () => {
                     if (!this.scene || !this.scene.textures) return;
-                    this.scene.textures.addImage(iconKey, img);
+                    if (!this.scene.textures.exists(iconKey)) {
+                        this.scene.textures.addImage(iconKey, img);
+                    }
                     const icon = this.scene.add.image(slotW / 2, isMain ? slotH * 0.44 : slotH / 2, iconKey);
                     const fitScale = Math.min((slotW - 8) / icon.width, (slotH - 8) / icon.height);
                     icon.setScale(fitScale).setAlpha(0.7);
@@ -303,8 +415,9 @@ window.PhaserSidebar = class PhaserSidebar {
             label = (isMain ? '' : '') + (item.name || '');
             if (u.team === 'enemy') {
                 // 敵ユニットは弾丸ゲージ表示なし（はみ出し防止・弾切れは行動で表現）
-            } else if (item && item.code === 'mg42' && item.reserve !== undefined && isMain) {
-                const maxRounds = 300;
+            } else if (needsBeltGauge) {
+                const maxRounds = (typeof PlMgTripod !== 'undefined')
+                    ? PlMgTripod.getDefaultBeltReserve(item.code) : 300;
                 const reserve = Math.min(maxRounds, item.reserve || 0);
                 const cols = 30, rows = 10, gap = 1;
                 const availW = slotW - 16;
@@ -416,9 +529,28 @@ window.PhaserSidebar = class PhaserSidebar {
         }
 
         const self = this;
-        bg.on('pointerdown', (ptr) => { if (label === '[EMPTY]') return; self.onSlotPointerDown(ptr, type, index, slotW, slotH, label, container); });
-        bg.on('pointerover', () => { if (self.dragSrc) bg.setStrokeStyle(3, ACCENT, 1); });
-        bg.on('pointerout', () => { bg.setStrokeStyle(1, borderColor, item ? 1 : 0.3); });
+        const compatTip = (item && typeof getLoadoutCompatTooltipText === 'function')
+            ? getLoadoutCompatTooltipText(item) : null;
+        bg.on('pointerdown', (ptr) => {
+            if (typeof hideLoadoutCompatTooltip === 'function') hideLoadoutCompatTooltip();
+            if (label === '[EMPTY]') return;
+            self.onSlotPointerDown(ptr, type, index, slotW, slotH, label, container);
+        });
+        bg.on('pointerover', (ptr) => {
+            if (self.dragSrc) bg.setStrokeStyle(3, ACCENT, 1);
+            if (compatTip && typeof showLoadoutCompatTooltip === 'function') {
+                showLoadoutCompatTooltip(ptr, compatTip);
+            }
+        });
+        bg.on('pointerout', () => {
+            bg.setStrokeStyle(1, borderColor, item ? 1 : 0.3);
+            if (typeof hideLoadoutCompatTooltip === 'function') hideLoadoutCompatTooltip();
+        });
+        bg.on('pointermove', (ptr) => {
+            if (compatTip && typeof moveLoadoutCompatTooltip === 'function') {
+                moveLoadoutCompatTooltip(ptr);
+            }
+        });
         bg.on('pointerup', (ptr) => { self.onSlotPointerUp(ptr, type, index); });
 
         container.slotData = { type, index, u, borderColor, hasItem: !!item };
@@ -426,8 +558,12 @@ window.PhaserSidebar = class PhaserSidebar {
     }
 
     updateDropHighlight(px, py) {
-        const isWeaponryCardDrag = typeof Renderer !== 'undefined' && Renderer.isCardDragging && typeof WPNS !== 'undefined' && Renderer.draggedCardType && WPNS[Renderer.draggedCardType] && WPNS[Renderer.draggedCardType].attr === (typeof ATTR !== 'undefined' ? ATTR.WEAPON : 'Weaponry');
-        const showHighlight = this.dragSrc || isWeaponryCardDrag;
+        const dragCard = typeof Renderer !== 'undefined' ? Renderer.draggedCard : null;
+        const dragSrc = dragCard ? (dragCard.weaponData || dragCard.cardType) : null;
+        const isEquipCardDrag = typeof Renderer !== 'undefined' && Renderer.isCardDragging && dragSrc
+            && window.gameLogic && window.gameLogic.canEquipItemFromDeck
+            && window.gameLogic.canEquipItemFromDeck(dragSrc);
+        const showHighlight = this.dragSrc || isEquipCardDrag;
         this._snapTarget = null;
         const over = this.slots.length ? this.hitTestSlots(px, py) : null;
         if (over) {
@@ -467,7 +603,7 @@ window.PhaserSidebar = class PhaserSidebar {
         const isMain = type === 'main';
         const borderColor = isMain ? ACCENT : SLOT_BORDER;
         const bgColor = isMain ? 0x2a201a : SLOT_BG;
-        this.dragSrc = { type, index };
+        this.dragSrc = { type, index, unitId: this.currentUnit ? this.currentUnit.id : null };
         this.dragLiftedSlot = slotContainer;
         slotContainer.setAlpha(0.2);
         this.dragGhost = this.scene.add.container(pointer.x, pointer.y);
@@ -484,7 +620,12 @@ window.PhaserSidebar = class PhaserSidebar {
         this.dragGhost.angle = 0; this.dragGhost.velocityAngle = 0;
         this._pointerX = pointer.x; this._pointerY = pointer.y;
         this.container.add(this.dragGhost);
-        const onMove = (p) => { this.dragGhost.targetX = p.x; this.dragGhost.targetY = p.y; this._pointerX = p.x; this._pointerY = p.y; };
+        const onMove = (p) => {
+            this.dragGhost.targetX = p.x; this.dragGhost.targetY = p.y;
+            this._pointerX = p.x; this._pointerY = p.y;
+            this.updateDropHighlight(p.x, p.y);
+            this.updateSquadChipHighlight(p.x, p.y);
+        };
         const onUp = (p) => {
             this.scene.input.off('pointermove', onMove); this.scene.input.off('pointerup', onUp);
             if (!this.dragSrc || !this.dragGhost) {
@@ -494,22 +635,31 @@ window.PhaserSidebar = class PhaserSidebar {
                 return;
             }
             const dropTarget = this.hitTestSlots(p.x, p.y);
+            const squadTarget = this.hitTestSquadChip(p.x, p.y);
             const w = this.scene.scale.width;
             const h = this.scene.scale.height;
             const dropZoneY = h * 0.88;
             const overDeck = p.x < w - window.getSidebarWidth() && p.y >= dropZoneY;
             const sameSlot = dropTarget && this.dragSrc.type === dropTarget.type && this.dragSrc.index === dropTarget.index;
-            const didSwap = dropTarget && window.gameLogic && window.gameLogic.swapEquipment && !sameSlot;
-            const didMoveToDeck = overDeck && window.gameLogic && window.gameLogic.moveWeaponToDeck;
+            let didTransfer = false;
+            if (squadTarget && window.gameLogic && window.gameLogic.transferEquipment && this.currentUnit) {
+                didTransfer = window.gameLogic.transferEquipment(
+                    this.currentUnit, squadTarget, this.dragSrc,
+                    { type: this.dragSrc.type, index: this.dragSrc.index }
+                );
+            }
+            const didSwap = !didTransfer && dropTarget && window.gameLogic && window.gameLogic.swapEquipment && !sameSlot;
+            const didMoveToDeck = !didTransfer && overDeck && window.gameLogic && window.gameLogic.moveWeaponToDeck;
             if (didSwap) {
                 window.gameLogic.swapEquipment(this.dragSrc, dropTarget);
             } else if (didMoveToDeck) {
                 window.gameLogic.moveWeaponToDeck(this.dragSrc);
             }
-            if (this.dragLiftedSlot && !didSwap && !didMoveToDeck) this.dragLiftedSlot.setAlpha(1);
+            if (this.dragLiftedSlot && !didSwap && !didMoveToDeck && !didTransfer) this.dragLiftedSlot.setAlpha(1);
             this.dragLiftedSlot = null;
             this.dragGhost.destroy(); this.dragGhost = null; this.dragSrc = null;
             this._snapTarget = null;
+            this.updateSquadChipHighlight(-1, -1);
         };
         this.scene.input.on('pointermove', onMove);
         this.scene.input.once('pointerup', onUp);

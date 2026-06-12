@@ -412,45 +412,6 @@ class EnvSystem {
         }
     }
 
-    spawnGrassHexSheet(scene, group, x, y) {
-        if (!scene.textures.exists('grass')) return;
-        const hexR = (typeof HEX_SIZE !== 'undefined' ? HEX_SIZE : 54);
-        const g = scene.make.graphics({ x: 0, y: 0, add: false });
-        g.fillStyle(0xffffff, 1);
-        g.beginPath();
-        for (let i = 0; i < 6; i++) {
-            const a = Math.PI / 180 * (90 + 60 * i);
-            const px = hexR * Math.cos(a);
-            const py = hexR * Math.sin(a);
-            if (i === 0) g.moveTo(px, py);
-            else g.lineTo(px, py);
-        }
-        g.closePath();
-        g.fillPath();
-        const mask = g.createGeometryMask();
-        const frameW = 32;
-        const sprite = scene.add.sprite(x, y, 'grass', Math.floor(Math.random() * 16)).setOrigin(0.5, 0.5);
-        const bleed = 1.65;
-        const hexW = Math.sqrt(3) * hexR;
-        const scale = (hexW * bleed) / frameW;
-        sprite.setScale(scale);
-        sprite.setMask(mask);
-        sprite.setDepth(this.decorDepth(y, 0));
-        sprite.setPosition(x, y);
-        g.setPosition(x, y);
-        g.setVisible(false);
-        group.add(g);
-        group.add(sprite);
-        if (!scene.anims.exists('grass_sway')) {
-            scene.anims.create({
-                key: 'grass_sway',
-                frames: scene.anims.generateFrameNumbers('grass', { start: 0, end: 15 }),
-                frameRate: 8,
-                repeat: -1
-            });
-        }
-        sprite.play('grass_sway');
-    }
     spawnTrees(scene, group, x, y) {
         const count = 4 + Math.floor(Math.random() * 3);
         const scaleFactor = 0.66;
