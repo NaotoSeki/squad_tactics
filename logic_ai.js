@@ -140,6 +140,7 @@ class EnemyAI {
     const waveGap = cfg.RT_WAVE_GAP_MS || 35;
     const parallel = { parallel: true };
 
+    actors.forEach(a => { a._aiSwaps = 0; });
     if (team === 'enemy') {
       actors.forEach(a => { a.ap = a.maxAp; });
     }
@@ -224,6 +225,7 @@ class EnemyAI {
 
     for (let actor of actors) {
       if (actor.hp <= 0) continue;
+      actor._aiSwaps = 0;
       if (team === 'enemy') actor.ap = actor.maxAp;
 
       const targets = units.filter(u => u.team === targetTeam && u.hp > 0);
@@ -315,6 +317,7 @@ class EnemyAI {
 
   async optimizeWeapon(actor, target) {
     if (!actor.hands || !Array.isArray(actor.hands)) return;
+    if ((actor._aiSwaps || 0) >= 1) return; // 対物/対人の持ち替えは1ターン1回まで（乱発防止）
 
     const currentWpn = this.game.getVirtualWeapon(actor);
     if (!currentWpn) return;
@@ -330,6 +333,7 @@ class EnemyAI {
 
     if (bestSlotIndex !== -1) {
       this.game.swapEquipment({ type: 'main', index: 0 }, { type: 'bag', index: bestSlotIndex }, actor);
+      actor._aiSwaps = (actor._aiSwaps || 0) + 1;
       if (window.Sfx) window.Sfx.play('swap');
       await new Promise(r => setTimeout(r, 50));
     }
@@ -340,26 +344,33 @@ class EnemyAI {
     const game = this.game;
     const attrWeapon = typeof ATTR !== 'undefined' ? ATTR.WEAPON : 'Weaponry';
 
-    const trySlot = (srcType, srcIndex) => {
-      const item = srcType === 'bag' ? actor.bag[srcIndex] : actor.hands[srcIndex];
+    // 候補は副作用なしで評価する（swap→確認→戻す の破壊的プローブ禁止 — NORTH_STAR §7.3）。
+    // 弾薬 current/reserve はアイテム自身が保持しているため、構えなくても判定できる。
+    const isReadyWeapon = (item) => {
       if (!item || !item.code || item.type === 'part') return false;
-      if (typeof WPNS !== 'undefined' && WPNS[item.code] && WPNS[item.code].attr !== attrWeapon) return false;
+      const master = (typeof WPNS !== 'undefined') ? WPNS[item.code] : null;
+      if (master && master.attr !== attrWeapon) return false;
+      if (!master && item.attr !== attrWeapon) return false;
+      return (item.current || 0) > 0 || (item.reserve || 0) > 0;
+    };
+
+    const doSwap = (srcType, srcIndex) => {
       game.swapEquipment({ type: 'main', index: 0 }, { type: srcType, index: srcIndex }, actor);
       const w = game.getVirtualWeapon(actor);
-      const hasAmmo = w && ((w.current !== undefined && w.current > 0) || (w.reserve !== undefined && w.reserve > 0));
-      if (hasAmmo) {
+      if (w && ((w.current || 0) > 0 || (w.reserve || 0) > 0)) {
         if (window.Sfx) window.Sfx.play('swap');
         return true;
       }
+      // 構えてみたら撃てない特殊ケース（enrich 依存）のみ戻す
       game.swapEquipment({ type: 'main', index: 0 }, { type: srcType, index: srcIndex }, actor);
       return false;
     };
 
     for (let i = 0; actor.bag && i < actor.bag.length; i++) {
-      if (trySlot('bag', i)) return true;
+      if (isReadyWeapon(actor.bag[i]) && doSwap('bag', i)) return true;
     }
     for (let idx of [1, 2]) {
-      if (actor.hands[idx] && trySlot('main', idx)) return true;
+      if (isReadyWeapon(actor.hands[idx]) && doSwap('main', idx)) return true;
     }
     return false;
   }
