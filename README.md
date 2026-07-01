@@ -1,5 +1,7 @@
 # SQUAD TACTICS - Heroic Update
 
+> **設計正本**: [docs/NORTH_STAR.md](docs/NORTH_STAR.md) — 全設計判断の最上位ドキュメント
+
 A turn-based tactical strategy game set in WWII, built with HTML5, JavaScript (ES6+), and the Phaser 3 engine. The game features hex-grid combat, squad management, and combined arms warfare (Infantry, Tanks, and Artillery support).
 
 ## 🎮 Game Features

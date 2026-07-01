@@ -2,7 +2,7 @@
 
 戦闘の人数・AUTO テンポ・戦車出現率は **`data.js` 先頭** で切り替えます。
 
-**設計方針（知略ダイヤル UI ビジョン含む）**: [docs/DESIGN_DIRECTION.md](docs/DESIGN_DIRECTION.md)
+**設計方針**: [docs/NORTH_STAR.md](docs/NORTH_STAR.md)（知略ダイヤル UI ビジョンは保留棚 — [docs/archive/vision/DESIGN_DIRECTION.md](docs/archive/vision/DESIGN_DIRECTION.md)）
 
 ## プリセットの切り替え
 
