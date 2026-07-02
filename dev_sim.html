@@ -182,12 +182,17 @@ function draw() {
     ctx.stroke();
     ctx.lineWidth = 1;
 
-    // suppression bar
+    // HP bar (white, upper) + suppression bar (green->amber->red, lower)
     if (alive) {
       ctx.fillStyle = '#000';
-      ctx.fillRect(x - 14, y + 16, 28, 4);
+      ctx.fillRect(x - 14, y + 16, 28, 3);
+      ctx.fillStyle = '#ddd';
+      ctx.fillRect(x - 14, y + 16, 28 * Math.min(1, s.hp / 100), 3);
+
+      ctx.fillStyle = '#000';
+      ctx.fillRect(x - 14, y + 20, 28, 4);
       ctx.fillStyle = s.suppression >= SIM_TUNING.PINNED_AT ? '#f22' : (s.suppression >= SIM_TUNING.SUPPRESSED_AT ? '#fa2' : '#4a4');
-      ctx.fillRect(x - 14, y + 16, 28 * Math.min(1, s.suppression / 100), 4);
+      ctx.fillRect(x - 14, y + 20, 28 * Math.min(1, s.suppression / 100), 4);
     }
 
     ctx.fillStyle = '#ccc';
@@ -197,6 +202,15 @@ function draw() {
   }
 
   document.getElementById('tickLabel').textContent = sim._tick;
+
+  // live stats for the selected soldier
+  if (selectedId) {
+    const s = sim.getSoldier(selectedId);
+    if (s) {
+      document.getElementById('selectedLabel').textContent =
+        `${s.id} [${s.state}] hp:${s.hp} sup:${Math.round(s.suppression)} mag:${s.magRemaining}+${s.magsLeft}予備 morale:${Math.round(s.morale)}`;
+    }
+  }
 }
 
 function loop() {
