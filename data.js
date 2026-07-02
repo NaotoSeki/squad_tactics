@@ -377,3 +377,62 @@ const UNIT_TEMPLATES = {
 const MAG_VARIANTS = {
     thompson: [ { name: "20rd Box", code: "45ACP20T", cap: 20, cost: 28, jam: 0.0 }, { name: "30rd Box", code: "45ACP30T", cap: 30, cost: 54, jam: 0.008 } ]
 };
+
+/**
+ * SIM_TUNING — WS-A sim_core.js の数値パラメータ集約テーブル。
+ * docs/SIM_CORE_SPEC.md §6 の表を転記。sim_core.js はこのテーブル参照のみでマジックナンバーを持たない。
+ * 全値は「要プレイテスト」（仕様書注記どおり）。
+ */
+const SIM_TUNING = {
+    TICK_MS: 100,
+    DECISION_INTERVAL_T: 5,
+
+    PHIT_BASE: { rifle: 0.04, smg: 0.05, mg: 0.05, sniper: 0.08 },
+    PHIT_RANGE_FALLOFF: { near: 1.5, mid: 1.0, far: 0.5 },
+    PHIT_EXPOSED_MULT: 3.0,
+    PHIT_MOVING_OPEN_MULT: 4.0,
+    PHIT_FLANK_MULT: 6.0,
+    PHIT_SHOOTER_SUPPRESSED_PINNED: { suppressed: 0.5, pinned: 0.25 },
+    PHIT_AIMED: 1.5,
+    PHIT_SUPPRESS_MODE: 0.6,
+    CRIT_EXPOSED: 0.005,
+
+    DMG_HIT: { base: 40, spread: 20 },
+
+    SUPPRESS_PER_BURST: { rifle: 8, smg: 10, mg: 22, sniper: 15 },
+    SUPPRESS_DECAY: 6, // /秒（静穏3秒後から）
+    SUPPRESSED_AT: 50,
+    PINNED_AT: 80,
+
+    MORALE_CASUALTY_NEAR: -15, // 3hex内の味方死亡
+    MORALE_LEADER_DOWN: -25,
+    MORALE_PINNED_DRAIN: -1, // /秒
+    ROUT_CHECK_BELOW: 30, // 5秒ごとに morale/100 判定
+
+    RELOAD_T: { rifle: 30, smg: 30, mg: 80, sniper: 30 },
+    SWITCH_T: 30,
+    AIM_T: { aimed: 20, suppress: 8 },
+    BURST_INTERVAL_T: {
+        aimed: { rifle: 30, smg: 25, mg: 20, sniper: 30 },
+        // suppress: 半分（sim_core側で aimed値の半分として算出）
+    },
+
+    GRENADE_RNG: 2,
+    GRENADE_FUSE_T: 30,
+    GRENADE_SUPPRESS: 60,
+    GRENADE_DMG: { base: 70, spread: 30 },
+
+    ASSAULT_WIN_VS_PINNED: 0.85,
+    ASSAULT_WIN_VS_ACTIVE: 0.30,
+
+    MOVE_T_PER_HEX: 8, // ×地形コスト、伏せ×2
+
+    /** classifyWeapon() の自動判定を上書きしたい武器コードのみ列挙（既定は空） */
+    WEAPON_CLASS_OVERRIDES: {},
+};
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports.SIM_TUNING = SIM_TUNING;
+}
+if (typeof window !== 'undefined') {
+    window.SIM_TUNING = SIM_TUNING;
+}

@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>dev_sim -- sim_core headless harness</title>
+<style>
+  html, body { margin: 0; padding: 0; background: #1a1a1a; color: #ddd; font-family: monospace; }
+  #layout { display: flex; height: 100vh; }
+  #canvasWrap { flex: 1; position: relative; }
+  canvas { display: block; background: #223; }
+  #sidebar { width: 340px; border-left: 1px solid #444; padding: 10px; overflow-y: auto; box-sizing: border-box; }
+  #log { height: 300px; overflow-y: auto; background: #111; border: 1px solid #333; padding: 4px; font-size: 11px; }
+  #log div { border-bottom: 1px solid #222; padding: 1px 0; }
+  button, input { font-family: monospace; font-size: 12px; }
+  .row { margin-bottom: 6px; }
+  h3 { margin: 6px 0 2px 0; font-size: 13px; color: #9cf; }
+</style>
+</head>
+<body>
+<div id="layout">
+  <div id="canvasWrap">
+    <canvas id="cv" width="900" height="720"></canvas>
+  </div>
+  <div id="sidebar">
+    <h3>dev_sim (sim_core headless harness)</h3>
+    <div class="row">
+      seed: <input id="seedInput" type="number" value="1" style="width:80px">
+      <button id="btnRestart">restart</button>
+    </div>
+    <div class="row">
+      <button id="btnPause">pause</button>
+      <button id="btn1x">1x</button>
+      <button id="btn2x">2x</button>
+      <span id="speedLabel">1x</span>
+    </div>
+    <div class="row">tick: <span id="tickLabel">0</span> | result: <span id="resultLabel">--</span></div>
+    <div class="row">Click a soldier to select, right-click a hex to order MOVE_TO.</div>
+    <div class="row">Selected: <span id="selectedLabel">none</span></div>
+    <h3>Event log</h3>
+    <div id="log"></div>
+  </div>
+</div>
+
+<script src="sim_core.js"></script>
+<script src="data.js"></script>
+<script>
+// dev_sim.html -- SS10 lightweight debug harness. Single file, canvas 2D, no libs.
+// Runs sim_core headlessly and draws a hand-rolled hex grid. Look is not the point.
+
+const GRID_W = 10, GRID_H = 8;
+const HEX_R = 34; // pixel radius for flat-top-ish axial layout (approx, "look doesn't matter")
+const ORIGIN_X = 80, ORIGIN_Y = 60;
+
+const STATE_COLORS = {
+  idle: '#7a8', move: '#6cf', engage: '#e94', suppressed: '#fc6',
+  pinned: '#f44', reload: '#99c', switch: '#aaa', assault: '#f0f',
+  rout: '#666', down: '#222',
+};
+
+function axialToPixel(q, r) {
+  const x = ORIGIN_X + HEX_R * 1.5 * q;
+  const y = ORIGIN_Y + HEX_R * Math.sqrt(3) * (r + q / 2);
+  return { x, y };
+}
+
+// simple stub map: flat grid, cover 0.4 in a band down the middle (a "hedgerow"),
+// LOS always true (2D toy map, per SS10 "look is not the point").
+function makeDevMap() {
+  return {
+    dist: (a, b) => {
+      const dq = a.q - b.q, dr = a.r - b.r;
+      return (Math.abs(dq) + Math.abs(dr) + Math.abs(dq + dr)) / 2;
+    },
+    hasLos: () => true,
+    cover: (hex) => (hex.q === Math.floor(GRID_W / 2)) ? 0.6 : 0.15,
+    moveCost: () => 1,
+    neighbors: (hex) => [
+      { q: hex.q + 1, r: hex.r }, { q: hex.q - 1, r: hex.r },
+      { q: hex.q, r: hex.r + 1 }, { q: hex.q, r: hex.r - 1 },
+      { q: hex.q + 1, r: hex.r - 1 }, { q: hex.q - 1, r: hex.r + 1 },
+    ],
+  };
+}
+
+let sim, map, orders, seed, running = true, speedMult = 1;
+let selectedId = null;
+let logLines = [];
+
+function setup(seedVal) {
+  seed = seedVal;
+  map = makeDevMap();
+  orders = new InstantOrders();
+  const rng = mulberry32(seed);
+  sim = new SimCore({ map, tuning: SIM_TUNING, rng, orders });
+
+  const rifle = toSimWeapon('m1', WPNS.m1, SIM_TUNING);
+  const smg = toSimWeapon('thompson', WPNS.thompson, SIM_TUNING);
+  const mg = toSimWeapon('mg42', WPNS.mg42, SIM_TUNING);
+
+  for (let i = 0; i < 5; i++) {
+    const w = (i === 0) ? mg : rifle;
+    sim.addSoldier({ id: 'A' + i, team: 'A', q: 1, r: i + 1, weapon: w, ammo: { mags: 10 }, skill: 1.0, isLeader: i === 0, facing: { q: 1, r: 0 } });
+  }
+  for (let i = 0; i < 5; i++) {
+    const w = (i === 0) ? smg : rifle;
+    sim.addSoldier({ id: 'B' + i, team: 'B', q: 8, r: i + 1, weapon: w, ammo: { mags: 10 }, skill: 1.0, isLeader: i === 0, facing: { q: -1, r: 0 } });
+  }
+
+  for (let i = 0; i < 5; i++) {
+    sim.issueOrder({ type: 'TARGET', soldierIds: ['A' + i], payload: { targetId: 'B' + i, mode: 'aimed' } });
+    sim.issueOrder({ type: 'TARGET', soldierIds: ['B' + i], payload: { targetId: 'A' + i, mode: 'aimed' } });
+  }
+
+  logLines = [];
+  document.getElementById('log').innerHTML = '';
+  document.getElementById('resultLabel').textContent = '--';
+  selectedId = null;
+  updateSelectedLabel();
+}
+
+function pushLog(text) {
+  const el = document.getElementById('log');
+  const div = document.createElement('div');
+  div.textContent = text;
+  el.appendChild(div);
+  if (el.children.length > 300) el.removeChild(el.firstChild);
+  el.scrollTop = el.scrollHeight;
+}
+
+function formatEvent(ev) {
+  const parts = [`t${ev.tick}`, ev.type];
+  if (ev.id) parts.push(ev.id);
+  if (ev.shooterId) parts.push(ev.shooterId + '->' + ev.targetId + (ev.hit ? ' HIT' : ' miss') + (ev.killed ? ' KILL' : ''));
+  return parts.join(' ');
+}
+
+function step() {
+  if (!running || sim.result()) return;
+  for (let i = 0; i < speedMult; i++) {
+    if (sim.result()) break;
+    sim.tick();
+    const evs = sim.drainEvents();
+    for (const ev of evs) {
+      if (ev.type === 'RESULT') {
+        document.getElementById('resultLabel').textContent = `${ev.winner || 'draw'} (${ev.reason})`;
+      }
+      pushLog(formatEvent(ev));
+    }
+  }
+}
+
+function draw() {
+  const cv = document.getElementById('cv');
+  const ctx = cv.getContext('2d');
+  ctx.clearRect(0, 0, cv.width, cv.height);
+
+  // hex tiles
+  for (let q = 0; q < GRID_W; q++) {
+    for (let r = 0; r < GRID_H; r++) {
+      const { x, y } = axialToPixel(q, r);
+      const cover = map.cover({ q, r });
+      const shade = Math.round(40 + cover * 120);
+      ctx.fillStyle = `rgb(${30 + shade * 0.3},${40 + shade * 0.5},${30 + shade * 0.3})`;
+      ctx.beginPath();
+      ctx.arc(x, y, HEX_R * 0.9, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = '#333';
+      ctx.stroke();
+    }
+  }
+
+  // soldiers
+  for (const s of sim.soldiers()) {
+    const { x, y } = axialToPixel(s.q, s.r);
+    const alive = s.hp > 0;
+    ctx.fillStyle = alive ? (STATE_COLORS[s.state] || '#fff') : STATE_COLORS.down;
+    ctx.beginPath();
+    ctx.arc(x, y, 12, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = s.team === 'A' ? '#39f' : '#f93';
+    ctx.lineWidth = s.id === selectedId ? 4 : 2;
+    ctx.stroke();
+    ctx.lineWidth = 1;
+
+    // suppression bar
+    if (alive) {
+      ctx.fillStyle = '#000';
+      ctx.fillRect(x - 14, y + 16, 28, 4);
+      ctx.fillStyle = s.suppression >= SIM_TUNING.PINNED_AT ? '#f22' : (s.suppression >= SIM_TUNING.SUPPRESSED_AT ? '#fa2' : '#4a4');
+      ctx.fillRect(x - 14, y + 16, 28 * Math.min(1, s.suppression / 100), 4);
+    }
+
+    ctx.fillStyle = '#ccc';
+    ctx.font = '10px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText(s.id + (alive ? '' : ' X'), x, y - 18);
+  }
+
+  document.getElementById('tickLabel').textContent = sim._tick;
+}
+
+function loop() {
+  step();
+  draw();
+  requestAnimationFrame(loop);
+}
+
+function updateSelectedLabel() {
+  document.getElementById('selectedLabel').textContent = selectedId || 'none';
+}
+
+function pixelToNearestHex(px, py) {
+  let best = null, bestD = Infinity;
+  for (let q = 0; q < GRID_W; q++) {
+    for (let r = 0; r < GRID_H; r++) {
+      const { x, y } = axialToPixel(q, r);
+      const d = (x - px) * (x - px) + (y - py) * (y - py);
+      if (d < bestD) { bestD = d; best = { q, r }; }
+    }
+  }
+  return best;
+}
+
+document.getElementById('cv').addEventListener('click', (e) => {
+  const rect = e.target.getBoundingClientRect();
+  const px = e.clientX - rect.left, py = e.clientY - rect.top;
+  let found = null;
+  for (const s of sim.soldiers()) {
+    const { x, y } = axialToPixel(s.q, s.r);
+    if ((x - px) * (x - px) + (y - py) * (y - py) <= 14 * 14) { found = s.id; break; }
+  }
+  selectedId = found;
+  updateSelectedLabel();
+});
+
+document.getElementById('cv').addEventListener('contextmenu', (e) => {
+  e.preventDefault();
+  if (!selectedId) return;
+  const rect = e.target.getBoundingClientRect();
+  const px = e.clientX - rect.left, py = e.clientY - rect.top;
+  const hex = pixelToNearestHex(px, py);
+  // straight-line path (dev harness only; no pathfinding, per SS10 scope)
+  const s = sim.getSoldier(selectedId);
+  const path = [];
+  let cq = s.q, cr = s.r;
+  const steps = Math.max(Math.abs(hex.q - s.q), Math.abs(hex.r - s.r));
+  for (let i = 1; i <= steps; i++) {
+    path.push({
+      q: Math.round(s.q + (hex.q - s.q) * i / steps),
+      r: Math.round(s.r + (hex.r - s.r) * i / steps),
+    });
+  }
+  sim.issueOrder({ type: 'MOVE_TO', soldierIds: [selectedId], payload: { path } });
+});
+
+document.getElementById('btnPause').addEventListener('click', () => {
+  running = !running;
+  document.getElementById('btnPause').textContent = running ? 'pause' : 'resume';
+});
+document.getElementById('btn1x').addEventListener('click', () => { speedMult = 1; document.getElementById('speedLabel').textContent = '1x'; });
+document.getElementById('btn2x').addEventListener('click', () => { speedMult = 2; document.getElementById('speedLabel').textContent = '2x'; });
+document.getElementById('btnRestart').addEventListener('click', () => {
+  const v = parseInt(document.getElementById('seedInput').value, 10) || 1;
+  setup(v);
+});
+
+setup(parseInt(document.getElementById('seedInput').value, 10) || 1);
+loop();
+</script>
+</body>
+</html>
