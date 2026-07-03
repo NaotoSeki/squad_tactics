@@ -357,6 +357,11 @@ SimCore.prototype._phaseDecide = function () {
       intent = s.currentOrder;
     } else {
       intent = this.policy.decide(this._snapshot(s), worldView, this.rng);
+      // trait visibility: surface policy notes as events, once per distinct note
+      if (intent && intent.note && intent.note !== s.lastPolicyNote) {
+        s.lastPolicyNote = intent.note;
+        this._emit('POLICY', { id: s.id, note: intent.note });
+      }
     }
     this._applyIntent(s, intent);
   });

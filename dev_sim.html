@@ -42,6 +42,8 @@
 </div>
 
 <script src="sim_core.js"></script>
+<script src="sim_orders.js"></script>
+<script src="sim_policy.js"></script>
 <script src="data.js"></script>
 <script>
 // dev_sim.html -- SS10 lightweight debug harness. Single file, canvas 2D, no libs.
@@ -91,27 +93,33 @@ let logLines = [];
 function setup(seedVal) {
   seed = seedVal;
   map = makeDevMap();
-  orders = new InstantOrders();
   const rng = mulberry32(seed);
-  sim = new SimCore({ map, tuning: SIM_TUNING, rng, orders });
+  sim = new SimCore({ map, tuning: SIM_TUNING, rng, policy: TraitPolicy });
+  // comms layer needs live soldier lookups, so wire it after sim exists
+  orders = new CommsOrders({
+    getSoldier: (id) => sim.getSoldier(id),
+    soldiers: () => sim.soldiers(),
+    map, tuning: SIM_TUNING,
+  });
+  sim.orders = orders;
 
   const rifle = toSimWeapon('m1', WPNS.m1, SIM_TUNING);
   const smg = toSimWeapon('thompson', WPNS.thompson, SIM_TUNING);
   const mg = toSimWeapon('mg42', WPNS.mg42, SIM_TUNING);
 
+  // one of each trait per side: leader / aggressive / cautious / calm / timid
+  const TRAITS = [[], ['aggressive'], ['cautious'], ['calm'], ['timid']];
   for (let i = 0; i < 5; i++) {
     const w = (i === 0) ? mg : rifle;
-    sim.addSoldier({ id: 'A' + i, team: 'A', q: 1, r: i + 1, weapon: w, ammo: { mags: 10 }, skill: 1.0, isLeader: i === 0, facing: { q: 1, r: 0 } });
+    sim.addSoldier({ id: 'A' + i, team: 'A', q: 1, r: i + 1, weapon: w, ammo: { mags: 10 }, skill: 1.0, isLeader: i === 0, traits: TRAITS[i], facing: { q: 1, r: 0 } });
   }
   for (let i = 0; i < 5; i++) {
     const w = (i === 0) ? smg : rifle;
-    sim.addSoldier({ id: 'B' + i, team: 'B', q: 8, r: i + 1, weapon: w, ammo: { mags: 10 }, skill: 1.0, isLeader: i === 0, facing: { q: -1, r: 0 } });
+    sim.addSoldier({ id: 'B' + i, team: 'B', q: 8, r: i + 1, weapon: w, ammo: { mags: 10 }, skill: 1.0, isLeader: i === 0, traits: TRAITS[i], facing: { q: -1, r: 0 } });
   }
 
-  for (let i = 0; i < 5; i++) {
-    sim.issueOrder({ type: 'TARGET', soldierIds: ['A' + i], payload: { targetId: 'B' + i, mode: 'aimed' } });
-    sim.issueOrder({ type: 'TARGET', soldierIds: ['B' + i], payload: { targetId: 'A' + i, mode: 'aimed' } });
-  }
+  // no opening orders: engagement decisions are left to TraitPolicy so
+  // per-soldier traits are observable from the first seconds (NORTH_STAR §4.1)
 
   logLines = [];
   document.getElementById('log').innerHTML = '';
@@ -133,6 +141,8 @@ function formatEvent(ev) {
   const parts = [`t${ev.tick}`, ev.type];
   if (ev.id) parts.push(ev.id);
   if (ev.shooterId) parts.push(ev.shooterId + '->' + ev.targetId + (ev.hit ? ' HIT' : ' miss') + (ev.killed ? ' KILL' : ''));
+  if (ev.note) parts.push('「' + ev.note + '」');
+  if (ev.type === 'ORDER_DELIVERED' && ev.order) parts.push(ev.order.type);
   return parts.join(' ');
 }
 
@@ -209,8 +219,9 @@ function draw() {
   if (selectedId) {
     const s = sim.getSoldier(selectedId);
     if (s) {
+      const tr = (s.traits && s.traits.length) ? ` {${s.traits.join(',')}}` : (s.isLeader ? ' {分隊長}' : '');
       document.getElementById('selectedLabel').textContent =
-        `${s.id} [${s.state}] hp:${s.hp} sup:${Math.round(s.suppression)} mag:${s.magRemaining}+${s.magsLeft}予備 morale:${Math.round(s.morale)}`;
+        `${s.id}${tr} [${s.state}] hp:${s.hp} sup:${Math.round(s.suppression)} mag:${s.magRemaining}+${s.magsLeft}予備 morale:${Math.round(s.morale)}`;
     }
   }
 }
