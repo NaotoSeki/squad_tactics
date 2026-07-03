@@ -34,7 +34,8 @@
       <span id="speedLabel">1x</span>
     </div>
     <div class="row">tick: <span id="tickLabel">0</span> | result: <span id="resultLabel">--</span></div>
-    <div class="row">Click a soldier to select, right-click a hex to order MOVE_TO.</div>
+    <div class="row">Click a soldier to select, right-click a hex to order MOVE_TO.<br>
+      Select an ENEMY and press <b>F</b>: A-team focus fire (via comms delay).</div>
     <div class="row">Selected: <span id="selectedLabel">none</span></div>
     <h3>Event log</h3>
     <div id="log"></div>
@@ -89,6 +90,7 @@ function makeDevMap() {
 let sim, map, orders, seed, running = true, speedMult = 1;
 let selectedId = null;
 let logLines = [];
+let fieldNotes = {}; // id -> { text, tick } floating speech above soldiers
 
 function setup(seedVal) {
   seed = seedVal;
@@ -122,6 +124,7 @@ function setup(seedVal) {
   // per-soldier traits are observable from the first seconds (NORTH_STAR §4.1)
 
   logLines = [];
+  fieldNotes = {};
   document.getElementById('log').innerHTML = '';
   document.getElementById('resultLabel').textContent = '--';
   selectedId = null;
@@ -155,6 +158,12 @@ function step() {
     for (const ev of evs) {
       if (ev.type === 'RESULT') {
         document.getElementById('resultLabel').textContent = `${ev.winner || 'draw'} (${ev.reason})`;
+      }
+      if (ev.type === 'POLICY' && ev.note) {
+        fieldNotes[ev.id] = { text: ev.note, tick: ev.tick };
+      }
+      if (ev.type === 'ORDER_DELIVERED') {
+        fieldNotes[ev.id] = { text: '了解! ' + ev.order.type, tick: ev.tick };
       }
       pushLog(formatEvent(ev));
     }
@@ -211,6 +220,13 @@ function draw() {
     ctx.font = '10px monospace';
     ctx.textAlign = 'center';
     ctx.fillText(s.id + (alive ? '' : ' X'), x, y - 18);
+
+    // floating speech: trait decisions and order acknowledgements (fade ~6s)
+    const fn = fieldNotes[s.id];
+    if (alive && fn && sim._tick - fn.tick < 60) {
+      ctx.fillStyle = `rgba(255,230,120,${1 - (sim._tick - fn.tick) / 60})`;
+      ctx.fillText(fn.text, x, y - 30);
+    }
   }
 
   document.getElementById('tickLabel').textContent = sim._tick;
@@ -278,6 +294,18 @@ document.getElementById('cv').addEventListener('contextmenu', (e) => {
     });
   }
   sim.issueOrder({ type: 'MOVE_TO', soldierIds: [selectedId], payload: { path } });
+});
+
+// squad-leader doctrine demo: focus fire — every living A soldier targets the
+// selected enemy. Orders route through CommsOrders, so far soldiers comply late.
+document.addEventListener('keydown', (e) => {
+  if (e.key !== 'f' && e.key !== 'F') return;
+  if (!selectedId) return;
+  const tgt = sim.getSoldier(selectedId);
+  if (!tgt || tgt.team !== 'B' || tgt.hp <= 0) return;
+  const ids = sim.soldiers().filter(s => s.team === 'A' && s.hp > 0).map(s => s.id);
+  sim.issueOrder({ type: 'TARGET', soldierIds: ids, payload: { targetId: tgt.id, mode: 'aimed' } });
+  pushLog(`t${sim._tick} 分隊長命令: 全員 ${tgt.id} へ集中射撃`);
 });
 
 document.getElementById('btnPause').addEventListener('click', () => {
