@@ -429,6 +429,14 @@ const SIM_TUNING = {
 
     /** classifyWeapon() の自動判定を上書きしたい武器コードのみ列挙（既定は空） */
     WEAPON_CLASS_OVERRIDES: {},
+
+    // WS-B: sim_orders.js（命令伝達コスト SS12 / NORTH_STAR SS3.4）
+    COMMS_VOICE_RNG: 2, // 分隊長からこの距離以内 + LOS で声/手信号
+    COMMS_VOICE_DELAY_T: 10, // 1秒
+    COMMS_RUNNER_T_PER_HEX: 10, // 1秒/hex
+    COMMS_RADIO_DELAY_T: 30, // 3秒（無線手のいる班、声より遠い場合のみ有利）
+    COMMS_LEADER_DOWN_MULT: 3,
+    COMMS_SHOCK_T: 300, // 30秒（分隊長死亡直後は配達自体を停止）
 };
 if (typeof module !== 'undefined' && module.exports) {
     module.exports.SIM_TUNING = SIM_TUNING;
