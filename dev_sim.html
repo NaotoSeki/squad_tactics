@@ -111,13 +111,14 @@ function setup(seedVal) {
 
   // one of each trait per side: leader / aggressive / cautious / calm / timid
   const TRAITS = [[], ['aggressive'], ['cautious'], ['calm'], ['timid']];
+  const magsFor = (w) => (SIM_TUNING.DEFAULT_MAGS && SIM_TUNING.DEFAULT_MAGS[w.class]) || 6;
   for (let i = 0; i < 5; i++) {
     const w = (i === 0) ? mg : rifle;
-    sim.addSoldier({ id: 'A' + i, team: 'A', q: 1, r: i + 1, weapon: w, ammo: { mags: 10 }, skill: 1.0, isLeader: i === 0, traits: TRAITS[i], facing: { q: 1, r: 0 } });
+    sim.addSoldier({ id: 'A' + i, team: 'A', q: 1, r: i + 1, weapon: w, ammo: { mags: magsFor(w) }, skill: 1.0, isLeader: i === 0, traits: TRAITS[i], facing: { q: 1, r: 0 } });
   }
   for (let i = 0; i < 5; i++) {
     const w = (i === 0) ? smg : rifle;
-    sim.addSoldier({ id: 'B' + i, team: 'B', q: 8, r: i + 1, weapon: w, ammo: { mags: 10 }, skill: 1.0, isLeader: i === 0, traits: TRAITS[i], facing: { q: -1, r: 0 } });
+    sim.addSoldier({ id: 'B' + i, team: 'B', q: 8, r: i + 1, weapon: w, ammo: { mags: magsFor(w) }, skill: 1.0, isLeader: i === 0, traits: TRAITS[i], facing: { q: -1, r: 0 } });
   }
 
   // no opening orders: engagement decisions are left to TraitPolicy so

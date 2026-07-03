@@ -89,7 +89,9 @@ function toSimWeapon(code, wpnsEntry, tuning) {
     burstSize: Math.max(1, w.burst || 1),
     burstIntervalT: burstIntervalT,
     aimT: T.AIM_T.aimed,
-    magCap: Math.max(1, w.cap || 1),
+    // BURSTS_PER_MAG があればそれを正とする（実弾数 w.cap の直流しは意味論が壊れる）
+    magCap: (T.BURSTS_PER_MAG && T.BURSTS_PER_MAG[cls] != null)
+      ? T.BURSTS_PER_MAG[cls] : Math.max(1, w.cap || 1),
     reloadT: reloadT,
     switchT: T.SWITCH_T,
     rngMax: Math.max(1, w.rng || 1),
@@ -571,10 +573,27 @@ SimCore.prototype._resolveBurst = function (shooter, target, T) {
   const isFlank = this._isFlank(shooter, target);
   if (isFlank) {
     pHit *= T.PHIT_FLANK_MULT;
+  } else if (target.state === 'move') {
+    // movers forfeit hex cover; sustained-fire weapons (MG) punish movement hardest
+    const mv = T.PHIT_MOVING_MULT || {};
+    const mult = (mv[shooter.weapon.class] != null) ? mv[shooter.weapon.class] : (mv.default || 1.5);
+    pHit *= mult;
   } else if (cover <= 0) {
-    pHit *= (target.state === 'move') ? T.PHIT_MOVING_OPEN_MULT : T.PHIT_EXPOSED_MULT;
+    pHit *= T.PHIT_EXPOSED_MULT;
   } else {
     pHit *= (1 - cover);
+  }
+
+  // overlapping aim: 3+ shooters on one target pin it fast but do not kill fast
+  if (T.FOCUS_PHIT_PENALTY_PER_EXTRA) {
+    let others = 0;
+    this._soldiers.forEach((o) => {
+      if (o.hp > 0 && o.id !== shooter.id && o.team === shooter.team
+        && o.engageTargetId === target.id && o.state === 'engage') others++;
+    });
+    if (others >= 2) {
+      pHit *= Math.max(T.FOCUS_PHIT_FLOOR || 0.4, 1 - T.FOCUS_PHIT_PENALTY_PER_EXTRA * (others - 1));
+    }
   }
 
   // shooter's own suppression

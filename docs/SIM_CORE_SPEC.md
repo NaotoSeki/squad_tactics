@@ -103,7 +103,8 @@ map = {
 | PHIT_BASE | rifle .04 / smg .05 / mg .05 / sniper .08 | 有効射程・遮蔽下の1バースト命中 |
 | PHIT_RANGE_FALLOFF | 近(≤1/3 rng)×1.5 / 中×1.0 / 遠×0.5 | 距離帯倍率 |
 | PHIT_EXPOSED_MULT | 3.0 | 遮蔽なし目標 |
-| PHIT_MOVING_OPEN_MULT | 4.0 | 開豁地を移動中の目標 |
+| PHIT_MOVING_MULT | mg 4.0 / default 1.5 | 移動目標はhex遮蔽を享受しない。MGのみ強罰（§14 C裁定） |
+| FOCUS_PHIT_PENALTY_PER_EXTRA / FLOOR | 0.15 / 0.4 | 同一目標へ3人以上→pHit逓減。集中射撃=速くpinするが殺せない（§14 D裁定） |
 | PHIT_FLANK_MULT | 6.0 | 側面/背面（遮蔽無効化と排他でなく置換: cover を無視して ×6） |
 | PHIT_SHOOTER_SUPPRESSED / PINNED | 0.5 / 0.25 | 射手が制圧下 |
 | PHIT_AIMED / SUPPRESS_MODE | 1.5 / 0.6 | 射撃モード |
@@ -117,6 +118,8 @@ map = {
 | MORALE_PINNED_DRAIN | -1/秒 | |
 | ROUT_CHECK_BELOW | 30（5秒ごとに morale/100 判定） | |
 | RELOAD_T | rifle 30 / mg 80 | tick |
+| BURSTS_PER_MAG | rifle 12 / smg 12 / mg 28 / sniper 10 | 1マガジンのバースト数（実弾数w.capの直流しを廃止 — §14 B裁定） |
+| DEFAULT_MAGS | rifle 6 / smg 4 / mg 4 / sniper 6 | 予備弾倉。MGが8〜10分で先に沈黙する配分 |
 | SWITCH_T | 30 | 持ち替え |
 | AIM_T | aimed 20 / suppress 8 | |
 | BURST_INTERVAL_T | aimed: rifle 30 smg 25 mg 20 / suppress: 半分 | |
@@ -215,3 +218,20 @@ class CommsOrders {            // §8 OrdersApi を実装
 - 鷹の目（crit 倍率）は sim_core 側対応が必要なため**範囲外**（メイン統合待ち）
 
 テスト: 同一シナリオ・同一シードで DefaultPolicy と各トレイトのイベント列を比較 — aggressive が先に SHOT / cautious が開豁地へ MOVE しない / calm の初 SHOT が近距離まで出ない / timid が sup≥40 で行動停止 / 決定論（同シード同列）。
+
+---
+
+## 14. バランス検収記録（critic 2026-07-03）と宿題
+
+外部調査（Gemini産・弾薬タイムライン）を critic が検収した裁定の要約。詳細な数値根拠は本節の値が反映済み。
+
+- **A 史実性**: 「長時間戦闘の実態は膠着＋断続突撃」（主張5）は膠着設計の裏付けとして採用。弾薬数は**桁のみ採用**（一次裏取りなし。レンジを仕様に直書きしない）
+- **B 弾薬経済**: magCap=実弾数の直流しは意味論崩壊 → BURSTS_PER_MAG 新設。MG=分隊火力の主柱が先に沈黙し「制圧が消えた瞬間に膠着が動く」締め付け構造
+- **C 移動致死**: 「移動中は遮蔽を失う」を採用しつつ、MGのみ×4・他×1.5（全武器×4は側面機動を自殺行為化し §7.4 基準2 と矛盾するため却下）
+- **D 集中射撃**: 史実妥当だが膠着設計の最大の破壊者 → pHit重複ペナルティで「集中=速くpin、殺すのは機動/手榴弾/突撃」を維持
+
+### 宿題（未実装・要設計）
+
+1. **弾切れ→決断の機構**: AMMO_OUT 後の兵は hold で固まるだけ。「終盤に突撃/白兵/後退の決断を迫る」ドラマは弾薬値だけでは生まれない（policy/命令側の設計課題。銃剣突撃・弾薬融通・後退命令）
+2. **crawl/dash の機動技術**: 伏せ移動（遅いが移動ペナルティ減免）と遮蔽間短距離ダッシュ減免。機動の正解ルートを作る
+3. **射撃分配命令**: 「班にゾーンを与える」粒度の分配（集中射撃の対、NCO采配個性の軸）

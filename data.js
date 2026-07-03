@@ -390,8 +390,14 @@ const SIM_TUNING = {
     PHIT_BASE: { rifle: 0.04, smg: 0.05, mg: 0.05, sniper: 0.08 },
     PHIT_RANGE_FALLOFF: { near: 1.5, mid: 1.0, far: 0.5 },
     PHIT_EXPOSED_MULT: 3.0,
-    PHIT_MOVING_OPEN_MULT: 4.0,
+    // 移動中の目標はhexの遮蔽を享受しない。持続射撃できるMGだけが移動を強く罰する
+    // （殺傷ベクトル4「開豁地移動へのMGの持続射撃」— critic検収 2026-07-03）
+    PHIT_MOVING_MULT: { mg: 4.0, default: 1.5 },
     PHIT_FLANK_MULT: 6.0,
+    // 集中射撃は「速くpinする道具」であって「殺す道具」ではない:
+    // 同一目標を3人以上が同時射撃すると狙いが重複しpHitが逓減（制圧蓄積はフル）
+    FOCUS_PHIT_PENALTY_PER_EXTRA: 0.15,
+    FOCUS_PHIT_FLOOR: 0.4,
     PHIT_SHOOTER_SUPPRESSED_PINNED: { suppressed: 0.5, pinned: 0.25 },
     PHIT_AIMED: 1.5,
     PHIT_SUPPRESS_MODE: 0.6,
@@ -413,9 +419,15 @@ const SIM_TUNING = {
     SWITCH_T: 30,
     AIM_T: { aimed: 20, suppress: 8 },
     BURST_INTERVAL_T: {
-        aimed: { rifle: 30, smg: 25, mg: 20, sniper: 30 },
+        aimed: { rifle: 30, smg: 25, mg: 18, sniper: 30 },
         // suppress: 半分（sim_core側で aimed値の半分として算出）
     },
+
+    // 弾薬経済（critic検収 2026-07-03）: magCap=実弾数の直流しを廃し、
+    // 「1マガジンで撃てるバースト数」をクラス別に定義。MG（分隊火力の主柱）が
+    // 8〜10分で先に沈黙し、小銃はリロード頻度で締まる配分。
+    BURSTS_PER_MAG: { rifle: 12, smg: 12, mg: 28, sniper: 10 },
+    DEFAULT_MAGS: { rifle: 6, smg: 4, mg: 4, sniper: 6 },
 
     GRENADE_RNG: 2,
     GRENADE_FUSE_T: 30,
