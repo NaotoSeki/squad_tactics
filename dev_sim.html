@@ -63,8 +63,9 @@ function axialToPixel(q, r) {
   return { x, y };
 }
 
-// simple stub map: flat grid, cover 0.4 in a band down the middle (a "hedgerow"),
-// LOS always true (2D toy map, per SS10 "look is not the point").
+// stub map: both start columns are trenches (cover 0.6) so frontal fire stalls,
+// middle hedgerow gives partial cover (0.35), everything else is open (0.12).
+// Flanking (PHIT_FLANK_MULT) is the intended way to break the standoff.
 function makeDevMap() {
   return {
     dist: (a, b) => {
@@ -72,7 +73,8 @@ function makeDevMap() {
       return (Math.abs(dq) + Math.abs(dr) + Math.abs(dq + dr)) / 2;
     },
     hasLos: () => true,
-    cover: (hex) => (hex.q === Math.floor(GRID_W / 2)) ? 0.6 : 0.15,
+    cover: (hex) => (hex.q === 1 || hex.q === 8) ? 0.6
+      : (hex.q === Math.floor(GRID_W / 2)) ? 0.35 : 0.12,
     moveCost: () => 1,
     neighbors: (hex) => [
       { q: hex.q + 1, r: hex.r }, { q: hex.q - 1, r: hex.r },
@@ -278,6 +280,8 @@ document.getElementById('btnRestart').addEventListener('click', () => {
   setup(v);
 });
 
+// default to a random seed each page load (type a seed + restart to reproduce a battle)
+document.getElementById('seedInput').value = Math.floor(Math.random() * 99999) + 1;
 setup(parseInt(document.getElementById('seedInput').value, 10) || 1);
 loop();
 </script>

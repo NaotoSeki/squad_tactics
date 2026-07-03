@@ -167,10 +167,51 @@ policy = { decide(soldierView, worldView, rng) /* -> intent */ }
 
 単一ファイル・canvas 2D・ライブラリなし・500行以内。機能: hex を色タイルで描画（cover 濃淡）/ 兵は丸+状態色+制圧バー / イベントログペイン / pause・1x・2x / seed 入力+再実行 / クリック選択→右クリック移動命令（InstantOrders 経由）。見た目は問わない。**手触り検証器**であり製品UIではない。
 
-## 11. 実装者への納品物と検収
+## 11. 実装者への納品物と検収（WS-A）
 
 1. `sim_core.js`（mulberry32・toSimWeapon・InstantOrders・DefaultPolicy 同梱）
 2. data.js 末尾に `SIM_TUNING`（既存コードに影響しないこと — 追記のみ）
 3. `tests/sim_core.test.js`（`node tests/sim_core.test.js` で T1〜T7、失敗時 exit 1）
 4. `dev_sim.html`
 5. 検収=メインが node でテスト実行 + dev_sim.html 目視。**テスト green の自己申告は検収に代えない**
+
+---
+
+## 12. WS-B: sim_orders.js（命令伝達コスト — NORTH_STAR §3.4）
+
+**触ってよいファイル**: `sim_orders.js`（新規）・`tests/sim_orders.test.js`（新規）・data.js の `SIM_TUNING` オブジェクト内へのキー追加のみ。**sim_core.js / dev_sim.html は変更禁止**（統合はメイン）。
+
+```js
+class CommsOrders {            // §8 OrdersApi を実装
+  constructor({ getSoldier, soldiers, map, tuning })
+  queue(order, tick)           // 配達予定 tick を計算して保持
+  deliveries(tick)             // 期日到来分 [{soldierId, order}] を返す
+}
+```
+
+遅延規則（対象兵ごとに個別計算。NORTH_STAR §3.4 の表を tick 化）:
+1. `tick === 0`（作戦フェーズ）→ 遅延 0
+2. 発令者 = 同チームの生存 `isLeader` 兵。`dist(leader, 対象) <= COMMS_VOICE_RNG(2)` かつ `hasLos` → `COMMS_VOICE_DELAY_T(10)`
+3. それ以外 → `dist × COMMS_RUNNER_T_PER_HEX(10)`
+4. 対象兵が `hasRadio`（SoldierSpec 任意フィールド、なければ false）→ 固定 `COMMS_RADIO_DELAY_T(30)`（2 より遠い場合のみ有利）
+5. リーダー死亡 → 全遅延 ×`COMMS_LEADER_DOWN_MULT(3)`。死亡 tick から `COMMS_SHOCK_T(300)` の間は配達自体を停止（期日を後ろへずらす）
+
+テスト（node 直実行・exit code・決定論）: 近傍1秒 / 遠隔の距離比例 / 無線 / リーダー死亡×3+ショック停止 / `node tests/sim_core.test.js` が引き続き green（回帰なし）。
+
+## 13. WS-C: sim_policy.js（トレイト行動 — NORTH_STAR §4.1）
+
+**触ってよいファイル**: `sim_policy.js`（新規）・`tests/sim_policy.test.js`（新規）のみ。**sim_core.js / data.js / dev_sim.html は変更禁止**。
+
+`TraitPolicy` は §8 Policy を実装。baseline は sim_core 同梱 DefaultPolicy と同等の分岐から開始し、`soldierView.traits` で行動を変える。数値は `sim_policy.js` 内の `TRAIT_MODS` テーブルに集約（マジックナンバー禁止）。
+
+| trait（英字コード） | 行動差（v1 は行動のみ。sim_core 側の数値変更は範囲外） |
+|---|---|
+| `aggressive` 攻撃的 | 交戦開始距離 +2hex。無命令時の既定 fireMode='suppress' |
+| `cautious` 慎重 | cover < 0.3 の hex へ**自発的に**移動しない（明示命令には従う） |
+| `calm` 冷静 | 距離が rngMax×2/3 以下になるまで射撃を開始しない |
+| `timid` 臆病 | suppression ≥ 40 で自発行動を停止（現位置で沈黙） |
+
+- intent に任意の `note: string`（例: `'攻撃的: 独断で射撃開始'`）を付けてよい。可視化（吹き出し/ログ）はメインが統合
+- 鷹の目（crit 倍率）は sim_core 側対応が必要なため**範囲外**（メイン統合待ち）
+
+テスト: 同一シナリオ・同一シードで DefaultPolicy と各トレイトのイベント列を比較 — aggressive が先に SHOT / cautious が開豁地へ MOVE しない / calm の初 SHOT が近距離まで出ない / timid が sup≥40 で行動停止 / 決定論（同シード同列）。
