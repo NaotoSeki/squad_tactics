@@ -293,3 +293,67 @@ VFX.update(); VFX.draw(g)
 
 - **D1（メイン直轄・本スプリント）**: 駆動ループ + シーン骨格 + 兵士スプライト + VFX曳光/マズル/着弾 + 入力 + 簡易hexタイル
 - **D2（委譲可）**: TerrainRender.buildMap の統合（美麗タイル）、soldier_crawl 8方向アニメ、サイドバー（phaser_sidebar 流用検討）
+
+---
+
+## 16. WS-F: sim_leader.js — 現場分隊長AIと影響ネットワーク（NORTH_STAR §3.4 三現主義）
+
+**設計思想（ディレクター 2026-07-05）**: 兵士は全員が個人AI（TraitPolicy）を持ち、**周囲の兵士同士がInfluenceし合う。分隊長は特別な機構ではなく、影響ネットワークで最も重みが大きいノード**にすぎない。プレイヤーは神視点だが、命令はWW2通信で遅れて届く——見えているのに介入できないもどかしさが体験の核。
+
+**触ってよいファイル**: `sim_leader.js`（新規）・`tests/sim_leader.test.js`（新規）・`sim_policy.js`（影響ルール追加のみ）・data.js の SIM_TUNING キー追加・dev_sim.html（統合）。**sim_core.js / sim_orders.js は変更禁止。**
+
+### 16.1 LeaderPolicy（分隊長AI）
+
+```js
+// sim_leader.js — 純JS・依存ゼロ・決定論（Math.random禁止）
+const LeaderPolicy = {
+  // 分隊長個体の意思決定周期（LEADER_ASSESS_INTERVAL_T ごと）に呼ばれる。
+  // 戻り値: Order[]（sim.issueOrder へそのまま流せる形; 0件なら空配列）
+  assess(leaderView, worldView, rng, state) { ... }
+};
+```
+- **命令は必ず CommsOrders を通る**（プレイヤーと同じ経路・同じ遅延）。分隊長が「現場で速い」のは声が届く距離にいるから——三現主義の機構的表現
+- **state**（呼び出し側が保持する分隊長ごとの記憶）: `{ lastDoctrine, lastOrderTick, playerLockUntil }`
+
+### 16.2 ドクトリン判定（v1 は4種 + 静観）
+
+優先度順に評価し、**最初に条件を満たした1つだけ**発令。条件は全て SIM_TUNING キー:
+
+| 優先 | ドクトリン | 発火条件（初期値） | 発令内容 |
+|---|---|---|---|
+| 1 | **FALL_BACK 下がれ!** | 自軍死者≥2 かつ 平均morale<50 | 全員に MOVE_TO（最寄り敵から離れる方向へ2hex、直線パス） |
+| 2 | **FOCUS_FIRE あの一点を潰せ!** | 敵1名が露出(cover<0.3)or移動中 かつ 味方≥3名の射程内 | 射程内全員に TARGET(aimed, その敵) |
+| 3 | **SUPPRESS_FIRE 頭を上げさせるな!** | 自軍の被制圧者≥2（suppression≥SUPPRESSED_AT） | 各兵に最寄り敵へ TARGET(suppress) |
+| 4 | **HOLD_FIRE 撃ち方やめ!** | 交戦なし30秒 かつ 分隊残弾率<40% | 全員に FIRE_MODE(hold) |
+| - | 静観 | 上記いずれも不成立 | 空配列 |
+
+- **クールダウン**: 発令後 DOCTRINE_COOLDOWN_T(100tick=10秒) は再評価しても発令しない（命令スパム防止）
+- **同一ドクトリン連発禁止**: lastDoctrine と同じで戦況スコアが変わらないなら発令しない
+- **プレイヤー命令ロック**: プレイヤー発の命令が届いたら PLAYER_ORDER_LOCK_T(150tick=15秒) は分隊長AIは発令しない（上意下達）。呼び出し側が state.playerLockUntil を更新
+- 全発令は `POLICY` イベント相当の note を伴う（「制圧しろ！頭を上げさせるな！」等、吹き出しで分隊長の思考が読める）
+
+### 16.3 影響ネットワーク（sim_policy.js への追加、v1 は2ルールのみ）
+
+一般化した影響グラフは**作らない**（機構の蜜壺）。v1 は効果が読める2ルールだけ:
+
+1. **連鎖射撃**: 2hex以内の味方が2名以上 engage 中なら、散発射撃確率(HARASS_FIRE_P)を INFLUENCE_JOIN_FIRE_MULT(2.0)倍 — 「周りが撃ち始めたら自分も撃つ」
+2. **分隊長の存在**: 生存分隊長が LEADER_STEADY_RADIUS(2hex)内にいる兵は、timid の凍結閾値 +LEADER_STEADY_BONUS(20)、散発射撃確率 1.5倍 — 「班長がそばにいると肝が据わる」
+
+将来の拡張（保留棚）: 古参(skill高)の周囲影響、敗走の伝染、NCOドクトリン個性（集中型/分配型/慎重型の重み差）。
+
+### 16.4 テスト（tests/sim_leader.test.js）
+
+| # | シナリオ | 合格条件 |
+|---|---|---|
+| F1 | 分隊長不在の分隊 | ドクトリン発令ゼロ |
+| F2 | 自軍2名が被制圧 | 30秒以内に SUPPRESS_FIRE 発令（ORDER_DELIVERED観測） |
+| F3 | 死者2+低morale | FALL_BACK 発令、全員が敵から離れる方向へ移動 |
+| F4 | プレイヤー命令直後 | ロック中は分隊長AI発令ゼロ、ロック明けに再開 |
+| F5 | 決定論 | 同シード2回で発令列一致 |
+| F6 | クールダウン | 連続tickで発令が DOCTRINE_COOLDOWN_T 未満の間隔にならない |
+
+### 16.5 dev_sim 統合
+
+- 各チームの分隊長で LEADER_ASSESS_INTERVAL_T(25tick)ごとに LeaderPolicy.assess を呼び、返った Order を sim.issueOrder へ
+- プレイヤーの F/S/移動命令発行時に該当チームの state.playerLockUntil を更新
+- 分隊長の発令 note は吹き出し+ログに必ず出す（プレイヤーがNCOの判断を読めることが体験の核）
