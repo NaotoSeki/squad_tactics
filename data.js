@@ -429,6 +429,12 @@ const SIM_TUNING = {
     BURSTS_PER_MAG: { rifle: 12, smg: 12, mg: 28, sniper: 10 },
     DEFAULT_MAGS: { rifle: 6, smg: 4, mg: 4, sniper: 6 },
 
+    // 射撃規律（2026-07-04）: 敵が頭を下げている（制圧≥SUPPRESSED_AT）間は、
+    // 近距離の脅威か移動中の的でない限り撃たない。放置=全員弾切れではなく
+    // 「散発的な撃ち合いの膠着」へ（史実: 長時間戦闘は撃たない時間が支配的）
+    DISCIPLINE_CLOSE_RNG: 2,          // この距離以内の敵は制圧中でも撃ってよい
+    DISCIPLINE_LAST_MAG_COVER_MAX: 0.3, // 最終弾倉時、これ以上の遮蔽の的には撃たない
+
     GRENADE_RNG: 2,
     GRENADE_FUSE_T: 30,
     GRENADE_SUPPRESS: 60,

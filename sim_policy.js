@@ -71,14 +71,29 @@ const TraitPolicy = {
 
     const effRangeBonus = has('aggressive') ? TRAIT_MODS.aggressive.ENGAGE_RANGE_BONUS : 0;
 
+    // fire discipline (aggressive ignores it -- that IS the trait):
+    // suppressed targets are not worth ammo unless close or moving;
+    // on the last magazine only worthwhile targets get shot at.
+    const disciplined = !has('aggressive');
+    const supAt = T.SUPPRESSED_AT != null ? T.SUPPRESSED_AT : 50;
+    const closeRng = T.DISCIPLINE_CLOSE_RNG != null ? T.DISCIPLINE_CLOSE_RNG : 2;
+    const lastMag = s.magsLeft <= 0;
+
     let bestTarget = null;
     let bestDist = Infinity;
+    let sawEnemy = false;
     for (const other of worldView.soldiers) {
       if (other.team === s.team || other.hp <= 0) continue;
       if (!worldView.map.hasLos({ q: s.q, r: s.r }, { q: other.q, r: other.r })) continue;
       const d = worldView.map.dist({ q: s.q, r: s.r }, { q: other.q, r: other.r });
       const effRange = s.weapon.rngMax + effRangeBonus;
-      if (d <= effRange && d < bestDist) {
+      if (d > effRange) continue;
+      sawEnemy = true;
+      if (disciplined && other.suppression >= supAt && d > closeRng && other.state !== 'move') continue;
+      if (disciplined && lastMag && !(other.state === 'move'
+        || worldView.map.cover({ q: other.q, r: other.r }) < (T.DISCIPLINE_LAST_MAG_COVER_MAX || 0.3)
+        || d <= s.weapon.rngMax / 3)) continue;
+      if (d < bestDist) {
         bestDist = d;
         bestTarget = other;
       }
@@ -104,6 +119,10 @@ const TraitPolicy = {
       };
       if (has('aggressive')) intent.note = '攻撃的: 独断で射撃開始';
       return intent;
+    }
+
+    if (sawEnemy) {
+      return { type: 'HOLD_POS', soldierIds: [s.id], payload: {}, note: '射撃節制: 敵は頭を下げている' };
     }
 
     // cautious: do not self-initiate a move into low-cover ground. TraitPolicy

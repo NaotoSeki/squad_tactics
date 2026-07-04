@@ -154,19 +154,37 @@ const DefaultPolicy = {
       return { type: 'HOLD_POS', soldierIds: [s.id], payload: { prone: true } };
     }
 
+    const T = worldView.tuning || {};
+    const supAt = T.SUPPRESSED_AT != null ? T.SUPPRESSED_AT : 50;
+    const closeRng = T.DISCIPLINE_CLOSE_RNG != null ? T.DISCIPLINE_CLOSE_RNG : 2;
+    const lastMag = s.magsLeft <= 0;
+
     let bestTarget = null;
     let bestDist = Infinity;
+    let sawEnemy = false;
     for (const other of worldView.soldiers) {
       if (other.team === s.team || other.hp <= 0) continue;
       if (!worldView.map.hasLos({ q: s.q, r: s.r }, { q: other.q, r: other.r })) continue;
       const d = worldView.map.dist({ q: s.q, r: s.r }, { q: other.q, r: other.r });
-      if (d <= s.weapon.rngMax && d < bestDist) {
+      if (d > s.weapon.rngMax) continue;
+      sawEnemy = true;
+      // fire discipline: a target keeping its head down is not worth ammo
+      // unless it is a close threat or on the move
+      if (other.suppression >= supAt && d > closeRng && other.state !== 'move') continue;
+      // last magazine: only spend on worthwhile targets (moving / exposed / near)
+      if (lastMag && !(other.state === 'move'
+        || worldView.map.cover({ q: other.q, r: other.r }) < (T.DISCIPLINE_LAST_MAG_COVER_MAX || 0.3)
+        || d <= s.weapon.rngMax / 3)) continue;
+      if (d < bestDist) {
         bestDist = d;
         bestTarget = other;
       }
     }
     if (bestTarget) {
       return { type: 'TARGET', soldierIds: [s.id], payload: { targetId: bestTarget.id, mode: 'aimed' } };
+    }
+    if (sawEnemy) {
+      return { type: 'HOLD_POS', soldierIds: [s.id], payload: {}, note: '射撃節制: 敵は頭を下げている' };
     }
     return { type: 'HOLD_POS', soldierIds: [s.id], payload: {} };
   },
