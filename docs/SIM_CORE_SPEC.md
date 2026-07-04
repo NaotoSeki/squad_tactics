@@ -235,3 +235,61 @@ class CommsOrders {            // §8 OrdersApi を実装
 1. **弾切れ→決断の機構**: AMMO_OUT 後の兵は hold で固まるだけ。「終盤に突撃/白兵/後退の決断を迫る」ドラマは弾薬値だけでは生まれない（policy/命令側の設計課題。銃剣突撃・弾薬融通・後退命令）
 2. **crawl/dash の機動技術**: 伏せ移動（遅いが移動ペナルティ減免）と遮蔽間短距離ダッシュ減免。機動の正解ルートを作る
 3. **射撃分配命令**: 「班にゾーンを与える」粒度の分配（集中射撃の対、NCO采配個性の軸）
+
+---
+
+## 15. WS-D: Phaser 製品ビュー接続（sim_scene.js + sim_game.html）
+
+**上位**: NORTH_STAR §7.1「phaser_bridge 拡張」/ §7.4 基準6。**目的**: dev_sim の手触りを、既存アセット（地形タイル・兵士スプライト・VFX）で描く製品ビューにする。
+
+**Strangler Fig 原則**: index.html（凍結ターン制ビルド）と phaser_bridge.js の MainScene には**一切触れない**。sim_core を描く**新規シーン**を並列エントリとして作る。
+
+### 15.1 再利用マップ（結合度調査に基づく確定）
+
+| モジュール | 結合度 | 扱い |
+|-----------|--------|------|
+| phaser_vfx.js（`window.VFX` = VFXSystem シングルトン） | ターン制状態への結合ゼロ | **直接再利用**。`VFX.update()`→`VFX.draw(graphics)` 毎フレーム。`addBulletImpact`/`addExplosion`/`addRocket`/`addSmoke` |
+| phaser_sound.js（`window.Sfx`） | ほぼゼロ | 直接再利用 |
+| phaser_terrain.js（`window.TerrainRender.buildMap`） | ゼロ | D2で再利用。D1は簡易hexタイル |
+| phaser_unit.js（UnitView） | `gameLogic.units` を毎フレーム走査（9箇所） | **再利用しない**。sim兵士は形が違う。sim_scene が独自の軽量スプライト管理を持つ（soldier_crawl等のアセットは共用） |
+| phaser_bridge.js MainScene | ターン制オーケストレーション | **触らない** |
+
+### 15.2 駆動ループ（最重要 — 「シミュは描画を待たない」の技術的強制）
+
+Phaser の `update(time, delta)` 内で**固定タイムステップ・アキュムレータ**:
+```
+acc += delta * speed          // speed: 0(pause)/1/2
+let n = 0
+while (acc >= TICK_MS && n < MAX_CATCHUP) { sim.tick(); acc -= TICK_MS; n++ }  // MAX_CATCHUP=5 でスパイラル防止
+dispatch(sim.drainEvents())   // イベント→VFX/SFX/フロートテキスト
+renderSprites()               // スプライト位置は hex目標へ lerp（10Hzシミュを60fpsで滑らかに）
+VFX.update(); VFX.draw(g)
+```
+- **sim は10Hz、描画は60fps、スプライトは補間**。これが v1 の軽快さと RTwP の両立点。
+- tick は同期・副作用は drainEvents 経由のみ（sim_core の鉄則を破らない）。
+
+### 15.3 イベント→ビジュアル対応
+
+| SimEvent | ビジュアル（実在API） |
+|----------|----------------------|
+| SHOT (miss) | 曳光線 shooter→target（graphics線, 3〜4フレーム） + マズル閃光 |
+| SHOT (hit) | 上記 + `VFX.addBulletImpact(tx,ty,burst)` |
+| DOWN | `VFX.addExplosion(x,y,'#c33',6)` + スプライト死亡表現（伏せ+暗色） |
+| GRENADE | `VFX.addRocket(sx,sy,ex,ey,onHit)` → onHit で `addExplosion` |
+| PINNED/SUPPRESSED | スプライト tint（土色）+ `addSmoke` 散発 |
+| POLICY / ORDER_DELIVERED | 頭上フロートテキスト（吹き出し、6秒フェード） |
+| ROUT | フロート「敗走!」+ スプライト後退 |
+
+### 15.4 受け入れ基準（§7.4 基準6）
+
+1. sim_game.html が 5v5 塹壕戦を**実地形タイル + 兵士スプライト + VFX曳光/着弾**で描く
+2. pause / 1x / 2x、クリック選択 + 右クリック移動命令（CommsOrders経由の遅延つき）
+3. **≥55fps**（Phaserデバッグや `performance` で確認）、強制待機ゼロ（await なし）
+4. MG★・トレイト・射撃節制の吹き出しが製品ビューでも読める
+5. **VFX再利用率を報告**（新規描画コード行 vs phaser_vfx 流用）
+6. index.html / phaser_bridge.js を diff �ーロで無変更
+
+### 15.5 分割
+
+- **D1（メイン直轄・本スプリント）**: 駆動ループ + シーン骨格 + 兵士スプライト + VFX曳光/マズル/着弾 + 入力 + 簡易hexタイル
+- **D2（委譲可）**: TerrainRender.buildMap の統合（美麗タイル）、soldier_crawl 8方向アニメ、サイドバー（phaser_sidebar 流用検討）
