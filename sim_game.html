@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>SQUAD TACTICS v2 — sim product view (WS-D)</title>
+<style>
+  html, body { margin: 0; padding: 0; background: #16140f; color: #ddd; font-family: monospace; overflow: hidden; }
+  #wrap { display: flex; height: 100vh; }
+  #game-view { flex: 1; position: relative; }
+  #hud { position: absolute; top: 8px; left: 8px; z-index: 10; background: rgba(0,0,0,.45); padding: 6px 10px; border-radius: 4px; font-size: 12px; }
+  #hud button { font-family: monospace; margin-right: 4px; }
+  #side { width: 300px; background: #1c1a14; border-left: 1px solid #443; padding: 10px; box-sizing: border-box; font-size: 12px; }
+  #side h3 { color: #9cf; margin: 4px 0; font-size: 13px; }
+  #sel { background: #111; padding: 6px; border: 1px solid #333; min-height: 40px; line-height: 1.5; }
+  .k { color: #8ac; }
+</style>
+</head>
+<body>
+<div id="wrap">
+  <div id="game-view">
+    <div id="hud">
+      seed <input id="seed" type="number" value="1" style="width:70px">
+      <button id="restart">restart</button>
+      <button id="pause">pause</button>
+      <button id="s1">1x</button>
+      <button id="s2">2x</button>
+      <span id="fps">-- fps</span> | <span id="result">--</span>
+    </div>
+  </div>
+  <div id="side">
+    <h3>SQUAD TACTICS v2 (WS-D product view)</h3>
+    <div>左クリック=選択 / 右クリック=移動命令<br>敵を選択して <b>F</b> = 全員集中射撃</div>
+    <h3>選択兵</h3>
+    <div id="sel">none</div>
+    <h3>凡例</h3>
+    <div>★=分隊長 / mg,rifle,smg=武器<br>白バー=HP 下バー=制圧<br>黄吹き出し=個性/命令</div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
+<script src="data.js"></script>
+<script src="data/wpns_pl_master.js"></script>
+<script src="sim_core.js"></script>
+<script src="sim_orders.js"></script>
+<script src="sim_policy.js"></script>
+<script src="phaser_sound.js"></script>
+<script src="phaser_vfx.js"></script>
+<script src="sim_scene.js"></script>
+<script>
+  // WPNS fallback: sim_scene uses WPNS.m1 / thompson / mg42. data.js defines WPNS,
+  // but guard in case a code is missing so we fail loud, not silent.
+  (function () {
+    // WPNS is a top-level `const` in data.js (a lexical global, not a window property),
+    // so reference it by bareword, not window.WPNS.
+    const need = ['m1', 'thompson', 'mg42'];
+    const missing = need.filter(c => typeof WPNS === 'undefined' || !WPNS[c]);
+    if (missing.length) console.warn('sim_game: WPNS missing', missing, '— toSimWeapon will use defaults');
+  })();
+
+  const gv = document.getElementById('game-view');
+  const config = {
+    type: Phaser.AUTO, parent: 'game-view',
+    width: gv.clientWidth, height: gv.clientHeight,
+    backgroundColor: '#16140f', pixelArt: false,
+    fps: { target: 60 },
+    scene: [SimScene],
+  };
+  const game = new Phaser.Game(config);
+  window.simGame = game;
+
+  function scene() { return game.scene.getScene('SimScene'); }
+
+  game.events.on('sim-result', (ev) => {
+    document.getElementById('result').textContent = (ev.winner || 'draw') + ' ' + (ev.reason || '');
+  });
+
+  // control bar
+  document.getElementById('pause').onclick = () => { const s = scene(); s.speed = s.speed === 0 ? 1 : 0; document.getElementById('pause').textContent = s.speed === 0 ? 'resume' : 'pause'; };
+  document.getElementById('s1').onclick = () => { scene().speed = 1; };
+  document.getElementById('s2').onclick = () => { scene().speed = 2; };
+  document.getElementById('restart').onclick = () => {
+    const seed = parseInt(document.getElementById('seed').value, 10) || 1;
+    scene().restart(seed);
+  };
+  document.getElementById('seed').value = Math.floor(Math.random() * 99999) + 1;
+
+  // sidebar live readout + fps
+  setInterval(() => {
+    const s = scene(); if (!s || !s.sim) return;
+    document.getElementById('fps').textContent = s.fps + ' fps';
+    const sel = document.getElementById('sel');
+    if (s.selectedId) {
+      const u = s.sim.getSoldier(s.selectedId);
+      if (u) {
+        const tr = (u.traits && u.traits.length) ? u.traits.join(',') : (u.isLeader ? '分隊長' : '—');
+        sel.innerHTML = `<span class="k">${u.id}${u.isLeader ? '★' : ''}</span> [${u.state}] ${u.weapon.class}<br>`
+          + `trait: ${tr}<br>hp: ${u.hp} / sup: ${Math.round(u.suppression)} / morale: ${Math.round(u.morale)}<br>`
+          + `弾: ${u.magRemaining} + 予備${u.magsLeft}`;
+      }
+    } else { sel.textContent = 'none'; }
+  }, 150);
+
+  window.addEventListener('resize', () => { game.scale.resize(gv.clientWidth, gv.clientHeight); });
+</script>
+</body>
+</html>
