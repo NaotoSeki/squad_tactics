@@ -434,6 +434,8 @@ const SIM_TUNING = {
     // 「散発的な撃ち合いの膠着」へ（史実: 長時間戦闘は撃たない時間が支配的）
     DISCIPLINE_CLOSE_RNG: 2,          // この距離以内の敵は制圧中でも撃ってよい
     DISCIPLINE_LAST_MAG_COVER_MAX: 0.3, // 最終弾倉時、これ以上の遮蔽の的には撃たない
+    HARASS_FIRE_P: 0.25,   // 制圧済みの敵への散発射撃確率（意思決定サイクル毎）
+    BURST_JITTER: 0.25,    // バースト間隔の±ゆらぎ率（機械的な等間隔射撃を崩す）
 
     GRENADE_RNG: 2,
     GRENADE_FUSE_T: 30,

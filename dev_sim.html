@@ -35,7 +35,8 @@
     </div>
     <div class="row">tick: <span id="tickLabel">0</span> | result: <span id="resultLabel">--</span></div>
     <div class="row">Click a soldier to select, right-click a hex to order MOVE_TO.<br>
-      Select an ENEMY and press <b>F</b>: A-team focus fire (via comms delay).</div>
+      Select an ENEMY and press <b>F</b>: A-team focus fire (via comms delay).
+      Press <b>S</b>: A-team suppress fire (all enemies in range).</div>
     <div class="row">Selected: <span id="selectedLabel">none</span></div>
     <h3>Event log</h3>
     <div id="log"></div>
@@ -302,13 +303,32 @@ document.getElementById('cv').addEventListener('contextmenu', (e) => {
 // squad-leader doctrine demo: focus fire — every living A soldier targets the
 // selected enemy. Orders route through CommsOrders, so far soldiers comply late.
 document.addEventListener('keydown', (e) => {
-  if (e.key !== 'f' && e.key !== 'F') return;
-  if (!selectedId) return;
-  const tgt = sim.getSoldier(selectedId);
-  if (!tgt || tgt.team !== 'B' || tgt.hp <= 0) return;
-  const ids = sim.soldiers().filter(s => s.team === 'A' && s.hp > 0).map(s => s.id);
-  sim.issueOrder({ type: 'TARGET', soldierIds: ids, payload: { targetId: tgt.id, mode: 'aimed' } });
-  pushLog(`t${sim._tick} 分隊長命令: 全員 ${tgt.id} へ集中射撃`);
+  if (e.key === 'f' || e.key === 'F') {
+    if (!selectedId) return;
+    const tgt = sim.getSoldier(selectedId);
+    if (!tgt || tgt.team !== 'B' || tgt.hp <= 0) return;
+    const ids = sim.soldiers().filter(s => s.team === 'A' && s.hp > 0).map(s => s.id);
+    sim.issueOrder({ type: 'TARGET', soldierIds: ids, payload: { targetId: tgt.id, mode: 'aimed' } });
+    pushLog(`t${sim._tick} 分隊長命令: 全員 ${tgt.id} へ集中射撃`);
+  } else if (e.key === 's' || e.key === 'S') {
+    const ateam = sim.soldiers().filter(s => s.team === 'A' && s.hp > 0);
+    const bteam = sim.soldiers().filter(s => s.team === 'B' && s.hp > 0);
+    for (const soldier of ateam) {
+      let closestEnemy = null;
+      let closestDist = Infinity;
+      for (const enemy of bteam) {
+        const d = map.dist({ q: soldier.q, r: soldier.r }, { q: enemy.q, r: enemy.r });
+        if (d <= soldier.weapon.rngMax && d < closestDist) {
+          closestDist = d;
+          closestEnemy = enemy;
+        }
+      }
+      if (closestEnemy) {
+        sim.issueOrder({ type: 'TARGET', soldierIds: [soldier.id], payload: { targetId: closestEnemy.id, mode: 'suppress' } });
+      }
+    }
+    pushLog(`t${sim._tick} 分隊長命令: 制圧射撃！`);
+  }
 });
 
 document.getElementById('btnPause').addEventListener('click', () => {

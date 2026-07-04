@@ -169,8 +169,12 @@ const DefaultPolicy = {
       if (d > s.weapon.rngMax) continue;
       sawEnemy = true;
       // fire discipline: a target keeping its head down is not worth ammo
-      // unless it is a close threat or on the move
-      if (other.suppression >= supAt && d > closeRng && other.state !== 'move') continue;
+      // unless it is a close threat or on the move. suppressed targets are engaged
+      // only probabilistically (harassing fire).
+      if (other.suppression >= supAt && d > closeRng && other.state !== 'move') {
+        const harassP = T.HARASS_FIRE_P != null ? T.HARASS_FIRE_P : 0.25;
+        if (rng() >= harassP) continue;
+      }
       // last magazine: only spend on worthwhile targets (moving / exposed / near)
       if (lastMag && !(other.state === 'move'
         || worldView.map.cover({ q: other.q, r: other.r }) < (T.DISCIPLINE_LAST_MAG_COVER_MAX || 0.3)
@@ -522,9 +526,11 @@ SimCore.prototype._actEngage = function (s, T) {
   }
   if (!s._burstIntervalRemaining || s._burstIntervalRemaining <= 0) {
     this._resolveBurst(s, target, T);
-    const interval = (s.fireMode === 'suppress')
+    const base = (s.fireMode === 'suppress')
       ? Math.round(s.weapon.burstIntervalT / 2)
       : s.weapon.burstIntervalT;
+    const J = (T.BURST_JITTER != null) ? T.BURST_JITTER : 0;
+    const interval = Math.max(1, Math.round(base * (1 - J + this.rng() * 2 * J)));
     s._burstIntervalRemaining = interval;
   } else {
     s._burstIntervalRemaining--;

@@ -24,6 +24,7 @@ const TRAIT_MODS = {
   },
   calm: {
     ENGAGE_RANGE_FRACTION: 2 / 3, // withholds fire until dist <= rngMax * this fraction
+    HARASS_FIRE_P: 0.15,            // harassing fire probability for suppressed targets (60% of default 0.25)
   },
   timid: {
     FREEZE_AT_SUPPRESSION: 40, // suppression >= this => self-initiated actions stop
@@ -89,7 +90,13 @@ const TraitPolicy = {
       const effRange = s.weapon.rngMax + effRangeBonus;
       if (d > effRange) continue;
       sawEnemy = true;
-      if (disciplined && other.suppression >= supAt && d > closeRng && other.state !== 'move') continue;
+      if (disciplined && other.suppression >= supAt && d > closeRng && other.state !== 'move') {
+        let harassP = T.HARASS_FIRE_P != null ? T.HARASS_FIRE_P : 0.25;
+        if (has('calm') && TRAIT_MODS.calm.HARASS_FIRE_P != null) {
+          harassP = TRAIT_MODS.calm.HARASS_FIRE_P;
+        }
+        if (rng() >= harassP) continue;
+      }
       if (disciplined && lastMag && !(other.state === 'move'
         || worldView.map.cover({ q: other.q, r: other.r }) < (T.DISCIPLINE_LAST_MAG_COVER_MAX || 0.3)
         || d <= s.weapon.rngMax / 3)) continue;
