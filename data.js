@@ -473,6 +473,19 @@ const SIM_TUNING = {
     COMMS_RADIO_DELAY_T: 30, // 3秒（無線手のいる班、声より遠い場合のみ有利）
     COMMS_LEADER_DOWN_MULT: 3,
     COMMS_SHOCK_T: 300, // 30秒（分隊長死亡直後は配達自体を停止）
+
+    // WS-G: sim_battle_adapter.js — 実地形(TERRAIN, data.js)id -> sim_core cover(0..1)。
+    // TERRAIN.cover（0..40の相対スケール、logic_game.jsの命中式専用）とは別テーブル。
+    // ディレクター指摘: 地形毎のcover定数調整はここで行う（sim_core側は参照のみ）。
+    TERRAIN_COVER: {
+        [-1]: 0,     // VOID（不使用マスだが安全側で0）
+        0: 0.12,     // DIRT 荒地・開豁地
+        1: 0.2,      // GRASS 草原
+        2: 0.4,      // FOREST 森林
+        3: 0.05,     // ROAD 道路（露出）
+        4: 0.5,      // TOWN 廃墟・建物
+        5: 0,        // WATER 水域（通行不可想定・cover概念なし）
+    },
 };
 if (typeof module !== 'undefined' && module.exports) {
     module.exports.SIM_TUNING = SIM_TUNING;
