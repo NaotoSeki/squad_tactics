@@ -46,6 +46,7 @@
 <script src="sim_core.js"></script>
 <script src="sim_orders.js"></script>
 <script src="sim_policy.js"></script>
+<script src="sim_leader.js"></script>
 <script src="data.js"></script>
 <script>
 // dev_sim.html -- SS10 lightweight debug harness. Single file, canvas 2D, no libs.
@@ -92,6 +93,12 @@ let sim, map, orders, seed, running = true, speedMult = 1;
 let selectedId = null;
 let logLines = [];
 let fieldNotes = {}; // id -> { text, tick } floating speech above soldiers
+// per-team squad-leader AI memory (SIM_CORE_SPEC.md SS16.5). team -> { lastDoctrine, lastOrderTick, playerLockUntil, quietT }
+let leaderState = {};
+
+function freshLeaderState() {
+  return { lastDoctrine: null, lastOrderTick: -Infinity, playerLockUntil: 0, quietT: 0 };
+}
 
 function setup(seedVal) {
   seed = seedVal;
@@ -125,6 +132,8 @@ function setup(seedVal) {
   // no opening orders: engagement decisions are left to TraitPolicy so
   // per-soldier traits are observable from the first seconds (NORTH_STAR §4.1)
 
+  leaderState = { A: freshLeaderState(), B: freshLeaderState() };
+
   logLines = [];
   fieldNotes = {};
   document.getElementById('log').innerHTML = '';
@@ -151,11 +160,31 @@ function formatEvent(ev) {
   return parts.join(' ');
 }
 
+// squad-leader AI tick (SS16.5): every LEADER_ASSESS_INTERVAL_T, ask each living
+// team leader's LeaderPolicy for orders and route them through the same
+// CommsOrders channel as player orders (issueOrder), so NCO decisions are
+// subject to the same delay.
+function runLeaderAI() {
+  const interval = SIM_TUNING.LEADER_ASSESS_INTERVAL_T || 25;
+  if (sim._tick % interval !== 0) return;
+  for (const team of ['A', 'B']) {
+    const leader = sim.soldiers().find((s) => s.team === team && s.isLeader && s.hp > 0);
+    if (!leader) continue;
+    const worldView = { tick: sim._tick, soldiers: sim.soldiers(), map, tuning: SIM_TUNING };
+    const leaderOrders = LeaderPolicy.assess(leader, worldView, sim.rng, leaderState[team]);
+    for (const o of leaderOrders) {
+      sim.issueOrder(o);
+      if (o.note) pushLog(`t${sim._tick} 分隊長(${team})発令: 「${o.note}」`);
+    }
+  }
+}
+
 function step() {
   if (!running || sim.result()) return;
   for (let i = 0; i < speedMult; i++) {
     if (sim.result()) break;
     sim.tick();
+    runLeaderAI();
     const evs = sim.drainEvents();
     for (const ev of evs) {
       if (ev.type === 'RESULT') {
@@ -165,7 +194,9 @@ function step() {
         fieldNotes[ev.id] = { text: ev.note, tick: ev.tick };
       }
       if (ev.type === 'ORDER_DELIVERED') {
-        fieldNotes[ev.id] = { text: '了解! ' + ev.order.type, tick: ev.tick };
+        // NCO doctrine orders carry a `note` (SS16.2 speech); player-issued
+        // orders (F/S/right-click) do not, so fall back to a plain ack.
+        fieldNotes[ev.id] = { text: ev.order.note ? ev.order.note : ('了解! ' + ev.order.type), tick: ev.tick };
       }
       pushLog(formatEvent(ev));
     }
@@ -298,6 +329,8 @@ document.getElementById('cv').addEventListener('contextmenu', (e) => {
     });
   }
   sim.issueOrder({ type: 'MOVE_TO', soldierIds: [selectedId], payload: { path } });
+  // player took direct control: A-team squad leader AI stays quiet for a while (SS16.5)
+  leaderState.A.playerLockUntil = sim._tick + (SIM_TUNING.PLAYER_ORDER_LOCK_T || 150);
 });
 
 // squad-leader doctrine demo: focus fire — every living A soldier targets the
@@ -310,6 +343,7 @@ document.addEventListener('keydown', (e) => {
     const ids = sim.soldiers().filter(s => s.team === 'A' && s.hp > 0).map(s => s.id);
     sim.issueOrder({ type: 'TARGET', soldierIds: ids, payload: { targetId: tgt.id, mode: 'aimed' } });
     pushLog(`t${sim._tick} 分隊長命令: 全員 ${tgt.id} へ集中射撃`);
+    leaderState.A.playerLockUntil = sim._tick + (SIM_TUNING.PLAYER_ORDER_LOCK_T || 150);
   } else if (e.key === 's' || e.key === 'S') {
     const ateam = sim.soldiers().filter(s => s.team === 'A' && s.hp > 0);
     const bteam = sim.soldiers().filter(s => s.team === 'B' && s.hp > 0);
@@ -328,6 +362,7 @@ document.addEventListener('keydown', (e) => {
       }
     }
     pushLog(`t${sim._tick} 分隊長命令: 制圧射撃！`);
+    leaderState.A.playerLockUntil = sim._tick + (SIM_TUNING.PLAYER_ORDER_LOCK_T || 150);
   }
 });
 

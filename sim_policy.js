@@ -48,11 +48,38 @@ const TraitPolicy = {
     const has = function (t) { return traits.indexOf(t) !== -1; };
     const T = worldView.tuning || {};
 
+    // ---------------------------------------------------------------------
+    // Influence network (SIM_CORE_SPEC.md SS16.3, v1: 2 rules only).
+    // Both are read-only observations of worldView.soldiers -- no mutation,
+    // no probe. Only engage when a qualifying neighbour actually exists, so
+    // scenarios without such neighbours (e.g. existing sim_policy tests) are
+    // unaffected.
+    // ---------------------------------------------------------------------
+    const steadyRadius = T.LEADER_STEADY_RADIUS != null ? T.LEADER_STEADY_RADIUS : 2;
+    const steadyBonus = T.LEADER_STEADY_BONUS != null ? T.LEADER_STEADY_BONUS : 20;
+    const steadyFireMult = T.LEADER_STEADY_FIRE_MULT != null ? T.LEADER_STEADY_FIRE_MULT : 1.5;
+    const joinFireMult = T.INFLUENCE_JOIN_FIRE_MULT != null ? T.INFLUENCE_JOIN_FIRE_MULT : 2.0;
+
+    let nearLeader = false;
+    let engagedNeighbours = 0;
+    for (const other of worldView.soldiers) {
+      if (other.id === s.id || other.team !== s.team || other.hp <= 0) continue;
+      const d = worldView.map.dist({ q: s.q, r: s.r }, { q: other.q, r: other.r });
+      if (other.isLeader && d <= steadyRadius) nearLeader = true;
+      if (other.state === 'engage' && d <= 2) engagedNeighbours++;
+    }
+    let harassMult = 1.0;
+    if (engagedNeighbours >= 2) harassMult *= joinFireMult;
+    if (nearLeader) harassMult *= steadyFireMult;
+    const applyHarassMult = function (p) { return Math.min(1.0, p * harassMult); };
+
     // timid: once suppression crosses the freeze threshold, stop all
     // self-initiated action and stay put (explicit orders still bypass
     // this because they arrive via s.currentOrder in sim_core, never
-    // reaching policy.decide()).
-    if (has('timid') && s.suppression >= TRAIT_MODS.timid.FREEZE_AT_SUPPRESSION) {
+    // reaching policy.decide()). A steady leader nearby raises the
+    // threshold -- "having the NCO close by settles the nerves".
+    const timidFreezeAt = TRAIT_MODS.timid.FREEZE_AT_SUPPRESSION + (nearLeader ? steadyBonus : 0);
+    if (has('timid') && s.suppression >= timidFreezeAt) {
       return {
         type: 'HOLD_POS', soldierIds: [s.id], payload: {},
         note: '臆病: 制圧下のため行動停止',
@@ -95,6 +122,7 @@ const TraitPolicy = {
         if (has('calm') && TRAIT_MODS.calm.HARASS_FIRE_P != null) {
           harassP = TRAIT_MODS.calm.HARASS_FIRE_P;
         }
+        harassP = applyHarassMult(harassP);
         if (rng() >= harassP) continue;
       }
       if (disciplined && lastMag && !(other.state === 'move'

@@ -437,6 +437,22 @@ const SIM_TUNING = {
     HARASS_FIRE_P: 0.25,   // 制圧済みの敵への散発射撃確率（意思決定サイクル毎）
     BURST_JITTER: 0.25,    // バースト間隔の±ゆらぎ率（機械的な等間隔射撃を崩す）
 
+    // WS-F: sim_leader.js 分隊長AI + 影響ネットワーク（SIM_CORE_SPEC.md SS16）
+    LEADER_ASSESS_INTERVAL_T: 25,     // 分隊長の意思決定周期（2.5秒）
+    DOCTRINE_COOLDOWN_T: 100,         // 発令後の再発令禁止期間（10秒、命令スパム防止）
+    PLAYER_ORDER_LOCK_T: 150,         // プレイヤー命令直後、分隊長AIが沈黙する期間（15秒）
+    FALLBACK_CASUALTIES: 2,           // FALL_BACK 発火: 自軍死者がこの数以上
+    FALLBACK_MORALE_BELOW: 50,        // FALL_BACK 発火: 自軍平均moraleがこの値未満
+    FOCUS_MIN_SHOOTERS: 3,            // FOCUS_FIRE 発火: 射程内の味方数がこの数以上
+    FOCUS_TARGET_COVER_MAX: 0.3,      // FOCUS_FIRE 発火: 敵の遮蔽がこの値未満（露出扱い）
+    SUPPRESS_DOCTRINE_MIN_SUPPRESSED: 2, // SUPPRESS_FIRE 発火: 自軍の被制圧者数がこの数以上
+    HOLDFIRE_QUIET_T: 300,            // HOLD_FIRE 発火: 交戦なし継続期間（30秒）
+    HOLDFIRE_AMMO_BELOW: 0.4,         // HOLD_FIRE 発火: 分隊残弾率がこの値未満
+    INFLUENCE_JOIN_FIRE_MULT: 2.0,    // 連鎖射撃: 周囲2名以上engageで散発射撃確率を倍加
+    LEADER_STEADY_RADIUS: 2,          // 分隊長の存在: この距離内の兵が影響を受ける
+    LEADER_STEADY_BONUS: 20,          // 分隊長の存在: timid凍結閾値への加算
+    LEADER_STEADY_FIRE_MULT: 1.5,     // 分隊長の存在: 散発射撃確率の倍率
+
     GRENADE_RNG: 2,
     GRENADE_FUSE_T: 30,
     GRENADE_SUPPRESS: 60,
