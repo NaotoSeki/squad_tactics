@@ -357,3 +357,29 @@ const LeaderPolicy = {
 - 各チームの分隊長で LEADER_ASSESS_INTERVAL_T(25tick)ごとに LeaderPolicy.assess を呼び、返った Order を sim.issueOrder へ
 - プレイヤーの F/S/移動命令発行時に該当チームの state.playerLockUntil を更新
 - 分隊長の発令 note は吹き出し+ログに必ず出す（プレイヤーがNCOの判断を読めることが体験の核）
+
+---
+
+## 17. WS-G: 本編統合 — sim_battle.html（製品の画でRTwPを遊ぶ）
+
+**ディレクター認識（2026-07-05）**: 統合=ロジック層の差し替え。見た目（地形タイル・兵士スプライト・VFX）は本編のものを無変更で流用し、新規追加は③分隊長の吹き出し・命令UIのみ。
+
+**接合面の実測**（2026-07-05）: phaser_terrain / phaser_vfx / phaser_sound は結合ゼロで直接流用可。phaser_unit（UnitView=製品品質の兵士描画）の要求面は `gameLogic.units / selectedUnit / onUnitClick / interactionMode` の4メンバーのみ、unitオブジェクトは `{id, def, hp, maxHp, q, r, team, hands, skills, fusionCount}`。→ **極小ファサード（SimBattleAdapter）で UnitView を無改変駆動する**。MainScene（約30メソッドのgameLogic依存・ターン制概念込み）は流用せず、sim_scene.js の駆動ループ（10Hz sim + 60fps補間、§15.2）を土台に新シーンを作る。
+
+### 17.1 構成（新規2ファイル+既存流用）
+
+| ファイル | 役割 |
+|---|---|
+| `sim_battle_adapter.js`（新規） | ①SimCore兵士→UnitView用unit形のファサード ②実マップ（data.js/logic_map.js の地形）→ MapApi アダプタ ③SIM_TUNING.TERRAIN_COVER（地形id→cover定数表。ディレクター指摘: 地形毎のカバー定数はここで調整） |
+| `sim_battle.html`（新規） | 本編と同じアセットスタックを読み込む並列エントリ。SimBattleScene（sim_scene.jsを拡張 or 同形の新シーン）: TerrainRender.buildMap の実タイル + UnitView の実スプライト + VFX + ③吹き出し/RTwP HUD |
+| 流用（無改変） | phaser_terrain.js / phaser_unit.js / phaser_vfx.js / phaser_sound.js / sim_core / sim_orders / sim_policy / sim_leader |
+| 変更禁止 | index.html / logic_game.js / phaser_bridge.js（凍結ターン制ビルド） |
+
+### 17.2 要件
+
+1. 実地形タイル上で 5v5（dev_simと同配置思想: 両軍塹壕+開豁地）のRTwP戦闘が動く。地形のcoverは TERRAIN_COVER 表から
+2. 兵士は UnitView の実スプライト（soldier_crawl系）で描画。HP/制圧/武器クラス/分隊長★はオーバーレイ表示
+3. ③吹き出し: POLICY note・分隊長ドクトリン発令・ORDER_DELIVERED を頭上フロート（6秒フェード）
+4. 入力: pause/1x/2x、左クリック選択、右クリック移動、F集中射撃、S制圧射撃（dev_simと同じ操作系）。プレイヤー命令で分隊長AIロック（PLAYER_ORDER_LOCK_T）
+5. 分隊長AI・影響ネットワーク・射撃規律v2がそのまま動く（ロジックは一切fork しない — sim_*モジュールをそのまま読む）
+6. 受け入れ: 4スイート全PASS維持 + ヘッドレスsmoke（アダプタの単体: sim兵士→unit形変換・TERRAIN_COVER参照）+ ブラウザ目視はディレクター
