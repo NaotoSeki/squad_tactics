@@ -413,6 +413,10 @@ SimCore.prototype._applyIntent = function (s, intent) {
       } else {
         s.fireMode = intent.payload.mode;
       }
+      // one-shot: fireMode is now soldier state; if the order persisted it
+      // would shadow policy.decide forever (e.g. a hold-fire order would
+      // leave the soldier unable to ever fight back on his own judgement)
+      if (s.currentOrder === intent) s.currentOrder = null;
       break;
     case 'MOVE_TO':
       s.movePath = intent.payload.path ? intent.payload.path.slice() : null;
@@ -481,6 +485,10 @@ SimCore.prototype._phaseAct = function () {
 
 SimCore.prototype._actMove = function (s, T) {
   if (!s.movePath || s.movePath.length === 0) {
+    // path fulfilled: a MOVE_TO order is one-shot, so consume it here --
+    // otherwise the persisting currentOrder re-applies the same path every
+    // decision tick and the soldier "moves" in place forever
+    if (s.currentOrder && s.currentOrder.type === 'MOVE_TO') s.currentOrder = null;
     this._setState(s, 'idle');
     return;
   }
@@ -496,7 +504,10 @@ SimCore.prototype._actMove = function (s, T) {
     s._moveAccum = 0;
     s.movePath.shift();
     this._emit('MOVE', { id: s.id, from: from, to: { q: s.q, r: s.r } });
-    if (s.movePath.length === 0) this._setState(s, 'idle');
+    if (s.movePath.length === 0) {
+      if (s.currentOrder && s.currentOrder.type === 'MOVE_TO') s.currentOrder = null;
+      this._setState(s, 'idle');
+    }
   }
 };
 

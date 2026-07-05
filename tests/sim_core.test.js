@@ -413,6 +413,33 @@ function runT7() {
 }
 
 // ===========================================================================
+// T8 Order consumption regression: MOVE_TO / FIRE_MODE are one-shot orders.
+// Bug (2026-07-05): currentOrder persisted after path completion, so the same
+// MOVE_TO re-applied every decision tick -> endless MOVE/STATE event spam.
+// A persisting FIRE_MODE order likewise shadowed policy.decide forever.
+// ===========================================================================
+
+{
+  const map = makeGridMap({ coverAt: () => 0.6 });
+  const sim = new SimCore({ map: map, tuning: SIM_TUNING, rng: mulberry32(11) });
+  const rifleWeapon = toSimWeapon('m1', WPNS.m1, SIM_TUNING);
+  // lone soldier, no enemies: only order-driven behaviour can emit events
+  sim.addSoldier({ id: 'walker', team: 'A', q: 0, r: 0, weapon: rifleWeapon, ammo: { mags: 2 }, skill: 1.0, facing: { q: 1, r: 0 } });
+  sim.issueOrder({ type: 'MOVE_TO', soldierIds: ['walker'], payload: { path: [{ q: 1, r: 0 }] } });
+  let moves = 0;
+  for (let t = 0; t < 600; t++) {
+    sim.tick();
+    for (const ev of sim.drainEvents()) if (ev.type === 'MOVE') moves++;
+  }
+  check(moves === 1, `T8 MOVE_TO is one-shot: 1-hex order emits exactly 1 MOVE over 60s (got ${moves})`);
+  check(sim.getSoldier('walker').currentOrder === null, 'T8 MOVE_TO order consumed after path completion');
+
+  sim.issueOrder({ type: 'FIRE_MODE', soldierIds: ['walker'], payload: { mode: 'hold' } });
+  for (let t = 0; t < 20; t++) { sim.tick(); sim.drainEvents(); }
+  check(sim.getSoldier('walker').currentOrder === null, 'T8 FIRE_MODE order consumed after application (policy regains control)');
+}
+
+// ===========================================================================
 // summary
 // ===========================================================================
 
