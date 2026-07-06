@@ -503,13 +503,7 @@ function bootGame() {
 
 // 19モーション manifest を Phaser 起動前に取得（preload で寸法が要るため）。
 // 取得失敗時は SOLDIER_MANIFEST=null のまま起動し、旧 soldier_crawl で動く。
-fetch('asset/sprites/soldier/manifest.json')
-  .then((r) => (r.ok ? r.json() : null))
-  .catch(() => null)
-  .then((man) => {
-    window.SOLDIER_MANIFEST = (man && man.actions && man.frameWidth) ? man : null;
-    bootGame();
-  });
+window.loadSoldierManifest().then(() => bootGame());
 
 document.getElementById('pause').onclick = () => { const s = scene(); s.speed = s.speed === 0 ? 1 : 0; document.getElementById('pause').textContent = s.speed === 0 ? 'resume' : 'pause'; };
 document.getElementById('s1').onclick = () => { scene().speed = 1; };

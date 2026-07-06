@@ -70,6 +70,15 @@ class SoldierUnitView extends UnitView {
         return !!(man && man.actions && man.frameWidth > 0);
     }
 
+    /**
+     * 疑似tick（25Hz相当）。RTwP(sim_battle)では sim の実tick、
+     * ターン制本編(index.html)では scene.time から合成する。
+     */
+    _now() {
+        if (this.scene.sim && this.scene.sim._tick != null) return this.scene.sim._tick;
+        return Math.floor(this.scene.time.now / 40);
+    }
+
     defineAnimations() {
         super.defineAnimations();
         const man = window.SOLDIER_MANIFEST;
@@ -124,11 +133,13 @@ class SoldierUnitView extends UnitView {
     /** UnitView フック: 毎フレームのアニメ選択（姿勢×動作×方向） */
     updateInfantryAnim(visual, u, isMoving) {
         const spr = visual.sprite;
-        const s = u._sim;
-        if (!spr || !s || !SoldierUnitView.manifestReady()
+        if (!spr || !SoldierUnitView.manifestReady()
             || spr.texture.key.indexOf('sold_') !== 0) {
             return super.updateInfantryAnim(visual, u, isMoving);
         }
+        // RTwP では sim スナップショット、ターン制本編には無いので合成
+        // （姿勢は被弾トラッキングのみで決まり、射撃は triggerAttack の one-shot）
+        const s = u._sim || { id: u.id, state: isMoving ? 'move' : 'idle', suppression: 0, facing: null };
 
         // ---- 方向 ----
         let dir;
@@ -143,23 +154,30 @@ class SoldierUnitView extends UnitView {
         }
         visual.soldierDir = dir;
 
-        // ---- one-shot（手榴弾投擲など）が再生中なら優先 ----
+        // ---- one-shot（手榴弾投擲・ターン制の射撃など）が再生中なら優先 ----
         const os = this._oneShot.get(u.id);
         if (os) {
-            if (!os.started) {
+            if (os.untilTick != null && this._now() >= os.untilTick) {
+                this._oneShot.delete(u.id); // 時限式（ループアニメ流用時）
+            } else if (!os.started) {
                 if (this.scene.anims.exists(os.key)) {
                     os.started = true;
                     spr.play(os.key);
-                    spr.once('animationcomplete-' + os.key, () => this._oneShot.delete(u.id));
+                    if (os.untilTick == null) {
+                        spr.once('animationcomplete-' + os.key, () => this._oneShot.delete(u.id));
+                    }
                 } else {
                     this._oneShot.delete(u.id);
                 }
+                if (os.started) { this._syncShadowTex(visual, spr); return; }
+            } else {
+                this._syncShadowTex(visual, spr);
+                return;
             }
-            if (os.started) { this._syncShadowTex(visual, spr); return; }
         }
 
         // ---- 姿勢（制圧度＋被弾）: 遷移アニメを挟んだステートマシン ----
-        const tick = (this.scene.sim && this.scene.sim._tick) || 0;
+        const tick = this._now();
         const target = this._postureLevelOf(s, tick);
         if (visual.postureLv == null) visual.postureLv = target; // 出現時は即時
 
@@ -216,10 +234,32 @@ class SoldierUnitView extends UnitView {
     /** scene の SHOT イベントから: 射手を射線方向へ向け、被弾側を「被射撃中」として記録 */
     noteShot(shooterId, fromPx, toPx, targetId) {
         this._faceDir.set(shooterId, soldierDirFromDelta(toPx.x - fromPx.x, toPx.y - fromPx.y));
-        if (targetId != null) {
-            const tick = (this.scene.sim && this.scene.sim._tick) || 0;
-            this._underFire.set(targetId, tick);
+        if (targetId != null) this._underFire.set(targetId, this._now());
+    }
+
+    /**
+     * ターン制本編の攻撃演出（Renderer.playAttackAnim → UnitView.triggerAttack）。
+     * 旧実装は crawl を目標方向へ再生するだけだった。新スプライトでは
+     * 目標方向を向いて fire を時限 one-shot 再生し、被弾側を記録する。
+     */
+    triggerAttack(attacker, target) {
+        const visual = this.visuals.get(attacker.id);
+        if (!visual || !visual.sprite || (attacker.def && attacker.def.isTank)) {
+            return super.triggerAttack(attacker, target);
         }
+        if (visual.sprite.texture.key.indexOf('sold_') !== 0) {
+            return super.triggerAttack(attacker, target);
+        }
+        if (typeof Renderer === 'undefined') return;
+        const a = Renderer.hexToPx(attacker.q, attacker.r);
+        const b = Renderer.hexToPx(target.q, target.r);
+        const dir = soldierDirFromDelta(b.x - a.x, b.y - a.y);
+        this._faceDir.set(attacker.id, dir);
+        visual.soldierDir = dir;
+        if (target && target.id != null) this._underFire.set(target.id, this._now());
+        const posture = POSTURE_NAMES[visual.postureLv || 0] || 'stand';
+        // fire はループ定義なので時限式 one-shot（約1秒）で流用する
+        this._oneShot.set(attacker.id, { key: `sold_${posture}_fire_${dir}`, started: false, untilTick: this._now() + 25 });
     }
 
     /** scene の GRENADE イベントから: 投擲 one-shot（姿勢対応） */
@@ -245,17 +285,7 @@ class SoldierUnitView extends UnitView {
         const posture = (v && v.postureLv != null && !v.postureTrans)
             ? (POSTURE_NAMES[v.postureLv] || 'stand')
             : this._postureOf(simSoldier);
-        const key = `sold_${posture}_dying_${dir}`;
-        if (!this.scene.anims.exists(key)) return;
-
-        const scale = SOLDIER_VIEW_H / man.frameHeight;
-        const c = this.scene.add.sprite(p.x, p.y - 20, `sold_${posture}_dying`, 0);
-        c.setOrigin((man.anchorX != null) ? man.anchorX : 0.5, 0.55);
-        c.setScale(scale);
-        c.setDepth(9); // 地形(0)/道路(1.6)/装飾(8) より上、ユニット(20) より下
-        c.setTint(0xbbbbbb);
-        c.play(key); // repeat:0 → 最終フレームで停止＝死体
-        this._corpses.push(c);
+        this._spawnCorpseAt(p.x, p.y, dir, posture);
         this._faceDir.delete(simSoldier.id);
         this._oneShot.delete(simSoldier.id);
     }
@@ -277,8 +307,34 @@ class SoldierUnitView extends UnitView {
     }
 
     _postureOf(s) {
-        const tick = (this.scene.sim && this.scene.sim._tick) || 0;
-        return POSTURE_NAMES[this._postureLevelOf(s, tick)] || 'stand';
+        return POSTURE_NAMES[this._postureLevelOf(s, this._now())] || 'stand';
+    }
+
+    /** UnitView フック: 死亡時（hp<=0 で視覚破棄される直前）— ターン制本編の死体化 */
+    onUnitDead(u, visual) {
+        if (u && u._sim) return; // RTwP(sim_battle)は DOWN イベント→spawnCorpse が担当（二重生成防止）
+        if (!SoldierUnitView.manifestReady() || !visual || !visual.container) return;
+        if (u.def && u.def.isTank) return;
+        if (visual.sprite && visual.sprite.texture.key.indexOf('sold_') !== 0) return;
+        const dir = this._faceDir.get(u.id) ?? visual.soldierDir ?? 0;
+        const posture = POSTURE_NAMES[visual.postureLv || 0] || 'stand';
+        this._spawnCorpseAt(visual.container.x, visual.container.y, dir, posture);
+        this._faceDir.delete(u.id);
+        this._oneShot.delete(u.id);
+    }
+
+    _spawnCorpseAt(x, y, dir, posture) {
+        const man = window.SOLDIER_MANIFEST;
+        const key = `sold_${posture}_dying_${dir}`;
+        if (!this.scene.anims.exists(key)) return;
+        const scale = SOLDIER_VIEW_H / man.frameHeight;
+        const c = this.scene.add.sprite(x, y - 20, `sold_${posture}_dying`, 0);
+        c.setOrigin((man.anchorX != null) ? man.anchorX : 0.5, 0.55);
+        c.setScale(scale);
+        c.setDepth(9); // 地形(0)/道路(1.6)/装飾(8) より上、ユニット(20) より下
+        c.setTint(0xbbbbbb);
+        c.play(key); // repeat:0 → 最終フレームで停止＝死体
+        this._corpses.push(c);
     }
 
     clear() {
@@ -294,4 +350,23 @@ class SoldierUnitView extends UnitView {
 if (typeof window !== 'undefined') {
     window.SoldierUnitView = SoldierUnitView;
     window.soldierDirFromDelta = soldierDirFromDelta;
+
+    /**
+     * manifest の先行フェッチ（結果は window.SOLDIER_MANIFEST）。
+     * ターン制本編は起動が同期的なのでスクリプト読込時に走らせておき、
+     * preload 時点で解決済みであることを期待する（未解決/失敗なら
+     * SOLDIER_MANIFEST が falsy のまま旧 soldier_crawl で劣化動作）。
+     */
+    window.loadSoldierManifest = function () {
+        if (window._soldierManifestPromise) return window._soldierManifestPromise;
+        window._soldierManifestPromise = fetch('asset/sprites/soldier/manifest.json')
+            .then((r) => (r.ok ? r.json() : null))
+            .catch(() => null)
+            .then((m) => {
+                window.SOLDIER_MANIFEST = (m && m.actions && m.frameWidth) ? m : null;
+                return window.SOLDIER_MANIFEST;
+            });
+        return window._soldierManifestPromise;
+    };
+    window.loadSoldierManifest();
 }

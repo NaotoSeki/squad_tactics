@@ -35,6 +35,9 @@ class UnitView {
         }
     }
 
+    // 死亡時フック（hp<=0 で視覚破棄される直前に呼ばれる。既定は何もしない）
+    onUnitDead(u, visual) { }
+
     // 歩兵スプライト生成（createVisual から純粋抽出。サブクラスの差し替えフック）
     buildInfantrySprite(u) {
         const shadow = this.scene.add.sprite(2, -18, 'soldier_crawl', 0);
@@ -101,6 +104,7 @@ class UnitView {
                     if (u.hp <= 0) {
                         const deadVisual = this.visuals.get(u.id);
                         if (deadVisual) {
+                            this.onUnitDead(u, deadVisual); // 既定は no-op（サブクラス用フック）
                             if (deadVisual.container) deadVisual.container.destroy();
                             if (deadVisual.hpBg) deadVisual.hpBg.destroy();
                             if (deadVisual.hpBar) deadVisual.hpBar.destroy();
@@ -119,6 +123,7 @@ class UnitView {
                     if (u.hp <= 0) {
                         const deadVisual = this.visuals.get(u.id);
                         if (deadVisual) {
+                            this.onUnitDead(u, deadVisual); // 既定は no-op（サブクラス用フック）
                             if (deadVisual.container) deadVisual.container.destroy();
                             if (deadVisual.hpBg) deadVisual.hpBg.destroy();
                             if (deadVisual.hpBar) deadVisual.hpBar.destroy();

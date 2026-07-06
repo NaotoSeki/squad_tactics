@@ -115,6 +115,19 @@ const Renderer = {
     draggedCard: null,
 
     init(canvasElement) {
+        // 19モーション manifest（phaser_soldier_view.js が先行フェッチ）の解決を待って
+        // から Phaser を起動する。preload が manifest の寸法に依存するため。
+        // 解決済み/ヘルパー不在なら即起動（旧 soldier_crawl で劣化動作）。
+        if (this._bootPending) return;
+        if (typeof window.loadSoldierManifest === 'function' && window.SOLDIER_MANIFEST === undefined) {
+            this._bootPending = true;
+            window.loadSoldierManifest().then(() => { this._bootPending = false; this._boot(canvasElement); });
+            return;
+        }
+        this._boot(canvasElement);
+    },
+
+    _boot(canvasElement) {
         const config = { type: Phaser.AUTO, parent: 'game-view', width: document.getElementById('game-view').clientWidth, height: document.getElementById('game-view').clientHeight, backgroundColor: '#2a2824', pixelArt: false, scene: [MainScene, UIScene], fps: { target: 30 }, physics: { default: 'arcade', arcade: { debug: false } }, input: { activePointers: 1 } };
         this.game = new Phaser.Game(config); 
         phaserGame = this.game;
@@ -753,6 +766,19 @@ class MainScene extends Phaser.Scene {
         this.load.spritesheet('us_soldier', 'asset/us-soldier-back-sheet.png', { frameWidth: 128, frameHeight: 128 });
         // 匍匐前進: Blender 出力 2048×7680（8列×30行・256pxセル）をそのままスプライトシートで使用
         this.load.spritesheet('soldier_crawl', 'asset/soldier_crawl.png', { frameWidth: 256, frameHeight: 256, endFrame: 239 });
+        // 19モーション実スプライト（asset/sprites/soldier, manifest 駆動）。manifest は
+        // phaser_soldier_view.js がスクリプト読込時に先行フェッチ済み。未解決なら
+        // 旧 soldier_crawl のまま劣化動作（SoldierUnitView 側でフォールバック）。
+        const solMan = window.SOLDIER_MANIFEST;
+        if (solMan && solMan.actions && solMan.frameWidth) {
+            for (const name of (window.SOLDIER_LOAD_ACTIONS || [])) {
+                const meta = solMan.actions[name];
+                if (!meta) continue;
+                this.load.spritesheet('sold_' + name, 'asset/sprites/soldier/' + meta.file, {
+                    frameWidth: solMan.frameWidth, frameHeight: solMan.frameHeight, endFrame: meta.frames * 8 - 1,
+                });
+            }
+        }
         this.load.spritesheet('soldier_sheet', 'asset/soldier_sheet_1.png', { frameWidth: 128, frameHeight: 128 });
         this.load.spritesheet('tank_sheet', 'asset/tank_sheet_1.png', { frameWidth: 128, frameHeight: 128 });
         this.load.spritesheet('explosion_sheet', 'asset/explosion_sheet_1.png', { frameWidth: 64, frameHeight: 64 });
@@ -780,7 +806,9 @@ class MainScene extends Phaser.Scene {
         this.overlayGraphics = this.add.graphics().setDepth(1500).setScrollFactor(1); 
         if(window.EnvSystem) window.EnvSystem.clear();
         this.scene.launch('UIScene'); 
-        this.unitView = new UnitView(this, this.unitGroup, this.hpGroup);
+        const UnitViewClass = (window.SoldierUnitView && window.SOLDIER_MANIFEST && this.textures.exists('sold_stand_idle'))
+            ? window.SoldierUnitView : UnitView;
+        this.unitView = new UnitViewClass(this, this.unitGroup, this.hpGroup);
         this.battleCloudRenderer = new BattleCloudRenderer(this);
         this.input.on('wheel', (pointer, gameObjects, deltaX, deltaY, deltaZ) => { let newZoom = this.cameras.main.zoom; if (deltaY > 0) newZoom -= 0.5; else if (deltaY < 0) newZoom += 0.5; newZoom = Phaser.Math.Clamp(newZoom, 0.25, 4.0); this.tweens.add({ targets: this.cameras.main, zoom: newZoom, duration: 150, ease: 'Cubic.out' }); });
         
