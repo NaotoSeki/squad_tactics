@@ -1,0 +1,6280 @@
+{
+  "generated": "2026-05-31",
+  "summary": {
+    "total": 225,
+    "matchEffective": 191,
+    "matchRaw": 161,
+    "withDrift": 34
+  },
+  "causeCounts": {
+    "U27_SHAPE_FILTER": 23,
+    "BUILD_HEURISTIC:AMMO_3006": 19,
+    "BUILD_HEURISTIC:OTHER": 1,
+    "CBE_AUX_IN_RAW": 5,
+    "BUILD_HEURISTIC:AMMO_27": 2,
+    "BUILD_HEURISTIC:AMMO_792": 36
+  },
+  "weapons": [
+    {
+      "cbeIdx": 0,
+      "name": "M1911A1",
+      "category": "pistol",
+      "raw": [
+        225
+      ],
+      "afterCat18": [
+        225
+      ],
+      "effective": [],
+      "auxInRaw": [],
+      "u27Dropped": [
+        225
+      ],
+      "stMaster": [
+        225
+      ],
+      "stExtra": [
+        225
+      ],
+      "stMissing": [],
+      "causes": {
+        "U27_SHAPE_FILTER": [
+          225
+        ]
+      },
+      "w21": 0,
+      "matchEffective": false,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 1,
+      "name": "M1917 S&W",
+      "category": "pistol",
+      "raw": [
+        226
+      ],
+      "afterCat18": [
+        226
+      ],
+      "effective": [
+        226
+      ],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [
+        226
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 2,
+      "name": "M1917 Colt",
+      "category": "pistol",
+      "raw": [
+        226
+      ],
+      "afterCat18": [
+        226
+      ],
+      "effective": [
+        226
+      ],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [
+        226
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 3,
+      "name": "OSS",
+      "category": "pistol",
+      "raw": [
+        228
+      ],
+      "afterCat18": [
+        228
+      ],
+      "effective": [
+        228
+      ],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [
+        228
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 4,
+      "name": "AN-M8",
+      "category": "smoke_grenade",
+      "raw": [
+        228
+      ],
+      "afterCat18": [
+        228
+      ],
+      "effective": [
+        228
+      ],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [
+        228
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 5,
+      "name": "M1903A1",
+      "category": "rifle",
+      "raw": [
+        230,
+        245,
+        246,
+        251
+      ],
+      "afterCat18": [
+        230
+      ],
+      "effective": [
+        230
+      ],
+      "auxInRaw": [
+        245,
+        246,
+        251
+      ],
+      "u27Dropped": [],
+      "stMaster": [
+        230
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": false
+    },
+    {
+      "cbeIdx": 6,
+      "name": "M1903A4",
+      "category": "rifle",
+      "raw": [
+        229,
+        230,
+        231
+      ],
+      "afterCat18": [
+        229,
+        230,
+        231
+      ],
+      "effective": [
+        229,
+        230,
+        231
+      ],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [
+        229,
+        230,
+        231
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 7,
+      "name": "M1918A2 BAR",
+      "category": "lmg",
+      "raw": [
+        230
+      ],
+      "afterCat18": [
+        230
+      ],
+      "effective": [
+        230
+      ],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [
+        230
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 8,
+      "name": "M1 Rifle",
+      "category": "rifle",
+      "raw": [
+        229,
+        231
+      ],
+      "afterCat18": [
+        229,
+        231
+      ],
+      "effective": [
+        229,
+        231
+      ],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [
+        229,
+        231
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 9,
+      "name": "M1C Rifle",
+      "category": "rifle",
+      "raw": [
+        232
+      ],
+      "afterCat18": [
+        232
+      ],
+      "effective": [
+        232
+      ],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [
+        232
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 10,
+      "name": "M1D Rifle",
+      "category": "rifle",
+      "raw": [
+        232
+      ],
+      "afterCat18": [
+        232
+      ],
+      "effective": [
+        232
+      ],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [
+        232
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 11,
+      "name": "M1941 Rifle",
+      "category": "rifle",
+      "raw": [
+        230,
+        252
+      ],
+      "afterCat18": [
+        230
+      ],
+      "effective": [
+        230
+      ],
+      "auxInRaw": [
+        252
+      ],
+      "u27Dropped": [],
+      "stMaster": [
+        230
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": false
+    },
+    {
+      "cbeIdx": 12,
+      "name": "M1 Cbn",
+      "category": "rifle",
+      "raw": [
+        233,
+        234,
+        245,
+        253
+      ],
+      "afterCat18": [
+        233,
+        234
+      ],
+      "effective": [
+        233
+      ],
+      "auxInRaw": [
+        245,
+        253
+      ],
+      "u27Dropped": [
+        234
+      ],
+      "stMaster": [
+        233
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": false
+    },
+    {
+      "cbeIdx": 13,
+      "name": "M1A1 Cbn",
+      "category": "rifle",
+      "raw": [
+        233,
+        234,
+        245,
+        253
+      ],
+      "afterCat18": [
+        233,
+        234
+      ],
+      "effective": [
+        233
+      ],
+      "auxInRaw": [
+        245,
+        253
+      ],
+      "u27Dropped": [
+        234
+      ],
+      "stMaster": [
+        233
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": false
+    },
+    {
+      "cbeIdx": 14,
+      "name": "M2 Cbn",
+      "category": "rifle",
+      "raw": [
+        234,
+        233,
+        245,
+        253
+      ],
+      "afterCat18": [
+        234,
+        233
+      ],
+      "effective": [
+        233
+      ],
+      "auxInRaw": [
+        245,
+        253
+      ],
+      "u27Dropped": [
+        234
+      ],
+      "stMaster": [
+        233
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": false
+    },
+    {
+      "cbeIdx": 15,
+      "name": "M1928A1 SMG",
+      "category": "smg",
+      "raw": [
+        235,
+        236,
+        237
+      ],
+      "afterCat18": [
+        235,
+        236,
+        237
+      ],
+      "effective": [
+        235,
+        236,
+        237
+      ],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [
+        235,
+        236,
+        237
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 16,
+      "name": "M1 SMG",
+      "category": "smg",
+      "raw": [
+        235,
+        236
+      ],
+      "afterCat18": [
+        235,
+        236
+      ],
+      "effective": [
+        235
+      ],
+      "auxInRaw": [],
+      "u27Dropped": [
+        236
+      ],
+      "stMaster": [
+        235
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": false
+    },
+    {
+      "cbeIdx": 17,
+      "name": "M1A1 SMG",
+      "category": "smg",
+      "raw": [
+        234,
+        235,
+        236,
+        237
+      ],
+      "afterCat18": [
+        234,
+        235,
+        236,
+        237
+      ],
+      "effective": [
+        235,
+        237
+      ],
+      "auxInRaw": [],
+      "u27Dropped": [
+        234,
+        236
+      ],
+      "stMaster": [
+        234,
+        235,
+        236,
+        237
+      ],
+      "stExtra": [
+        234,
+        236
+      ],
+      "stMissing": [],
+      "causes": {
+        "U27_SHAPE_FILTER": [
+          234,
+          236
+        ]
+      },
+      "w21": 0,
+      "matchEffective": false,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 18,
+      "name": "M3 SMG",
+      "category": "smg",
+      "raw": [
+        238
+      ],
+      "afterCat18": [
+        238
+      ],
+      "effective": [
+        238
+      ],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [
+        238
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 19,
+      "name": "M3A1 SMG",
+      "category": "smg",
+      "raw": [
+        238
+      ],
+      "afterCat18": [
+        238
+      ],
+      "effective": [
+        238
+      ],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [
+        238
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 20,
+      "name": "M1919A6 LMG",
+      "category": "lmg",
+      "raw": [],
+      "afterCat18": [],
+      "effective": [],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [
+        230,
+        238,
+        239,
+        240
+      ],
+      "stExtra": [
+        230,
+        238,
+        239,
+        240
+      ],
+      "stMissing": [],
+      "causes": {
+        "BUILD_HEURISTIC:AMMO_3006": [
+          230,
+          238,
+          239,
+          240
+        ]
+      },
+      "w21": 32,
+      "matchEffective": false,
+      "matchRaw": false
+    },
+    {
+      "cbeIdx": 21,
+      "name": "M1941   LMG",
+      "category": "lmg",
+      "raw": [
+        239
+      ],
+      "afterCat18": [
+        239
+      ],
+      "effective": [
+        239
+      ],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [
+        239
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 22,
+      "name": "M1917A1 MMG",
+      "category": "mmg",
+      "raw": [],
+      "afterCat18": [],
+      "effective": [],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [
+        230,
+        238,
+        239,
+        240
+      ],
+      "stExtra": [
+        230,
+        238,
+        239,
+        240
+      ],
+      "stMissing": [],
+      "causes": {
+        "BUILD_HEURISTIC:AMMO_3006": [
+          230,
+          238,
+          239,
+          240
+        ]
+      },
+      "w21": 33,
+      "matchEffective": false,
+      "matchRaw": false
+    },
+    {
+      "cbeIdx": 23,
+      "name": "M1919A4 MMG",
+      "category": "mmg",
+      "raw": [],
+      "afterCat18": [],
+      "effective": [],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [
+        230,
+        238,
+        239,
+        240
+      ],
+      "stExtra": [
+        230,
+        238,
+        239,
+        240
+      ],
+      "stMissing": [],
+      "causes": {
+        "BUILD_HEURISTIC:AMMO_3006": [
+          230,
+          238,
+          239,
+          240
+        ]
+      },
+      "w21": 32,
+      "matchEffective": false,
+      "matchRaw": false
+    },
+    {
+      "cbeIdx": 24,
+      "name": "M2 HB HMG",
+      "category": "mmg",
+      "raw": [],
+      "afterCat18": [],
+      "effective": [],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [
+        239,
+        240,
+        241
+      ],
+      "stExtra": [
+        239,
+        240,
+        241
+      ],
+      "stMissing": [],
+      "causes": {
+        "BUILD_HEURISTIC:AMMO_3006": [
+          239,
+          240
+        ],
+        "BUILD_HEURISTIC:OTHER": [
+          241
+        ]
+      },
+      "w21": 34,
+      "matchEffective": false,
+      "matchRaw": false
+    },
+    {
+      "cbeIdx": 25,
+      "name": "M1 RL",
+      "category": "rocket_launcher",
+      "raw": [
+        243
+      ],
+      "afterCat18": [
+        243
+      ],
+      "effective": [
+        243
+      ],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [
+        243
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 26,
+      "name": "M1A1 RL",
+      "category": "rocket_launcher",
+      "raw": [
+        243
+      ],
+      "afterCat18": [
+        243
+      ],
+      "effective": [
+        243
+      ],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [
+        243
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 27,
+      "name": "M9 RL",
+      "category": "rocket_launcher",
+      "raw": [
+        244,
+        243
+      ],
+      "afterCat18": [
+        243
+      ],
+      "effective": [
+        243
+      ],
+      "auxInRaw": [
+        244
+      ],
+      "u27Dropped": [],
+      "stMaster": [
+        243
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": false
+    },
+    {
+      "cbeIdx": 28,
+      "name": "E1R1 Fl",
+      "category": "flamethrower",
+      "raw": [],
+      "afterCat18": [],
+      "effective": [],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [
+        229
+      ],
+      "stExtra": [
+        229
+      ],
+      "stMissing": [],
+      "causes": {
+        "BUILD_HEURISTIC:AMMO_3006": [
+          229
+        ]
+      },
+      "w21": 0,
+      "matchEffective": false,
+      "matchRaw": false
+    },
+    {
+      "cbeIdx": 29,
+      "name": "M1A1 Fl",
+      "category": "flamethrower",
+      "raw": [],
+      "afterCat18": [],
+      "effective": [],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [
+        229
+      ],
+      "stExtra": [
+        229
+      ],
+      "stMissing": [],
+      "causes": {
+        "BUILD_HEURISTIC:AMMO_3006": [
+          229
+        ]
+      },
+      "w21": 0,
+      "matchEffective": false,
+      "matchRaw": false
+    },
+    {
+      "cbeIdx": 30,
+      "name": "M2A1-7 Fl",
+      "category": "flamethrower",
+      "raw": [],
+      "afterCat18": [],
+      "effective": [],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [
+        229
+      ],
+      "stExtra": [
+        229
+      ],
+      "stMissing": [],
+      "causes": {
+        "BUILD_HEURISTIC:AMMO_3006": [
+          229
+        ]
+      },
+      "w21": 0,
+      "matchEffective": false,
+      "matchRaw": false
+    },
+    {
+      "cbeIdx": 31,
+      "name": "M2 Tripod",
+      "category": "tripod",
+      "raw": [],
+      "afterCat18": [],
+      "effective": [],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 32,
+      "name": "M1917 Tripod",
+      "category": "tripod",
+      "raw": [],
+      "afterCat18": [],
+      "effective": [],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 33,
+      "name": "M3 Tripod",
+      "category": "tripod",
+      "raw": [],
+      "afterCat18": [],
+      "effective": [],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 34,
+      "name": "M1 Ammobox",
+      "category": "ammo_box",
+      "raw": [
+        240,
+        241
+      ],
+      "afterCat18": [
+        240,
+        241
+      ],
+      "effective": [
+        240,
+        241
+      ],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [
+        240,
+        241
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 35,
+      "name": "M2HB Ammobox",
+      "category": "ammo_box",
+      "raw": [
+        242
+      ],
+      "afterCat18": [
+        242
+      ],
+      "effective": [
+        242
+      ],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [
+        242
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 36,
+      "name": "M3 Binocular",
+      "category": "binoculars",
+      "raw": [],
+      "afterCat18": [],
+      "effective": [],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 37,
+      "name": "SCR536",
+      "category": "radio",
+      "raw": [],
+      "afterCat18": [],
+      "effective": [],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 38,
+      "name": "Med Bag",
+      "category": "medical",
+      "raw": [],
+      "afterCat18": [],
+      "effective": [],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 39,
+      "name": "Film",
+      "category": "document",
+      "raw": [],
+      "afterCat18": [],
+      "effective": [],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 40,
+      "name": "Map Case",
+      "category": "document",
+      "raw": [],
+      "afterCat18": [],
+      "effective": [],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 41,
+      "name": "C/96",
+      "category": "pistol",
+      "raw": [
+        256
+      ],
+      "afterCat18": [
+        256
+      ],
+      "effective": [
+        256
+      ],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [
+        256
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 42,
+      "name": "C/96M712",
+      "category": "pistol",
+      "raw": [
+        258,
+        257,
+        256
+      ],
+      "afterCat18": [
+        258,
+        257,
+        256
+      ],
+      "effective": [],
+      "auxInRaw": [],
+      "u27Dropped": [
+        256,
+        257,
+        258
+      ],
+      "stMaster": [
+        256,
+        257,
+        258
+      ],
+      "stExtra": [
+        256,
+        257,
+        258
+      ],
+      "stMissing": [],
+      "causes": {
+        "U27_SHAPE_FILTER": [
+          256,
+          257,
+          258
+        ]
+      },
+      "w21": 0,
+      "matchEffective": false,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 43,
+      "name": "P08",
+      "category": "pistol",
+      "raw": [
+        259
+      ],
+      "afterCat18": [
+        259
+      ],
+      "effective": [
+        259
+      ],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [
+        259
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 44,
+      "name": "M1934",
+      "category": "pistol",
+      "raw": [
+        260
+      ],
+      "afterCat18": [
+        260
+      ],
+      "effective": [
+        260
+      ],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [
+        260
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 45,
+      "name": "Beholla",
+      "category": "pistol",
+      "raw": [
+        261
+      ],
+      "afterCat18": [
+        261
+      ],
+      "effective": [
+        261
+      ],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [
+        261
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 46,
+      "name": "M38H",
+      "category": "pistol",
+      "raw": [
+        262
+      ],
+      "afterCat18": [
+        262
+      ],
+      "effective": [
+        262
+      ],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [
+        262
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 47,
+      "name": "PP",
+      "category": "pistol",
+      "raw": [
+        263
+      ],
+      "afterCat18": [
+        263
+      ],
+      "effective": [
+        263
+      ],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [
+        263
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 48,
+      "name": "PPK",
+      "category": "pistol",
+      "raw": [
+        264
+      ],
+      "afterCat18": [
+        264
+      ],
+      "effective": [
+        264
+      ],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [
+        264
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 49,
+      "name": "HSc",
+      "category": "pistol",
+      "raw": [
+        265
+      ],
+      "afterCat18": [
+        265
+      ],
+      "effective": [
+        265
+      ],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [
+        265
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 50,
+      "name": "P38",
+      "category": "pistol",
+      "raw": [
+        266
+      ],
+      "afterCat18": [
+        266
+      ],
+      "effective": [
+        266
+      ],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [
+        266
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 51,
+      "name": "27mmLeuP",
+      "category": "smoke_grenade",
+      "raw": [
+        266,
+        267
+      ],
+      "afterCat18": [
+        266
+      ],
+      "effective": [
+        266
+      ],
+      "auxInRaw": [
+        267
+      ],
+      "u27Dropped": [],
+      "stMaster": [
+        266,
+        267
+      ],
+      "stExtra": [
+        267
+      ],
+      "stMissing": [],
+      "causes": {
+        "CBE_AUX_IN_RAW": [
+          267
+        ]
+      },
+      "w21": 0,
+      "matchEffective": false,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 52,
+      "name": "27mmP42",
+      "category": "smoke_grenade",
+      "raw": [
+        266,
+        267
+      ],
+      "afterCat18": [
+        266
+      ],
+      "effective": [
+        266
+      ],
+      "auxInRaw": [
+        267
+      ],
+      "u27Dropped": [],
+      "stMaster": [
+        266,
+        267
+      ],
+      "stExtra": [
+        267
+      ],
+      "stMissing": [],
+      "causes": {
+        "CBE_AUX_IN_RAW": [
+          267
+        ]
+      },
+      "w21": 0,
+      "matchEffective": false,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 53,
+      "name": "27mmKpfP",
+      "category": "grenade_launcher_ammo",
+      "raw": [
+        271,
+        270
+      ],
+      "afterCat18": [],
+      "effective": [],
+      "auxInRaw": [
+        270,
+        271
+      ],
+      "u27Dropped": [],
+      "stMaster": [
+        266,
+        267
+      ],
+      "stExtra": [
+        266,
+        267
+      ],
+      "stMissing": [],
+      "causes": {
+        "BUILD_HEURISTIC:AMMO_27": [
+          266,
+          267
+        ]
+      },
+      "w21": 0,
+      "matchEffective": false,
+      "matchRaw": false
+    },
+    {
+      "cbeIdx": 54,
+      "name": "27mmStuP",
+      "category": "grenade_launcher_ammo",
+      "raw": [
+        267
+      ],
+      "afterCat18": [],
+      "effective": [],
+      "auxInRaw": [
+        267
+      ],
+      "u27Dropped": [],
+      "stMaster": [
+        267
+      ],
+      "stExtra": [
+        267
+      ],
+      "stMissing": [],
+      "causes": {
+        "CBE_AUX_IN_RAW": [
+          267
+        ]
+      },
+      "w21": 0,
+      "matchEffective": false,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 55,
+      "name": "Gew98",
+      "category": "rifle",
+      "raw": [
+        273,
+        314
+      ],
+      "afterCat18": [
+        273
+      ],
+      "effective": [
+        273
+      ],
+      "auxInRaw": [
+        314
+      ],
+      "u27Dropped": [],
+      "stMaster": [
+        273
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": false
+    },
+    {
+      "cbeIdx": 56,
+      "name": "Kar98b",
+      "category": "rifle",
+      "raw": [
+        273,
+        314
+      ],
+      "afterCat18": [
+        273
+      ],
+      "effective": [
+        273
+      ],
+      "auxInRaw": [
+        314
+      ],
+      "u27Dropped": [],
+      "stMaster": [
+        273
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": false
+    },
+    {
+      "cbeIdx": 57,
+      "name": "Kar98k",
+      "category": "rifle",
+      "raw": [
+        273,
+        304,
+        305,
+        314
+      ],
+      "afterCat18": [
+        273
+      ],
+      "effective": [
+        273
+      ],
+      "auxInRaw": [
+        304,
+        305,
+        314
+      ],
+      "u27Dropped": [],
+      "stMaster": [
+        273
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": false
+    },
+    {
+      "cbeIdx": 58,
+      "name": "Kar98k svw",
+      "category": "rifle",
+      "raw": [
+        272,
+        303,
+        304
+      ],
+      "afterCat18": [
+        272
+      ],
+      "effective": [
+        272
+      ],
+      "auxInRaw": [
+        303,
+        304
+      ],
+      "u27Dropped": [],
+      "stMaster": [
+        272,
+        303,
+        304
+      ],
+      "stExtra": [
+        303,
+        304
+      ],
+      "stMissing": [],
+      "causes": {
+        "CBE_AUX_IN_RAW": [
+          303,
+          304
+        ]
+      },
+      "w21": 0,
+      "matchEffective": false,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 59,
+      "name": "Gew29/40",
+      "category": "rifle",
+      "raw": [
+        273,
+        314
+      ],
+      "afterCat18": [
+        273
+      ],
+      "effective": [],
+      "auxInRaw": [
+        314
+      ],
+      "u27Dropped": [
+        273
+      ],
+      "stMaster": [
+        273
+      ],
+      "stExtra": [
+        273
+      ],
+      "stMissing": [],
+      "causes": {
+        "U27_SHAPE_FILTER": [
+          273
+        ]
+      },
+      "w21": 0,
+      "matchEffective": false,
+      "matchRaw": false
+    },
+    {
+      "cbeIdx": 60,
+      "name": "Gew33/40",
+      "category": "rifle",
+      "raw": [
+        273,
+        314
+      ],
+      "afterCat18": [
+        273
+      ],
+      "effective": [
+        273
+      ],
+      "auxInRaw": [
+        314
+      ],
+      "u27Dropped": [],
+      "stMaster": [
+        273
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": false
+    },
+    {
+      "cbeIdx": 61,
+      "name": "Gew98/40",
+      "category": "rifle",
+      "raw": [
+        273,
+        314
+      ],
+      "afterCat18": [
+        273
+      ],
+      "effective": [
+        273
+      ],
+      "auxInRaw": [
+        314
+      ],
+      "u27Dropped": [],
+      "stMaster": [
+        273
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": false
+    },
+    {
+      "cbeIdx": 62,
+      "name": "VG-1",
+      "category": "rifle",
+      "raw": [
+        274
+      ],
+      "afterCat18": [
+        274
+      ],
+      "effective": [
+        274
+      ],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [
+        274
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 63,
+      "name": "VG-2",
+      "category": "rifle",
+      "raw": [
+        274
+      ],
+      "afterCat18": [
+        274
+      ],
+      "effective": [
+        274
+      ],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [
+        274
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 64,
+      "name": "VK-98",
+      "category": "rifle",
+      "raw": [
+        273
+      ],
+      "afterCat18": [
+        273
+      ],
+      "effective": [
+        273
+      ],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [
+        273
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 65,
+      "name": "Gew41(W)",
+      "category": "rifle",
+      "raw": [
+        273,
+        314
+      ],
+      "afterCat18": [
+        273
+      ],
+      "effective": [
+        273
+      ],
+      "auxInRaw": [
+        314
+      ],
+      "u27Dropped": [],
+      "stMaster": [
+        273
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": false
+    },
+    {
+      "cbeIdx": 66,
+      "name": "Gew41(M)",
+      "category": "rifle",
+      "raw": [
+        273,
+        314
+      ],
+      "afterCat18": [
+        273
+      ],
+      "effective": [
+        273
+      ],
+      "auxInRaw": [
+        314
+      ],
+      "u27Dropped": [],
+      "stMaster": [
+        273
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": false
+    },
+    {
+      "cbeIdx": 67,
+      "name": "Gew43",
+      "category": "rifle",
+      "raw": [
+        273,
+        274
+      ],
+      "afterCat18": [
+        273,
+        274
+      ],
+      "effective": [
+        273,
+        274
+      ],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [
+        273,
+        274
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 68,
+      "name": "Kar43",
+      "category": "rifle",
+      "raw": [
+        273,
+        274
+      ],
+      "afterCat18": [
+        273,
+        274
+      ],
+      "effective": [
+        273,
+        274
+      ],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [
+        273,
+        274
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 69,
+      "name": "Zf Kar98k",
+      "category": "rifle",
+      "raw": [
+        273,
+        314
+      ],
+      "afterCat18": [
+        273
+      ],
+      "effective": [
+        273
+      ],
+      "auxInRaw": [
+        314
+      ],
+      "u27Dropped": [],
+      "stMaster": [
+        273
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": false
+    },
+    {
+      "cbeIdx": 70,
+      "name": "Zf Gew43",
+      "category": "rifle",
+      "raw": [
+        273,
+        274
+      ],
+      "afterCat18": [
+        273,
+        274
+      ],
+      "effective": [
+        273,
+        274
+      ],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [
+        273,
+        274
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 71,
+      "name": "FG42/1",
+      "category": "lmg",
+      "raw": [
+        276,
+        275
+      ],
+      "afterCat18": [
+        276,
+        275
+      ],
+      "effective": [],
+      "auxInRaw": [],
+      "u27Dropped": [
+        275,
+        276
+      ],
+      "stMaster": [
+        275,
+        276
+      ],
+      "stExtra": [
+        275,
+        276
+      ],
+      "stMissing": [],
+      "causes": {
+        "U27_SHAPE_FILTER": [
+          275,
+          276
+        ]
+      },
+      "w21": 0,
+      "matchEffective": false,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 72,
+      "name": "FG42/2",
+      "category": "lmg",
+      "raw": [
+        277
+      ],
+      "afterCat18": [
+        277
+      ],
+      "effective": [],
+      "auxInRaw": [],
+      "u27Dropped": [
+        277
+      ],
+      "stMaster": [
+        277
+      ],
+      "stExtra": [
+        277
+      ],
+      "stMissing": [],
+      "causes": {
+        "U27_SHAPE_FILTER": [
+          277
+        ]
+      },
+      "w21": 0,
+      "matchEffective": false,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 73,
+      "name": "MKb42(W)",
+      "category": "rifle",
+      "raw": [
+        278,
+        314
+      ],
+      "afterCat18": [
+        278
+      ],
+      "effective": [
+        278
+      ],
+      "auxInRaw": [
+        314
+      ],
+      "u27Dropped": [],
+      "stMaster": [
+        278
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": false
+    },
+    {
+      "cbeIdx": 74,
+      "name": "MKb42(H)",
+      "category": "rifle",
+      "raw": [
+        277
+      ],
+      "afterCat18": [
+        277
+      ],
+      "effective": [
+        277
+      ],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [
+        277
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 75,
+      "name": "MP43",
+      "category": "rifle",
+      "raw": [
+        278,
+        304,
+        305
+      ],
+      "afterCat18": [
+        278
+      ],
+      "effective": [
+        278
+      ],
+      "auxInRaw": [
+        304,
+        305
+      ],
+      "u27Dropped": [],
+      "stMaster": [
+        278
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": false
+    },
+    {
+      "cbeIdx": 76,
+      "name": "StG44",
+      "category": "rifle",
+      "raw": [
+        278,
+        304,
+        305
+      ],
+      "afterCat18": [
+        278
+      ],
+      "effective": [
+        278
+      ],
+      "auxInRaw": [
+        304,
+        305
+      ],
+      "u27Dropped": [],
+      "stMaster": [
+        278
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": false
+    },
+    {
+      "cbeIdx": 77,
+      "name": "VG1-5",
+      "category": "rifle",
+      "raw": [
+        278
+      ],
+      "afterCat18": [
+        278
+      ],
+      "effective": [
+        278
+      ],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [
+        278
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 78,
+      "name": "MP28/2",
+      "category": "smg",
+      "raw": [
+        280,
+        279,
+        281,
+        314
+      ],
+      "afterCat18": [
+        280,
+        279,
+        281
+      ],
+      "effective": [
+        280,
+        279,
+        281
+      ],
+      "auxInRaw": [
+        314
+      ],
+      "u27Dropped": [],
+      "stMaster": [
+        279,
+        280,
+        281
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": false
+    },
+    {
+      "cbeIdx": 79,
+      "name": "MP35/1",
+      "category": "smg",
+      "raw": [
+        285,
+        284
+      ],
+      "afterCat18": [
+        285,
+        284
+      ],
+      "effective": [],
+      "auxInRaw": [],
+      "u27Dropped": [
+        284,
+        285
+      ],
+      "stMaster": [
+        284,
+        285
+      ],
+      "stExtra": [
+        284,
+        285
+      ],
+      "stMissing": [],
+      "causes": {
+        "U27_SHAPE_FILTER": [
+          284,
+          285
+        ]
+      },
+      "w21": 0,
+      "matchEffective": false,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 80,
+      "name": "EMP",
+      "category": "smg",
+      "raw": [
+        283,
+        282
+      ],
+      "afterCat18": [
+        283,
+        282
+      ],
+      "effective": [],
+      "auxInRaw": [],
+      "u27Dropped": [
+        282,
+        283
+      ],
+      "stMaster": [
+        282,
+        283
+      ],
+      "stExtra": [
+        282,
+        283
+      ],
+      "stMissing": [],
+      "causes": {
+        "U27_SHAPE_FILTER": [
+          282,
+          283
+        ]
+      },
+      "w21": 0,
+      "matchEffective": false,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 81,
+      "name": "MP38",
+      "category": "smg",
+      "raw": [
+        286
+      ],
+      "afterCat18": [
+        286
+      ],
+      "effective": [
+        286
+      ],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [
+        286
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 82,
+      "name": "MP40",
+      "category": "smg",
+      "raw": [
+        286
+      ],
+      "afterCat18": [
+        286
+      ],
+      "effective": [
+        286
+      ],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [
+        286
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 83,
+      "name": "MP40/2",
+      "category": "smg",
+      "raw": [
+        286
+      ],
+      "afterCat18": [
+        286
+      ],
+      "effective": [
+        286
+      ],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [
+        286
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 84,
+      "name": "MP41",
+      "category": "smg",
+      "raw": [
+        286
+      ],
+      "afterCat18": [
+        286
+      ],
+      "effective": [],
+      "auxInRaw": [],
+      "u27Dropped": [
+        286
+      ],
+      "stMaster": [
+        286
+      ],
+      "stExtra": [
+        286
+      ],
+      "stMissing": [],
+      "causes": {
+        "U27_SHAPE_FILTER": [
+          286
+        ]
+      },
+      "w21": 0,
+      "matchEffective": false,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 85,
+      "name": "Ger Potsdam",
+      "category": "smg",
+      "raw": [
+        287,
+        356
+      ],
+      "afterCat18": [
+        287,
+        356
+      ],
+      "effective": [
+        287
+      ],
+      "auxInRaw": [],
+      "u27Dropped": [
+        356
+      ],
+      "stMaster": [
+        287
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": false
+    },
+    {
+      "cbeIdx": 86,
+      "name": "MP3008",
+      "category": "smg",
+      "raw": [
+        286
+      ],
+      "afterCat18": [
+        286
+      ],
+      "effective": [
+        286
+      ],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [
+        286
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 87,
+      "name": "MG08/15",
+      "category": "lmg",
+      "raw": [
+        288
+      ],
+      "afterCat18": [
+        288
+      ],
+      "effective": [
+        288
+      ],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [
+        288
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 88,
+      "name": "MG08/18",
+      "category": "lmg",
+      "raw": [
+        288
+      ],
+      "afterCat18": [
+        288
+      ],
+      "effective": [
+        288
+      ],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [
+        288
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 89,
+      "name": "MG13",
+      "category": "lmg",
+      "raw": [
+        291,
+        292
+      ],
+      "afterCat18": [
+        291,
+        292
+      ],
+      "effective": [
+        291,
+        292
+      ],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [
+        291,
+        292
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 90,
+      "name": "MG15",
+      "category": "lmg",
+      "raw": [
+        293
+      ],
+      "afterCat18": [
+        293
+      ],
+      "effective": [],
+      "auxInRaw": [],
+      "u27Dropped": [
+        293
+      ],
+      "stMaster": [
+        293
+      ],
+      "stExtra": [
+        293
+      ],
+      "stMissing": [],
+      "causes": {
+        "U27_SHAPE_FILTER": [
+          293
+        ]
+      },
+      "w21": 0,
+      "matchEffective": false,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 91,
+      "name": "MG34",
+      "category": "lmg",
+      "raw": [
+        294,
+        295
+      ],
+      "afterCat18": [
+        294,
+        295
+      ],
+      "effective": [
+        294,
+        295
+      ],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [
+        294,
+        295
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 113,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 92,
+      "name": "MG34S",
+      "category": "lmg",
+      "raw": [
+        294,
+        295
+      ],
+      "afterCat18": [
+        294,
+        295
+      ],
+      "effective": [
+        294,
+        295
+      ],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [
+        294,
+        295
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 93,
+      "name": "MG34/41",
+      "category": "lmg",
+      "raw": [
+        294,
+        295
+      ],
+      "afterCat18": [
+        294,
+        295
+      ],
+      "effective": [
+        294,
+        295
+      ],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [
+        294,
+        295
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 94,
+      "name": "MG42",
+      "category": "lmg",
+      "raw": [
+        272,
+        273,
+        274,
+        275,
+        276,
+        277,
+        288,
+        289,
+        290,
+        295,
+        296,
+        389
+      ],
+      "afterCat18": [
+        272,
+        273,
+        274,
+        275,
+        276,
+        277,
+        288,
+        289,
+        290,
+        295,
+        296,
+        389
+      ],
+      "effective": [
+        272,
+        273,
+        274,
+        275,
+        276,
+        277,
+        288,
+        289,
+        290,
+        295,
+        296,
+        389
+      ],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [
+        272,
+        273,
+        274,
+        275,
+        276,
+        277,
+        288,
+        289,
+        290,
+        295,
+        296,
+        389
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 114,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 95,
+      "name": "MG08",
+      "category": "mmg",
+      "raw": [],
+      "afterCat18": [],
+      "effective": [],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [
+        272,
+        273,
+        274,
+        275,
+        276,
+        277,
+        288,
+        289,
+        290,
+        295,
+        296,
+        389
+      ],
+      "stExtra": [
+        272,
+        273,
+        274,
+        275,
+        276,
+        277,
+        288,
+        289,
+        290,
+        295,
+        296,
+        389
+      ],
+      "stMissing": [],
+      "causes": {
+        "BUILD_HEURISTIC:AMMO_792": [
+          272,
+          273,
+          274,
+          275,
+          276,
+          277,
+          288,
+          289,
+          290,
+          295,
+          296,
+          389
+        ]
+      },
+      "w21": 115,
+      "matchEffective": false,
+      "matchRaw": false
+    },
+    {
+      "cbeIdx": 96,
+      "name": "PzB38",
+      "category": "at_rifle",
+      "raw": [
+        298
+      ],
+      "afterCat18": [
+        298
+      ],
+      "effective": [
+        298
+      ],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [
+        298
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 97,
+      "name": "PzB39",
+      "category": "at_rifle",
+      "raw": [
+        298
+      ],
+      "afterCat18": [
+        298
+      ],
+      "effective": [
+        298
+      ],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [
+        298
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 98,
+      "name": "GrB39",
+      "category": "at_rifle",
+      "raw": [
+        304,
+        305
+      ],
+      "afterCat18": [],
+      "effective": [],
+      "auxInRaw": [
+        304,
+        305
+      ],
+      "u27Dropped": [],
+      "stMaster": [],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": false
+    },
+    {
+      "cbeIdx": 99,
+      "name": "PzBSS41",
+      "category": "at_rifle",
+      "raw": [
+        299
+      ],
+      "afterCat18": [
+        299
+      ],
+      "effective": [],
+      "auxInRaw": [],
+      "u27Dropped": [
+        299
+      ],
+      "stMaster": [
+        299
+      ],
+      "stExtra": [
+        299
+      ],
+      "stMissing": [],
+      "causes": {
+        "U27_SHAPE_FILTER": [
+          299
+        ]
+      },
+      "w21": 0,
+      "matchEffective": false,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 100,
+      "name": "PzB41",
+      "category": "at_rifle",
+      "raw": [
+        300,
+        301
+      ],
+      "afterCat18": [
+        300,
+        301
+      ],
+      "effective": [
+        300
+      ],
+      "auxInRaw": [],
+      "u27Dropped": [
+        301
+      ],
+      "stMaster": [
+        300
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": false
+    },
+    {
+      "cbeIdx": 101,
+      "name": "PF30mK",
+      "category": "panzerfaust",
+      "raw": [],
+      "afterCat18": [],
+      "effective": [],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 102,
+      "name": "PF30mG",
+      "category": "panzerfaust",
+      "raw": [],
+      "afterCat18": [],
+      "effective": [],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 103,
+      "name": "PF60m",
+      "category": "panzerfaust",
+      "raw": [],
+      "afterCat18": [],
+      "effective": [],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 104,
+      "name": "PF100m",
+      "category": "panzerfaust",
+      "raw": [],
+      "afterCat18": [],
+      "effective": [],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 105,
+      "name": "RPzB43",
+      "category": "rocket_launcher",
+      "raw": [
+        302
+      ],
+      "afterCat18": [
+        302
+      ],
+      "effective": [
+        302
+      ],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [
+        302
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 106,
+      "name": "RPzB54",
+      "category": "rocket_launcher",
+      "raw": [
+        302,
+        303
+      ],
+      "afterCat18": [
+        302
+      ],
+      "effective": [
+        302
+      ],
+      "auxInRaw": [
+        303
+      ],
+      "u27Dropped": [],
+      "stMaster": [
+        302
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": false
+    },
+    {
+      "cbeIdx": 107,
+      "name": "RPzB54/1",
+      "category": "rocket_launcher",
+      "raw": [
+        303
+      ],
+      "afterCat18": [],
+      "effective": [],
+      "auxInRaw": [
+        303
+      ],
+      "u27Dropped": [],
+      "stMaster": [
+        229
+      ],
+      "stExtra": [
+        229
+      ],
+      "stMissing": [],
+      "causes": {
+        "BUILD_HEURISTIC:AMMO_3006": [
+          229
+        ]
+      },
+      "w21": 0,
+      "matchEffective": false,
+      "matchRaw": false
+    },
+    {
+      "cbeIdx": 108,
+      "name": "FmW35",
+      "category": "flamethrower",
+      "raw": [],
+      "afterCat18": [],
+      "effective": [],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 109,
+      "name": "FmW40",
+      "category": "flamethrower",
+      "raw": [],
+      "afterCat18": [],
+      "effective": [],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 110,
+      "name": "FmW41",
+      "category": "flamethrower",
+      "raw": [],
+      "afterCat18": [],
+      "effective": [],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 111,
+      "name": "FmW42",
+      "category": "flamethrower",
+      "raw": [],
+      "afterCat18": [],
+      "effective": [],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 112,
+      "name": "Laf34",
+      "category": "tripod",
+      "raw": [],
+      "afterCat18": [],
+      "effective": [],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 113,
+      "name": "Laf42",
+      "category": "tripod",
+      "raw": [],
+      "afterCat18": [],
+      "effective": [],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 114,
+      "name": "Sch08",
+      "category": "tripod",
+      "raw": [],
+      "afterCat18": [],
+      "effective": [],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 115,
+      "name": "PatrK41",
+      "category": "ammo_box",
+      "raw": [
+        297,
+        296
+      ],
+      "afterCat18": [
+        297,
+        296
+      ],
+      "effective": [
+        297,
+        296
+      ],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [
+        296,
+        297
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 116,
+      "name": "PatrK15",
+      "category": "ammo_box",
+      "raw": [
+        290,
+        289
+      ],
+      "afterCat18": [
+        290,
+        289
+      ],
+      "effective": [
+        290,
+        289
+      ],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [
+        289,
+        290
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 117,
+      "name": "Fernglas",
+      "category": "binoculars",
+      "raw": [],
+      "afterCat18": [],
+      "effective": [],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 118,
+      "name": "Feldfu.b",
+      "category": "radio",
+      "raw": [],
+      "afterCat18": [],
+      "effective": [],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 119,
+      "name": "SaniTo34",
+      "category": "medical",
+      "raw": [],
+      "afterCat18": [],
+      "effective": [],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 120,
+      "name": "Mkt35",
+      "category": "document",
+      "raw": [],
+      "afterCat18": [],
+      "effective": [],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 121,
+      "name": "Bodeo mod89",
+      "category": "pistol",
+      "raw": [
+        316
+      ],
+      "afterCat18": [
+        316
+      ],
+      "effective": [
+        316
+      ],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [
+        316
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 122,
+      "name": "Glisenti m10",
+      "category": "pistol",
+      "raw": [
+        317
+      ],
+      "afterCat18": [
+        317
+      ],
+      "effective": [
+        317
+      ],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [
+        317
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 123,
+      "name": "Beretta m34",
+      "category": "pistol",
+      "raw": [
+        318
+      ],
+      "afterCat18": [
+        318
+      ],
+      "effective": [
+        318
+      ],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [
+        318
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 124,
+      "name": "F. mod91",
+      "category": "rifle",
+      "raw": [
+        319,
+        332
+      ],
+      "afterCat18": [
+        319
+      ],
+      "effective": [
+        319
+      ],
+      "auxInRaw": [
+        332
+      ],
+      "u27Dropped": [],
+      "stMaster": [
+        319
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": false
+    },
+    {
+      "cbeIdx": 125,
+      "name": "M. mod91",
+      "category": "rifle",
+      "raw": [
+        319
+      ],
+      "afterCat18": [
+        319
+      ],
+      "effective": [
+        319
+      ],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [
+        319
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 126,
+      "name": "M. mod91/TS",
+      "category": "rifle",
+      "raw": [
+        319,
+        332
+      ],
+      "afterCat18": [
+        319
+      ],
+      "effective": [
+        319
+      ],
+      "auxInRaw": [
+        332
+      ],
+      "u27Dropped": [],
+      "stMaster": [
+        319
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": false
+    },
+    {
+      "cbeIdx": 127,
+      "name": "F. mod38",
+      "category": "rifle",
+      "raw": [
+        320
+      ],
+      "afterCat18": [
+        320
+      ],
+      "effective": [
+        320
+      ],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [
+        320
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 128,
+      "name": "M. mod38",
+      "category": "rifle",
+      "raw": [
+        320
+      ],
+      "afterCat18": [
+        320
+      ],
+      "effective": [
+        320
+      ],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [
+        320
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 129,
+      "name": "M. mod38/TS",
+      "category": "rifle",
+      "raw": [
+        320,
+        332
+      ],
+      "afterCat18": [
+        320
+      ],
+      "effective": [
+        320
+      ],
+      "auxInRaw": [
+        332
+      ],
+      "u27Dropped": [],
+      "stMaster": [
+        320
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": false
+    },
+    {
+      "cbeIdx": 130,
+      "name": "F. mod38",
+      "category": "rifle",
+      "raw": [
+        319
+      ],
+      "afterCat18": [
+        319
+      ],
+      "effective": [
+        319
+      ],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [
+        319
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 131,
+      "name": "M. mod38",
+      "category": "rifle",
+      "raw": [
+        319
+      ],
+      "afterCat18": [
+        319
+      ],
+      "effective": [
+        319
+      ],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [
+        319
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 132,
+      "name": "M. mod38/TS",
+      "category": "rifle",
+      "raw": [
+        319,
+        332
+      ],
+      "afterCat18": [
+        319
+      ],
+      "effective": [
+        319
+      ],
+      "auxInRaw": [
+        332
+      ],
+      "u27Dropped": [],
+      "stMaster": [
+        319
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": false
+    },
+    {
+      "cbeIdx": 133,
+      "name": "MAB mod38A",
+      "category": "smg",
+      "raw": [
+        324,
+        321,
+        322,
+        333
+      ],
+      "afterCat18": [
+        324,
+        321,
+        322
+      ],
+      "effective": [
+        324,
+        321
+      ],
+      "auxInRaw": [
+        333
+      ],
+      "u27Dropped": [
+        322
+      ],
+      "stMaster": [
+        321,
+        324
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": false
+    },
+    {
+      "cbeIdx": 134,
+      "name": "MAB mod38/42",
+      "category": "smg",
+      "raw": [
+        324,
+        322,
+        323
+      ],
+      "afterCat18": [
+        324,
+        322,
+        323
+      ],
+      "effective": [
+        324
+      ],
+      "auxInRaw": [],
+      "u27Dropped": [
+        322,
+        323
+      ],
+      "stMaster": [
+        324
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": false
+    },
+    {
+      "cbeIdx": 135,
+      "name": "Breda mod30",
+      "category": "lmg",
+      "raw": [
+        318,
+        324
+      ],
+      "afterCat18": [
+        318,
+        324
+      ],
+      "effective": [
+        318,
+        324
+      ],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [
+        318,
+        324
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 136,
+      "name": "FR mod14",
+      "category": "mmg",
+      "raw": [
+        326
+      ],
+      "afterCat18": [
+        326
+      ],
+      "effective": [
+        326
+      ],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [
+        326
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 140,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 137,
+      "name": "FR mod14/35",
+      "category": "mmg",
+      "raw": [],
+      "afterCat18": [],
+      "effective": [],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 140,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 138,
+      "name": "Breda mod37",
+      "category": "mmg",
+      "raw": [
+        327
+      ],
+      "afterCat18": [
+        327
+      ],
+      "effective": [
+        327
+      ],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [
+        327
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 141,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 139,
+      "name": "T. FR mod14",
+      "category": "tripod",
+      "raw": [],
+      "afterCat18": [],
+      "effective": [],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 140,
+      "name": "T. Breda m37",
+      "category": "tripod",
+      "raw": [],
+      "afterCat18": [],
+      "effective": [],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 141,
+      "name": "CM. FR 14/35",
+      "category": "ammo_box",
+      "raw": [
+        328
+      ],
+      "afterCat18": [],
+      "effective": [],
+      "auxInRaw": [
+        328
+      ],
+      "u27Dropped": [],
+      "stMaster": [],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": false
+    },
+    {
+      "cbeIdx": 142,
+      "name": "Binocolo",
+      "category": "binoculars",
+      "raw": [],
+      "afterCat18": [],
+      "effective": [],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 143,
+      "name": "Lebel 92",
+      "category": "pistol",
+      "raw": [
+        335
+      ],
+      "afterCat18": [
+        335
+      ],
+      "effective": [
+        335
+      ],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [
+        335
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 144,
+      "name": "Unique Mle17",
+      "category": "pistol",
+      "raw": [
+        336
+      ],
+      "afterCat18": [
+        336
+      ],
+      "effective": [
+        336
+      ],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [
+        336
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 145,
+      "name": "Mle1935A",
+      "category": "pistol",
+      "raw": [
+        337
+      ],
+      "afterCat18": [
+        337
+      ],
+      "effective": [
+        337
+      ],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [
+        337
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 146,
+      "name": "Mle1935S",
+      "category": "pistol",
+      "raw": [
+        337
+      ],
+      "afterCat18": [
+        337
+      ],
+      "effective": [
+        337
+      ],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [
+        337
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 147,
+      "name": "F. Mle86/93",
+      "category": "rifle",
+      "raw": [
+        338,
+        348
+      ],
+      "afterCat18": [
+        338
+      ],
+      "effective": [
+        338
+      ],
+      "auxInRaw": [
+        348
+      ],
+      "u27Dropped": [],
+      "stMaster": [
+        338
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": false
+    },
+    {
+      "cbeIdx": 148,
+      "name": "M. Mle92/27",
+      "category": "rifle",
+      "raw": [
+        339,
+        349
+      ],
+      "afterCat18": [
+        339
+      ],
+      "effective": [
+        339
+      ],
+      "auxInRaw": [
+        349
+      ],
+      "u27Dropped": [],
+      "stMaster": [
+        339
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": false
+    },
+    {
+      "cbeIdx": 149,
+      "name": "F. Mle07/15",
+      "category": "rifle",
+      "raw": [
+        339,
+        348
+      ],
+      "afterCat18": [
+        339
+      ],
+      "effective": [
+        339
+      ],
+      "auxInRaw": [
+        348
+      ],
+      "u27Dropped": [],
+      "stMaster": [
+        339
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": false
+    },
+    {
+      "cbeIdx": 150,
+      "name": "F. Mle16",
+      "category": "rifle",
+      "raw": [
+        340,
+        348
+      ],
+      "afterCat18": [
+        340
+      ],
+      "effective": [
+        340
+      ],
+      "auxInRaw": [
+        348
+      ],
+      "u27Dropped": [],
+      "stMaster": [
+        340
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": false
+    },
+    {
+      "cbeIdx": 151,
+      "name": "M. Mle16/27",
+      "category": "rifle",
+      "raw": [
+        340,
+        349
+      ],
+      "afterCat18": [
+        340
+      ],
+      "effective": [
+        340
+      ],
+      "auxInRaw": [
+        349
+      ],
+      "u27Dropped": [],
+      "stMaster": [
+        340
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": false
+    },
+    {
+      "cbeIdx": 152,
+      "name": "F. MAS36",
+      "category": "rifle",
+      "raw": [
+        341
+      ],
+      "afterCat18": [
+        341
+      ],
+      "effective": [
+        341
+      ],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [
+        341
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 153,
+      "name": "F. MAS36CR39",
+      "category": "rifle",
+      "raw": [
+        341
+      ],
+      "afterCat18": [
+        341
+      ],
+      "effective": [
+        341
+      ],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [
+        341
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 154,
+      "name": "MAS38",
+      "category": "smg",
+      "raw": [
+        342
+      ],
+      "afterCat18": [
+        342
+      ],
+      "effective": [
+        342
+      ],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [
+        342
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 155,
+      "name": "MAC24/29",
+      "category": "lmg",
+      "raw": [
+        343
+      ],
+      "afterCat18": [
+        343
+      ],
+      "effective": [
+        343
+      ],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [
+        343
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 156,
+      "name": "Mle1914",
+      "category": "mmg",
+      "raw": [
+        344,
+        345
+      ],
+      "afterCat18": [
+        344
+      ],
+      "effective": [
+        344
+      ],
+      "auxInRaw": [
+        345
+      ],
+      "u27Dropped": [],
+      "stMaster": [
+        344
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 158,
+      "matchEffective": true,
+      "matchRaw": false
+    },
+    {
+      "cbeIdx": 157,
+      "name": "T. Mle1914",
+      "category": "tripod",
+      "raw": [],
+      "afterCat18": [],
+      "effective": [],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 158,
+      "name": "Jumelles",
+      "category": "binoculars",
+      "raw": [],
+      "afterCat18": [],
+      "effective": [],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 159,
+      "name": "No1 Mk4",
+      "category": "pistol",
+      "raw": [
+        351
+      ],
+      "afterCat18": [
+        351
+      ],
+      "effective": [
+        351
+      ],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [
+        351
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 160,
+      "name": "No2 Mk2",
+      "category": "pistol",
+      "raw": [
+        352
+      ],
+      "afterCat18": [
+        352
+      ],
+      "effective": [
+        352
+      ],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [
+        352
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 161,
+      "name": "No2 Mk1*",
+      "category": "pistol",
+      "raw": [
+        352
+      ],
+      "afterCat18": [
+        352
+      ],
+      "effective": [
+        352
+      ],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [
+        352
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 162,
+      "name": "No2 Mk1**",
+      "category": "pistol",
+      "raw": [
+        352
+      ],
+      "afterCat18": [
+        352
+      ],
+      "effective": [
+        352
+      ],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [
+        352
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 163,
+      "name": "Webley Mk4",
+      "category": "pistol",
+      "raw": [
+        352
+      ],
+      "afterCat18": [
+        352
+      ],
+      "effective": [
+        352
+      ],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [
+        352
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 164,
+      "name": "S&W No2",
+      "category": "pistol",
+      "raw": [
+        352
+      ],
+      "afterCat18": [
+        352
+      ],
+      "effective": [
+        352
+      ],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [
+        352
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 165,
+      "name": "Very",
+      "category": "smoke_grenade",
+      "raw": [
+        353
+      ],
+      "afterCat18": [
+        353
+      ],
+      "effective": [
+        353
+      ],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [
+        353
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 166,
+      "name": "No1 Mk3",
+      "category": "rifle",
+      "raw": [
+        355,
+        363
+      ],
+      "afterCat18": [
+        355
+      ],
+      "effective": [
+        355
+      ],
+      "auxInRaw": [
+        363
+      ],
+      "u27Dropped": [],
+      "stMaster": [
+        355
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": false
+    },
+    {
+      "cbeIdx": 167,
+      "name": "No1 Mk3*",
+      "category": "rifle",
+      "raw": [
+        355,
+        363
+      ],
+      "afterCat18": [
+        355
+      ],
+      "effective": [
+        355
+      ],
+      "auxInRaw": [
+        363
+      ],
+      "u27Dropped": [],
+      "stMaster": [
+        355
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": false
+    },
+    {
+      "cbeIdx": 168,
+      "name": "No4 Mk1",
+      "category": "rifle",
+      "raw": [
+        355,
+        365
+      ],
+      "afterCat18": [
+        355,
+        365
+      ],
+      "effective": [
+        355
+      ],
+      "auxInRaw": [],
+      "u27Dropped": [
+        365
+      ],
+      "stMaster": [
+        355
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": false
+    },
+    {
+      "cbeIdx": 169,
+      "name": "No4 Mk1*",
+      "category": "rifle",
+      "raw": [
+        355,
+        365
+      ],
+      "afterCat18": [
+        355,
+        365
+      ],
+      "effective": [
+        355
+      ],
+      "auxInRaw": [],
+      "u27Dropped": [
+        365
+      ],
+      "stMaster": [
+        355
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": false
+    },
+    {
+      "cbeIdx": 170,
+      "name": "No4 Mk1(T)",
+      "category": "rifle",
+      "raw": [
+        355,
+        365
+      ],
+      "afterCat18": [
+        355,
+        365
+      ],
+      "effective": [
+        355
+      ],
+      "auxInRaw": [],
+      "u27Dropped": [
+        365
+      ],
+      "stMaster": [
+        355
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": false
+    },
+    {
+      "cbeIdx": 171,
+      "name": "No3 Mk1*(T)",
+      "category": "rifle",
+      "raw": [
+        355,
+        364
+      ],
+      "afterCat18": [
+        355
+      ],
+      "effective": [
+        355
+      ],
+      "auxInRaw": [
+        364
+      ],
+      "u27Dropped": [],
+      "stMaster": [
+        355
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": false
+    },
+    {
+      "cbeIdx": 172,
+      "name": "Sten Mk2",
+      "category": "smg",
+      "raw": [
+        356,
+        287
+      ],
+      "afterCat18": [
+        356,
+        287
+      ],
+      "effective": [
+        356
+      ],
+      "auxInRaw": [],
+      "u27Dropped": [
+        287
+      ],
+      "stMaster": [
+        356
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": false
+    },
+    {
+      "cbeIdx": 173,
+      "name": "Sten Mk3",
+      "category": "smg",
+      "raw": [
+        356,
+        287
+      ],
+      "afterCat18": [
+        356,
+        287
+      ],
+      "effective": [
+        356
+      ],
+      "auxInRaw": [],
+      "u27Dropped": [
+        287
+      ],
+      "stMaster": [
+        356
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": false
+    },
+    {
+      "cbeIdx": 174,
+      "name": "Sten Mk5",
+      "category": "smg",
+      "raw": [
+        356,
+        287,
+        365
+      ],
+      "afterCat18": [
+        356,
+        287,
+        365
+      ],
+      "effective": [
+        356
+      ],
+      "auxInRaw": [],
+      "u27Dropped": [
+        287,
+        365
+      ],
+      "stMaster": [
+        356
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": false
+    },
+    {
+      "cbeIdx": 175,
+      "name": "Lewis Mk1",
+      "category": "lmg",
+      "raw": [
+        357
+      ],
+      "afterCat18": [
+        357
+      ],
+      "effective": [
+        357
+      ],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [
+        357
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 176,
+      "name": "Bren Mk1",
+      "category": "lmg",
+      "raw": [
+        358
+      ],
+      "afterCat18": [
+        358
+      ],
+      "effective": [
+        358
+      ],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [
+        358
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 184,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 177,
+      "name": "Bren Mk2",
+      "category": "lmg",
+      "raw": [
+        358
+      ],
+      "afterCat18": [
+        358
+      ],
+      "effective": [
+        358
+      ],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [
+        358
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 184,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 178,
+      "name": "Bren Mk3",
+      "category": "lmg",
+      "raw": [
+        358
+      ],
+      "afterCat18": [
+        358
+      ],
+      "effective": [
+        358
+      ],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [
+        358
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 184,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 179,
+      "name": "Vickers Mk1",
+      "category": "mmg",
+      "raw": [],
+      "afterCat18": [],
+      "effective": [],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [
+        272,
+        273,
+        274,
+        275,
+        276,
+        277,
+        288,
+        289,
+        290,
+        295,
+        296,
+        389
+      ],
+      "stExtra": [
+        272,
+        273,
+        274,
+        275,
+        276,
+        277,
+        288,
+        289,
+        290,
+        295,
+        296,
+        389
+      ],
+      "stMissing": [],
+      "causes": {
+        "BUILD_HEURISTIC:AMMO_792": [
+          272,
+          273,
+          274,
+          275,
+          276,
+          277,
+          288,
+          289,
+          290,
+          295,
+          296,
+          389
+        ]
+      },
+      "w21": 185,
+      "matchEffective": false,
+      "matchRaw": false
+    },
+    {
+      "cbeIdx": 180,
+      "name": "Boys Mk1",
+      "category": "at_rifle",
+      "raw": [
+        360
+      ],
+      "afterCat18": [
+        360
+      ],
+      "effective": [
+        360
+      ],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [
+        360
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 181,
+      "name": "PIAT",
+      "category": "rocket_launcher",
+      "raw": [
+        361
+      ],
+      "afterCat18": [],
+      "effective": [],
+      "auxInRaw": [
+        361
+      ],
+      "u27Dropped": [],
+      "stMaster": [
+        229
+      ],
+      "stExtra": [
+        229
+      ],
+      "stMissing": [],
+      "causes": {
+        "BUILD_HEURISTIC:AMMO_3006": [
+          229
+        ]
+      },
+      "w21": 0,
+      "matchEffective": false,
+      "matchRaw": false
+    },
+    {
+      "cbeIdx": 182,
+      "name": "No1 Mk1",
+      "category": "flamethrower",
+      "raw": [],
+      "afterCat18": [],
+      "effective": [],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 183,
+      "name": "Tripod Mk2",
+      "category": "tripod",
+      "raw": [],
+      "afterCat18": [],
+      "effective": [],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 184,
+      "name": "Tripod Mk4",
+      "category": "tripod",
+      "raw": [],
+      "afterCat18": [],
+      "effective": [],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 185,
+      "name": "No8 Mk1",
+      "category": "ammo_box",
+      "raw": [
+        359
+      ],
+      "afterCat18": [
+        359
+      ],
+      "effective": [
+        359
+      ],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [
+        359
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 186,
+      "name": "Binocular",
+      "category": "binoculars",
+      "raw": [],
+      "afterCat18": [],
+      "effective": [],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 187,
+      "name": "Note",
+      "category": "document",
+      "raw": [],
+      "afterCat18": [],
+      "effective": [],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 188,
+      "name": "obr1895g",
+      "category": "pistol",
+      "raw": [
+        366
+      ],
+      "afterCat18": [
+        366
+      ],
+      "effective": [
+        366
+      ],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [
+        366
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 189,
+      "name": "TT33",
+      "category": "pistol",
+      "raw": [
+        367
+      ],
+      "afterCat18": [
+        367
+      ],
+      "effective": [
+        367
+      ],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [
+        367
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 190,
+      "name": "obr1891/30g",
+      "category": "rifle",
+      "raw": [
+        368,
+        377
+      ],
+      "afterCat18": [
+        368
+      ],
+      "effective": [
+        368
+      ],
+      "auxInRaw": [
+        377
+      ],
+      "u27Dropped": [],
+      "stMaster": [
+        368
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": false
+    },
+    {
+      "cbeIdx": 191,
+      "name": "obr1938g",
+      "category": "rifle",
+      "raw": [
+        368,
+        377
+      ],
+      "afterCat18": [
+        368
+      ],
+      "effective": [
+        368
+      ],
+      "auxInRaw": [
+        377
+      ],
+      "u27Dropped": [],
+      "stMaster": [
+        368
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": false
+    },
+    {
+      "cbeIdx": 192,
+      "name": "obr91/30g-PU",
+      "category": "rifle",
+      "raw": [
+        368,
+        377
+      ],
+      "afterCat18": [
+        368
+      ],
+      "effective": [
+        368
+      ],
+      "auxInRaw": [
+        377
+      ],
+      "u27Dropped": [],
+      "stMaster": [
+        368
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": false
+    },
+    {
+      "cbeIdx": 193,
+      "name": "obr1944g",
+      "category": "rifle",
+      "raw": [
+        368
+      ],
+      "afterCat18": [
+        368
+      ],
+      "effective": [
+        368
+      ],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [
+        368
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 194,
+      "name": "SVT40",
+      "category": "rifle",
+      "raw": [
+        369,
+        368,
+        378
+      ],
+      "afterCat18": [
+        369,
+        368,
+        378
+      ],
+      "effective": [
+        369,
+        368,
+        378
+      ],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [
+        368,
+        369,
+        378
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 195,
+      "name": "PPD40",
+      "category": "smg",
+      "raw": [
+        370
+      ],
+      "afterCat18": [
+        370
+      ],
+      "effective": [
+        370
+      ],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [
+        370
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 196,
+      "name": "PPSh41",
+      "category": "smg",
+      "raw": [
+        372,
+        371
+      ],
+      "afterCat18": [
+        372,
+        371
+      ],
+      "effective": [
+        372,
+        371
+      ],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [
+        371,
+        372
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 197,
+      "name": "PPS43",
+      "category": "smg",
+      "raw": [
+        373
+      ],
+      "afterCat18": [
+        373
+      ],
+      "effective": [
+        373
+      ],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [
+        373
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 198,
+      "name": "DP",
+      "category": "lmg",
+      "raw": [
+        374
+      ],
+      "afterCat18": [
+        374
+      ],
+      "effective": [
+        374
+      ],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [
+        374
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 199,
+      "name": "PM1910",
+      "category": "mmg",
+      "raw": [],
+      "afterCat18": [],
+      "effective": [],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [
+        272,
+        273,
+        274,
+        275,
+        276,
+        277,
+        288,
+        289,
+        290,
+        295,
+        296,
+        389
+      ],
+      "stExtra": [
+        272,
+        273,
+        274,
+        275,
+        276,
+        277,
+        288,
+        289,
+        290,
+        295,
+        296,
+        389
+      ],
+      "stMissing": [],
+      "causes": {
+        "BUILD_HEURISTIC:AMMO_792": [
+          272,
+          273,
+          274,
+          275,
+          276,
+          277,
+          288,
+          289,
+          290,
+          295,
+          296,
+          389
+        ]
+      },
+      "w21": 0,
+      "matchEffective": false,
+      "matchRaw": false
+    },
+    {
+      "cbeIdx": 200,
+      "name": "DShK",
+      "category": "mmg",
+      "raw": [],
+      "afterCat18": [],
+      "effective": [],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 201,
+      "name": "pat.1910",
+      "category": "ammo_box",
+      "raw": [
+        375
+      ],
+      "afterCat18": [
+        375
+      ],
+      "effective": [
+        375
+      ],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [
+        375
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 202,
+      "name": "pat.DShK",
+      "category": "ammo_box",
+      "raw": [
+        376
+      ],
+      "afterCat18": [],
+      "effective": [],
+      "auxInRaw": [
+        376
+      ],
+      "u27Dropped": [],
+      "stMaster": [],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": false
+    },
+    {
+      "cbeIdx": 203,
+      "name": "SP M12",
+      "category": "pistol",
+      "raw": [
+        379
+      ],
+      "afterCat18": [
+        379
+      ],
+      "effective": [
+        379
+      ],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [
+        379
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 204,
+      "name": "MP34(o)",
+      "category": "smg",
+      "raw": [
+        380
+      ],
+      "afterCat18": [
+        380
+      ],
+      "effective": [],
+      "auxInRaw": [],
+      "u27Dropped": [
+        380
+      ],
+      "stMaster": [
+        380
+      ],
+      "stExtra": [
+        380
+      ],
+      "stMissing": [],
+      "causes": {
+        "U27_SHAPE_FILTER": [
+          380
+        ]
+      },
+      "w21": 0,
+      "matchEffective": false,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 205,
+      "name": "M30",
+      "category": "lmg",
+      "raw": [
+        381
+      ],
+      "afterCat18": [
+        381
+      ],
+      "effective": [
+        381
+      ],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [
+        381
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 206,
+      "name": "M07/12",
+      "category": "mmg",
+      "raw": [],
+      "afterCat18": [],
+      "effective": [],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 208,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 207,
+      "name": "M07 Laf",
+      "category": "tripod",
+      "raw": [],
+      "afterCat18": [],
+      "effective": [],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 208,
+      "name": "M07 PatrK",
+      "category": "ammo_box",
+      "raw": [
+        382
+      ],
+      "afterCat18": [
+        382
+      ],
+      "effective": [
+        382
+      ],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [
+        382
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 209,
+      "name": "Mle1903",
+      "category": "pistol",
+      "raw": [
+        383
+      ],
+      "afterCat18": [
+        383
+      ],
+      "effective": [
+        383
+      ],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [
+        383
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 210,
+      "name": "Mle10/22",
+      "category": "pistol",
+      "raw": [
+        384
+      ],
+      "afterCat18": [
+        384
+      ],
+      "effective": [],
+      "auxInRaw": [],
+      "u27Dropped": [
+        384
+      ],
+      "stMaster": [
+        384
+      ],
+      "stExtra": [
+        384
+      ],
+      "stMissing": [],
+      "causes": {
+        "U27_SHAPE_FILTER": [
+          384
+        ]
+      },
+      "w21": 0,
+      "matchEffective": false,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 211,
+      "name": "GP35",
+      "category": "pistol",
+      "raw": [
+        385
+      ],
+      "afterCat18": [
+        385
+      ],
+      "effective": [
+        385
+      ],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [
+        385
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 212,
+      "name": "CZ vz24",
+      "category": "pistol",
+      "raw": [
+        386
+      ],
+      "afterCat18": [
+        386
+      ],
+      "effective": [
+        386
+      ],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [
+        386
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 213,
+      "name": "CZ vz27",
+      "category": "pistol",
+      "raw": [
+        387
+      ],
+      "afterCat18": [
+        387
+      ],
+      "effective": [
+        387
+      ],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [
+        387
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 214,
+      "name": "CZ vz38",
+      "category": "pistol",
+      "raw": [
+        388
+      ],
+      "afterCat18": [
+        388
+      ],
+      "effective": [
+        388
+      ],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [
+        388
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 215,
+      "name": "ZK383",
+      "category": "smg",
+      "raw": [
+        389
+      ],
+      "afterCat18": [
+        389
+      ],
+      "effective": [],
+      "auxInRaw": [],
+      "u27Dropped": [
+        389
+      ],
+      "stMaster": [
+        389
+      ],
+      "stExtra": [
+        389
+      ],
+      "stMissing": [],
+      "causes": {
+        "U27_SHAPE_FILTER": [
+          389
+        ]
+      },
+      "w21": 0,
+      "matchEffective": false,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 216,
+      "name": "lk ZB vz26",
+      "category": "lmg",
+      "raw": [
+        390
+      ],
+      "afterCat18": [
+        390
+      ],
+      "effective": [],
+      "auxInRaw": [],
+      "u27Dropped": [
+        390
+      ],
+      "stMaster": [
+        390
+      ],
+      "stExtra": [
+        390
+      ],
+      "stMissing": [],
+      "causes": {
+        "U27_SHAPE_FILTER": [
+          390
+        ]
+      },
+      "w21": 219,
+      "matchEffective": false,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 217,
+      "name": "tk ZB vz37",
+      "category": "mmg",
+      "raw": [],
+      "afterCat18": [],
+      "effective": [],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 220,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 218,
+      "name": "ZB206",
+      "category": "tripod",
+      "raw": [],
+      "afterCat18": [],
+      "effective": [],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 219,
+      "name": "ZB308",
+      "category": "tripod",
+      "raw": [],
+      "afterCat18": [],
+      "effective": [],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 220,
+      "name": "VIS wz35",
+      "category": "pistol",
+      "raw": [
+        391
+      ],
+      "afterCat18": [
+        391
+      ],
+      "effective": [
+        391
+      ],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [
+        391
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 221,
+      "name": "wz35",
+      "category": "at_rifle",
+      "raw": [
+        392
+      ],
+      "afterCat18": [
+        392
+      ],
+      "effective": [],
+      "auxInRaw": [],
+      "u27Dropped": [
+        392
+      ],
+      "stMaster": [
+        392
+      ],
+      "stExtra": [
+        392
+      ],
+      "stMissing": [],
+      "causes": {
+        "U27_SHAPE_FILTER": [
+          392
+        ]
+      },
+      "w21": 0,
+      "matchEffective": false,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 222,
+      "name": "Astra400",
+      "category": "pistol",
+      "raw": [
+        393
+      ],
+      "afterCat18": [
+        393
+      ],
+      "effective": [],
+      "auxInRaw": [],
+      "u27Dropped": [
+        393
+      ],
+      "stMaster": [
+        393
+      ],
+      "stExtra": [
+        393
+      ],
+      "stMissing": [],
+      "causes": {
+        "U27_SHAPE_FILTER": [
+          393
+        ]
+      },
+      "w21": 0,
+      "matchEffective": false,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 223,
+      "name": "Astra903",
+      "category": "pistol",
+      "raw": [
+        258,
+        257,
+        256
+      ],
+      "afterCat18": [
+        258,
+        257,
+        256
+      ],
+      "effective": [
+        258,
+        257,
+        256
+      ],
+      "auxInRaw": [],
+      "u27Dropped": [],
+      "stMaster": [
+        256,
+        257,
+        258
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": true
+    },
+    {
+      "cbeIdx": 224,
+      "name": "S-18/100",
+      "category": "at_rifle",
+      "raw": [
+        394,
+        395
+      ],
+      "afterCat18": [
+        394
+      ],
+      "effective": [
+        394
+      ],
+      "auxInRaw": [
+        395
+      ],
+      "u27Dropped": [],
+      "stMaster": [
+        394
+      ],
+      "stExtra": [],
+      "stMissing": [],
+      "causes": {},
+      "w21": 0,
+      "matchEffective": true,
+      "matchRaw": false
+    }
+  ],
+  "magTypePairs": [
+    {
+      "weapon": "MG34",
+      "wi": 91,
+      "ammo": "Pt34-75",
+      "ai": 294,
+      "w21": 113,
+      "a21": 92,
+      "delta": -21
+    },
+    {
+      "weapon": "MG34",
+      "wi": 91,
+      "ammo": "7.92-50",
+      "ai": 295,
+      "w21": 113,
+      "a21": 116,
+      "delta": 3
+    },
+    {
+      "weapon": "MG42",
+      "wi": 94,
+      "ammo": "7.92-5",
+      "ai": 272,
+      "w21": 114,
+      "a21": 58,
+      "delta": -56
+    },
+    {
+      "weapon": "MG42",
+      "wi": 94,
+      "ammo": "7.92-10G",
+      "ai": 273,
+      "w21": 114,
+      "a21": 68,
+      "delta": -46
+    },
+    {
+      "weapon": "MG42",
+      "wi": 94,
+      "ammo": "7.92-101",
+      "ai": 274,
+      "w21": 114,
+      "a21": 72,
+      "delta": -42
+    },
+    {
+      "weapon": "MG42",
+      "wi": 94,
+      "ammo": "7.92-201",
+      "ai": 275,
+      "w21": 114,
+      "a21": 72,
+      "delta": -42
+    },
+    {
+      "weapon": "MG42",
+      "wi": 94,
+      "ammo": "7.92-202",
+      "ai": 276,
+      "w21": 114,
+      "a21": 73,
+      "delta": -41
+    },
+    {
+      "weapon": "MG42",
+      "wi": 94,
+      "ammo": "7.92k-30",
+      "ai": 277,
+      "w21": 114,
+      "a21": 75,
+      "delta": -39
+    },
+    {
+      "weapon": "MG42",
+      "wi": 94,
+      "ammo": "7.92f100",
+      "ai": 288,
+      "w21": 114,
+      "a21": 117,
+      "delta": 3
+    },
+    {
+      "weapon": "MG42",
+      "wi": 94,
+      "ammo": "7.92f250",
+      "ai": 289,
+      "w21": 114,
+      "a21": 117,
+      "delta": 3
+    },
+    {
+      "weapon": "MG42",
+      "wi": 94,
+      "ammo": "7.92-25",
+      "ai": 290,
+      "w21": 114,
+      "a21": 90,
+      "delta": -24
+    },
+    {
+      "weapon": "MG42",
+      "wi": 94,
+      "ammo": "7.92-50",
+      "ai": 295,
+      "w21": 114,
+      "a21": 116,
+      "delta": 2
+    },
+    {
+      "weapon": "MG42",
+      "wi": 94,
+      "ammo": "7.92m250",
+      "ai": 296,
+      "w21": 114,
+      "a21": 116,
+      "delta": 2
+    },
+    {
+      "weapon": "MG42",
+      "wi": 94,
+      "ammo": "7.92-20Z",
+      "ai": 389,
+      "w21": 114,
+      "a21": 217,
+      "delta": 103
+    },
+    {
+      "weapon": "FR mod14",
+      "wi": 136,
+      "ammo": "8Brd-20",
+      "ai": 326,
+      "w21": 140,
+      "a21": 139,
+      "delta": -1
+    },
+    {
+      "weapon": "Breda mod37",
+      "wi": 138,
+      "ammo": "8Brd-50",
+      "ai": 327,
+      "w21": 141,
+      "a21": 142,
+      "delta": 1
+    },
+    {
+      "weapon": "Mle1914",
+      "wi": 156,
+      "ammo": "8M86-30",
+      "ai": 344,
+      "w21": 158,
+      "a21": 157,
+      "delta": -1
+    },
+    {
+      "weapon": "Bren Mk1",
+      "wi": 176,
+      "ammo": "303Br250",
+      "ai": 358,
+      "w21": 184,
+      "a21": 186,
+      "delta": 2
+    },
+    {
+      "weapon": "Bren Mk2",
+      "wi": 177,
+      "ammo": "303Br250",
+      "ai": 358,
+      "w21": 184,
+      "a21": 186,
+      "delta": 2
+    },
+    {
+      "weapon": "Bren Mk3",
+      "wi": 178,
+      "ammo": "303Br250",
+      "ai": 358,
+      "w21": 184,
+      "a21": 186,
+      "delta": 2
+    },
+    {
+      "weapon": "lk ZB vz26",
+      "wi": 216,
+      "ammo": "9Pb-8R",
+      "ai": 390,
+      "w21": 219,
+      "a21": 221,
+      "delta": 2
+    }
+  ],
+  "kar98_272_gap": [
+    {
+      "wi": 55,
+      "name": "Gew98",
+      "has272": false,
+      "rawAmmo": [
+        "7.92-10G",
+        "Messer"
+      ],
+      "effective273": true
+    },
+    {
+      "wi": 56,
+      "name": "Kar98b",
+      "has272": false,
+      "rawAmmo": [
+        "7.92-10G",
+        "Messer"
+      ],
+      "effective273": true
+    },
+    {
+      "wi": 57,
+      "name": "Kar98k",
+      "has272": false,
+      "rawAmmo": [
+        "7.92-10G",
+        "GSprgr",
+        "StiGr24",
+        "Messer"
+      ],
+      "effective273": true
+    },
+    {
+      "wi": 58,
+      "name": "Kar98k svw",
+      "has272": false,
+      "rawAmmo": [
+        "7.92-10G",
+        "GSprgr",
+        "StiGr24"
+      ],
+      "effective273": true
+    },
+    {
+      "wi": 59,
+      "name": "Gew29/40",
+      "has272": false,
+      "rawAmmo": [
+        "7.92-10G",
+        "Messer"
+      ],
+      "effective273": false
+    },
+    {
+      "wi": 60,
+      "name": "Gew33/40",
+      "has272": false,
+      "rawAmmo": [
+        "7.92-10G",
+        "Messer"
+      ],
+      "effective273": true
+    },
+    {
+      "wi": 61,
+      "name": "Gew98/40",
+      "has272": false,
+      "rawAmmo": [
+        "7.92-10G",
+        "Messer"
+      ],
+      "effective273": true
+    },
+    {
+      "wi": 64,
+      "name": "VK-98",
+      "has272": false,
+      "rawAmmo": [
+        "7.92-10G"
+      ],
+      "effective273": true
+    },
+    {
+      "wi": 68,
+      "name": "Kar43",
+      "has272": false,
+      "rawAmmo": [
+        "7.92-10G",
+        "7.92-101"
+      ],
+      "effective273": true
+    },
+    {
+      "wi": 69,
+      "name": "Zf Kar98k",
+      "has272": false,
+      "rawAmmo": [
+        "7.92-10G",
+        "Messer"
+      ],
+      "effective273": true
+    }
+  ]
+}

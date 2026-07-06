@@ -1,0 +1,8240 @@
+{
+  "summary": {
+    "generated": "2026-05-31",
+    "weapons": 189,
+    "w21NonZero": 18,
+    "stMatchAfterU27": 148,
+    "stMatchAfterMagPm2": 146,
+    "hypothesisScores": {
+      "exact": 140,
+      "delta_pm2": 146,
+      "delta_pm3": 146,
+      "a21_ge_w21": 144,
+      "a21_nonzero": 148
+    },
+    "masterDeltaDistribution": {
+      "-22": 1,
+      "-21": 1,
+      "-1": 2,
+      "1": 1,
+      "2": 4,
+      "3": 1
+    },
+    "allDeltaDistribution": {
+      "-22": 1,
+      "-21": 1,
+      "-1": 2,
+      "1": 1,
+      "2": 4,
+      "3": 1
+    },
+    "status": "PARTIAL",
+    "conclusion": "w21!=0 は 18 武器のみ。delta=a21-w21 は武器ごとにばらつき（-56〜+3）。単一ルール未確定。w21=0 武器（Kar98/M1911/HSc 等）には mag_type フィルタは適用されない。272/7.92-5 問題は ammo_indices 未収録であり mag_type では説明不可。"
+  },
+  "w21NonZero": [
+    {
+      "cbeIdx": 20,
+      "name": "M1919A6 LMG",
+      "w21": 32,
+      "stMaster": [
+        230,
+        238,
+        239,
+        240
+      ],
+      "stMatchU27": false,
+      "stMatchMagPm2": false,
+      "stExtra": [
+        230,
+        238,
+        239,
+        240
+      ],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [
+        230,
+        238,
+        239,
+        240
+      ],
+      "pairs": [],
+      "raw": [],
+      "afterCat18": [],
+      "afterU27": [],
+      "afterMagType_pm2": [],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 22,
+      "name": "M1917A1 MMG",
+      "w21": 33,
+      "stMaster": [
+        230,
+        238,
+        239,
+        240
+      ],
+      "stMatchU27": false,
+      "stMatchMagPm2": false,
+      "stExtra": [
+        230,
+        238,
+        239,
+        240
+      ],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [
+        230,
+        238,
+        239,
+        240
+      ],
+      "pairs": [],
+      "raw": [],
+      "afterCat18": [],
+      "afterU27": [],
+      "afterMagType_pm2": [],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 23,
+      "name": "M1919A4 MMG",
+      "w21": 32,
+      "stMaster": [
+        230,
+        238,
+        239,
+        240
+      ],
+      "stMatchU27": false,
+      "stMatchMagPm2": false,
+      "stExtra": [
+        230,
+        238,
+        239,
+        240
+      ],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [
+        230,
+        238,
+        239,
+        240
+      ],
+      "pairs": [],
+      "raw": [],
+      "afterCat18": [],
+      "afterU27": [],
+      "afterMagType_pm2": [],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 24,
+      "name": "M2 HB HMG",
+      "w21": 34,
+      "stMaster": [
+        241
+      ],
+      "stMatchU27": false,
+      "stMatchMagPm2": false,
+      "stExtra": [
+        241
+      ],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [
+        241
+      ],
+      "pairs": [],
+      "raw": [],
+      "afterCat18": [],
+      "afterU27": [],
+      "afterMagType_pm2": [],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 91,
+      "name": "MG34",
+      "w21": 113,
+      "stMaster": [
+        294,
+        295
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": false,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [
+        294,
+        295
+      ],
+      "pairs": [
+        {
+          "ai": 294,
+          "name": "Pt34-75",
+          "a21": 92,
+          "delta": -21,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        },
+        {
+          "ai": 295,
+          "name": "7.92-50",
+          "a21": 116,
+          "delta": 3,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        294,
+        295
+      ],
+      "afterCat18": [
+        294,
+        295
+      ],
+      "afterU27": [
+        294,
+        295
+      ],
+      "afterMagType_pm2": [],
+      "magTypeDropped_pm2": [
+        294,
+        295
+      ]
+    },
+    {
+      "cbeIdx": 94,
+      "name": "MG42",
+      "w21": 114,
+      "stMaster": [
+        294
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": false,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [
+        294
+      ],
+      "pairs": [
+        {
+          "ai": 294,
+          "name": "Pt34-75",
+          "a21": 92,
+          "delta": -22,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        294
+      ],
+      "afterCat18": [
+        294
+      ],
+      "afterU27": [
+        294
+      ],
+      "afterMagType_pm2": [],
+      "magTypeDropped_pm2": [
+        294
+      ]
+    },
+    {
+      "cbeIdx": 95,
+      "name": "MG08",
+      "w21": 115,
+      "stMaster": [
+        272,
+        273,
+        274,
+        275,
+        276,
+        277,
+        288,
+        289,
+        290,
+        295,
+        296,
+        389
+      ],
+      "stMatchU27": false,
+      "stMatchMagPm2": false,
+      "stExtra": [
+        272,
+        273,
+        274,
+        275,
+        276,
+        277,
+        288,
+        289,
+        290,
+        295,
+        296,
+        389
+      ],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [
+        272,
+        273,
+        274,
+        275,
+        276,
+        277,
+        288,
+        289,
+        290,
+        295,
+        296,
+        389
+      ],
+      "pairs": [],
+      "raw": [],
+      "afterCat18": [],
+      "afterU27": [],
+      "afterMagType_pm2": [],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 136,
+      "name": "FR mod14",
+      "w21": 140,
+      "stMaster": [
+        326
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 326,
+          "name": "8Brd-20",
+          "a21": 139,
+          "delta": -1,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        326
+      ],
+      "afterCat18": [
+        326
+      ],
+      "afterU27": [
+        326
+      ],
+      "afterMagType_pm2": [
+        326
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 137,
+      "name": "FR mod14/35",
+      "w21": 140,
+      "stMaster": [],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [],
+      "raw": [],
+      "afterCat18": [],
+      "afterU27": [],
+      "afterMagType_pm2": [],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 138,
+      "name": "Breda mod37",
+      "w21": 141,
+      "stMaster": [
+        327
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 327,
+          "name": "8Brd-50",
+          "a21": 142,
+          "delta": 1,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        327
+      ],
+      "afterCat18": [
+        327
+      ],
+      "afterU27": [
+        327
+      ],
+      "afterMagType_pm2": [
+        327
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 156,
+      "name": "Mle1914",
+      "w21": 158,
+      "stMaster": [
+        344
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 344,
+          "name": "8M86-30",
+          "a21": 157,
+          "delta": -1,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        344,
+        345
+      ],
+      "afterCat18": [
+        344
+      ],
+      "afterU27": [
+        344
+      ],
+      "afterMagType_pm2": [
+        344
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 176,
+      "name": "Bren Mk1",
+      "w21": 184,
+      "stMaster": [
+        358
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 358,
+          "name": "303Br250",
+          "a21": 186,
+          "delta": 2,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        358
+      ],
+      "afterCat18": [
+        358
+      ],
+      "afterU27": [
+        358
+      ],
+      "afterMagType_pm2": [
+        358
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 177,
+      "name": "Bren Mk2",
+      "w21": 184,
+      "stMaster": [
+        358
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 358,
+          "name": "303Br250",
+          "a21": 186,
+          "delta": 2,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        358
+      ],
+      "afterCat18": [
+        358
+      ],
+      "afterU27": [
+        358
+      ],
+      "afterMagType_pm2": [
+        358
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 178,
+      "name": "Bren Mk3",
+      "w21": 184,
+      "stMaster": [
+        358
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 358,
+          "name": "303Br250",
+          "a21": 186,
+          "delta": 2,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        358
+      ],
+      "afterCat18": [
+        358
+      ],
+      "afterU27": [
+        358
+      ],
+      "afterMagType_pm2": [
+        358
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 179,
+      "name": "Vickers Mk1",
+      "w21": 185,
+      "stMaster": [
+        272,
+        273,
+        274,
+        275,
+        276,
+        277,
+        288,
+        289,
+        290,
+        295,
+        296,
+        389
+      ],
+      "stMatchU27": false,
+      "stMatchMagPm2": false,
+      "stExtra": [
+        272,
+        273,
+        274,
+        275,
+        276,
+        277,
+        288,
+        289,
+        290,
+        295,
+        296,
+        389
+      ],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [
+        272,
+        273,
+        274,
+        275,
+        276,
+        277,
+        288,
+        289,
+        290,
+        295,
+        296,
+        389
+      ],
+      "pairs": [],
+      "raw": [],
+      "afterCat18": [],
+      "afterU27": [],
+      "afterMagType_pm2": [],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 206,
+      "name": "M07/12",
+      "w21": 208,
+      "stMaster": [],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [],
+      "raw": [],
+      "afterCat18": [],
+      "afterU27": [],
+      "afterMagType_pm2": [],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 216,
+      "name": "lk ZB vz26",
+      "w21": 219,
+      "stMaster": [
+        390
+      ],
+      "stMatchU27": false,
+      "stMatchMagPm2": false,
+      "stExtra": [
+        390
+      ],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [
+        390
+      ],
+      "pairs": [
+        {
+          "ai": 390,
+          "name": "9Pb-8R",
+          "a21": 221,
+          "delta": 2,
+          "passCat18": true,
+          "passU27": false,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        390
+      ],
+      "afterCat18": [
+        390
+      ],
+      "afterU27": [],
+      "afterMagType_pm2": [],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 217,
+      "name": "tk ZB vz37",
+      "w21": 220,
+      "stMaster": [],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [],
+      "raw": [],
+      "afterCat18": [],
+      "afterU27": [],
+      "afterMagType_pm2": [],
+      "magTypeDropped_pm2": []
+    }
+  ],
+  "weapons": [
+    {
+      "cbeIdx": 0,
+      "name": "M1911A1",
+      "w21": 0,
+      "stMaster": [
+        225
+      ],
+      "stMatchU27": false,
+      "stMatchMagPm2": false,
+      "stExtra": [
+        225
+      ],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [
+        225
+      ],
+      "pairs": [
+        {
+          "ai": 226,
+          "name": "45ACP-3",
+          "a21": 2,
+          "delta": null,
+          "passCat18": true,
+          "passU27": false,
+          "inMaster": false
+        }
+      ],
+      "raw": [
+        226
+      ],
+      "afterCat18": [
+        226
+      ],
+      "afterU27": [],
+      "afterMagType_pm2": [],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 1,
+      "name": "M1917 S&W",
+      "w21": 0,
+      "stMaster": [
+        226
+      ],
+      "stMatchU27": false,
+      "stMatchMagPm2": false,
+      "stExtra": [
+        226
+      ],
+      "stMissing": [
+        227
+      ],
+      "stMissingAfterMag": [
+        227
+      ],
+      "stExtraAfterMag": [
+        226
+      ],
+      "pairs": [
+        {
+          "ai": 227,
+          "name": "45ACP-1",
+          "a21": 4,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": false
+        }
+      ],
+      "raw": [
+        227
+      ],
+      "afterCat18": [
+        227
+      ],
+      "afterU27": [
+        227
+      ],
+      "afterMagType_pm2": [
+        227
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 2,
+      "name": "M1917 Colt",
+      "w21": 0,
+      "stMaster": [
+        226
+      ],
+      "stMatchU27": false,
+      "stMatchMagPm2": false,
+      "stExtra": [
+        226
+      ],
+      "stMissing": [
+        227
+      ],
+      "stMissingAfterMag": [
+        227
+      ],
+      "stExtraAfterMag": [
+        226
+      ],
+      "pairs": [
+        {
+          "ai": 227,
+          "name": "45ACP-1",
+          "a21": 4,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": false
+        }
+      ],
+      "raw": [
+        227
+      ],
+      "afterCat18": [
+        227
+      ],
+      "afterU27": [
+        227
+      ],
+      "afterMagType_pm2": [
+        227
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 3,
+      "name": "OSS",
+      "w21": 0,
+      "stMaster": [
+        228
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 228,
+          "name": "AN-M8-1",
+          "a21": 5,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        228
+      ],
+      "afterCat18": [
+        228
+      ],
+      "afterU27": [
+        228
+      ],
+      "afterMagType_pm2": [
+        228
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 4,
+      "name": "AN-M8",
+      "w21": 0,
+      "stMaster": [
+        228
+      ],
+      "stMatchU27": false,
+      "stMatchMagPm2": false,
+      "stExtra": [
+        228
+      ],
+      "stMissing": [
+        229
+      ],
+      "stMissingAfterMag": [
+        229
+      ],
+      "stExtraAfterMag": [
+        228
+      ],
+      "pairs": [
+        {
+          "ai": 229,
+          "name": "3006-5",
+          "a21": 6,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": false
+        }
+      ],
+      "raw": [
+        229
+      ],
+      "afterCat18": [
+        229
+      ],
+      "afterU27": [
+        229
+      ],
+      "afterMagType_pm2": [
+        229
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 5,
+      "name": "M1903A1",
+      "w21": 0,
+      "stMaster": [
+        230
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 230,
+          "name": "3006-20B",
+          "a21": 8,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        230,
+        245,
+        246,
+        251
+      ],
+      "afterCat18": [
+        230
+      ],
+      "afterU27": [
+        230
+      ],
+      "afterMagType_pm2": [
+        230
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 6,
+      "name": "M1903A4",
+      "w21": 0,
+      "stMaster": [
+        229,
+        230,
+        231
+      ],
+      "stMatchU27": false,
+      "stMatchMagPm2": false,
+      "stExtra": [
+        229,
+        231
+      ],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [
+        229,
+        231
+      ],
+      "pairs": [
+        {
+          "ai": 230,
+          "name": "3006-20B",
+          "a21": 8,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        230,
+        251
+      ],
+      "afterCat18": [
+        230
+      ],
+      "afterU27": [
+        230
+      ],
+      "afterMagType_pm2": [
+        230
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 7,
+      "name": "M1918A2 BAR",
+      "w21": 0,
+      "stMaster": [
+        230
+      ],
+      "stMatchU27": false,
+      "stMatchMagPm2": false,
+      "stExtra": [
+        230
+      ],
+      "stMissing": [
+        231
+      ],
+      "stMissingAfterMag": [
+        231
+      ],
+      "stExtraAfterMag": [
+        230
+      ],
+      "pairs": [
+        {
+          "ai": 231,
+          "name": "3006-8",
+          "a21": 9,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": false
+        }
+      ],
+      "raw": [
+        231
+      ],
+      "afterCat18": [
+        231
+      ],
+      "afterU27": [
+        231
+      ],
+      "afterMagType_pm2": [
+        231
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 8,
+      "name": "M1 Rifle",
+      "w21": 0,
+      "stMaster": [
+        229,
+        231
+      ],
+      "stMatchU27": false,
+      "stMatchMagPm2": false,
+      "stExtra": [
+        229,
+        231
+      ],
+      "stMissing": [
+        232
+      ],
+      "stMissingAfterMag": [
+        232
+      ],
+      "stExtraAfterMag": [
+        229,
+        231
+      ],
+      "pairs": [
+        {
+          "ai": 232,
+          "name": "30Cbn-15",
+          "a21": 13,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": false
+        }
+      ],
+      "raw": [
+        232,
+        245,
+        246,
+        251
+      ],
+      "afterCat18": [
+        232
+      ],
+      "afterU27": [
+        232
+      ],
+      "afterMagType_pm2": [
+        232
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 9,
+      "name": "M1C Rifle",
+      "w21": 0,
+      "stMaster": [
+        232
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 232,
+          "name": "30Cbn-15",
+          "a21": 13,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        232
+      ],
+      "afterCat18": [
+        232
+      ],
+      "afterU27": [
+        232
+      ],
+      "afterMagType_pm2": [
+        232
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 10,
+      "name": "M1D Rifle",
+      "w21": 0,
+      "stMaster": [
+        232
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 232,
+          "name": "30Cbn-15",
+          "a21": 13,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        232
+      ],
+      "afterCat18": [
+        232
+      ],
+      "afterU27": [
+        232
+      ],
+      "afterMagType_pm2": [
+        232
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 11,
+      "name": "M1941 Rifle",
+      "w21": 0,
+      "stMaster": [
+        230
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 230,
+          "name": "3006-20B",
+          "a21": 8,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        230,
+        252
+      ],
+      "afterCat18": [
+        230
+      ],
+      "afterU27": [
+        230
+      ],
+      "afterMagType_pm2": [
+        230
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 12,
+      "name": "M1 Cbn",
+      "w21": 0,
+      "stMaster": [
+        233
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 233,
+          "name": "30Cbn-30",
+          "a21": 13,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        },
+        {
+          "ai": 234,
+          "name": "45ACP20T",
+          "a21": 16,
+          "delta": null,
+          "passCat18": true,
+          "passU27": false,
+          "inMaster": false
+        }
+      ],
+      "raw": [
+        233,
+        234,
+        245,
+        253
+      ],
+      "afterCat18": [
+        233,
+        234
+      ],
+      "afterU27": [
+        233
+      ],
+      "afterMagType_pm2": [
+        233
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 13,
+      "name": "M1A1 Cbn",
+      "w21": 0,
+      "stMaster": [
+        233
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 233,
+          "name": "30Cbn-30",
+          "a21": 13,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        },
+        {
+          "ai": 234,
+          "name": "45ACP20T",
+          "a21": 16,
+          "delta": null,
+          "passCat18": true,
+          "passU27": false,
+          "inMaster": false
+        }
+      ],
+      "raw": [
+        233,
+        234,
+        245,
+        253
+      ],
+      "afterCat18": [
+        233,
+        234
+      ],
+      "afterU27": [
+        233
+      ],
+      "afterMagType_pm2": [
+        233
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 14,
+      "name": "M2 Cbn",
+      "w21": 0,
+      "stMaster": [
+        233
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 234,
+          "name": "45ACP20T",
+          "a21": 16,
+          "delta": null,
+          "passCat18": true,
+          "passU27": false,
+          "inMaster": false
+        },
+        {
+          "ai": 233,
+          "name": "30Cbn-30",
+          "a21": 13,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        234,
+        233,
+        245,
+        253
+      ],
+      "afterCat18": [
+        234,
+        233
+      ],
+      "afterU27": [
+        233
+      ],
+      "afterMagType_pm2": [
+        233
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 15,
+      "name": "M1928A1 SMG",
+      "w21": 0,
+      "stMaster": [
+        235,
+        236,
+        237
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 235,
+          "name": "45ACP30T",
+          "a21": 16,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        },
+        {
+          "ai": 236,
+          "name": "45ACP50T",
+          "a21": 16,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        },
+        {
+          "ai": 237,
+          "name": "45ACP30G",
+          "a21": 19,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        235,
+        236,
+        237
+      ],
+      "afterCat18": [
+        235,
+        236,
+        237
+      ],
+      "afterU27": [
+        235,
+        236,
+        237
+      ],
+      "afterMagType_pm2": [
+        235,
+        236,
+        237
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 16,
+      "name": "M1 SMG",
+      "w21": 0,
+      "stMaster": [
+        235
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 235,
+          "name": "45ACP30T",
+          "a21": 16,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        },
+        {
+          "ai": 236,
+          "name": "45ACP50T",
+          "a21": 16,
+          "delta": null,
+          "passCat18": true,
+          "passU27": false,
+          "inMaster": false
+        }
+      ],
+      "raw": [
+        235,
+        236
+      ],
+      "afterCat18": [
+        235,
+        236
+      ],
+      "afterU27": [
+        235
+      ],
+      "afterMagType_pm2": [
+        235
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 17,
+      "name": "M1A1 SMG",
+      "w21": 0,
+      "stMaster": [
+        235,
+        237
+      ],
+      "stMatchU27": false,
+      "stMatchMagPm2": false,
+      "stExtra": [
+        237
+      ],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [
+        237
+      ],
+      "pairs": [
+        {
+          "ai": 235,
+          "name": "45ACP30T",
+          "a21": 16,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        },
+        {
+          "ai": 236,
+          "name": "45ACP50T",
+          "a21": 16,
+          "delta": null,
+          "passCat18": true,
+          "passU27": false,
+          "inMaster": false
+        }
+      ],
+      "raw": [
+        235,
+        236
+      ],
+      "afterCat18": [
+        235,
+        236
+      ],
+      "afterU27": [
+        235
+      ],
+      "afterMagType_pm2": [
+        235
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 18,
+      "name": "M3 SMG",
+      "w21": 0,
+      "stMaster": [
+        238
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 238,
+          "name": "3006-20J",
+          "a21": 22,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        238
+      ],
+      "afterCat18": [
+        238
+      ],
+      "afterU27": [
+        238
+      ],
+      "afterMagType_pm2": [
+        238
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 19,
+      "name": "M3A1 SMG",
+      "w21": 0,
+      "stMaster": [
+        238
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 238,
+          "name": "3006-20J",
+          "a21": 22,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        238
+      ],
+      "afterCat18": [
+        238
+      ],
+      "afterU27": [
+        238
+      ],
+      "afterMagType_pm2": [
+        238
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 20,
+      "name": "M1919A6 LMG",
+      "w21": 32,
+      "stMaster": [
+        230,
+        238,
+        239,
+        240
+      ],
+      "stMatchU27": false,
+      "stMatchMagPm2": false,
+      "stExtra": [
+        230,
+        238,
+        239,
+        240
+      ],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [
+        230,
+        238,
+        239,
+        240
+      ],
+      "pairs": [],
+      "raw": [],
+      "afterCat18": [],
+      "afterU27": [],
+      "afterMagType_pm2": [],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 21,
+      "name": "M1941   LMG",
+      "w21": 0,
+      "stMaster": [
+        239
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 239,
+          "name": "3006-200",
+          "a21": 35,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        239
+      ],
+      "afterCat18": [
+        239
+      ],
+      "afterU27": [
+        239
+      ],
+      "afterMagType_pm2": [
+        239
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 22,
+      "name": "M1917A1 MMG",
+      "w21": 33,
+      "stMaster": [
+        230,
+        238,
+        239,
+        240
+      ],
+      "stMatchU27": false,
+      "stMatchMagPm2": false,
+      "stExtra": [
+        230,
+        238,
+        239,
+        240
+      ],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [
+        230,
+        238,
+        239,
+        240
+      ],
+      "pairs": [],
+      "raw": [],
+      "afterCat18": [],
+      "afterU27": [],
+      "afterMagType_pm2": [],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 23,
+      "name": "M1919A4 MMG",
+      "w21": 32,
+      "stMaster": [
+        230,
+        238,
+        239,
+        240
+      ],
+      "stMatchU27": false,
+      "stMatchMagPm2": false,
+      "stExtra": [
+        230,
+        238,
+        239,
+        240
+      ],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [
+        230,
+        238,
+        239,
+        240
+      ],
+      "pairs": [],
+      "raw": [],
+      "afterCat18": [],
+      "afterU27": [],
+      "afterMagType_pm2": [],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 24,
+      "name": "M2 HB HMG",
+      "w21": 34,
+      "stMaster": [
+        241
+      ],
+      "stMatchU27": false,
+      "stMatchMagPm2": false,
+      "stExtra": [
+        241
+      ],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [
+        241
+      ],
+      "pairs": [],
+      "raw": [],
+      "afterCat18": [],
+      "afterU27": [],
+      "afterMagType_pm2": [],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 25,
+      "name": "M1 RL",
+      "w21": 0,
+      "stMaster": [
+        243
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 243,
+          "name": "M6A5 HR",
+          "a21": 26,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        243
+      ],
+      "afterCat18": [
+        243
+      ],
+      "afterU27": [
+        243
+      ],
+      "afterMagType_pm2": [
+        243
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 26,
+      "name": "M1A1 RL",
+      "w21": 0,
+      "stMaster": [
+        243
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 243,
+          "name": "M6A5 HR",
+          "a21": 26,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        243
+      ],
+      "afterCat18": [
+        243
+      ],
+      "afterU27": [
+        243
+      ],
+      "afterMagType_pm2": [
+        243
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 27,
+      "name": "M9 RL",
+      "w21": 0,
+      "stMaster": [
+        243
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 243,
+          "name": "M6A5 HR",
+          "a21": 26,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        244,
+        243
+      ],
+      "afterCat18": [
+        243
+      ],
+      "afterU27": [
+        243
+      ],
+      "afterMagType_pm2": [
+        243
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 28,
+      "name": "E1R1 Fl",
+      "w21": 0,
+      "stMaster": [
+        229
+      ],
+      "stMatchU27": false,
+      "stMatchMagPm2": false,
+      "stExtra": [
+        229
+      ],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [
+        229
+      ],
+      "pairs": [],
+      "raw": [],
+      "afterCat18": [],
+      "afterU27": [],
+      "afterMagType_pm2": [],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 29,
+      "name": "M1A1 Fl",
+      "w21": 0,
+      "stMaster": [
+        229
+      ],
+      "stMatchU27": false,
+      "stMatchMagPm2": false,
+      "stExtra": [
+        229
+      ],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [
+        229
+      ],
+      "pairs": [],
+      "raw": [],
+      "afterCat18": [],
+      "afterU27": [],
+      "afterMagType_pm2": [],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 30,
+      "name": "M2A1-7 Fl",
+      "w21": 0,
+      "stMaster": [
+        229
+      ],
+      "stMatchU27": false,
+      "stMatchMagPm2": false,
+      "stExtra": [
+        229
+      ],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [
+        229
+      ],
+      "pairs": [],
+      "raw": [],
+      "afterCat18": [],
+      "afterU27": [],
+      "afterMagType_pm2": [],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 41,
+      "name": "C/96",
+      "w21": 0,
+      "stMaster": [
+        256
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 256,
+          "name": "7.63-10b",
+          "a21": 43,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        256
+      ],
+      "afterCat18": [
+        256
+      ],
+      "afterU27": [
+        256
+      ],
+      "afterMagType_pm2": [
+        256
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 42,
+      "name": "C/96M712",
+      "w21": 0,
+      "stMaster": [
+        258,
+        257,
+        256
+      ],
+      "stMatchU27": false,
+      "stMatchMagPm2": false,
+      "stExtra": [
+        256,
+        257,
+        258
+      ],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [
+        256,
+        257,
+        258
+      ],
+      "pairs": [
+        {
+          "ai": 258,
+          "name": "9Pb-8L",
+          "a21": 44,
+          "delta": null,
+          "passCat18": true,
+          "passU27": false,
+          "inMaster": true
+        },
+        {
+          "ai": 257,
+          "name": "7.63-20b",
+          "a21": 43,
+          "delta": null,
+          "passCat18": true,
+          "passU27": false,
+          "inMaster": true
+        },
+        {
+          "ai": 256,
+          "name": "7.63-10b",
+          "a21": 43,
+          "delta": null,
+          "passCat18": true,
+          "passU27": false,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        258,
+        257,
+        256
+      ],
+      "afterCat18": [
+        258,
+        257,
+        256
+      ],
+      "afterU27": [],
+      "afterMagType_pm2": [],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 43,
+      "name": "P08",
+      "w21": 0,
+      "stMaster": [
+        259
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 259,
+          "name": "32ACP-8M",
+          "a21": 45,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        259
+      ],
+      "afterCat18": [
+        259
+      ],
+      "afterU27": [
+        259
+      ],
+      "afterMagType_pm2": [
+        259
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 44,
+      "name": "M1934",
+      "w21": 0,
+      "stMaster": [
+        260
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 260,
+          "name": "32ACP-7B",
+          "a21": 46,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        260
+      ],
+      "afterCat18": [
+        260
+      ],
+      "afterU27": [
+        260
+      ],
+      "afterMagType_pm2": [
+        260
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 45,
+      "name": "Beholla",
+      "w21": 0,
+      "stMaster": [
+        261
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 261,
+          "name": "32ACP-8S",
+          "a21": 47,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        261
+      ],
+      "afterCat18": [
+        261
+      ],
+      "afterU27": [
+        261
+      ],
+      "afterMagType_pm2": [
+        261
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 46,
+      "name": "M38H",
+      "w21": 0,
+      "stMaster": [
+        262
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 262,
+          "name": "32ACP-8W",
+          "a21": 48,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        262
+      ],
+      "afterCat18": [
+        262
+      ],
+      "afterU27": [
+        262
+      ],
+      "afterMagType_pm2": [
+        262
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 47,
+      "name": "PP",
+      "w21": 0,
+      "stMaster": [
+        263
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 263,
+          "name": "32ACP-7W",
+          "a21": 49,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        263
+      ],
+      "afterCat18": [
+        263
+      ],
+      "afterU27": [
+        263
+      ],
+      "afterMagType_pm2": [
+        263
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 48,
+      "name": "PPK",
+      "w21": 0,
+      "stMaster": [
+        264
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 264,
+          "name": "32ACP-8H",
+          "a21": 50,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        264
+      ],
+      "afterCat18": [
+        264
+      ],
+      "afterU27": [
+        264
+      ],
+      "afterMagType_pm2": [
+        264
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 49,
+      "name": "HSc",
+      "w21": 0,
+      "stMaster": [
+        265
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 265,
+          "name": "9Pb-8W",
+          "a21": 51,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        265
+      ],
+      "afterCat18": [
+        265
+      ],
+      "afterU27": [
+        265
+      ],
+      "afterMagType_pm2": [
+        265
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 50,
+      "name": "P38",
+      "w21": 0,
+      "stMaster": [
+        266
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 266,
+          "name": "FLeut41",
+          "a21": 52,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        266
+      ],
+      "afterCat18": [
+        266
+      ],
+      "afterU27": [
+        266
+      ],
+      "afterMagType_pm2": [
+        266
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 51,
+      "name": "27mmLeuP",
+      "w21": 0,
+      "stMaster": [
+        266
+      ],
+      "stMatchU27": false,
+      "stMatchMagPm2": false,
+      "stExtra": [
+        266
+      ],
+      "stMissing": [
+        269
+      ],
+      "stMissingAfterMag": [
+        269
+      ],
+      "stExtraAfterMag": [
+        266
+      ],
+      "pairs": [
+        {
+          "ai": 269,
+          "name": "FLeut.Z",
+          "a21": 54,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": false
+        }
+      ],
+      "raw": [
+        267,
+        268,
+        269
+      ],
+      "afterCat18": [
+        269
+      ],
+      "afterU27": [
+        269
+      ],
+      "afterMagType_pm2": [
+        269
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 52,
+      "name": "27mmP42",
+      "w21": 0,
+      "stMaster": [
+        266
+      ],
+      "stMatchU27": false,
+      "stMatchMagPm2": false,
+      "stExtra": [
+        266
+      ],
+      "stMissing": [
+        269
+      ],
+      "stMissingAfterMag": [
+        269
+      ],
+      "stExtraAfterMag": [
+        266
+      ],
+      "pairs": [
+        {
+          "ai": 269,
+          "name": "FLeut.Z",
+          "a21": 54,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": false
+        }
+      ],
+      "raw": [
+        267,
+        268,
+        269
+      ],
+      "afterCat18": [
+        269
+      ],
+      "afterU27": [
+        269
+      ],
+      "afterMagType_pm2": [
+        269
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 53,
+      "name": "27mmKpfP",
+      "w21": 0,
+      "stMaster": [
+        266,
+        267
+      ],
+      "stMatchU27": false,
+      "stMatchMagPm2": false,
+      "stExtra": [
+        266,
+        267
+      ],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [
+        266,
+        267
+      ],
+      "pairs": [],
+      "raw": [
+        271,
+        270
+      ],
+      "afterCat18": [],
+      "afterU27": [],
+      "afterMagType_pm2": [],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 54,
+      "name": "27mmStuP",
+      "w21": 0,
+      "stMaster": [
+        267
+      ],
+      "stMatchU27": false,
+      "stMatchMagPm2": false,
+      "stExtra": [
+        267
+      ],
+      "stMissing": [
+        269,
+        272
+      ],
+      "stMissingAfterMag": [
+        269,
+        272
+      ],
+      "stExtraAfterMag": [
+        267
+      ],
+      "pairs": [
+        {
+          "ai": 272,
+          "name": "7.92-5",
+          "a21": 58,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": false
+        },
+        {
+          "ai": 269,
+          "name": "FLeut.Z",
+          "a21": 54,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": false
+        }
+      ],
+      "raw": [
+        272,
+        269,
+        268
+      ],
+      "afterCat18": [
+        272,
+        269
+      ],
+      "afterU27": [
+        272,
+        269
+      ],
+      "afterMagType_pm2": [
+        272,
+        269
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 55,
+      "name": "Gew98",
+      "w21": 0,
+      "stMaster": [
+        273
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 273,
+          "name": "7.92-10G",
+          "a21": 68,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        273,
+        314
+      ],
+      "afterCat18": [
+        273
+      ],
+      "afterU27": [
+        273
+      ],
+      "afterMagType_pm2": [
+        273
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 56,
+      "name": "Kar98b",
+      "w21": 0,
+      "stMaster": [
+        273
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 273,
+          "name": "7.92-10G",
+          "a21": 68,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        273,
+        314
+      ],
+      "afterCat18": [
+        273
+      ],
+      "afterU27": [
+        273
+      ],
+      "afterMagType_pm2": [
+        273
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 57,
+      "name": "Kar98k",
+      "w21": 0,
+      "stMaster": [
+        273
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 273,
+          "name": "7.92-10G",
+          "a21": 68,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        273,
+        304,
+        305,
+        314
+      ],
+      "afterCat18": [
+        273
+      ],
+      "afterU27": [
+        273
+      ],
+      "afterMagType_pm2": [
+        273
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 58,
+      "name": "Kar98k svw",
+      "w21": 0,
+      "stMaster": [
+        272
+      ],
+      "stMatchU27": false,
+      "stMatchMagPm2": false,
+      "stExtra": [
+        272
+      ],
+      "stMissing": [
+        273
+      ],
+      "stMissingAfterMag": [
+        273
+      ],
+      "stExtraAfterMag": [
+        272
+      ],
+      "pairs": [
+        {
+          "ai": 273,
+          "name": "7.92-10G",
+          "a21": 68,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": false
+        }
+      ],
+      "raw": [
+        273,
+        304,
+        305
+      ],
+      "afterCat18": [
+        273
+      ],
+      "afterU27": [
+        273
+      ],
+      "afterMagType_pm2": [
+        273
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 59,
+      "name": "Gew29/40",
+      "w21": 0,
+      "stMaster": [
+        273
+      ],
+      "stMatchU27": false,
+      "stMatchMagPm2": false,
+      "stExtra": [
+        273
+      ],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [
+        273
+      ],
+      "pairs": [
+        {
+          "ai": 273,
+          "name": "7.92-10G",
+          "a21": 68,
+          "delta": null,
+          "passCat18": true,
+          "passU27": false,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        273,
+        314
+      ],
+      "afterCat18": [
+        273
+      ],
+      "afterU27": [],
+      "afterMagType_pm2": [],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 60,
+      "name": "Gew33/40",
+      "w21": 0,
+      "stMaster": [
+        273
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 273,
+          "name": "7.92-10G",
+          "a21": 68,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        273,
+        314
+      ],
+      "afterCat18": [
+        273
+      ],
+      "afterU27": [
+        273
+      ],
+      "afterMagType_pm2": [
+        273
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 61,
+      "name": "Gew98/40",
+      "w21": 0,
+      "stMaster": [
+        273
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 273,
+          "name": "7.92-10G",
+          "a21": 68,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        273,
+        314
+      ],
+      "afterCat18": [
+        273
+      ],
+      "afterU27": [
+        273
+      ],
+      "afterMagType_pm2": [
+        273
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 62,
+      "name": "VG-1",
+      "w21": 0,
+      "stMaster": [
+        274
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 274,
+          "name": "7.92-101",
+          "a21": 72,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        274
+      ],
+      "afterCat18": [
+        274
+      ],
+      "afterU27": [
+        274
+      ],
+      "afterMagType_pm2": [
+        274
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 63,
+      "name": "VG-2",
+      "w21": 0,
+      "stMaster": [
+        274
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 274,
+          "name": "7.92-101",
+          "a21": 72,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        274
+      ],
+      "afterCat18": [
+        274
+      ],
+      "afterU27": [
+        274
+      ],
+      "afterMagType_pm2": [
+        274
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 64,
+      "name": "VK-98",
+      "w21": 0,
+      "stMaster": [
+        273
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 273,
+          "name": "7.92-10G",
+          "a21": 68,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        273
+      ],
+      "afterCat18": [
+        273
+      ],
+      "afterU27": [
+        273
+      ],
+      "afterMagType_pm2": [
+        273
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 65,
+      "name": "Gew41(W)",
+      "w21": 0,
+      "stMaster": [
+        273
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 273,
+          "name": "7.92-10G",
+          "a21": 68,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        273,
+        314
+      ],
+      "afterCat18": [
+        273
+      ],
+      "afterU27": [
+        273
+      ],
+      "afterMagType_pm2": [
+        273
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 66,
+      "name": "Gew41(M)",
+      "w21": 0,
+      "stMaster": [
+        273
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 273,
+          "name": "7.92-10G",
+          "a21": 68,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        273,
+        314
+      ],
+      "afterCat18": [
+        273
+      ],
+      "afterU27": [
+        273
+      ],
+      "afterMagType_pm2": [
+        273
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 67,
+      "name": "Gew43",
+      "w21": 0,
+      "stMaster": [
+        273,
+        274
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 273,
+          "name": "7.92-10G",
+          "a21": 68,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        },
+        {
+          "ai": 274,
+          "name": "7.92-101",
+          "a21": 72,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        273,
+        274
+      ],
+      "afterCat18": [
+        273,
+        274
+      ],
+      "afterU27": [
+        273,
+        274
+      ],
+      "afterMagType_pm2": [
+        273,
+        274
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 68,
+      "name": "Kar43",
+      "w21": 0,
+      "stMaster": [
+        273,
+        274
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 273,
+          "name": "7.92-10G",
+          "a21": 68,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        },
+        {
+          "ai": 274,
+          "name": "7.92-101",
+          "a21": 72,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        273,
+        274
+      ],
+      "afterCat18": [
+        273,
+        274
+      ],
+      "afterU27": [
+        273,
+        274
+      ],
+      "afterMagType_pm2": [
+        273,
+        274
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 69,
+      "name": "Zf Kar98k",
+      "w21": 0,
+      "stMaster": [
+        273
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 273,
+          "name": "7.92-10G",
+          "a21": 68,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        273,
+        314
+      ],
+      "afterCat18": [
+        273
+      ],
+      "afterU27": [
+        273
+      ],
+      "afterMagType_pm2": [
+        273
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 70,
+      "name": "Zf Gew43",
+      "w21": 0,
+      "stMaster": [
+        273,
+        274
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 273,
+          "name": "7.92-10G",
+          "a21": 68,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        },
+        {
+          "ai": 274,
+          "name": "7.92-101",
+          "a21": 72,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        273,
+        274
+      ],
+      "afterCat18": [
+        273,
+        274
+      ],
+      "afterU27": [
+        273,
+        274
+      ],
+      "afterMagType_pm2": [
+        273,
+        274
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 71,
+      "name": "FG42/1",
+      "w21": 0,
+      "stMaster": [
+        276,
+        275
+      ],
+      "stMatchU27": false,
+      "stMatchMagPm2": false,
+      "stExtra": [
+        275,
+        276
+      ],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [
+        275,
+        276
+      ],
+      "pairs": [
+        {
+          "ai": 276,
+          "name": "7.92-202",
+          "a21": 73,
+          "delta": null,
+          "passCat18": true,
+          "passU27": false,
+          "inMaster": true
+        },
+        {
+          "ai": 275,
+          "name": "7.92-201",
+          "a21": 72,
+          "delta": null,
+          "passCat18": true,
+          "passU27": false,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        276,
+        275
+      ],
+      "afterCat18": [
+        276,
+        275
+      ],
+      "afterU27": [],
+      "afterMagType_pm2": [],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 72,
+      "name": "FG42/2",
+      "w21": 0,
+      "stMaster": [
+        277
+      ],
+      "stMatchU27": false,
+      "stMatchMagPm2": false,
+      "stExtra": [
+        277
+      ],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [
+        277
+      ],
+      "pairs": [
+        {
+          "ai": 277,
+          "name": "7.92k-30",
+          "a21": 75,
+          "delta": null,
+          "passCat18": true,
+          "passU27": false,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        277
+      ],
+      "afterCat18": [
+        277
+      ],
+      "afterU27": [],
+      "afterMagType_pm2": [],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 73,
+      "name": "MKb42(W)",
+      "w21": 0,
+      "stMaster": [
+        278
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 278,
+          "name": "9Pb-20S",
+          "a21": 79,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        278,
+        314
+      ],
+      "afterCat18": [
+        278
+      ],
+      "afterU27": [
+        278
+      ],
+      "afterMagType_pm2": [
+        278
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 74,
+      "name": "MKb42(H)",
+      "w21": 0,
+      "stMaster": [
+        278
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 278,
+          "name": "9Pb-20S",
+          "a21": 79,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        278,
+        304,
+        305,
+        314
+      ],
+      "afterCat18": [
+        278
+      ],
+      "afterU27": [
+        278
+      ],
+      "afterMagType_pm2": [
+        278
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 75,
+      "name": "MP43",
+      "w21": 0,
+      "stMaster": [
+        278
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 278,
+          "name": "9Pb-20S",
+          "a21": 79,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        278,
+        304,
+        305
+      ],
+      "afterCat18": [
+        278
+      ],
+      "afterU27": [
+        278
+      ],
+      "afterMagType_pm2": [
+        278
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 76,
+      "name": "StG44",
+      "w21": 0,
+      "stMaster": [
+        278
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 278,
+          "name": "9Pb-20S",
+          "a21": 79,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        278,
+        304,
+        305
+      ],
+      "afterCat18": [
+        278
+      ],
+      "afterU27": [
+        278
+      ],
+      "afterMagType_pm2": [
+        278
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 77,
+      "name": "VG1-5",
+      "w21": 0,
+      "stMaster": [
+        278
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 278,
+          "name": "9Pb-20S",
+          "a21": 79,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        278
+      ],
+      "afterCat18": [
+        278
+      ],
+      "afterU27": [
+        278
+      ],
+      "afterMagType_pm2": [
+        278
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 78,
+      "name": "MP28/2",
+      "w21": 0,
+      "stMaster": [
+        280,
+        279,
+        281
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 280,
+          "name": "9Pb-50S",
+          "a21": 79,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        },
+        {
+          "ai": 279,
+          "name": "9Pb-32S",
+          "a21": 79,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        },
+        {
+          "ai": 281,
+          "name": "9Pb-20E",
+          "a21": 81,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        280,
+        279,
+        281,
+        314
+      ],
+      "afterCat18": [
+        280,
+        279,
+        281
+      ],
+      "afterU27": [
+        280,
+        279,
+        281
+      ],
+      "afterMagType_pm2": [
+        280,
+        279,
+        281
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 79,
+      "name": "MP35/1",
+      "w21": 0,
+      "stMaster": [
+        285,
+        284
+      ],
+      "stMatchU27": false,
+      "stMatchMagPm2": false,
+      "stExtra": [
+        284,
+        285
+      ],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [
+        284,
+        285
+      ],
+      "pairs": [
+        {
+          "ai": 285,
+          "name": "9Pb-32M",
+          "a21": 82,
+          "delta": null,
+          "passCat18": true,
+          "passU27": false,
+          "inMaster": true
+        },
+        {
+          "ai": 284,
+          "name": "9Pb-32B",
+          "a21": 80,
+          "delta": null,
+          "passCat18": true,
+          "passU27": false,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        285,
+        284
+      ],
+      "afterCat18": [
+        285,
+        284
+      ],
+      "afterU27": [],
+      "afterMagType_pm2": [],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 80,
+      "name": "EMP",
+      "w21": 0,
+      "stMaster": [
+        283,
+        282
+      ],
+      "stMatchU27": false,
+      "stMatchMagPm2": false,
+      "stExtra": [
+        282,
+        283
+      ],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [
+        282,
+        283
+      ],
+      "pairs": [
+        {
+          "ai": 283,
+          "name": "9Pb-24B",
+          "a21": 80,
+          "delta": null,
+          "passCat18": true,
+          "passU27": false,
+          "inMaster": true
+        },
+        {
+          "ai": 282,
+          "name": "9Pb-32E",
+          "a21": 81,
+          "delta": null,
+          "passCat18": true,
+          "passU27": false,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        283,
+        282
+      ],
+      "afterCat18": [
+        283,
+        282
+      ],
+      "afterU27": [],
+      "afterMagType_pm2": [],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 81,
+      "name": "MP38",
+      "w21": 0,
+      "stMaster": [
+        286
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 286,
+          "name": "9Pb-32P",
+          "a21": 86,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        286
+      ],
+      "afterCat18": [
+        286
+      ],
+      "afterU27": [
+        286
+      ],
+      "afterMagType_pm2": [
+        286
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 82,
+      "name": "MP40",
+      "w21": 0,
+      "stMaster": [
+        286
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 286,
+          "name": "9Pb-32P",
+          "a21": 86,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        286
+      ],
+      "afterCat18": [
+        286
+      ],
+      "afterU27": [
+        286
+      ],
+      "afterMagType_pm2": [
+        286
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 83,
+      "name": "MP40/2",
+      "w21": 0,
+      "stMaster": [
+        286
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 286,
+          "name": "9Pb-32P",
+          "a21": 86,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        286
+      ],
+      "afterCat18": [
+        286
+      ],
+      "afterU27": [
+        286
+      ],
+      "afterMagType_pm2": [
+        286
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 84,
+      "name": "MP41",
+      "w21": 0,
+      "stMaster": [
+        286
+      ],
+      "stMatchU27": false,
+      "stMatchMagPm2": false,
+      "stExtra": [
+        286
+      ],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [
+        286
+      ],
+      "pairs": [
+        {
+          "ai": 286,
+          "name": "9Pb-32P",
+          "a21": 86,
+          "delta": null,
+          "passCat18": true,
+          "passU27": false,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        286
+      ],
+      "afterCat18": [
+        286
+      ],
+      "afterU27": [],
+      "afterMagType_pm2": [],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 85,
+      "name": "Ger Potsdam",
+      "w21": 0,
+      "stMaster": [
+        287
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 287,
+          "name": "Pk16-100",
+          "a21": 96,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        },
+        {
+          "ai": 356,
+          "name": "303Br-47",
+          "a21": 176,
+          "delta": null,
+          "passCat18": true,
+          "passU27": false,
+          "inMaster": false
+        }
+      ],
+      "raw": [
+        287,
+        356
+      ],
+      "afterCat18": [
+        287,
+        356
+      ],
+      "afterU27": [
+        287
+      ],
+      "afterMagType_pm2": [
+        287
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 86,
+      "name": "MP3008",
+      "w21": 0,
+      "stMaster": [
+        286
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 286,
+          "name": "9Pb-32P",
+          "a21": 86,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        286
+      ],
+      "afterCat18": [
+        286
+      ],
+      "afterU27": [
+        286
+      ],
+      "afterMagType_pm2": [
+        286
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 87,
+      "name": "MG08/15",
+      "w21": 0,
+      "stMaster": [
+        288
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 288,
+          "name": "7.92f100",
+          "a21": 117,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        288
+      ],
+      "afterCat18": [
+        288
+      ],
+      "afterU27": [
+        288
+      ],
+      "afterMagType_pm2": [
+        288
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 88,
+      "name": "MG08/18",
+      "w21": 0,
+      "stMaster": [
+        288
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 288,
+          "name": "7.92f100",
+          "a21": 117,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        288
+      ],
+      "afterCat18": [
+        288
+      ],
+      "afterU27": [
+        288
+      ],
+      "afterMagType_pm2": [
+        288
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 89,
+      "name": "MG13",
+      "w21": 0,
+      "stMaster": [
+        291,
+        292
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 291,
+          "name": "Pt13-75",
+          "a21": 90,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        },
+        {
+          "ai": 292,
+          "name": "Dt15-75",
+          "a21": 91,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        291,
+        292
+      ],
+      "afterCat18": [
+        291,
+        292
+      ],
+      "afterU27": [
+        291,
+        292
+      ],
+      "afterMagType_pm2": [
+        291,
+        292
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 90,
+      "name": "MG15",
+      "w21": 0,
+      "stMaster": [
+        293
+      ],
+      "stMatchU27": false,
+      "stMatchMagPm2": false,
+      "stExtra": [
+        293
+      ],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [
+        293
+      ],
+      "pairs": [
+        {
+          "ai": 293,
+          "name": "Gt34-50",
+          "a21": 92,
+          "delta": null,
+          "passCat18": true,
+          "passU27": false,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        293
+      ],
+      "afterCat18": [
+        293
+      ],
+      "afterU27": [],
+      "afterMagType_pm2": [],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 91,
+      "name": "MG34",
+      "w21": 113,
+      "stMaster": [
+        294,
+        295
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": false,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [
+        294,
+        295
+      ],
+      "pairs": [
+        {
+          "ai": 294,
+          "name": "Pt34-75",
+          "a21": 92,
+          "delta": -21,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        },
+        {
+          "ai": 295,
+          "name": "7.92-50",
+          "a21": 116,
+          "delta": 3,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        294,
+        295
+      ],
+      "afterCat18": [
+        294,
+        295
+      ],
+      "afterU27": [
+        294,
+        295
+      ],
+      "afterMagType_pm2": [],
+      "magTypeDropped_pm2": [
+        294,
+        295
+      ]
+    },
+    {
+      "cbeIdx": 92,
+      "name": "MG34S",
+      "w21": 0,
+      "stMaster": [
+        294,
+        295
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 294,
+          "name": "Pt34-75",
+          "a21": 92,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        },
+        {
+          "ai": 295,
+          "name": "7.92-50",
+          "a21": 116,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        294,
+        295
+      ],
+      "afterCat18": [
+        294,
+        295
+      ],
+      "afterU27": [
+        294,
+        295
+      ],
+      "afterMagType_pm2": [
+        294,
+        295
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 93,
+      "name": "MG34/41",
+      "w21": 0,
+      "stMaster": [
+        294,
+        295
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 294,
+          "name": "Pt34-75",
+          "a21": 92,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        },
+        {
+          "ai": 295,
+          "name": "7.92-50",
+          "a21": 116,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        294,
+        295
+      ],
+      "afterCat18": [
+        294,
+        295
+      ],
+      "afterU27": [
+        294,
+        295
+      ],
+      "afterMagType_pm2": [
+        294,
+        295
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 94,
+      "name": "MG42",
+      "w21": 114,
+      "stMaster": [
+        294
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": false,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [
+        294
+      ],
+      "pairs": [
+        {
+          "ai": 294,
+          "name": "Pt34-75",
+          "a21": 92,
+          "delta": -22,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        294
+      ],
+      "afterCat18": [
+        294
+      ],
+      "afterU27": [
+        294
+      ],
+      "afterMagType_pm2": [],
+      "magTypeDropped_pm2": [
+        294
+      ]
+    },
+    {
+      "cbeIdx": 95,
+      "name": "MG08",
+      "w21": 115,
+      "stMaster": [
+        272,
+        273,
+        274,
+        275,
+        276,
+        277,
+        288,
+        289,
+        290,
+        295,
+        296,
+        389
+      ],
+      "stMatchU27": false,
+      "stMatchMagPm2": false,
+      "stExtra": [
+        272,
+        273,
+        274,
+        275,
+        276,
+        277,
+        288,
+        289,
+        290,
+        295,
+        296,
+        389
+      ],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [
+        272,
+        273,
+        274,
+        275,
+        276,
+        277,
+        288,
+        289,
+        290,
+        295,
+        296,
+        389
+      ],
+      "pairs": [],
+      "raw": [],
+      "afterCat18": [],
+      "afterU27": [],
+      "afterMagType_pm2": [],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 96,
+      "name": "PzB38",
+      "w21": 0,
+      "stMaster": [
+        298
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 298,
+          "name": "Pa318-10",
+          "a21": 100,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        298
+      ],
+      "afterCat18": [
+        298
+      ],
+      "afterU27": [
+        298
+      ],
+      "afterMagType_pm2": [
+        298
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 97,
+      "name": "PzB39",
+      "w21": 0,
+      "stMaster": [
+        298
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 298,
+          "name": "Pa318-10",
+          "a21": 100,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        298
+      ],
+      "afterCat18": [
+        298
+      ],
+      "afterU27": [
+        298
+      ],
+      "afterMagType_pm2": [
+        298
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 98,
+      "name": "GrB39",
+      "w21": 0,
+      "stMaster": [],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [],
+      "raw": [
+        304,
+        305
+      ],
+      "afterCat18": [],
+      "afterU27": [],
+      "afterMagType_pm2": [],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 99,
+      "name": "PzBSS41",
+      "w21": 0,
+      "stMaster": [
+        299
+      ],
+      "stMatchU27": false,
+      "stMatchMagPm2": false,
+      "stExtra": [
+        299
+      ],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [
+        299
+      ],
+      "pairs": [
+        {
+          "ai": 299,
+          "name": "20LS-5",
+          "a21": 101,
+          "delta": null,
+          "passCat18": true,
+          "passU27": false,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        299
+      ],
+      "afterCat18": [
+        299
+      ],
+      "afterU27": [],
+      "afterMagType_pm2": [],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 100,
+      "name": "PzB41",
+      "w21": 0,
+      "stMaster": [
+        300
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 300,
+          "name": "20LS-10",
+          "a21": 101,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        },
+        {
+          "ai": 301,
+          "name": "RPzB4322",
+          "a21": 106,
+          "delta": null,
+          "passCat18": true,
+          "passU27": false,
+          "inMaster": false
+        }
+      ],
+      "raw": [
+        300,
+        301
+      ],
+      "afterCat18": [
+        300,
+        301
+      ],
+      "afterU27": [
+        300
+      ],
+      "afterMagType_pm2": [
+        300
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 101,
+      "name": "PF30mK",
+      "w21": 0,
+      "stMaster": [],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [],
+      "raw": [],
+      "afterCat18": [],
+      "afterU27": [],
+      "afterMagType_pm2": [],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 102,
+      "name": "PF30mG",
+      "w21": 0,
+      "stMaster": [],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [],
+      "raw": [],
+      "afterCat18": [],
+      "afterU27": [],
+      "afterMagType_pm2": [],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 103,
+      "name": "PF60m",
+      "w21": 0,
+      "stMaster": [],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [],
+      "raw": [],
+      "afterCat18": [],
+      "afterU27": [],
+      "afterMagType_pm2": [],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 104,
+      "name": "PF100m",
+      "w21": 0,
+      "stMaster": [],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [],
+      "raw": [],
+      "afterCat18": [],
+      "afterU27": [],
+      "afterMagType_pm2": [],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 105,
+      "name": "RPzB43",
+      "w21": 0,
+      "stMaster": [
+        302
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 302,
+          "name": "RPzB4992",
+          "a21": 108,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        302
+      ],
+      "afterCat18": [
+        302
+      ],
+      "afterU27": [
+        302
+      ],
+      "afterMagType_pm2": [
+        302
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 106,
+      "name": "RPzB54",
+      "w21": 0,
+      "stMaster": [
+        302
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 302,
+          "name": "RPzB4992",
+          "a21": 108,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        302,
+        303
+      ],
+      "afterCat18": [
+        302
+      ],
+      "afterU27": [
+        302
+      ],
+      "afterMagType_pm2": [
+        302
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 107,
+      "name": "RPzB54/1",
+      "w21": 0,
+      "stMaster": [
+        229
+      ],
+      "stMatchU27": false,
+      "stMatchMagPm2": false,
+      "stExtra": [
+        229
+      ],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [
+        229
+      ],
+      "pairs": [],
+      "raw": [
+        303
+      ],
+      "afterCat18": [],
+      "afterU27": [],
+      "afterMagType_pm2": [],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 108,
+      "name": "FmW35",
+      "w21": 0,
+      "stMaster": [],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [],
+      "raw": [],
+      "afterCat18": [],
+      "afterU27": [],
+      "afterMagType_pm2": [],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 109,
+      "name": "FmW40",
+      "w21": 0,
+      "stMaster": [],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [],
+      "raw": [],
+      "afterCat18": [],
+      "afterU27": [],
+      "afterMagType_pm2": [],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 110,
+      "name": "FmW41",
+      "w21": 0,
+      "stMaster": [],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [],
+      "raw": [],
+      "afterCat18": [],
+      "afterU27": [],
+      "afterMagType_pm2": [],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 111,
+      "name": "FmW42",
+      "w21": 0,
+      "stMaster": [],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [],
+      "raw": [],
+      "afterCat18": [],
+      "afterU27": [],
+      "afterMagType_pm2": [],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 121,
+      "name": "Bodeo mod89",
+      "w21": 0,
+      "stMaster": [
+        316
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 316,
+          "name": "9Gli-7",
+          "a21": 123,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        316
+      ],
+      "afterCat18": [
+        316
+      ],
+      "afterU27": [
+        316
+      ],
+      "afterMagType_pm2": [
+        316
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 122,
+      "name": "Glisenti m10",
+      "w21": 0,
+      "stMaster": [
+        317
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 317,
+          "name": "380ACP-7",
+          "a21": 124,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        317
+      ],
+      "afterCat18": [
+        317
+      ],
+      "afterU27": [
+        317
+      ],
+      "afterMagType_pm2": [
+        317
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 123,
+      "name": "Beretta m34",
+      "w21": 0,
+      "stMaster": [
+        318
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 318,
+          "name": "6.5-6",
+          "a21": 125,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        318
+      ],
+      "afterCat18": [
+        318
+      ],
+      "afterU27": [
+        318
+      ],
+      "afterMagType_pm2": [
+        318
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 124,
+      "name": "F. mod91",
+      "w21": 0,
+      "stMaster": [
+        319
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 319,
+          "name": "7.35-6",
+          "a21": 128,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        319,
+        332
+      ],
+      "afterCat18": [
+        319
+      ],
+      "afterU27": [
+        319
+      ],
+      "afterMagType_pm2": [
+        319
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 125,
+      "name": "M. mod91",
+      "w21": 0,
+      "stMaster": [
+        319
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 319,
+          "name": "7.35-6",
+          "a21": 128,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        319
+      ],
+      "afterCat18": [
+        319
+      ],
+      "afterU27": [
+        319
+      ],
+      "afterMagType_pm2": [
+        319
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 126,
+      "name": "M. mod91/TS",
+      "w21": 0,
+      "stMaster": [
+        319
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 319,
+          "name": "7.35-6",
+          "a21": 128,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        319,
+        332
+      ],
+      "afterCat18": [
+        319
+      ],
+      "afterU27": [
+        319
+      ],
+      "afterMagType_pm2": [
+        319
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 127,
+      "name": "F. mod38",
+      "w21": 0,
+      "stMaster": [
+        320
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 320,
+          "name": "9Pb-10",
+          "a21": 134,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        320
+      ],
+      "afterCat18": [
+        320
+      ],
+      "afterU27": [
+        320
+      ],
+      "afterMagType_pm2": [
+        320
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 128,
+      "name": "M. mod38",
+      "w21": 0,
+      "stMaster": [
+        320
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 320,
+          "name": "9Pb-10",
+          "a21": 134,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        320
+      ],
+      "afterCat18": [
+        320
+      ],
+      "afterU27": [
+        320
+      ],
+      "afterMagType_pm2": [
+        320
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 129,
+      "name": "M. mod38/TS",
+      "w21": 0,
+      "stMaster": [
+        320
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 320,
+          "name": "9Pb-10",
+          "a21": 134,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        320,
+        332
+      ],
+      "afterCat18": [
+        320
+      ],
+      "afterU27": [
+        320
+      ],
+      "afterMagType_pm2": [
+        320
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 130,
+      "name": "F. mod38",
+      "w21": 0,
+      "stMaster": [
+        319
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 319,
+          "name": "7.35-6",
+          "a21": 128,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        319
+      ],
+      "afterCat18": [
+        319
+      ],
+      "afterU27": [
+        319
+      ],
+      "afterMagType_pm2": [
+        319
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 131,
+      "name": "M. mod38",
+      "w21": 0,
+      "stMaster": [
+        319
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 319,
+          "name": "7.35-6",
+          "a21": 128,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        319
+      ],
+      "afterCat18": [
+        319
+      ],
+      "afterU27": [
+        319
+      ],
+      "afterMagType_pm2": [
+        319
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 132,
+      "name": "M. mod38/TS",
+      "w21": 0,
+      "stMaster": [
+        319
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 319,
+          "name": "7.35-6",
+          "a21": 128,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        319,
+        332
+      ],
+      "afterCat18": [
+        319
+      ],
+      "afterU27": [
+        319
+      ],
+      "afterMagType_pm2": [
+        319
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 133,
+      "name": "MAB mod38A",
+      "w21": 0,
+      "stMaster": [
+        324,
+        321
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 324,
+          "name": "6.5-20",
+          "a21": 136,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        },
+        {
+          "ai": 321,
+          "name": "9Pb-20",
+          "a21": 134,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        },
+        {
+          "ai": 322,
+          "name": "9Pb-30",
+          "a21": 134,
+          "delta": null,
+          "passCat18": true,
+          "passU27": false,
+          "inMaster": false
+        }
+      ],
+      "raw": [
+        324,
+        321,
+        322,
+        333
+      ],
+      "afterCat18": [
+        324,
+        321,
+        322
+      ],
+      "afterU27": [
+        324,
+        321
+      ],
+      "afterMagType_pm2": [
+        324,
+        321
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 134,
+      "name": "MAB mod38/42",
+      "w21": 0,
+      "stMaster": [
+        324
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 324,
+          "name": "6.5-20",
+          "a21": 136,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        },
+        {
+          "ai": 322,
+          "name": "9Pb-30",
+          "a21": 134,
+          "delta": null,
+          "passCat18": true,
+          "passU27": false,
+          "inMaster": false
+        },
+        {
+          "ai": 323,
+          "name": "9Pb-40",
+          "a21": 134,
+          "delta": null,
+          "passCat18": true,
+          "passU27": false,
+          "inMaster": false
+        }
+      ],
+      "raw": [
+        324,
+        322,
+        323
+      ],
+      "afterCat18": [
+        324,
+        322,
+        323
+      ],
+      "afterU27": [
+        324
+      ],
+      "afterMagType_pm2": [
+        324
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 135,
+      "name": "Breda mod30",
+      "w21": 0,
+      "stMaster": [
+        318,
+        324
+      ],
+      "stMatchU27": false,
+      "stMatchMagPm2": false,
+      "stExtra": [
+        318,
+        324
+      ],
+      "stMissing": [
+        319,
+        325
+      ],
+      "stMissingAfterMag": [
+        319,
+        325
+      ],
+      "stExtraAfterMag": [
+        318,
+        324
+      ],
+      "pairs": [
+        {
+          "ai": 325,
+          "name": "6.5-50",
+          "a21": 137,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": false
+        },
+        {
+          "ai": 319,
+          "name": "7.35-6",
+          "a21": 128,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": false
+        }
+      ],
+      "raw": [
+        325,
+        319
+      ],
+      "afterCat18": [
+        325,
+        319
+      ],
+      "afterU27": [
+        325,
+        319
+      ],
+      "afterMagType_pm2": [
+        325,
+        319
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 136,
+      "name": "FR mod14",
+      "w21": 140,
+      "stMaster": [
+        326
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 326,
+          "name": "8Brd-20",
+          "a21": 139,
+          "delta": -1,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        326
+      ],
+      "afterCat18": [
+        326
+      ],
+      "afterU27": [
+        326
+      ],
+      "afterMagType_pm2": [
+        326
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 137,
+      "name": "FR mod14/35",
+      "w21": 140,
+      "stMaster": [],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [],
+      "raw": [],
+      "afterCat18": [],
+      "afterU27": [],
+      "afterMagType_pm2": [],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 138,
+      "name": "Breda mod37",
+      "w21": 141,
+      "stMaster": [
+        327
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 327,
+          "name": "8Brd-50",
+          "a21": 142,
+          "delta": 1,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        327
+      ],
+      "afterCat18": [
+        327
+      ],
+      "afterU27": [
+        327
+      ],
+      "afterMagType_pm2": [
+        327
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 143,
+      "name": "Lebel 92",
+      "w21": 0,
+      "stMaster": [
+        335
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 335,
+          "name": "32ACP-9",
+          "a21": 145,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        335
+      ],
+      "afterCat18": [
+        335
+      ],
+      "afterU27": [
+        335
+      ],
+      "afterMagType_pm2": [
+        335
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 144,
+      "name": "Unique Mle17",
+      "w21": 0,
+      "stMaster": [
+        336
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 336,
+          "name": "7.65-8",
+          "a21": 146,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        336
+      ],
+      "afterCat18": [
+        336
+      ],
+      "afterU27": [
+        336
+      ],
+      "afterMagType_pm2": [
+        336
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 145,
+      "name": "Mle1935A",
+      "w21": 0,
+      "stMaster": [
+        337
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 337,
+          "name": "8M86-1",
+          "a21": 148,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        337
+      ],
+      "afterCat18": [
+        337
+      ],
+      "afterU27": [
+        337
+      ],
+      "afterMagType_pm2": [
+        337
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 146,
+      "name": "Mle1935S",
+      "w21": 0,
+      "stMaster": [
+        337
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 337,
+          "name": "8M86-1",
+          "a21": 148,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        337
+      ],
+      "afterCat18": [
+        337
+      ],
+      "afterU27": [
+        337
+      ],
+      "afterMagType_pm2": [
+        337
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 147,
+      "name": "F. Mle86/93",
+      "w21": 0,
+      "stMaster": [
+        338
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 338,
+          "name": "8M86-3",
+          "a21": 149,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        338,
+        348
+      ],
+      "afterCat18": [
+        338
+      ],
+      "afterU27": [
+        338
+      ],
+      "afterMagType_pm2": [
+        338
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 148,
+      "name": "M. Mle92/27",
+      "w21": 0,
+      "stMaster": [
+        339
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 339,
+          "name": "8M86-5",
+          "a21": 152,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        339,
+        349
+      ],
+      "afterCat18": [
+        339
+      ],
+      "afterU27": [
+        339
+      ],
+      "afterMagType_pm2": [
+        339
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 149,
+      "name": "F. Mle07/15",
+      "w21": 0,
+      "stMaster": [
+        339
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 339,
+          "name": "8M86-5",
+          "a21": 152,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        339,
+        348
+      ],
+      "afterCat18": [
+        339
+      ],
+      "afterU27": [
+        339
+      ],
+      "afterMagType_pm2": [
+        339
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 150,
+      "name": "F. Mle16",
+      "w21": 0,
+      "stMaster": [
+        340
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 340,
+          "name": "7.5-5",
+          "a21": 153,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        340,
+        348
+      ],
+      "afterCat18": [
+        340
+      ],
+      "afterU27": [
+        340
+      ],
+      "afterMagType_pm2": [
+        340
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 151,
+      "name": "M. Mle16/27",
+      "w21": 0,
+      "stMaster": [
+        340
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 340,
+          "name": "7.5-5",
+          "a21": 153,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        340,
+        349
+      ],
+      "afterCat18": [
+        340
+      ],
+      "afterU27": [
+        340
+      ],
+      "afterMagType_pm2": [
+        340
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 152,
+      "name": "F. MAS36",
+      "w21": 0,
+      "stMaster": [
+        341
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 341,
+          "name": "7.65-32",
+          "a21": 155,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        341
+      ],
+      "afterCat18": [
+        341
+      ],
+      "afterU27": [
+        341
+      ],
+      "afterMagType_pm2": [
+        341
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 153,
+      "name": "F. MAS36CR39",
+      "w21": 0,
+      "stMaster": [
+        341
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 341,
+          "name": "7.65-32",
+          "a21": 155,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        341
+      ],
+      "afterCat18": [
+        341
+      ],
+      "afterU27": [
+        341
+      ],
+      "afterMagType_pm2": [
+        341
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 154,
+      "name": "MAS38",
+      "w21": 0,
+      "stMaster": [
+        342
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 342,
+          "name": "7.5-25",
+          "a21": 156,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        342
+      ],
+      "afterCat18": [
+        342
+      ],
+      "afterU27": [
+        342
+      ],
+      "afterMagType_pm2": [
+        342
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 155,
+      "name": "MAC24/29",
+      "w21": 0,
+      "stMaster": [
+        343
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 343,
+          "name": "8M86-24",
+          "a21": 157,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        343
+      ],
+      "afterCat18": [
+        343
+      ],
+      "afterU27": [
+        343
+      ],
+      "afterMagType_pm2": [
+        343
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 156,
+      "name": "Mle1914",
+      "w21": 158,
+      "stMaster": [
+        344
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 344,
+          "name": "8M86-30",
+          "a21": 157,
+          "delta": -1,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        344,
+        345
+      ],
+      "afterCat18": [
+        344
+      ],
+      "afterU27": [
+        344
+      ],
+      "afterMagType_pm2": [
+        344
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 159,
+      "name": "No1 Mk4",
+      "w21": 0,
+      "stMaster": [
+        351
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 351,
+          "name": "380Mk2-1",
+          "a21": 161,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        351
+      ],
+      "afterCat18": [
+        351
+      ],
+      "afterU27": [
+        351
+      ],
+      "afterMagType_pm2": [
+        351
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 160,
+      "name": "No2 Mk2",
+      "w21": 0,
+      "stMaster": [
+        352
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 352,
+          "name": "Very-1",
+          "a21": 166,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        352
+      ],
+      "afterCat18": [
+        352
+      ],
+      "afterU27": [
+        352
+      ],
+      "afterMagType_pm2": [
+        352
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 161,
+      "name": "No2 Mk1*",
+      "w21": 0,
+      "stMaster": [
+        352
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 352,
+          "name": "Very-1",
+          "a21": 166,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        352
+      ],
+      "afterCat18": [
+        352
+      ],
+      "afterU27": [
+        352
+      ],
+      "afterMagType_pm2": [
+        352
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 162,
+      "name": "No2 Mk1**",
+      "w21": 0,
+      "stMaster": [
+        352
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 352,
+          "name": "Very-1",
+          "a21": 166,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        352
+      ],
+      "afterCat18": [
+        352
+      ],
+      "afterU27": [
+        352
+      ],
+      "afterMagType_pm2": [
+        352
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 163,
+      "name": "Webley Mk4",
+      "w21": 0,
+      "stMaster": [
+        352
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 352,
+          "name": "Very-1",
+          "a21": 166,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        352
+      ],
+      "afterCat18": [
+        352
+      ],
+      "afterU27": [
+        352
+      ],
+      "afterMagType_pm2": [
+        352
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 164,
+      "name": "S&W No2",
+      "w21": 0,
+      "stMaster": [
+        352
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 352,
+          "name": "Very-1",
+          "a21": 166,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        352
+      ],
+      "afterCat18": [
+        352
+      ],
+      "afterU27": [
+        352
+      ],
+      "afterMagType_pm2": [
+        352
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 165,
+      "name": "Very",
+      "w21": 0,
+      "stMaster": [
+        353
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 353,
+          "name": "303Br-10",
+          "a21": 0,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        353
+      ],
+      "afterCat18": [
+        353
+      ],
+      "afterU27": [
+        353
+      ],
+      "afterMagType_pm2": [
+        353
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 166,
+      "name": "No1 Mk3",
+      "w21": 0,
+      "stMaster": [
+        355
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 355,
+          "name": "9Pb-32R",
+          "a21": 173,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        355,
+        363
+      ],
+      "afterCat18": [
+        355
+      ],
+      "afterU27": [
+        355
+      ],
+      "afterMagType_pm2": [
+        355
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 167,
+      "name": "No1 Mk3*",
+      "w21": 0,
+      "stMaster": [
+        355
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 355,
+          "name": "9Pb-32R",
+          "a21": 173,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        355,
+        363
+      ],
+      "afterCat18": [
+        355
+      ],
+      "afterU27": [
+        355
+      ],
+      "afterMagType_pm2": [
+        355
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 168,
+      "name": "No4 Mk1",
+      "w21": 0,
+      "stMaster": [
+        355
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 355,
+          "name": "9Pb-32R",
+          "a21": 173,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        },
+        {
+          "ai": 365,
+          "name": "7.62N-1",
+          "a21": 189,
+          "delta": null,
+          "passCat18": true,
+          "passU27": false,
+          "inMaster": false
+        }
+      ],
+      "raw": [
+        355,
+        365
+      ],
+      "afterCat18": [
+        355,
+        365
+      ],
+      "afterU27": [
+        355
+      ],
+      "afterMagType_pm2": [
+        355
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 169,
+      "name": "No4 Mk1*",
+      "w21": 0,
+      "stMaster": [
+        355
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 355,
+          "name": "9Pb-32R",
+          "a21": 173,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        },
+        {
+          "ai": 365,
+          "name": "7.62N-1",
+          "a21": 189,
+          "delta": null,
+          "passCat18": true,
+          "passU27": false,
+          "inMaster": false
+        }
+      ],
+      "raw": [
+        355,
+        365
+      ],
+      "afterCat18": [
+        355,
+        365
+      ],
+      "afterU27": [
+        355
+      ],
+      "afterMagType_pm2": [
+        355
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 170,
+      "name": "No4 Mk1(T)",
+      "w21": 0,
+      "stMaster": [
+        355
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 355,
+          "name": "9Pb-32R",
+          "a21": 173,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        },
+        {
+          "ai": 365,
+          "name": "7.62N-1",
+          "a21": 189,
+          "delta": null,
+          "passCat18": true,
+          "passU27": false,
+          "inMaster": false
+        }
+      ],
+      "raw": [
+        355,
+        365
+      ],
+      "afterCat18": [
+        355,
+        365
+      ],
+      "afterU27": [
+        355
+      ],
+      "afterMagType_pm2": [
+        355
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 171,
+      "name": "No3 Mk1*(T)",
+      "w21": 0,
+      "stMaster": [
+        355
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 355,
+          "name": "9Pb-32R",
+          "a21": 173,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        355,
+        364
+      ],
+      "afterCat18": [
+        355
+      ],
+      "afterU27": [
+        355
+      ],
+      "afterMagType_pm2": [
+        355
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 172,
+      "name": "Sten Mk2",
+      "w21": 0,
+      "stMaster": [
+        356
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 356,
+          "name": "303Br-47",
+          "a21": 176,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        },
+        {
+          "ai": 287,
+          "name": "Pk16-100",
+          "a21": 96,
+          "delta": null,
+          "passCat18": true,
+          "passU27": false,
+          "inMaster": false
+        }
+      ],
+      "raw": [
+        356,
+        287
+      ],
+      "afterCat18": [
+        356,
+        287
+      ],
+      "afterU27": [
+        356
+      ],
+      "afterMagType_pm2": [
+        356
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 173,
+      "name": "Sten Mk3",
+      "w21": 0,
+      "stMaster": [
+        356
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 356,
+          "name": "303Br-47",
+          "a21": 176,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        },
+        {
+          "ai": 287,
+          "name": "Pk16-100",
+          "a21": 96,
+          "delta": null,
+          "passCat18": true,
+          "passU27": false,
+          "inMaster": false
+        }
+      ],
+      "raw": [
+        356,
+        287
+      ],
+      "afterCat18": [
+        356,
+        287
+      ],
+      "afterU27": [
+        356
+      ],
+      "afterMagType_pm2": [
+        356
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 174,
+      "name": "Sten Mk5",
+      "w21": 0,
+      "stMaster": [
+        356
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 356,
+          "name": "303Br-47",
+          "a21": 176,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        },
+        {
+          "ai": 287,
+          "name": "Pk16-100",
+          "a21": 96,
+          "delta": null,
+          "passCat18": true,
+          "passU27": false,
+          "inMaster": false
+        },
+        {
+          "ai": 365,
+          "name": "7.62N-1",
+          "a21": 189,
+          "delta": null,
+          "passCat18": true,
+          "passU27": false,
+          "inMaster": false
+        }
+      ],
+      "raw": [
+        356,
+        287,
+        365
+      ],
+      "afterCat18": [
+        356,
+        287,
+        365
+      ],
+      "afterU27": [
+        356
+      ],
+      "afterMagType_pm2": [
+        356
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 175,
+      "name": "Lewis Mk1",
+      "w21": 0,
+      "stMaster": [
+        357
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 357,
+          "name": "303Br-30",
+          "a21": 177,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        357
+      ],
+      "afterCat18": [
+        357
+      ],
+      "afterU27": [
+        357
+      ],
+      "afterMagType_pm2": [
+        357
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 176,
+      "name": "Bren Mk1",
+      "w21": 184,
+      "stMaster": [
+        358
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 358,
+          "name": "303Br250",
+          "a21": 186,
+          "delta": 2,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        358
+      ],
+      "afterCat18": [
+        358
+      ],
+      "afterU27": [
+        358
+      ],
+      "afterMagType_pm2": [
+        358
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 177,
+      "name": "Bren Mk2",
+      "w21": 184,
+      "stMaster": [
+        358
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 358,
+          "name": "303Br250",
+          "a21": 186,
+          "delta": 2,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        358
+      ],
+      "afterCat18": [
+        358
+      ],
+      "afterU27": [
+        358
+      ],
+      "afterMagType_pm2": [
+        358
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 178,
+      "name": "Bren Mk3",
+      "w21": 184,
+      "stMaster": [
+        358
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 358,
+          "name": "303Br250",
+          "a21": 186,
+          "delta": 2,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        358
+      ],
+      "afterCat18": [
+        358
+      ],
+      "afterU27": [
+        358
+      ],
+      "afterMagType_pm2": [
+        358
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 179,
+      "name": "Vickers Mk1",
+      "w21": 185,
+      "stMaster": [
+        272,
+        273,
+        274,
+        275,
+        276,
+        277,
+        288,
+        289,
+        290,
+        295,
+        296,
+        389
+      ],
+      "stMatchU27": false,
+      "stMatchMagPm2": false,
+      "stExtra": [
+        272,
+        273,
+        274,
+        275,
+        276,
+        277,
+        288,
+        289,
+        290,
+        295,
+        296,
+        389
+      ],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [
+        272,
+        273,
+        274,
+        275,
+        276,
+        277,
+        288,
+        289,
+        290,
+        295,
+        296,
+        389
+      ],
+      "pairs": [],
+      "raw": [],
+      "afterCat18": [],
+      "afterU27": [],
+      "afterMagType_pm2": [],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 180,
+      "name": "Boys Mk1",
+      "w21": 0,
+      "stMaster": [
+        360
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 360,
+          "name": "PIAT-1",
+          "a21": 182,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        360
+      ],
+      "afterCat18": [
+        360
+      ],
+      "afterU27": [
+        360
+      ],
+      "afterMagType_pm2": [
+        360
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 181,
+      "name": "PIAT",
+      "w21": 0,
+      "stMaster": [
+        229
+      ],
+      "stMatchU27": false,
+      "stMatchMagPm2": false,
+      "stExtra": [
+        229
+      ],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [
+        229
+      ],
+      "pairs": [],
+      "raw": [
+        361
+      ],
+      "afterCat18": [],
+      "afterU27": [],
+      "afterMagType_pm2": [],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 182,
+      "name": "No1 Mk1",
+      "w21": 0,
+      "stMaster": [],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [],
+      "raw": [],
+      "afterCat18": [],
+      "afterU27": [],
+      "afterMagType_pm2": [],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 188,
+      "name": "obr1895g",
+      "w21": 0,
+      "stMaster": [
+        366
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 366,
+          "name": "7.62T-8",
+          "a21": 190,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        366
+      ],
+      "afterCat18": [
+        366
+      ],
+      "afterU27": [
+        366
+      ],
+      "afterMagType_pm2": [
+        366
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 189,
+      "name": "TT33",
+      "w21": 0,
+      "stMaster": [
+        367
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 367,
+          "name": "7.62-5",
+          "a21": 191,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        367
+      ],
+      "afterCat18": [
+        367
+      ],
+      "afterU27": [
+        367
+      ],
+      "afterMagType_pm2": [
+        367
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 190,
+      "name": "obr1891/30g",
+      "w21": 0,
+      "stMaster": [
+        368
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 368,
+          "name": "7.62-10",
+          "a21": 195,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        368,
+        377
+      ],
+      "afterCat18": [
+        368
+      ],
+      "afterU27": [
+        368
+      ],
+      "afterMagType_pm2": [
+        368
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 191,
+      "name": "obr1938g",
+      "w21": 0,
+      "stMaster": [
+        368
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 368,
+          "name": "7.62-10",
+          "a21": 195,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        368,
+        377
+      ],
+      "afterCat18": [
+        368
+      ],
+      "afterU27": [
+        368
+      ],
+      "afterMagType_pm2": [
+        368
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 192,
+      "name": "obr91/30g-PU",
+      "w21": 0,
+      "stMaster": [
+        368
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 368,
+          "name": "7.62-10",
+          "a21": 195,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        368,
+        377
+      ],
+      "afterCat18": [
+        368
+      ],
+      "afterU27": [
+        368
+      ],
+      "afterMagType_pm2": [
+        368
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 193,
+      "name": "obr1944g",
+      "w21": 0,
+      "stMaster": [
+        368
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 368,
+          "name": "7.62-10",
+          "a21": 195,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        368
+      ],
+      "afterCat18": [
+        368
+      ],
+      "afterU27": [
+        368
+      ],
+      "afterMagType_pm2": [
+        368
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 194,
+      "name": "SVT40",
+      "w21": 0,
+      "stMaster": [
+        369,
+        368,
+        378
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 369,
+          "name": "7.62T71D",
+          "a21": 196,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        },
+        {
+          "ai": 368,
+          "name": "7.62-10",
+          "a21": 195,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        },
+        {
+          "ai": 378,
+          "name": "9Pb-8s",
+          "a21": 204,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        369,
+        368,
+        378
+      ],
+      "afterCat18": [
+        369,
+        368,
+        378
+      ],
+      "afterU27": [
+        369,
+        368,
+        378
+      ],
+      "afterMagType_pm2": [
+        369,
+        368,
+        378
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 195,
+      "name": "PPD40",
+      "w21": 0,
+      "stMaster": [
+        370
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 370,
+          "name": "7.62T35h",
+          "a21": 197,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        370
+      ],
+      "afterCat18": [
+        370
+      ],
+      "afterU27": [
+        370
+      ],
+      "afterMagType_pm2": [
+        370
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 196,
+      "name": "PPSh41",
+      "w21": 0,
+      "stMaster": [
+        372,
+        371
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 372,
+          "name": "7.62T35S",
+          "a21": 198,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        },
+        {
+          "ai": 371,
+          "name": "7.62T71h",
+          "a21": 197,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        372,
+        371
+      ],
+      "afterCat18": [
+        372,
+        371
+      ],
+      "afterU27": [
+        372,
+        371
+      ],
+      "afterMagType_pm2": [
+        372,
+        371
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 197,
+      "name": "PPS43",
+      "w21": 0,
+      "stMaster": [
+        373
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 373,
+          "name": "7.62-47",
+          "a21": 199,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        373
+      ],
+      "afterCat18": [
+        373
+      ],
+      "afterU27": [
+        373
+      ],
+      "afterMagType_pm2": [
+        373
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 198,
+      "name": "DP",
+      "w21": 0,
+      "stMaster": [
+        374
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 374,
+          "name": "7.62-250",
+          "a21": 202,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        374
+      ],
+      "afterCat18": [
+        374
+      ],
+      "afterU27": [
+        374
+      ],
+      "afterMagType_pm2": [
+        374
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 199,
+      "name": "PM1910",
+      "w21": 0,
+      "stMaster": [
+        272,
+        273,
+        274,
+        275,
+        276,
+        277,
+        288,
+        289,
+        290,
+        295,
+        296,
+        389
+      ],
+      "stMatchU27": false,
+      "stMatchMagPm2": false,
+      "stExtra": [
+        272,
+        273,
+        274,
+        275,
+        276,
+        277,
+        288,
+        289,
+        290,
+        295,
+        296,
+        389
+      ],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [
+        272,
+        273,
+        274,
+        275,
+        276,
+        277,
+        288,
+        289,
+        290,
+        295,
+        296,
+        389
+      ],
+      "pairs": [],
+      "raw": [],
+      "afterCat18": [],
+      "afterU27": [],
+      "afterMagType_pm2": [],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 200,
+      "name": "DShK",
+      "w21": 0,
+      "stMaster": [],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [],
+      "raw": [],
+      "afterCat18": [],
+      "afterU27": [],
+      "afterMagType_pm2": [],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 203,
+      "name": "SP M12",
+      "w21": 0,
+      "stMaster": [
+        379
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 379,
+          "name": "9Pb-32s",
+          "a21": 205,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        379
+      ],
+      "afterCat18": [
+        379
+      ],
+      "afterU27": [
+        379
+      ],
+      "afterMagType_pm2": [
+        379
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 204,
+      "name": "MP34(o)",
+      "w21": 0,
+      "stMaster": [
+        380
+      ],
+      "stMatchU27": false,
+      "stMatchMagPm2": false,
+      "stExtra": [
+        380
+      ],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [
+        380
+      ],
+      "pairs": [
+        {
+          "ai": 380,
+          "name": "8Aut-25",
+          "a21": 206,
+          "delta": null,
+          "passCat18": true,
+          "passU27": false,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        380
+      ],
+      "afterCat18": [
+        380
+      ],
+      "afterU27": [],
+      "afterMagType_pm2": [],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 205,
+      "name": "M30",
+      "w21": 0,
+      "stMaster": [
+        381
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 381,
+          "name": "8Aut-250",
+          "a21": 209,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        381
+      ],
+      "afterCat18": [
+        381
+      ],
+      "afterU27": [
+        381
+      ],
+      "afterMagType_pm2": [
+        381
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 206,
+      "name": "M07/12",
+      "w21": 208,
+      "stMaster": [],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [],
+      "raw": [],
+      "afterCat18": [],
+      "afterU27": [],
+      "afterMagType_pm2": [],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 209,
+      "name": "Mle1903",
+      "w21": 0,
+      "stMaster": [
+        383
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 383,
+          "name": "32ACP-9B",
+          "a21": 211,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        383
+      ],
+      "afterCat18": [
+        383
+      ],
+      "afterU27": [
+        383
+      ],
+      "afterMagType_pm2": [
+        383
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 210,
+      "name": "Mle10/22",
+      "w21": 0,
+      "stMaster": [
+        384
+      ],
+      "stMatchU27": false,
+      "stMatchMagPm2": false,
+      "stExtra": [
+        384
+      ],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [
+        384
+      ],
+      "pairs": [
+        {
+          "ai": 384,
+          "name": "9Pb-13",
+          "a21": 212,
+          "delta": null,
+          "passCat18": true,
+          "passU27": false,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        384
+      ],
+      "afterCat18": [
+        384
+      ],
+      "afterU27": [],
+      "afterMagType_pm2": [],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 211,
+      "name": "GP35",
+      "w21": 0,
+      "stMaster": [
+        385
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 385,
+          "name": "380ACP8A",
+          "a21": 213,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        385
+      ],
+      "afterCat18": [
+        385
+      ],
+      "afterU27": [
+        385
+      ],
+      "afterMagType_pm2": [
+        385
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 212,
+      "name": "CZ vz24",
+      "w21": 0,
+      "stMaster": [
+        386
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 386,
+          "name": "32ACP-8C",
+          "a21": 214,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        386
+      ],
+      "afterCat18": [
+        386
+      ],
+      "afterU27": [
+        386
+      ],
+      "afterMagType_pm2": [
+        386
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 213,
+      "name": "CZ vz27",
+      "w21": 0,
+      "stMaster": [
+        387
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 387,
+          "name": "380ACP8B",
+          "a21": 215,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        387
+      ],
+      "afterCat18": [
+        387
+      ],
+      "afterU27": [
+        387
+      ],
+      "afterMagType_pm2": [
+        387
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 214,
+      "name": "CZ vz38",
+      "w21": 0,
+      "stMaster": [
+        388
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 388,
+          "name": "9Pb-30Z",
+          "a21": 216,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        388
+      ],
+      "afterCat18": [
+        388
+      ],
+      "afterU27": [
+        388
+      ],
+      "afterMagType_pm2": [
+        388
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 215,
+      "name": "ZK383",
+      "w21": 0,
+      "stMaster": [
+        389
+      ],
+      "stMatchU27": false,
+      "stMatchMagPm2": false,
+      "stExtra": [
+        389
+      ],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [
+        389
+      ],
+      "pairs": [
+        {
+          "ai": 389,
+          "name": "7.92-20Z",
+          "a21": 217,
+          "delta": null,
+          "passCat18": true,
+          "passU27": false,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        389
+      ],
+      "afterCat18": [
+        389
+      ],
+      "afterU27": [],
+      "afterMagType_pm2": [],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 216,
+      "name": "lk ZB vz26",
+      "w21": 219,
+      "stMaster": [
+        390
+      ],
+      "stMatchU27": false,
+      "stMatchMagPm2": false,
+      "stExtra": [
+        390
+      ],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [
+        390
+      ],
+      "pairs": [
+        {
+          "ai": 390,
+          "name": "9Pb-8R",
+          "a21": 221,
+          "delta": 2,
+          "passCat18": true,
+          "passU27": false,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        390
+      ],
+      "afterCat18": [
+        390
+      ],
+      "afterU27": [],
+      "afterMagType_pm2": [],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 217,
+      "name": "tk ZB vz37",
+      "w21": 220,
+      "stMaster": [],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [],
+      "raw": [],
+      "afterCat18": [],
+      "afterU27": [],
+      "afterMagType_pm2": [],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 220,
+      "name": "VIS wz35",
+      "w21": 0,
+      "stMaster": [
+        391
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 391,
+          "name": "8Mrzk-5",
+          "a21": 222,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        391
+      ],
+      "afterCat18": [
+        391
+      ],
+      "afterU27": [
+        391
+      ],
+      "afterMagType_pm2": [
+        391
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 221,
+      "name": "wz35",
+      "w21": 0,
+      "stMaster": [
+        392
+      ],
+      "stMatchU27": false,
+      "stMatchMagPm2": false,
+      "stExtra": [
+        392
+      ],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [
+        392
+      ],
+      "pairs": [
+        {
+          "ai": 392,
+          "name": "9Largo-8",
+          "a21": 223,
+          "delta": null,
+          "passCat18": true,
+          "passU27": false,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        392
+      ],
+      "afterCat18": [
+        392
+      ],
+      "afterU27": [],
+      "afterMagType_pm2": [],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 222,
+      "name": "Astra400",
+      "w21": 0,
+      "stMaster": [
+        393
+      ],
+      "stMatchU27": false,
+      "stMatchMagPm2": false,
+      "stExtra": [
+        393
+      ],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [
+        393
+      ],
+      "pairs": [
+        {
+          "ai": 393,
+          "name": "20SS-5",
+          "a21": 225,
+          "delta": null,
+          "passCat18": true,
+          "passU27": false,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        393
+      ],
+      "afterCat18": [
+        393
+      ],
+      "afterU27": [],
+      "afterMagType_pm2": [],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 223,
+      "name": "Astra903",
+      "w21": 0,
+      "stMaster": [
+        258,
+        257,
+        256
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 258,
+          "name": "9Pb-8L",
+          "a21": 44,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        },
+        {
+          "ai": 257,
+          "name": "7.63-20b",
+          "a21": 43,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        },
+        {
+          "ai": 256,
+          "name": "7.63-10b",
+          "a21": 43,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        258,
+        257,
+        256
+      ],
+      "afterCat18": [
+        258,
+        257,
+        256
+      ],
+      "afterU27": [
+        258,
+        257,
+        256
+      ],
+      "afterMagType_pm2": [
+        258,
+        257,
+        256
+      ],
+      "magTypeDropped_pm2": []
+    },
+    {
+      "cbeIdx": 224,
+      "name": "S-18/100",
+      "w21": 0,
+      "stMaster": [
+        394
+      ],
+      "stMatchU27": true,
+      "stMatchMagPm2": true,
+      "stExtra": [],
+      "stMissing": [],
+      "stMissingAfterMag": [],
+      "stExtraAfterMag": [],
+      "pairs": [
+        {
+          "ai": 394,
+          "name": "20SS-10",
+          "a21": 225,
+          "delta": null,
+          "passCat18": true,
+          "passU27": true,
+          "inMaster": true
+        }
+      ],
+      "raw": [
+        394,
+        395
+      ],
+      "afterCat18": [
+        394
+      ],
+      "afterU27": [
+        394
+      ],
+      "afterMagType_pm2": [
+        394
+      ],
+      "magTypeDropped_pm2": []
+    }
+  ]
+}

@@ -114,6 +114,12 @@ const Sfx = {
         if (id === 'tank_reload') return;
         if (document.visibilityState === 'hidden') return;
 
+        if (window.gameLogic && window.gameLogic.isProcessingTurn) {
+            const quiet = ['move', 'swap', 'click'];
+            const ft = fallbackType || id;
+            if (quiet.includes(id) || quiet.includes(ft)) return;
+        }
+
         // スロットリング処理
         if (this.throttles[id]) {
             const now = Date.now();

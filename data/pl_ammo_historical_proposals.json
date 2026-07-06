@@ -1,0 +1,5810 @@
+{
+  "summary": {
+    "generated": "2026-05-31",
+    "total": 225,
+    "researched": 35,
+    "verdicts": {
+      "CBE_EMPTY": 10,
+      "UNRESEARCHED": 190,
+      "CONFLICT": 8,
+      "MATCH": 13,
+      "CBE_SUBSET": 4
+    },
+    "driftWeapons": 34
+  },
+  "proposals": [
+    {
+      "cbeIdx": 0,
+      "name": "M1911A1",
+      "category": "pistol",
+      "cbeEffective": [],
+      "cbeEffectiveNames": [],
+      "historicalPlIndices": [
+        226
+      ],
+      "historicalNames": [
+        "45ACP-3"
+      ],
+      "historicalSummary": "M1911A1: .45 ACP 7 発箱。PL 226(45ACP-1) — u27 で 225 除外要 RE。",
+      "sources": [
+        "https://en.wikipedia.org/wiki/M1911_pistol"
+      ],
+      "verdict": "CBE_EMPTY",
+      "recommendation": "CBE デコード or 実機 — 史実は暫定候補のみ",
+      "onlyCbe": [],
+      "onlyHist": [
+        226
+      ],
+      "both": [],
+      "auditDrift": true,
+      "stExtra": [
+        225
+      ],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 1,
+      "name": "M1917 S&W",
+      "category": "pistol",
+      "cbeEffective": [
+        226
+      ],
+      "cbeEffectiveNames": [
+        "45ACP-3"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "M1917 S&W: ",
+      "sources": [
+        "https://en.wikipedia.org/wiki/M1917_S%26W"
+      ],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        226
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": "Auto-crawl 2026-05-31. Indices は口径ヒューリスティクス — 人手確認。"
+    },
+    {
+      "cbeIdx": 2,
+      "name": "M1917 Colt",
+      "category": "pistol",
+      "cbeEffective": [
+        226
+      ],
+      "cbeEffectiveNames": [
+        "45ACP-3"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "M1917 Colt: ",
+      "sources": [
+        "https://en.wikipedia.org/wiki/M1917_Colt"
+      ],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        226
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": "Auto-crawl 2026-05-31. Indices は口径ヒューリスティクス — 人手確認。"
+    },
+    {
+      "cbeIdx": 3,
+      "name": "OSS",
+      "category": "pistol",
+      "cbeEffective": [
+        228
+      ],
+      "cbeEffectiveNames": [
+        "AN-M8-1"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "OSS: OSS or Oss may refer to:",
+      "sources": [
+        "https://en.wikipedia.org/wiki/OSS"
+      ],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        228
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": "Auto-crawl 2026-05-31. Indices は口径ヒューリスティクス — 人手確認。"
+    },
+    {
+      "cbeIdx": 4,
+      "name": "AN-M8",
+      "category": "smoke_grenade",
+      "cbeEffective": [
+        228
+      ],
+      "cbeEffectiveNames": [
+        "AN-M8-1"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "AN-M8: ",
+      "sources": [
+        "https://en.wikipedia.org/wiki/AN-M8"
+      ],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        228
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": "Auto-crawl 2026-05-31. Indices は口径ヒューリスティクス — 人手確認。"
+    },
+    {
+      "cbeIdx": 5,
+      "name": "M1903A1",
+      "category": "rifle",
+      "cbeEffective": [
+        230
+      ],
+      "cbeEffectiveNames": [
+        "3006-20B"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "M1903A1: ",
+      "sources": [
+        "https://en.wikipedia.org/wiki/M1903A1"
+      ],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        230
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": "Auto-crawl 2026-05-31. Indices は口径ヒューリスティクス — 人手確認。"
+    },
+    {
+      "cbeIdx": 6,
+      "name": "M1903A4",
+      "category": "rifle",
+      "cbeEffective": [
+        229,
+        230,
+        231
+      ],
+      "cbeEffectiveNames": [
+        "3006-5",
+        "3006-20B",
+        "3006-8"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "M1903A4: ",
+      "sources": [
+        "https://en.wikipedia.org/wiki/M1903A4"
+      ],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        229,
+        230,
+        231
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": "Auto-crawl 2026-05-31. Indices は口径ヒューリスティクス — 人手確認。"
+    },
+    {
+      "cbeIdx": 7,
+      "name": "M1918A2 BAR",
+      "category": "lmg",
+      "cbeEffective": [
+        230
+      ],
+      "cbeEffectiveNames": [
+        "3006-20B"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "M1918A2 BAR: ",
+      "sources": [
+        "https://en.wikipedia.org/wiki/M1918A2_BAR"
+      ],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        230
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": "Auto-crawl 2026-05-31. Indices は口径ヒューリスティクス — 人手確認。"
+    },
+    {
+      "cbeIdx": 8,
+      "name": "M1 Rifle",
+      "category": "rifle",
+      "cbeEffective": [
+        229,
+        231
+      ],
+      "cbeEffectiveNames": [
+        "3006-5",
+        "3006-8"
+      ],
+      "historicalPlIndices": [
+        232
+      ],
+      "historicalNames": [
+        "30Cbn-15"
+      ],
+      "historicalSummary": "M1 Garand: .30-06 8 発 en-bloc。PL 232(30Cbn-15)。",
+      "sources": [
+        "https://en.wikipedia.org/wiki/M1_Garand"
+      ],
+      "verdict": "CONFLICT",
+      "recommendation": "PL 実機装填 UI 確認 — override 禁止",
+      "onlyCbe": [
+        229,
+        231
+      ],
+      "onlyHist": [
+        232
+      ],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 9,
+      "name": "M1C Rifle",
+      "category": "rifle",
+      "cbeEffective": [
+        232
+      ],
+      "cbeEffectiveNames": [
+        "30Cbn-15"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "M1C Rifle: ",
+      "sources": [
+        "https://en.wikipedia.org/wiki/M1C_Rifle"
+      ],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        232
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": "Auto-crawl 2026-05-31. Indices は口径ヒューリスティクス — 人手確認。"
+    },
+    {
+      "cbeIdx": 10,
+      "name": "M1D Rifle",
+      "category": "rifle",
+      "cbeEffective": [
+        232
+      ],
+      "cbeEffectiveNames": [
+        "30Cbn-15"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "M1D Rifle: ",
+      "sources": [
+        "https://en.wikipedia.org/wiki/M1D_Rifle"
+      ],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        232
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": "Auto-crawl 2026-05-31. Indices は口径ヒューリスティクス — 人手確認。"
+    },
+    {
+      "cbeIdx": 11,
+      "name": "M1941 Rifle",
+      "category": "rifle",
+      "cbeEffective": [
+        230
+      ],
+      "cbeEffectiveNames": [
+        "3006-20B"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "M1941 Rifle: ",
+      "sources": [
+        "https://en.wikipedia.org/wiki/M1941_Rifle"
+      ],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        230
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": "Auto-crawl 2026-05-31. Indices は口径ヒューリスティクス — 人手確認。"
+    },
+    {
+      "cbeIdx": 12,
+      "name": "M1 Cbn",
+      "category": "rifle",
+      "cbeEffective": [
+        233
+      ],
+      "cbeEffectiveNames": [
+        "30Cbn-30"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "M1 Cbn: ",
+      "sources": [
+        "https://en.wikipedia.org/wiki/M1_Cbn"
+      ],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        233
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": "Auto-crawl 2026-05-31. Indices は口径ヒューリスティクス — 人手確認。"
+    },
+    {
+      "cbeIdx": 13,
+      "name": "M1A1 Cbn",
+      "category": "rifle",
+      "cbeEffective": [
+        233
+      ],
+      "cbeEffectiveNames": [
+        "30Cbn-30"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "M1A1 Cbn: ",
+      "sources": [
+        "https://en.wikipedia.org/wiki/M1A1_Cbn"
+      ],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        233
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": "Auto-crawl 2026-05-31. Indices は口径ヒューリスティクス — 人手確認。"
+    },
+    {
+      "cbeIdx": 14,
+      "name": "M2 Cbn",
+      "category": "rifle",
+      "cbeEffective": [
+        233
+      ],
+      "cbeEffectiveNames": [
+        "30Cbn-30"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "M2 Cbn: ",
+      "sources": [
+        "https://en.wikipedia.org/wiki/M2_Cbn"
+      ],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        233
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": "Auto-crawl 2026-05-31. Indices は口径ヒューリスティクス — 人手確認。"
+    },
+    {
+      "cbeIdx": 15,
+      "name": "M1928A1 SMG",
+      "category": "smg",
+      "cbeEffective": [
+        235,
+        236,
+        237
+      ],
+      "cbeEffectiveNames": [
+        "45ACP30T",
+        "45ACP50T",
+        "45ACP30G"
+      ],
+      "historicalPlIndices": [
+        234,
+        235,
+        236
+      ],
+      "historicalNames": [
+        "45ACP20T",
+        "45ACP30T",
+        "45ACP50T"
+      ],
+      "historicalSummary": "M1928A1: .45 ACP。20/30/50 発（ドラム可）。",
+      "sources": [
+        "https://en.wikipedia.org/wiki/Thompson_submachine_gun"
+      ],
+      "verdict": "CONFLICT",
+      "recommendation": "PL 実機装填 UI 確認 — override 禁止",
+      "onlyCbe": [
+        237
+      ],
+      "onlyHist": [
+        234
+      ],
+      "both": [
+        235,
+        236
+      ],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 16,
+      "name": "M1 SMG",
+      "category": "smg",
+      "cbeEffective": [
+        235
+      ],
+      "cbeEffectiveNames": [
+        "45ACP30T"
+      ],
+      "historicalPlIndices": [
+        235
+      ],
+      "historicalNames": [
+        "45ACP30T"
+      ],
+      "historicalSummary": "M1 SMG: .45 ACP 30発箱のみ。ドラム不可（u27 一致）。",
+      "sources": [
+        "https://en.wikipedia.org/wiki/Thompson_submachine_gun"
+      ],
+      "verdict": "MATCH",
+      "recommendation": "変更不要",
+      "onlyCbe": [],
+      "onlyHist": [],
+      "both": [
+        235
+      ],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 17,
+      "name": "M1A1 SMG",
+      "category": "smg",
+      "cbeEffective": [
+        235,
+        237
+      ],
+      "cbeEffectiveNames": [
+        "45ACP30T",
+        "45ACP30G"
+      ],
+      "historicalPlIndices": [
+        235,
+        237
+      ],
+      "historicalNames": [
+        "45ACP30T",
+        "45ACP30G"
+      ],
+      "historicalSummary": "M1A1 SMG: .45 ACP 30発 + 30G。ドラム/20T 不可。",
+      "sources": [
+        "https://en.wikipedia.org/wiki/Thompson_submachine_gun"
+      ],
+      "verdict": "MATCH",
+      "recommendation": "変更不要",
+      "onlyCbe": [],
+      "onlyHist": [],
+      "both": [
+        235,
+        237
+      ],
+      "auditDrift": true,
+      "stExtra": [
+        234,
+        236
+      ],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 18,
+      "name": "M3 SMG",
+      "category": "smg",
+      "cbeEffective": [
+        238
+      ],
+      "cbeEffectiveNames": [
+        "3006-20J"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "M3 SMG: ",
+      "sources": [
+        "https://en.wikipedia.org/wiki/M3_SMG"
+      ],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        238
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": "Auto-crawl 2026-05-31. Indices は口径ヒューリスティクス — 人手確認。"
+    },
+    {
+      "cbeIdx": 19,
+      "name": "M3A1 SMG",
+      "category": "smg",
+      "cbeEffective": [
+        238
+      ],
+      "cbeEffectiveNames": [
+        "3006-20J"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "M3A1 SMG: ",
+      "sources": [
+        "https://en.wikipedia.org/wiki/M3A1_SMG"
+      ],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        238
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": "Auto-crawl 2026-05-31. Indices は口径ヒューリスティクス — 人手確認。"
+    },
+    {
+      "cbeIdx": 20,
+      "name": "M1919A6 LMG",
+      "category": "lmg",
+      "cbeEffective": [],
+      "cbeEffectiveNames": [],
+      "historicalPlIndices": [
+        230,
+        238,
+        239,
+        240
+      ],
+      "historicalNames": [
+        "3006-20B",
+        "3006-20J",
+        "3006-200",
+        "3006-250"
+      ],
+      "historicalSummary": "M1919A6: .30-06 Springfield 250 発布/金属リンクベルト。",
+      "sources": [
+        "https://en.wikipedia.org/wiki/M1919_Browning_machine_gun"
+      ],
+      "verdict": "CBE_EMPTY",
+      "recommendation": "CBE デコード or 実機 — 史実は暫定候補のみ",
+      "onlyCbe": [],
+      "onlyHist": [
+        230,
+        238,
+        239,
+        240
+      ],
+      "both": [],
+      "auditDrift": true,
+      "stExtra": [
+        230,
+        238,
+        239,
+        240
+      ],
+      "notes": "CBE 空 — override JSON 暫定と一致。"
+    },
+    {
+      "cbeIdx": 21,
+      "name": "M1941   LMG",
+      "category": "lmg",
+      "cbeEffective": [
+        239
+      ],
+      "cbeEffectiveNames": [
+        "3006-200"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "M1941   LMG: ",
+      "sources": [
+        "https://en.wikipedia.org/wiki/M1941_LMG"
+      ],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        239
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": "Auto-crawl 2026-05-31. Indices は口径ヒューリスティクス — 人手確認。"
+    },
+    {
+      "cbeIdx": 22,
+      "name": "M1917A1 MMG",
+      "category": "mmg",
+      "cbeEffective": [],
+      "cbeEffectiveNames": [],
+      "historicalPlIndices": [
+        230,
+        238,
+        239,
+        240
+      ],
+      "historicalNames": [
+        "3006-20B",
+        "3006-20J",
+        "3006-200",
+        "3006-250"
+      ],
+      "historicalSummary": "M1917A1 MMG: .30-06 ベルト。",
+      "sources": [
+        "https://en.wikipedia.org/wiki/M1919_Browning_machine_gun"
+      ],
+      "verdict": "CBE_EMPTY",
+      "recommendation": "CBE デコード or 実機 — 史実は暫定候補のみ",
+      "onlyCbe": [],
+      "onlyHist": [
+        230,
+        238,
+        239,
+        240
+      ],
+      "both": [],
+      "auditDrift": true,
+      "stExtra": [
+        230,
+        238,
+        239,
+        240
+      ],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 23,
+      "name": "M1919A4 MMG",
+      "category": "mmg",
+      "cbeEffective": [],
+      "cbeEffectiveNames": [],
+      "historicalPlIndices": [
+        230,
+        238,
+        239,
+        240
+      ],
+      "historicalNames": [
+        "3006-20B",
+        "3006-20J",
+        "3006-200",
+        "3006-250"
+      ],
+      "historicalSummary": "M1919A4: .30-06 ベルト。",
+      "sources": [
+        "https://en.wikipedia.org/wiki/M1919_Browning_machine_gun"
+      ],
+      "verdict": "CBE_EMPTY",
+      "recommendation": "CBE デコード or 実機 — 史実は暫定候補のみ",
+      "onlyCbe": [],
+      "onlyHist": [
+        230,
+        238,
+        239,
+        240
+      ],
+      "both": [],
+      "auditDrift": true,
+      "stExtra": [
+        230,
+        238,
+        239,
+        240
+      ],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 24,
+      "name": "M2 HB HMG",
+      "category": "mmg",
+      "cbeEffective": [],
+      "cbeEffectiveNames": [],
+      "historicalPlIndices": [
+        239,
+        240,
+        241
+      ],
+      "historicalNames": [
+        "3006-200",
+        "3006-250",
+        "50M2-110"
+      ],
+      "historicalSummary": "M2 HB: .50 BMG(241) + .30 ベルト系。CBE 空。",
+      "sources": [
+        "https://en.wikipedia.org/wiki/M2_Browning"
+      ],
+      "verdict": "CBE_EMPTY",
+      "recommendation": "CBE デコード or 実機 — 史実は暫定候補のみ",
+      "onlyCbe": [],
+      "onlyHist": [
+        239,
+        240,
+        241
+      ],
+      "both": [],
+      "auditDrift": true,
+      "stExtra": [
+        239,
+        240,
+        241
+      ],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 25,
+      "name": "M1 RL",
+      "category": "rocket_launcher",
+      "cbeEffective": [
+        243
+      ],
+      "cbeEffectiveNames": [
+        "M6A5 HR"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "M1 RL: ",
+      "sources": [
+        "https://en.wikipedia.org/wiki/M1_RL"
+      ],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        243
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": "Auto-crawl 2026-05-31. Indices は口径ヒューリスティクス — 人手確認。"
+    },
+    {
+      "cbeIdx": 26,
+      "name": "M1A1 RL",
+      "category": "rocket_launcher",
+      "cbeEffective": [
+        243
+      ],
+      "cbeEffectiveNames": [
+        "M6A5 HR"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "M1A1 RL: ",
+      "sources": [
+        "https://en.wikipedia.org/wiki/M1A1_RL"
+      ],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        243
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": "Auto-crawl 2026-05-31. Indices は口径ヒューリスティクス — 人手確認。"
+    },
+    {
+      "cbeIdx": 27,
+      "name": "M9 RL",
+      "category": "rocket_launcher",
+      "cbeEffective": [
+        243
+      ],
+      "cbeEffectiveNames": [
+        "M6A5 HR"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "M9 RL: ",
+      "sources": [
+        "https://en.wikipedia.org/wiki/M9_RL"
+      ],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        243
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": "Auto-crawl 2026-05-31. Indices は口径ヒューリスティクス — 人手確認。"
+    },
+    {
+      "cbeIdx": 28,
+      "name": "E1R1 Fl",
+      "category": "flamethrower",
+      "cbeEffective": [],
+      "cbeEffectiveNames": [],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "E1R1 Fl: ",
+      "sources": [
+        "https://en.wikipedia.org/wiki/E1R1_Fl"
+      ],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": true,
+      "stExtra": [
+        229
+      ],
+      "notes": "Auto-crawl 2026-05-31. Indices は口径ヒューリスティクス — 人手確認。"
+    },
+    {
+      "cbeIdx": 29,
+      "name": "M1A1 Fl",
+      "category": "flamethrower",
+      "cbeEffective": [],
+      "cbeEffectiveNames": [],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": true,
+      "stExtra": [
+        229
+      ],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 30,
+      "name": "M2A1-7 Fl",
+      "category": "flamethrower",
+      "cbeEffective": [],
+      "cbeEffectiveNames": [],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": true,
+      "stExtra": [
+        229
+      ],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 31,
+      "name": "M2 Tripod",
+      "category": "tripod",
+      "cbeEffective": [],
+      "cbeEffectiveNames": [],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 32,
+      "name": "M1917 Tripod",
+      "category": "tripod",
+      "cbeEffective": [],
+      "cbeEffectiveNames": [],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 33,
+      "name": "M3 Tripod",
+      "category": "tripod",
+      "cbeEffective": [],
+      "cbeEffectiveNames": [],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 34,
+      "name": "M1 Ammobox",
+      "category": "ammo_box",
+      "cbeEffective": [
+        240,
+        241
+      ],
+      "cbeEffectiveNames": [
+        "3006-250",
+        "50M2-110"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        240,
+        241
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 35,
+      "name": "M2HB Ammobox",
+      "category": "ammo_box",
+      "cbeEffective": [
+        242
+      ],
+      "cbeEffectiveNames": [
+        "M6A1 HR"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        242
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 36,
+      "name": "M3 Binocular",
+      "category": "binoculars",
+      "cbeEffective": [],
+      "cbeEffectiveNames": [],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 37,
+      "name": "SCR536",
+      "category": "radio",
+      "cbeEffective": [],
+      "cbeEffectiveNames": [],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 38,
+      "name": "Med Bag",
+      "category": "medical",
+      "cbeEffective": [],
+      "cbeEffectiveNames": [],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 39,
+      "name": "Film",
+      "category": "document",
+      "cbeEffective": [],
+      "cbeEffectiveNames": [],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 40,
+      "name": "Map Case",
+      "category": "document",
+      "cbeEffective": [],
+      "cbeEffectiveNames": [],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 41,
+      "name": "C/96",
+      "category": "pistol",
+      "cbeEffective": [
+        256
+      ],
+      "cbeEffectiveNames": [
+        "7.63-10b"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "C/96: ",
+      "sources": [
+        "https://en.wikipedia.org/wiki/C/96"
+      ],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        256
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": "Auto-crawl 2026-05-31. Indices は口径ヒューリスティクス — 人手確認。"
+    },
+    {
+      "cbeIdx": 42,
+      "name": "C/96M712",
+      "category": "pistol",
+      "cbeEffective": [],
+      "cbeEffectiveNames": [],
+      "historicalPlIndices": [
+        256,
+        257,
+        258
+      ],
+      "historicalNames": [
+        "7.63-10b",
+        "7.63-20b",
+        "9Pb-8L"
+      ],
+      "historicalSummary": "C/96M712: 9mm(258) / 7.63mm(256,257)。CBE 一致。u27 で effective 空 — RE。",
+      "sources": [
+        "https://en.wikipedia.org/wiki/Mauser_C96"
+      ],
+      "verdict": "CBE_EMPTY",
+      "recommendation": "CBE デコード or 実機 — 史実は暫定候補のみ",
+      "onlyCbe": [],
+      "onlyHist": [
+        256,
+        257,
+        258
+      ],
+      "both": [],
+      "auditDrift": true,
+      "stExtra": [
+        256,
+        257,
+        258
+      ],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 43,
+      "name": "P08",
+      "category": "pistol",
+      "cbeEffective": [
+        259
+      ],
+      "cbeEffectiveNames": [
+        "32ACP-8M"
+      ],
+      "historicalPlIndices": [
+        259
+      ],
+      "historicalNames": [
+        "32ACP-8M"
+      ],
+      "historicalSummary": "P08: CBE は 32ACP-8M(259) のみ。史実の標準 P08 は 9×19mm Parabellum。PL/CBE は意図的別口径の可能性 — 実機優先。",
+      "sources": [
+        "https://en.wikipedia.org/wiki/Luger_pistol",
+        "https://en.wikipedia.org/wiki/9mm_Parabellum"
+      ],
+      "verdict": "MATCH",
+      "recommendation": "変更不要",
+      "onlyCbe": [],
+      "onlyHist": [],
+      "both": [
+        259
+      ],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": "史実 9mm → PL 258/320 等と混同注意。CBE 正本 259 を維持。"
+    },
+    {
+      "cbeIdx": 44,
+      "name": "M1934",
+      "category": "pistol",
+      "cbeEffective": [
+        260
+      ],
+      "cbeEffectiveNames": [
+        "32ACP-7B"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "M1934: ",
+      "sources": [
+        "https://en.wikipedia.org/wiki/M1934"
+      ],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        260
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": "Auto-crawl 2026-05-31. Indices は口径ヒューリスティクス — 人手確認。"
+    },
+    {
+      "cbeIdx": 45,
+      "name": "Beholla",
+      "category": "pistol",
+      "cbeEffective": [
+        261
+      ],
+      "cbeEffectiveNames": [
+        "32ACP-8S"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "Beholla: ",
+      "sources": [
+        "https://en.wikipedia.org/wiki/Beholla"
+      ],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        261
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": "Auto-crawl 2026-05-31. Indices は口径ヒューリスティクス — 人手確認。"
+    },
+    {
+      "cbeIdx": 46,
+      "name": "M38H",
+      "category": "pistol",
+      "cbeEffective": [
+        262
+      ],
+      "cbeEffectiveNames": [
+        "32ACP-8W"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        262
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 47,
+      "name": "PP",
+      "category": "pistol",
+      "cbeEffective": [
+        263
+      ],
+      "cbeEffectiveNames": [
+        "32ACP-7W"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        263
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 48,
+      "name": "PPK",
+      "category": "pistol",
+      "cbeEffective": [
+        264
+      ],
+      "cbeEffectiveNames": [
+        "32ACP-8H"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        264
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 49,
+      "name": "HSc",
+      "category": "pistol",
+      "cbeEffective": [
+        265
+      ],
+      "cbeEffectiveNames": [
+        "9Pb-8W"
+      ],
+      "historicalPlIndices": [
+        265
+      ],
+      "historicalNames": [
+        "9Pb-8W"
+      ],
+      "historicalSummary": "HSc: 7.65mm/.32 ACP 系。CBE 265(9Pb-8W)。",
+      "sources": [
+        "https://en.wikipedia.org/wiki/Heckler_%26_Koch_HSc"
+      ],
+      "verdict": "MATCH",
+      "recommendation": "変更不要",
+      "onlyCbe": [],
+      "onlyHist": [],
+      "both": [
+        265
+      ],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 50,
+      "name": "P38",
+      "category": "pistol",
+      "cbeEffective": [
+        266
+      ],
+      "cbeEffectiveNames": [
+        "FLeut41"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        266
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 51,
+      "name": "27mmLeuP",
+      "category": "smoke_grenade",
+      "cbeEffective": [
+        266
+      ],
+      "cbeEffectiveNames": [
+        "FLeut41"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        266
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": true,
+      "stExtra": [
+        267
+      ],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 52,
+      "name": "27mmP42",
+      "category": "smoke_grenade",
+      "cbeEffective": [
+        266
+      ],
+      "cbeEffectiveNames": [
+        "FLeut41"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        266
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": true,
+      "stExtra": [
+        267
+      ],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 53,
+      "name": "27mmKpfP",
+      "category": "grenade_launcher_ammo",
+      "cbeEffective": [],
+      "cbeEffectiveNames": [],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": true,
+      "stExtra": [
+        266,
+        267
+      ],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 54,
+      "name": "27mmStuP",
+      "category": "grenade_launcher_ammo",
+      "cbeEffective": [],
+      "cbeEffectiveNames": [],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": true,
+      "stExtra": [
+        267
+      ],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 55,
+      "name": "Gew98",
+      "category": "rifle",
+      "cbeEffective": [
+        273
+      ],
+      "cbeEffectiveNames": [
+        "7.92-10G"
+      ],
+      "historicalPlIndices": [
+        272,
+        273
+      ],
+      "historicalNames": [
+        "7.92-5",
+        "7.92-10G"
+      ],
+      "historicalSummary": "Gew98: 7.92×57 5 発クリップ。",
+      "sources": [
+        "https://en.wikipedia.org/wiki/Gewehr_98"
+      ],
+      "verdict": "CBE_SUBSET",
+      "recommendation": "CBE 拡張テーブル / 272 系 RE — override 禁止",
+      "onlyCbe": [],
+      "onlyHist": [
+        272
+      ],
+      "both": [
+        273
+      ],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 56,
+      "name": "Kar98b",
+      "category": "rifle",
+      "cbeEffective": [
+        273
+      ],
+      "cbeEffectiveNames": [
+        "7.92-10G"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        273
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 57,
+      "name": "Kar98k",
+      "category": "rifle",
+      "cbeEffective": [
+        273
+      ],
+      "cbeEffectiveNames": [
+        "7.92-10G"
+      ],
+      "historicalPlIndices": [
+        272,
+        273
+      ],
+      "historicalNames": [
+        "7.92-5",
+        "7.92-10G"
+      ],
+      "historicalSummary": "Kar98k: 7.92×57mm、5発ストリッパークリップ(272) + 10発相当(273)。特殊弾(GSprgr等)は別枠。",
+      "sources": [
+        "https://en.wikipedia.org/wiki/Karabiner_98k"
+      ],
+      "verdict": "CBE_SUBSET",
+      "recommendation": "CBE 拡張テーブル / 272 系 RE — override 禁止",
+      "onlyCbe": [],
+      "onlyHist": [
+        272
+      ],
+      "both": [
+        273
+      ],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": "CBE raw [273,304,305,314] — 272 は 4 スロット外。第3フィルタ/拡張 RE。"
+    },
+    {
+      "cbeIdx": 58,
+      "name": "Kar98k svw",
+      "category": "rifle",
+      "cbeEffective": [
+        272
+      ],
+      "cbeEffectiveNames": [
+        "7.92-5"
+      ],
+      "historicalPlIndices": [
+        272,
+        273
+      ],
+      "historicalNames": [
+        "7.92-5",
+        "7.92-10G"
+      ],
+      "historicalSummary": "Kar98k svw: Kar98k 同型。5発クリップ + 7.92×57。",
+      "sources": [
+        "https://en.wikipedia.org/wiki/Karabiner_98k"
+      ],
+      "verdict": "CBE_SUBSET",
+      "recommendation": "CBE 拡張テーブル / 272 系 RE — override 禁止",
+      "onlyCbe": [],
+      "onlyHist": [
+        273
+      ],
+      "both": [
+        272
+      ],
+      "auditDrift": true,
+      "stExtra": [
+        303,
+        304
+      ],
+      "notes": "監査: effective に 272 のみ — CBE 解釈要確認。"
+    },
+    {
+      "cbeIdx": 59,
+      "name": "Gew29/40",
+      "category": "rifle",
+      "cbeEffective": [],
+      "cbeEffectiveNames": [],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": true,
+      "stExtra": [
+        273
+      ],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 60,
+      "name": "Gew33/40",
+      "category": "rifle",
+      "cbeEffective": [
+        273
+      ],
+      "cbeEffectiveNames": [
+        "7.92-10G"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        273
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 61,
+      "name": "Gew98/40",
+      "category": "rifle",
+      "cbeEffective": [
+        273
+      ],
+      "cbeEffectiveNames": [
+        "7.92-10G"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        273
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 62,
+      "name": "VG-1",
+      "category": "rifle",
+      "cbeEffective": [
+        274
+      ],
+      "cbeEffectiveNames": [
+        "7.92-101"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        274
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 63,
+      "name": "VG-2",
+      "category": "rifle",
+      "cbeEffective": [
+        274
+      ],
+      "cbeEffectiveNames": [
+        "7.92-101"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        274
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 64,
+      "name": "VK-98",
+      "category": "rifle",
+      "cbeEffective": [
+        273
+      ],
+      "cbeEffectiveNames": [
+        "7.92-10G"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        273
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 65,
+      "name": "Gew41(W)",
+      "category": "rifle",
+      "cbeEffective": [
+        273
+      ],
+      "cbeEffectiveNames": [
+        "7.92-10G"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        273
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 66,
+      "name": "Gew41(M)",
+      "category": "rifle",
+      "cbeEffective": [
+        273
+      ],
+      "cbeEffectiveNames": [
+        "7.92-10G"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        273
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 67,
+      "name": "Gew43",
+      "category": "rifle",
+      "cbeEffective": [
+        273,
+        274
+      ],
+      "cbeEffectiveNames": [
+        "7.92-10G",
+        "7.92-101"
+      ],
+      "historicalPlIndices": [
+        272,
+        273,
+        274
+      ],
+      "historicalNames": [
+        "7.92-5",
+        "7.92-10G",
+        "7.92-101"
+      ],
+      "historicalSummary": "Gew43: 7.92×57 10発マガジン。Kar43 と同系。",
+      "sources": [
+        "https://en.wikipedia.org/wiki/Gewehr_43"
+      ],
+      "verdict": "CBE_SUBSET",
+      "recommendation": "CBE 拡張テーブル / 272 系 RE — override 禁止",
+      "onlyCbe": [],
+      "onlyHist": [
+        272
+      ],
+      "both": [
+        273,
+        274
+      ],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": "CBE [273,274] — 272 追加は Kar98 系パターン。"
+    },
+    {
+      "cbeIdx": 68,
+      "name": "Kar43",
+      "category": "rifle",
+      "cbeEffective": [
+        273,
+        274
+      ],
+      "cbeEffectiveNames": [
+        "7.92-10G",
+        "7.92-101"
+      ],
+      "historicalPlIndices": [
+        272,
+        273
+      ],
+      "historicalNames": [
+        "7.92-5",
+        "7.92-10G"
+      ],
+      "historicalSummary": "Kar43/G43: 7.92×57、10発ボックス + 5発ストリッパー。274(7.92-101)は Gew43 系 CBE リンクだが史実上 Kurz/FG42 用ではない。",
+      "sources": [
+        "https://en.wikipedia.org/wiki/Gewehr_43"
+      ],
+      "verdict": "CONFLICT",
+      "recommendation": "PL 実機装填 UI 確認 — override 禁止",
+      "onlyCbe": [
+        274
+      ],
+      "onlyHist": [
+        272
+      ],
+      "both": [
+        273
+      ],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": "CBE [273,274] — 史実は 272+273。274 除外は mag_type RE 候補。"
+    },
+    {
+      "cbeIdx": 69,
+      "name": "Zf Kar98k",
+      "category": "rifle",
+      "cbeEffective": [
+        273
+      ],
+      "cbeEffectiveNames": [
+        "7.92-10G"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        273
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 70,
+      "name": "Zf Gew43",
+      "category": "rifle",
+      "cbeEffective": [
+        273,
+        274
+      ],
+      "cbeEffectiveNames": [
+        "7.92-10G",
+        "7.92-101"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        273,
+        274
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 71,
+      "name": "FG42/1",
+      "category": "lmg",
+      "cbeEffective": [],
+      "cbeEffectiveNames": [],
+      "historicalPlIndices": [
+        272,
+        273,
+        275,
+        276
+      ],
+      "historicalNames": [
+        "7.92-5",
+        "7.92-10G",
+        "7.92-201",
+        "7.92-202"
+      ],
+      "historicalSummary": "FG42/1: 7.92×57 フルパワー。10/20発ボックス + 5発クリップ。CBE 275/276 に対応。",
+      "sources": [
+        "https://en.wikipedia.org/wiki/FG_42"
+      ],
+      "verdict": "CBE_EMPTY",
+      "recommendation": "CBE デコード or 実機 — 史実は暫定候補のみ",
+      "onlyCbe": [],
+      "onlyHist": [
+        272,
+        273,
+        275,
+        276
+      ],
+      "both": [],
+      "auditDrift": true,
+      "stExtra": [
+        275,
+        276
+      ],
+      "notes": "u27 フィルタで effective 空 — 形状 RE 要。"
+    },
+    {
+      "cbeIdx": 72,
+      "name": "FG42/2",
+      "category": "lmg",
+      "cbeEffective": [],
+      "cbeEffectiveNames": [],
+      "historicalPlIndices": [
+        277
+      ],
+      "historicalNames": [
+        "7.92k-30"
+      ],
+      "historicalSummary": "FG42/2: CBE 277(7.92k-30) のみ。後期型 Kurz 系の可能性 — 要 PL 実機。",
+      "sources": [
+        "https://en.wikipedia.org/wiki/FG_42"
+      ],
+      "verdict": "CBE_EMPTY",
+      "recommendation": "CBE デコード or 実機 — 史実は暫定候補のみ",
+      "onlyCbe": [],
+      "onlyHist": [
+        277
+      ],
+      "both": [],
+      "auditDrift": true,
+      "stExtra": [
+        277
+      ],
+      "notes": "CBE と史実の口径差 — CONFLICT 候補。"
+    },
+    {
+      "cbeIdx": 73,
+      "name": "MKb42(W)",
+      "category": "rifle",
+      "cbeEffective": [
+        278
+      ],
+      "cbeEffectiveNames": [
+        "9Pb-20S"
+      ],
+      "historicalPlIndices": [
+        278
+      ],
+      "historicalNames": [
+        "9Pb-20S"
+      ],
+      "historicalSummary": "MKb42(W)/StG 系: 7.92×33mm Kurz。CBE 278(9Pb-20S) = Pistolenpatrone M43 相当。277 は FG42/2 用。",
+      "sources": [
+        "https://en.wikipedia.org/wiki/StG_44",
+        "https://en.wikipedia.org/wiki/7.92x33mm_Kurz"
+      ],
+      "verdict": "MATCH",
+      "recommendation": "変更不要",
+      "onlyCbe": [],
+      "onlyHist": [],
+      "both": [
+        278
+      ],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": "旧 override 277 は誤り。CBE 278 が正。"
+    },
+    {
+      "cbeIdx": 74,
+      "name": "MKb42(H)",
+      "category": "rifle",
+      "cbeEffective": [
+        277
+      ],
+      "cbeEffectiveNames": [
+        "7.92k-30"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        277
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 75,
+      "name": "MP43",
+      "category": "rifle",
+      "cbeEffective": [
+        278
+      ],
+      "cbeEffectiveNames": [
+        "9Pb-20S"
+      ],
+      "historicalPlIndices": [
+        278
+      ],
+      "historicalNames": [
+        "9Pb-20S"
+      ],
+      "historicalSummary": "MP43/StG44: 7.92×33 Kurz 30発箱。CBE 278。",
+      "sources": [
+        "https://en.wikipedia.org/wiki/StG_44"
+      ],
+      "verdict": "MATCH",
+      "recommendation": "変更不要",
+      "onlyCbe": [],
+      "onlyHist": [],
+      "both": [
+        278
+      ],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 76,
+      "name": "StG44",
+      "category": "rifle",
+      "cbeEffective": [
+        278
+      ],
+      "cbeEffectiveNames": [
+        "9Pb-20S"
+      ],
+      "historicalPlIndices": [
+        278
+      ],
+      "historicalNames": [
+        "9Pb-20S"
+      ],
+      "historicalSummary": "StG44: 7.92×33 Kurz。CBE 278(9Pb-20S)。",
+      "sources": [
+        "https://en.wikipedia.org/wiki/StG_44"
+      ],
+      "verdict": "MATCH",
+      "recommendation": "変更不要",
+      "onlyCbe": [],
+      "onlyHist": [],
+      "both": [
+        278
+      ],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 77,
+      "name": "VG1-5",
+      "category": "rifle",
+      "cbeEffective": [
+        278
+      ],
+      "cbeEffectiveNames": [
+        "9Pb-20S"
+      ],
+      "historicalPlIndices": [
+        278
+      ],
+      "historicalNames": [
+        "9Pb-20S"
+      ],
+      "historicalSummary": "VG1-5: Kurz 系。CBE 278。",
+      "sources": [
+        "https://en.wikipedia.org/wiki/7.92x33mm_Kurz"
+      ],
+      "verdict": "MATCH",
+      "recommendation": "変更不要",
+      "onlyCbe": [],
+      "onlyHist": [],
+      "both": [
+        278
+      ],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 78,
+      "name": "MP28/2",
+      "category": "smg",
+      "cbeEffective": [
+        279,
+        280,
+        281
+      ],
+      "cbeEffectiveNames": [
+        "9Pb-32S",
+        "9Pb-50S",
+        "9Pb-20E"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        279,
+        280,
+        281
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 79,
+      "name": "MP35/1",
+      "category": "smg",
+      "cbeEffective": [],
+      "cbeEffectiveNames": [],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": true,
+      "stExtra": [
+        284,
+        285
+      ],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 80,
+      "name": "EMP",
+      "category": "smg",
+      "cbeEffective": [],
+      "cbeEffectiveNames": [],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": true,
+      "stExtra": [
+        282,
+        283
+      ],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 81,
+      "name": "MP38",
+      "category": "smg",
+      "cbeEffective": [
+        286
+      ],
+      "cbeEffectiveNames": [
+        "9Pb-32P"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        286
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 82,
+      "name": "MP40",
+      "category": "smg",
+      "cbeEffective": [
+        286
+      ],
+      "cbeEffectiveNames": [
+        "9Pb-32P"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        286
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 83,
+      "name": "MP40/2",
+      "category": "smg",
+      "cbeEffective": [
+        286
+      ],
+      "cbeEffectiveNames": [
+        "9Pb-32P"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        286
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 84,
+      "name": "MP41",
+      "category": "smg",
+      "cbeEffective": [],
+      "cbeEffectiveNames": [],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": true,
+      "stExtra": [
+        286
+      ],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 85,
+      "name": "Ger Potsdam",
+      "category": "smg",
+      "cbeEffective": [
+        287
+      ],
+      "cbeEffectiveNames": [
+        "Pk16-100"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        287
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 86,
+      "name": "MP3008",
+      "category": "smg",
+      "cbeEffective": [
+        286
+      ],
+      "cbeEffectiveNames": [
+        "9Pb-32P"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        286
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 87,
+      "name": "MG08/15",
+      "category": "lmg",
+      "cbeEffective": [
+        288
+      ],
+      "cbeEffectiveNames": [
+        "7.92f100"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        288
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 88,
+      "name": "MG08/18",
+      "category": "lmg",
+      "cbeEffective": [
+        288
+      ],
+      "cbeEffectiveNames": [
+        "7.92f100"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        288
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 89,
+      "name": "MG13",
+      "category": "lmg",
+      "cbeEffective": [
+        291,
+        292
+      ],
+      "cbeEffectiveNames": [
+        "Pt13-75",
+        "Dt15-75"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        291,
+        292
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 90,
+      "name": "MG15",
+      "category": "lmg",
+      "cbeEffective": [],
+      "cbeEffectiveNames": [],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": true,
+      "stExtra": [
+        293
+      ],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 91,
+      "name": "MG34",
+      "category": "lmg",
+      "cbeEffective": [
+        294,
+        295
+      ],
+      "cbeEffectiveNames": [
+        "Pt34-75",
+        "7.92-50"
+      ],
+      "historicalPlIndices": [
+        294,
+        295
+      ],
+      "historicalNames": [
+        "Pt34-75",
+        "7.92-50"
+      ],
+      "historicalSummary": "MG34: 7.92×57 75 発/50 発ベルト。CBE 294/295。",
+      "sources": [
+        "https://en.wikipedia.org/wiki/MG_34"
+      ],
+      "verdict": "MATCH",
+      "recommendation": "変更不要",
+      "onlyCbe": [],
+      "onlyHist": [],
+      "both": [
+        294,
+        295
+      ],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 92,
+      "name": "MG34S",
+      "category": "lmg",
+      "cbeEffective": [
+        294,
+        295
+      ],
+      "cbeEffectiveNames": [
+        "Pt34-75",
+        "7.92-50"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        294,
+        295
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 93,
+      "name": "MG34/41",
+      "category": "lmg",
+      "cbeEffective": [
+        294,
+        295
+      ],
+      "cbeEffectiveNames": [
+        "Pt34-75",
+        "7.92-50"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        294,
+        295
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 94,
+      "name": "MG42",
+      "category": "lmg",
+      "cbeEffective": [
+        272,
+        273,
+        274,
+        275,
+        276,
+        277,
+        288,
+        289,
+        290,
+        295,
+        296,
+        389
+      ],
+      "cbeEffectiveNames": [
+        "7.92-5",
+        "7.92-10G",
+        "7.92-101",
+        "7.92-201",
+        "7.92-202",
+        "7.92k-30",
+        "7.92f100",
+        "7.92f250",
+        "7.92-25",
+        "7.92-50",
+        "7.92m250",
+        "7.92-20Z"
+      ],
+      "historicalPlIndices": [
+        294
+      ],
+      "historicalNames": [
+        "Pt34-75"
+      ],
+      "historicalSummary": "MG42: 7.92×57 ベルト。CBE 294。",
+      "sources": [
+        "https://en.wikipedia.org/wiki/MG_42"
+      ],
+      "verdict": "CONFLICT",
+      "recommendation": "PL 実機装填 UI 確認 — override 禁止",
+      "onlyCbe": [
+        272,
+        273,
+        274,
+        275,
+        276,
+        277,
+        288,
+        289,
+        290,
+        295,
+        296,
+        389
+      ],
+      "onlyHist": [
+        294
+      ],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 95,
+      "name": "MG08",
+      "category": "mmg",
+      "cbeEffective": [],
+      "cbeEffectiveNames": [],
+      "historicalPlIndices": [
+        273,
+        358
+      ],
+      "historicalNames": [
+        "7.92-10G",
+        "303Br250"
+      ],
+      "historicalSummary": "MG08: 7.92×57 250 発ベルト。CBE 空 — 289/358 系候補。",
+      "sources": [
+        "https://en.wikipedia.org/wiki/MG_08"
+      ],
+      "verdict": "CBE_EMPTY",
+      "recommendation": "CBE デコード or 実機 — 史実は暫定候補のみ",
+      "onlyCbe": [],
+      "onlyHist": [
+        273,
+        358
+      ],
+      "both": [],
+      "auditDrift": true,
+      "stExtra": [
+        272,
+        273,
+        274,
+        275,
+        276,
+        277,
+        288,
+        289,
+        290,
+        295,
+        296,
+        389
+      ],
+      "notes": "CBE_EMPTY — 7.92 クラスタ fallback 撤去後要正本。"
+    },
+    {
+      "cbeIdx": 96,
+      "name": "PzB38",
+      "category": "at_rifle",
+      "cbeEffective": [
+        298
+      ],
+      "cbeEffectiveNames": [
+        "Pa318-10"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        298
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 97,
+      "name": "PzB39",
+      "category": "at_rifle",
+      "cbeEffective": [
+        298
+      ],
+      "cbeEffectiveNames": [
+        "Pa318-10"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        298
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 98,
+      "name": "GrB39",
+      "category": "at_rifle",
+      "cbeEffective": [],
+      "cbeEffectiveNames": [],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 99,
+      "name": "PzBSS41",
+      "category": "at_rifle",
+      "cbeEffective": [],
+      "cbeEffectiveNames": [],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": true,
+      "stExtra": [
+        299
+      ],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 100,
+      "name": "PzB41",
+      "category": "at_rifle",
+      "cbeEffective": [
+        300
+      ],
+      "cbeEffectiveNames": [
+        "20LS-10"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        300
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 101,
+      "name": "PF30mK",
+      "category": "panzerfaust",
+      "cbeEffective": [],
+      "cbeEffectiveNames": [],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 102,
+      "name": "PF30mG",
+      "category": "panzerfaust",
+      "cbeEffective": [],
+      "cbeEffectiveNames": [],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 103,
+      "name": "PF60m",
+      "category": "panzerfaust",
+      "cbeEffective": [],
+      "cbeEffectiveNames": [],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 104,
+      "name": "PF100m",
+      "category": "panzerfaust",
+      "cbeEffective": [],
+      "cbeEffectiveNames": [],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 105,
+      "name": "RPzB43",
+      "category": "rocket_launcher",
+      "cbeEffective": [
+        302
+      ],
+      "cbeEffectiveNames": [
+        "RPzB4992"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        302
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 106,
+      "name": "RPzB54",
+      "category": "rocket_launcher",
+      "cbeEffective": [
+        302
+      ],
+      "cbeEffectiveNames": [
+        "RPzB4992"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        302
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 107,
+      "name": "RPzB54/1",
+      "category": "rocket_launcher",
+      "cbeEffective": [],
+      "cbeEffectiveNames": [],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": true,
+      "stExtra": [
+        229
+      ],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 108,
+      "name": "FmW35",
+      "category": "flamethrower",
+      "cbeEffective": [],
+      "cbeEffectiveNames": [],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 109,
+      "name": "FmW40",
+      "category": "flamethrower",
+      "cbeEffective": [],
+      "cbeEffectiveNames": [],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 110,
+      "name": "FmW41",
+      "category": "flamethrower",
+      "cbeEffective": [],
+      "cbeEffectiveNames": [],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 111,
+      "name": "FmW42",
+      "category": "flamethrower",
+      "cbeEffective": [],
+      "cbeEffectiveNames": [],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 112,
+      "name": "Laf34",
+      "category": "tripod",
+      "cbeEffective": [],
+      "cbeEffectiveNames": [],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 113,
+      "name": "Laf42",
+      "category": "tripod",
+      "cbeEffective": [],
+      "cbeEffectiveNames": [],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 114,
+      "name": "Sch08",
+      "category": "tripod",
+      "cbeEffective": [],
+      "cbeEffectiveNames": [],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 115,
+      "name": "PatrK41",
+      "category": "ammo_box",
+      "cbeEffective": [
+        296,
+        297
+      ],
+      "cbeEffectiveNames": [
+        "7.92m250",
+        "Pa318-1"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        296,
+        297
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 116,
+      "name": "PatrK15",
+      "category": "ammo_box",
+      "cbeEffective": [
+        289,
+        290
+      ],
+      "cbeEffectiveNames": [
+        "7.92f250",
+        "7.92-25"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        289,
+        290
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 117,
+      "name": "Fernglas",
+      "category": "binoculars",
+      "cbeEffective": [],
+      "cbeEffectiveNames": [],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 118,
+      "name": "Feldfu.b",
+      "category": "radio",
+      "cbeEffective": [],
+      "cbeEffectiveNames": [],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 119,
+      "name": "SaniTo34",
+      "category": "medical",
+      "cbeEffective": [],
+      "cbeEffectiveNames": [],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 120,
+      "name": "Mkt35",
+      "category": "document",
+      "cbeEffective": [],
+      "cbeEffectiveNames": [],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 121,
+      "name": "Bodeo mod89",
+      "category": "pistol",
+      "cbeEffective": [
+        316
+      ],
+      "cbeEffectiveNames": [
+        "9Gli-7"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        316
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 122,
+      "name": "Glisenti m10",
+      "category": "pistol",
+      "cbeEffective": [
+        317
+      ],
+      "cbeEffectiveNames": [
+        "380ACP-7"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        317
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 123,
+      "name": "Beretta m34",
+      "category": "pistol",
+      "cbeEffective": [
+        318
+      ],
+      "cbeEffectiveNames": [
+        "6.5-6"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        318
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 124,
+      "name": "F. mod91",
+      "category": "rifle",
+      "cbeEffective": [
+        319
+      ],
+      "cbeEffectiveNames": [
+        "7.35-6"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        319
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 125,
+      "name": "M. mod91",
+      "category": "rifle",
+      "cbeEffective": [
+        319
+      ],
+      "cbeEffectiveNames": [
+        "7.35-6"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        319
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 126,
+      "name": "M. mod91/TS",
+      "category": "rifle",
+      "cbeEffective": [
+        319
+      ],
+      "cbeEffectiveNames": [
+        "7.35-6"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        319
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 127,
+      "name": "F. mod38",
+      "category": "rifle",
+      "cbeEffective": [
+        320
+      ],
+      "cbeEffectiveNames": [
+        "9Pb-10"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        320
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 128,
+      "name": "M. mod38",
+      "category": "rifle",
+      "cbeEffective": [
+        320
+      ],
+      "cbeEffectiveNames": [
+        "9Pb-10"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        320
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 129,
+      "name": "M. mod38/TS",
+      "category": "rifle",
+      "cbeEffective": [
+        320
+      ],
+      "cbeEffectiveNames": [
+        "9Pb-10"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        320
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 130,
+      "name": "F. mod38",
+      "category": "rifle",
+      "cbeEffective": [
+        319
+      ],
+      "cbeEffectiveNames": [
+        "7.35-6"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        319
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 131,
+      "name": "M. mod38",
+      "category": "rifle",
+      "cbeEffective": [
+        319
+      ],
+      "cbeEffectiveNames": [
+        "7.35-6"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        319
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 132,
+      "name": "M. mod38/TS",
+      "category": "rifle",
+      "cbeEffective": [
+        319
+      ],
+      "cbeEffectiveNames": [
+        "7.35-6"
+      ],
+      "historicalPlIndices": [
+        319
+      ],
+      "historicalNames": [
+        "7.35-6"
+      ],
+      "historicalSummary": "M. mod38/TS: イタリア製カルカノ系。主弾 7.35×51mm (PL 7.35-6)。付属銃剣 SB.mod91。",
+      "sources": [
+        "https://en.wikipedia.org/wiki/Carcano",
+        "user_playtest_memory"
+      ],
+      "verdict": "MATCH",
+      "recommendation": "変更不要",
+      "onlyCbe": [],
+      "onlyHist": [],
+      "both": [
+        319
+      ],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": "主弾 319 は CBE と一致。付属スロット: CBE +50=332(BP.MAB38) だがユーザー期待は 331(SB.mod91)。332 はベレッタ MAB 系名称でカルカノ銃剣と不整合 — PL 実機要確認。"
+    },
+    {
+      "cbeIdx": 133,
+      "name": "MAB mod38A",
+      "category": "smg",
+      "cbeEffective": [
+        321,
+        324
+      ],
+      "cbeEffectiveNames": [
+        "9Pb-20",
+        "6.5-20"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        321,
+        324
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 134,
+      "name": "MAB mod38/42",
+      "category": "smg",
+      "cbeEffective": [
+        324
+      ],
+      "cbeEffectiveNames": [
+        "6.5-20"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        324
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 135,
+      "name": "Breda mod30",
+      "category": "lmg",
+      "cbeEffective": [
+        318,
+        324
+      ],
+      "cbeEffectiveNames": [
+        "6.5-6",
+        "6.5-20"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        318,
+        324
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 136,
+      "name": "FR mod14",
+      "category": "mmg",
+      "cbeEffective": [
+        326
+      ],
+      "cbeEffectiveNames": [
+        "8Brd-20"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        326
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 137,
+      "name": "FR mod14/35",
+      "category": "mmg",
+      "cbeEffective": [],
+      "cbeEffectiveNames": [],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 138,
+      "name": "Breda mod37",
+      "category": "mmg",
+      "cbeEffective": [
+        327
+      ],
+      "cbeEffectiveNames": [
+        "8Brd-50"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        327
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 139,
+      "name": "T. FR mod14",
+      "category": "tripod",
+      "cbeEffective": [],
+      "cbeEffectiveNames": [],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 140,
+      "name": "T. Breda m37",
+      "category": "tripod",
+      "cbeEffective": [],
+      "cbeEffectiveNames": [],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 141,
+      "name": "CM. FR 14/35",
+      "category": "ammo_box",
+      "cbeEffective": [],
+      "cbeEffectiveNames": [],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 142,
+      "name": "Binocolo",
+      "category": "binoculars",
+      "cbeEffective": [],
+      "cbeEffectiveNames": [],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 143,
+      "name": "Lebel 92",
+      "category": "pistol",
+      "cbeEffective": [
+        335
+      ],
+      "cbeEffectiveNames": [
+        "32ACP-9"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        335
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 144,
+      "name": "Unique Mle17",
+      "category": "pistol",
+      "cbeEffective": [
+        336
+      ],
+      "cbeEffectiveNames": [
+        "7.65-8"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        336
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 145,
+      "name": "Mle1935A",
+      "category": "pistol",
+      "cbeEffective": [
+        337
+      ],
+      "cbeEffectiveNames": [
+        "8M86-1"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        337
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 146,
+      "name": "Mle1935S",
+      "category": "pistol",
+      "cbeEffective": [
+        337
+      ],
+      "cbeEffectiveNames": [
+        "8M86-1"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        337
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 147,
+      "name": "F. Mle86/93",
+      "category": "rifle",
+      "cbeEffective": [
+        338
+      ],
+      "cbeEffectiveNames": [
+        "8M86-3"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        338
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 148,
+      "name": "M. Mle92/27",
+      "category": "rifle",
+      "cbeEffective": [
+        339
+      ],
+      "cbeEffectiveNames": [
+        "8M86-5"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        339
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 149,
+      "name": "F. Mle07/15",
+      "category": "rifle",
+      "cbeEffective": [
+        339
+      ],
+      "cbeEffectiveNames": [
+        "8M86-5"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        339
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 150,
+      "name": "F. Mle16",
+      "category": "rifle",
+      "cbeEffective": [
+        340
+      ],
+      "cbeEffectiveNames": [
+        "7.5-5"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        340
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 151,
+      "name": "M. Mle16/27",
+      "category": "rifle",
+      "cbeEffective": [
+        340
+      ],
+      "cbeEffectiveNames": [
+        "7.5-5"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        340
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 152,
+      "name": "F. MAS36",
+      "category": "rifle",
+      "cbeEffective": [
+        341
+      ],
+      "cbeEffectiveNames": [
+        "7.65-32"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        341
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 153,
+      "name": "F. MAS36CR39",
+      "category": "rifle",
+      "cbeEffective": [
+        341
+      ],
+      "cbeEffectiveNames": [
+        "7.65-32"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        341
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 154,
+      "name": "MAS38",
+      "category": "smg",
+      "cbeEffective": [
+        342
+      ],
+      "cbeEffectiveNames": [
+        "7.5-25"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        342
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 155,
+      "name": "MAC24/29",
+      "category": "lmg",
+      "cbeEffective": [
+        343
+      ],
+      "cbeEffectiveNames": [
+        "8M86-24"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        343
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 156,
+      "name": "Mle1914",
+      "category": "mmg",
+      "cbeEffective": [
+        344
+      ],
+      "cbeEffectiveNames": [
+        "8M86-30"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        344
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 157,
+      "name": "T. Mle1914",
+      "category": "tripod",
+      "cbeEffective": [],
+      "cbeEffectiveNames": [],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 158,
+      "name": "Jumelles",
+      "category": "binoculars",
+      "cbeEffective": [],
+      "cbeEffectiveNames": [],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 159,
+      "name": "No1 Mk4",
+      "category": "pistol",
+      "cbeEffective": [
+        351
+      ],
+      "cbeEffectiveNames": [
+        "380Mk2-1"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        351
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 160,
+      "name": "No2 Mk2",
+      "category": "pistol",
+      "cbeEffective": [
+        352
+      ],
+      "cbeEffectiveNames": [
+        "Very-1"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        352
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 161,
+      "name": "No2 Mk1*",
+      "category": "pistol",
+      "cbeEffective": [
+        352
+      ],
+      "cbeEffectiveNames": [
+        "Very-1"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        352
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 162,
+      "name": "No2 Mk1**",
+      "category": "pistol",
+      "cbeEffective": [
+        352
+      ],
+      "cbeEffectiveNames": [
+        "Very-1"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        352
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 163,
+      "name": "Webley Mk4",
+      "category": "pistol",
+      "cbeEffective": [
+        352
+      ],
+      "cbeEffectiveNames": [
+        "Very-1"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        352
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 164,
+      "name": "S&W No2",
+      "category": "pistol",
+      "cbeEffective": [
+        352
+      ],
+      "cbeEffectiveNames": [
+        "Very-1"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        352
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 165,
+      "name": "Very",
+      "category": "smoke_grenade",
+      "cbeEffective": [
+        353
+      ],
+      "cbeEffectiveNames": [
+        "303Br-10"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        353
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 166,
+      "name": "No1 Mk3",
+      "category": "rifle",
+      "cbeEffective": [
+        355
+      ],
+      "cbeEffectiveNames": [
+        "9Pb-32R"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        355
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 167,
+      "name": "No1 Mk3*",
+      "category": "rifle",
+      "cbeEffective": [
+        355
+      ],
+      "cbeEffectiveNames": [
+        "9Pb-32R"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        355
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 168,
+      "name": "No4 Mk1",
+      "category": "rifle",
+      "cbeEffective": [
+        355
+      ],
+      "cbeEffectiveNames": [
+        "9Pb-32R"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        355
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 169,
+      "name": "No4 Mk1*",
+      "category": "rifle",
+      "cbeEffective": [
+        355
+      ],
+      "cbeEffectiveNames": [
+        "9Pb-32R"
+      ],
+      "historicalPlIndices": [
+        355
+      ],
+      "historicalNames": [
+        "9Pb-32R"
+      ],
+      "historicalSummary": "No4 Mk1*: .303 2×5 発チャージャー。",
+      "sources": [
+        "https://en.wikipedia.org/wiki/Rifle_No_4"
+      ],
+      "verdict": "MATCH",
+      "recommendation": "変更不要",
+      "onlyCbe": [],
+      "onlyHist": [],
+      "both": [
+        355
+      ],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 170,
+      "name": "No4 Mk1(T)",
+      "category": "rifle",
+      "cbeEffective": [
+        355
+      ],
+      "cbeEffectiveNames": [
+        "9Pb-32R"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        355
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 171,
+      "name": "No3 Mk1*(T)",
+      "category": "rifle",
+      "cbeEffective": [
+        355
+      ],
+      "cbeEffectiveNames": [
+        "9Pb-32R"
+      ],
+      "historicalPlIndices": [
+        355
+      ],
+      "historicalNames": [
+        "9Pb-32R"
+      ],
+      "historicalSummary": "No3 Mk1*(T): .303 British クリップ装填。CBE 355(名称 9Pb-32R)。",
+      "sources": [
+        "https://en.wikipedia.org/wiki/Rifle_No_4",
+        "https://en.wikipedia.org/wiki/Stripper_clip"
+      ],
+      "verdict": "MATCH",
+      "recommendation": "変更不要",
+      "onlyCbe": [],
+      "onlyHist": [],
+      "both": [
+        355
+      ],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 172,
+      "name": "Sten Mk2",
+      "category": "smg",
+      "cbeEffective": [
+        356
+      ],
+      "cbeEffectiveNames": [
+        "303Br-47"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        356
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 173,
+      "name": "Sten Mk3",
+      "category": "smg",
+      "cbeEffective": [
+        356
+      ],
+      "cbeEffectiveNames": [
+        "303Br-47"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        356
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 174,
+      "name": "Sten Mk5",
+      "category": "smg",
+      "cbeEffective": [
+        356
+      ],
+      "cbeEffectiveNames": [
+        "303Br-47"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        356
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 175,
+      "name": "Lewis Mk1",
+      "category": "lmg",
+      "cbeEffective": [
+        357
+      ],
+      "cbeEffectiveNames": [
+        "303Br-30"
+      ],
+      "historicalPlIndices": [
+        357
+      ],
+      "historicalNames": [
+        "303Br-30"
+      ],
+      "historicalSummary": "Lewis Mk1: .303 British 47/97 発パン。PL 357(303Br-30) が近傍。",
+      "sources": [
+        "https://en.wikipedia.org/wiki/Lewis_gun"
+      ],
+      "verdict": "MATCH",
+      "recommendation": "変更不要",
+      "onlyCbe": [],
+      "onlyHist": [],
+      "both": [
+        357
+      ],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 176,
+      "name": "Bren Mk1",
+      "category": "lmg",
+      "cbeEffective": [
+        358
+      ],
+      "cbeEffectiveNames": [
+        "303Br250"
+      ],
+      "historicalPlIndices": [
+        357
+      ],
+      "historicalNames": [
+        "303Br-30"
+      ],
+      "historicalSummary": "Bren Mk1: .303 30発湾曲箱。250 発ベルト(358)は歩兵 Bren 標準ではない。",
+      "sources": [
+        "https://en.wikipedia.org/wiki/Bren"
+      ],
+      "verdict": "CONFLICT",
+      "recommendation": "PL 実機装填 UI 確認 — override 禁止",
+      "onlyCbe": [
+        358
+      ],
+      "onlyHist": [
+        357
+      ],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 177,
+      "name": "Bren Mk2",
+      "category": "lmg",
+      "cbeEffective": [
+        358
+      ],
+      "cbeEffectiveNames": [
+        "303Br250"
+      ],
+      "historicalPlIndices": [
+        357
+      ],
+      "historicalNames": [
+        "303Br-30"
+      ],
+      "historicalSummary": "Bren Mk2: .303 30発箱マガジン。CBE 358(303Br250) はベルト/持続射撃系 — 史実と CONFLICT。",
+      "sources": [
+        "https://en.wikipedia.org/wiki/Bren"
+      ],
+      "verdict": "CONFLICT",
+      "recommendation": "PL 実機装填 UI 確認 — override 禁止",
+      "onlyCbe": [
+        358
+      ],
+      "onlyHist": [
+        357
+      ],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": "PL 実機で 357 vs 358 要確認。override 禁止。"
+    },
+    {
+      "cbeIdx": 178,
+      "name": "Bren Mk3",
+      "category": "lmg",
+      "cbeEffective": [
+        358
+      ],
+      "cbeEffectiveNames": [
+        "303Br250"
+      ],
+      "historicalPlIndices": [
+        357
+      ],
+      "historicalNames": [
+        "303Br-30"
+      ],
+      "historicalSummary": "Bren Mk3: 同 Bren 系 .303 30 発箱。",
+      "sources": [
+        "https://en.wikipedia.org/wiki/Bren"
+      ],
+      "verdict": "CONFLICT",
+      "recommendation": "PL 実機装填 UI 確認 — override 禁止",
+      "onlyCbe": [
+        358
+      ],
+      "onlyHist": [
+        357
+      ],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 179,
+      "name": "Vickers Mk1",
+      "category": "mmg",
+      "cbeEffective": [],
+      "cbeEffectiveNames": [],
+      "historicalPlIndices": [
+        358
+      ],
+      "historicalNames": [
+        "303Br250"
+      ],
+      "historicalSummary": "Vickers Mk1: .303 ベルト給弾。CBE 空 — 358(250 ベルト) が妥当候補。",
+      "sources": [
+        "https://en.wikipedia.org/wiki/Vickers_machine_gun"
+      ],
+      "verdict": "CBE_EMPTY",
+      "recommendation": "CBE デコード or 実機 — 史実は暫定候補のみ",
+      "onlyCbe": [],
+      "onlyHist": [
+        358
+      ],
+      "both": [],
+      "auditDrift": true,
+      "stExtra": [
+        272,
+        273,
+        274,
+        275,
+        276,
+        277,
+        288,
+        289,
+        290,
+        295,
+        296,
+        389
+      ],
+      "notes": "CBE_EMPTY — 史実は暫定候補。"
+    },
+    {
+      "cbeIdx": 180,
+      "name": "Boys Mk1",
+      "category": "at_rifle",
+      "cbeEffective": [
+        360
+      ],
+      "cbeEffectiveNames": [
+        "PIAT-1"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        360
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 181,
+      "name": "PIAT",
+      "category": "rocket_launcher",
+      "cbeEffective": [],
+      "cbeEffectiveNames": [],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": true,
+      "stExtra": [
+        229
+      ],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 182,
+      "name": "No1 Mk1",
+      "category": "flamethrower",
+      "cbeEffective": [],
+      "cbeEffectiveNames": [],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 183,
+      "name": "Tripod Mk2",
+      "category": "tripod",
+      "cbeEffective": [],
+      "cbeEffectiveNames": [],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 184,
+      "name": "Tripod Mk4",
+      "category": "tripod",
+      "cbeEffective": [],
+      "cbeEffectiveNames": [],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 185,
+      "name": "No8 Mk1",
+      "category": "ammo_box",
+      "cbeEffective": [
+        359
+      ],
+      "cbeEffectiveNames": [
+        "55Boys-5"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        359
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 186,
+      "name": "Binocular",
+      "category": "binoculars",
+      "cbeEffective": [],
+      "cbeEffectiveNames": [],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 187,
+      "name": "Note",
+      "category": "document",
+      "cbeEffective": [],
+      "cbeEffectiveNames": [],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 188,
+      "name": "obr1895g",
+      "category": "pistol",
+      "cbeEffective": [
+        366
+      ],
+      "cbeEffectiveNames": [
+        "7.62T-8"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        366
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 189,
+      "name": "TT33",
+      "category": "pistol",
+      "cbeEffective": [
+        367
+      ],
+      "cbeEffectiveNames": [
+        "7.62-5"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        367
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 190,
+      "name": "obr1891/30g",
+      "category": "rifle",
+      "cbeEffective": [
+        368
+      ],
+      "cbeEffectiveNames": [
+        "7.62-10"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        368
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 191,
+      "name": "obr1938g",
+      "category": "rifle",
+      "cbeEffective": [
+        368
+      ],
+      "cbeEffectiveNames": [
+        "7.62-10"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        368
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 192,
+      "name": "obr91/30g-PU",
+      "category": "rifle",
+      "cbeEffective": [
+        368
+      ],
+      "cbeEffectiveNames": [
+        "7.62-10"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        368
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 193,
+      "name": "obr1944g",
+      "category": "rifle",
+      "cbeEffective": [
+        368
+      ],
+      "cbeEffectiveNames": [
+        "7.62-10"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        368
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 194,
+      "name": "SVT40",
+      "category": "rifle",
+      "cbeEffective": [
+        368,
+        369,
+        378
+      ],
+      "cbeEffectiveNames": [
+        "7.62-10",
+        "7.62T71D",
+        "9Pb-8s"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        368,
+        369,
+        378
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 195,
+      "name": "PPD40",
+      "category": "smg",
+      "cbeEffective": [
+        370
+      ],
+      "cbeEffectiveNames": [
+        "7.62T35h"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        370
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 196,
+      "name": "PPSh41",
+      "category": "smg",
+      "cbeEffective": [
+        371,
+        372
+      ],
+      "cbeEffectiveNames": [
+        "7.62T71h",
+        "7.62T35S"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        371,
+        372
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 197,
+      "name": "PPS43",
+      "category": "smg",
+      "cbeEffective": [
+        373
+      ],
+      "cbeEffectiveNames": [
+        "7.62-47"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        373
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 198,
+      "name": "DP",
+      "category": "lmg",
+      "cbeEffective": [
+        374
+      ],
+      "cbeEffectiveNames": [
+        "7.62-250"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        374
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 199,
+      "name": "PM1910",
+      "category": "mmg",
+      "cbeEffective": [],
+      "cbeEffectiveNames": [],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": true,
+      "stExtra": [
+        272,
+        273,
+        274,
+        275,
+        276,
+        277,
+        288,
+        289,
+        290,
+        295,
+        296,
+        389
+      ],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 200,
+      "name": "DShK",
+      "category": "mmg",
+      "cbeEffective": [],
+      "cbeEffectiveNames": [],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 201,
+      "name": "pat.1910",
+      "category": "ammo_box",
+      "cbeEffective": [
+        375
+      ],
+      "cbeEffectiveNames": [
+        "12.7-50"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        375
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 202,
+      "name": "pat.DShK",
+      "category": "ammo_box",
+      "cbeEffective": [],
+      "cbeEffectiveNames": [],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 203,
+      "name": "SP M12",
+      "category": "pistol",
+      "cbeEffective": [
+        379
+      ],
+      "cbeEffectiveNames": [
+        "9Pb-32s"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        379
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 204,
+      "name": "MP34(o)",
+      "category": "smg",
+      "cbeEffective": [],
+      "cbeEffectiveNames": [],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": true,
+      "stExtra": [
+        380
+      ],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 205,
+      "name": "M30",
+      "category": "lmg",
+      "cbeEffective": [
+        381
+      ],
+      "cbeEffectiveNames": [
+        "8Aut-250"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        381
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 206,
+      "name": "M07/12",
+      "category": "mmg",
+      "cbeEffective": [],
+      "cbeEffectiveNames": [],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 207,
+      "name": "M07 Laf",
+      "category": "tripod",
+      "cbeEffective": [],
+      "cbeEffectiveNames": [],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 208,
+      "name": "M07 PatrK",
+      "category": "ammo_box",
+      "cbeEffective": [
+        382
+      ],
+      "cbeEffectiveNames": [
+        "9BLg-7"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        382
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 209,
+      "name": "Mle1903",
+      "category": "pistol",
+      "cbeEffective": [
+        383
+      ],
+      "cbeEffectiveNames": [
+        "32ACP-9B"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        383
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 210,
+      "name": "Mle10/22",
+      "category": "pistol",
+      "cbeEffective": [],
+      "cbeEffectiveNames": [],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": true,
+      "stExtra": [
+        384
+      ],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 211,
+      "name": "GP35",
+      "category": "pistol",
+      "cbeEffective": [
+        385
+      ],
+      "cbeEffectiveNames": [
+        "380ACP8A"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        385
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 212,
+      "name": "CZ vz24",
+      "category": "pistol",
+      "cbeEffective": [
+        386
+      ],
+      "cbeEffectiveNames": [
+        "32ACP-8C"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        386
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 213,
+      "name": "CZ vz27",
+      "category": "pistol",
+      "cbeEffective": [
+        387
+      ],
+      "cbeEffectiveNames": [
+        "380ACP8B"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        387
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 214,
+      "name": "CZ vz38",
+      "category": "pistol",
+      "cbeEffective": [
+        388
+      ],
+      "cbeEffectiveNames": [
+        "9Pb-30Z"
+      ],
+      "historicalPlIndices": [
+        387
+      ],
+      "historicalNames": [
+        "380ACP8B"
+      ],
+      "historicalSummary": "CZ vz.38: チェコ製拳銃。.380 ACP (9×17mm Browning Short)。vz27 同系の 380ACP 行。",
+      "sources": [
+        "https://en.wikipedia.org/wiki/%C4%8CZ_vz._38",
+        "user_playtest_memory"
+      ],
+      "verdict": "CONFLICT",
+      "recommendation": "PL 実機装填 UI 確認 — override 禁止",
+      "onlyCbe": [
+        388
+      ],
+      "onlyHist": [
+        387
+      ],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": "CBE raw [388]=9Pb-30Z は PL 命名上 9mm Para に見えるが史実は .380。vz27→387(380ACP8B)、GP35→385(380ACP8A)。388 は vz38 専用 CBE リンク — 口径は .380 系の可能性（Z=チェコ?）だが PL 実機装填 UI 確認必須。override 禁止。"
+    },
+    {
+      "cbeIdx": 215,
+      "name": "ZK383",
+      "category": "smg",
+      "cbeEffective": [],
+      "cbeEffectiveNames": [],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": true,
+      "stExtra": [
+        389
+      ],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 216,
+      "name": "lk ZB vz26",
+      "category": "lmg",
+      "cbeEffective": [],
+      "cbeEffectiveNames": [],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": true,
+      "stExtra": [
+        390
+      ],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 217,
+      "name": "tk ZB vz37",
+      "category": "mmg",
+      "cbeEffective": [],
+      "cbeEffectiveNames": [],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 218,
+      "name": "ZB206",
+      "category": "tripod",
+      "cbeEffective": [],
+      "cbeEffectiveNames": [],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 219,
+      "name": "ZB308",
+      "category": "tripod",
+      "cbeEffective": [],
+      "cbeEffectiveNames": [],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 220,
+      "name": "VIS wz35",
+      "category": "pistol",
+      "cbeEffective": [
+        391
+      ],
+      "cbeEffectiveNames": [
+        "8Mrzk-5"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        391
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 221,
+      "name": "wz35",
+      "category": "at_rifle",
+      "cbeEffective": [],
+      "cbeEffectiveNames": [],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": true,
+      "stExtra": [
+        392
+      ],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 222,
+      "name": "Astra400",
+      "category": "pistol",
+      "cbeEffective": [],
+      "cbeEffectiveNames": [],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": true,
+      "stExtra": [
+        393
+      ],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 223,
+      "name": "Astra903",
+      "category": "pistol",
+      "cbeEffective": [
+        256,
+        257,
+        258
+      ],
+      "cbeEffectiveNames": [
+        "7.63-10b",
+        "7.63-20b",
+        "9Pb-8L"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        256,
+        257,
+        258
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    },
+    {
+      "cbeIdx": 224,
+      "name": "S-18/100",
+      "category": "at_rifle",
+      "cbeEffective": [
+        394
+      ],
+      "cbeEffectiveNames": [
+        "20SS-10"
+      ],
+      "historicalPlIndices": [],
+      "historicalNames": [],
+      "historicalSummary": "",
+      "sources": [],
+      "verdict": "UNRESEARCHED",
+      "recommendation": "Wikipedia 等で調査",
+      "onlyCbe": [
+        394
+      ],
+      "onlyHist": [],
+      "both": [],
+      "auditDrift": false,
+      "stExtra": [],
+      "notes": ""
+    }
+  ]
+}

@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>dev_sim -- sim_core headless harness</title>
+<style>
+  html, body { margin: 0; padding: 0; background: #1a1a1a; color: #ddd; font-family: monospace; }
+  #layout { display: flex; height: 100vh; }
+  #canvasWrap { flex: 1; position: relative; }
+  canvas { display: block; background: #223; }
+  #sidebar { width: 340px; border-left: 1px solid #444; padding: 10px; overflow-y: auto; box-sizing: border-box; }
+  #log { height: 300px; overflow-y: auto; background: #111; border: 1px solid #333; padding: 4px; font-size: 11px; }
+  #log div { border-bottom: 1px solid #222; padding: 1px 0; }
+  button, input { font-family: monospace; font-size: 12px; }
+  .row { margin-bottom: 6px; }
+  h3 { margin: 6px 0 2px 0; font-size: 13px; color: #9cf; }
+</style>
+</head>
+<body>
+<div id="layout">
+  <div id="canvasWrap">
+    <canvas id="cv" width="900" height="720"></canvas>
+  </div>
+  <div id="sidebar">
+    <h3>dev_sim (sim_core headless harness)</h3>
+    <div class="row">
+      seed: <input id="seedInput" type="number" value="1" style="width:80px">
+      <button id="btnRestart">restart</button>
+    </div>
+    <div class="row">
+      <button id="btnPause">pause</button>
+      <button id="btn1x">1x</button>
+      <button id="btn2x">2x</button>
+      <span id="speedLabel">1x</span>
+    </div>
+    <div class="row">tick: <span id="tickLabel">0</span> | result: <span id="resultLabel">--</span></div>
+    <div class="row">Click a soldier to select, right-click a hex to order MOVE_TO.<br>
+      Select an ENEMY and press <b>F</b>: A-team focus fire (via comms delay).
+      Press <b>S</b>: A-team suppress fire (all enemies in range).</div>
+    <div class="row">Selected: <span id="selectedLabel">none</span></div>
+    <h3>Event log</h3>
+    <div id="log"></div>
+  </div>
+</div>
+
+<script src="sim_core.js"></script>
+<script src="sim_orders.js"></script>
+<script src="sim_policy.js"></script>
+<script src="sim_leader.js"></script>
+<script src="data.js"></script>
+<script>
+// dev_sim.html -- SS10 lightweight debug harness. Single file, canvas 2D, no libs.
+// Runs sim_core headlessly and draws a hand-rolled hex grid. Look is not the point.
+
+const GRID_W = 10, GRID_H = 8;
+const HEX_R = 34; // pixel radius for flat-top-ish axial layout (approx, "look doesn't matter")
+const ORIGIN_X = 80, ORIGIN_Y = 60;
+
+const STATE_COLORS = {
+  idle: '#7a8', move: '#6cf', engage: '#e94', suppressed: '#fc6',
+  pinned: '#f44', reload: '#99c', switch: '#aaa', assault: '#f0f',
+  rout: '#666', down: '#222',
+};
+
+function axialToPixel(q, r) {
+  const x = ORIGIN_X + HEX_R * 1.5 * q;
+  const y = ORIGIN_Y + HEX_R * Math.sqrt(3) * (r + q / 2);
+  return { x, y };
+}
+
+// stub map: both start columns are trenches (cover 0.6) so frontal fire stalls,
+// middle hedgerow gives partial cover (0.35), everything else is open (0.12).
+// Flanking (PHIT_FLANK_MULT) is the intended way to break the standoff.
+function makeDevMap() {
+  return {
+    dist: (a, b) => {
+      const dq = a.q - b.q, dr = a.r - b.r;
+      return (Math.abs(dq) + Math.abs(dr) + Math.abs(dq + dr)) / 2;
+    },
+    hasLos: () => true,
+    cover: (hex) => (hex.q === 1 || hex.q === 8) ? 0.6
+      : (hex.q === Math.floor(GRID_W / 2)) ? 0.35 : 0.12,
+    moveCost: () => 1,
+    neighbors: (hex) => [
+      { q: hex.q + 1, r: hex.r }, { q: hex.q - 1, r: hex.r },
+      { q: hex.q, r: hex.r + 1 }, { q: hex.q, r: hex.r - 1 },
+      { q: hex.q + 1, r: hex.r - 1 }, { q: hex.q - 1, r: hex.r + 1 },
+    ],
+  };
+}
+
+let sim, map, orders, seed, running = true, speedMult = 1;
+let selectedId = null;
+let logLines = [];
+let fieldNotes = {}; // id -> { text, tick } floating speech above soldiers
+// per-team squad-leader AI memory (SIM_CORE_SPEC.md SS16.5). team -> { lastDoctrine, lastOrderTick, playerLockUntil, quietT }
+let leaderState = {};
+
+function freshLeaderState() {
+  return { lastDoctrine: null, lastOrderTick: -Infinity, playerLockUntil: 0, quietT: 0 };
+}
+
+function setup(seedVal) {
+  seed = seedVal;
+  map = makeDevMap();
+  const rng = mulberry32(seed);
+  sim = new SimCore({ map, tuning: SIM_TUNING, rng, policy: TraitPolicy });
+  // comms layer needs live soldier lookups, so wire it after sim exists
+  orders = new CommsOrders({
+    getSoldier: (id) => sim.getSoldier(id),
+    soldiers: () => sim.soldiers(),
+    map, tuning: SIM_TUNING,
+  });
+  sim.orders = orders;
+
+  const rifle = toSimWeapon('m1', WPNS.m1, SIM_TUNING);
+  const smg = toSimWeapon('thompson', WPNS.thompson, SIM_TUNING);
+  const mg = toSimWeapon('mg42', WPNS.mg42, SIM_TUNING);
+
+  // one of each trait per side: leader / aggressive / cautious / calm / timid
+  const TRAITS = [[], ['aggressive'], ['cautious'], ['calm'], ['timid']];
+  const magsFor = (w) => (SIM_TUNING.DEFAULT_MAGS && SIM_TUNING.DEFAULT_MAGS[w.class]) || 6;
+  for (let i = 0; i < 5; i++) {
+    const w = (i === 0) ? mg : rifle;
+    sim.addSoldier({ id: 'A' + i, team: 'A', q: 1, r: i + 1, weapon: w, ammo: { mags: magsFor(w) }, skill: 1.0, isLeader: i === 0, traits: TRAITS[i], facing: { q: 1, r: 0 } });
+  }
+  for (let i = 0; i < 5; i++) {
+    const w = (i === 0) ? smg : rifle;
+    sim.addSoldier({ id: 'B' + i, team: 'B', q: 8, r: i + 1, weapon: w, ammo: { mags: magsFor(w) }, skill: 1.0, isLeader: i === 0, traits: TRAITS[i], facing: { q: -1, r: 0 } });
+  }
+
+  // no opening orders: engagement decisions are left to TraitPolicy so
+  // per-soldier traits are observable from the first seconds (NORTH_STAR §4.1)
+
+  leaderState = { A: freshLeaderState(), B: freshLeaderState() };
+
+  logLines = [];
+  fieldNotes = {};
+  document.getElementById('log').innerHTML = '';
+  document.getElementById('resultLabel').textContent = '--';
+  selectedId = null;
+  updateSelectedLabel();
+}
+
+function pushLog(text) {
+  const el = document.getElementById('log');
+  const div = document.createElement('div');
+  div.textContent = text;
+  el.appendChild(div);
+  if (el.children.length > 300) el.removeChild(el.firstChild);
+  el.scrollTop = el.scrollHeight;
+}
+
+function formatEvent(ev) {
+  const parts = [`t${ev.tick}`, ev.type];
+  if (ev.id) parts.push(ev.id);
+  if (ev.shooterId) parts.push(ev.shooterId + '->' + ev.targetId + (ev.hit ? ' HIT' : ' miss') + (ev.killed ? ' KILL' : ''));
+  if (ev.note) parts.push('「' + ev.note + '」');
+  if (ev.type === 'ORDER_DELIVERED' && ev.order) parts.push(ev.order.type);
+  return parts.join(' ');
+}
+
+// squad-leader AI tick (SS16.5): every LEADER_ASSESS_INTERVAL_T, ask each living
+// team leader's LeaderPolicy for orders and route them through the same
+// CommsOrders channel as player orders (issueOrder), so NCO decisions are
+// subject to the same delay.
+function runLeaderAI() {
+  const interval = SIM_TUNING.LEADER_ASSESS_INTERVAL_T || 25;
+  if (sim._tick % interval !== 0) return;
+  for (const team of ['A', 'B']) {
+    const leader = sim.soldiers().find((s) => s.team === team && s.isLeader && s.hp > 0);
+    if (!leader) continue;
+    const worldView = { tick: sim._tick, soldiers: sim.soldiers(), map, tuning: SIM_TUNING };
+    const leaderOrders = LeaderPolicy.assess(leader, worldView, sim.rng, leaderState[team]);
+    for (const o of leaderOrders) {
+      sim.issueOrder(o);
+      if (o.note) pushLog(`t${sim._tick} 分隊長(${team})発令: 「${o.note}」`);
+    }
+  }
+}
+
+function step() {
+  if (!running || sim.result()) return;
+  for (let i = 0; i < speedMult; i++) {
+    if (sim.result()) break;
+    sim.tick();
+    runLeaderAI();
+    const evs = sim.drainEvents();
+    for (const ev of evs) {
+      if (ev.type === 'RESULT') {
+        document.getElementById('resultLabel').textContent = `${ev.winner || 'draw'} (${ev.reason})`;
+      }
+      if (ev.type === 'POLICY' && ev.note) {
+        fieldNotes[ev.id] = { text: ev.note, tick: ev.tick };
+      }
+      if (ev.type === 'ORDER_DELIVERED') {
+        // NCO doctrine orders carry a `note` (SS16.2 speech); player-issued
+        // orders (F/S/right-click) do not, so fall back to a plain ack.
+        fieldNotes[ev.id] = { text: ev.order.note ? ev.order.note : ('了解! ' + ev.order.type), tick: ev.tick };
+      }
+      pushLog(formatEvent(ev));
+    }
+  }
+}
+
+function draw() {
+  const cv = document.getElementById('cv');
+  const ctx = cv.getContext('2d');
+  ctx.clearRect(0, 0, cv.width, cv.height);
+
+  // hex tiles
+  for (let q = 0; q < GRID_W; q++) {
+    for (let r = 0; r < GRID_H; r++) {
+      const { x, y } = axialToPixel(q, r);
+      const cover = map.cover({ q, r });
+      const shade = Math.round(40 + cover * 120);
+      ctx.fillStyle = `rgb(${30 + shade * 0.3},${40 + shade * 0.5},${30 + shade * 0.3})`;
+      ctx.beginPath();
+      ctx.arc(x, y, HEX_R * 0.9, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = '#333';
+      ctx.stroke();
+    }
+  }
+
+  // soldiers
+  for (const s of sim.soldiers()) {
+    const { x, y } = axialToPixel(s.q, s.r);
+    const alive = s.hp > 0;
+    ctx.fillStyle = alive ? (STATE_COLORS[s.state] || '#fff') : STATE_COLORS.down;
+    ctx.beginPath();
+    ctx.arc(x, y, 12, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = s.team === 'A' ? '#39f' : '#f93';
+    ctx.lineWidth = s.id === selectedId ? 4 : 2;
+    ctx.stroke();
+    ctx.lineWidth = 1;
+
+    // HP bar (white, upper) + suppression bar (green->amber->red, lower)
+    if (alive) {
+      ctx.fillStyle = '#000';
+      ctx.fillRect(x - 14, y + 16, 28, 3);
+      ctx.fillStyle = '#ddd';
+      ctx.fillRect(x - 14, y + 16, 28 * Math.min(1, s.hp / 100), 3);
+
+      ctx.fillStyle = '#000';
+      ctx.fillRect(x - 14, y + 20, 28, 4);
+      ctx.fillStyle = s.suppression >= SIM_TUNING.PINNED_AT ? '#f22' : (s.suppression >= SIM_TUNING.SUPPRESSED_AT ? '#fa2' : '#4a4');
+      ctx.fillRect(x - 14, y + 20, 28 * Math.min(1, s.suppression / 100), 4);
+    }
+
+    ctx.fillStyle = '#ccc';
+    ctx.font = '10px monospace';
+    ctx.textAlign = 'center';
+    // id + leader star + weapon class so you can tell the MG at a glance
+    const tag = s.id + (s.isLeader ? '★' : '') + ' ' + s.weapon.class + (alive ? '' : ' X');
+    ctx.fillText(tag, x, y - 18);
+
+    // floating speech: trait decisions and order acknowledgements (fade ~6s)
+    const fn = fieldNotes[s.id];
+    if (alive && fn && sim._tick - fn.tick < 60) {
+      ctx.fillStyle = `rgba(255,230,120,${1 - (sim._tick - fn.tick) / 60})`;
+      ctx.fillText(fn.text, x, y - 30);
+    }
+  }
+
+  document.getElementById('tickLabel').textContent = sim._tick;
+
+  // live stats for the selected soldier
+  if (selectedId) {
+    const s = sim.getSoldier(selectedId);
+    if (s) {
+      const tr = (s.traits && s.traits.length) ? ` {${s.traits.join(',')}}` : (s.isLeader ? ' {分隊長}' : '');
+      document.getElementById('selectedLabel').textContent =
+        `${s.id}${tr} [${s.state}] hp:${s.hp} sup:${Math.round(s.suppression)} mag:${s.magRemaining}+${s.magsLeft}予備 morale:${Math.round(s.morale)}`;
+    }
+  }
+}
+
+function loop() {
+  step();
+  draw();
+  requestAnimationFrame(loop);
+}
+
+function updateSelectedLabel() {
+  document.getElementById('selectedLabel').textContent = selectedId || 'none';
+}
+
+function pixelToNearestHex(px, py) {
+  let best = null, bestD = Infinity;
+  for (let q = 0; q < GRID_W; q++) {
+    for (let r = 0; r < GRID_H; r++) {
+      const { x, y } = axialToPixel(q, r);
+      const d = (x - px) * (x - px) + (y - py) * (y - py);
+      if (d < bestD) { bestD = d; best = { q, r }; }
+    }
+  }
+  return best;
+}
+
+document.getElementById('cv').addEventListener('click', (e) => {
+  const rect = e.target.getBoundingClientRect();
+  const px = e.clientX - rect.left, py = e.clientY - rect.top;
+  let found = null;
+  for (const s of sim.soldiers()) {
+    const { x, y } = axialToPixel(s.q, s.r);
+    if ((x - px) * (x - px) + (y - py) * (y - py) <= 14 * 14) { found = s.id; break; }
+  }
+  selectedId = found;
+  updateSelectedLabel();
+});
+
+document.getElementById('cv').addEventListener('contextmenu', (e) => {
+  e.preventDefault();
+  if (!selectedId) return;
+  const rect = e.target.getBoundingClientRect();
+  const px = e.clientX - rect.left, py = e.clientY - rect.top;
+  const hex = pixelToNearestHex(px, py);
+  // straight-line path (dev harness only; no pathfinding, per SS10 scope)
+  const s = sim.getSoldier(selectedId);
+  const path = [];
+  let cq = s.q, cr = s.r;
+  const steps = Math.max(Math.abs(hex.q - s.q), Math.abs(hex.r - s.r));
+  for (let i = 1; i <= steps; i++) {
+    path.push({
+      q: Math.round(s.q + (hex.q - s.q) * i / steps),
+      r: Math.round(s.r + (hex.r - s.r) * i / steps),
+    });
+  }
+  sim.issueOrder({ type: 'MOVE_TO', soldierIds: [selectedId], payload: { path } });
+  // player took direct control: A-team squad leader AI stays quiet for a while (SS16.5)
+  leaderState.A.playerLockUntil = sim._tick + (SIM_TUNING.PLAYER_ORDER_LOCK_T || 150);
+});
+
+// squad-leader doctrine demo: focus fire — every living A soldier targets the
+// selected enemy. Orders route through CommsOrders, so far soldiers comply late.
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'f' || e.key === 'F') {
+    if (!selectedId) return;
+    const tgt = sim.getSoldier(selectedId);
+    if (!tgt || tgt.team !== 'B' || tgt.hp <= 0) return;
+    const ids = sim.soldiers().filter(s => s.team === 'A' && s.hp > 0).map(s => s.id);
+    sim.issueOrder({ type: 'TARGET', soldierIds: ids, payload: { targetId: tgt.id, mode: 'aimed' } });
+    pushLog(`t${sim._tick} 分隊長命令: 全員 ${tgt.id} へ集中射撃`);
+    leaderState.A.playerLockUntil = sim._tick + (SIM_TUNING.PLAYER_ORDER_LOCK_T || 150);
+  } else if (e.key === 's' || e.key === 'S') {
+    const ateam = sim.soldiers().filter(s => s.team === 'A' && s.hp > 0);
+    const bteam = sim.soldiers().filter(s => s.team === 'B' && s.hp > 0);
+    for (const soldier of ateam) {
+      let closestEnemy = null;
+      let closestDist = Infinity;
+      for (const enemy of bteam) {
+        const d = map.dist({ q: soldier.q, r: soldier.r }, { q: enemy.q, r: enemy.r });
+        if (d <= soldier.weapon.rngMax && d < closestDist) {
+          closestDist = d;
+          closestEnemy = enemy;
+        }
+      }
+      if (closestEnemy) {
+        sim.issueOrder({ type: 'TARGET', soldierIds: [soldier.id], payload: { targetId: closestEnemy.id, mode: 'suppress' } });
+      }
+    }
+    pushLog(`t${sim._tick} 分隊長命令: 制圧射撃！`);
+    leaderState.A.playerLockUntil = sim._tick + (SIM_TUNING.PLAYER_ORDER_LOCK_T || 150);
+  }
+});
+
+document.getElementById('btnPause').addEventListener('click', () => {
+  running = !running;
+  document.getElementById('btnPause').textContent = running ? 'pause' : 'resume';
+});
+document.getElementById('btn1x').addEventListener('click', () => { speedMult = 1; document.getElementById('speedLabel').textContent = '1x'; });
+document.getElementById('btn2x').addEventListener('click', () => { speedMult = 2; document.getElementById('speedLabel').textContent = '2x'; });
+document.getElementById('btnRestart').addEventListener('click', () => {
+  const v = parseInt(document.getElementById('seedInput').value, 10) || 1;
+  setup(v);
+});
+
+// default to a random seed each page load (type a seed + restart to reproduce a battle)
+document.getElementById('seedInput').value = Math.floor(Math.random() * 99999) + 1;
+setup(parseInt(document.getElementById('seedInput').value, 10) || 1);
+loop();
+</script>
+</body>
+</html>

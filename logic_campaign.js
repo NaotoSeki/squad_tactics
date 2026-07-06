@@ -2,6 +2,12 @@
 
 const AVAILABLE_CARDS = ['rifleman', 'scout', 'gunner', 'sniper', 'mortar_gunner', 'aerial', 'tank_pz4', 'tank_tiger'];
 
+/** @deprecated 正本は data/pl_mg_tripod.js の PlMgTripod.TRIPOD_CODE_FOR_MAIN */
+const TRIPOD_CODE_FOR_MAIN = (typeof PlMgTripod !== 'undefined')
+    ? PlMgTripod.TRIPOD_CODE_FOR_MAIN
+    : {};
+if (typeof window !== 'undefined') window.TRIPOD_CODE_FOR_MAIN = TRIPOD_CODE_FOR_MAIN;
+
 function createCardIcon(type) {
     const c = document.createElement('canvas'); c.width = 1; c.height = 1; return c.toDataURL();
 }
@@ -107,16 +113,16 @@ class CampaignManager {
             const t = UNIT_TEMPLATES[k]; 
             const d = document.createElement('div'); d.className = 'card';
             const portraitIndex = Math.floor(Math.random() * maxPortrait);
-            const firstName = FIRST_NAMES[Math.floor(Math.random() * FIRST_NAMES.length)];
-            const lastName = LAST_NAMES[Math.floor(Math.random() * LAST_NAMES.length)];
-            const soldierName = `${firstName} ${lastName}`;
+            const soldierName = (typeof generateSoldierName === 'function')
+                ? generateSoldierName()
+                : `${FIRST_NAMES[Math.floor(Math.random() * FIRST_NAMES.length)]} ${LAST_NAMES[Math.floor(Math.random() * LAST_NAMES.length)]}`;
             d.dataset.portraitIndex = String(portraitIndex);
             d.dataset.soldierName = soldierName;
             d.dataset.key = k;
             const portraitNum = String(portraitIndex + 1).padStart(3, '0');
             const faceUrl = 'asset/portraits/inf_us_' + portraitNum + '.jpg';
             
-            const mainWeaponName = (t.main && typeof WPNS !== 'undefined' && WPNS[t.main]) ? WPNS[t.main].name : (t.loadout ? 'M2 Mortar' : '—');
+            const mainWeaponName = getTemplateMainWeaponName(k);
             d.innerHTML = `
                 <div class="card-badge" style="display:none;">✔</div>
                 <div style="background:#222; width:100%; text-align:center; padding:2px 0; border-bottom:1px solid #444; margin-bottom:5px;">
@@ -169,6 +175,20 @@ class CampaignManager {
             };
             box.appendChild(d);
         });
+
+        if (typeof location !== 'undefined' && new URLSearchParams(location.search).has('autodeploy')) {
+            const run = () => {
+                const cards = box.querySelectorAll('.card');
+                for (let i = 0; i < 3 && i < cards.length; i++) cards[i].click();
+                const btn = document.getElementById('btn-start');
+                if (btn && !btn.disabled && window.gameLogic && window.gameLogic.startCampaign) {
+                    window.gameLogic.startCampaign();
+                } else {
+                    setTimeout(run, 80);
+                }
+            };
+            setTimeout(run, 200);
+        }
     }
 
     // --- DEPLOYMENT (Game Logicへの引き渡し) ---
@@ -213,6 +233,20 @@ class CampaignManager {
                 if (u) deployUnits.push(u);
             });
         }
+        deployUnits.forEach(u => this.repairMortarGunnerLoadout(u, { ensureMissing: true }));
+
+        if (typeof refreshAmmoItemLabel === 'function') {
+            deployUnits.forEach(u => {
+                const main = u.hands && u.hands[0];
+                if (main && main.code && typeof WPNS !== 'undefined' && WPNS[main.code]) {
+                    const master = WPNS[main.code];
+                    if (master.acceptsAmmo) main.acceptsAmmo = master.acceptsAmmo.slice();
+                    if (master.plCompat) main.plCompat = { ...master.plCompat };
+                }
+                const weapon = main || (main && main.code && WPNS[main.code]) || (u.def && u.def.main && WPNS[u.def.main]);
+                if (weapon) (u.bag || []).forEach(item => refreshAmmoItemLabel(item, weapon));
+            });
+        }
 
         // BattleLogic（logic_game.js）をインスタンス化
         if (window.BattleLogic) {
@@ -230,6 +264,57 @@ class CampaignManager {
     }
 
     // --- UNIT FACTORY ---
+    isMortarGunnerUnit(u) {
+        if (!u || !u.hands) return false;
+        const codes = u.hands.map(h => h && h.code);
+        return codes.includes('mortar_barrel') && codes.includes('mortar_bipod') && codes.includes('mortar_plate');
+    }
+
+    /** 迫撃砲兵: 弾薬箱・拳銃の初期配置（ensureMissing 時のみ欠品を補う） */
+    repairMortarGunnerLoadout(u, options) {
+        if (!this.isMortarGunnerUnit(u)) return;
+        const ensureMissing = !!(options && options.ensureMissing);
+        const w = (code) => (typeof WPNS !== 'undefined' && WPNS[code]) ? WPNS[code] : null;
+        const boxBase = w('mortar_shell_box');
+        if (!boxBase) return;
+
+        const bag = u.bag || (u.bag = []);
+        const hands = u.hands || [];
+        const allItems = () => bag.concat(hands).filter(Boolean);
+
+        let box = allItems().find(i => i && i.code === 'mortar_shell_box');
+        if (!box && ensureMissing) {
+            box = {
+                ...boxBase, code: 'mortar_shell_box', id: Math.random(),
+                current: boxBase.current != null ? boxBase.current : boxBase.cap, cap: boxBase.cap
+            };
+            let bi = bag.findIndex(it => !it);
+            if (bi < 0 && bag.length < 4) bag.push(box);
+            else if (bi >= 0) bag[bi] = box;
+        } else if (box && ensureMissing && (!box.current || box.current <= 0)) {
+            box.current = boxBase.cap;
+        }
+
+        const sidearmCode = (u.def && u.def.opt) || 'm1911';
+        const sideBase = w(sidearmCode);
+        let sidearm = allItems().find(i => i && i.code === sidearmCode);
+        if (!sidearm && ensureMissing && sideBase) {
+            sidearm = {
+                ...sideBase, code: sidearmCode, id: Math.random(),
+                current: sideBase.cap, cap: sideBase.cap, isBroken: false
+            };
+            let si = bag.findIndex(it => !it);
+            if (si < 0 && bag.length < 4) bag.push(sidearm);
+            else if (si >= 0) bag[si] = sidearm;
+        } else if (sidearm && sideBase && sidearm.current == null) {
+            sidearm.current = sideBase.cap;
+        }
+
+        if (ensureMissing) {
+            u.bag = [box || null, sidearm || null, bag[2] || null, bag[3] || null];
+        }
+    }
+
     createSoldier(templateKey, team, fusionData, overridePortraitIndex, overrideName, fusionCount) {
         const t = UNIT_TEMPLATES[templateKey]; 
         if (!t) { console.error("Template not found:", templateKey); return null; }
@@ -244,7 +329,7 @@ class CampaignManager {
         }
         const baseParams = (t.params && typeof PARAM_KEYS !== 'undefined') ? { ...t.params } : { action:4, speed:4, str:5, morale:5, aim:5, throw:5, melee:5, recon:4 };
         const params = {};
-        (typeof PARAM_KEYS !== 'undefined' ? PARAM_KEYS : Object.keys(baseParams)).forEach(k => {
+        window.getParamKeys().forEach(k => {
             let v = baseParams[k] != null ? baseParams[k] : 5;
             if (isPlayer && !t.isTank) v = v + Math.floor(Math.random() * 3) - 1;
             params[k] = Math.max(1, Math.min(10, v));
@@ -256,6 +341,8 @@ class CampaignManager {
         if (isPlayer && !t.isTank) { 
             if (overrideName) {
                 name = overrideName;
+            } else if (typeof generateSoldierName === 'function') {
+                name = generateSoldierName();
             } else {
                 const first = FIRST_NAMES[Math.floor(Math.random() * FIRST_NAMES.length)]; 
                 const last = LAST_NAMES[Math.floor(Math.random() * LAST_NAMES.length)]; 
@@ -286,6 +373,10 @@ class CampaignManager {
             if (!key || !WPNS[key]) return null;
             let base = WPNS[key]; 
             let item = { ...base, code: key, id: Math.random(), isBroken: false };
+            if (key.startsWith('pl_') && item.cbeNameIndex == null) {
+                const n = parseInt(key.slice(3));
+                if (!isNaN(n)) item.cbeNameIndex = n;
+            }
             
             if (base.type === 'bullet' || base.type === 'shell_fast') {
                 item.current = item.cap;
@@ -295,8 +386,12 @@ class CampaignManager {
             } else if (base.type === 'ammo') {
                 item.current = base.current || base.cap;
             }
-            if (t.isTank && !base.type.includes('part') && !base.type.includes('ammo')) { 
-                item.current = 1; item.cap = 1; item.reserve = (key === 'mg42' ? 300 : 12); 
+            if (t.isTank && !base.type.includes('part') && !base.type.includes('ammo')) {
+                item.current = 1; item.cap = 1;
+                item.reserve = (typeof PlMgTripod !== 'undefined' && PlMgTripod.usesBeltReserve(key))
+                    ? PlMgTripod.getDefaultBeltReserve(key) : 12;
+            } else if (typeof PlMgTripod !== 'undefined') {
+                PlMgTripod.applyItemDefaults(item, key, false);
             }
             return item;
         };
@@ -305,7 +400,13 @@ class CampaignManager {
         if (t.loadout) {
             t.loadout.forEach((k, i) => { if (i < 3) hands[i] = createItem(k); });
         } else if (t.main) {
-            hands[0] = createItem(t.main);
+            let mainKey = t.main;
+            if (isPlayer && !t.isTank && window.WPNS_PL_INFANTRY_MAIN_CODES && window.WPNS_PL_INFANTRY_MAIN_CODES.length) {
+                const filterMain = window.isPlausibleInfantryMainWeapon || function () { return false; };
+                const pool = window.WPNS_PL_INFANTRY_MAIN_CODES.filter(filterMain);
+                if (pool.length) mainKey = pool[Math.floor(Math.random() * pool.length)];
+            }
+            hands[0] = createItem(mainKey);
             if (t.isTank && t.sub) {
                 hands[1] = createItem(t.sub);
                 if (isFusedTank) {
@@ -323,22 +424,93 @@ class CampaignManager {
         }
 
         let bag = [];
-        if (t.sub && !t.isTank) { bag.push(createItem(t.sub)); }
-        if (t.opt) { 
-            const optBase = WPNS[t.opt]; const count = optBase.mag || 1; 
-            for (let i = 0; i < count; i++) { bag.push(createItem(t.opt)); }
+        const isMortarTemplate = !!(t.loadout && t.sub === 'mortar_shell_box' && !t.isTank);
+        if (isMortarTemplate) {
+            bag.push(createItem('mortar_shell_box'));
+            if (t.opt) bag.push(createItem(t.opt));
+        } else {
+            if (t.sub && !t.isTank) {
+                let subKey = t.sub;
+                const subDef = WPNS[subKey];
+                const keepSubFixed = !!(t.loadout || (subDef && (subDef.type === 'ammo' || subDef.ammoFor)));
+                if (isPlayer && !keepSubFixed && window.WPNS_PL_INFANTRY_SUB_CODES && window.WPNS_PL_INFANTRY_SUB_CODES.length) {
+                    const subPool = window.WPNS_PL_INFANTRY_SUB_CODES.filter(k => WPNS[k] && (WPNS[k].plCategory === 'pistol' || WPNS[k].plCategory === 'melee'));
+                    if (subPool.length) subKey = subPool[Math.floor(Math.random() * subPool.length)];
+                }
+                bag.push(createItem(subKey));
+            }
+            if (t.opt) {
+                const optBase = WPNS[t.opt];
+                const count = optBase.mag || 1;
+                for (let i = 0; i < count; i++) { bag.push(createItem(t.opt)); }
+            }
         }
         
-        if (hands[0] && hands[0].type === 'bullet' && !t.isTank) { 
-            for (let i = 0; i < hands[0].mag; i++) { 
+        if (isPlayer && !t.isTank && hands[0] && hands[0].code) {
+            const tripCode = TRIPOD_CODE_FOR_MAIN[hands[0].code];
+            if (tripCode && WPNS[tripCode]) {
+                const hasInLoadout = (typeof PlMgTripod !== 'undefined' && PlMgTripod.findTripodInLoadout)
+                    ? PlMgTripod.findTripodInLoadout({ hands }, tripCode) >= 0
+                    : hands.slice(1).some(it => it && it.code === tripCode);
+                if (!hasInLoadout) {
+                    const bi = bag.findIndex(it => it && it.code === tripCode);
+                    const tripod = bi >= 0 ? bag.splice(bi, 1)[0] : createItem(tripCode);
+                    let slot = (typeof PlMgTripod !== 'undefined' && PlMgTripod.findEmptyTripodLoadoutSlot)
+                        ? PlMgTripod.findEmptyTripodLoadoutSlot({ hands })
+                        : hands.findIndex((it, i) => i > 0 && !it);
+                    if (slot < 1) slot = !hands[1] ? 1 : (!hands[2] ? 2 : -1);
+                    if (slot >= 1 && slot <= 2) hands[slot] = tripod;
+                }
+            }
+        }
+
+        if (hands[0] && hands[0].type === 'bullet' && !t.isTank && hands[0].mag
+            && hands[0].acceptsAmmo && hands[0].acceptsAmmo.length) {
+            for (let i = 0; i < hands[0].mag; i++) {
                 if (bag.length >= 4) break;
-                bag.push({ type: 'ammo', name: (hands[0].magName || 'Clip'), ammoFor: hands[0].code, cap: hands[0].cap, jam: hands[0].jam, code: 'mag' }); 
-            } 
+                if (typeof buildSpareAmmoItem === 'function') {
+                    bag.push(buildSpareAmmoItem(hands[0]));
+                } else {
+                    bag.push({
+                        type: 'ammo', name: hands[0].magName || 'Mag', ammoFor: hands[0].code,
+                        cap: hands[0].cap, current: hands[0].cap, jam: hands[0].jam, code: 'mag'
+                    });
+                }
+            }
         }
-        
-        if (!isPlayer) { 
-            if (hands[0] && !hands[0].partType) { hands[0].current = 999; }
-            bag = []; 
+
+        if (!isPlayer) {
+            const rtEnemyAmmo = typeof BATTLE_SCALE !== 'undefined' && BATTLE_SCALE.RT_SIMULTANEOUS_AI;
+            if (rtEnemyAmmo) {
+                if (hands[0] && !hands[0].partType && hands[0].type === 'bullet') {
+                    hands[0].current = hands[0].cap;
+                }
+                if (hands[0] && hands[0].acceptsAmmo && hands[0].acceptsAmmo.length
+                    && typeof buildSpareAmmoItem === 'function') {
+                    const spareN = (hands[0].plCategory === 'mg') ? 3 : 2;
+                    for (let si = 0; si < spareN && bag.length < 4; si++) {
+                        bag.push(buildSpareAmmoItem(hands[0]));
+                    }
+                }
+            } else if (typeof REALISM_PACK !== 'undefined' && REALISM_PACK.ENEMY_FINITE_AMMO) {
+                // REALISM_PACK.ENEMY_FINITE_AMMO: 敵も有限弾（携行マガジン3本相当 = 本体満タン + 予備2本）
+                if (t.isTank) {
+                    if (hands[0] && !hands[0].partType) { hands[0].current = hands[0].cap || 1; }
+                } else if (hands[0] && !hands[0].partType && hands[0].cap) {
+                    hands[0].current = hands[0].cap;
+                    if (typeof buildSpareAmmoItem === 'function') {
+                        const spareN = (hands[0].plCategory === 'mg') ? 3 : 2;
+                        for (let si = 0; si < spareN && bag.length < 4; si++) {
+                            bag.push(buildSpareAmmoItem(hands[0]));
+                        }
+                    }
+                } else if (hands[0] && !hands[0].partType) {
+                    hands[0].current = 999;
+                }
+            } else {
+                if (hands[0] && !hands[0].partType) { hands[0].current = 999; }
+                bag = [];
+            }
         }
 
         if (isPlayer && !t.isTank && fusionCount >= 2 && Math.random() < 0.45) {
@@ -363,10 +535,17 @@ class CampaignManager {
         const hp = baseHp;
         const maxAp = baseAp;
         const unitFusionCount = (isPlayer && fusionCount >= 2) ? fusionCount : undefined;
-        return {
+        const unit = {
             id: Math.random(), team: team, q: 0, r: 0, def: t, name: name, rank: 0, faceSeed: faceSeed, portraitIndex: portraitIndex,
-            stats: stats, params: params, hp: hp, maxHp: hp, ap: maxAp, maxAp: maxAp, hands: hands, bag: bag, stance: 'stand', skills: skills, sectorsSurvived: 0, deadProcessed: false, fusionCount: unitFusionCount
+            stats: stats, params: params, hp: hp, maxHp: hp, ap: maxAp, maxAp: maxAp, hands: hands, bag: bag,
+            stance: (t.isTank ? 'stand' : ((typeof BATTLE_SCALE !== 'undefined' && BATTLE_SCALE.RT_DEFAULT_STANCE) || 'prone')),
+            skills: skills, sectorsSurvived: 0, deadProcessed: false, fusionCount: unitFusionCount
         };
+        if (t.loadout) this.repairMortarGunnerLoadout(unit, { ensureMissing: true });
+        if (typeof sanitizeUnitSpareAmmo === 'function') sanitizeUnitSpareAmmo(unit);
+        else if (typeof sanitizeUnitBagAmmo === 'function') sanitizeUnitBagAmmo(unit);
+        if (typeof LoadoutWeight !== 'undefined') LoadoutWeight.refreshUnitLoadout(unit);
+        return unit;
     }
 
     // --- MISSION END HANDLERS ---
@@ -381,24 +560,40 @@ class CampaignManager {
         const b = document.getElementById('reward-cards'); 
         b.innerHTML = ''; 
         
-        [{k:'rifleman',t:'新兵'}, {k:'mortar_gunner',t:'迫撃砲兵'}, {k:'tank_pz4',t:'鹵獲戦車'}, {k:'supply',t:'補給'}].forEach(o => { 
-            const d = document.createElement('div'); d.className = 'card'; 
-            const iconType = o.k === 'supply' ? 'heal' : 'infantry'; 
+        const replacementHint = (typeof REALISM_PACK !== 'undefined' && REALISM_PACK.REPLACEMENT_PENALTY) ? '（経験不足）' : '';
+        [{k:'rifleman',t:'新兵' + replacementHint}, {k:'mortar_gunner',t:'迫撃砲兵' + replacementHint}, {k:'tank_pz4',t:'鹵獲戦車'}, {k:'supply',t:'補給'}].forEach(o => {
+            const d = document.createElement('div'); d.className = 'card';
+            const iconType = o.k === 'supply' ? 'heal' : 'infantry';
             d.innerHTML = `<div class="card-img-box"><img src="${createCardIcon(iconType)}"></div><div class="card-body"><p>${o.t}</p></div>`;
-            d.onclick = () => { 
-                if (o.k === 'supply') { 
-                    this.resupplySurvivors(); 
-                } else { 
+            d.onclick = () => {
+                if (o.k === 'supply') {
+                    this.resupplySurvivors();
+                } else {
                     const newUnit = this.createSoldier(o.k, 'player');
+                    // REALISM_PACK.REPLACEMENT_PENALTY: 補充兵は経験不足で各能力値-1（下限1）
+                    if (typeof REALISM_PACK !== 'undefined' && REALISM_PACK.REPLACEMENT_PENALTY
+                        && newUnit && !newUnit.def?.isTank) {
+                        newUnit.isReplacement = true;
+                        if (newUnit.params) {
+                            Object.keys(newUnit.params).forEach(pk => {
+                                if (typeof newUnit.params[pk] === 'number') {
+                                    newUnit.params[pk] = Math.max(1, newUnit.params[pk] - 1);
+                                }
+                            });
+                        }
+                        if (newUnit.name && newUnit.name.indexOf('(新)') === -1) {
+                            newUnit.name = `${newUnit.name} (新)`;
+                        }
+                    }
                     if(window.gameLogic && window.gameLogic.addReinforcement) {
                         window.gameLogic.addReinforcement(newUnit);
                     }
                     this.survivingUnits.push(newUnit);
                 }
-                this.sector++; 
-                this.startMission(); 
-            }; 
-            b.appendChild(d); 
+                this.sector++;
+                this.startMission();
+            };
+            b.appendChild(d);
         });
         if (window.Sfx) Sfx.play('win');
     }
@@ -407,25 +602,27 @@ class CampaignManager {
         document.getElementById('gameover-screen').style.display = 'flex';
     }
 
-    promoteSurvivors() { 
-        this.survivingUnits.forEach(u => { 
+    promoteSurvivors() {
+        this.survivingUnits.forEach(u => {
             u.sectorsSurvived = (u.sectorsSurvived || 0) + 1;
             if (!u.skills) u.skills = [];
             if (u.sectorsSurvived === 5) { u.skills.push("Hero"); u.maxAp = (u.maxAp || 4) + 1; }
             u.rank = Math.min(5, (u.rank||0) + 1);
             u.maxHp = (u.maxHp || 80) + 30; u.hp = (u.hp || u.maxHp) + 30;
             if (u.hp > u.maxHp) u.hp = u.maxHp;
-            if (u.skills.length < 8 && Math.random() < 0.7) { 
+            if (u.skills.length < 8 && Math.random() < 0.7) {
                 const k = Object.keys(typeof SKILLS !== 'undefined' ? SKILLS : {}).filter(z => z !== "Hero");
                 if (k.length) u.skills.push(k[Math.floor(Math.random() * k.length)]);
             }
-        }); 
+            if (window.gameLogic && window.gameLogic.refreshWoundedState) window.gameLogic.refreshWoundedState(u);
+        });
     }
 
     resupplySurvivors() {
         const BAG_SLOTS = 4;
         this.survivingUnits.forEach(u => {
             if (u.hp < u.maxHp) u.hp = Math.floor(u.maxHp * 0.8);
+            if (window.gameLogic && window.gameLogic.refreshWoundedState) window.gameLogic.refreshWoundedState(u);
 
             if (!u.hands) u.hands = [null, null, null];
             if (!u.bag) u.bag = [];
@@ -437,22 +634,29 @@ class CampaignManager {
                 if (!h) return;
                 if (h.current !== undefined && h.cap !== undefined) h.current = h.cap;
                 if (h.reserve !== undefined) {
-                    if (h.code === 'mg42') h.reserve = 300;
-                    else h.reserve = 12;
+                    if (typeof PlMgTripod !== 'undefined' && PlMgTripod.usesBeltReserve(h.code)) {
+                        h.reserve = PlMgTripod.getDefaultBeltReserve(h.code);
+                    } else h.reserve = 12;
                 }
                 if (h.code === 'm8_rocket') { h.current = 60; h.cap = 60; }
             });
 
+            let mainWeapon = u.hands[0];
+            const mainCode = mainWeapon ? mainWeapon.code : (u.def && u.def.main) ? u.def.main : null;
+            if (mainWeapon && mainCode && typeof WPNS !== 'undefined' && WPNS[mainCode] && WPNS[mainCode].acceptsAmmo) {
+                mainWeapon.acceptsAmmo = WPNS[mainCode].acceptsAmmo.slice();
+            }
+            const mainBase = mainCode ? w(mainCode) : null;
+            if (!mainWeapon && mainBase) mainWeapon = mainBase;
+
             u.bag.forEach((item) => {
                 if (!item) return;
                 if (item.current !== undefined && item.cap !== undefined) item.current = item.cap;
-                if (item.reserve !== undefined && item.code !== 'mg42') item.reserve = 12;
+                if (item.reserve !== undefined && !(typeof PlMgTripod !== 'undefined' && PlMgTripod.usesBeltReserve(item.code))) {
+                    item.reserve = 12;
+                }
                 if (item.code === 'm8_rocket') { item.current = 60; item.cap = 60; }
             });
-
-            const mainWeapon = u.hands[0];
-            const mainCode = mainWeapon ? mainWeapon.code : (u.def && u.def.main) ? u.def.main : null;
-            const mainBase = mainCode ? w(mainCode) : null;
             const optCode = (u.def && u.def.opt) ? u.def.opt : null;
             const nadeBase = optCode === 'nade' ? w('nade') : null;
 
@@ -460,13 +664,19 @@ class CampaignManager {
             u.bag.forEach((item, i) => { if (!item) emptySlots.push(i); });
 
             let slotIdx = 0;
-            if (mainBase && mainBase.type === 'bullet' && !u.def.isTank && mainBase.mag) {
+            if (mainBase && mainBase.type === 'bullet' && !u.def.isTank && mainBase.mag
+                && mainWeapon && mainWeapon.acceptsAmmo && mainWeapon.acceptsAmmo.length) {
+                const weaponForAmmo = mainWeapon || mainBase;
                 const need = Math.min(emptySlots.length, mainBase.mag);
                 for (let k = 0; k < need && slotIdx < emptySlots.length; k++, slotIdx++) {
-                    u.bag[emptySlots[slotIdx]] = {
-                        type: 'ammo', name: (mainBase.magName || 'Clip'), ammoFor: mainCode,
-                        cap: mainBase.cap, code: 'mag', jam: mainBase.jam
-                    };
+                    if (typeof buildSpareAmmoItem === 'function') {
+                        u.bag[emptySlots[slotIdx]] = buildSpareAmmoItem({ ...weaponForAmmo, code: mainCode });
+                    } else {
+                        u.bag[emptySlots[slotIdx]] = {
+                            type: 'ammo', name: (mainBase.magName || 'Clip'), ammoFor: mainCode,
+                            cap: mainBase.cap, current: mainBase.cap, code: 'mag', jam: mainBase.jam
+                        };
+                    }
                 }
             }
             if (nadeBase && slotIdx < emptySlots.length) {
@@ -478,12 +688,34 @@ class CampaignManager {
                     };
                 }
             }
+
+            if (typeof refreshAmmoItemLabel === 'function' && mainWeapon) {
+                u.bag.forEach(item => refreshAmmoItemLabel(item, mainWeapon));
+            }
+            this.repairMortarGunnerLoadout(u, { ensureMissing: true });
         });
     }
 }
 
 // キャンペーンマネージャーを起動
 window.campaign = new CampaignManager();
+
+(function scheduleAutodeploy() {
+    if (typeof location === 'undefined' || !new URLSearchParams(location.search).has('autodeploy')) return;
+    const box = document.getElementById('setup-cards');
+    const cards = box ? box.querySelectorAll('.card') : [];
+    if (cards.length < 3) {
+        setTimeout(scheduleAutodeploy, 60);
+        return;
+    }
+    for (let i = 0; i < 3; i++) cards[i].click();
+    const btn = document.getElementById('btn-start');
+    if (btn && !btn.disabled && window.gameLogic && window.gameLogic.startCampaign) {
+        window.gameLogic.startCampaign();
+    } else {
+        setTimeout(scheduleAutodeploy, 80);
+    }
+})();
 
 // ★重要: 初期化段階での gameLogic のダミー (Phaser側のエラー回避用)
 window.gameLogic = {
@@ -508,3 +740,32 @@ window.gameLogic = {
     getNeighbors: () => [],
     checkDeploy: () => false
 };
+
+/** ?mapdebug=1 — 地形確認用: セットアップを飛ばしてマップだけ表示 */
+if (typeof location !== 'undefined' && new URLSearchParams(location.search).has('mapdebug')) {
+    const bootMapDebug = () => {
+        ['setup-screen', 'gameover-screen', 'reward-screen'].forEach((id) => {
+            const el = document.getElementById(id);
+            if (el) el.style.display = 'none';
+        });
+        ['sidebar', 'resizer', 'sidebar-toggle'].forEach((id) => {
+            const el = document.getElementById(id);
+            if (el) el.style.display = 'none';
+        });
+        const app = document.getElementById('app');
+        if (app) app.classList.add('phaser-sidebar');
+        window.campaign.survivingUnits = [];
+        window.campaign.setupSlots = [
+            { key: 'rifleman', portraitIndex: 1, name: 'Debug A' },
+            { key: 'rifleman', portraitIndex: 2, name: 'Debug B' },
+            { key: 'rifleman', portraitIndex: 3, name: 'Debug C' }
+        ];
+        window.campaign.startMission();
+        setTimeout(() => {
+            if (typeof Renderer !== 'undefined') Renderer.centerMap();
+        }, 400);
+    };
+    const runBoot = () => setTimeout(bootMapDebug, window.BattleLogic ? 200 : 1200);
+    if (document.readyState === 'complete') runBoot();
+    else window.addEventListener('load', runBoot);
+}

@@ -82,19 +82,28 @@ class VFXSystem {
     }
 
     draw(graphics) {
-        graphics.clear();
         this.particles.forEach(p => {
             if (p.delay > 0) return;
             
             // 弾丸 (Line Tracer)
             if (p.type === 'proj') {
-                if(p.isTracer) {
-                    const alpha = Math.min(1.0, p.life * 0.2);
-                    const color = (p.type === 'shell_fast') ? 0xffaa55 : 0xffffcc;
-                    graphics.lineStyle(2, color, alpha);
-                    graphics.beginPath(); graphics.moveTo(p.prevX, p.prevY); graphics.lineTo(p.x, p.y); graphics.strokePath();
-                    graphics.lineStyle(1, 0xffffff, alpha + 0.3);
-                    graphics.beginPath(); graphics.moveTo(p.prevX + (p.x-p.prevX)*0.6, p.prevY + (p.y-p.prevY)*0.6); graphics.lineTo(p.x, p.y); graphics.strokePath();
+                if (p.isTracer) {
+                    const alpha = 0.92;
+                    const color = 0xffffcc;
+                    const dx = p.x - p.prevX;
+                    const dy = p.y - p.prevY;
+                    if (dx * dx + dy * dy < 0.25) {
+                        graphics.fillStyle(color, alpha);
+                        graphics.fillCircle(p.x, p.y, 3);
+                    } else {
+                        graphics.lineStyle(3, color, alpha);
+                        graphics.beginPath(); graphics.moveTo(p.prevX, p.prevY); graphics.lineTo(p.x, p.y); graphics.strokePath();
+                        graphics.lineStyle(1, 0xffffff, Math.min(1, alpha + 0.2));
+                        graphics.beginPath();
+                        graphics.moveTo(p.prevX + dx * 0.55, p.prevY + dy * 0.55);
+                        graphics.lineTo(p.x, p.y);
+                        graphics.strokePath();
+                    }
                 }
             }
             // ロケット (弧を描く飛翔＋煙の尾)
@@ -241,11 +250,16 @@ class VFXSystem {
         }); 
     }
     
-    addProj(params) { 
-        params.type = 'proj'; 
-        params.life = 999; 
-        if(!params.color) params.color="#ffffaa"; 
-        this.add(params); 
+    addProj(params) {
+        params.type = 'proj';
+        params.life = 999;
+        params.progress = params.progress || 0;
+        params.x = params.sx;
+        params.y = params.sy;
+        params.prevX = params.sx;
+        params.prevY = params.sy;
+        if (!params.color) params.color = '#ffffaa';
+        this.add(params);
     }
     
     addUnitDebris(x, y) { }
@@ -350,46 +364,54 @@ class EnvSystem {
     }
     generateGrassFrames(scene, keyPrefix, bladeDefs, w, h, scale, windSens) { for (let frame = 0; frame < this.TOTAL_GRASS_FRAMES; frame++) { const g = scene.make.graphics({x:0, y:0, add:false}); g.fillStyle(0x2a331a, 0.8); g.fillEllipse(w/2, h, h/4, h/10); const bendFactor = frame / (this.TOTAL_GRASS_FRAMES - 1.0); for(let b of bladeDefs) { g.lineStyle(1.5 * scale, b.col, 1.0); const startX = b.startX; const startY = h; const windX = bendFactor * (h * windSens); const windY = Math.abs(windX) * 0.2; const endX = startX + b.lean + windX; const endY = startY - b.len + windY; const ctrlX = startX + (b.lean * 0.1) + (windX * 0.5) + b.ctrlOff; const ctrlY = startY - (b.len * 0.5); const curve = new Phaser.Curves.QuadraticBezier(new Phaser.Math.Vector2(startX, startY), new Phaser.Math.Vector2(ctrlX, ctrlY), new Phaser.Math.Vector2(endX, endY)); curve.draw(g); } g.generateTexture(`${keyPrefix}_${frame}`, w, h); } }
     clear() { this.grassElements = []; this.treeElements = []; }
-    spawnGrass(scene, group, x, y) { const count = 60; const scaleFactor = 0.07; for(let i=0; i<count; i++) { const r = Math.random() * (HEX_SIZE * 1.0); const angle = Math.random() * Math.PI * 2; const ox = Math.cos(angle) * r; const oy = Math.sin(angle) * r * 0.866; const type = Math.random() > 0.5 ? 'A' : 'B'; const textureKey = type === 'A' ? 'hd_grass_0' : 'hd_grass_b_0'; const grass = scene.add.sprite(x+ox, y+oy, textureKey); grass.setOrigin(0.5, 1.0); const typeScale = type === 'A' ? 1.0 : 0.85; grass.setScale((0.8 + Math.random() * 0.4) * scaleFactor * typeScale); grass.setDepth(y+oy); grass.grassType = type; grass.currentWindValue = 0; grass.origX = x + ox; grass.origY = y + oy; grass.amp = 0.82 + Math.random() * 0.36; const tintVar = Math.floor(Math.random() * 40); grass.setTint(Phaser.Display.Color.GetColor(160 + tintVar, 170 + tintVar, 130 + tintVar)); group.add(grass); this.grassElements.push(grass); } }
-    spawnGrassHexSheet(scene, group, x, y) {
-        if (!scene.textures.exists('grass')) return;
-        const hexR = (typeof HEX_SIZE !== 'undefined' ? HEX_SIZE : 54);
-        const g = scene.make.graphics({ x: 0, y: 0, add: false });
-        g.fillStyle(0xffffff, 1);
-        g.beginPath();
-        for (let i = 0; i < 6; i++) {
-            const a = Math.PI / 180 * (90 + 60 * i);
-            const px = hexR * Math.cos(a);
-            const py = hexR * Math.sin(a);
-            if (i === 0) g.moveTo(px, py);
-            else g.lineTo(px, py);
-        }
-        g.closePath();
-        g.fillPath();
-        const mask = g.createGeometryMask();
-        const frameW = 32;
-        const sprite = scene.add.sprite(x, y, 'grass', Math.floor(Math.random() * 16)).setOrigin(0.5, 0.5);
-        const bleed = 1.65;
-        const hexW = Math.sqrt(3) * hexR;
-        const scale = (hexW * bleed) / frameW;
-        sprite.setScale(scale);
-        sprite.setMask(mask);
-        sprite.setDepth(y);
-        sprite.setPosition(x, y);
-        g.setPosition(x, y);
-        g.setVisible(false);
-        group.add(g);
-        group.add(sprite);
-        if (!scene.anims.exists('grass_sway')) {
-            scene.anims.create({
-                key: 'grass_sway',
-                frames: scene.anims.generateFrameNumbers('grass', { start: 0, end: 15 }),
-                frameRate: 8,
-                repeat: -1
-            });
-        }
-        sprite.play('grass_sway');
+
+    /** Stable per-hex roll for sparse decor (0 .. mod-1). */
+    _hexDecorRoll(q, r, salt, mod) {
+        let h = (q * 73856093) ^ (r * 19349663) ^ (salt * 50331653);
+        h = ((h >> 16) ^ h) * 0x45d9f3b;
+        h = ((h >> 16) ^ h) * 0x45d9f3b;
+        h = (h >> 16) ^ h;
+        return (h >>> 0) % mod;
     }
+
+    spawnGrass(scene, group, x, y) {
+        if (Math.random() > 0.33) return;
+        const count = 60; const scaleFactor = 0.07;
+        for(let i=0; i<count; i++) { const r = Math.random() * (HEX_SIZE * 1.0); const angle = Math.random() * Math.PI * 2; const ox = Math.cos(angle) * r; const oy = Math.sin(angle) * r * 0.866; const type = Math.random() > 0.5 ? 'A' : 'B'; const textureKey = type === 'A' ? 'hd_grass_0' : 'hd_grass_b_0'; const grass = scene.add.sprite(x+ox, y+oy, textureKey); grass.setOrigin(0.5, 1.0); const typeScale = type === 'A' ? 1.0 : 0.85; grass.setScale((0.8 + Math.random() * 0.4) * scaleFactor * typeScale); grass.setDepth(y+oy); grass.grassType = type; grass.currentWindValue = 0; grass.origX = x + ox; grass.origY = y + oy; grass.amp = 0.82 + Math.random() * 0.36; const tintVar = Math.floor(Math.random() * 40); grass.setTint(Phaser.Display.Color.GetColor(160 + tintVar, 170 + tintVar, 130 + tintVar)); group.add(grass); this.grassElements.push(grass); }
+    }
+
+    decorDepth(worldY, offset) {
+        return 8 + (worldY + (offset || 0)) * 0.001;
+    }
+
+    /** v1 terrain: hd_grass blade clutter (replaces legacy grass.png hex overlay) */
+    spawnGrassSparse(scene, group, x, y, q, r) {
+        if (this._hexDecorRoll(q, r, 11, 3) !== 0) return;
+        const count = 4 + this._hexDecorRoll(q, r, 17, 5);
+        const scaleFactor = 0.1;
+        for (let i = 0; i < count; i++) {
+            const rad = Math.random() * (HEX_SIZE * 0.82);
+            const angle = Math.random() * Math.PI * 2;
+            const ox = Math.cos(angle) * rad;
+            const oy = Math.sin(angle) * rad * 0.866;
+            const type = Math.random() > 0.5 ? 'A' : 'B';
+            const textureKey = type === 'A' ? 'hd_grass_0' : 'hd_grass_b_0';
+            const grass = scene.add.sprite(x + ox, y + oy, textureKey);
+            grass.setOrigin(0.5, 1.0);
+            grass.setScale((0.85 + Math.random() * 0.4) * scaleFactor);
+            grass.setDepth(this.decorDepth(y, oy));
+            grass.grassType = type;
+            grass.currentWindValue = 0;
+            grass.origX = x + ox;
+            grass.origY = y + oy;
+            grass.amp = 0.82 + Math.random() * 0.36;
+            const tintVar = Math.floor(Math.random() * 30);
+            grass.setTint(Phaser.Display.Color.GetColor(150 + tintVar, 165 + tintVar, 120 + tintVar));
+            if (group && group.add) group.add(grass);
+            this.grassElements.push(grass);
+        }
+    }
+
     spawnTrees(scene, group, x, y) {
         const count = 4 + Math.floor(Math.random() * 3);
         const scaleFactor = 0.66;
@@ -425,6 +447,45 @@ class EnvSystem {
             this.treeElements.push(treeContainer);
         }
     }
+
+    /** v1 terrain: trees on forest hexes */
+    spawnTreesSparse(scene, group, x, y, q, r) {
+        const count = 2 + this._hexDecorRoll(q, r, 31, 2);
+        const scaleFactor = 0.78;
+        const FIR_FRAMES_WEAK = 16;
+        for (let i = 0; i < count; i++) {
+            const rad = Math.random() * (HEX_SIZE * 0.72);
+            const angle = Math.random() * Math.PI * 2;
+            const ox = Math.cos(angle) * rad;
+            const oy = Math.sin(angle) * rad * 0.866;
+            const scaleBase = (0.65 + Math.random() * 0.45) * scaleFactor;
+            const depth = this.decorDepth(y, oy);
+            const shadow = scene.add.ellipse(x + ox, y + oy + 3, 36 * scaleBase, 13 * scaleBase, 0x000000, 0.45);
+            shadow.setDepth(depth - 0.001);
+            const treeContainer = scene.add.container(x + ox, y + oy);
+            treeContainer.setDepth(depth);
+            const firSprite = scene.add.sprite(0, 0, 'fir_tree', Math.floor(Math.random() * FIR_FRAMES_WEAK)).setOrigin(0.5, 0.95);
+            firSprite.setScale(scaleBase);
+            const tintR = 0xc0 + Math.floor(Math.random() * 0x28);
+            const tintG = 0xd0 + Math.floor(Math.random() * 0x28);
+            const tintB = 0xb0 + Math.floor(Math.random() * 0x38);
+            firSprite.setTint(Phaser.Display.Color.GetColor(tintR, tintG, tintB));
+            treeContainer.add(firSprite);
+            treeContainer.firSprite = firSprite;
+            treeContainer.currentSkew = 0;
+            treeContainer.origX = x + ox;
+            treeContainer.origY = y + oy;
+            treeContainer.swayOffset = (Math.random() - 0.5) * Math.PI * 0.5;
+            treeContainer.amp = 0.88 + Math.random() * 0.2;
+            treeContainer.frameOffset = Math.floor(Math.random() * FIR_FRAMES_WEAK);
+            if (group && group.add) {
+                group.add(shadow);
+                group.add(treeContainer);
+            }
+            this.treeElements.push(treeContainer);
+        }
+    }
+
     spawnRubble(scene, x, y, decorGroup, rubbleFrontGroup) {
         const countBack = 6 + Math.floor(Math.random() * 4);
         const countFront = 6 + Math.floor(Math.random() * 4);
@@ -460,12 +521,6 @@ class EnvSystem {
         this.gustPower *= 0.98;
         if (this.gustPower < 0.01) this.gustPower = 0;
         this.treeGust += (this.gustPower - this.treeGust) * 0.045;
-        const mainScene = this.grassElements[0]?.scene;
-        let bounds = null;
-        if (mainScene) {
-            const cam = mainScene.cameras.main;
-            bounds = new Phaser.Geom.Rectangle(cam.worldView.x - 100, cam.worldView.y - 100, cam.worldView.width + 200, cam.worldView.height + 200);
-        }
         const windBase = t * 1.0;
         const windSpreadX = 0.012;
         const windSpreadY = 0.006;
@@ -473,7 +528,7 @@ class EnvSystem {
         this.grassElements = this.grassElements.filter(g => g.scene);
         for (let i = 0; i < this.grassElements.length; i++) {
             const g = this.grassElements[i];
-            if (bounds && !bounds.contains(g.origX, g.origY)) { g.visible = false; continue; }
+            if (!g.active) continue;
             g.visible = true;
             const wavePhase = windBase - g.origX * windSpreadX - g.origY * windSpreadY;
             const bigWave = (Math.sin(wavePhase) + 1.0) * 0.5;
@@ -488,9 +543,13 @@ class EnvSystem {
             const frameIdx = Math.floor(floatFrame);
             const prefix = (g.grassType === 'B') ? 'hd_grass_b_' : 'hd_grass_';
             const safeFrame = Phaser.Math.Clamp(frameIdx, 0, maxFrames);
-            g.setTexture(`${prefix}${safeFrame}`);
+            const textureKey = `${prefix}${safeFrame}`;
+            if (g.lastTextureKey !== textureKey && g.scene && g.scene.textures.exists(textureKey)) {
+                g.setTexture(textureKey);
+                g.lastTextureKey = textureKey;
+            }
             const remainder = floatFrame - frameIdx;
-            g.skewX = remainder * 0.05;
+            if (typeof g.skewX === 'number') g.skewX = remainder * 0.05;
         }
 
         this.treeElements = this.treeElements.filter(tr => tr.scene);
@@ -499,7 +558,7 @@ class EnvSystem {
         const frameBase = strongWind ? 16 : 0;
         for (let i = 0; i < this.treeElements.length; i++) {
             const tr = this.treeElements[i];
-            if (bounds && !bounds.contains(tr.origX, tr.origY)) { tr.visible = false; continue; }
+            if (!tr.active) continue;
             tr.visible = true;
             const wavePhase = windBase - tr.origX * windSpreadX - tr.origY * windSpreadY + tr.swayOffset;
             const amp = (tr.amp !== undefined ? tr.amp : 1);
@@ -509,11 +568,15 @@ class EnvSystem {
             const targetSkew = mainSway + subSway + gust;
             const stiffness = 0.018;
             tr.currentSkew += (targetSkew - tr.currentSkew) * stiffness;
-            if (tr.firSprite) {
-                tr.firSprite.skewX = tr.currentSkew * 0.5;
+            if (tr.firSprite && tr.firSprite.active) {
+                if (typeof tr.firSprite.skewX === 'number') tr.firSprite.skewX = tr.currentSkew * 0.5;
                 const framePhase = (wavePhase * 0.4 + (tr.frameOffset || 0) / FIR_FRAMES_WEAK * Math.PI * 2) % 1;
                 const subFrame = (Math.floor(framePhase * FIR_FRAMES_WEAK) + (tr.frameOffset || 0)) % FIR_FRAMES_WEAK;
-                tr.firSprite.setFrame(Phaser.Math.Clamp(frameBase + subFrame, 0, 31));
+                const targetFrame = Phaser.Math.Clamp(frameBase + subFrame, 0, 31);
+                if (tr.firSprite.lastFrame !== targetFrame) {
+                    tr.firSprite.setFrame(targetFrame);
+                    tr.firSprite.lastFrame = targetFrame;
+                }
             }
         }
     }

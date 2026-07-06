@@ -1,0 +1,218 @@
+{
+  "frameWidth": 110,
+  "frameHeight": 71,
+  "scale": 0.27692307692307694,
+  "srcFrameW": 400,
+  "srcFrameH": 262,
+  "bbox": [
+    2,
+    2,
+    398,
+    260
+  ],
+  "anchorX": 0.5,
+  "anchorY": 0.5,
+  "dirOrder": [
+    "S",
+    "SE",
+    "E",
+    "NE",
+    "N",
+    "NW",
+    "W",
+    "SW"
+  ],
+  "srcFps": 24,
+  "actions": {
+    "kneel_dying": {
+      "file": "kneel_dying.png",
+      "srcFrames": 24,
+      "stride": 1,
+      "frames": 24,
+      "cols": 72,
+      "rows": 3,
+      "sheetW": 7920,
+      "sheetH": 213
+    },
+    "kneel_fire": {
+      "file": "kneel_fire.png",
+      "srcFrames": 11,
+      "stride": 1,
+      "frames": 11,
+      "cols": 72,
+      "rows": 2,
+      "sheetW": 7920,
+      "sheetH": 142
+    },
+    "kneel_forward": {
+      "file": "kneel_forward.png",
+      "srcFrames": 11,
+      "stride": 1,
+      "frames": 11,
+      "cols": 72,
+      "rows": 2,
+      "sheetW": 7920,
+      "sheetH": 142
+    },
+    "kneel_idle": {
+      "file": "kneel_idle.png",
+      "srcFrames": 12,
+      "stride": 2,
+      "frames": 6,
+      "cols": 48,
+      "rows": 1,
+      "sheetW": 5280,
+      "sheetH": 71
+    },
+    "kneel_throw_grenade": {
+      "file": "kneel_throw_grenade.png",
+      "srcFrames": 36,
+      "stride": 1,
+      "frames": 36,
+      "cols": 72,
+      "rows": 4,
+      "sheetW": 7920,
+      "sheetH": 284
+    },
+    "kneel_to_prone": {
+      "file": "kneel_to_prone.png",
+      "srcFrames": 20,
+      "stride": 1,
+      "frames": 20,
+      "cols": 72,
+      "rows": 3,
+      "sheetW": 7920,
+      "sheetH": 213
+    },
+    "kneel_to_stand": {
+      "file": "kneel_to_stand.png",
+      "srcFrames": 13,
+      "stride": 1,
+      "frames": 13,
+      "cols": 72,
+      "rows": 2,
+      "sheetW": 7920,
+      "sheetH": 142
+    },
+    "prone_dying": {
+      "file": "prone_dying.png",
+      "srcFrames": 19,
+      "stride": 1,
+      "frames": 19,
+      "cols": 72,
+      "rows": 3,
+      "sheetW": 7920,
+      "sheetH": 213
+    },
+    "prone_fire": {
+      "file": "prone_fire.png",
+      "srcFrames": 5,
+      "stride": 1,
+      "frames": 5,
+      "cols": 40,
+      "rows": 1,
+      "sheetW": 4400,
+      "sheetH": 71
+    },
+    "prone_forward": {
+      "file": "prone_forward.png",
+      "srcFrames": 25,
+      "stride": 1,
+      "frames": 25,
+      "cols": 72,
+      "rows": 3,
+      "sheetW": 7920,
+      "sheetH": 213
+    },
+    "prone_idle": {
+      "file": "prone_idle.png",
+      "srcFrames": 20,
+      "stride": 2,
+      "frames": 10,
+      "cols": 72,
+      "rows": 2,
+      "sheetW": 7920,
+      "sheetH": 142
+    },
+    "prone_throw_grenade": {
+      "file": "prone_throw_grenade.png",
+      "srcFrames": 36,
+      "stride": 1,
+      "frames": 36,
+      "cols": 72,
+      "rows": 4,
+      "sheetW": 7920,
+      "sheetH": 284
+    },
+    "prone_to_kneel": {
+      "file": "prone_to_kneel.png",
+      "srcFrames": 20,
+      "stride": 1,
+      "frames": 20,
+      "cols": 72,
+      "rows": 3,
+      "sheetW": 7920,
+      "sheetH": 213
+    },
+    "stand_dying": {
+      "file": "stand_dying.png",
+      "srcFrames": 45,
+      "stride": 1,
+      "frames": 45,
+      "cols": 72,
+      "rows": 5,
+      "sheetW": 7920,
+      "sheetH": 355
+    },
+    "stand_fire": {
+      "file": "stand_fire.png",
+      "srcFrames": 12,
+      "stride": 1,
+      "frames": 12,
+      "cols": 72,
+      "rows": 2,
+      "sheetW": 7920,
+      "sheetH": 142
+    },
+    "stand_forward": {
+      "file": "stand_forward.png",
+      "srcFrames": 14,
+      "stride": 1,
+      "frames": 14,
+      "cols": 72,
+      "rows": 2,
+      "sheetW": 7920,
+      "sheetH": 142
+    },
+    "stand_idle": {
+      "file": "stand_idle.png",
+      "srcFrames": 86,
+      "stride": 2,
+      "frames": 43,
+      "cols": 72,
+      "rows": 5,
+      "sheetW": 7920,
+      "sheetH": 355
+    },
+    "stand_throw_grenade": {
+      "file": "stand_throw_grenade.png",
+      "srcFrames": 33,
+      "stride": 1,
+      "frames": 33,
+      "cols": 72,
+      "rows": 4,
+      "sheetW": 7920,
+      "sheetH": 284
+    },
+    "stand_to_kneel": {
+      "file": "stand_to_kneel.png",
+      "srcFrames": 10,
+      "stride": 1,
+      "frames": 10,
+      "cols": 72,
+      "rows": 2,
+      "sheetW": 7920,
+      "sheetH": 142
+    }
+  }
+}

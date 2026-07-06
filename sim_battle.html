@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>SQUAD TACTICS -- sim_battle (WS-G product integration)</title>
+<style>
+  html, body { margin: 0; padding: 0; background: #16140f; color: #ddd; font-family: monospace; overflow: hidden; }
+  #wrap { display: flex; height: 100vh; }
+  #game-view { flex: 1; position: relative; }
+  #hud { position: absolute; top: 8px; left: 8px; z-index: 10; background: rgba(0,0,0,.5); padding: 6px 10px; border-radius: 4px; font-size: 12px; }
+  #hud button { font-family: monospace; margin-right: 4px; }
+  #side { width: 320px; background: #1c1a14; border-left: 1px solid #443; padding: 10px; box-sizing: border-box; font-size: 12px; overflow-y: auto; }
+  #side h3 { color: #9cf; margin: 6px 0 2px 0; font-size: 13px; }
+  #sel { background: #111; padding: 6px; border: 1px solid #333; min-height: 40px; line-height: 1.5; }
+  #log { height: 260px; overflow-y: auto; background: #111; border: 1px solid #333; padding: 4px; font-size: 11px; }
+  #log div { border-bottom: 1px solid #222; padding: 1px 0; }
+  .k { color: #8ac; }
+</style>
+</head>
+<body>
+<div id="wrap">
+  <div id="game-view">
+    <div id="hud">
+      seed <input id="seed" type="number" value="1" style="width:70px">
+      <button id="restart">restart</button>
+      <button id="pause">pause</button>
+      <button id="s1">1x</button>
+      <button id="s2">2x</button>
+      <span id="fps">-- fps</span> | <span id="result">--</span>
+    </div>
+  </div>
+  <div id="side">
+    <h3>SQUAD TACTICS (WS-G product view)</h3>
+    <div>左クリック=選択 / 右クリック=移動命令<br>
+      敵を選択して <b>F</b> = A隊 全員集中射撃<br>
+      <b>S</b> = A隊 制圧射撃（射程内の最寄り敵）</div>
+    <h3>選択兵</h3>
+    <div id="sel">none</div>
+    <h3>凡例</h3>
+    <div>★=分隊長 / rifle,smg,mg=武器<br>白バー=HP 下バー=制圧<br>黄吹き出し=個性/命令/分隊長ドクトリン</div>
+    <h3>イベントログ</h3>
+    <div id="log"></div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
+<script src="data.js"></script>
+<script src="data/wpns_pl_master.js"></script>
+<script src="sim_core.js"></script>
+<script src="sim_orders.js"></script>
+<script src="sim_policy.js"></script>
+<script src="sim_leader.js"></script>
+<script src="sim_battle_adapter.js"></script>
+<script src="phaser_sound.js"></script>
+<script src="phaser_vfx.js"></script>
+<script src="phaser_terrain_v1_bake.js"></script>
+<script src="phaser_terrain.js"></script>
+<script src="phaser_unit.js"></script>
+<script src="phaser_soldier_view.js"></script>
+<script>
+/**
+ * sim_battle.html -- WS-G (docs/SIM_CORE_SPEC.md SS17). Product-view integration:
+ * real TerrainRender tiles + real UnitView sprites + real VFX, driving sim_core
+ * through SimBattleAdapter (façade only -- sim_core/sim_orders/sim_policy/sim_leader
+ * are NOT forked). Driven by the SS15.2 fixed-timestep accumulator loop, same as
+ * sim_scene.js, but rendering through UnitView instead of a hand-rolled sprite.
+ *
+ * index.html / logic_game.js / phaser_bridge.js / phaser_unit.js / phaser_terrain.js /
+ * sim_scene.js / dev_sim.html are NOT touched by this file (Strangler Fig).
+ */
+
+// ---------------------------------------------------------------------------
+// Renderer -- UnitView (phaser_unit.js) and TerrainRender (phaser_terrain.js)
+// both read a global `Renderer.hexToPx(q,r)` / `window.Renderer`. phaser_bridge.js
+// defines the real one but we must not load phaser_bridge.js (frozen turn-based
+// build), so this is a minimal stand-in exposing only what those two modules
+// actually call: hexToPx (both), playAttackAnim (UnitView.triggerAttack caller --
+// unused here since we drive UnitView directly, kept as a no-op for safety).
+// Formula matches phaser_bridge.js Renderer.hexToPx exactly (flat-top axial).
+// ---------------------------------------------------------------------------
+window.Renderer = {
+  hexToPx(q, r) { return { x: HEX_SIZE * Math.sqrt(3) * (q + r / 2), y: HEX_SIZE * (3 / 2) * r }; },
+  playAttackAnim(attacker, target) {
+    const scene = window.simBattleScene;
+    if (scene && scene.unitView) scene.unitView.triggerAttack(attacker, target);
+  },
+  suppressMapClick: false,
+};
+
+/** Minimal stand-in for phaser_bridge.js's window.createHexTexture (fallback hex fill). */
+window.createHexTexture = function (scene) {
+  if (scene.textures.exists('hex_base')) return;
+  const g = scene.make.graphics({ x: 0, y: 0, add: false });
+  const baseSize = (typeof HEX_SIZE !== 'undefined' ? HEX_SIZE : 54);
+  const size = baseSize * (window.HIGH_RES_SCALE || 1) * 1.02;
+  const w = size * Math.sqrt(3), h = size * 2;
+  g.fillStyle(0xffffff);
+  g.beginPath();
+  for (let i = 0; i < 6; i++) {
+    const rad = Math.PI / 180 * (90 + 60 * i);
+    const px = w / 2 + size * Math.cos(rad), py = h / 2 + size * Math.sin(rad);
+    if (i === 0) g.moveTo(px, py); else g.lineTo(px, py);
+  }
+  g.closePath(); g.fillPath();
+  g.generateTexture('hex_base', w, h);
+};
+window.HIGH_RES_SCALE = window.HIGH_RES_SCALE || 1;
+
+// ---------------------------------------------------------------------------
+// SimBattleScene -- SS15.2 fixed-timestep driver, UnitView + TerrainRender + VFX
+// ---------------------------------------------------------------------------
+class SimBattleScene extends Phaser.Scene {
+  constructor() {
+    super({ key: 'SimBattleScene' });
+    this.sim = null;
+    this.orders = null;
+    this.map = null;       // sim_core MapApi
+    this.mapData = null;   // { grid, W, H } logical battle grid
+    this.acc = 0;
+    this.speed = 1;
+    this.gameLogic = null; // SimBattleAdapter instance
+    this.unitView = null;
+    this.notes = new Map();     // soldierId -> { text, until (sim tick) }
+    this.leaderState = {};
+    this.fps = 0;
+  }
+
+  preload() {
+    // Same asset keys/paths as phaser_bridge.js MainScene.preload (SPEC SS17.1:
+    // "preload: 実タイル・soldier_crawl 等... phaser_bridge.js の preload から
+    // 必要分だけ移植"). We do NOT load phaser_bridge.js itself.
+    if (window.TerrainRender) window.TerrainRender.preload(this);
+    if (window.Sfx && window.Sfx.preload) window.Sfx.preload(this);
+    this.load.spritesheet('soldier_crawl', 'asset/soldier_crawl.png', { frameWidth: 256, frameHeight: 256, endFrame: 239 });
+    // 19モーション実スプライト（scripts/repack_soldier_sheets.py 生成）。manifest 到着後、
+    // 同一ロードフェーズ内で各アクションのシートを追加投入する（Phaser の loader は
+    // ロード中の add をサポート）。manifest が無い環境では旧 soldier_crawl にフォールバック。
+    this.load.json('soldier_manifest', 'asset/sprites/soldier/manifest.json');
+    this.load.on('filecomplete-json-soldier_manifest', (key, type, man) => {
+      if (!man || !man.actions || !man.frameWidth) return;
+      for (const name of (window.SOLDIER_LOAD_ACTIONS || [])) {
+        const meta = man.actions[name];
+        if (!meta) continue;
+        this.load.spritesheet('sold_' + name, 'asset/sprites/soldier/' + meta.file, {
+          frameWidth: man.frameWidth, frameHeight: man.frameHeight, endFrame: meta.frames * 8 - 1,
+        });
+      }
+    });
+    // UnitView.defineAnimations() unconditionally builds tank_idle / explosion_anim
+    // animations even though v1 only spawns infantry -- these textures must exist.
+    this.load.spritesheet('tank_sheet', 'asset/tank_sheet_1.png', { frameWidth: 128, frameHeight: 128 });
+    this.load.spritesheet('explosion_sheet', 'asset/explosion_sheet_1.png', { frameWidth: 64, frameHeight: 64 });
+  }
+
+  create() {
+    this.acc = 0;
+    this.notes = new Map();
+    window.simBattleScene = this;
+
+    // ---- sim_core wiring (logic layer only, unmodified modules) ----
+    this.mapData = window.buildBattleMap();
+    this.map = window.makeBattleMapApi(this.mapData);
+    const seed = this.seed || 1;
+    const rng = mulberry32(seed);
+    this.sim = new SimCore({ map: this.map, tuning: SIM_TUNING, rng, policy: TraitPolicy });
+    this.orders = new CommsOrders({
+      getSoldier: (id) => this.sim.getSoldier(id),
+      soldiers: () => this.sim.soldiers(),
+      map: this.map, tuning: SIM_TUNING,
+    });
+    this.sim.orders = this.orders;
+    this.spawnSquads();
+    this.leaderState = { A: this.freshLeaderState(), B: this.freshLeaderState() };
+
+    // ---- product rendering layer (real assets, unmodified modules) ----
+    window.createHexTexture(this);
+    this.cameras.main.setBackgroundColor('#141210');
+    this.hexGroup = this.add.layer(); this.hexGroup.setDepth(0);
+    this.decorGroup = this.add.container(0, 0); this.decorGroup.setDepth(8);
+    this.roadGraphics = this.add.graphics().setDepth(1.6);
+    this.unitGroup = this.add.layer(); this.unitGroup.setDepth(20);
+    this.hpGroup = this.add.layer(); this.hpGroup.setDepth(10);
+    this.vfxGraphics = this.add.graphics().setDepth(2000);
+    this.tracerGraphics = this.add.graphics().setDepth(1900);
+    this.noteLayer = this.add.container(0, 0).setDepth(2100);
+
+    const renderGrid = window.toRenderGrid(this.mapData);
+    window.TerrainRender.buildMap(this, this.hexGroup, renderGrid, this.decorGroup, this.roadGraphics);
+
+    // ---- ③ SimBattleAdapter façade drives UnitView (無改変) ----
+    this.gameLogic = new SimBattleAdapter(this.sim);
+    window.gameLogic = this.gameLogic;
+    window.SOLDIER_MANIFEST = this.cache.json.get('soldier_manifest') || null;
+    this.unitView = new SoldierUnitView(this, this.unitGroup, this.hpGroup);
+
+    // per-soldier HUD overlay UnitView does not draw: id+leader star+weapon
+    // class label, HP bar, suppression bar (SPEC SS17.2 #2).
+    this.overlays = new Map();
+    this.buildOverlays();
+
+    // camera centered on the battle grid
+    const c = Renderer.hexToPx(this.mapData.W / 2, this.mapData.H / 2);
+    this.cameras.main.centerOn(c.x, c.y);
+    this.cameras.main.setZoom(1.1);
+
+    this.setupInput();
+    this.game.events.emit('sim-ready');
+  }
+
+  freshLeaderState() {
+    return { lastDoctrine: null, lastOrderTick: -Infinity, playerLockUntil: 0, quietT: 0 };
+  }
+
+  spawnSquads() {
+    const rifle = toSimWeapon('m1', WPNS.m1, SIM_TUNING);
+    const smg = toSimWeapon('thompson', WPNS.thompson, SIM_TUNING);
+    const mg = toSimWeapon('mg42', WPNS.mg42, SIM_TUNING);
+    const TRAITS = [[], ['aggressive'], ['cautious'], ['calm'], ['timid']];
+    const magsFor = (w) => (SIM_TUNING.DEFAULT_MAGS && SIM_TUNING.DEFAULT_MAGS[w.class]) || 6;
+    const W = this.mapData.W;
+    for (let i = 0; i < 5; i++) {
+      const w = (i === 0) ? mg : rifle;
+      this.sim.addSoldier({ id: 'A' + i, team: 'A', q: 1, r: i + 1, weapon: w, ammo: { mags: magsFor(w) }, skill: 1.0, isLeader: i === 0, traits: TRAITS[i], facing: { q: 1, r: 0 } });
+    }
+    for (let i = 0; i < 5; i++) {
+      const w = (i === 0) ? smg : rifle;
+      this.sim.addSoldier({ id: 'B' + i, team: 'B', q: W - 2, r: i + 1, weapon: w, ammo: { mags: magsFor(w) }, skill: 1.0, isLeader: i === 0, traits: TRAITS[i], facing: { q: -1, r: 0 } });
+    }
+  }
+
+  buildOverlays() {
+    for (const s of this.sim.soldiers()) {
+      const label = this.add.text(0, 0, '', { fontFamily: 'monospace', fontSize: '11px', color: '#dfe' }).setOrigin(0.5).setDepth(2050);
+      const hpBg = this.add.rectangle(0, 0, 28, 3, 0x000000).setDepth(2050);
+      const hpBar = this.add.rectangle(0, 0, 28, 3, 0xdddddd).setOrigin(0, 0.5).setDepth(2051);
+      const supBg = this.add.rectangle(0, 0, 28, 4, 0x000000).setDepth(2050);
+      const supBar = this.add.rectangle(0, 0, 28, 4, 0x44aa44).setOrigin(0, 0.5).setDepth(2051);
+      this.overlays.set(s.id, { label, hpBg, hpBar, supBg, supBar });
+    }
+  }
+
+  // ---- input (dev_sim-equivalent operations, SPEC SS17.2 #4) ----
+  setupInput() {
+    this.input.mouse.disableContextMenu();
+    this.input.on('pointerdown', (pointer) => {
+      if (pointer.rightButtonDown()) {
+        const wp = this.cameras.main.getWorldPoint(pointer.x, pointer.y);
+        this.orderMoveTo(wp);
+      }
+      // left-click selection is handled by UnitView's own sprite pointerdown
+      // (calls gameLogic.onUnitClick) -- see phaser_unit.js createVisual().
+    });
+    this.input.keyboard.on('keydown-F', () => {
+      const sel = this.gameLogic.selectedUnit;
+      if (!sel) return;
+      const tgt = this.sim.getSoldier(sel.id);
+      if (!tgt || tgt.team !== 'B' || tgt.hp <= 0) return;
+      const ids = this.sim.soldiers().filter((s) => s.team === 'A' && s.hp > 0).map((s) => s.id);
+      this.sim.issueOrder({ type: 'TARGET', soldierIds: ids, payload: { targetId: tgt.id, mode: 'aimed' } });
+      this.pushLog(`t${this.sim._tick} プレイヤー命令: 全員 ${tgt.id} へ集中射撃`);
+      this.leaderState.A.playerLockUntil = this.sim._tick + (SIM_TUNING.PLAYER_ORDER_LOCK_T || 150);
+    });
+    this.input.keyboard.on('keydown-S', () => {
+      const ateam = this.sim.soldiers().filter((s) => s.team === 'A' && s.hp > 0);
+      const bteam = this.sim.soldiers().filter((s) => s.team === 'B' && s.hp > 0);
+      for (const soldier of ateam) {
+        let closest = null, closestDist = Infinity;
+        for (const enemy of bteam) {
+          const d = this.map.dist({ q: soldier.q, r: soldier.r }, { q: enemy.q, r: enemy.r });
+          if (d <= soldier.weapon.rngMax && d < closestDist) { closestDist = d; closest = enemy; }
+        }
+        if (closest) {
+          this.sim.issueOrder({ type: 'TARGET', soldierIds: [soldier.id], payload: { targetId: closest.id, mode: 'suppress' } });
+        }
+      }
+      this.pushLog(`t${this.sim._tick} プレイヤー命令: 制圧射撃！`);
+      this.leaderState.A.playerLockUntil = this.sim._tick + (SIM_TUNING.PLAYER_ORDER_LOCK_T || 150);
+    });
+  }
+
+  nearestHex(wp) {
+    let best = null, bestD = Infinity;
+    for (let q = 0; q < this.mapData.W; q++) {
+      for (let r = 0; r < this.mapData.H; r++) {
+        const p = Renderer.hexToPx(q, r);
+        const d = (p.x - wp.x) ** 2 + (p.y - wp.y) ** 2;
+        if (d < bestD) { bestD = d; best = { q, r }; }
+      }
+    }
+    return best;
+  }
+
+  orderMoveTo(wp) {
+    const sel = this.gameLogic.selectedUnit;
+    if (!sel) return;
+    const s = this.sim.getSoldier(sel.id);
+    if (!s || s.hp <= 0) return;
+    const dest = this.nearestHex(wp);
+    const steps = Math.max(Math.abs(dest.q - s.q), Math.abs(dest.r - s.r));
+    const path = [];
+    for (let i = 1; i <= steps; i++) {
+      path.push({ q: Math.round(s.q + (dest.q - s.q) * i / steps), r: Math.round(s.r + (dest.r - s.r) * i / steps) });
+    }
+    if (path.length) {
+      this.sim.issueOrder({ type: 'MOVE_TO', soldierIds: [sel.id], payload: { path } });
+      if (s.team === 'A') this.leaderState.A.playerLockUntil = this.sim._tick + (SIM_TUNING.PLAYER_ORDER_LOCK_T || 150);
+    }
+  }
+
+  // squad-leader AI tick (SPEC SS16.5): same integration as dev_sim.html.
+  runLeaderAI() {
+    const interval = SIM_TUNING.LEADER_ASSESS_INTERVAL_T || 25;
+    if (this.sim._tick % interval !== 0) return;
+    for (const team of ['A', 'B']) {
+      const leader = this.sim.soldiers().find((s) => s.team === team && s.isLeader && s.hp > 0);
+      if (!leader) continue;
+      const worldView = { tick: this.sim._tick, soldiers: this.sim.soldiers(), map: this.map, tuning: SIM_TUNING };
+      const leaderOrders = LeaderPolicy.assess(leader, worldView, this.sim.rng, this.leaderState[team]);
+      for (const o of leaderOrders) {
+        this.sim.issueOrder(o);
+        if (o.note) this.pushLog(`t${this.sim._tick} 分隊長(${team})発令: 「${o.note}」`);
+      }
+    }
+  }
+
+  // ---- the driver (SPEC SS15.2 / SS17: sim never waits for rendering) ----
+  update(time, delta) {
+    this.fps = Math.round(this.game.loop.actualFps);
+    const TICK = SIM_TUNING.TICK_MS;
+    if (this.sim && !this.sim.result()) {
+      this.acc += delta * this.speed;
+      let n = 0;
+      while (this.acc >= TICK && n < 5) {
+        this.sim.tick();
+        this.runLeaderAI();
+        this.dispatch(this.sim.drainEvents());
+        this.acc -= TICK;
+        n++;
+      }
+    }
+    if (this.unitView) this.unitView.update(time, delta);
+    this.renderOverlays();
+    this.renderTracers(delta);
+    if (window.VFX) {
+      if (window.VFX.shakeRequest > 0) { this.cameras.main.shake(90, window.VFX.shakeRequest * 0.001); window.VFX.shakeRequest = 0; }
+      window.VFX.update();
+      this.vfxGraphics.clear();
+      window.VFX.draw(this.vfxGraphics);
+    }
+  }
+
+  // ---- SS15.3 event -> visual dispatch (VFX/SFX/floating notes) ----
+  dispatch(events) {
+    for (const ev of events) {
+      switch (ev.type) {
+        case 'SHOT': {
+          const sh = this.sim.getSoldier(ev.shooterId), tg = this.sim.getSoldier(ev.targetId);
+          if (!sh || !tg) break;
+          const a = Renderer.hexToPx(sh.q, sh.r), b = Renderer.hexToPx(tg.q, tg.r);
+          if (this.unitView.noteShot) this.unitView.noteShot(ev.shooterId, a, b);
+          if (!this.tracers) this.tracers = [];
+          this.tracers.push({ sx: a.x, sy: a.y - 20, ex: b.x, ey: b.y - 20, life: 4, hit: ev.hit });
+          if (window.VFX) { window.VFX.addSmoke(a.x, a.y - 20); if (ev.hit) window.VFX.addBulletImpact(b.x, b.y - 16, 2); }
+          if (window.Sfx) try { window.Sfx.play('shot'); } catch (e) { }
+          break;
+        }
+        case 'DOWN': {
+          const s = this.sim.getSoldier(ev.id); if (!s) break;
+          const p = Renderer.hexToPx(s.q, s.r);
+          if (this.unitView.spawnCorpse) this.unitView.spawnCorpse(s);
+          if (window.VFX) window.VFX.addExplosion(p.x, p.y - 16, '#cc3333', 6);
+          this.flashNote(ev.id, '☠', 0);
+          break;
+        }
+        case 'GRENADE': {
+          const s = this.sim.getSoldier(ev.id); if (!s) break;
+          const a = Renderer.hexToPx(s.q, s.r);
+          const t = ev.target ? Renderer.hexToPx(ev.target.q, ev.target.r) : a;
+          if (this.unitView.playThrow) this.unitView.playThrow(s, a, t);
+          if (window.VFX) window.VFX.addRocket(a.x, a.y - 20, t.x, t.y - 20, () => window.VFX.addExplosion(t.x, t.y - 16, '#ffaa00', 12));
+          break;
+        }
+        case 'POLICY': this.flashNote(ev.id, ev.note, 60); break;
+        case 'ORDER_DELIVERED': this.flashNote(ev.id, ev.order.note ? ev.order.note : ('了解! ' + ev.order.type), 40); break;
+        case 'ROUT': this.flashNote(ev.id, '敗走!', 60); break;
+        case 'RESULT': this.game.events.emit('sim-result', ev); break;
+        default: break;
+      }
+      this.pushLog(this.formatEvent(ev));
+    }
+  }
+
+  formatEvent(ev) {
+    const parts = ['t' + ev.tick, ev.type];
+    if (ev.id) parts.push(ev.id);
+    if (ev.shooterId) parts.push(ev.shooterId + '->' + ev.targetId + (ev.hit ? ' HIT' : ' miss') + (ev.killed ? ' KILL' : ''));
+    if (ev.note) parts.push('「' + ev.note + '」');
+    if (ev.type === 'ORDER_DELIVERED' && ev.order) parts.push(ev.order.type);
+    return parts.join(' ');
+  }
+
+  pushLog(text) {
+    const el = document.getElementById('log');
+    if (!el) return;
+    const div = document.createElement('div');
+    div.textContent = text;
+    el.appendChild(div);
+    if (el.children.length > 300) el.removeChild(el.firstChild);
+    el.scrollTop = el.scrollHeight;
+  }
+
+  flashNote(id, text, ttl) {
+    this.notes.set(id, { text, until: this.sim._tick + (ttl || 40) });
+  }
+
+  // HP/suppression/label overlay UnitView does not provide (SPEC SS17.2 #2/#3).
+  renderOverlays() {
+    for (const s of this.sim.soldiers()) {
+      const ov = this.overlays.get(s.id);
+      if (!ov) continue;
+      const v = this.unitView.visuals.get(s.id);
+      const alive = s.hp > 0;
+      if (!v || !alive) {
+        ov.label.setVisible(false); ov.hpBg.setVisible(false); ov.hpBar.setVisible(false);
+        ov.supBg.setVisible(false); ov.supBar.setVisible(false);
+        continue;
+      }
+      const x = v.container.x, y = v.container.y;
+      const tag = s.id + (s.isLeader ? '★' : '') + ' ' + s.weapon.class;
+      if (ov.label.text !== tag) ov.label.setText(tag);
+      ov.label.setPosition(x, y - 58).setVisible(true);
+      ov.hpBg.setPosition(x - 14, y - 50).setVisible(true);
+      ov.hpBar.setPosition(x - 14, y - 50).setVisible(true);
+      ov.hpBar.width = 28 * Math.max(0, Math.min(1, s.hp / 100));
+      ov.supBg.setPosition(x - 14, y - 46).setVisible(true);
+      ov.supBar.setPosition(x - 14, y - 46).setVisible(true);
+      ov.supBar.width = 28 * Math.max(0, Math.min(1, s.suppression / 100));
+      ov.supBar.fillColor = s.suppression >= SIM_TUNING.PINNED_AT ? 0xff2222
+        : (s.suppression >= SIM_TUNING.SUPPRESSED_AT ? 0xffaa22 : 0x44aa44);
+
+      // ③ floating note (POLICY / doctrine / ORDER_DELIVERED), 6s fade (SPEC SS17.2 #3)
+      const n = this.notes.get(s.id);
+      if (n && this.sim._tick < n.until) {
+        if (!ov.note) {
+          ov.note = this.add.text(0, 0, '', { fontFamily: 'monospace', fontSize: '11px', color: '#ffe678' }).setOrigin(0.5).setDepth(2100);
+        }
+        if (ov.note.text !== n.text) ov.note.setText(n.text);
+        ov.note.setPosition(x, y - 70);
+        ov.note.setAlpha(Math.max(0, (n.until - this.sim._tick) / 60));
+        ov.note.setVisible(true);
+      } else if (ov.note) {
+        ov.note.setVisible(false);
+      }
+    }
+  }
+
+  renderTracers(delta) {
+    const g = this.tracerGraphics;
+    g.clear();
+    if (!this.tracers) this.tracers = [];
+    for (const t of this.tracers) {
+      const a = Math.max(0, t.life / 4);
+      g.lineStyle(t.hit ? 2 : 1, t.hit ? 0xffee88 : 0xffcc66, a * 0.9);
+      g.beginPath(); g.moveTo(t.sx, t.sy); g.lineTo(t.ex, t.ey); g.strokePath();
+      t.life -= delta / 16;
+    }
+    this.tracers = this.tracers.filter((t) => t.life > 0);
+  }
+
+  restart(seed) {
+    this.seed = seed;
+    if (this.unitView) this.unitView.clear();
+    for (const ov of this.overlays.values()) {
+      ov.label.destroy(); ov.hpBg.destroy(); ov.hpBar.destroy(); ov.supBg.destroy(); ov.supBar.destroy();
+      if (ov.note) ov.note.destroy();
+    }
+    this.overlays.clear();
+    this.scene.restart();
+  }
+}
+
+// ---------------------------------------------------------------------------
+// bootstrap (sim_game.html-equivalent HUD wiring)
+// ---------------------------------------------------------------------------
+const gv = document.getElementById('game-view');
+const config = {
+  type: Phaser.AUTO, parent: 'game-view',
+  width: gv.clientWidth, height: gv.clientHeight,
+  backgroundColor: '#16140f', pixelArt: false,
+  fps: { target: 60 },
+  scene: [SimBattleScene],
+};
+const game = new Phaser.Game(config);
+window.simGame = game;
+
+function scene() { return game.scene.getScene('SimBattleScene'); }
+
+game.events.on('sim-result', (ev) => {
+  document.getElementById('result').textContent = (ev.winner || 'draw') + ' ' + (ev.reason || '');
+});
+
+document.getElementById('pause').onclick = () => { const s = scene(); s.speed = s.speed === 0 ? 1 : 0; document.getElementById('pause').textContent = s.speed === 0 ? 'resume' : 'pause'; };
+document.getElementById('s1').onclick = () => { scene().speed = 1; };
+document.getElementById('s2').onclick = () => { scene().speed = 2; };
+document.getElementById('restart').onclick = () => {
+  const seed = parseInt(document.getElementById('seed').value, 10) || 1;
+  document.getElementById('log').innerHTML = '';
+  document.getElementById('result').textContent = '--';
+  scene().restart(seed);
+};
+document.getElementById('seed').value = Math.floor(Math.random() * 99999) + 1;
+
+setInterval(() => {
+  const s = scene(); if (!s || !s.sim) return;
+  document.getElementById('fps').textContent = s.fps + ' fps';
+  const sel = document.getElementById('sel');
+  const selUnit = s.gameLogic && s.gameLogic.selectedUnit;
+  if (selUnit) {
+    const u = s.sim.getSoldier(selUnit.id);
+    if (u) {
+      const tr = (u.traits && u.traits.length) ? u.traits.join(',') : (u.isLeader ? '分隊長' : '—');
+      sel.innerHTML = `<span class="k">${u.id}${u.isLeader ? '★' : ''}</span> [${u.state}] ${u.weapon.class}<br>`
+        + `trait: ${tr}<br>hp: ${u.hp} / sup: ${Math.round(u.suppression)} / morale: ${Math.round(u.morale)}<br>`
+        + `弾: ${u.magRemaining} + 予備${u.magsLeft}`;
+    }
+  } else { sel.textContent = 'none'; }
+}, 150);
+
+window.addEventListener('resize', () => { game.scale.resize(gv.clientWidth, gv.clientHeight); });
+</script>
+</body>
+</html>

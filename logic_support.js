@@ -32,7 +32,7 @@
                         units.forEach(u => { game.ui.log(`>> ${logKey}命中`); game.applyDamage(u, damage, logKey); });
                     }
                     game.updateSidebar();
-                    if (window.VFX) VFX.addSmoke(pos.x, pos.y);
+                    if (window.VFX) window.VFX.addSmoke(pos.x, pos.y);
                 }, Math.random() * 800);
             }
         }

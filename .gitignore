@@ -1,0 +1,25 @@
+# IDE / local
+.cursor/
+
+# Python
+__pycache__/
+*.py[cod]
+
+# v1 ソースアーカイブ（ゲームは asset/environment/hex_tiles/ が正）
+_v1_extract/
+v1.0.zip
+
+# 調査・一時スクリプト（プレイ不要）
+scripts/pl_decoded/
+scripts/_tmp_*
+scripts/_check_*
+scripts/tdd_debug/
+scripts/onenote_*
+scripts/*output*.txt
+scripts/verify_output*.txt
+scripts/phase2_output.txt
+scripts/schema_check.txt
+scripts/survey_output.txt
+
+# 個人メモ
+PC_PURCHASE_NOTES_2026.md

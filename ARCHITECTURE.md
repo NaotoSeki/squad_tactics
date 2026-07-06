@@ -2,6 +2,8 @@
 
 SQUAD TACTICS の起動フロー・主要モジュール・グローバル依存のメモです。
 
+**設計方針・課題ロードマップ**: [docs/NORTH_STAR.md](docs/NORTH_STAR.md) および [docs/DATA_PIPELINE.md](docs/DATA_PIPELINE.md)（**ランタイムは静的 data のみ** — CBE 直読みはビルド時）
+
 ## 起動フロー
 
 1. **index.html**  
@@ -24,7 +26,7 @@ SQUAD TACTICS の起動フロー・主要モジュール・グローバル依存
 
 ## サイドバー（右ペイン）
 
-- PhaserSidebar (phaser_sidebar.js) がユニット情報・レーダー・IN HANDS / BACKPACK・End Turn を描画
+- PhaserSidebar (phaser_sidebar.js) がユニット情報・レーダー・LOADOUT / BACKPACK・End Turn を描画
 - 幅: window.getSidebarWidth() / __sidebarWidth。リサイザーで更新
 - End Turn は常に最下部固定、ユニット未選択時も表示
 
@@ -39,7 +41,7 @@ SQUAD TACTICS の起動フロー・主要モジュール・グローバル依存
 
 ## ファイル責務
 
-- data.js: 定数・テンプレート・getRadarPoints
+- data.js: 定数・テンプレート・getRadarPoints・**BATTLE_SCALE**（`BATTLE_SCALE_PRESET` で classic/chaos 切替。詳細は `BATTLE_SCALE_NOTES.md`）
 - logic_campaign.js: セットアップ・createSoldier・startMission
 - logic_game.js: 戦闘・ターン・攻撃・移動
 - logic_map.js: MapSystem（経路・距離）

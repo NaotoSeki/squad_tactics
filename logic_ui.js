@@ -210,11 +210,15 @@ class UIManager {
         setEnabled(btnMove, u.ap >= 1);
         
         // 射撃可能条件: ①AP足りる ②InHandsにWeaponry(or仮想迫撃砲) ③残弾あり（戦車は予備弾があれば可）
-        const w = window.gameLogic && window.gameLogic.getVirtualWeapon ? window.gameLogic.getVirtualWeapon(u) : null;
+        const w = window.getCurrentWeapon(u);
         const weaponCost = w ? w.ap : 99;
-        const hasAmmo = w && ((w.current || 0) > 0 || (u.def && u.def.isTank && (w.reserve || 0) > 0));
+        const hasAmmo = w && (
+            (w.current || 0) > 0
+            || (w.reserve !== undefined && (w.reserve || 0) > 0)
+            || (u.def && u.def.isTank && (w.reserve || 0) > 0)
+        );
         setEnabled(btnAttack, !!w && u.ap >= weaponCost && hasAmmo);
-        
+
         const anyBroken = Array.isArray(u.hands) ? u.hands.some(h => h && h.isBroken) : (u.hands && u.hands.isBroken);
         setEnabled(btnRepair, anyBroken);
         
@@ -258,7 +262,7 @@ class UIManager {
         if (!btnAttack || !window.gameLogic || !window.gameLogic.getVirtualWeapon) return;
         const w = window.gameLogic.getVirtualWeapon(u);
         const cfg = w && window.gameLogic.getBurstSelectionConfigForWeapon
-            ? window.gameLogic.getBurstSelectionConfigForWeapon(w)
+            ? window.gameLogic.getBurstSelectionConfigForWeapon(w, u)
             : null;
 
         // 対象外武器 or 武器なし の場合は見た目を元に戻す
@@ -294,7 +298,7 @@ class UIManager {
         const u = window.gameLogic.selectedUnit;
         const w = window.gameLogic.getVirtualWeapon(u);
         const cfg = w && window.gameLogic.getBurstSelectionConfigForWeapon
-            ? window.gameLogic.getBurstSelectionConfigForWeapon(w)
+            ? window.gameLogic.getBurstSelectionConfigForWeapon(w, u)
             : null;
         if (!cfg || !Array.isArray(cfg.modes) || cfg.modes.length < 2) {
             this.clearAttackBurstUI();
@@ -346,9 +350,13 @@ class UIManager {
         const grpStance = menu.querySelector('.cmd-group');
         const setEnabled = (btn, enabled) => { if (btn) { if (enabled) btn.classList.remove('disabled'); else btn.classList.add('disabled'); } };
         setEnabled(btnMove, u.ap >= 1);
-        const w = window.gameLogic && window.gameLogic.getVirtualWeapon ? window.gameLogic.getVirtualWeapon(u) : null;
+        const w = window.getCurrentWeapon(u);
         const weaponCost = w ? w.ap : 99;
-        const hasAmmo = w && ((w.current || 0) > 0 || (u.def && u.def.isTank && (w.reserve || 0) > 0));
+        const hasAmmo = w && (
+            (w.current || 0) > 0
+            || (w.reserve !== undefined && (w.reserve || 0) > 0)
+            || (u.def && u.def.isTank && (w.reserve || 0) > 0)
+        );
         setEnabled(btnAttack, !!w && u.ap >= weaponCost && hasAmmo);
         const anyBroken = Array.isArray(u.hands) ? u.hands.some(h => h && h.isBroken) : (u.hands && u.hands.isBroken);
         setEnabled(btnRepair, anyBroken);
@@ -400,7 +408,7 @@ class UIManager {
             ? ('asset/portraits/inf_us_' + String((u.portraitIndex % (typeof PORTRAIT_AVAILABLE !== 'undefined' ? PORTRAIT_AVAILABLE : 7)) + 1).padStart(3, '0') + '.jpg')
             : ((Renderer.generateFaceIcon) ? Renderer.generateFaceIcon(u.faceSeed) : "");
         
-        const virtualWpn = (window.gameLogic && window.gameLogic.getVirtualWeapon) ? window.gameLogic.getVirtualWeapon(u) : null;
+        const virtualWpn = window.getCurrentWeapon(u);
         const isMortarActive = virtualWpn && virtualWpn.code === 'm2_mortar';
 
         const makeSlot = (item, type, index) => { 
@@ -414,8 +422,8 @@ class UIManager {
             
             if (!isAmmo && !item.partType) { 
                 gaugeHtml = `<div class="ammo-gauge">`; 
-                if (item.code === 'mg42' && item.reserve !== undefined && isMain) {
-                    const maxRounds = 300;
+                if (typeof PlMgTripod !== 'undefined' && PlMgTripod.usesBeltReserve(item.code) && item.reserve !== undefined && isMain) {
+                    const maxRounds = PlMgTripod.getDefaultBeltReserve(item.code);
                     const reserve = Math.min(maxRounds, item.reserve || 0);
                     gaugeHtml += `<div style="font-size:8px;color:#888;margin-bottom:2px;">${reserve}/${maxRounds}</div>`;
                     gaugeHtml += `<div style="display:grid;grid-template-columns:repeat(30,1fr);grid-template-rows:repeat(10,2px);gap:1px;width:100%;max-width:100%;box-sizing:border-box;">`;
@@ -445,7 +453,35 @@ class UIManager {
                 blinkClass = "synergy-active"; 
             }
 
-            return `<div class="slot ${isMain?'main-weapon':'bag-item'} ${blinkClass}" ${dragAttrs}><div class="slot-name">${isMain?'🔫':''} ${item.name}</div>${!isAmmo && !item.partType ? `<div class="slot-meta">RNG:${item.rng} DMG:${item.dmg}</div>` : ''}${gaugeHtml}</div>`; 
+            let partMeta = '';
+            if (item.partType && item.code) {
+                let mainCode = null;
+                const tripMap = (typeof window !== 'undefined' && window.TRIPOD_CODE_FOR_MAIN) ? window.TRIPOD_CODE_FOR_MAIN : null;
+                if (tripMap) {
+                    mainCode = Object.keys(tripMap).find(k => tripMap[k] === item.code);
+                }
+                if (mainCode && typeof WPNS !== 'undefined' && WPNS[mainCode]) {
+                    partMeta = `<div class="slot-meta" style="position:relative;z-index:1;color:#8ab;">架台（${getWeaponName(mainCode)}用・主装備+弾薬）</div>`;
+                } else {
+                    partMeta = `<div class="slot-meta" style="position:relative;z-index:1;color:#888;">補助装備</div>`;
+                }
+            }
+            const iconPath = (typeof window.plItemHasWeaponIcon === 'function' && window.plItemHasWeaponIcon(item)
+                && typeof window.plCbeWeaponIconPath === 'function')
+                ? window.plCbeWeaponIconPath(item.cbeNameIndex) : '';
+            const iconStyle = iconPath
+                ? `background-image:url('${iconPath}');background-size:contain;background-position:center;background-repeat:no-repeat;`
+                : '';
+            const iconOnErr = iconPath ? ` onerror="this.style.backgroundImage='none'"` : '';
+            const compatTip = (typeof getLoadoutCompatTooltipText === 'function')
+                ? getLoadoutCompatTooltipText(item) : null;
+            const tipAttr = compatTip && typeof loadoutCompatTooltipAttrEscape === 'function'
+                ? ` data-loadout-tip="${loadoutCompatTooltipAttrEscape(compatTip)}"`
+                + ' onmouseenter="showLoadoutCompatTooltipFromEl(this,event)"'
+                + ' onmouseleave="hideLoadoutCompatTooltip()"'
+                + ' onmousemove="moveLoadoutCompatTooltip(event)"'
+                : '';
+            return `<div class="slot ${isMain?'main-weapon':'bag-item'} ${blinkClass}" ${dragAttrs} style="${iconStyle}"${iconOnErr}${tipAttr}><div class="slot-name" style="position:relative;z-index:1;">${item.name}</div>${!isAmmo && !item.partType ? `<div class="slot-meta" style="position:relative;z-index:1;">RNG:${item.rng} DMG:${item.dmg}</div>` : ''}${partMeta}${gaugeHtml}</div>`; 
         };
 
         let mainSlotsHtml = "";
@@ -471,6 +507,6 @@ class UIManager {
         }
 
         const onErr = (u.team === 'player' && u.portraitIndex !== undefined) ? ' onerror="this.style.display=\'none\'"' : '';
-        ui.innerHTML = `<div class="soldier-header"><div class="face-box"><img src="${faceUrl}" width="96" height="96"${onErr}></div><div><div class="soldier-name">${u.name}</div><div class="soldier-rank">${u.def.role}</div>${skillListHtml}</div></div><div class="stat-grid"><div class="stat-row"><span>HP</span> <span>${u.hp}/${u.maxHp}</span></div><div class="stat-row"><span>AP</span> <span>${u.ap}/${u.maxAp}</span></div></div><div class="inv-header" style="padding:0 10px; margin-top:10px;">${(u.def && u.def.isTank) ? 'Main armament / Sub armament' : 'IN HANDS (3 Slots)'}</div><div class="loadout-container" style="display:flex;flex-direction:column;">${mainSlotsHtml}</div><div class="inv-header" style="padding:0 10px; margin-top:10px;">BACKPACK</div><div class="loadout-container">${subSlotsHtml}</div><div style="padding:0 10px;">${reloadBtn}</div><div style="padding:10px;"><button onclick="gameLogic.endTurn()" style="width:100%; background:#522; border-color:#d44; margin-top:15px; padding:5px; color:#fcc;">End Turn</button></div>`;
+        ui.innerHTML = `<div class="soldier-header"><div class="face-box"><img src="${faceUrl}" width="96" height="96"${onErr}></div><div><div class="soldier-name">${u.name}</div><div class="soldier-rank">${u.def.role}</div>${skillListHtml}</div></div><div class="stat-grid"><div class="stat-row"><span>HP</span> <span>${u.hp}/${u.maxHp}</span></div><div class="stat-row"><span>AP</span> <span>${u.ap}/${u.maxAp}</span></div></div><div class="inv-header" style="padding:0 10px; margin-top:10px;">${(u.def && u.def.isTank) ? 'Main armament / Sub armament' : 'LOADOUT'}</div><div class="loadout-container" style="display:flex;flex-direction:column;">${mainSlotsHtml}</div><div class="inv-header" style="padding:0 10px; margin-top:10px;">BACKPACK</div><div class="loadout-container">${subSlotsHtml}</div><div style="padding:0 10px;">${reloadBtn}</div><div style="padding:10px;"><button onclick="gameLogic.endTurn()" style="width:100%; background:#522; border-color:#d44; margin-top:15px; padding:5px; color:#fcc;">End Turn</button></div>`;
     }
 }

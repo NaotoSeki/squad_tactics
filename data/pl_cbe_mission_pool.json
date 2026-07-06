@@ -1,0 +1,2044 @@
+{
+  "generated": "2026-05-31",
+  "source": "scripts/pl_decoded/cbe_seg132_units.json",
+  "runtime_source": "data\\pl_cbe_mission_pool_runtime.json",
+  "descriptor_blocks": 36,
+  "weapon_entries": 36,
+  "runtime_overrides": 0,
+  "gate_rule": "(ammo.mag_type & 0x800F) == (header & 0x800F)",
+  "kar98_family_propagate": {
+    "from": 55,
+    "to": [
+      56,
+      57,
+      58,
+      69
+    ]
+  },
+  "pool": {
+    "17": [
+      307,
+      235,
+      314
+    ],
+    "44": [
+      294,
+      259,
+      315,
+      288,
+      306,
+      350
+    ],
+    "51": [
+      294,
+      266,
+      315
+    ],
+    "52": [
+      267,
+      268,
+      273,
+      314
+    ],
+    "53": [
+      267,
+      269,
+      273,
+      314
+    ],
+    "54": [
+      271,
+      270,
+      273,
+      314
+    ],
+    "55": [
+      272,
+      269,
+      273,
+      314
+    ],
+    "73": [
+      306,
+      277,
+      266,
+      315
+    ],
+    "90": [
+      291,
+      385,
+      315
+    ],
+    "94": [
+      294,
+      266,
+      315
+    ],
+    "95": [
+      294,
+      266,
+      315
+    ],
+    "100": [
+      299,
+      391,
+      315
+    ],
+    "101": [
+      300,
+      391,
+      315
+    ],
+    "106": [
+      302,
+      266,
+      314
+    ],
+    "107": [
+      302,
+      266,
+      314
+    ],
+    "108": [
+      303,
+      266,
+      314
+    ],
+    "112": [
+      266,
+      314
+    ],
+    "120": [
+      266,
+      315
+    ],
+    "130": [
+      320,
+      332
+    ],
+    "156": [
+      343,
+      393,
+      315
+    ],
+    "170": [
+      355,
+      365
+    ],
+    "177": [
+      358,
+      352
+    ],
+    "178": [
+      358,
+      352
+    ],
+    "179": [
+      358,
+      352
+    ],
+    "181": [
+      360,
+      352
+    ],
+    "182": [
+      361,
+      352
+    ],
+    "193": [
+      309,
+      368,
+      337,
+      377
+    ],
+    "195": [
+      309,
+      369,
+      318,
+      378
+    ],
+    "197": [
+      306,
+      372
+    ],
+    "206": [
+      381,
+      387,
+      315
+    ],
+    "222": [
+      392,
+      316
+    ],
+    "225": [
+      395,
+      317
+    ],
+    "56": [
+      272,
+      269,
+      273,
+      314
+    ],
+    "57": [
+      272,
+      269,
+      273,
+      314
+    ],
+    "58": [
+      272,
+      269,
+      273,
+      314
+    ],
+    "69": [
+      272,
+      269,
+      273,
+      314
+    ]
+  },
+  "pool_cat18": {
+    "17": [
+      235
+    ],
+    "44": [
+      294,
+      259,
+      315,
+      288,
+      350
+    ],
+    "51": [
+      294,
+      266,
+      315
+    ],
+    "52": [
+      273
+    ],
+    "53": [
+      269,
+      273
+    ],
+    "54": [
+      273
+    ],
+    "55": [
+      272,
+      269,
+      273
+    ],
+    "73": [
+      277,
+      266,
+      315
+    ],
+    "90": [
+      291,
+      385,
+      315
+    ],
+    "94": [
+      294,
+      266,
+      315
+    ],
+    "95": [
+      294,
+      266,
+      315
+    ],
+    "100": [
+      299,
+      391,
+      315
+    ],
+    "101": [
+      300,
+      391,
+      315
+    ],
+    "106": [
+      302,
+      266
+    ],
+    "107": [
+      302,
+      266
+    ],
+    "108": [
+      266
+    ],
+    "112": [
+      266
+    ],
+    "120": [
+      266,
+      315
+    ],
+    "130": [
+      320
+    ],
+    "156": [
+      343,
+      393,
+      315
+    ],
+    "170": [
+      355,
+      365
+    ],
+    "177": [
+      358,
+      352
+    ],
+    "178": [
+      358,
+      352
+    ],
+    "179": [
+      358,
+      352
+    ],
+    "181": [
+      360,
+      352
+    ],
+    "182": [
+      352
+    ],
+    "193": [
+      368,
+      337
+    ],
+    "195": [
+      369,
+      318,
+      378
+    ],
+    "197": [
+      372
+    ],
+    "206": [
+      381,
+      387,
+      315
+    ],
+    "222": [
+      392,
+      316
+    ],
+    "225": [
+      317
+    ],
+    "56": [
+      272,
+      269,
+      273
+    ],
+    "57": [
+      272,
+      269,
+      273
+    ],
+    "58": [
+      272,
+      269,
+      273
+    ],
+    "69": [
+      272,
+      269,
+      273
+    ]
+  },
+  "pool_aux": {
+    "17": [
+      307,
+      314
+    ],
+    "44": [
+      306
+    ],
+    "52": [
+      267,
+      268,
+      314
+    ],
+    "53": [
+      267,
+      314
+    ],
+    "54": [
+      271,
+      270,
+      314
+    ],
+    "55": [
+      314
+    ],
+    "73": [
+      306
+    ],
+    "106": [
+      314
+    ],
+    "107": [
+      314
+    ],
+    "108": [
+      303,
+      314
+    ],
+    "112": [
+      314
+    ],
+    "130": [
+      332
+    ],
+    "182": [
+      361
+    ],
+    "193": [
+      309,
+      377
+    ],
+    "195": [
+      309
+    ],
+    "197": [
+      306
+    ],
+    "225": [
+      395
+    ],
+    "56": [
+      314
+    ],
+    "57": [
+      314
+    ],
+    "58": [
+      314
+    ],
+    "69": [
+      314
+    ]
+  },
+  "pool_pass2": {},
+  "weapons": {
+    "17": {
+      "weapon_id": 17,
+      "name": "M1A1 SMG",
+      "source": "seg132",
+      "from_file": "0x1DCD98",
+      "blocks": [
+        {
+          "file_off": "0x1DCD98",
+          "mag_hex": "0x0033",
+          "cx_gate": 3,
+          "pass1_hits": [],
+          "pairs": [
+            {
+              "idx": 307,
+              "qty": 2,
+              "name": "StiGr43",
+              "pass1": null
+            },
+            {
+              "idx": 235,
+              "qty": 2,
+              "name": "45ACP30T",
+              "pass1": false
+            },
+            {
+              "idx": 314,
+              "qty": 1,
+              "name": "Messer",
+              "pass1": null
+            }
+          ]
+        }
+      ],
+      "indices": [
+        307,
+        235,
+        314
+      ],
+      "cat18": [
+        235
+      ],
+      "aux": [
+        307,
+        314
+      ]
+    },
+    "44": {
+      "weapon_id": 44,
+      "name": "M1934",
+      "source": "seg132",
+      "from_file": null,
+      "blocks": [
+        {
+          "file_off": "0x1DC94C",
+          "mag_hex": "0x0074",
+          "cx_gate": 4,
+          "pass1_hits": [],
+          "pairs": [
+            {
+              "idx": 294,
+              "qty": 4,
+              "name": "Pt34-75",
+              "pass1": false
+            },
+            {
+              "idx": 259,
+              "qty": 1,
+              "name": "32ACP-8M",
+              "pass1": false
+            },
+            {
+              "idx": 315,
+              "qty": 1,
+              "name": "10.35-1",
+              "pass1": false
+            }
+          ]
+        },
+        {
+          "file_off": "0x1DC978",
+          "mag_hex": "0x0075",
+          "cx_gate": 5,
+          "pass1_hits": [
+            288
+          ],
+          "pairs": [
+            {
+              "idx": 288,
+              "qty": 2,
+              "name": "7.92f100",
+              "pass1": true
+            },
+            {
+              "idx": 259,
+              "qty": 1,
+              "name": "32ACP-8M",
+              "pass1": false
+            },
+            {
+              "idx": 315,
+              "qty": 1,
+              "name": "10.35-1",
+              "pass1": false
+            }
+          ]
+        },
+        {
+          "file_off": "0x1DC9D0",
+          "mag_hex": "0x0071",
+          "cx_gate": 1,
+          "pass1_hits": [],
+          "pairs": [
+            {
+              "idx": 259,
+              "qty": 1,
+              "name": "32ACP-8M",
+              "pass1": false
+            },
+            {
+              "idx": 315,
+              "qty": 1,
+              "name": "10.35-1",
+              "pass1": false
+            }
+          ]
+        },
+        {
+          "file_off": "0x1DD8F0",
+          "mag_hex": "0x0076",
+          "cx_gate": 6,
+          "pass1_hits": [],
+          "pairs": [
+            {
+              "idx": 306,
+              "qty": 1,
+              "name": "StiGr39",
+              "pass1": null
+            },
+            {
+              "idx": 259,
+              "qty": 1,
+              "name": "32ACP-8M",
+              "pass1": false
+            },
+            {
+              "idx": 350,
+              "qty": 1,
+              "name": "455Web-1",
+              "pass1": false
+            }
+          ]
+        }
+      ],
+      "indices": [
+        294,
+        259,
+        315,
+        288,
+        306,
+        350
+      ],
+      "cat18": [
+        294,
+        259,
+        315,
+        288,
+        350
+      ],
+      "aux": [
+        306
+      ]
+    },
+    "51": {
+      "weapon_id": 51,
+      "name": "27mmLeuP",
+      "source": "seg132",
+      "from_file": null,
+      "blocks": [
+        {
+          "file_off": "0x1DC962",
+          "mag_hex": "0x0074",
+          "cx_gate": 4,
+          "pass1_hits": [
+            266
+          ],
+          "pairs": [
+            {
+              "idx": 294,
+              "qty": 4,
+              "name": "Pt34-75",
+              "pass1": false
+            },
+            {
+              "idx": 266,
+              "qty": 1,
+              "name": "FLeut41",
+              "pass1": true
+            },
+            {
+              "idx": 315,
+              "qty": 1,
+              "name": "10.35-1",
+              "pass1": false
+            }
+          ]
+        },
+        {
+          "file_off": "0x1DC9E6",
+          "mag_hex": "0x0072",
+          "cx_gate": 2,
+          "pass1_hits": [],
+          "pairs": [
+            {
+              "idx": 266,
+              "qty": 1,
+              "name": "FLeut41",
+              "pass1": false
+            },
+            {
+              "idx": 315,
+              "qty": 1,
+              "name": "10.35-1",
+              "pass1": false
+            }
+          ]
+        }
+      ],
+      "indices": [
+        294,
+        266,
+        315
+      ],
+      "cat18": [
+        294,
+        266,
+        315
+      ],
+      "aux": []
+    },
+    "52": {
+      "weapon_id": 52,
+      "name": "27mmP42",
+      "source": "seg132",
+      "from_file": "0x1DCA6A",
+      "blocks": [
+        {
+          "file_off": "0x1DCA6A",
+          "mag_hex": "0x003A",
+          "cx_gate": 10,
+          "pass1_hits": [],
+          "pairs": [
+            {
+              "idx": 267,
+              "qty": 8,
+              "name": "Wkor361",
+              "pass1": false
+            },
+            {
+              "idx": 268,
+              "qty": 4,
+              "name": "Wgrp326",
+              "pass1": false
+            },
+            {
+              "idx": 273,
+              "qty": 12,
+              "name": "7.92-10G",
+              "pass1": false
+            },
+            {
+              "idx": 314,
+              "qty": 1,
+              "name": "Messer",
+              "pass1": null
+            }
+          ]
+        }
+      ],
+      "indices": [
+        267,
+        268,
+        273,
+        314
+      ],
+      "cat18": [
+        273
+      ],
+      "aux": [
+        267,
+        268,
+        314
+      ]
+    },
+    "53": {
+      "weapon_id": 53,
+      "name": "27mmKpfP",
+      "source": "seg132",
+      "from_file": "0x1DCA80",
+      "blocks": [
+        {
+          "file_off": "0x1DCA80",
+          "mag_hex": "0x003A",
+          "cx_gate": 10,
+          "pass1_hits": [],
+          "pairs": [
+            {
+              "idx": 267,
+              "qty": 8,
+              "name": "Wkor361",
+              "pass1": false
+            },
+            {
+              "idx": 269,
+              "qty": 4,
+              "name": "FLeut.Z",
+              "pass1": false
+            },
+            {
+              "idx": 273,
+              "qty": 12,
+              "name": "7.92-10G",
+              "pass1": false
+            },
+            {
+              "idx": 314,
+              "qty": 1,
+              "name": "Messer",
+              "pass1": null
+            }
+          ]
+        }
+      ],
+      "indices": [
+        267,
+        269,
+        273,
+        314
+      ],
+      "cat18": [
+        269,
+        273
+      ],
+      "aux": [
+        267,
+        314
+      ]
+    },
+    "54": {
+      "weapon_id": 54,
+      "name": "27mmStuP",
+      "source": "seg132",
+      "from_file": "0x1DCA96",
+      "blocks": [
+        {
+          "file_off": "0x1DCA96",
+          "mag_hex": "0x003A",
+          "cx_gate": 10,
+          "pass1_hits": [],
+          "pairs": [
+            {
+              "idx": 271,
+              "qty": 8,
+              "name": "Pzwk42",
+              "pass1": false
+            },
+            {
+              "idx": 270,
+              "qty": 4,
+              "name": "SprGr.Z",
+              "pass1": false
+            },
+            {
+              "idx": 273,
+              "qty": 6,
+              "name": "7.92-10G",
+              "pass1": false
+            },
+            {
+              "idx": 314,
+              "qty": 1,
+              "name": "Messer",
+              "pass1": null
+            }
+          ]
+        }
+      ],
+      "indices": [
+        271,
+        270,
+        273,
+        314
+      ],
+      "cat18": [
+        273
+      ],
+      "aux": [
+        271,
+        270,
+        314
+      ]
+    },
+    "55": {
+      "weapon_id": 55,
+      "name": "Gew98",
+      "source": "seg132",
+      "from_file": "0x1DCAAC",
+      "blocks": [
+        {
+          "file_off": "0x1DCAAC",
+          "mag_hex": "0x003A",
+          "cx_gate": 10,
+          "pass1_hits": [
+            272
+          ],
+          "pairs": [
+            {
+              "idx": 272,
+              "qty": 4,
+              "name": "7.92-5",
+              "pass1": true
+            },
+            {
+              "idx": 269,
+              "qty": 4,
+              "name": "FLeut.Z",
+              "pass1": false
+            },
+            {
+              "idx": 273,
+              "qty": 6,
+              "name": "7.92-10G",
+              "pass1": false
+            },
+            {
+              "idx": 314,
+              "qty": 1,
+              "name": "Messer",
+              "pass1": null
+            }
+          ]
+        }
+      ],
+      "indices": [
+        272,
+        269,
+        273,
+        314
+      ],
+      "cat18": [
+        272,
+        269,
+        273
+      ],
+      "aux": [
+        314
+      ]
+    },
+    "73": {
+      "weapon_id": 73,
+      "name": "MKb42(W)",
+      "source": "seg132",
+      "from_file": "0x1DD0C6",
+      "blocks": [
+        {
+          "file_off": "0x1DD0C6",
+          "mag_hex": "0x0033",
+          "cx_gate": 3,
+          "pass1_hits": [],
+          "pairs": [
+            {
+              "idx": 306,
+              "qty": 2,
+              "name": "StiGr39",
+              "pass1": null
+            },
+            {
+              "idx": 277,
+              "qty": 8,
+              "name": "7.92k-30",
+              "pass1": false
+            },
+            {
+              "idx": 266,
+              "qty": 1,
+              "name": "FLeut41",
+              "pass1": false
+            },
+            {
+              "idx": 315,
+              "qty": 1,
+              "name": "10.35-1",
+              "pass1": false
+            }
+          ]
+        }
+      ],
+      "indices": [
+        306,
+        277,
+        266,
+        315
+      ],
+      "cat18": [
+        277,
+        266,
+        315
+      ],
+      "aux": [
+        306
+      ]
+    },
+    "90": {
+      "weapon_id": 90,
+      "name": "MG15",
+      "source": "seg132",
+      "from_file": "0x1DC920",
+      "blocks": [
+        {
+          "file_off": "0x1DC920",
+          "mag_hex": "0x00D4",
+          "cx_gate": 4,
+          "pass1_hits": [],
+          "pairs": [
+            {
+              "idx": 291,
+              "qty": 2,
+              "name": "Pt13-75",
+              "pass1": false
+            },
+            {
+              "idx": 385,
+              "qty": 1,
+              "name": "380ACP8A",
+              "pass1": false
+            },
+            {
+              "idx": 315,
+              "qty": 1,
+              "name": "10.35-1",
+              "pass1": false
+            }
+          ]
+        }
+      ],
+      "indices": [
+        291,
+        385,
+        315
+      ],
+      "cat18": [
+        291,
+        385,
+        315
+      ],
+      "aux": []
+    },
+    "94": {
+      "weapon_id": 94,
+      "name": "MG42",
+      "source": "seg132",
+      "from_file": "0x1DC8F4",
+      "blocks": [
+        {
+          "file_off": "0x1DC8F4",
+          "mag_hex": "0x0033",
+          "cx_gate": 3,
+          "pass1_hits": [],
+          "pairs": [
+            {
+              "idx": 294,
+              "qty": 1,
+              "name": "Pt34-75",
+              "pass1": false
+            },
+            {
+              "idx": 266,
+              "qty": 1,
+              "name": "FLeut41",
+              "pass1": false
+            },
+            {
+              "idx": 315,
+              "qty": 1,
+              "name": "10.35-1",
+              "pass1": false
+            }
+          ]
+        }
+      ],
+      "indices": [
+        294,
+        266,
+        315
+      ],
+      "cat18": [
+        294,
+        266,
+        315
+      ],
+      "aux": []
+    },
+    "95": {
+      "weapon_id": 95,
+      "name": "MG08",
+      "source": "seg132",
+      "from_file": "0x1DC8DE",
+      "blocks": [
+        {
+          "file_off": "0x1DC8DE",
+          "mag_hex": "0x0033",
+          "cx_gate": 3,
+          "pass1_hits": [],
+          "pairs": [
+            {
+              "idx": 294,
+              "qty": 1,
+              "name": "Pt34-75",
+              "pass1": false
+            },
+            {
+              "idx": 266,
+              "qty": 1,
+              "name": "FLeut41",
+              "pass1": false
+            },
+            {
+              "idx": 315,
+              "qty": 1,
+              "name": "10.35-1",
+              "pass1": false
+            }
+          ]
+        }
+      ],
+      "indices": [
+        294,
+        266,
+        315
+      ],
+      "cat18": [
+        294,
+        266,
+        315
+      ],
+      "aux": []
+    },
+    "100": {
+      "weapon_id": 100,
+      "name": "PzB41",
+      "source": "seg132",
+      "from_file": "0x1DD226",
+      "blocks": [
+        {
+          "file_off": "0x1DD226",
+          "mag_hex": "0x00DD",
+          "cx_gate": 13,
+          "pass1_hits": [],
+          "pairs": [
+            {
+              "idx": 299,
+              "qty": 1,
+              "name": "20LS-5",
+              "pass1": false
+            },
+            {
+              "idx": 391,
+              "qty": 1,
+              "name": "8Mrzk-5",
+              "pass1": false
+            },
+            {
+              "idx": 315,
+              "qty": 1,
+              "name": "10.35-1",
+              "pass1": false
+            }
+          ]
+        }
+      ],
+      "indices": [
+        299,
+        391,
+        315
+      ],
+      "cat18": [
+        299,
+        391,
+        315
+      ],
+      "aux": []
+    },
+    "101": {
+      "weapon_id": 101,
+      "name": "PF30mK",
+      "source": "seg132",
+      "from_file": "0x1DCB04",
+      "blocks": [
+        {
+          "file_off": "0x1DCB04",
+          "mag_hex": "0x00DD",
+          "cx_gate": 13,
+          "pass1_hits": [],
+          "pairs": [
+            {
+              "idx": 300,
+              "qty": 4,
+              "name": "20LS-10",
+              "pass1": false
+            },
+            {
+              "idx": 391,
+              "qty": 1,
+              "name": "8Mrzk-5",
+              "pass1": false
+            },
+            {
+              "idx": 315,
+              "qty": 1,
+              "name": "10.35-1",
+              "pass1": false
+            }
+          ]
+        }
+      ],
+      "indices": [
+        300,
+        391,
+        315
+      ],
+      "cat18": [
+        300,
+        391,
+        315
+      ],
+      "aux": []
+    },
+    "106": {
+      "weapon_id": 106,
+      "name": "RPzB54",
+      "source": "seg132",
+      "from_file": "0x1DCC4E",
+      "blocks": [
+        {
+          "file_off": "0x1DCC4E",
+          "mag_hex": "0x0033",
+          "cx_gate": 3,
+          "pass1_hits": [],
+          "pairs": [
+            {
+              "idx": 302,
+              "qty": 1,
+              "name": "RPzB4992",
+              "pass1": false
+            },
+            {
+              "idx": 266,
+              "qty": 1,
+              "name": "FLeut41",
+              "pass1": false
+            },
+            {
+              "idx": 314,
+              "qty": 1,
+              "name": "Messer",
+              "pass1": null
+            }
+          ]
+        }
+      ],
+      "indices": [
+        302,
+        266,
+        314
+      ],
+      "cat18": [
+        302,
+        266
+      ],
+      "aux": [
+        314
+      ]
+    },
+    "107": {
+      "weapon_id": 107,
+      "name": "RPzB54/1",
+      "source": "seg132",
+      "from_file": "0x1DCC64",
+      "blocks": [
+        {
+          "file_off": "0x1DCC64",
+          "mag_hex": "0x0033",
+          "cx_gate": 3,
+          "pass1_hits": [],
+          "pairs": [
+            {
+              "idx": 302,
+              "qty": 1,
+              "name": "RPzB4992",
+              "pass1": false
+            },
+            {
+              "idx": 266,
+              "qty": 1,
+              "name": "FLeut41",
+              "pass1": false
+            },
+            {
+              "idx": 314,
+              "qty": 1,
+              "name": "Messer",
+              "pass1": null
+            }
+          ]
+        }
+      ],
+      "indices": [
+        302,
+        266,
+        314
+      ],
+      "cat18": [
+        302,
+        266
+      ],
+      "aux": [
+        314
+      ]
+    },
+    "108": {
+      "weapon_id": 108,
+      "name": "FmW35",
+      "source": "seg132",
+      "from_file": "0x1DCC7A",
+      "blocks": [
+        {
+          "file_off": "0x1DCC7A",
+          "mag_hex": "0x0033",
+          "cx_gate": 3,
+          "pass1_hits": [],
+          "pairs": [
+            {
+              "idx": 303,
+              "qty": 1,
+              "name": "GPzgr",
+              "pass1": false
+            },
+            {
+              "idx": 266,
+              "qty": 1,
+              "name": "FLeut41",
+              "pass1": false
+            },
+            {
+              "idx": 314,
+              "qty": 1,
+              "name": "Messer",
+              "pass1": null
+            }
+          ]
+        }
+      ],
+      "indices": [
+        303,
+        266,
+        314
+      ],
+      "cat18": [
+        266
+      ],
+      "aux": [
+        303,
+        314
+      ]
+    },
+    "112": {
+      "weapon_id": 112,
+      "name": "Laf34",
+      "source": "seg132",
+      "from_file": "0x1DCC0C",
+      "blocks": [
+        {
+          "file_off": "0x1DCC0C",
+          "mag_hex": "0x0033",
+          "cx_gate": 3,
+          "pass1_hits": [],
+          "pairs": [
+            {
+              "idx": 266,
+              "qty": 1,
+              "name": "FLeut41",
+              "pass1": false
+            },
+            {
+              "idx": 314,
+              "qty": 1,
+              "name": "Messer",
+              "pass1": null
+            }
+          ]
+        }
+      ],
+      "indices": [
+        266,
+        314
+      ],
+      "cat18": [
+        266
+      ],
+      "aux": [
+        314
+      ]
+    },
+    "120": {
+      "weapon_id": 120,
+      "name": "Mkt35",
+      "source": "seg132",
+      "from_file": "0x1DCD40",
+      "blocks": [
+        {
+          "file_off": "0x1DCD40",
+          "mag_hex": "0x0033",
+          "cx_gate": 3,
+          "pass1_hits": [],
+          "pairs": [
+            {
+              "idx": 266,
+              "qty": 1,
+              "name": "FLeut41",
+              "pass1": false
+            },
+            {
+              "idx": 315,
+              "qty": 1,
+              "name": "10.35-1",
+              "pass1": false
+            }
+          ]
+        }
+      ],
+      "indices": [
+        266,
+        315
+      ],
+      "cat18": [
+        266,
+        315
+      ],
+      "aux": []
+    },
+    "130": {
+      "weapon_id": 130,
+      "name": "F. mod38",
+      "source": "seg132",
+      "from_file": "0x1DD3C8",
+      "blocks": [
+        {
+          "file_off": "0x1DD3C8",
+          "mag_hex": "0x008E",
+          "cx_gate": 14,
+          "pass1_hits": [],
+          "pairs": [
+            {
+              "idx": 320,
+              "qty": 6,
+              "name": "9Pb-10",
+              "pass1": false
+            },
+            {
+              "idx": 332,
+              "qty": 1,
+              "name": "BP.MAB38",
+              "pass1": false
+            }
+          ]
+        }
+      ],
+      "indices": [
+        320,
+        332
+      ],
+      "cat18": [
+        320
+      ],
+      "aux": [
+        332
+      ]
+    },
+    "156": {
+      "weapon_id": 156,
+      "name": "Mle1914",
+      "source": "seg132",
+      "from_file": "0x1DC936",
+      "blocks": [
+        {
+          "file_off": "0x1DC936",
+          "mag_hex": "0x00DF",
+          "cx_gate": 15,
+          "pass1_hits": [],
+          "pairs": [
+            {
+              "idx": 343,
+              "qty": 2,
+              "name": "8M86-24",
+              "pass1": false
+            },
+            {
+              "idx": 393,
+              "qty": 1,
+              "name": "20SS-5",
+              "pass1": false
+            },
+            {
+              "idx": 315,
+              "qty": 1,
+              "name": "10.35-1",
+              "pass1": false
+            }
+          ]
+        }
+      ],
+      "indices": [
+        343,
+        393,
+        315
+      ],
+      "cat18": [
+        343,
+        393,
+        315
+      ],
+      "aux": []
+    },
+    "170": {
+      "weapon_id": 170,
+      "name": "No4 Mk1(T)",
+      "source": "seg132",
+      "from_file": "0x1DD7BC",
+      "blocks": [
+        {
+          "file_off": "0x1DD7BC",
+          "mag_hex": "0x00BA",
+          "cx_gate": 10,
+          "pass1_hits": [],
+          "pairs": [
+            {
+              "idx": 355,
+              "qty": 10,
+              "name": "9Pb-32R",
+              "pass1": false
+            },
+            {
+              "idx": 365,
+              "qty": 1,
+              "name": "7.62N-1",
+              "pass1": false
+            }
+          ]
+        }
+      ],
+      "indices": [
+        355,
+        365
+      ],
+      "cat18": [
+        355,
+        365
+      ],
+      "aux": []
+    },
+    "177": {
+      "weapon_id": 177,
+      "name": "Bren Mk2",
+      "source": "seg132",
+      "from_file": "0x1DD722",
+      "blocks": [
+        {
+          "file_off": "0x1DD722",
+          "mag_hex": "0x00A4",
+          "cx_gate": 4,
+          "pass1_hits": [],
+          "pairs": [
+            {
+              "idx": 358,
+              "qty": 4,
+              "name": "303Br250",
+              "pass1": false
+            },
+            {
+              "idx": 352,
+              "qty": 6,
+              "name": "Very-1",
+              "pass1": false
+            }
+          ]
+        }
+      ],
+      "indices": [
+        358,
+        352
+      ],
+      "cat18": [
+        358,
+        352
+      ],
+      "aux": []
+    },
+    "178": {
+      "weapon_id": 178,
+      "name": "Bren Mk3",
+      "source": "seg132",
+      "from_file": "0x1DD738",
+      "blocks": [
+        {
+          "file_off": "0x1DD738",
+          "mag_hex": "0x00A4",
+          "cx_gate": 4,
+          "pass1_hits": [],
+          "pairs": [
+            {
+              "idx": 358,
+              "qty": 4,
+              "name": "303Br250",
+              "pass1": false
+            },
+            {
+              "idx": 352,
+              "qty": 6,
+              "name": "Very-1",
+              "pass1": false
+            }
+          ]
+        }
+      ],
+      "indices": [
+        358,
+        352
+      ],
+      "cat18": [
+        358,
+        352
+      ],
+      "aux": []
+    },
+    "179": {
+      "weapon_id": 179,
+      "name": "Vickers Mk1",
+      "source": "seg132",
+      "from_file": "0x1DD74E",
+      "blocks": [
+        {
+          "file_off": "0x1DD74E",
+          "mag_hex": "0x00A5",
+          "cx_gate": 5,
+          "pass1_hits": [],
+          "pairs": [
+            {
+              "idx": 358,
+              "qty": 4,
+              "name": "303Br250",
+              "pass1": false
+            },
+            {
+              "idx": 352,
+              "qty": 6,
+              "name": "Very-1",
+              "pass1": false
+            }
+          ]
+        }
+      ],
+      "indices": [
+        358,
+        352
+      ],
+      "cat18": [
+        358,
+        352
+      ],
+      "aux": []
+    },
+    "181": {
+      "weapon_id": 181,
+      "name": "PIAT",
+      "source": "seg132",
+      "from_file": "0x1DD840",
+      "blocks": [
+        {
+          "file_off": "0x1DD840",
+          "mag_hex": "0x00A4",
+          "cx_gate": 4,
+          "pass1_hits": [],
+          "pairs": [
+            {
+              "idx": 360,
+              "qty": 2,
+              "name": "PIAT-1",
+              "pass1": false
+            },
+            {
+              "idx": 352,
+              "qty": 12,
+              "name": "Very-1",
+              "pass1": false
+            }
+          ]
+        }
+      ],
+      "indices": [
+        360,
+        352
+      ],
+      "cat18": [
+        360,
+        352
+      ],
+      "aux": []
+    },
+    "182": {
+      "weapon_id": 182,
+      "name": "No1 Mk1",
+      "source": "seg132",
+      "from_file": "0x1DD86C",
+      "blocks": [
+        {
+          "file_off": "0x1DD86C",
+          "mag_hex": "0x00A4",
+          "cx_gate": 4,
+          "pass1_hits": [],
+          "pairs": [
+            {
+              "idx": 361,
+              "qty": 3,
+              "name": "No36M",
+              "pass1": null
+            },
+            {
+              "idx": 352,
+              "qty": 12,
+              "name": "Very-1",
+              "pass1": false
+            }
+          ]
+        }
+      ],
+      "indices": [
+        361,
+        352
+      ],
+      "cat18": [
+        352
+      ],
+      "aux": [
+        361
+      ]
+    },
+    "193": {
+      "weapon_id": 193,
+      "name": "obr1944g",
+      "source": "seg132",
+      "from_file": "0x1DD1E4",
+      "blocks": [
+        {
+          "file_off": "0x1DD1E4",
+          "mag_hex": "0x0092",
+          "cx_gate": 2,
+          "pass1_hits": [],
+          "pairs": [
+            {
+              "idx": 309,
+              "qty": 2,
+              "name": "GebLad",
+              "pass1": null
+            },
+            {
+              "idx": 368,
+              "qty": 8,
+              "name": "7.62-10",
+              "pass1": false
+            },
+            {
+              "idx": 337,
+              "qty": 1,
+              "name": "8M86-1",
+              "pass1": false
+            },
+            {
+              "idx": 377,
+              "qty": 1,
+              "name": "sht.1940",
+              "pass1": false
+            }
+          ]
+        }
+      ],
+      "indices": [
+        309,
+        368,
+        337,
+        377
+      ],
+      "cat18": [
+        368,
+        337
+      ],
+      "aux": [
+        309,
+        377
+      ]
+    },
+    "195": {
+      "weapon_id": 195,
+      "name": "PPD40",
+      "source": "seg132",
+      "from_file": "0x1DD1CE",
+      "blocks": [
+        {
+          "file_off": "0x1DD1CE",
+          "mag_hex": "0x007C",
+          "cx_gate": 12,
+          "pass1_hits": [
+            378
+          ],
+          "pairs": [
+            {
+              "idx": 309,
+              "qty": 4,
+              "name": "GebLad",
+              "pass1": null
+            },
+            {
+              "idx": 369,
+              "qty": 6,
+              "name": "7.62T71D",
+              "pass1": false
+            },
+            {
+              "idx": 318,
+              "qty": 1,
+              "name": "6.5-6",
+              "pass1": false
+            },
+            {
+              "idx": 378,
+              "qty": 1,
+              "name": "9Pb-8s",
+              "pass1": true
+            }
+          ]
+        }
+      ],
+      "indices": [
+        309,
+        369,
+        318,
+        378
+      ],
+      "cat18": [
+        369,
+        318,
+        378
+      ],
+      "aux": [
+        309
+      ]
+    },
+    "197": {
+      "weapon_id": 197,
+      "name": "PPS43",
+      "source": "seg132",
+      "from_file": "0x1DCFEA",
+      "blocks": [
+        {
+          "file_off": "0x1DCFEA",
+          "mag_hex": "0x0069",
+          "cx_gate": 9,
+          "pass1_hits": [],
+          "pairs": [
+            {
+              "idx": 306,
+              "qty": 2,
+              "name": "StiGr39",
+              "pass1": null
+            },
+            {
+              "idx": 372,
+              "qty": 1,
+              "name": "7.62T35S",
+              "pass1": false
+            }
+          ]
+        }
+      ],
+      "indices": [
+        306,
+        372
+      ],
+      "cat18": [
+        372
+      ],
+      "aux": [
+        306
+      ]
+    },
+    "206": {
+      "weapon_id": 206,
+      "name": "M07/12",
+      "source": "seg132",
+      "from_file": "0x1DCE48",
+      "blocks": [
+        {
+          "file_off": "0x1DCE48",
+          "mag_hex": "0x00D6",
+          "cx_gate": 6,
+          "pass1_hits": [],
+          "pairs": [
+            {
+              "idx": 381,
+              "qty": 3,
+              "name": "8Aut-250",
+              "pass1": false
+            },
+            {
+              "idx": 387,
+              "qty": 1,
+              "name": "380ACP8B",
+              "pass1": false
+            },
+            {
+              "idx": 315,
+              "qty": 1,
+              "name": "10.35-1",
+              "pass1": false
+            }
+          ]
+        }
+      ],
+      "indices": [
+        381,
+        387,
+        315
+      ],
+      "cat18": [
+        381,
+        387,
+        315
+      ],
+      "aux": []
+    },
+    "222": {
+      "weapon_id": 222,
+      "name": "Astra400",
+      "source": "seg132",
+      "from_file": "0x1DD478",
+      "blocks": [
+        {
+          "file_off": "0x1DD478",
+          "mag_hex": "0x007A",
+          "cx_gate": 10,
+          "pass1_hits": [],
+          "pairs": [
+            {
+              "idx": 392,
+              "qty": 4,
+              "name": "9Largo-8",
+              "pass1": false
+            },
+            {
+              "idx": 316,
+              "qty": 6,
+              "name": "9Gli-7",
+              "pass1": false
+            }
+          ]
+        }
+      ],
+      "indices": [
+        392,
+        316
+      ],
+      "cat18": [
+        392,
+        316
+      ],
+      "aux": []
+    },
+    "225": {
+      "weapon_id": 225,
+      "name": "45ACP-7",
+      "source": "seg132",
+      "from_file": "0x1DD462",
+      "blocks": [
+        {
+          "file_off": "0x1DD462",
+          "mag_hex": "0x007B",
+          "cx_gate": 11,
+          "pass1_hits": [],
+          "pairs": [
+            {
+              "idx": 395,
+              "qty": 2,
+              "name": "M1919A4 MMG",
+              "pass1": false
+            },
+            {
+              "idx": 317,
+              "qty": 1,
+              "name": "380ACP-7",
+              "pass1": false
+            }
+          ]
+        }
+      ],
+      "indices": [
+        395,
+        317
+      ],
+      "cat18": [
+        317
+      ],
+      "aux": [
+        395
+      ]
+    },
+    "56": {
+      "weapon_id": 56,
+      "name": "Kar98b",
+      "source": "kar98_family_propagate",
+      "propagated_from": 55,
+      "from_file": "0x1DCAAC",
+      "blocks": [],
+      "indices": [
+        272,
+        269,
+        273,
+        314
+      ],
+      "cat18": [
+        272,
+        269,
+        273
+      ],
+      "aux": [
+        314
+      ]
+    },
+    "57": {
+      "weapon_id": 57,
+      "name": "Kar98k",
+      "source": "kar98_family_propagate",
+      "propagated_from": 55,
+      "from_file": "0x1DCAAC",
+      "blocks": [],
+      "indices": [
+        272,
+        269,
+        273,
+        314
+      ],
+      "cat18": [
+        272,
+        269,
+        273
+      ],
+      "aux": [
+        314
+      ]
+    },
+    "58": {
+      "weapon_id": 58,
+      "name": "Kar98k svw",
+      "source": "kar98_family_propagate",
+      "propagated_from": 55,
+      "from_file": "0x1DCAAC",
+      "blocks": [],
+      "indices": [
+        272,
+        269,
+        273,
+        314
+      ],
+      "cat18": [
+        272,
+        269,
+        273
+      ],
+      "aux": [
+        314
+      ]
+    },
+    "69": {
+      "weapon_id": 69,
+      "name": "Zf Kar98k",
+      "source": "kar98_family_propagate",
+      "propagated_from": 55,
+      "from_file": "0x1DCAAC",
+      "blocks": [],
+      "indices": [
+        272,
+        269,
+        273,
+        314
+      ],
+      "cat18": [
+        272,
+        269,
+        273
+      ],
+      "aux": [
+        314
+      ]
+    }
+  }
+}

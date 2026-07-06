@@ -1,0 +1,3 @@
+8bpp 240x256 (縦長ストライド別解)
+8bpp DIB 240x256
+tiles=20 grid=4x5

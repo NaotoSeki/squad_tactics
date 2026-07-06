@@ -1,0 +1,4099 @@
+{
+  "generated": "2026-05-31",
+  "summary": {
+    "compositeWeapons": 186,
+    "ammoBoxes": 9,
+    "hmgStyle": 9
+  },
+  "ammoBoxes": [
+    {
+      "idx": 34,
+      "name": "M1 Ammobox",
+      "innerAmmo": [
+        {
+          "idx": 240,
+          "name": "3006-250"
+        },
+        {
+          "idx": 241,
+          "name": "50M2-110"
+        }
+      ],
+      "usedByWeapons": []
+    },
+    {
+      "idx": 35,
+      "name": "M2HB Ammobox",
+      "innerAmmo": [
+        {
+          "idx": 242,
+          "name": "M6A1 HR"
+        }
+      ],
+      "usedByWeapons": [
+        {
+          "idx": 20,
+          "name": "M1919A6 LMG"
+        },
+        {
+          "idx": 22,
+          "name": "M1917A1 MMG"
+        },
+        {
+          "idx": 23,
+          "name": "M1919A4 MMG"
+        }
+      ]
+    },
+    {
+      "idx": 115,
+      "name": "PatrK41",
+      "innerAmmo": [
+        {
+          "idx": 297,
+          "name": "Pa318-1"
+        },
+        {
+          "idx": 296,
+          "name": "7.92m250"
+        }
+      ],
+      "usedByWeapons": []
+    },
+    {
+      "idx": 116,
+      "name": "PatrK15",
+      "innerAmmo": [
+        {
+          "idx": 290,
+          "name": "7.92-25"
+        },
+        {
+          "idx": 289,
+          "name": "7.92f250"
+        }
+      ],
+      "usedByWeapons": [
+        {
+          "idx": 91,
+          "name": "MG34"
+        },
+        {
+          "idx": 92,
+          "name": "MG34S"
+        },
+        {
+          "idx": 93,
+          "name": "MG34/41"
+        },
+        {
+          "idx": 94,
+          "name": "MG42"
+        },
+        {
+          "idx": 217,
+          "name": "tk ZB vz37"
+        }
+      ]
+    },
+    {
+      "idx": 141,
+      "name": "CM. FR 14/35",
+      "innerAmmo": [
+        {
+          "idx": 328,
+          "name": "SRCM m35"
+        }
+      ],
+      "usedByWeapons": []
+    },
+    {
+      "idx": 185,
+      "name": "No8 Mk1",
+      "innerAmmo": [
+        {
+          "idx": 359,
+          "name": "55Boys-5"
+        }
+      ],
+      "usedByWeapons": []
+    },
+    {
+      "idx": 201,
+      "name": "pat.1910",
+      "innerAmmo": [
+        {
+          "idx": 375,
+          "name": "12.7-50"
+        }
+      ],
+      "usedByWeapons": []
+    },
+    {
+      "idx": 202,
+      "name": "pat.DShK",
+      "innerAmmo": [
+        {
+          "idx": 376,
+          "name": "sht.1891"
+        }
+      ],
+      "usedByWeapons": [
+        {
+          "idx": 199,
+          "name": "PM1910"
+        }
+      ]
+    },
+    {
+      "idx": 208,
+      "name": "M07 PatrK",
+      "innerAmmo": [
+        {
+          "idx": 382,
+          "name": "9BLg-7"
+        }
+      ],
+      "usedByWeapons": []
+    }
+  ],
+  "weapons": [
+    {
+      "weaponIdx": 0,
+      "weaponName": "M1911A1",
+      "category": 1,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 226,
+          "name": "45ACP-3",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 1,
+      "weaponName": "M1917 S&W",
+      "category": 1,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 227,
+          "name": "45ACP-1",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 2,
+      "weaponName": "M1917 Colt",
+      "category": 1,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 227,
+          "name": "45ACP-1",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 3,
+      "weaponName": "OSS",
+      "category": 1,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 228,
+          "name": "AN-M8-1",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 4,
+      "weaponName": "AN-M8",
+      "category": 3,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 229,
+          "name": "3006-5",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 5,
+      "weaponName": "M1903A1",
+      "category": 4,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 230,
+          "name": "3006-20B",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [
+        {
+          "idx": 245,
+          "name": "Mk2 GPA",
+          "cat": 19,
+          "kind": "grenade_adapter"
+        },
+        {
+          "idx": 246,
+          "name": "Mk2 Grd",
+          "cat": 20,
+          "kind": "other"
+        },
+        {
+          "idx": 251,
+          "name": "John Byt",
+          "cat": 24,
+          "kind": "bayonet"
+        }
+      ],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 6,
+      "weaponName": "M1903A4",
+      "category": 4,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 230,
+          "name": "3006-20B",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [
+        {
+          "idx": 251,
+          "name": "John Byt",
+          "cat": 24,
+          "kind": "bayonet"
+        }
+      ],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 7,
+      "weaponName": "M1918A2 BAR",
+      "category": 5,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 231,
+          "name": "3006-8",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 8,
+      "weaponName": "M1 Rifle",
+      "category": 4,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 232,
+          "name": "30Cbn-15",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [
+        {
+          "idx": 245,
+          "name": "Mk2 GPA",
+          "cat": 19,
+          "kind": "grenade_adapter"
+        },
+        {
+          "idx": 246,
+          "name": "Mk2 Grd",
+          "cat": 20,
+          "kind": "other"
+        },
+        {
+          "idx": 251,
+          "name": "John Byt",
+          "cat": 24,
+          "kind": "bayonet"
+        }
+      ],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 9,
+      "weaponName": "M1C Rifle",
+      "category": 4,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 232,
+          "name": "30Cbn-15",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 10,
+      "weaponName": "M1D Rifle",
+      "category": 4,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 232,
+          "name": "30Cbn-15",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 11,
+      "weaponName": "M1941 Rifle",
+      "category": 4,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 230,
+          "name": "3006-20B",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [
+        {
+          "idx": 252,
+          "name": "M4 Byt",
+          "cat": 24,
+          "kind": "bayonet"
+        }
+      ],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 12,
+      "weaponName": "M1 Cbn",
+      "category": 4,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 233,
+          "name": "30Cbn-30",
+          "cat": 18,
+          "kind": "ammo"
+        },
+        {
+          "idx": 234,
+          "name": "45ACP20T",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [
+        {
+          "idx": 245,
+          "name": "Mk2 GPA",
+          "cat": 19,
+          "kind": "grenade_adapter"
+        },
+        {
+          "idx": 253,
+          "name": "Mk1 TKnf",
+          "cat": 24,
+          "kind": "bayonet"
+        }
+      ],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 13,
+      "weaponName": "M1A1 Cbn",
+      "category": 4,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 233,
+          "name": "30Cbn-30",
+          "cat": 18,
+          "kind": "ammo"
+        },
+        {
+          "idx": 234,
+          "name": "45ACP20T",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [
+        {
+          "idx": 245,
+          "name": "Mk2 GPA",
+          "cat": 19,
+          "kind": "grenade_adapter"
+        },
+        {
+          "idx": 253,
+          "name": "Mk1 TKnf",
+          "cat": 24,
+          "kind": "bayonet"
+        }
+      ],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 14,
+      "weaponName": "M2 Cbn",
+      "category": 4,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 234,
+          "name": "45ACP20T",
+          "cat": 18,
+          "kind": "ammo"
+        },
+        {
+          "idx": 233,
+          "name": "30Cbn-30",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [
+        {
+          "idx": 245,
+          "name": "Mk2 GPA",
+          "cat": 19,
+          "kind": "grenade_adapter"
+        },
+        {
+          "idx": 253,
+          "name": "Mk1 TKnf",
+          "cat": 24,
+          "kind": "bayonet"
+        }
+      ],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 15,
+      "weaponName": "M1928A1 SMG",
+      "category": 6,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 235,
+          "name": "45ACP30T",
+          "cat": 18,
+          "kind": "ammo"
+        },
+        {
+          "idx": 236,
+          "name": "45ACP50T",
+          "cat": 18,
+          "kind": "ammo"
+        },
+        {
+          "idx": 237,
+          "name": "45ACP30G",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 16,
+      "weaponName": "M1 SMG",
+      "category": 6,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 235,
+          "name": "45ACP30T",
+          "cat": 18,
+          "kind": "ammo"
+        },
+        {
+          "idx": 236,
+          "name": "45ACP50T",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 17,
+      "weaponName": "M1A1 SMG",
+      "category": 6,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 235,
+          "name": "45ACP30T",
+          "cat": 18,
+          "kind": "ammo"
+        },
+        {
+          "idx": 236,
+          "name": "45ACP50T",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 18,
+      "weaponName": "M3 SMG",
+      "category": 6,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 238,
+          "name": "3006-20J",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 19,
+      "weaponName": "M3A1 SMG",
+      "category": 6,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 238,
+          "name": "3006-20J",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 20,
+      "weaponName": "M1919A6 LMG",
+      "category": 5,
+      "w21": 32,
+      "primaryAmmo": [],
+      "auxSlots": [],
+      "u26Link": {
+        "idx": 35,
+        "name": "M2HB Ammobox",
+        "cat": 13,
+        "kind": "ammo_box",
+        "innerAmmo": [
+          {
+            "idx": 242,
+            "name": "M6A1 HR"
+          }
+        ]
+      },
+      "completeHmgHint": true
+    },
+    {
+      "weaponIdx": 21,
+      "weaponName": "M1941   LMG",
+      "category": 5,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 239,
+          "name": "3006-200",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 22,
+      "weaponName": "M1917A1 MMG",
+      "category": 7,
+      "w21": 33,
+      "primaryAmmo": [],
+      "auxSlots": [],
+      "u26Link": {
+        "idx": 35,
+        "name": "M2HB Ammobox",
+        "cat": 13,
+        "kind": "ammo_box",
+        "innerAmmo": [
+          {
+            "idx": 242,
+            "name": "M6A1 HR"
+          }
+        ]
+      },
+      "completeHmgHint": true
+    },
+    {
+      "weaponIdx": 23,
+      "weaponName": "M1919A4 MMG",
+      "category": 7,
+      "w21": 31,
+      "primaryAmmo": [],
+      "auxSlots": [],
+      "u26Link": {
+        "idx": 34,
+        "name": "M1 Ammobox",
+        "cat": 13,
+        "kind": "ammo_box",
+        "innerAmmo": [
+          {
+            "idx": 240,
+            "name": "3006-250"
+          }
+        ]
+      },
+      "completeHmgHint": true
+    },
+    {
+      "weaponIdx": 24,
+      "weaponName": "M2 HB HMG",
+      "category": 7,
+      "w21": 33,
+      "primaryAmmo": [],
+      "auxSlots": [],
+      "u26Link": {
+        "idx": 35,
+        "name": "M2HB Ammobox",
+        "cat": 13,
+        "kind": "ammo_box",
+        "innerAmmo": [
+          {
+            "idx": 241,
+            "name": "50M2-110"
+          }
+        ]
+      },
+      "completeHmgHint": true
+    },
+    {
+      "weaponIdx": 25,
+      "weaponName": "M1 RL",
+      "category": 10,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 243,
+          "name": "M6A5 HR",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 26,
+      "weaponName": "M1A1 RL",
+      "category": 10,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 243,
+          "name": "M6A5 HR",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 27,
+      "weaponName": "M9 RL",
+      "category": 10,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 243,
+          "name": "M6A5 HR",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [
+        {
+          "idx": 244,
+          "name": "M9A1 RfG",
+          "cat": 19,
+          "kind": "grenade_adapter"
+        }
+      ],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 34,
+      "weaponName": "M1 Ammobox",
+      "category": 13,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 240,
+          "name": "3006-250",
+          "cat": 18,
+          "kind": "ammo"
+        },
+        {
+          "idx": 241,
+          "name": "50M2-110",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 35,
+      "weaponName": "M2HB Ammobox",
+      "category": 13,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 242,
+          "name": "M6A1 HR",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 41,
+      "weaponName": "C/96",
+      "category": 1,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 256,
+          "name": "7.63-10b",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 42,
+      "weaponName": "C/96M712",
+      "category": 1,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 258,
+          "name": "9Pb-8L",
+          "cat": 18,
+          "kind": "ammo"
+        },
+        {
+          "idx": 257,
+          "name": "7.63-20b",
+          "cat": 18,
+          "kind": "ammo"
+        },
+        {
+          "idx": 256,
+          "name": "7.63-10b",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 43,
+      "weaponName": "P08",
+      "category": 1,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 259,
+          "name": "32ACP-8M",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 44,
+      "weaponName": "M1934",
+      "category": 1,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 260,
+          "name": "32ACP-7B",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 45,
+      "weaponName": "Beholla",
+      "category": 1,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 261,
+          "name": "32ACP-8S",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 46,
+      "weaponName": "M38H",
+      "category": 1,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 262,
+          "name": "32ACP-8W",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 47,
+      "weaponName": "PP",
+      "category": 1,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 263,
+          "name": "32ACP-7W",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 48,
+      "weaponName": "PPK",
+      "category": 1,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 264,
+          "name": "32ACP-8H",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 49,
+      "weaponName": "HSc",
+      "category": 1,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 265,
+          "name": "9Pb-8W",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 50,
+      "weaponName": "P38",
+      "category": 1,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 266,
+          "name": "FLeut41",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 51,
+      "weaponName": "27mmLeuP",
+      "category": 3,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 269,
+          "name": "FLeut.Z",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [
+        {
+          "idx": 267,
+          "name": "Wkor361",
+          "cat": 19,
+          "kind": "grenade_adapter"
+        },
+        {
+          "idx": 268,
+          "name": "Wgrp326",
+          "cat": 19,
+          "kind": "grenade_adapter"
+        }
+      ],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 52,
+      "weaponName": "27mmP42",
+      "category": 3,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 269,
+          "name": "FLeut.Z",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [
+        {
+          "idx": 267,
+          "name": "Wkor361",
+          "cat": 19,
+          "kind": "grenade_adapter"
+        },
+        {
+          "idx": 268,
+          "name": "Wgrp326",
+          "cat": 19,
+          "kind": "grenade_adapter"
+        }
+      ],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 53,
+      "weaponName": "27mmKpfP",
+      "category": 2,
+      "w21": 0,
+      "primaryAmmo": [],
+      "auxSlots": [
+        {
+          "idx": 271,
+          "name": "Pzwk42",
+          "cat": 19,
+          "kind": "grenade_adapter"
+        },
+        {
+          "idx": 270,
+          "name": "SprGr.Z",
+          "cat": 19,
+          "kind": "grenade_adapter"
+        }
+      ],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 54,
+      "weaponName": "27mmStuP",
+      "category": 2,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 272,
+          "name": "7.92-5",
+          "cat": 18,
+          "kind": "ammo"
+        },
+        {
+          "idx": 269,
+          "name": "FLeut.Z",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [
+        {
+          "idx": 268,
+          "name": "Wgrp326",
+          "cat": 19,
+          "kind": "grenade_adapter"
+        }
+      ],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 55,
+      "weaponName": "Gew98",
+      "category": 4,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 273,
+          "name": "7.92-10G",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [
+        {
+          "idx": 314,
+          "name": "Messer",
+          "cat": 24,
+          "kind": "bayonet"
+        }
+      ],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 56,
+      "weaponName": "Kar98b",
+      "category": 4,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 273,
+          "name": "7.92-10G",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [
+        {
+          "idx": 314,
+          "name": "Messer",
+          "cat": 24,
+          "kind": "bayonet"
+        }
+      ],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 57,
+      "weaponName": "Kar98k",
+      "category": 4,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 273,
+          "name": "7.92-10G",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [
+        {
+          "idx": 304,
+          "name": "GSprgr",
+          "cat": 19,
+          "kind": "grenade_adapter"
+        },
+        {
+          "idx": 305,
+          "name": "StiGr24",
+          "cat": 20,
+          "kind": "other"
+        },
+        {
+          "idx": 314,
+          "name": "Messer",
+          "cat": 24,
+          "kind": "bayonet"
+        }
+      ],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 58,
+      "weaponName": "Kar98k svw",
+      "category": 4,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 273,
+          "name": "7.92-10G",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [
+        {
+          "idx": 304,
+          "name": "GSprgr",
+          "cat": 19,
+          "kind": "grenade_adapter"
+        },
+        {
+          "idx": 305,
+          "name": "StiGr24",
+          "cat": 20,
+          "kind": "other"
+        }
+      ],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 59,
+      "weaponName": "Gew29/40",
+      "category": 4,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 273,
+          "name": "7.92-10G",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [
+        {
+          "idx": 314,
+          "name": "Messer",
+          "cat": 24,
+          "kind": "bayonet"
+        }
+      ],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 60,
+      "weaponName": "Gew33/40",
+      "category": 4,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 273,
+          "name": "7.92-10G",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [
+        {
+          "idx": 314,
+          "name": "Messer",
+          "cat": 24,
+          "kind": "bayonet"
+        }
+      ],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 61,
+      "weaponName": "Gew98/40",
+      "category": 4,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 273,
+          "name": "7.92-10G",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [
+        {
+          "idx": 314,
+          "name": "Messer",
+          "cat": 24,
+          "kind": "bayonet"
+        }
+      ],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 62,
+      "weaponName": "VG-1",
+      "category": 4,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 274,
+          "name": "7.92-101",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 63,
+      "weaponName": "VG-2",
+      "category": 4,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 274,
+          "name": "7.92-101",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 64,
+      "weaponName": "VK-98",
+      "category": 4,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 273,
+          "name": "7.92-10G",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 65,
+      "weaponName": "Gew41(W)",
+      "category": 4,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 273,
+          "name": "7.92-10G",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [
+        {
+          "idx": 314,
+          "name": "Messer",
+          "cat": 24,
+          "kind": "bayonet"
+        }
+      ],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 66,
+      "weaponName": "Gew41(M)",
+      "category": 4,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 273,
+          "name": "7.92-10G",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [
+        {
+          "idx": 314,
+          "name": "Messer",
+          "cat": 24,
+          "kind": "bayonet"
+        }
+      ],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 67,
+      "weaponName": "Gew43",
+      "category": 4,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 273,
+          "name": "7.92-10G",
+          "cat": 18,
+          "kind": "ammo"
+        },
+        {
+          "idx": 274,
+          "name": "7.92-101",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 68,
+      "weaponName": "Kar43",
+      "category": 4,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 273,
+          "name": "7.92-10G",
+          "cat": 18,
+          "kind": "ammo"
+        },
+        {
+          "idx": 274,
+          "name": "7.92-101",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 69,
+      "weaponName": "Zf Kar98k",
+      "category": 4,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 273,
+          "name": "7.92-10G",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [
+        {
+          "idx": 314,
+          "name": "Messer",
+          "cat": 24,
+          "kind": "bayonet"
+        }
+      ],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 70,
+      "weaponName": "Zf Gew43",
+      "category": 4,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 273,
+          "name": "7.92-10G",
+          "cat": 18,
+          "kind": "ammo"
+        },
+        {
+          "idx": 274,
+          "name": "7.92-101",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 71,
+      "weaponName": "FG42/1",
+      "category": 5,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 276,
+          "name": "7.92-202",
+          "cat": 18,
+          "kind": "ammo"
+        },
+        {
+          "idx": 275,
+          "name": "7.92-201",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 72,
+      "weaponName": "FG42/2",
+      "category": 5,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 277,
+          "name": "7.92k-30",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 73,
+      "weaponName": "MKb42(W)",
+      "category": 4,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 278,
+          "name": "9Pb-20S",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [
+        {
+          "idx": 314,
+          "name": "Messer",
+          "cat": 24,
+          "kind": "bayonet"
+        }
+      ],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 74,
+      "weaponName": "MKb42(H)",
+      "category": 4,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 278,
+          "name": "9Pb-20S",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [
+        {
+          "idx": 304,
+          "name": "GSprgr",
+          "cat": 19,
+          "kind": "grenade_adapter"
+        },
+        {
+          "idx": 305,
+          "name": "StiGr24",
+          "cat": 20,
+          "kind": "other"
+        },
+        {
+          "idx": 314,
+          "name": "Messer",
+          "cat": 24,
+          "kind": "bayonet"
+        }
+      ],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 75,
+      "weaponName": "MP43",
+      "category": 4,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 278,
+          "name": "9Pb-20S",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [
+        {
+          "idx": 304,
+          "name": "GSprgr",
+          "cat": 19,
+          "kind": "grenade_adapter"
+        },
+        {
+          "idx": 305,
+          "name": "StiGr24",
+          "cat": 20,
+          "kind": "other"
+        }
+      ],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 76,
+      "weaponName": "StG44",
+      "category": 4,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 278,
+          "name": "9Pb-20S",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [
+        {
+          "idx": 304,
+          "name": "GSprgr",
+          "cat": 19,
+          "kind": "grenade_adapter"
+        },
+        {
+          "idx": 305,
+          "name": "StiGr24",
+          "cat": 20,
+          "kind": "other"
+        }
+      ],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 77,
+      "weaponName": "VG1-5",
+      "category": 4,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 278,
+          "name": "9Pb-20S",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 78,
+      "weaponName": "MP28/2",
+      "category": 6,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 280,
+          "name": "9Pb-50S",
+          "cat": 18,
+          "kind": "ammo"
+        },
+        {
+          "idx": 279,
+          "name": "9Pb-32S",
+          "cat": 18,
+          "kind": "ammo"
+        },
+        {
+          "idx": 281,
+          "name": "9Pb-20E",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [
+        {
+          "idx": 314,
+          "name": "Messer",
+          "cat": 24,
+          "kind": "bayonet"
+        }
+      ],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 79,
+      "weaponName": "MP35/1",
+      "category": 6,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 285,
+          "name": "9Pb-32M",
+          "cat": 18,
+          "kind": "ammo"
+        },
+        {
+          "idx": 284,
+          "name": "9Pb-32B",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 80,
+      "weaponName": "EMP",
+      "category": 6,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 283,
+          "name": "9Pb-24B",
+          "cat": 18,
+          "kind": "ammo"
+        },
+        {
+          "idx": 282,
+          "name": "9Pb-32E",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 81,
+      "weaponName": "MP38",
+      "category": 6,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 286,
+          "name": "9Pb-32P",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 82,
+      "weaponName": "MP40",
+      "category": 6,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 286,
+          "name": "9Pb-32P",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 83,
+      "weaponName": "MP40/2",
+      "category": 6,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 286,
+          "name": "9Pb-32P",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 84,
+      "weaponName": "MP41",
+      "category": 6,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 286,
+          "name": "9Pb-32P",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 85,
+      "weaponName": "Ger Potsdam",
+      "category": 6,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 287,
+          "name": "Pk16-100",
+          "cat": 18,
+          "kind": "ammo"
+        },
+        {
+          "idx": 356,
+          "name": "303Br-47",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 86,
+      "weaponName": "MP3008",
+      "category": 6,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 286,
+          "name": "9Pb-32P",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 87,
+      "weaponName": "MG08/15",
+      "category": 5,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 288,
+          "name": "7.92f100",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [],
+      "u26Link": {
+        "idx": 117,
+        "name": "Fernglas",
+        "cat": 14,
+        "kind": "optic"
+      },
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 88,
+      "weaponName": "MG08/18",
+      "category": 5,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 288,
+          "name": "7.92f100",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [],
+      "u26Link": {
+        "idx": 117,
+        "name": "Fernglas",
+        "cat": 14,
+        "kind": "optic"
+      },
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 89,
+      "weaponName": "MG13",
+      "category": 5,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 291,
+          "name": "Pt13-75",
+          "cat": 18,
+          "kind": "ammo"
+        },
+        {
+          "idx": 292,
+          "name": "Dt15-75",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 90,
+      "weaponName": "MG15",
+      "category": 5,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 293,
+          "name": "Gt34-50",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 91,
+      "weaponName": "MG34",
+      "category": 5,
+      "w21": 113,
+      "primaryAmmo": [
+        {
+          "idx": 294,
+          "name": "Pt34-75",
+          "cat": 18,
+          "kind": "ammo"
+        },
+        {
+          "idx": 295,
+          "name": "7.92-50",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [],
+      "u26Link": {
+        "idx": 116,
+        "name": "PatrK15",
+        "cat": 13,
+        "kind": "ammo_box",
+        "innerAmmo": [
+          {
+            "idx": 290,
+            "name": "7.92-25"
+          },
+          {
+            "idx": 289,
+            "name": "7.92f250"
+          }
+        ]
+      },
+      "completeHmgHint": true
+    },
+    {
+      "weaponIdx": 92,
+      "weaponName": "MG34S",
+      "category": 5,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 294,
+          "name": "Pt34-75",
+          "cat": 18,
+          "kind": "ammo"
+        },
+        {
+          "idx": 295,
+          "name": "7.92-50",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [],
+      "u26Link": {
+        "idx": 116,
+        "name": "PatrK15",
+        "cat": 13,
+        "kind": "ammo_box",
+        "innerAmmo": [
+          {
+            "idx": 290,
+            "name": "7.92-25"
+          },
+          {
+            "idx": 289,
+            "name": "7.92f250"
+          }
+        ]
+      },
+      "completeHmgHint": true
+    },
+    {
+      "weaponIdx": 93,
+      "weaponName": "MG34/41",
+      "category": 5,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 294,
+          "name": "Pt34-75",
+          "cat": 18,
+          "kind": "ammo"
+        },
+        {
+          "idx": 295,
+          "name": "7.92-50",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [],
+      "u26Link": {
+        "idx": 116,
+        "name": "PatrK15",
+        "cat": 13,
+        "kind": "ammo_box",
+        "innerAmmo": [
+          {
+            "idx": 290,
+            "name": "7.92-25"
+          },
+          {
+            "idx": 289,
+            "name": "7.92f250"
+          }
+        ]
+      },
+      "completeHmgHint": true
+    },
+    {
+      "weaponIdx": 94,
+      "weaponName": "MG42",
+      "category": 5,
+      "w21": 114,
+      "primaryAmmo": [
+        {
+          "idx": 294,
+          "name": "Pt34-75",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [],
+      "u26Link": {
+        "idx": 116,
+        "name": "PatrK15",
+        "cat": 13,
+        "kind": "ammo_box",
+        "innerAmmo": [
+          {
+            "idx": 290,
+            "name": "7.92-25"
+          },
+          {
+            "idx": 289,
+            "name": "7.92f250"
+          }
+        ]
+      },
+      "completeHmgHint": true
+    },
+    {
+      "weaponIdx": 95,
+      "weaponName": "MG08",
+      "category": 7,
+      "w21": 115,
+      "primaryAmmo": [],
+      "auxSlots": [],
+      "u26Link": {
+        "idx": 117,
+        "name": "Fernglas",
+        "cat": 14,
+        "kind": "optic"
+      },
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 96,
+      "weaponName": "PzB38",
+      "category": 8,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 298,
+          "name": "Pa318-10",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 97,
+      "weaponName": "PzB39",
+      "category": 8,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 298,
+          "name": "Pa318-10",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 98,
+      "weaponName": "GrB39",
+      "category": 8,
+      "w21": 0,
+      "primaryAmmo": [],
+      "auxSlots": [
+        {
+          "idx": 304,
+          "name": "GSprgr",
+          "cat": 19,
+          "kind": "grenade_adapter"
+        },
+        {
+          "idx": 305,
+          "name": "StiGr24",
+          "cat": 20,
+          "kind": "other"
+        }
+      ],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 99,
+      "weaponName": "PzBSS41",
+      "category": 8,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 299,
+          "name": "20LS-5",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 100,
+      "weaponName": "PzB41",
+      "category": 8,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 300,
+          "name": "20LS-10",
+          "cat": 18,
+          "kind": "ammo"
+        },
+        {
+          "idx": 301,
+          "name": "RPzB4322",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 105,
+      "weaponName": "RPzB43",
+      "category": 10,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 302,
+          "name": "RPzB4992",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 106,
+      "weaponName": "RPzB54",
+      "category": 10,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 302,
+          "name": "RPzB4992",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [
+        {
+          "idx": 303,
+          "name": "GPzgr",
+          "cat": 19,
+          "kind": "grenade_adapter"
+        }
+      ],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 107,
+      "weaponName": "RPzB54/1",
+      "category": 10,
+      "w21": 0,
+      "primaryAmmo": [],
+      "auxSlots": [
+        {
+          "idx": 303,
+          "name": "GPzgr",
+          "cat": 19,
+          "kind": "grenade_adapter"
+        }
+      ],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 115,
+      "weaponName": "PatrK41",
+      "category": 13,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 297,
+          "name": "Pa318-1",
+          "cat": 18,
+          "kind": "ammo"
+        },
+        {
+          "idx": 296,
+          "name": "7.92m250",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 116,
+      "weaponName": "PatrK15",
+      "category": 13,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 290,
+          "name": "7.92-25",
+          "cat": 18,
+          "kind": "ammo"
+        },
+        {
+          "idx": 289,
+          "name": "7.92f250",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 121,
+      "weaponName": "Bodeo mod89",
+      "category": 1,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 316,
+          "name": "9Gli-7",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 122,
+      "weaponName": "Glisenti m10",
+      "category": 1,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 317,
+          "name": "380ACP-7",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 123,
+      "weaponName": "Beretta m34",
+      "category": 1,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 318,
+          "name": "6.5-6",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 124,
+      "weaponName": "F. mod91",
+      "category": 4,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 319,
+          "name": "7.35-6",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [
+        {
+          "idx": 332,
+          "name": "BP.MAB38",
+          "cat": 24,
+          "kind": "bayonet"
+        }
+      ],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 125,
+      "weaponName": "M. mod91",
+      "category": 4,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 319,
+          "name": "7.35-6",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 126,
+      "weaponName": "M. mod91/TS",
+      "category": 4,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 319,
+          "name": "7.35-6",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [
+        {
+          "idx": 332,
+          "name": "BP.MAB38",
+          "cat": 24,
+          "kind": "bayonet"
+        }
+      ],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 127,
+      "weaponName": "F. mod38",
+      "category": 4,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 320,
+          "name": "9Pb-10",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 128,
+      "weaponName": "M. mod38",
+      "category": 4,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 320,
+          "name": "9Pb-10",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 129,
+      "weaponName": "M. mod38/TS",
+      "category": 4,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 320,
+          "name": "9Pb-10",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [
+        {
+          "idx": 332,
+          "name": "BP.MAB38",
+          "cat": 24,
+          "kind": "bayonet"
+        }
+      ],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 130,
+      "weaponName": "F. mod38",
+      "category": 4,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 319,
+          "name": "7.35-6",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 131,
+      "weaponName": "M. mod38",
+      "category": 4,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 319,
+          "name": "7.35-6",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 132,
+      "weaponName": "M. mod38/TS",
+      "category": 4,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 319,
+          "name": "7.35-6",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [
+        {
+          "idx": 332,
+          "name": "BP.MAB38",
+          "cat": 24,
+          "kind": "bayonet"
+        }
+      ],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 133,
+      "weaponName": "MAB mod38A",
+      "category": 6,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 324,
+          "name": "6.5-20",
+          "cat": 18,
+          "kind": "ammo"
+        },
+        {
+          "idx": 321,
+          "name": "9Pb-20",
+          "cat": 18,
+          "kind": "ammo"
+        },
+        {
+          "idx": 322,
+          "name": "9Pb-30",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [
+        {
+          "idx": 333,
+          "name": "P. mod39",
+          "cat": 24,
+          "kind": "bayonet"
+        }
+      ],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 134,
+      "weaponName": "MAB mod38/42",
+      "category": 6,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 324,
+          "name": "6.5-20",
+          "cat": 18,
+          "kind": "ammo"
+        },
+        {
+          "idx": 322,
+          "name": "9Pb-30",
+          "cat": 18,
+          "kind": "ammo"
+        },
+        {
+          "idx": 323,
+          "name": "9Pb-40",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 135,
+      "weaponName": "Breda mod30",
+      "category": 5,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 325,
+          "name": "6.5-50",
+          "cat": 18,
+          "kind": "ammo"
+        },
+        {
+          "idx": 319,
+          "name": "7.35-6",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 136,
+      "weaponName": "FR mod14",
+      "category": 7,
+      "w21": 140,
+      "primaryAmmo": [
+        {
+          "idx": 326,
+          "name": "8Brd-20",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 137,
+      "weaponName": "FR mod14/35",
+      "category": 7,
+      "w21": 140,
+      "primaryAmmo": [],
+      "auxSlots": [],
+      "u26Link": {
+        "idx": 142,
+        "name": "Binocolo",
+        "cat": 14,
+        "kind": "optic"
+      },
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 138,
+      "weaponName": "Breda mod37",
+      "category": 7,
+      "w21": 141,
+      "primaryAmmo": [
+        {
+          "idx": 327,
+          "name": "8Brd-50",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 141,
+      "weaponName": "CM. FR 14/35",
+      "category": 13,
+      "w21": 0,
+      "primaryAmmo": [],
+      "auxSlots": [
+        {
+          "idx": 328,
+          "name": "SRCM m35",
+          "cat": 20,
+          "kind": "other"
+        }
+      ],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 143,
+      "weaponName": "Lebel 92",
+      "category": 1,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 335,
+          "name": "32ACP-9",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 144,
+      "weaponName": "Unique Mle17",
+      "category": 1,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 336,
+          "name": "7.65-8",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 145,
+      "weaponName": "Mle1935A",
+      "category": 1,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 337,
+          "name": "8M86-1",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 146,
+      "weaponName": "Mle1935S",
+      "category": 1,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 337,
+          "name": "8M86-1",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 147,
+      "weaponName": "F. Mle86/93",
+      "category": 4,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 338,
+          "name": "8M86-3",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [
+        {
+          "idx": 348,
+          "name": "Mle92/15",
+          "cat": 24,
+          "kind": "bayonet"
+        }
+      ],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 148,
+      "weaponName": "M. Mle92/27",
+      "category": 4,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 339,
+          "name": "8M86-5",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [
+        {
+          "idx": 349,
+          "name": "41 CONON",
+          "cat": 24,
+          "kind": "bayonet"
+        }
+      ],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 149,
+      "weaponName": "F. Mle07/15",
+      "category": 4,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 339,
+          "name": "8M86-5",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [
+        {
+          "idx": 348,
+          "name": "Mle92/15",
+          "cat": 24,
+          "kind": "bayonet"
+        }
+      ],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 150,
+      "weaponName": "F. Mle16",
+      "category": 4,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 340,
+          "name": "7.5-5",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [
+        {
+          "idx": 348,
+          "name": "Mle92/15",
+          "cat": 24,
+          "kind": "bayonet"
+        }
+      ],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 151,
+      "weaponName": "M. Mle16/27",
+      "category": 4,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 340,
+          "name": "7.5-5",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [
+        {
+          "idx": 349,
+          "name": "41 CONON",
+          "cat": 24,
+          "kind": "bayonet"
+        }
+      ],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 152,
+      "weaponName": "F. MAS36",
+      "category": 4,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 341,
+          "name": "7.65-32",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 153,
+      "weaponName": "F. MAS36CR39",
+      "category": 4,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 341,
+          "name": "7.65-32",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 154,
+      "weaponName": "MAS38",
+      "category": 6,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 342,
+          "name": "7.5-25",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 155,
+      "weaponName": "MAC24/29",
+      "category": 5,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 343,
+          "name": "8M86-24",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 156,
+      "weaponName": "Mle1914",
+      "category": 7,
+      "w21": 158,
+      "primaryAmmo": [
+        {
+          "idx": 344,
+          "name": "8M86-30",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [
+        {
+          "idx": 345,
+          "name": "Grd F1",
+          "cat": 20,
+          "kind": "other"
+        }
+      ],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 159,
+      "weaponName": "No1 Mk4",
+      "category": 1,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 351,
+          "name": "380Mk2-1",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 160,
+      "weaponName": "No2 Mk2",
+      "category": 1,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 352,
+          "name": "Very-1",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 161,
+      "weaponName": "No2 Mk1*",
+      "category": 1,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 352,
+          "name": "Very-1",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 162,
+      "weaponName": "No2 Mk1**",
+      "category": 1,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 352,
+          "name": "Very-1",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 163,
+      "weaponName": "Webley Mk4",
+      "category": 1,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 352,
+          "name": "Very-1",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 164,
+      "weaponName": "S&W No2",
+      "category": 1,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 352,
+          "name": "Very-1",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 165,
+      "weaponName": "Very",
+      "category": 3,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 353,
+          "name": "303Br-10",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 166,
+      "weaponName": "No1 Mk3",
+      "category": 4,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 355,
+          "name": "9Pb-32R",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [
+        {
+          "idx": 363,
+          "name": "No3 Mk1",
+          "cat": 24,
+          "kind": "bayonet"
+        }
+      ],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 167,
+      "weaponName": "No1 Mk3*",
+      "category": 4,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 355,
+          "name": "9Pb-32R",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [
+        {
+          "idx": 363,
+          "name": "No3 Mk1",
+          "cat": 24,
+          "kind": "bayonet"
+        }
+      ],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 168,
+      "weaponName": "No4 Mk1",
+      "category": 4,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 355,
+          "name": "9Pb-32R",
+          "cat": 18,
+          "kind": "ammo"
+        },
+        {
+          "idx": 365,
+          "name": "7.62N-1",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 169,
+      "weaponName": "No4 Mk1*",
+      "category": 4,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 355,
+          "name": "9Pb-32R",
+          "cat": 18,
+          "kind": "ammo"
+        },
+        {
+          "idx": 365,
+          "name": "7.62N-1",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 170,
+      "weaponName": "No4 Mk1(T)",
+      "category": 4,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 355,
+          "name": "9Pb-32R",
+          "cat": 18,
+          "kind": "ammo"
+        },
+        {
+          "idx": 365,
+          "name": "7.62N-1",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 171,
+      "weaponName": "No3 Mk1*(T)",
+      "category": 4,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 355,
+          "name": "9Pb-32R",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [
+        {
+          "idx": 364,
+          "name": "No4 Mk2",
+          "cat": 24,
+          "kind": "bayonet"
+        }
+      ],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 172,
+      "weaponName": "Sten Mk2",
+      "category": 6,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 356,
+          "name": "303Br-47",
+          "cat": 18,
+          "kind": "ammo"
+        },
+        {
+          "idx": 287,
+          "name": "Pk16-100",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 173,
+      "weaponName": "Sten Mk3",
+      "category": 6,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 356,
+          "name": "303Br-47",
+          "cat": 18,
+          "kind": "ammo"
+        },
+        {
+          "idx": 287,
+          "name": "Pk16-100",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 174,
+      "weaponName": "Sten Mk5",
+      "category": 6,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 356,
+          "name": "303Br-47",
+          "cat": 18,
+          "kind": "ammo"
+        },
+        {
+          "idx": 287,
+          "name": "Pk16-100",
+          "cat": 18,
+          "kind": "ammo"
+        },
+        {
+          "idx": 365,
+          "name": "7.62N-1",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 175,
+      "weaponName": "Lewis Mk1",
+      "category": 5,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 357,
+          "name": "303Br-30",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 176,
+      "weaponName": "Bren Mk1",
+      "category": 5,
+      "w21": 184,
+      "primaryAmmo": [
+        {
+          "idx": 358,
+          "name": "303Br250",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 177,
+      "weaponName": "Bren Mk2",
+      "category": 5,
+      "w21": 184,
+      "primaryAmmo": [
+        {
+          "idx": 358,
+          "name": "303Br250",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 178,
+      "weaponName": "Bren Mk3",
+      "category": 5,
+      "w21": 184,
+      "primaryAmmo": [
+        {
+          "idx": 358,
+          "name": "303Br250",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 179,
+      "weaponName": "Vickers Mk1",
+      "category": 7,
+      "w21": 185,
+      "primaryAmmo": [],
+      "auxSlots": [],
+      "u26Link": {
+        "idx": 186,
+        "name": "Binocular",
+        "cat": 14,
+        "kind": "optic"
+      },
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 180,
+      "weaponName": "Boys Mk1",
+      "category": 8,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 360,
+          "name": "PIAT-1",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 181,
+      "weaponName": "PIAT",
+      "category": 10,
+      "w21": 0,
+      "primaryAmmo": [],
+      "auxSlots": [
+        {
+          "idx": 361,
+          "name": "No36M",
+          "cat": 20,
+          "kind": "other"
+        }
+      ],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 185,
+      "weaponName": "No8 Mk1",
+      "category": 13,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 359,
+          "name": "55Boys-5",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 188,
+      "weaponName": "obr1895g",
+      "category": 1,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 366,
+          "name": "7.62T-8",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 189,
+      "weaponName": "TT33",
+      "category": 1,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 367,
+          "name": "7.62-5",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 190,
+      "weaponName": "obr1891/30g",
+      "category": 4,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 368,
+          "name": "7.62-10",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [
+        {
+          "idx": 377,
+          "name": "sht.1940",
+          "cat": 24,
+          "kind": "bayonet"
+        }
+      ],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 191,
+      "weaponName": "obr1938g",
+      "category": 4,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 368,
+          "name": "7.62-10",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [
+        {
+          "idx": 377,
+          "name": "sht.1940",
+          "cat": 24,
+          "kind": "bayonet"
+        }
+      ],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 192,
+      "weaponName": "obr91/30g-PU",
+      "category": 4,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 368,
+          "name": "7.62-10",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [
+        {
+          "idx": 377,
+          "name": "sht.1940",
+          "cat": 24,
+          "kind": "bayonet"
+        }
+      ],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 193,
+      "weaponName": "obr1944g",
+      "category": 4,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 368,
+          "name": "7.62-10",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 194,
+      "weaponName": "SVT40",
+      "category": 4,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 369,
+          "name": "7.62T71D",
+          "cat": 18,
+          "kind": "ammo"
+        },
+        {
+          "idx": 368,
+          "name": "7.62-10",
+          "cat": 18,
+          "kind": "ammo"
+        },
+        {
+          "idx": 378,
+          "name": "9Pb-8s",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 195,
+      "weaponName": "PPD40",
+      "category": 6,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 370,
+          "name": "7.62T35h",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 196,
+      "weaponName": "PPSh41",
+      "category": 6,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 372,
+          "name": "7.62T35S",
+          "cat": 18,
+          "kind": "ammo"
+        },
+        {
+          "idx": 371,
+          "name": "7.62T71h",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 197,
+      "weaponName": "PPS43",
+      "category": 6,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 373,
+          "name": "7.62-47",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 198,
+      "weaponName": "DP",
+      "category": 5,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 374,
+          "name": "7.62-250",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 199,
+      "weaponName": "PM1910",
+      "category": 7,
+      "w21": 0,
+      "primaryAmmo": [],
+      "auxSlots": [],
+      "u26Link": {
+        "idx": 202,
+        "name": "pat.DShK",
+        "cat": 13,
+        "kind": "ammo_box",
+        "innerAmmo": [
+          {
+            "idx": 376,
+            "name": "sht.1891"
+          }
+        ]
+      },
+      "completeHmgHint": true
+    },
+    {
+      "weaponIdx": 200,
+      "weaponName": "DShK",
+      "category": 7,
+      "w21": 0,
+      "primaryAmmo": [],
+      "auxSlots": [],
+      "u26Link": {
+        "idx": 203,
+        "name": "SP M12",
+        "cat": 1,
+        "kind": "other"
+      },
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 201,
+      "weaponName": "pat.1910",
+      "category": 13,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 375,
+          "name": "12.7-50",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 202,
+      "weaponName": "pat.DShK",
+      "category": 13,
+      "w21": 0,
+      "primaryAmmo": [],
+      "auxSlots": [
+        {
+          "idx": 376,
+          "name": "sht.1891",
+          "cat": 24,
+          "kind": "bayonet"
+        }
+      ],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 203,
+      "weaponName": "SP M12",
+      "category": 1,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 379,
+          "name": "9Pb-32s",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 204,
+      "weaponName": "MP34(o)",
+      "category": 6,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 380,
+          "name": "8Aut-25",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 205,
+      "weaponName": "M30",
+      "category": 5,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 381,
+          "name": "8Aut-250",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 206,
+      "weaponName": "M07/12",
+      "category": 7,
+      "w21": 208,
+      "primaryAmmo": [],
+      "auxSlots": [],
+      "u26Link": {
+        "idx": 209,
+        "name": "Mle1903",
+        "cat": 1,
+        "kind": "other"
+      },
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 208,
+      "weaponName": "M07 PatrK",
+      "category": 13,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 382,
+          "name": "9BLg-7",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 209,
+      "weaponName": "Mle1903",
+      "category": 1,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 383,
+          "name": "32ACP-9B",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 210,
+      "weaponName": "Mle10/22",
+      "category": 1,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 384,
+          "name": "9Pb-13",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 211,
+      "weaponName": "GP35",
+      "category": 1,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 385,
+          "name": "380ACP8A",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 212,
+      "weaponName": "CZ vz24",
+      "category": 1,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 386,
+          "name": "32ACP-8C",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 213,
+      "weaponName": "CZ vz27",
+      "category": 1,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 387,
+          "name": "380ACP8B",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 214,
+      "weaponName": "CZ vz38",
+      "category": 1,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 388,
+          "name": "9Pb-30Z",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 215,
+      "weaponName": "ZK383",
+      "category": 6,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 389,
+          "name": "7.92-20Z",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 216,
+      "weaponName": "lk ZB vz26",
+      "category": 5,
+      "w21": 219,
+      "primaryAmmo": [
+        {
+          "idx": 390,
+          "name": "9Pb-8R",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 217,
+      "weaponName": "tk ZB vz37",
+      "category": 7,
+      "w21": 220,
+      "primaryAmmo": [],
+      "auxSlots": [],
+      "u26Link": {
+        "idx": 116,
+        "name": "PatrK15",
+        "cat": 13,
+        "kind": "ammo_box",
+        "innerAmmo": [
+          {
+            "idx": 290,
+            "name": "7.92-25"
+          },
+          {
+            "idx": 289,
+            "name": "7.92f250"
+          }
+        ]
+      },
+      "completeHmgHint": true
+    },
+    {
+      "weaponIdx": 220,
+      "weaponName": "VIS wz35",
+      "category": 1,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 391,
+          "name": "8Mrzk-5",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 221,
+      "weaponName": "wz35",
+      "category": 8,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 392,
+          "name": "9Largo-8",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 222,
+      "weaponName": "Astra400",
+      "category": 1,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 393,
+          "name": "20SS-5",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 223,
+      "weaponName": "Astra903",
+      "category": 1,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 258,
+          "name": "9Pb-8L",
+          "cat": 18,
+          "kind": "ammo"
+        },
+        {
+          "idx": 257,
+          "name": "7.63-20b",
+          "cat": 18,
+          "kind": "ammo"
+        },
+        {
+          "idx": 256,
+          "name": "7.63-10b",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [],
+      "u26Link": null,
+      "completeHmgHint": false
+    },
+    {
+      "weaponIdx": 224,
+      "weaponName": "S-18/100",
+      "category": 8,
+      "w21": 0,
+      "primaryAmmo": [
+        {
+          "idx": 394,
+          "name": "20SS-10",
+          "cat": 18,
+          "kind": "ammo"
+        }
+      ],
+      "auxSlots": [
+        {
+          "idx": 395,
+          "name": "M1919A4 MMG",
+          "cat": 25,
+          "kind": "other"
+        }
+      ],
+      "u26Link": null,
+      "completeHmgHint": false
+    }
+  ]
+}

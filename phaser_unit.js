@@ -11,21 +11,18 @@ class UnitView {
 
     defineAnimations() {
         const anims = this.scene.anims;
-        if (anims.exists('anim_idle')) return; 
-
-        anims.create({ key: 'anim_idle', frames: anims.generateFrameNumbers('us_soldier', { start: 0, end: 7 }), frameRate: 8, repeat: -1 });
-        anims.create({ key: 'anim_crouch', frames: anims.generateFrameNumbers('us_soldier', { start: 8, end: 15 }), frameRate: 15, repeat: 0 });
-        anims.create({ key: 'anim_prone', frames: anims.generateFrameNumbers('us_soldier', { start: 24, end: 31 }), frameRate: 15, repeat: 0 });
-        anims.create({ key: 'anim_crouch_idle', frames: anims.generateFrameNumbers('us_soldier', { frames: [15] }), frameRate: 1, repeat: -1 });
-        anims.create({ key: 'anim_prone_idle', frames: anims.generateFrameNumbers('us_soldier', { frames: [33, 33, 33, 33, 33, 34, 33, 33, 33, 33, 38, 39, 38, 33, 33]}), frameRate: 6, repeat: -1 });
-        anims.create({ key: 'anim_crouch_shoot', frames: anims.generateFrameNumbers('us_soldier', { start: 16, end: 23 }), frameRate: 15, repeat: 0 });
-        anims.create({ key: 'anim_prone_shoot', frames: anims.generateFrameNumbers('us_soldier', { start: 32, end: 39 }), frameRate: 15, repeat: 0 });
-        anims.create({ key: 'anim_shoot', frames: anims.generateFrameNumbers('us_soldier', { start: 40, end: 47 }), frameRate: 15, repeat: 0 });
-        anims.create({ key: 'anim_walk', frames: anims.generateFrameNumbers('us_soldier', { start: 48, end: 55 }), frameRate: 10, repeat: -1 });
-        anims.create({ key: 'anim_crouch_walk', frames: anims.generateFrameNumbers('us_soldier', { start: 56, end: 63 }), frameRate: 8, repeat: -1 });
-        anims.create({ key: 'anim_crawl', frames: anims.generateFrameNumbers('us_soldier', { start: 64, end: 71 }), frameRate: 6, repeat: -1 });
-        anims.create({ key: 'anim_melee', frames: anims.generateFrameNumbers('us_soldier', { start: 72, end: 79 }), frameRate: 15, repeat: 0 });
-
+        if (anims.exists('anim_crawl_0')) return;
+        // soldier_crawl: 8方向×30フレーム。移動中は30fpsで蠢く、待機は止める
+        for (let d = 0; d < 8; d++) {
+            const frames = [];
+            for (let row = 0; row < 30; row++) frames.push(d + row * 8);
+            anims.create({
+                key: 'anim_crawl_' + d,
+                frames: anims.generateFrameNumbers('soldier_crawl', { frames }),
+                frameRate: 30,
+                repeat: -1
+            });
+        }
         if (!anims.exists('tank_idle')) { anims.create({ key: 'tank_idle', frames: anims.generateFrameNumbers('tank_sheet', { frames: [7, 6, 5, 6, 7, 5] }), frameRate: 10, repeat: -1 }); }
         if (!anims.exists('explosion_anim')) { 
             anims.create({ 
@@ -35,6 +32,40 @@ class UnitView {
                 repeat: 0, 
                 hideOnComplete: true 
             }); 
+        }
+    }
+
+    // 歩兵スプライト生成（createVisual から純粋抽出。サブクラスの差し替えフック）
+    buildInfantrySprite(u) {
+        const shadow = this.scene.add.sprite(2, -18, 'soldier_crawl', 0);
+        shadow.setTint(0x000000);
+        shadow.setAlpha(0.35);
+        shadow.setScale(0.16, 0.048);
+        shadow.setOrigin(0.5, 0.52);
+        const sprite = this.scene.add.sprite(0, -20, 'soldier_crawl', 0);
+        sprite.setScale(0.15); // 256px → 約38px（気持ち大きめ）
+        sprite.play('anim_crawl_0');
+        if (u.team === 'player') sprite.setTint(0xeeeeff); else sprite.setTint(0x9955ff);
+        return { shadow, sprite };
+    }
+
+    // 歩兵アニメ選択（updateVisual から純粋抽出。サブクラスの差し替えフック）
+    updateInfantryAnim(visual, u, isMoving) {
+        const dx_ = visual.lastDx || 0;
+        const dy_ = visual.lastDy || 0;
+        let d = Math.round((Math.atan2(-dy_, dx_) + 5 * Math.PI / 4) / (2 * Math.PI) * 8) % 8;
+        if (d < 0) d += 8;
+        const crawlAnim = 'anim_crawl_' + d;
+        if (isMoving) {
+            visual.crawlStopDelay = 4; // 移動終了後 4 フレームだけ再生してから止める
+            visual.sprite.play(crawlAnim, true); // 毎フレーム play でアニメ抜けを防ぐ
+        } else {
+            if (visual.crawlStopDelay > 0) {
+                visual.crawlStopDelay--;
+                visual.sprite.play(crawlAnim, true); // 制止までアニメをゆっくり続ける
+            } else {
+                visual.sprite.anims.stop(); // 現在のフレームで止める（setFrame しないのでピクつかない）
+            }
         }
     }
 
@@ -52,29 +83,60 @@ class UnitView {
 
     update(time, delta) {
         if (!window.gameLogic) return;
-        
+
         try {
             const activeIds = new Set();
-            const hexMap = new Map(); 
-            
+
+            // ★最適化: (q,r,生死)シグネチャが前フレームと同じなら hexMap を再構築せずに再利用
+            let sig = '';
             window.gameLogic.units.forEach(u => {
-                if (u.hp <= 0) {
-                    const deadVisual = this.visuals.get(u.id);
-                    if (deadVisual) {
-                        if (deadVisual.container) deadVisual.container.destroy();
-                        if (deadVisual.hpBg) deadVisual.hpBg.destroy();
-                        if (deadVisual.hpBar) deadVisual.hpBar.destroy();
-                        if (deadVisual.infoContainer) deadVisual.infoContainer.destroy();
-                        if (deadVisual.skillContainer) deadVisual.skillContainer.destroy();
-                        this.visuals.delete(u.id);
-                    }
-                    return;
-                }
-                const key = `${u.q},${u.r}`;
-                if (!hexMap.has(key)) hexMap.set(key, []);
-                hexMap.get(key).push(u);
-                activeIds.add(u.id);
+                sig += u.id + ':' + (u.hp > 0 ? `${u.q},${u.r}` : 'x') + '|';
             });
+
+            let hexMap;
+            if (sig === this._hexMapSig && this._hexMapCache) {
+                hexMap = this._hexMapCache;
+                // activeIds はまだ必要なので軽量に再構築
+                window.gameLogic.units.forEach(u => {
+                    if (u.hp <= 0) {
+                        const deadVisual = this.visuals.get(u.id);
+                        if (deadVisual) {
+                            if (deadVisual.container) deadVisual.container.destroy();
+                            if (deadVisual.hpBg) deadVisual.hpBg.destroy();
+                            if (deadVisual.hpBar) deadVisual.hpBar.destroy();
+                            if (deadVisual.infoContainer) deadVisual.infoContainer.destroy();
+                            if (deadVisual.skillContainer) deadVisual.skillContainer.destroy();
+                            this.visuals.delete(u.id);
+                        }
+                        return;
+                    }
+                    activeIds.add(u.id);
+                });
+            } else {
+                hexMap = new Map();
+
+                window.gameLogic.units.forEach(u => {
+                    if (u.hp <= 0) {
+                        const deadVisual = this.visuals.get(u.id);
+                        if (deadVisual) {
+                            if (deadVisual.container) deadVisual.container.destroy();
+                            if (deadVisual.hpBg) deadVisual.hpBg.destroy();
+                            if (deadVisual.hpBar) deadVisual.hpBar.destroy();
+                            if (deadVisual.infoContainer) deadVisual.infoContainer.destroy();
+                            if (deadVisual.skillContainer) deadVisual.skillContainer.destroy();
+                            this.visuals.delete(u.id);
+                        }
+                        return;
+                    }
+                    const key = `${u.q},${u.r}`;
+                    if (!hexMap.has(key)) hexMap.set(key, []);
+                    hexMap.get(key).push(u);
+                    activeIds.add(u.id);
+                });
+
+                this._hexMapSig = sig;
+                this._hexMapCache = hexMap;
+            }
 
             window.gameLogic.units.forEach(u => {
                 if (u.hp <= 0) return;
@@ -145,23 +207,23 @@ class UnitView {
         // container.setInteractive({ useHandCursor: true });
         // container.on('pointerdown', ...) も削除
 
-        const shadow = this.scene.add.ellipse(0, -4, 20, 10, 0x000000, 0.5);
-        
+        let shadow = null;
         let sprite;
-        if (u.def.name === "Rifleman" || u.def.role === "infantry" || !u.def.isTank) { 
-            sprite = this.scene.add.sprite(0, -20, 'us_soldier'); 
-            sprite.setScale(0.25); 
-            sprite.play('anim_idle');
-            if (u.team === 'player') sprite.setTint(0xeeeeff); else sprite.setTint(0x9955ff);
+        if (u.def.name === "Rifleman" || u.def.role === "infantry" || !u.def.isTank) {
+            ({ shadow, sprite } = this.buildInfantrySprite(u));
         } else if (u.def.isTank) {
+            shadow = this.scene.add.sprite(-1, -8, 'tank_sheet', 7);
+            shadow.setTint(0x000000);
+            shadow.setAlpha(0.38);
+            shadow.setScale(0.42, 0.14);
+            shadow.setOrigin(0.5, 0.5);
             sprite = this.scene.add.sprite(0, -10, 'tank_sheet');
             sprite.setScale(0.4);
             sprite.play('tank_idle');
             if (u.team === 'player') sprite.setTint(0xccddee); else sprite.setTint(0x9955ff);
-            shadow.setPosition(-2, 2); 
-            shadow.setSize(46, 18);
         } else {
             sprite = this.scene.add.rectangle(0, 0, 30, 40, u.team==='player'?0x00f:0xf00);
+            shadow = this.scene.add.ellipse(0, -12, 22, 9, 0x000000, 0.35);
         }
 
         // ★修正: スプライト(画像)自体をクリック可能にする
@@ -178,7 +240,8 @@ class UnitView {
             });
         }
 
-        container.add([shadow, sprite]);
+        if (shadow) container.add(shadow);
+        container.add(sprite);
 
         const hpBg = this.scene.add.rectangle(0, 0, 20, 2, 0x000000).setOrigin(0, 0.5);
         const hpBar = this.scene.add.rectangle(0, 0, 20, 2, 0x00ff00).setOrigin(0, 0.5);
@@ -188,7 +251,10 @@ class UnitView {
         this.hpLayer.add(hpBar);
         this.hpLayer.add(infoContainer);
 
-        const visual = { container, sprite, hpBg, hpBar, infoContainer, glowFx: null, fusionGlowFx: null };
+        const visual = {
+            container, sprite, shadowSprite: shadow, hpBg, hpBar, infoContainer,
+            glowFx: null, fusionGlowFx: null, lastDx: 0, lastDy: 0, crawlStopDelay: 0
+        };
         this.visuals.set(u.id, visual);
         
         if(typeof Renderer !== 'undefined') {
@@ -206,12 +272,12 @@ class UnitView {
         
         let offsetX = 0, offsetY = 0;
         if (count > 1) {
-            const spread = 20; 
-            if (index === 0) { offsetX = -spread; offsetY = -spread; }
-            else if (index === 1) { offsetX = spread; offsetY = -spread; }
-            else if (index === 2) { offsetX = -spread; offsetY = spread; }
-            else if (index === 3) { offsetX = spread; offsetY = spread; }
-            else if (index === 4) { offsetX = 0; offsetY = 0; }
+            const spread = 18;
+            const angle = (index / count) * Math.PI * 2 - Math.PI / 2;
+            const ring = Math.floor(index / 8);
+            const radius = spread * (0.85 + ring * 0.55);
+            offsetX = Math.cos(angle) * radius;
+            offsetY = Math.sin(angle) * radius;
         }
         
         visual.targetX = basePos.x + offsetX;
@@ -220,36 +286,47 @@ class UnitView {
         const dx = visual.targetX - visual.container.x;
         const dy = visual.targetY - visual.container.y;
         const dist = Math.sqrt(dx*dx + dy*dy);
-        const speed = 0.06; 
+        const isInfantry = !u.def.isTank && (u.def.role === 'infantry' || u.def.name === 'Rifleman');
+        const arriveThreshold = isInfantry ? 0.15 : 1;
         
         let isMoving = false;
-        if (dist > 1) {
-            visual.container.x += dx * speed;
-            visual.container.y += dy * speed;
+        if (dist > arriveThreshold) {
+            if (isInfantry) {
+                const crawlPxPerFrame = 0.9; // 一定速度でじわじわ（加速しない）
+                const step = Math.min(crawlPxPerFrame, dist);
+                visual.container.x += (dx / dist) * step;
+                visual.container.y += (dy / dist) * step;
+            } else {
+                visual.container.x += dx * 0.06;
+                visual.container.y += dy * 0.06;
+            }
             isMoving = true;
-            if (Math.abs(dx) > 0.1) visual.sprite.setFlipX(dx < 0);
+            visual.lastDx = dx;
+            visual.lastDy = dy;
         } else {
             visual.container.x = visual.targetX;
             visual.container.y = visual.targetY;
         }
 
-        if (!u.def.isTank && visual.sprite) {
-            const currentAnim = visual.sprite.anims.currentAnim ? visual.sprite.anims.currentAnim.key : '';
-            const isAttacking = currentAnim.includes('shoot') || currentAnim.includes('melee');
-            
-            if (isMoving) {
-                let moveAnim = 'anim_walk';
-                if (u.stance === 'crouch') moveAnim = 'anim_crouch_walk';
-                if (u.stance === 'prone') moveAnim = 'anim_crawl';
-                if (currentAnim !== moveAnim) visual.sprite.play(moveAnim, true);
-            } else {
-                if (!isAttacking || !visual.sprite.anims.isPlaying) {
-                    let idleAnim = 'anim_idle';
-                    if (u.stance === 'crouch') idleAnim = 'anim_crouch_idle'; 
-                    if (u.stance === 'prone') idleAnim = 'anim_prone_idle';
-                    if (currentAnim !== idleAnim) visual.sprite.play(idleAnim, true);
-                }
+        if (visual.shadowSprite && visual.sprite) {
+            const spr = visual.sprite;
+            const sh = visual.shadowSprite;
+            if (sh.texture && spr.texture && sh.texture.key === spr.texture.key) {
+                if (spr.frame && sh.setFrame) sh.setFrame(spr.frame.name);
+                sh.setFlipX(spr.flipX);
+                sh.setVisible(spr.visible);
             }
+            if (!u.def.isTank) {
+                sh.setScale(spr.scaleX * 1.05, spr.scaleY * 0.32);
+                sh.setPosition(spr.x + 2, spr.y + 2);
+            } else if (u.def.isTank) {
+                sh.setScale(spr.scaleX * 1.04, spr.scaleY * 0.34);
+                sh.setPosition(spr.x - 1, spr.y + 3);
+            }
+        }
+
+        if (!u.def.isTank && visual.sprite) {
+            this.updateInfantryAnim(visual, u, isMoving);
         }
 
         if (visual.hpBg && visual.hpBar && visual.infoContainer) {
@@ -264,45 +341,58 @@ class UnitView {
 
             const infoY = visual.container.y + 12;
             visual.infoContainer.setPosition(visual.container.x, infoY);
-            visual.infoContainer.removeAll(true);
 
             let infoText = "";
             if(u.hands && u.hands.isBroken) infoText += "⚠ ";
             if(u.hp < u.maxHp*0.5) infoText += "➕ ";
-            
-            if (infoText) {
-                const txt = this.scene.add.text(0, 0, infoText, { fontSize: '10px' }).setOrigin(0.5);
-                visual.infoContainer.add(txt);
-            }
 
             const skillsArr = (u.skills && Array.isArray(u.skills)) ? [...new Set(u.skills)] : [];
-            if (typeof SKILL_STYLES !== 'undefined' && skillsArr.length > 0) {
-                const scaleFactor = 0.24;
-                const iconSize = 8;
-                const skillY = barY + 2 + 3;
-                const yOffset = 0;
-                const spacing = 10;
-                let iconX = -((skillsArr.length - 1) * spacing) / 2;
 
-                if(!visual.skillContainer) {
-                    visual.skillContainer = this.scene.add.container(0, 0);
-                    this.hpLayer.add(visual.skillContainer);
+            // ★最適化: 表示内容に影響するキー（infoText, スキル配列）が前回と同じなら
+            // removeAll + 再生成をスキップする
+            const contentKey = infoText + '|' + skillsArr.join(',');
+
+            if (visual.lastContentKey !== contentKey) {
+                visual.infoContainer.removeAll(true);
+
+                if (infoText) {
+                    const txt = this.scene.add.text(0, 0, infoText, { fontSize: '10px' }).setOrigin(0.5);
+                    visual.infoContainer.add(txt);
                 }
+
+                if (typeof SKILL_STYLES !== 'undefined' && skillsArr.length > 0) {
+                    const iconSize = 8;
+                    const yOffset = 0;
+                    const spacing = 10;
+                    let iconX = -((skillsArr.length - 1) * spacing) / 2;
+
+                    if(!visual.skillContainer) {
+                        visual.skillContainer = this.scene.add.container(0, 0);
+                        this.hpLayer.add(visual.skillContainer);
+                    }
+                    visual.skillContainer.removeAll(true);
+
+                    skillsArr.forEach(sk => {
+                        if (SKILL_STYLES[sk]) {
+                            const st = SKILL_STYLES[sk];
+                            const bg = this.scene.add.rectangle(iconX, yOffset, iconSize, iconSize, parseInt(st.col.replace('#','0x'), 16), 0.9);
+                            const badge = this.scene.add.text(iconX, yOffset, st.icon, { fontSize: '12px', fontFamily: 'Segoe UI Emoji' }).setOrigin(0.5);
+                            visual.skillContainer.add([bg, badge]);
+                            iconX += spacing;
+                        }
+                    });
+                } else {
+                    if(visual.skillContainer) visual.skillContainer.removeAll(true);
+                }
+
+                visual.lastContentKey = contentKey;
+            }
+
+            if (visual.skillContainer) {
+                const scaleFactor = 0.24;
+                const skillY = barY + 2 + 3;
                 visual.skillContainer.setPosition(visual.container.x, skillY);
                 visual.skillContainer.setScale(scaleFactor);
-                visual.skillContainer.removeAll(true);
-
-                skillsArr.forEach(sk => {
-                    if (SKILL_STYLES[sk]) {
-                        const st = SKILL_STYLES[sk];
-                        const bg = this.scene.add.rectangle(iconX, yOffset, iconSize, iconSize, parseInt(st.col.replace('#','0x'), 16), 0.9);
-                        const badge = this.scene.add.text(iconX, yOffset, st.icon, { fontSize: '12px', fontFamily: 'Segoe UI Emoji' }).setOrigin(0.5);
-                        visual.skillContainer.add([bg, badge]);
-                        iconX += spacing;
-                    }
-                });
-            } else {
-                if(visual.skillContainer) visual.skillContainer.removeAll(true);
             }
         }
     }
@@ -319,32 +409,19 @@ class UnitView {
     triggerAttack(attacker, target) {
         const visual = this.visuals.get(attacker.id);
         if (!visual || !visual.sprite) return;
-        if (attacker.def.isTank) return; 
+        if (attacker.def.isTank) return;
+        if (typeof Renderer === 'undefined') return;
 
-        let animKey = 'anim_shoot'; 
-        if(typeof Renderer === 'undefined') return;
         const start = Renderer.hexToPx(attacker.q, attacker.r);
         const end = Renderer.hexToPx(target.q, target.r);
-        const dist = Phaser.Math.Distance.Between(start.x, start.y, end.x, end.y);
-        
-        if (dist < 60) {
-            animKey = 'anim_melee';
-        } else {
-            if (attacker.stance === 'crouch') animKey = 'anim_crouch_shoot';
-            if (attacker.stance === 'prone') animKey = 'anim_prone_shoot';
-        }
+        const dx = end.x - start.x;
+        const dy = end.y - start.y;
+        let d = Math.round(Math.atan2(-dy, dx) / (2 * Math.PI) * 8) % 8;
+        if (d < 0) d += 8;
+        visual.lastDx = dx;
+        visual.lastDy = dy;
 
-        const isRight = end.x >= start.x;
-        visual.sprite.setFlipX(!isRight);
-
-        visual.sprite.play(animKey);
-        visual.sprite.once('animationcomplete', () => {
-            if(visual.sprite) {
-                let idleAnim = 'anim_idle';
-                if (attacker.stance === 'crouch') idleAnim = 'anim_crouch_idle';
-                if (attacker.stance === 'prone') idleAnim = 'anim_prone_idle';
-                visual.sprite.play(idleAnim, true);
-            }
-        });
+        const crawlAnim = 'anim_crawl_' + d;
+        visual.sprite.play(crawlAnim, true);
     }
 }

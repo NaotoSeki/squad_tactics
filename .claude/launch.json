@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "squad-tactics",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["http-server", "-p", "8788", "-c-1"],
+      "port": 8788
+    },
+    {
+      "name": "squad-tactics-alt",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["http-server", "-p", "8789", "-c-1"],
+      "port": 8789
+    }
+  ]
+}

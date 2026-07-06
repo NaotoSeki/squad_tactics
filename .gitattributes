@@ -1,0 +1,2 @@
+asset/sprites/*.png filter=lfs diff=lfs merge=lfs -text
+data/sprites/iteml/*.png filter=lfs diff=lfs merge=lfs -text

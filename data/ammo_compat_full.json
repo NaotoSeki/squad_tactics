@@ -1,0 +1,2205 @@
+{
+  "version": "1.1",
+  "note": "CBE.EXE decode (TABLE_START=0x1DDF00, stride=64) + user corrections. Sprite offset: item_NNNN.png -> cbeNameIndex = NNN-1 (confirmed). Kar98k paper docs: 7.92-5(272), GPzgr(303), GSprgr(304), S84/92(313 bayonet).",
+  "sprite_index_rule": {
+    "formula": "item_NNNN.png -> cbeNameIndex = NNN - 1",
+    "confirmed": true,
+    "examples": {
+      "item_0233.png": {
+        "cbeNameIndex": 232,
+        "cbe_name": "30Cbn-15"
+      },
+      "item_0234.png": {
+        "cbeNameIndex": 233,
+        "cbe_name": "30Cbn-30"
+      },
+      "item_0235.png": {
+        "cbeNameIndex": 234,
+        "cbe_name": "45ACP20T"
+      }
+    }
+  },
+  "kar98k_paper_vs_cbe": {
+    "paper_ammo": {
+      "272": "7.92-5 (not in CBE 4slots)",
+      "303": "GPzgr (not in CBE 4slots)",
+      "304": "GSprgr (in CBE ✓)",
+      "313": "S84/92 bayonet (not in CBE 4slots)"
+    },
+    "cbe_only": {
+      "305": "StiGr24 (in CBE, not in paper docs)",
+      "314": "Messer (in CBE, paper has S84/92 instead)"
+    }
+  },
+  "stuP27_user_compat": {
+    "weapon_index": 54,
+    "weapon_name": "27mmStuP",
+    "category_code": 2,
+    "category_name": "grenade_launcher_ammo",
+    "cbe_ammo_indices": [
+      272,
+      269,
+      268
+    ],
+    "cbe_ammo_names": [
+      "7.92-5",
+      "FLeut.Z",
+      "Wgrp326"
+    ],
+    "user_confirmed_ammo": [
+      271,
+      268,
+      267
+    ],
+    "user_confirmed_names": [
+      "Pzwk42",
+      "Wgrp326",
+      "Wkor361"
+    ],
+    "note": "ユーザー提供: Pzwk42(271), Wgrp326(268), Wkor361(267)。 CBE decoded: [272=7.92-5, 269=FLeut.Z, 268=Wgrp326]。 CBE[272]とユーザー[271]が1ずれ(CBE[269]とユーザー[267]も2ずれ)。 category_code=2(grenade_launcher_ammo)は通常武器と ammo_indices 解釈が異なる可能性。 268(Wgrp326)はCBE/ユーザー双方で一致。"
+  },
+  "ammo": {
+    "225": {
+      "cbe_name": "45ACP-7",
+      "display_name": "45ACP-7",
+      "magazine_capacity": 7,
+      "purchase_cost": 10,
+      "weight_100g": 2,
+      "weapons_from_cbe": [],
+      "weapon_names_cbe": [],
+      "note": "",
+      "malfunction_modifier": 0
+    },
+    "226": {
+      "cbe_name": "45ACP-3",
+      "display_name": "45ACP-3",
+      "magazine_capacity": 3,
+      "purchase_cost": 3,
+      "weight_100g": 1,
+      "weapons_from_cbe": [
+        0
+      ],
+      "weapon_names_cbe": [
+        "M1911A1"
+      ],
+      "note": "",
+      "malfunction_modifier": 0
+    },
+    "227": {
+      "cbe_name": "45ACP-1",
+      "display_name": "45ACP-1",
+      "magazine_capacity": 1,
+      "purchase_cost": 1,
+      "weight_100g": 1,
+      "weapons_from_cbe": [
+        1,
+        2
+      ],
+      "weapon_names_cbe": [
+        "M1917 S&W",
+        "M1917 Colt"
+      ],
+      "note": "",
+      "malfunction_modifier": 0
+    },
+    "228": {
+      "cbe_name": "AN-M8-1",
+      "display_name": "AN-M8-1",
+      "magazine_capacity": 1,
+      "purchase_cost": 10,
+      "weight_100g": 3,
+      "weapons_from_cbe": [
+        3
+      ],
+      "weapon_names_cbe": [
+        "OSS"
+      ],
+      "note": "",
+      "malfunction_modifier": 0
+    },
+    "229": {
+      "cbe_name": "3006-5",
+      "display_name": "3006-5",
+      "magazine_capacity": 5,
+      "purchase_cost": 11,
+      "weight_100g": 2,
+      "weapons_from_cbe": [
+        4
+      ],
+      "weapon_names_cbe": [
+        "AN-M8"
+      ],
+      "note": "",
+      "malfunction_modifier": 0
+    },
+    "230": {
+      "cbe_name": "3006-20B",
+      "display_name": "3006-20B",
+      "magazine_capacity": 20,
+      "purchase_cost": 56,
+      "weight_100g": 7,
+      "weapons_from_cbe": [
+        5,
+        6,
+        11
+      ],
+      "weapon_names_cbe": [
+        "M1903A1",
+        "M1903A4",
+        "M1941 Rifle"
+      ],
+      "note": "",
+      "malfunction_modifier": 0
+    },
+    "231": {
+      "cbe_name": "3006-8",
+      "display_name": "3006-8",
+      "magazine_capacity": 8,
+      "purchase_cost": 18,
+      "weight_100g": 3,
+      "weapons_from_cbe": [
+        7
+      ],
+      "weapon_names_cbe": [
+        "M1918A2 BAR"
+      ],
+      "note": "",
+      "malfunction_modifier": 0
+    },
+    "232": {
+      "cbe_name": "30Cbn-15",
+      "display_name": "30Cbn-15",
+      "magazine_capacity": 15,
+      "purchase_cost": 32,
+      "weight_100g": 3,
+      "weapons_from_cbe": [
+        8,
+        9,
+        10
+      ],
+      "weapon_names_cbe": [
+        "M1 Rifle",
+        "M1C Rifle",
+        "M1D Rifle"
+      ],
+      "note": "CBE weapons_from_cbe=[8,9,10] = M1 Rifle/M1C/M1D Rifle (.30-06系)。 30Cbn-15 という名前はゲーム内簡略表記で .30口径15発の意味とみられる (M1 Garand は8発クリップだが CBE内部の命名による)。 M1A1 Cbn(13)/M1 Cbn(12) のCBE 4スロットには未収録。 ユーザー補正: M1A1 Cbn, M1 Cbn も15発マガジンとして使用可能と想定。",
+      "weapons_user_correction": [
+        12,
+        13
+      ],
+      "malfunction_modifier": 0
+    },
+    "233": {
+      "cbe_name": "30Cbn-30",
+      "display_name": "30Cbn-30",
+      "magazine_capacity": 30,
+      "purchase_cost": 79,
+      "weight_100g": 5,
+      "weapons_from_cbe": [
+        12,
+        13,
+        14
+      ],
+      "weapon_names_cbe": [
+        "M1 Cbn",
+        "M1A1 Cbn",
+        "M2 Cbn"
+      ],
+      "note": "sprite: item_0234.png (offset+1). CBE name='30Cbn-30' 正確。 M1A1 Cbn(13)/M1 Cbn(12)/M2 Cbn(14) のammo_indicesに含まれる。",
+      "malfunction_modifier": 1
+    },
+    "234": {
+      "cbe_name": "45ACP20T",
+      "display_name": "45ACP20T",
+      "magazine_capacity": 20,
+      "purchase_cost": 28,
+      "weight_100g": 6,
+      "weapons_from_cbe": [
+        12,
+        13,
+        14
+      ],
+      "weapon_names_cbe": [
+        "M1 Cbn",
+        "M1A1 Cbn",
+        "M2 Cbn"
+      ],
+      "note": "sprite: item_0235.png (offset+1). CBE name='45ACP20T' = .45ACP 20発トーチャーマグ。 M1A1 SMG/M3 SMG 用。M1A1 Cbn(13)のCBE ammo_indicesに含まれているが、 これは .45ACP 弾でカービン弾ではない。要調査。",
+      "malfunction_modifier": 0
+    },
+    "235": {
+      "cbe_name": "45ACP30T",
+      "display_name": "45ACP30T",
+      "magazine_capacity": 30,
+      "purchase_cost": 53,
+      "weight_100g": 7,
+      "weapons_from_cbe": [
+        15,
+        16,
+        17
+      ],
+      "weapon_names_cbe": [
+        "M1928A1 SMG",
+        "M1 SMG",
+        "M1A1 SMG"
+      ],
+      "note": "",
+      "malfunction_modifier": 0
+    },
+    "236": {
+      "cbe_name": "45ACP50T",
+      "display_name": "45ACP50T",
+      "magazine_capacity": 50,
+      "purchase_cost": 113,
+      "weight_100g": 23,
+      "weapons_from_cbe": [
+        15,
+        16,
+        17
+      ],
+      "weapon_names_cbe": [
+        "M1928A1 SMG",
+        "M1 SMG",
+        "M1A1 SMG"
+      ],
+      "note": "",
+      "malfunction_modifier": 2
+    },
+    "237": {
+      "cbe_name": "45ACP30G",
+      "display_name": "45ACP30G",
+      "magazine_capacity": 30,
+      "purchase_cost": 42,
+      "weight_100g": 9,
+      "weapons_from_cbe": [
+        15
+      ],
+      "weapon_names_cbe": [
+        "M1928A1 SMG"
+      ],
+      "note": "",
+      "malfunction_modifier": 0
+    },
+    "238": {
+      "cbe_name": "3006-20J",
+      "display_name": "3006-20J",
+      "magazine_capacity": 20,
+      "purchase_cost": 56,
+      "weight_100g": 7,
+      "weapons_from_cbe": [
+        18,
+        19
+      ],
+      "weapon_names_cbe": [
+        "M3 SMG",
+        "M3A1 SMG"
+      ],
+      "note": "",
+      "malfunction_modifier": 0
+    },
+    "239": {
+      "cbe_name": "3006-200",
+      "display_name": "3006-200",
+      "magazine_capacity": 200,
+      "purchase_cost": 520,
+      "weight_100g": 55,
+      "weapons_from_cbe": [
+        21
+      ],
+      "weapon_names_cbe": [
+        "M1941   LMG"
+      ],
+      "note": "",
+      "malfunction_modifier": 0
+    },
+    "240": {
+      "cbe_name": "3006-250",
+      "display_name": "3006-250",
+      "magazine_capacity": 250,
+      "purchase_cost": 600,
+      "weight_100g": 80,
+      "weapons_from_cbe": [
+        34
+      ],
+      "weapon_names_cbe": [
+        "M1 Ammobox"
+      ],
+      "note": "",
+      "malfunction_modifier": 1
+    },
+    "241": {
+      "cbe_name": "50M2-110",
+      "display_name": "50M2-110",
+      "magazine_capacity": 110,
+      "purchase_cost": 572,
+      "weight_100g": 135,
+      "weapons_from_cbe": [
+        34
+      ],
+      "weapon_names_cbe": [
+        "M1 Ammobox"
+      ],
+      "note": "",
+      "malfunction_modifier": 0
+    },
+    "242": {
+      "cbe_name": "M6A1 HR",
+      "display_name": "M6A1 HR",
+      "magazine_capacity": 1,
+      "purchase_cost": 100,
+      "weight_100g": 15,
+      "weapons_from_cbe": [
+        35
+      ],
+      "weapon_names_cbe": [
+        "M2HB Ammobox"
+      ],
+      "note": "",
+      "malfunction_modifier": 0
+    },
+    "243": {
+      "cbe_name": "M6A5 HR",
+      "display_name": "M6A5 HR",
+      "magazine_capacity": 1,
+      "purchase_cost": 130,
+      "weight_100g": 15,
+      "weapons_from_cbe": [
+        25,
+        26,
+        27
+      ],
+      "weapon_names_cbe": [
+        "M1 RL",
+        "M1A1 RL",
+        "M9 RL"
+      ],
+      "note": "",
+      "malfunction_modifier": 0
+    },
+    "255": {
+      "cbe_name": "7.63-10c",
+      "display_name": "7.63-10c",
+      "magazine_capacity": 10,
+      "purchase_cost": 11,
+      "weight_100g": 2,
+      "weapons_from_cbe": [],
+      "weapon_names_cbe": [],
+      "note": "",
+      "malfunction_modifier": 0
+    },
+    "256": {
+      "cbe_name": "7.63-10b",
+      "display_name": "7.63-10b",
+      "magazine_capacity": 10,
+      "purchase_cost": 18,
+      "weight_100g": 3,
+      "weapons_from_cbe": [
+        41,
+        42,
+        223
+      ],
+      "weapon_names_cbe": [
+        "C/96",
+        "C/96M712",
+        "Astra903"
+      ],
+      "note": "",
+      "malfunction_modifier": 0
+    },
+    "257": {
+      "cbe_name": "7.63-20b",
+      "display_name": "7.63-20b",
+      "magazine_capacity": 20,
+      "purchase_cost": 42,
+      "weight_100g": 5,
+      "weapons_from_cbe": [
+        42,
+        223
+      ],
+      "weapon_names_cbe": [
+        "C/96M712",
+        "Astra903"
+      ],
+      "note": "",
+      "malfunction_modifier": 2
+    },
+    "258": {
+      "cbe_name": "9Pb-8L",
+      "display_name": "9Pb-8L",
+      "magazine_capacity": 8,
+      "purchase_cost": 11,
+      "weight_100g": 2,
+      "weapons_from_cbe": [
+        42,
+        223
+      ],
+      "weapon_names_cbe": [
+        "C/96M712",
+        "Astra903"
+      ],
+      "note": "",
+      "malfunction_modifier": 0
+    },
+    "259": {
+      "cbe_name": "32ACP-8M",
+      "display_name": "32ACP-8M",
+      "magazine_capacity": 8,
+      "purchase_cost": 11,
+      "weight_100g": 1,
+      "weapons_from_cbe": [
+        43
+      ],
+      "weapon_names_cbe": [
+        "P08"
+      ],
+      "note": "",
+      "malfunction_modifier": 0
+    },
+    "260": {
+      "cbe_name": "32ACP-7B",
+      "display_name": "32ACP-7B",
+      "magazine_capacity": 7,
+      "purchase_cost": 10,
+      "weight_100g": 1,
+      "weapons_from_cbe": [
+        44
+      ],
+      "weapon_names_cbe": [
+        "M1934"
+      ],
+      "note": "",
+      "malfunction_modifier": 0
+    },
+    "261": {
+      "cbe_name": "32ACP-8S",
+      "display_name": "32ACP-8S",
+      "magazine_capacity": 8,
+      "purchase_cost": 11,
+      "weight_100g": 1,
+      "weapons_from_cbe": [
+        45
+      ],
+      "weapon_names_cbe": [
+        "Beholla"
+      ],
+      "note": "",
+      "malfunction_modifier": 0
+    },
+    "262": {
+      "cbe_name": "32ACP-8W",
+      "display_name": "32ACP-8W",
+      "magazine_capacity": 8,
+      "purchase_cost": 11,
+      "weight_100g": 1,
+      "weapons_from_cbe": [
+        46
+      ],
+      "weapon_names_cbe": [
+        "M38H"
+      ],
+      "note": "",
+      "malfunction_modifier": 0
+    },
+    "263": {
+      "cbe_name": "32ACP-7W",
+      "display_name": "32ACP-7W",
+      "magazine_capacity": 7,
+      "purchase_cost": 10,
+      "weight_100g": 1,
+      "weapons_from_cbe": [
+        47
+      ],
+      "weapon_names_cbe": [
+        "PP"
+      ],
+      "note": "",
+      "malfunction_modifier": 0
+    },
+    "264": {
+      "cbe_name": "32ACP-8H",
+      "display_name": "32ACP-8H",
+      "magazine_capacity": 8,
+      "purchase_cost": 11,
+      "weight_100g": 1,
+      "weapons_from_cbe": [
+        48
+      ],
+      "weapon_names_cbe": [
+        "PPK"
+      ],
+      "note": "",
+      "malfunction_modifier": 0
+    },
+    "265": {
+      "cbe_name": "9Pb-8W",
+      "display_name": "9Pb-8W",
+      "magazine_capacity": 8,
+      "purchase_cost": 11,
+      "weight_100g": 2,
+      "weapons_from_cbe": [
+        49
+      ],
+      "weapon_names_cbe": [
+        "HSc"
+      ],
+      "note": "",
+      "malfunction_modifier": 0
+    },
+    "266": {
+      "cbe_name": "FLeut41",
+      "display_name": "FLeut41",
+      "magazine_capacity": 1,
+      "purchase_cost": 10,
+      "weight_100g": 1,
+      "weapons_from_cbe": [
+        50
+      ],
+      "weapon_names_cbe": [
+        "P38"
+      ],
+      "note": "",
+      "malfunction_modifier": 0
+    },
+    "269": {
+      "cbe_name": "FLeut.Z",
+      "display_name": "FLeut.Z",
+      "magazine_capacity": 1,
+      "purchase_cost": 15,
+      "weight_100g": 1,
+      "weapons_from_cbe": [
+        51,
+        52,
+        54
+      ],
+      "weapon_names_cbe": [
+        "27mmLeuP",
+        "27mmP42",
+        "27mmStuP"
+      ],
+      "note": "",
+      "malfunction_modifier": 0
+    },
+    "272": {
+      "cbe_name": "7.92-5",
+      "display_name": "7.92-5",
+      "magazine_capacity": 5,
+      "purchase_cost": 11,
+      "weight_100g": 2,
+      "weapons_from_cbe": [
+        54
+      ],
+      "weapon_names_cbe": [
+        "27mmStuP"
+      ],
+      "note": "書面資料: Kar98k系で使用可。CBEの4スロットには未収録。 clip-fed 5発クリップ弾薬（magazine_capacity=5確認済み）。 7.92-10G(273)の10発=2×5発クリップ相当という解釈も可能。 注意: CBE decoded で weapons_from_cbe=[54] (27mmStuP) となるが、 27mmStuP (category_code=2 grenade_launcher_ammo) の ammo_indices解釈が 通常武器と異なる可能性がある。CBE 27mmStuP ammo_indices=[272,269,268] はユーザー提供値[271,268,267]と1ずれしており要調査。",
+      "weapons_user_correction": [
+        55,
+        56,
+        57,
+        58,
+        59,
+        60,
+        61,
+        64,
+        65,
+        66,
+        67,
+        68,
+        69,
+        70
+      ],
+      "malfunction_modifier": 0
+    },
+    "273": {
+      "cbe_name": "7.92-10G",
+      "display_name": "7.92-10G",
+      "magazine_capacity": 10,
+      "purchase_cost": 35,
+      "weight_100g": 5,
+      "weapons_from_cbe": [
+        55,
+        56,
+        57,
+        58,
+        59,
+        60,
+        61,
+        64,
+        65,
+        66,
+        67,
+        68,
+        69,
+        70
+      ],
+      "weapon_names_cbe": [
+        "Gew98",
+        "Kar98b",
+        "Kar98k",
+        "Kar98k svw",
+        "Gew29/40",
+        "Gew33/40",
+        "Gew98/40",
+        "VK-98",
+        "Gew41(W)",
+        "Gew41(M)",
+        "Gew43",
+        "Kar43",
+        "Zf Kar98k",
+        "Zf Gew43"
+      ],
+      "note": "",
+      "malfunction_modifier": 0
+    },
+    "274": {
+      "cbe_name": "7.92-101",
+      "display_name": "7.92-101",
+      "magazine_capacity": 10,
+      "purchase_cost": 28,
+      "weight_100g": 5,
+      "weapons_from_cbe": [
+        62,
+        63,
+        67,
+        68,
+        70
+      ],
+      "weapon_names_cbe": [
+        "VG-1",
+        "VG-2",
+        "Gew43",
+        "Kar43",
+        "Zf Gew43"
+      ],
+      "note": "",
+      "malfunction_modifier": 0
+    },
+    "275": {
+      "cbe_name": "7.92-201",
+      "display_name": "7.92-201",
+      "magazine_capacity": 20,
+      "purchase_cost": 70,
+      "weight_100g": 8,
+      "weapons_from_cbe": [
+        71
+      ],
+      "weapon_names_cbe": [
+        "FG42/1"
+      ],
+      "note": "",
+      "malfunction_modifier": 1
+    },
+    "276": {
+      "cbe_name": "7.92-202",
+      "display_name": "7.92-202",
+      "magazine_capacity": 20,
+      "purchase_cost": 56,
+      "weight_100g": 9,
+      "weapons_from_cbe": [
+        71
+      ],
+      "weapon_names_cbe": [
+        "FG42/1"
+      ],
+      "note": "",
+      "malfunction_modifier": 0
+    },
+    "277": {
+      "cbe_name": "7.92k-30",
+      "display_name": "7.92k-30",
+      "magazine_capacity": 30,
+      "purchase_cost": 63,
+      "weight_100g": 9,
+      "weapons_from_cbe": [
+        72
+      ],
+      "weapon_names_cbe": [
+        "FG42/2"
+      ],
+      "note": "",
+      "malfunction_modifier": 0
+    },
+    "278": {
+      "cbe_name": "9Pb-20S",
+      "display_name": "9Pb-20S",
+      "magazine_capacity": 20,
+      "purchase_cost": 28,
+      "weight_100g": 5,
+      "weapons_from_cbe": [
+        73,
+        74,
+        75,
+        76,
+        77
+      ],
+      "weapon_names_cbe": [
+        "MKb42(W)",
+        "MKb42(H)",
+        "MP43",
+        "StG44",
+        "VG1-5"
+      ],
+      "note": "",
+      "malfunction_modifier": 0
+    },
+    "279": {
+      "cbe_name": "9Pb-32S",
+      "display_name": "9Pb-32S",
+      "magazine_capacity": 32,
+      "purchase_cost": 56,
+      "weight_100g": 7,
+      "weapons_from_cbe": [
+        78
+      ],
+      "weapon_names_cbe": [
+        "MP28/2"
+      ],
+      "note": "",
+      "malfunction_modifier": 0
+    },
+    "280": {
+      "cbe_name": "9Pb-50S",
+      "display_name": "9Pb-50S",
+      "magazine_capacity": 50,
+      "purchase_cost": 105,
+      "weight_100g": 11,
+      "weapons_from_cbe": [
+        78
+      ],
+      "weapon_names_cbe": [
+        "MP28/2"
+      ],
+      "note": "",
+      "malfunction_modifier": 1
+    },
+    "281": {
+      "cbe_name": "9Pb-20E",
+      "display_name": "9Pb-20E",
+      "magazine_capacity": 20,
+      "purchase_cost": 28,
+      "weight_100g": 5,
+      "weapons_from_cbe": [
+        78
+      ],
+      "weapon_names_cbe": [
+        "MP28/2"
+      ],
+      "note": "",
+      "malfunction_modifier": 0
+    },
+    "282": {
+      "cbe_name": "9Pb-32E",
+      "display_name": "9Pb-32E",
+      "magazine_capacity": 32,
+      "purchase_cost": 56,
+      "weight_100g": 7,
+      "weapons_from_cbe": [
+        80
+      ],
+      "weapon_names_cbe": [
+        "EMP"
+      ],
+      "note": "",
+      "malfunction_modifier": 0
+    },
+    "283": {
+      "cbe_name": "9Pb-24B",
+      "display_name": "9Pb-24B",
+      "magazine_capacity": 24,
+      "purchase_cost": 34,
+      "weight_100g": 5,
+      "weapons_from_cbe": [
+        80
+      ],
+      "weapon_names_cbe": [
+        "EMP"
+      ],
+      "note": "",
+      "malfunction_modifier": 0
+    },
+    "284": {
+      "cbe_name": "9Pb-32B",
+      "display_name": "9Pb-32B",
+      "magazine_capacity": 32,
+      "purchase_cost": 56,
+      "weight_100g": 7,
+      "weapons_from_cbe": [
+        79
+      ],
+      "weapon_names_cbe": [
+        "MP35/1"
+      ],
+      "note": "",
+      "malfunction_modifier": 0
+    },
+    "285": {
+      "cbe_name": "9Pb-32M",
+      "display_name": "9Pb-32M",
+      "magazine_capacity": 32,
+      "purchase_cost": 45,
+      "weight_100g": 7,
+      "weapons_from_cbe": [
+        79
+      ],
+      "weapon_names_cbe": [
+        "MP35/1"
+      ],
+      "note": "",
+      "malfunction_modifier": 0
+    },
+    "286": {
+      "cbe_name": "9Pb-32P",
+      "display_name": "9Pb-32P",
+      "magazine_capacity": 32,
+      "purchase_cost": 45,
+      "weight_100g": 6,
+      "weapons_from_cbe": [
+        81,
+        82,
+        83,
+        84,
+        86,
+        399
+      ],
+      "weapon_names_cbe": [
+        "MP38",
+        "MP40",
+        "MP40/2",
+        "MP41",
+        "MP3008",
+        "MP40"
+      ],
+      "note": "",
+      "malfunction_modifier": 0
+    },
+    "287": {
+      "cbe_name": "Pk16-100",
+      "display_name": "Pk16-100",
+      "magazine_capacity": 100,
+      "purchase_cost": 280,
+      "weight_100g": 53,
+      "weapons_from_cbe": [
+        85,
+        172,
+        173,
+        174
+      ],
+      "weapon_names_cbe": [
+        "Ger Potsdam",
+        "Sten Mk2",
+        "Sten Mk3",
+        "Sten Mk5"
+      ],
+      "note": "",
+      "malfunction_modifier": 1
+    },
+    "288": {
+      "cbe_name": "7.92f100",
+      "display_name": "7.92f100",
+      "magazine_capacity": 100,
+      "purchase_cost": 240,
+      "weight_100g": 29,
+      "weapons_from_cbe": [
+        87,
+        88
+      ],
+      "weapon_names_cbe": [
+        "MG08/15",
+        "MG08/18"
+      ],
+      "note": "",
+      "malfunction_modifier": 0
+    },
+    "289": {
+      "cbe_name": "7.92f250",
+      "display_name": "7.92f250",
+      "magazine_capacity": 250,
+      "purchase_cost": 675,
+      "weight_100g": 73,
+      "weapons_from_cbe": [
+        116
+      ],
+      "weapon_names_cbe": [
+        "PatrK15"
+      ],
+      "note": "",
+      "malfunction_modifier": 1
+    },
+    "290": {
+      "cbe_name": "7.92-25",
+      "display_name": "7.92-25",
+      "magazine_capacity": 25,
+      "purchase_cost": 70,
+      "weight_100g": 11,
+      "weapons_from_cbe": [
+        116
+      ],
+      "weapon_names_cbe": [
+        "PatrK15"
+      ],
+      "note": "",
+      "malfunction_modifier": 0
+    },
+    "291": {
+      "cbe_name": "Pt13-75",
+      "display_name": "Pt13-75",
+      "magazine_capacity": 75,
+      "purchase_cost": 281,
+      "weight_100g": 43,
+      "weapons_from_cbe": [
+        89
+      ],
+      "weapon_names_cbe": [
+        "MG13"
+      ],
+      "note": "",
+      "malfunction_modifier": 1
+    },
+    "292": {
+      "cbe_name": "Dt15-75",
+      "display_name": "Dt15-75",
+      "magazine_capacity": 75,
+      "purchase_cost": 225,
+      "weight_100g": 43,
+      "weapons_from_cbe": [
+        89
+      ],
+      "weapon_names_cbe": [
+        "MG13"
+      ],
+      "note": "",
+      "malfunction_modifier": 1
+    },
+    "293": {
+      "cbe_name": "Gt34-50",
+      "display_name": "Gt34-50",
+      "magazine_capacity": 50,
+      "purchase_cost": 140,
+      "weight_100g": 25,
+      "weapons_from_cbe": [
+        90
+      ],
+      "weapon_names_cbe": [
+        "MG15"
+      ],
+      "note": "",
+      "malfunction_modifier": 0
+    },
+    "294": {
+      "cbe_name": "Pt34-75",
+      "display_name": "Pt34-75",
+      "magazine_capacity": 75,
+      "purchase_cost": 281,
+      "weight_100g": 43,
+      "weapons_from_cbe": [
+        91,
+        92,
+        93,
+        94
+      ],
+      "weapon_names_cbe": [
+        "MG34",
+        "MG34S",
+        "MG34/41",
+        "MG42"
+      ],
+      "note": "",
+      "malfunction_modifier": 1
+    },
+    "295": {
+      "cbe_name": "7.92-50",
+      "display_name": "7.92-50",
+      "magazine_capacity": 50,
+      "purchase_cost": 130,
+      "weight_100g": 15,
+      "weapons_from_cbe": [
+        91,
+        92,
+        93
+      ],
+      "weapon_names_cbe": [
+        "MG34",
+        "MG34S",
+        "MG34/41"
+      ],
+      "note": "",
+      "malfunction_modifier": 0
+    },
+    "296": {
+      "cbe_name": "7.92m250",
+      "display_name": "7.92m250",
+      "magazine_capacity": 250,
+      "purchase_cost": 813,
+      "weight_100g": 69,
+      "weapons_from_cbe": [
+        115
+      ],
+      "weapon_names_cbe": [
+        "PatrK41"
+      ],
+      "note": "",
+      "malfunction_modifier": 0
+    },
+    "297": {
+      "cbe_name": "Pa318-1",
+      "display_name": "Pa318-1",
+      "magazine_capacity": 1,
+      "purchase_cost": 3,
+      "weight_100g": 1,
+      "weapons_from_cbe": [
+        115
+      ],
+      "weapon_names_cbe": [
+        "PatrK41"
+      ],
+      "note": "",
+      "malfunction_modifier": 0
+    },
+    "298": {
+      "cbe_name": "Pa318-10",
+      "display_name": "Pa318-10",
+      "magazine_capacity": 10,
+      "purchase_cost": 42,
+      "weight_100g": 12,
+      "weapons_from_cbe": [
+        96,
+        97
+      ],
+      "weapon_names_cbe": [
+        "PzB38",
+        "PzB39"
+      ],
+      "note": "",
+      "malfunction_modifier": 0
+    },
+    "299": {
+      "cbe_name": "20LS-5",
+      "display_name": "20LS-5",
+      "magazine_capacity": 5,
+      "purchase_cost": 35,
+      "weight_100g": 31,
+      "weapons_from_cbe": [
+        99
+      ],
+      "weapon_names_cbe": [
+        "PzBSS41"
+      ],
+      "note": "",
+      "malfunction_modifier": 0
+    },
+    "300": {
+      "cbe_name": "20LS-10",
+      "display_name": "20LS-10",
+      "magazine_capacity": 10,
+      "purchase_cost": 88,
+      "weight_100g": 59,
+      "weapons_from_cbe": [
+        100
+      ],
+      "weapon_names_cbe": [
+        "PzB41"
+      ],
+      "note": "",
+      "malfunction_modifier": 0
+    },
+    "301": {
+      "cbe_name": "RPzB4322",
+      "display_name": "RPzB4322",
+      "magazine_capacity": 1,
+      "purchase_cost": 200,
+      "weight_100g": 33,
+      "weapons_from_cbe": [
+        100
+      ],
+      "weapon_names_cbe": [
+        "PzB41"
+      ],
+      "note": "",
+      "malfunction_modifier": 0
+    },
+    "302": {
+      "cbe_name": "RPzB4992",
+      "display_name": "RPzB4992",
+      "magazine_capacity": 1,
+      "purchase_cost": 250,
+      "weight_100g": 33,
+      "weapons_from_cbe": [
+        105,
+        106
+      ],
+      "weapon_names_cbe": [
+        "RPzB43",
+        "RPzB54"
+      ],
+      "note": "",
+      "malfunction_modifier": 0
+    },
+    "315": {
+      "cbe_name": "10.35-1",
+      "display_name": "10.35-1",
+      "magazine_capacity": 1,
+      "purchase_cost": 1,
+      "weight_100g": 1,
+      "weapons_from_cbe": [],
+      "weapon_names_cbe": [],
+      "note": "",
+      "malfunction_modifier": 0
+    },
+    "316": {
+      "cbe_name": "9Gli-7",
+      "display_name": "9Gli-7",
+      "magazine_capacity": 7,
+      "purchase_cost": 10,
+      "weight_100g": 2,
+      "weapons_from_cbe": [
+        121
+      ],
+      "weapon_names_cbe": [
+        "Bodeo mod89"
+      ],
+      "note": "",
+      "malfunction_modifier": 0
+    },
+    "317": {
+      "cbe_name": "380ACP-7",
+      "display_name": "380ACP-7",
+      "magazine_capacity": 7,
+      "purchase_cost": 10,
+      "weight_100g": 2,
+      "weapons_from_cbe": [
+        122
+      ],
+      "weapon_names_cbe": [
+        "Glisenti m10"
+      ],
+      "note": "",
+      "malfunction_modifier": 0
+    },
+    "318": {
+      "cbe_name": "6.5-6",
+      "display_name": "6.5-6",
+      "magazine_capacity": 6,
+      "purchase_cost": 10,
+      "weight_100g": 2,
+      "weapons_from_cbe": [
+        123
+      ],
+      "weapon_names_cbe": [
+        "Beretta m34"
+      ],
+      "note": "",
+      "malfunction_modifier": 0
+    },
+    "319": {
+      "cbe_name": "7.35-6",
+      "display_name": "7.35-6",
+      "magazine_capacity": 6,
+      "purchase_cost": 13,
+      "weight_100g": 2,
+      "weapons_from_cbe": [
+        124,
+        125,
+        126,
+        130,
+        131,
+        132,
+        135
+      ],
+      "weapon_names_cbe": [
+        "F. mod91",
+        "M. mod91",
+        "M. mod91/TS",
+        "F. mod38",
+        "M. mod38",
+        "M. mod38/TS",
+        "Breda mod30"
+      ],
+      "note": "",
+      "malfunction_modifier": 0
+    },
+    "320": {
+      "cbe_name": "9Pb-10",
+      "display_name": "9Pb-10",
+      "magazine_capacity": 10,
+      "purchase_cost": 14,
+      "weight_100g": 2,
+      "weapons_from_cbe": [
+        127,
+        128,
+        129
+      ],
+      "weapon_names_cbe": [
+        "F. mod38",
+        "M. mod38",
+        "M. mod38/TS"
+      ],
+      "note": "",
+      "malfunction_modifier": 0
+    },
+    "321": {
+      "cbe_name": "9Pb-20",
+      "display_name": "9Pb-20",
+      "magazine_capacity": 20,
+      "purchase_cost": 35,
+      "weight_100g": 4,
+      "weapons_from_cbe": [
+        133
+      ],
+      "weapon_names_cbe": [
+        "MAB mod38A"
+      ],
+      "note": "",
+      "malfunction_modifier": 0
+    },
+    "322": {
+      "cbe_name": "9Pb-30",
+      "display_name": "9Pb-30",
+      "magazine_capacity": 30,
+      "purchase_cost": 63,
+      "weight_100g": 6,
+      "weapons_from_cbe": [
+        133,
+        134
+      ],
+      "weapon_names_cbe": [
+        "MAB mod38A",
+        "MAB mod38/42"
+      ],
+      "note": "",
+      "malfunction_modifier": 0
+    },
+    "323": {
+      "cbe_name": "9Pb-40",
+      "display_name": "9Pb-40",
+      "magazine_capacity": 40,
+      "purchase_cost": 98,
+      "weight_100g": 7,
+      "weapons_from_cbe": [
+        134
+      ],
+      "weapon_names_cbe": [
+        "MAB mod38/42"
+      ],
+      "note": "",
+      "malfunction_modifier": 1
+    },
+    "324": {
+      "cbe_name": "6.5-20",
+      "display_name": "6.5-20",
+      "magazine_capacity": 20,
+      "purchase_cost": 33,
+      "weight_100g": 5,
+      "weapons_from_cbe": [
+        133,
+        134
+      ],
+      "weapon_names_cbe": [
+        "MAB mod38A",
+        "MAB mod38/42"
+      ],
+      "note": "",
+      "malfunction_modifier": 0
+    },
+    "325": {
+      "cbe_name": "6.5-50",
+      "display_name": "6.5-50",
+      "magazine_capacity": 50,
+      "purchase_cost": 105,
+      "weight_100g": 22,
+      "weapons_from_cbe": [
+        135
+      ],
+      "weapon_names_cbe": [
+        "Breda mod30"
+      ],
+      "note": "",
+      "malfunction_modifier": 0
+    },
+    "326": {
+      "cbe_name": "8Brd-20",
+      "display_name": "8Brd-20",
+      "magazine_capacity": 20,
+      "purchase_cost": 52,
+      "weight_100g": 8,
+      "weapons_from_cbe": [
+        136
+      ],
+      "weapon_names_cbe": [
+        "FR mod14"
+      ],
+      "note": "",
+      "malfunction_modifier": 0
+    },
+    "327": {
+      "cbe_name": "8Brd-50",
+      "display_name": "8Brd-50",
+      "magazine_capacity": 50,
+      "purchase_cost": 130,
+      "weight_100g": 22,
+      "weapons_from_cbe": [
+        138
+      ],
+      "weapon_names_cbe": [
+        "Breda mod37"
+      ],
+      "note": "",
+      "malfunction_modifier": 0
+    },
+    "334": {
+      "cbe_name": "8M92-1",
+      "display_name": "8M92-1",
+      "magazine_capacity": 1,
+      "purchase_cost": 1,
+      "weight_100g": 1,
+      "weapons_from_cbe": [],
+      "weapon_names_cbe": [],
+      "note": "",
+      "malfunction_modifier": 0
+    },
+    "335": {
+      "cbe_name": "32ACP-9",
+      "display_name": "32ACP-9",
+      "magazine_capacity": 9,
+      "purchase_cost": 13,
+      "weight_100g": 1,
+      "weapons_from_cbe": [
+        143
+      ],
+      "weapon_names_cbe": [
+        "Lebel 92"
+      ],
+      "note": "",
+      "malfunction_modifier": 0
+    },
+    "336": {
+      "cbe_name": "7.65-8",
+      "display_name": "7.65-8",
+      "magazine_capacity": 8,
+      "purchase_cost": 11,
+      "weight_100g": 1,
+      "weapons_from_cbe": [
+        144
+      ],
+      "weapon_names_cbe": [
+        "Unique Mle17"
+      ],
+      "note": "",
+      "malfunction_modifier": 0
+    },
+    "337": {
+      "cbe_name": "8M86-1",
+      "display_name": "8M86-1",
+      "magazine_capacity": 1,
+      "purchase_cost": 2,
+      "weight_100g": 1,
+      "weapons_from_cbe": [
+        145,
+        146
+      ],
+      "weapon_names_cbe": [
+        "Mle1935A",
+        "Mle1935S"
+      ],
+      "note": "",
+      "malfunction_modifier": 0
+    },
+    "338": {
+      "cbe_name": "8M86-3",
+      "display_name": "8M86-3",
+      "magazine_capacity": 3,
+      "purchase_cost": 7,
+      "weight_100g": 1,
+      "weapons_from_cbe": [
+        147
+      ],
+      "weapon_names_cbe": [
+        "F. Mle86/93"
+      ],
+      "note": "",
+      "malfunction_modifier": 0
+    },
+    "339": {
+      "cbe_name": "8M86-5",
+      "display_name": "8M86-5",
+      "magazine_capacity": 5,
+      "purchase_cost": 11,
+      "weight_100g": 2,
+      "weapons_from_cbe": [
+        148,
+        149
+      ],
+      "weapon_names_cbe": [
+        "M. Mle92/27",
+        "F. Mle07/15"
+      ],
+      "note": "",
+      "malfunction_modifier": 0
+    },
+    "340": {
+      "cbe_name": "7.5-5",
+      "display_name": "7.5-5",
+      "magazine_capacity": 5,
+      "purchase_cost": 11,
+      "weight_100g": 2,
+      "weapons_from_cbe": [
+        150,
+        151
+      ],
+      "weapon_names_cbe": [
+        "F. Mle16",
+        "M. Mle16/27"
+      ],
+      "note": "",
+      "malfunction_modifier": 0
+    },
+    "341": {
+      "cbe_name": "7.65-32",
+      "display_name": "7.65-32",
+      "magazine_capacity": 32,
+      "purchase_cost": 59,
+      "weight_100g": 5,
+      "weapons_from_cbe": [
+        152,
+        153
+      ],
+      "weapon_names_cbe": [
+        "F. MAS36",
+        "F. MAS36CR39"
+      ],
+      "note": "",
+      "malfunction_modifier": 0
+    },
+    "342": {
+      "cbe_name": "7.5-25",
+      "display_name": "7.5-25",
+      "magazine_capacity": 25,
+      "purchase_cost": 70,
+      "weight_100g": 9,
+      "weapons_from_cbe": [
+        154
+      ],
+      "weapon_names_cbe": [
+        "MAS38"
+      ],
+      "note": "",
+      "malfunction_modifier": 0
+    },
+    "343": {
+      "cbe_name": "8M86-24",
+      "display_name": "8M86-24",
+      "magazine_capacity": 24,
+      "purchase_cost": 62,
+      "weight_100g": 8,
+      "weapons_from_cbe": [
+        155
+      ],
+      "weapon_names_cbe": [
+        "MAC24/29"
+      ],
+      "note": "",
+      "malfunction_modifier": 0
+    },
+    "344": {
+      "cbe_name": "8M86-30",
+      "display_name": "8M86-30",
+      "magazine_capacity": 30,
+      "purchase_cost": 98,
+      "weight_100g": 10,
+      "weapons_from_cbe": [
+        156
+      ],
+      "weapon_names_cbe": [
+        "Mle1914"
+      ],
+      "note": "",
+      "malfunction_modifier": 0
+    },
+    "350": {
+      "cbe_name": "455Web-1",
+      "display_name": "455Web-1",
+      "magazine_capacity": 1,
+      "purchase_cost": 1,
+      "weight_100g": 1,
+      "weapons_from_cbe": [],
+      "weapon_names_cbe": [],
+      "note": "",
+      "malfunction_modifier": 0
+    },
+    "351": {
+      "cbe_name": "380Mk2-1",
+      "display_name": "380Mk2-1",
+      "magazine_capacity": 1,
+      "purchase_cost": 1,
+      "weight_100g": 1,
+      "weapons_from_cbe": [
+        159
+      ],
+      "weapon_names_cbe": [
+        "No1 Mk4"
+      ],
+      "note": "",
+      "malfunction_modifier": 0
+    },
+    "352": {
+      "cbe_name": "Very-1",
+      "display_name": "Very-1",
+      "magazine_capacity": 1,
+      "purchase_cost": 10,
+      "weight_100g": 3,
+      "weapons_from_cbe": [
+        160,
+        161,
+        162,
+        163,
+        164
+      ],
+      "weapon_names_cbe": [
+        "No2 Mk2",
+        "No2 Mk1*",
+        "No2 Mk1**",
+        "Webley Mk4",
+        "S&W No2"
+      ],
+      "note": "",
+      "malfunction_modifier": 0
+    },
+    "353": {
+      "cbe_name": "303Br-10",
+      "display_name": "303Br-10",
+      "magazine_capacity": 10,
+      "purchase_cost": 28,
+      "weight_100g": 3,
+      "weapons_from_cbe": [
+        165
+      ],
+      "weapon_names_cbe": [
+        "Very"
+      ],
+      "note": "",
+      "malfunction_modifier": 0
+    },
+    "354": {
+      "cbe_name": "303Br-5",
+      "display_name": "303Br-5",
+      "magazine_capacity": 5,
+      "purchase_cost": 11,
+      "weight_100g": 2,
+      "weapons_from_cbe": [],
+      "weapon_names_cbe": [],
+      "note": "",
+      "malfunction_modifier": 0
+    },
+    "355": {
+      "cbe_name": "9Pb-32R",
+      "display_name": "9Pb-32R",
+      "magazine_capacity": 32,
+      "purchase_cost": 45,
+      "weight_100g": 6,
+      "weapons_from_cbe": [
+        166,
+        167,
+        168,
+        169,
+        170,
+        171
+      ],
+      "weapon_names_cbe": [
+        "No1 Mk3",
+        "No1 Mk3*",
+        "No4 Mk1",
+        "No4 Mk1*",
+        "No4 Mk1(T)",
+        "No3 Mk1*(T)"
+      ],
+      "note": "",
+      "malfunction_modifier": 0
+    },
+    "356": {
+      "cbe_name": "303Br-47",
+      "display_name": "303Br-47",
+      "magazine_capacity": 47,
+      "purchase_cost": 141,
+      "weight_100g": 25,
+      "weapons_from_cbe": [
+        85,
+        172,
+        173,
+        174
+      ],
+      "weapon_names_cbe": [
+        "Ger Potsdam",
+        "Sten Mk2",
+        "Sten Mk3",
+        "Sten Mk5"
+      ],
+      "note": "",
+      "malfunction_modifier": 0
+    },
+    "357": {
+      "cbe_name": "303Br-30",
+      "display_name": "303Br-30",
+      "magazine_capacity": 30,
+      "purchase_cost": 84,
+      "weight_100g": 23,
+      "weapons_from_cbe": [
+        175
+      ],
+      "weapon_names_cbe": [
+        "Lewis Mk1"
+      ],
+      "note": "",
+      "malfunction_modifier": 0
+    },
+    "358": {
+      "cbe_name": "303Br250",
+      "display_name": "303Br250",
+      "magazine_capacity": 250,
+      "purchase_cost": 600,
+      "weight_100g": 73,
+      "weapons_from_cbe": [
+        176,
+        177,
+        178
+      ],
+      "weapon_names_cbe": [
+        "Bren Mk1",
+        "Bren Mk2",
+        "Bren Mk3"
+      ],
+      "note": "",
+      "malfunction_modifier": 0
+    },
+    "359": {
+      "cbe_name": "55Boys-5",
+      "display_name": "55Boys-5",
+      "magazine_capacity": 5,
+      "purchase_cost": 28,
+      "weight_100g": 11,
+      "weapons_from_cbe": [
+        185
+      ],
+      "weapon_names_cbe": [
+        "No8 Mk1"
+      ],
+      "note": "",
+      "malfunction_modifier": 0
+    },
+    "360": {
+      "cbe_name": "PIAT-1",
+      "display_name": "PIAT-1",
+      "magazine_capacity": 1,
+      "purchase_cost": 20,
+      "weight_100g": 11,
+      "weapons_from_cbe": [
+        180
+      ],
+      "weapon_names_cbe": [
+        "Boys Mk1"
+      ],
+      "note": "",
+      "malfunction_modifier": 0
+    },
+    "365": {
+      "cbe_name": "7.62N-1",
+      "display_name": "7.62N-1",
+      "magazine_capacity": 1,
+      "purchase_cost": 1,
+      "weight_100g": 1,
+      "weapons_from_cbe": [
+        168,
+        169,
+        170,
+        174
+      ],
+      "weapon_names_cbe": [
+        "No4 Mk1",
+        "No4 Mk1*",
+        "No4 Mk1(T)",
+        "Sten Mk5"
+      ],
+      "note": "",
+      "malfunction_modifier": 0
+    },
+    "366": {
+      "cbe_name": "7.62T-8",
+      "display_name": "7.62T-8",
+      "magazine_capacity": 8,
+      "purchase_cost": 11,
+      "weight_100g": 2,
+      "weapons_from_cbe": [
+        188
+      ],
+      "weapon_names_cbe": [
+        "obr1895g"
+      ],
+      "note": "",
+      "malfunction_modifier": 0
+    },
+    "367": {
+      "cbe_name": "7.62-5",
+      "display_name": "7.62-5",
+      "magazine_capacity": 5,
+      "purchase_cost": 11,
+      "weight_100g": 2,
+      "weapons_from_cbe": [
+        189
+      ],
+      "weapon_names_cbe": [
+        "TT33"
+      ],
+      "note": "",
+      "malfunction_modifier": 0
+    },
+    "368": {
+      "cbe_name": "7.62-10",
+      "display_name": "7.62-10",
+      "magazine_capacity": 10,
+      "purchase_cost": 28,
+      "weight_100g": 5,
+      "weapons_from_cbe": [
+        190,
+        191,
+        192,
+        193,
+        194
+      ],
+      "weapon_names_cbe": [
+        "obr1891/30g",
+        "obr1938g",
+        "obr91/30g-PU",
+        "obr1944g",
+        "SVT40"
+      ],
+      "note": "",
+      "malfunction_modifier": 0
+    },
+    "369": {
+      "cbe_name": "7.62T71D",
+      "display_name": "7.62T71D",
+      "magazine_capacity": 71,
+      "purchase_cost": 107,
+      "weight_100g": 18,
+      "weapons_from_cbe": [
+        194
+      ],
+      "weapon_names_cbe": [
+        "SVT40"
+      ],
+      "note": "",
+      "malfunction_modifier": 1
+    },
+    "370": {
+      "cbe_name": "7.62T35h",
+      "display_name": "7.62T35h",
+      "magazine_capacity": 35,
+      "purchase_cost": 49,
+      "weight_100g": 7,
+      "weapons_from_cbe": [
+        195
+      ],
+      "weapon_names_cbe": [
+        "PPD40"
+      ],
+      "note": "",
+      "malfunction_modifier": 0
+    },
+    "371": {
+      "cbe_name": "7.62T71h",
+      "display_name": "7.62T71h",
+      "magazine_capacity": 71,
+      "purchase_cost": 134,
+      "weight_100g": 18,
+      "weapons_from_cbe": [
+        196
+      ],
+      "weapon_names_cbe": [
+        "PPSh41"
+      ],
+      "note": "",
+      "malfunction_modifier": 1
+    },
+    "372": {
+      "cbe_name": "7.62T35S",
+      "display_name": "7.62T35S",
+      "magazine_capacity": 35,
+      "purchase_cost": 49,
+      "weight_100g": 6,
+      "weapons_from_cbe": [
+        196
+      ],
+      "weapon_names_cbe": [
+        "PPSh41"
+      ],
+      "note": "",
+      "malfunction_modifier": 0
+    },
+    "373": {
+      "cbe_name": "7.62-47",
+      "display_name": "7.62-47",
+      "magazine_capacity": 47,
+      "purchase_cost": 141,
+      "weight_100g": 93,
+      "weapons_from_cbe": [
+        197
+      ],
+      "weapon_names_cbe": [
+        "PPS43"
+      ],
+      "note": "",
+      "malfunction_modifier": 0
+    },
+    "374": {
+      "cbe_name": "7.62-250",
+      "display_name": "7.62-250",
+      "magazine_capacity": 250,
+      "purchase_cost": 600,
+      "weight_100g": 63,
+      "weapons_from_cbe": [
+        198
+      ],
+      "weapon_names_cbe": [
+        "DP"
+      ],
+      "note": "",
+      "malfunction_modifier": 1
+    },
+    "375": {
+      "cbe_name": "12.7-50",
+      "display_name": "12.7-50",
+      "magazine_capacity": 50,
+      "purchase_cost": 260,
+      "weight_100g": 77,
+      "weapons_from_cbe": [
+        201
+      ],
+      "weapon_names_cbe": [
+        "pat.1910"
+      ],
+      "note": "",
+      "malfunction_modifier": 0
+    },
+    "378": {
+      "cbe_name": "9Pb-8s",
+      "display_name": "9Pb-8s",
+      "magazine_capacity": 8,
+      "purchase_cost": 9,
+      "weight_100g": 1,
+      "weapons_from_cbe": [
+        194
+      ],
+      "weapon_names_cbe": [
+        "SVT40"
+      ],
+      "note": "",
+      "malfunction_modifier": 0
+    },
+    "379": {
+      "cbe_name": "9Pb-32s",
+      "display_name": "9Pb-32s",
+      "magazine_capacity": 32,
+      "purchase_cost": 45,
+      "weight_100g": 6,
+      "weapons_from_cbe": [
+        203
+      ],
+      "weapon_names_cbe": [
+        "SP M12"
+      ],
+      "note": "",
+      "malfunction_modifier": 0
+    },
+    "380": {
+      "cbe_name": "8Aut-25",
+      "display_name": "8Aut-25",
+      "magazine_capacity": 25,
+      "purchase_cost": 70,
+      "weight_100g": 11,
+      "weapons_from_cbe": [
+        204
+      ],
+      "weapon_names_cbe": [
+        "MP34(o)"
+      ],
+      "note": "",
+      "malfunction_modifier": 0
+    },
+    "381": {
+      "cbe_name": "8Aut-250",
+      "display_name": "8Aut-250",
+      "magazine_capacity": 250,
+      "purchase_cost": 600,
+      "weight_100g": 83,
+      "weapons_from_cbe": [
+        205
+      ],
+      "weapon_names_cbe": [
+        "M30"
+      ],
+      "note": "",
+      "malfunction_modifier": 1
+    },
+    "382": {
+      "cbe_name": "9BLg-7",
+      "display_name": "9BLg-7",
+      "magazine_capacity": 7,
+      "purchase_cost": 10,
+      "weight_100g": 2,
+      "weapons_from_cbe": [
+        208
+      ],
+      "weapon_names_cbe": [
+        "M07 PatrK"
+      ],
+      "note": "",
+      "malfunction_modifier": 0
+    },
+    "383": {
+      "cbe_name": "32ACP-9B",
+      "display_name": "32ACP-9B",
+      "magazine_capacity": 9,
+      "purchase_cost": 13,
+      "weight_100g": 1,
+      "weapons_from_cbe": [
+        209
+      ],
+      "weapon_names_cbe": [
+        "Mle1903"
+      ],
+      "note": "",
+      "malfunction_modifier": 0
+    },
+    "384": {
+      "cbe_name": "9Pb-13",
+      "display_name": "9Pb-13",
+      "magazine_capacity": 13,
+      "purchase_cost": 18,
+      "weight_100g": 3,
+      "weapons_from_cbe": [
+        210
+      ],
+      "weapon_names_cbe": [
+        "Mle10/22"
+      ],
+      "note": "",
+      "malfunction_modifier": 0
+    },
+    "385": {
+      "cbe_name": "380ACP8A",
+      "display_name": "380ACP8A",
+      "magazine_capacity": 8,
+      "purchase_cost": 11,
+      "weight_100g": 2,
+      "weapons_from_cbe": [
+        211
+      ],
+      "weapon_names_cbe": [
+        "GP35"
+      ],
+      "note": "",
+      "malfunction_modifier": 0
+    },
+    "386": {
+      "cbe_name": "32ACP-8C",
+      "display_name": "32ACP-8C",
+      "magazine_capacity": 8,
+      "purchase_cost": 11,
+      "weight_100g": 1,
+      "weapons_from_cbe": [
+        212
+      ],
+      "weapon_names_cbe": [
+        "CZ vz24"
+      ],
+      "note": "",
+      "malfunction_modifier": 0
+    },
+    "387": {
+      "cbe_name": "380ACP8B",
+      "display_name": "380ACP8B",
+      "magazine_capacity": 8,
+      "purchase_cost": 11,
+      "weight_100g": 2,
+      "weapons_from_cbe": [
+        213
+      ],
+      "weapon_names_cbe": [
+        "CZ vz27"
+      ],
+      "note": "",
+      "malfunction_modifier": 0
+    },
+    "388": {
+      "cbe_name": "9Pb-30Z",
+      "display_name": "9Pb-30Z",
+      "magazine_capacity": 30,
+      "purchase_cost": 42,
+      "weight_100g": 6,
+      "weapons_from_cbe": [
+        214
+      ],
+      "weapon_names_cbe": [
+        "CZ vz38"
+      ],
+      "note": "",
+      "malfunction_modifier": 0
+    },
+    "389": {
+      "cbe_name": "7.92-20Z",
+      "display_name": "7.92-20Z",
+      "magazine_capacity": 20,
+      "purchase_cost": 56,
+      "weight_100g": 7,
+      "weapons_from_cbe": [
+        215
+      ],
+      "weapon_names_cbe": [
+        "ZK383"
+      ],
+      "note": "",
+      "malfunction_modifier": 0
+    },
+    "390": {
+      "cbe_name": "9Pb-8R",
+      "display_name": "9Pb-8R",
+      "magazine_capacity": 8,
+      "purchase_cost": 11,
+      "weight_100g": 2,
+      "weapons_from_cbe": [
+        216
+      ],
+      "weapon_names_cbe": [
+        "lk ZB vz26"
+      ],
+      "note": "",
+      "malfunction_modifier": 0
+    },
+    "391": {
+      "cbe_name": "8Mrzk-5",
+      "display_name": "8Mrzk-5",
+      "magazine_capacity": 5,
+      "purchase_cost": 17,
+      "weight_100g": 3,
+      "weapons_from_cbe": [
+        220
+      ],
+      "weapon_names_cbe": [
+        "VIS wz35"
+      ],
+      "note": "",
+      "malfunction_modifier": 0
+    },
+    "392": {
+      "cbe_name": "9Largo-8",
+      "display_name": "9Largo-8",
+      "magazine_capacity": 8,
+      "purchase_cost": 11,
+      "weight_100g": 2,
+      "weapons_from_cbe": [
+        221
+      ],
+      "weapon_names_cbe": [
+        "wz35"
+      ],
+      "note": "",
+      "malfunction_modifier": 0
+    },
+    "393": {
+      "cbe_name": "20SS-5",
+      "display_name": "20SS-5",
+      "magazine_capacity": 5,
+      "purchase_cost": 35,
+      "weight_100g": 31,
+      "weapons_from_cbe": [
+        222
+      ],
+      "weapon_names_cbe": [
+        "Astra400"
+      ],
+      "note": "",
+      "malfunction_modifier": 0
+    },
+    "394": {
+      "cbe_name": "20SS-10",
+      "display_name": "20SS-10",
+      "magazine_capacity": 10,
+      "purchase_cost": 88,
+      "weight_100g": 59,
+      "weapons_from_cbe": [
+        224
+      ],
+      "weapon_names_cbe": [
+        "S-18/100"
+      ],
+      "note": "",
+      "malfunction_modifier": 0
+    }
+  },
+  "weapons_using_ammo_outside_4slots": {
+    "57": {
+      "weapon_name": "Kar98k",
+      "cbe_ammo_indices": [
+        273,
+        304,
+        305,
+        314
+      ],
+      "user_add_ammo_indices": [
+        272,
+        303
+      ],
+      "note": "書面資料: 7.92-5(272)とGPzgr(303)を追加。 S84/92(313)は銃剣アタッチメント（ammo扱いか要確認）。 CBEにあるStiGr24(305)は書面に無し（ゲーム拡張か）。"
+    },
+    "55": {
+      "weapon_name": "Gew98",
+      "cbe_ammo_indices": [
+        273,
+        314
+      ],
+      "user_add_ammo_indices": [
+        272,
+        303,
+        304
+      ],
+      "note": "Kar98kと同系統のためGPzgr/GSprgr/7.92-5互換と推定。"
+    },
+    "56": {
+      "weapon_name": "Kar98b",
+      "cbe_ammo_indices": [
+        273,
+        314
+      ],
+      "user_add_ammo_indices": [
+        272,
+        303,
+        304
+      ],
+      "note": "Kar98kと同系統のためGPzgr/GSprgr/7.92-5互換と推定。"
+    },
+    "13": {
+      "weapon_name": "M1A1 Cbn",
+      "cbe_ammo_indices": [
+        233,
+        234,
+        245,
+        253
+      ],
+      "user_add_ammo_indices": [
+        232
+      ],
+      "note": "CBEの4スロットに30Cbn-15(232)が未収録。 ユーザー要求: M1A1 Cbnは15発マガジンが基本装備のため232を追加。"
+    },
+    "12": {
+      "weapon_name": "M1 Cbn",
+      "cbe_ammo_indices": [
+        233,
+        234,
+        245,
+        253
+      ],
+      "user_add_ammo_indices": [
+        232
+      ],
+      "note": "M1A1 Cbnと同様、30Cbn-15(232)を追加。"
+    }
+  }
+}

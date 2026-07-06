@@ -1,0 +1,5 @@
+source=D:\PL\ITEML.DLL
+dib=8bpp 256x240 bytes=61440
+grid=4x5 tiles=20
+chroma: black<28, green g>r+14 etc. (tune in script)
+next: cbe 索引との対応は pl_iteml_tile_map_*.json 未。ITEMPAL 取得で色精度向上。

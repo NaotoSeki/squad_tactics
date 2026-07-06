@@ -115,7 +115,7 @@ const Renderer = {
     draggedCard: null,
 
     init(canvasElement) {
-        const config = { type: Phaser.AUTO, parent: 'game-view', width: document.getElementById('game-view').clientWidth, height: document.getElementById('game-view').clientHeight, backgroundColor: '#0b0e0a', pixelArt: false, scene: [MainScene, UIScene], fps: { target: 30 }, physics: { default: 'arcade', arcade: { debug: false } }, input: { activePointers: 1 } };
+        const config = { type: Phaser.AUTO, parent: 'game-view', width: document.getElementById('game-view').clientWidth, height: document.getElementById('game-view').clientHeight, backgroundColor: '#2a2824', pixelArt: false, scene: [MainScene, UIScene], fps: { target: 30 }, physics: { default: 'arcade', arcade: { debug: false } }, input: { activePointers: 1 } };
         this.game = new Phaser.Game(config); 
         phaserGame = this.game;
         window.phaserGame = this.game;
@@ -153,12 +153,19 @@ const Renderer = {
     roundHex(q,r) { let rq=Math.round(q), rr=Math.round(r), rs=Math.round(-q-r); const dq=Math.abs(rq-q), dr=Math.abs(rr-r), ds=Math.abs(rs-(-q-r)); if(dq>dr&&dq>ds) rq=-rr-rs; else if(dr>ds) rr=-rq-rs; return {q:rq, r:rr}; },
     centerOn(q, r) { const main = this.game.scene.getScene('MainScene'); if (main && main.centerCamera) main.centerCamera(q, r); },
     centerMap() { const main = this.game.scene.getScene('MainScene'); if (main && main.centerMap) main.centerMap(); },
+    showFloatText(q, r, text, color) { const main = this.game.scene.getScene('MainScene'); if (main && main.showFloatText) main.showFloatText(q, r, text, color); },
     dealCards(types) { let ui = this.game.scene.getScene('UIScene'); if(!ui || !ui.sys) ui = this.game.scene.scenes.find(s => s.scene.key === 'UIScene'); if(ui) ui.dealStart(types); },
     dealCard(typeOrData) { const ui = this.game.scene.getScene('UIScene'); if(ui) ui.addCardToHand(typeOrData); },
     getFusedCardsFromHand() {
         const ui = this.game ? this.game.scene.getScene('UIScene') : null;
         if (!ui || !ui.cards) return [];
-        return ui.cards.filter(c => c.fusionData).map(c => ({ type: c.cardType, fusionData: c.fusionData, fusionCount: c.fusionCount }));
+        return ui.cards.filter(c => c.fusionData).map(c => ({
+            type: c.cardType,
+            fusionData: c.fusionData,
+            fusionCount: c.fusionCount,
+            name: c.unitName,
+            portraitIndex: c.portraitIndex
+        }));
     },
     checkUIHover(x, y, pointerEvent) { 
         if (this.isCardDragging) return true;
@@ -187,6 +194,17 @@ const Renderer = {
     playExplosion(x, y) { const main = this.game.scene.getScene('MainScene'); if (main) main.triggerExplosion(x, y); },
     generateFaceIcon(seed) { const c = document.createElement('canvas'); c.width = 64; c.height = 64; const ctx = c.getContext('2d'); const rnd = function() { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; }; ctx.fillStyle = "#334"; ctx.fillRect(0,0,64,64); const skinTones = ["#ffdbac", "#f1c27d", "#e0ac69", "#8d5524"]; ctx.fillStyle = skinTones[Math.floor(rnd() * skinTones.length)]; ctx.beginPath(); ctx.arc(32, 36, 18, 0, Math.PI*2); ctx.fill(); ctx.fillStyle = "#343"; ctx.beginPath(); ctx.arc(32, 28, 20, Math.PI, 0); ctx.lineTo(54, 30); ctx.lineTo(10, 30); ctx.fill(); ctx.strokeStyle = "#121"; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(10,28); ctx.lineTo(54,28); ctx.stroke(); ctx.fillStyle = "#000"; const eyeY = 36; const eyeOff = 6 + rnd()*2; ctx.fillRect(32-eyeOff-2, eyeY, 4, 2); ctx.fillRect(32+eyeOff-2, eyeY, 4, 2); ctx.strokeStyle = "#a76"; ctx.lineWidth = 1; ctx.beginPath(); const mouthW = 4 + rnd()*6; ctx.moveTo(32-mouthW/2, 48); ctx.lineTo(32+mouthW/2, 48); ctx.stroke(); if (rnd() < 0.5) { ctx.fillStyle = "rgba(0,0,0,0.2)"; ctx.fillRect(20 + rnd()*20, 30 + rnd()*20, 4, 2); } return c.toDataURL(); }
 };
+window.Renderer = Renderer;
+
+/** デッキカードをサイドバー装備スロットへ D&D できるか */
+function cardCanEquipToLoadout(cardOrCode) {
+    const src = (cardOrCode && cardOrCode.weaponData) || cardOrCode;
+    if (window.gameLogic && window.gameLogic.canEquipItemFromDeck) {
+        return window.gameLogic.canEquipItemFromDeck(src);
+    }
+    const code = typeof src === 'string' ? src : src && src.code;
+    return !!(typeof WPNS !== 'undefined' && code && WPNS[code] && WPNS[code].attr === (typeof ATTR !== 'undefined' ? ATTR.WEAPON : 'Weaponry'));
+}
 
 class Card extends Phaser.GameObjects.Container {
     constructor(scene, x, y, typeOrData) {
@@ -271,7 +289,7 @@ class Card extends Phaser.GameObjects.Container {
             if (count >= 3 && this.auraGraphics) {
                 this.auraGraphics.clear();
                 const baseOff = 2;
-                const pts = 140;
+                const pts = 50;
                 const colors = [0xffdd66, 0xffaa44, 0xff8844];
                 const vel = Math.sqrt((this.velocityX || 0) ** 2 + (this.velocityY || 0) ** 2);
                 const inertiaGain = Math.min(2.2, 1 + vel * 0.35);
@@ -403,7 +421,8 @@ class Card extends Phaser.GameObjects.Container {
         }
         if (this.isDragging) { this.setAlpha(0.6); } else {
             const isWeapon = typeof WPNS !== 'undefined' && WPNS[this.cardType];
-            const isDisabled = !isWeapon && (window.gameLogic && window.gameLogic.cardsUsed >= 2);
+            const deployMax = (window.gameLogic && window.gameLogic.getDeployCardMax) ? window.gameLogic.getDeployCardMax() : 2;
+            const isDisabled = !isWeapon && (window.gameLogic && window.gameLogic.cardsUsed >= deployMax);
             if (isDisabled) { this.frameImage.setTint(0x555555); this.setAlpha(0.6); } else { this.frameImage.clearTint(); this.setAlpha(1.0); }
         }
         if (!this.isDragging && !this.scene.isReturning) {
@@ -423,7 +442,8 @@ class Card extends Phaser.GameObjects.Container {
     onDragStart(pointer) { 
         if(Renderer.isMapDragging) return;
         const isWeapon = typeof WPNS !== 'undefined' && WPNS[this.cardType];
-        if (!isWeapon && window.gameLogic && window.gameLogic.cardsUsed >= 2) return; 
+        const deployMax = (window.gameLogic && window.gameLogic.getDeployCardMax) ? window.gameLogic.getDeployCardMax() : 2;
+        if (!isWeapon && window.gameLogic && window.gameLogic.cardsUsed >= deployMax) return; 
         this.isDragging = true; Renderer.isCardDragging = true; Renderer.draggedCardType = this.cardType; Renderer.draggedCardFusionData = this.fusionData; Renderer.draggedCard = this;
         this.setAlpha(0.6); this.setScale(1.1); 
         const hand = this.parentContainer; const worldPos = hand.getLocalTransformMatrix().transformPoint(this.x, this.y); hand.remove(this); this.scene.add.existing(this); this.physX = worldPos.x; this.physY = worldPos.y; this.targetX = this.physX; this.targetY = this.physY; this.setDepth(9999); this.dragOffsetX = this.physX - pointer.x; this.dragOffsetY = this.physY - pointer.y; 
@@ -435,8 +455,8 @@ class Card extends Phaser.GameObjects.Container {
         const main = this.scene.game.scene.getScene('MainScene');
         const overRightPanel = pointer.x >= this.scene.scale.width - (window.getSidebarWidth ? window.getSidebarWidth() : 340);
         const dropZoneY = this.scene.scale.height * 0.88;
-        const isWeaponry = typeof WPNS !== 'undefined' && WPNS[this.cardType] && WPNS[this.cardType].attr === (typeof ATTR !== 'undefined' ? ATTR.WEAPON : 'Weaponry');
-        if (!isWeaponry && this.targetY < dropZoneY && !overRightPanel) main.dragHighlightHex = Renderer.pxToHex(pointer.x, pointer.y);
+        const canEquipToSlot = cardCanEquipToLoadout(this);
+        if (!canEquipToSlot && this.targetY < dropZoneY && !overRightPanel) main.dragHighlightHex = Renderer.pxToHex(pointer.x, pointer.y);
         else main.dragHighlightHex = null;
         const cx = this.targetX; const cy = this.targetY;
         const target = this.findOverlappingSameTypeCardAt(cx, cy);
@@ -452,11 +472,11 @@ class Card extends Phaser.GameObjects.Container {
         const dropZoneY = this.scene.scale.height * 0.88;
         const sw = this.scene.scale.width;
         const overRightPanel = pointer.x >= sw - (window.getSidebarWidth ? window.getSidebarWidth() : 340);
-        const isWeaponry = typeof WPNS !== 'undefined' && WPNS[this.cardType] && WPNS[this.cardType].attr === (typeof ATTR !== 'undefined' ? ATTR.WEAPON : 'Weaponry');
+        const canEquipToSlot = cardCanEquipToLoadout(this);
         const cx = pointer.x + this.dragOffsetX; const cy = pointer.y + this.dragOffsetY;
         const targetCard = this.findOverlappingSameTypeCardAt(cx, cy);
         if (overRightPanel) {
-            if (!isWeaponry) { this.returnToHand(); return; }
+            if (!canEquipToSlot) { this.returnToHand(); return; }
             const sidebar = window.phaserSidebar;
             if (sidebar && sidebar.hitTestSlots(pointer.x, pointer.y) && window.gameLogic && window.gameLogic.equipWeaponFromDeck) {
                 const slotTarget = sidebar.hitTestSlots(pointer.x, pointer.y);
@@ -471,7 +491,7 @@ class Card extends Phaser.GameObjects.Container {
             this.scene.fuseCards(this, targetCard);
             return;
         }
-        if (isWeaponry) { this.returnToHand(); return; }
+        if (canEquipToSlot) { this.returnToHand(); return; }
         if (cy >= dropZoneY) { this.returnToHand(); return; }
         const hex = Renderer.pxToHex(pointer.x, pointer.y); 
         let canDeploy = false; 
@@ -485,13 +505,14 @@ class Card extends Phaser.GameObjects.Container {
     }
     burnAndConsume(hex) { 
         const type = this.cardType; const fusionData = this.fusionData; const portraitIndex = this.portraitIndex;
+        const unitName = this.unitName;
         const fusionCount = Math.max(0, parseInt(this.fusionCount, 10) || (this.fusionData ? 2 : 0));
         this.updatePhysics = () => {}; this.frameImage.setTint(0x552222); this.frameImage.disableInteractive(); 
         this.scene.tweens.add({ targets: this, alpha: 0, scale: 0.5, duration: 200, onComplete: () => { 
             this.scene.removeCard(this); this.destroy(); 
             try { 
                 if (type === 'aerial') { if (window.gameLogic) window.gameLogic.triggerBombardment(hex); } 
-                else if(window.gameLogic) { window.gameLogic.deployUnit(hex, type, fusionData, portraitIndex, fusionCount); } 
+                else if(window.gameLogic) { window.gameLogic.deployUnit(hex, type, fusionData, portraitIndex, fusionCount, unitName); } 
             } catch(e) { console.error("Logic Error:", e); } 
         }}); 
     }
@@ -537,11 +558,12 @@ class UIScene extends Phaser.Scene {
         this.uiVfxGraphics.clear();
         const cardDragging = typeof Renderer !== 'undefined' && Renderer.isCardDragging;
         const slotDragging = this.sidebar && this.sidebar.dragGhost;
+        const draggedCard = (typeof Renderer !== 'undefined' && Renderer.draggedCard) || null;
         const draggedType = (typeof Renderer !== 'undefined' && Renderer.draggedCardType) || null;
-        const isWeaponryDrag = slotDragging || (cardDragging && typeof WPNS !== 'undefined' && draggedType && WPNS[draggedType] && WPNS[draggedType].attr === (typeof ATTR !== 'undefined' ? ATTR.WEAPON : 'Weaponry'));
+        const isEquipDrag = slotDragging || (cardDragging && draggedCard && cardCanEquipToLoadout(draggedCard));
         const deployableAttrs = typeof ATTR !== 'undefined' ? [ATTR.MILITARY, ATTR.SUPPORT, ATTR.RECOVERY] : [];
-        const isMapCardDrag = cardDragging && !isWeaponryDrag && (draggedType === 'aerial' || (typeof UNIT_TEMPLATES !== 'undefined' && UNIT_TEMPLATES[draggedType] && deployableAttrs.indexOf(UNIT_TEMPLATES[draggedType].attr) >= 0));
-        if (isWeaponryDrag) this.drawDropZoneGlow(time, true);
+        const isMapCardDrag = cardDragging && !isEquipDrag && (draggedType === 'aerial' || (typeof UNIT_TEMPLATES !== 'undefined' && UNIT_TEMPLATES[draggedType] && deployableAttrs.indexOf(UNIT_TEMPLATES[draggedType].attr) >= 0));
+        if (isEquipDrag) this.drawDropZoneGlow(time, true);
         else if (isMapCardDrag) this.drawMapPerimeterGlow(time);
         if (this.fusionTargetCard && Renderer.draggedCard) this.drawFusionHalo(time);
         if (window.UIVFX) { window.UIVFX.update(); window.UIVFX.draw(this.uiVfxGraphics); }
@@ -566,24 +588,30 @@ class UIScene extends Phaser.Scene {
         } catch (e) {}
     }
     drawWavyHaloLine(g, t, colors, x1, y1, x2, y2, isVertical, segments, haloSpread, cycleMult, phaseOffset) {
+        segments = Math.min(segments, 30);
         const k = typeof cycleMult === 'number' ? cycleMult : 1;
         const phase = typeof phaseOffset === 'number' ? phaseOffset : 0;
         const wave = (i, s) => Math.sin((i / segments) * 4 * k * Math.PI + t * 2 + s + phase) * 6 + Math.sin((i / segments) * 2 * k * Math.PI + t * 1.2 + s * 0.7 + phase) * 4;
-        for (let layer = 0; layer < 5; layer++) {
-            const phase = layer * 0.4 + t * 0.5;
+        
+        // Draw 3 layers instead of 5
+        for (let layer = 0; layer < 3; layer++) {
+            const phaseVal = layer * 0.4 + t * 0.5;
             const col = colors[layer % colors.length];
             const a = 0.12 * (0.6 + 0.4 * Math.sin(t * 2 + layer));
             g.lineStyle(3 + Math.sin(t + layer) * 1.5, col, Math.max(0.03, a));
             g.beginPath();
             for (let i = 0; i <= segments; i++) {
                 const u = i / segments;
-                const x = x1 + (x2 - x1) * u + (isVertical ? wave(i, phase) : 0);
-                const y = y1 + (y2 - y1) * u + (isVertical ? 0 : wave(i, phase));
+                const x = x1 + (x2 - x1) * u + (isVertical ? wave(i, phaseVal) : 0);
+                const y = y1 + (y2 - y1) * u + (isVertical ? 0 : wave(i, phaseVal));
                 if (i === 0) g.moveTo(x, y); else g.lineTo(x, y);
             }
             g.strokePath();
         }
-        for (let o = -haloSpread; o <= haloSpread; o += 4) {
+        
+        // Draw with step = 12 instead of 4, reducing iterations by 3x
+        const step = 12;
+        for (let o = -haloSpread; o <= haloSpread; o += step) {
             const fade = 1 - (Math.abs(o) / haloSpread) * (Math.abs(o) / haloSpread);
             const col = colors[Math.abs(Math.floor(o * 0.2 + t * 3)) % colors.length];
             g.lineStyle(2, col, Math.max(0.01, 0.1 * fade * (0.7 + 0.3 * Math.sin(t + o * 0.05))));
@@ -661,8 +689,10 @@ class UIScene extends Phaser.Scene {
         }
         const template = (typeof UNIT_TEMPLATES !== 'undefined' && data.type && UNIT_TEMPLATES[data.type]) ? UNIT_TEMPLATES[data.type] : null;
         const isInfantry = template && template.role && String(template.role).toLowerCase() === 'infantry';
-        if (isInfantry && !data.name && typeof FIRST_NAMES !== 'undefined' && typeof LAST_NAMES !== 'undefined' && FIRST_NAMES.length && LAST_NAMES.length) {
-            data.name = FIRST_NAMES[Math.floor(Math.random() * FIRST_NAMES.length)] + ' ' + LAST_NAMES[Math.floor(Math.random() * LAST_NAMES.length)];
+        if (isInfantry && !data.name) {
+            data.name = (typeof generateSoldierName === 'function')
+                ? generateSoldierName()
+                : (FIRST_NAMES[Math.floor(Math.random() * FIRST_NAMES.length)] + ' ' + LAST_NAMES[Math.floor(Math.random() * LAST_NAMES.length)]);
         }
         const card = new Card(this, 0, 0, data);
         this.handContainer.add(card); this.cards.push(card); card.physX = 600; card.physY = 300; card.setPosition(card.physX, card.physY); this.arrangeHand();
@@ -671,10 +701,11 @@ class UIScene extends Phaser.Scene {
         const type = dragged.cardType;
         const fusionData = generateFusionData();
         const portraitIndex = dragged.portraitIndex !== undefined ? dragged.portraitIndex : target.portraitIndex;
+        const unitName = dragged.unitName || target.unitName;
         const fusionCount = (dragged.fusionCount || 1) + (target.fusionCount || 1);
         this.removeCard(dragged); dragged.destroy();
         this.removeCard(target); target.destroy();
-        const card = new Card(this, 0, 0, { type, fusionData, portraitIndex, fusionCount });
+        const card = new Card(this, 0, 0, { type, fusionData, portraitIndex, fusionCount, name: unitName });
         this.handContainer.add(card); this.cards.push(card);
         card.physX = (dragged.physX + target.physX) / 2; card.physY = (dragged.physY + target.physY) / 2;
         card.setPosition(card.physX, card.physY);
@@ -716,38 +747,41 @@ class UIScene extends Phaser.Scene {
 class MainScene extends Phaser.Scene {
     constructor() { super({ key: 'MainScene' }); this.hexGroup=null; this.decorGroup=null; this.unitGroup=null; this.treeGroup=null; this.hpGroup=null; this.vfxGraphics=null; this.overlayGraphics=null; this.mapGenerated=false; this.dragHighlightHex=null; this.crosshairGroup=null; this.unitView = null; }
     preload() { 
+        if (window.TerrainRender) window.TerrainRender.preload(this);
         if(window.EnvSystem) window.EnvSystem.preload(this);
         if (window.Sfx && window.Sfx.preload) { window.Sfx.preload(this); }
         this.load.spritesheet('us_soldier', 'asset/us-soldier-back-sheet.png', { frameWidth: 128, frameHeight: 128 });
+        // 匍匐前進: Blender 出力 2048×7680（8列×30行・256pxセル）をそのままスプライトシートで使用
+        this.load.spritesheet('soldier_crawl', 'asset/soldier_crawl.png', { frameWidth: 256, frameHeight: 256, endFrame: 239 });
         this.load.spritesheet('soldier_sheet', 'asset/soldier_sheet_1.png', { frameWidth: 128, frameHeight: 128 });
         this.load.spritesheet('tank_sheet', 'asset/tank_sheet_1.png', { frameWidth: 128, frameHeight: 128 });
         this.load.spritesheet('explosion_sheet', 'asset/explosion_sheet_1.png', { frameWidth: 64, frameHeight: 64 });
         // fir_tree: 128x128 x32コマ。レイアウト 16列x2行（0-15=弱い揺れ、16-31=強風）
         this.load.spritesheet('fir_tree', 'asset/environment/fir_tree.png', { frameWidth: 128, frameHeight: 128, endFrame: 31 });
-        // grass: 512x512 16コマ（16x1）。1フレーム=32x512。草原ヘックス用・ヘックスマスクで表示
-        this.load.spritesheet('grass', 'asset/environment/grass.png', { frameWidth: 32, frameHeight: 512, endFrame: 15 });
         for (let i = 1; i <= (typeof PORTRAIT_AVAILABLE !== 'undefined' ? PORTRAIT_AVAILABLE : 7); i++) {
             this.load.image('portrait_' + i, 'asset/portraits/inf_us_' + String(i).padStart(3, '0') + '.jpg');
         }
         this.load.image('aerial_spt', 'asset/portraits/aerial_spt.jpg');
     }
     create() {
-        window.createHexTexture(this); this.cameras.main.setBackgroundColor('#0b0e0a'); 
+        window.createHexTexture(this); this.cameras.main.setBackgroundColor('#141210'); 
         this.updateSidebarViewport();
         this.scale.on('resize', () => this.updateSidebarViewport());
         this.hexGroup = this.add.layer(); this.hexGroup.setDepth(0);
-        this.decorGroup = this.add.layer(); this.decorGroup.setDepth(0.5);
-        this.unitGroup = this.add.layer(); this.unitGroup.setDepth(1);
-        this.rubbleFrontGroup = this.add.layer(); this.rubbleFrontGroup.setDepth(1.5);
-        this.treeGroup = this.add.layer(); this.treeGroup.setDepth(2);
+        this.roadGraphics = this.add.graphics().setDepth(1.6);
+        this.decorGroup = this.add.container(0, 0); this.decorGroup.setDepth(8);
+        this.unitGroup = this.add.layer(); this.unitGroup.setDepth(20);
+        this.rubbleFrontGroup = this.add.layer(); this.rubbleFrontGroup.setDepth(21);
+        this.treeGroup = this.add.container(0, 0); this.treeGroup.setDepth(9);
         this.hpGroup = this.add.layer(); this.hpGroup.setDepth(10);
         this.crosshairGroup = this.add.graphics().setDepth(200);
         this.hitChanceText = this.add.text(0, 0, '', { fontSize: '14px', fontFamily: 'sans-serif', color: '#e8e8f0' }).setScrollFactor(0).setDepth(300).setVisible(false);
-        this.vfxGraphics = this.add.graphics().setDepth(100); 
-        this.overlayGraphics = this.add.graphics().setDepth(50); 
+        this.vfxGraphics = this.add.graphics().setDepth(2000).setScrollFactor(1);
+        this.overlayGraphics = this.add.graphics().setDepth(1500).setScrollFactor(1); 
         if(window.EnvSystem) window.EnvSystem.clear();
         this.scene.launch('UIScene'); 
         this.unitView = new UnitView(this, this.unitGroup, this.hpGroup);
+        this.battleCloudRenderer = new BattleCloudRenderer(this);
         this.input.on('wheel', (pointer, gameObjects, deltaX, deltaY, deltaZ) => { let newZoom = this.cameras.main.zoom; if (deltaY > 0) newZoom -= 0.5; else if (deltaY < 0) newZoom += 0.5; newZoom = Phaser.Math.Clamp(newZoom, 0.25, 4.0); this.tweens.add({ targets: this.cameras.main, zoom: newZoom, duration: 150, ease: 'Cubic.out' }); });
         
         this.getUnitAtScreenPosition = (screenX, screenY) => {
@@ -814,6 +848,12 @@ class MainScene extends Phaser.Scene {
         }); 
         this.input.mouse.disableContextMenu();
         this.input.keyboard.on('keydown-ESC', () => { if(window.gameLogic && window.gameLogic.clearSelection) { window.gameLogic.clearSelection(); } });
+        this.input.keyboard.on('keydown-TAB', (event) => {
+            if (window.gameLogic && window.gameLogic.state === 'PLAY' && window.gameLogic.selectNextUnit) {
+                event.preventDefault();
+                window.gameLogic.selectNextUnit(event.shiftKey ? -1 : 1);
+            }
+        });
     }
     updateSidebarViewport() {
         const app = document.getElementById('app');
@@ -825,7 +865,27 @@ class MainScene extends Phaser.Scene {
             this.cameras.main.setViewport(0, 0, this.scale.width, this.scale.height);
         }
     }
-    triggerExplosion(x, y) { const explosion = this.add.sprite(x, y, 'explosion_sheet'); explosion.setDepth(100); explosion.setScale(1.5); explosion.play('explosion_anim'); explosion.once('animationcomplete', () => { explosion.destroy(); }); }
+    triggerExplosion(x, y) {
+        const explosion = this.add.sprite(x, y, 'explosion_sheet');
+        explosion.setDepth(1999);
+        explosion.setScale(1.5);
+        explosion.play('explosion_anim');
+        explosion.once('animationcomplete', () => { explosion.destroy(); });
+    }
+    /** ヘックス座標(q,r)上に短いフロートテキストを表示（拒否理由など） */
+    showFloatText(q, r, text, color) {
+        const p = Renderer.hexToPx(q, r);
+        const t = this.add.text(p.x, p.y - 40, text, { fontSize: '13px', fontFamily: 'sans-serif', color: color || '#ff5555', fontStyle: 'bold' })
+            .setOrigin(0.5, 0.5).setDepth(1998);
+        this.tweens.add({
+            targets: t,
+            y: p.y - 80,
+            alpha: 0,
+            duration: 900,
+            ease: 'Cubic.out',
+            onComplete: () => { t.destroy(); }
+        });
+    }
     centerCamera(q, r) { const p = Renderer.hexToPx(q, r); this.cameras.main.centerOn(p.x, p.y); }
     centerMap() {
         const mapW = MAP_W * HEX_SIZE * Math.sqrt(3);
@@ -840,31 +900,60 @@ class MainScene extends Phaser.Scene {
         if(!window.gameLogic || !window.gameLogic.map) return;
         const map = window.gameLogic.map; this.hexGroup.removeAll(true); this.decorGroup.removeAll(true); this.unitGroup.removeAll(true); if(this.rubbleFrontGroup) this.rubbleFrontGroup.removeAll(true); this.treeGroup.removeAll(true); this.hpGroup.removeAll(true); 
         if(this.unitView) this.unitView.clear();
+        const useTileTerrain = window.TerrainRender && window.TerrainRender.enabled;
+        if (useTileTerrain) {
+            window.TerrainRender.buildMap(this, this.hexGroup, map, this.decorGroup, this.roadGraphics);
+        } else if (this.roadGraphics) {
+            this.roadGraphics.clear();
+        }
+        this.centerMap();
         for(let q=0; q<MAP_W; q++) { 
             for(let r=0; r<MAP_H; r++) { 
                 const t = map[q][r]; if(t.id===-1)continue; const pos = Renderer.hexToPx(q, r); 
-                const hex = this.add.image(pos.x, pos.y, 'hex_base').setScale(1/window.HIGH_RES_SCALE); 
-                let tint = 0x555555; if(t.id===0) tint=0x5a5245; else if(t.id===1) tint=0x335522; else if(t.id===2) tint=0x112211; else if(t.id===4) tint=0x504540; else if(t.id===5) { tint=0x303840; if(window.EnvSystem) window.EnvSystem.registerWater(hex, pos.y, q, r, this.decorGroup); }
-                if(window.EnvSystem) {
-                    if(t.id === 1) window.EnvSystem.spawnGrass(this, this.decorGroup, pos.x, pos.y);
-                    if(t.id === 2) window.EnvSystem.spawnTrees(this, this.treeGroup, pos.x, pos.y);
-                    if(t.id === 4) window.EnvSystem.spawnRubble(this, pos.x, pos.y, this.decorGroup, this.rubbleFrontGroup);
+                const decorId = (t.id === 3 && t.underId != null) ? t.underId : t.id;
+                if (!useTileTerrain) {
+                    const hex = this.add.image(pos.x, pos.y, 'hex_base').setScale(1/window.HIGH_RES_SCALE); 
+                    let tint = 0x555555; if(t.id===0) tint=0x5a5245; else if(t.id===1) tint=0x335522; else if(t.id===2) tint=0x112211; else if(t.id===3) tint=0x4a4845; else if(t.id===4) tint=0x504540; else if(t.id===5) { tint=0x303840; if(window.EnvSystem) window.EnvSystem.registerWater(hex, pos.y, q, r, this.decorGroup); }
+                    hex.setTint(tint); this.hexGroup.add(hex);
                 }
-                hex.setTint(tint); this.hexGroup.add(hex); 
+                if(window.EnvSystem) {
+                    const v1 = useTileTerrain && window.TerrainRender.useV1Tiles;
+                    if (decorId === 1) {
+                        if (v1) {
+                            window.EnvSystem.spawnGrassSparse(this, this.decorGroup, pos.x, pos.y, q, r);
+                        } else if (!useTileTerrain) {
+                            window.EnvSystem.spawnGrass(this, this.decorGroup, pos.x, pos.y);
+                        }
+                    }
+                    if (decorId === 2) {
+                        if (v1) window.EnvSystem.spawnTreesSparse(this, this.treeGroup, pos.x, pos.y, q, r);
+                        else window.EnvSystem.spawnTrees(this, this.treeGroup, pos.x, pos.y);
+                    }
+                    if(decorId === 4) window.EnvSystem.spawnRubble(this, pos.x, pos.y, this.decorGroup, this.rubbleFrontGroup);
+                }
             } 
-        } 
-        this.centerMap(); 
+        }
     }
     update(time, delta) {
         // ★修正: gameLogicが準備できていない、またはマップデータが無い場合は何もしない
         if (!window.gameLogic || !window.gameLogic.map) return;
         
-        if(window.VFX && window.VFX.shakeRequest > 0) { this.cameras.main.shake(100, window.VFX.shakeRequest * 0.001); window.VFX.shakeRequest = 0; }
-        if(window.EnvSystem) window.EnvSystem.update(time);
-        if(window.VFX) { window.VFX.update(); this.vfxGraphics.clear(); window.VFX.draw(this.vfxGraphics); }
+        if (window.VFX && window.VFX.shakeRequest > 0) {
+            this.cameras.main.shake(100, window.VFX.shakeRequest * 0.001);
+            window.VFX.shakeRequest = 0;
+        }
+        if (window.VFX) {
+            window.VFX.update();
+            this.vfxGraphics.clear();
+            window.VFX.draw(this.vfxGraphics);
+        }
+        if (window.EnvSystem) {
+            try { window.EnvSystem.update(time); } catch (e) { console.error('EnvSystem.update', e); }
+        }
         
         if (window.gameLogic.map.length > 0 && !this.mapGenerated) { this.createMap(); this.mapGenerated = true; }
         if(this.unitView) this.unitView.update(time, delta);
+        if (this.battleCloudRenderer) this.battleCloudRenderer.update(time);
         this.overlayGraphics.clear();
         
         if (this.dragHighlightHex) {
@@ -879,7 +968,8 @@ class MainScene extends Phaser.Scene {
             } else {
                 let isValid = false;
                 if (window.gameLogic && window.gameLogic.checkDeploy) {
-                    isValid = window.gameLogic.isValidHex(h.q, h.r) && window.gameLogic.map[h.q][h.r].id !== -1 && window.gameLogic.getUnitsInHex(h.q, h.r).length < 5;
+                    const hexCap = window.gameLogic.getHexUnitCap ? window.gameLogic.getHexUnitCap() : 5;
+                    isValid = window.gameLogic.isValidHex(h.q, h.r) && window.gameLogic.map[h.q][h.r].id !== -1 && window.gameLogic.getUnitsInHex(h.q, h.r).length < hexCap;
                 }
                 const color = isValid ? 0x00ffff : 0xff0000;
                 this.overlayGraphics.lineStyle(3, color, 0.8);
@@ -894,6 +984,34 @@ class MainScene extends Phaser.Scene {
                 this.overlayGraphics.lineStyle(1, 0xffffff, 0.3); 
                 window.gameLogic.reachableHexes.forEach(h => this.drawHexOutline(this.overlayGraphics, h.q, h.r)); 
             }
+            const march = window.gameLogic.marchReachableHexes;
+            if (march && march.length > 0) {
+                this.overlayGraphics.lineStyle(1, 0xddc020, 0.55);
+                march.forEach(h => this.drawHexOutline(this.overlayGraphics, h.q, h.r));
+                if (!this._marchTurnTexts) this._marchTurnTexts = [];
+                this._marchTurnTexts.forEach(t => t.setVisible(false));
+                let ti = 0;
+                march.forEach(h => {
+                    while (ti >= this._marchTurnTexts.length) {
+                        this._marchTurnTexts.push(
+                            this.add.text(0, 0, '', {
+                                fontSize: '11px',
+                                fontFamily: 'Share Tech Mono, monospace',
+                                color: '#ddc020',
+                            }).setDepth(251).setOrigin(0.5, 0.5)
+                        );
+                    }
+                    const pos = Renderer.hexToPx(h.q, h.r);
+                    const t = this._marchTurnTexts[ti++];
+                    t.setText(String(h.turns));
+                    t.setPosition(pos.x, pos.y - 2);
+                    t.setVisible(true);
+                });
+            } else if (this._marchTurnTexts) {
+                this._marchTurnTexts.forEach(t => t.setVisible(false));
+            }
+        } else if (this._marchTurnTexts) {
+            this._marchTurnTexts.forEach(t => t.setVisible(false));
         }
         
         const gl = window.gameLogic;
@@ -941,9 +1059,13 @@ class MainScene extends Phaser.Scene {
             }
         }
         if(selected && hover && window.gameLogic.reachableHexes && window.gameLogic.reachableHexes.some(h => h.q === hover.q && h.r === hover.r)) { this.overlayGraphics.lineStyle(3, 0xffffff, 0.8); this.drawHexOutline(this.overlayGraphics, hover.q, hover.r); }
+        else if (selected && hover && window.gameLogic.marchReachableHexes && window.gameLogic.marchReachableHexes.some(h => h.q === hover.q && h.r === hover.r)) { this.overlayGraphics.lineStyle(2, 0xddc020, 0.9); this.drawHexOutline(this.overlayGraphics, hover.q, hover.r); }
         const path = window.gameLogic.path;
-        if(path && path.length > 0 && selected) { 
-            this.overlayGraphics.lineStyle(3, 0xffffff, 0.5); this.overlayGraphics.beginPath(); const s = Renderer.hexToPx(selected.q, selected.r); this.overlayGraphics.moveTo(s.x, s.y); path.forEach(p => { const px = Renderer.hexToPx(p.q, p.r); this.overlayGraphics.lineTo(px.x, px.y); }); this.overlayGraphics.strokePath(); 
+        if(path && path.length > 0 && selected) {
+            const isMarch = window.gameLogic.marchReachableHexes && hover && window.gameLogic.marchReachableHexes.some(h => h.q === hover.q && h.r === hover.r)
+                && !(window.gameLogic.reachableHexes && window.gameLogic.reachableHexes.some(h => h.q === hover.q && h.r === hover.r));
+            this.overlayGraphics.lineStyle(3, isMarch ? 0xddc020 : 0xffffff, isMarch ? 0.65 : 0.5);
+            this.overlayGraphics.beginPath(); const s = Renderer.hexToPx(selected.q, selected.r); this.overlayGraphics.moveTo(s.x, s.y); path.forEach(p => { const px = Renderer.hexToPx(p.q, p.r); this.overlayGraphics.lineTo(px.x, px.y); }); this.overlayGraphics.strokePath(); 
         }
         this.crosshairGroup.clear();
         if (window.gameLogic.aimTargetUnit) { const u = window.gameLogic.aimTargetUnit; const pos = Renderer.hexToPx(u.q, u.r); this.drawCrosshair(this.crosshairGroup, pos.x, pos.y, time); }
