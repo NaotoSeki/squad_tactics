@@ -28,6 +28,8 @@ window.SOLDIER_LOAD_ACTIONS = [
 
 // 姿勢レベル: 0=stand, 1=kneel, 2=prone
 const POSTURE_NAMES = ['stand', 'kneel', 'prone'];
+// ターン制本編の u.stance（姿勢メニュー）→ 姿勢レベル。crouch は kneel 表示
+const STANCE_LEVEL = { stand: 0, crouch: 1, prone: 2 };
 const POSTURE_TRANS = { '0>1': 'stand_to_kneel', '1>0': 'kneel_to_stand', '1>2': 'kneel_to_prone', '2>1': 'prone_to_kneel' };
 const UNDER_FIRE_T = 75;   // 被弾判定の持続 tick（撃たれたら身を低くする）
 const POSTURE_HOLD_T = 50; // 姿勢を上げ直すまでの最低保持 tick（ピクつき防止）
@@ -67,7 +69,12 @@ class SoldierUnitView extends UnitView {
 
     static manifestReady() {
         const man = window.SOLDIER_MANIFEST;
-        return !!(man && man.actions && man.frameWidth > 0);
+        return !!(man && man.actions && man.version >= 2 && man.charH > 0);
+    }
+
+    /** 表示スケール（立ち身長 SOLDIER_VIEW_H px に正規化） */
+    static displayScale() {
+        return SOLDIER_VIEW_H / window.SOLDIER_MANIFEST.charH;
     }
 
     /**
@@ -110,18 +117,22 @@ class SoldierUnitView extends UnitView {
             return super.buildInfantrySprite(u);
         }
         const man = window.SOLDIER_MANIFEST;
-        const scale = SOLDIER_VIEW_H / man.frameHeight;
-        const ox = (man.anchorX != null) ? man.anchorX : 0.5;
+        const scale = SoldierUnitView.displayScale();
+        const meta = man.actions.stand_idle;
 
-        const shadow = this.scene.add.sprite(2, -18, 'sold_stand_idle', 0);
+        // v2 manifest はアクション別クロップ＋足元アンカー原点（originX/Y）。
+        // 原点＝接地点なので、コンテナ内オフセットはわずかに沈める程度でよい
+        const shadow = this.scene.add.sprite(2, 2, 'sold_stand_idle', 0);
         shadow.setTint(0x000000);
         shadow.setAlpha(0.35);
-        shadow.setOrigin(ox, 0.52);
+        shadow.setOrigin(meta.originX, meta.originY);
         shadow.setScale(scale * 1.05, scale * 0.32);
+        shadow._soldMeta = meta;
 
-        const sprite = this.scene.add.sprite(0, -20, 'sold_stand_idle', 0);
-        sprite.setOrigin(ox, 0.55);
+        const sprite = this.scene.add.sprite(0, 0, 'sold_stand_idle', 0);
+        sprite.setOrigin(meta.originX, meta.originY);
         sprite.setScale(scale);
+        sprite._soldMeta = meta;
         sprite.play('sold_stand_idle_0');
         // sim のチームは 'A'/'B'（UnitView 既定の 'player' 判定は写実スプライトだと
         // 全員が敵色紫になる）。味方=無着色、敵=薄赤で識別。
@@ -176,15 +187,20 @@ class SoldierUnitView extends UnitView {
             }
         }
 
-        // ---- 姿勢（制圧度＋被弾）: 遷移アニメを挟んだステートマシン ----
+        // ---- 姿勢: 遷移アニメを挟んだステートマシン ----
+        // ターン制本編は姿勢メニュー（u.stance）が正本。RTwP は制圧度＋被弾から導出
         const tick = this._now();
-        const target = this._postureLevelOf(s, tick);
+        const stanceDriven = !u._sim && u.stance != null;
+        const target = stanceDriven
+            ? (STANCE_LEVEL[u.stance] != null ? STANCE_LEVEL[u.stance] : 0)
+            : this._postureLevelOf(s, tick);
         if (visual.postureLv == null) visual.postureLv = target; // 出現時は即時
 
-        // ヒステリシス: 姿勢を上げ直す（伏せ→立ち方向）のは HOLD 経過後のみ
+        // ヒステリシス: 姿勢を上げ直す（伏せ→立ち方向）のは HOLD 経過後のみ。
+        // プレイヤーの明示的な姿勢変更（stance）は即時反映
         if (target > visual.postureLv) visual.postureHoldUntil = tick + POSTURE_HOLD_T;
         let effTarget = target;
-        if (target < visual.postureLv && tick < (visual.postureHoldUntil || 0)) {
+        if (!stanceDriven && target < visual.postureLv && tick < (visual.postureHoldUntil || 0)) {
             effTarget = visual.postureLv;
         }
 
@@ -224,10 +240,23 @@ class SoldierUnitView extends UnitView {
         this._syncShadowTex(visual, spr);
     }
 
+    /** テクスチャ（=アクション）切替時に per-action 原点を適用し、影を追従させる */
     _syncShadowTex(visual, spr) {
+        this._applyActionOrigin(spr);
         const sh = visual.shadowSprite;
-        if (sh && sh.texture && sh.texture.key !== spr.texture.key) {
-            sh.setTexture(spr.texture.key);
+        if (sh && sh.texture) {
+            if (sh.texture.key !== spr.texture.key) sh.setTexture(spr.texture.key);
+            this._applyActionOrigin(sh);
+        }
+    }
+
+    _applyActionOrigin(obj) {
+        const man = window.SOLDIER_MANIFEST;
+        if (!man || !obj.texture || obj.texture.key.indexOf('sold_') !== 0) return;
+        const meta = man.actions[obj.texture.key.slice(5)];
+        if (meta && obj._soldMeta !== meta) {
+            obj.setOrigin(meta.originX, meta.originY);
+            obj._soldMeta = meta;
         }
     }
 
@@ -327,10 +356,10 @@ class SoldierUnitView extends UnitView {
         const man = window.SOLDIER_MANIFEST;
         const key = `sold_${posture}_dying_${dir}`;
         if (!this.scene.anims.exists(key)) return;
-        const scale = SOLDIER_VIEW_H / man.frameHeight;
-        const c = this.scene.add.sprite(x, y - 20, `sold_${posture}_dying`, 0);
-        c.setOrigin((man.anchorX != null) ? man.anchorX : 0.5, 0.55);
-        c.setScale(scale);
+        const meta = man.actions[`${posture}_dying`];
+        const c = this.scene.add.sprite(x, y + 2, `sold_${posture}_dying`, 0);
+        c.setOrigin(meta.originX, meta.originY);
+        c.setScale(SoldierUnitView.displayScale());
         c.setDepth(9); // 地形(0)/道路(1.6)/装飾(8) より上、ユニット(20) より下
         c.setTint(0xbbbbbb);
         c.play(key); // repeat:0 → 最終フレームで停止＝死体
@@ -363,7 +392,7 @@ if (typeof window !== 'undefined') {
             .then((r) => (r.ok ? r.json() : null))
             .catch(() => null)
             .then((m) => {
-                window.SOLDIER_MANIFEST = (m && m.actions && m.frameWidth) ? m : null;
+                window.SOLDIER_MANIFEST = (m && m.actions && m.version >= 2) ? m : null;
                 return window.SOLDIER_MANIFEST;
             });
         return window._soldierManifestPromise;

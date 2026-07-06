@@ -770,12 +770,12 @@ class MainScene extends Phaser.Scene {
         // phaser_soldier_view.js がスクリプト読込時に先行フェッチ済み。未解決なら
         // 旧 soldier_crawl のまま劣化動作（SoldierUnitView 側でフォールバック）。
         const solMan = window.SOLDIER_MANIFEST;
-        if (solMan && solMan.actions && solMan.frameWidth) {
+        if (solMan && solMan.actions && solMan.version >= 2) {
             for (const name of (window.SOLDIER_LOAD_ACTIONS || [])) {
                 const meta = solMan.actions[name];
                 if (!meta) continue;
                 this.load.spritesheet('sold_' + name, 'asset/sprites/soldier/' + meta.file, {
-                    frameWidth: solMan.frameWidth, frameHeight: solMan.frameHeight, endFrame: meta.frames * 8 - 1,
+                    frameWidth: meta.frameW, frameHeight: meta.frameH, endFrame: meta.frames * 8 - 1,
                 });
             }
         }

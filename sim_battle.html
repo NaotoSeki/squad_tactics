@@ -136,12 +136,12 @@ class SimBattleScene extends Phaser.Scene {
     // Phaser 起動前に fetch 済み（bootstrap 参照 — ロード中のキュー追加はローダーが
     // 完了間際だとデッドロックするため避ける）。無い環境では旧 soldier_crawl のまま。
     const man = window.SOLDIER_MANIFEST;
-    if (man && man.actions && man.frameWidth) {
+    if (man && man.actions && man.version >= 2) {
       for (const name of (window.SOLDIER_LOAD_ACTIONS || [])) {
         const meta = man.actions[name];
         if (!meta) continue;
         this.load.spritesheet('sold_' + name, 'asset/sprites/soldier/' + meta.file, {
-          frameWidth: man.frameWidth, frameHeight: man.frameHeight, endFrame: meta.frames * 8 - 1,
+          frameWidth: meta.frameW, frameHeight: meta.frameH, endFrame: meta.frames * 8 - 1,
         });
       }
     }
@@ -515,6 +515,18 @@ document.getElementById('restart').onclick = () => {
   scene().restart(seed);
 };
 document.getElementById('seed').value = Math.floor(Math.random() * 99999) + 1;
+
+// ブラウザ非アクティブで自動ポーズ（自動ポーズ分だけ復帰時に自動再開）
+let _autoPaused = false;
+document.addEventListener('visibilitychange', () => {
+  const s = scene(); if (!s) return;
+  const btn = document.getElementById('pause');
+  if (document.hidden) {
+    if (s.speed !== 0) { _autoPaused = true; s.speed = 0; if (btn) btn.textContent = 'resume'; }
+  } else if (_autoPaused) {
+    _autoPaused = false; s.speed = 1; if (btn) btn.textContent = 'pause';
+  }
+});
 
 setInterval(() => {
   const s = scene(); if (!s || !s.sim) return;
