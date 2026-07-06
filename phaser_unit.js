@@ -35,6 +35,40 @@ class UnitView {
         }
     }
 
+    // 歩兵スプライト生成（createVisual から純粋抽出。サブクラスの差し替えフック）
+    buildInfantrySprite(u) {
+        const shadow = this.scene.add.sprite(2, -18, 'soldier_crawl', 0);
+        shadow.setTint(0x000000);
+        shadow.setAlpha(0.35);
+        shadow.setScale(0.16, 0.048);
+        shadow.setOrigin(0.5, 0.52);
+        const sprite = this.scene.add.sprite(0, -20, 'soldier_crawl', 0);
+        sprite.setScale(0.15); // 256px → 約38px（気持ち大きめ）
+        sprite.play('anim_crawl_0');
+        if (u.team === 'player') sprite.setTint(0xeeeeff); else sprite.setTint(0x9955ff);
+        return { shadow, sprite };
+    }
+
+    // 歩兵アニメ選択（updateVisual から純粋抽出。サブクラスの差し替えフック）
+    updateInfantryAnim(visual, u, isMoving) {
+        const dx_ = visual.lastDx || 0;
+        const dy_ = visual.lastDy || 0;
+        let d = Math.round((Math.atan2(-dy_, dx_) + 5 * Math.PI / 4) / (2 * Math.PI) * 8) % 8;
+        if (d < 0) d += 8;
+        const crawlAnim = 'anim_crawl_' + d;
+        if (isMoving) {
+            visual.crawlStopDelay = 4; // 移動終了後 4 フレームだけ再生してから止める
+            visual.sprite.play(crawlAnim, true); // 毎フレーム play でアニメ抜けを防ぐ
+        } else {
+            if (visual.crawlStopDelay > 0) {
+                visual.crawlStopDelay--;
+                visual.sprite.play(crawlAnim, true); // 制止までアニメをゆっくり続ける
+            } else {
+                visual.sprite.anims.stop(); // 現在のフレームで止める（setFrame しないのでピクつかない）
+            }
+        }
+    }
+
     clear() {
         this.visuals.forEach(v => {
             if (v.container) v.container.destroy();
@@ -176,15 +210,7 @@ class UnitView {
         let shadow = null;
         let sprite;
         if (u.def.name === "Rifleman" || u.def.role === "infantry" || !u.def.isTank) {
-            shadow = this.scene.add.sprite(2, -18, 'soldier_crawl', 0);
-            shadow.setTint(0x000000);
-            shadow.setAlpha(0.35);
-            shadow.setScale(0.16, 0.048);
-            shadow.setOrigin(0.5, 0.52);
-            sprite = this.scene.add.sprite(0, -20, 'soldier_crawl', 0);
-            sprite.setScale(0.15); // 256px → 約38px（気持ち大きめ）
-            sprite.play('anim_crawl_0');
-            if (u.team === 'player') sprite.setTint(0xeeeeff); else sprite.setTint(0x9955ff);
+            ({ shadow, sprite } = this.buildInfantrySprite(u));
         } else if (u.def.isTank) {
             shadow = this.scene.add.sprite(-1, -8, 'tank_sheet', 7);
             shadow.setTint(0x000000);
@@ -300,22 +326,7 @@ class UnitView {
         }
 
         if (!u.def.isTank && visual.sprite) {
-            const dx_ = visual.lastDx || 0;
-            const dy_ = visual.lastDy || 0;
-            let d = Math.round((Math.atan2(-dy_, dx_) + 5 * Math.PI / 4) / (2 * Math.PI) * 8) % 8;
-            if (d < 0) d += 8;
-            const crawlAnim = 'anim_crawl_' + d;
-            if (isMoving) {
-                visual.crawlStopDelay = 4; // 移動終了後 4 フレームだけ再生してから止める
-                visual.sprite.play(crawlAnim, true); // 毎フレーム play でアニメ抜けを防ぐ
-            } else {
-                if (visual.crawlStopDelay > 0) {
-                    visual.crawlStopDelay--;
-                    visual.sprite.play(crawlAnim, true); // 制止までアニメをゆっくり続ける
-                } else {
-                    visual.sprite.anims.stop(); // 現在のフレームで止める（setFrame しないのでピクつかない）
-                }
-            }
+            this.updateInfantryAnim(visual, u, isMoving);
         }
 
         if (visual.hpBg && visual.hpBar && visual.infoContainer) {
