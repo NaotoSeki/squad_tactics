@@ -18,22 +18,34 @@
  *   手榴弾: GRENADE イベントで playThrow() → throw_grenade を一回再生（one-shot 優先）
  */
 
-// v1 でロードする 15 アクション（姿勢遷移 4 種は v2 送り）
+// ロードする 19 アクション（姿勢遷移 4 種を含む）
 window.SOLDIER_LOAD_ACTIONS = [
     'stand_idle', 'stand_forward', 'stand_fire', 'stand_dying', 'stand_throw_grenade',
     'kneel_idle', 'kneel_forward', 'kneel_fire', 'kneel_dying', 'kneel_throw_grenade',
     'prone_idle', 'prone_forward', 'prone_fire', 'prone_dying', 'prone_throw_grenade',
+    'stand_to_kneel', 'kneel_to_stand', 'kneel_to_prone', 'prone_to_kneel',
 ];
+
+// 姿勢レベル: 0=stand, 1=kneel, 2=prone
+const POSTURE_NAMES = ['stand', 'kneel', 'prone'];
+const POSTURE_TRANS = { '0>1': 'stand_to_kneel', '1>0': 'kneel_to_stand', '1>2': 'kneel_to_prone', '2>1': 'prone_to_kneel' };
+const UNDER_FIRE_T = 75;   // 被弾判定の持続 tick（撃たれたら身を低くする）
+const POSTURE_HOLD_T = 50; // 姿勢を上げ直すまでの最低保持 tick（ピクつき防止）
 
 // 画面上の兵士の見かけ高さ（px）。旧 soldier_crawl は 256*0.15 ≈ 38px だった
 const SOLDIER_VIEW_H = 50;
 
-/** 画面座標デルタ → 方向行 (0..7 = S,SE,E,NE,N,NW,W,SW)。y は下向き正。 */
+/**
+ * 画面座標デルタ → シートの方向行。y は下向き正。
+ * シートの行順はラベル(S,SE,E,...)と逆回転で、実際の見た目は
+ * row: 0=S, 1=SW, 2=W, 3=NW, 4=N, 5=NE, 6=E, 7=SE（実測: stand_fire 検分）。
+ * よって S,SE,E,... 系の方位インデックス k に対し使用行 = (8-k)%8。
+ */
 function soldierDirFromDelta(dx, dy) {
     if (!dx && !dy) return 0;
-    let d = Math.round(Math.atan2(-dy, dx) / (Math.PI / 4)) + 2; // E=2 基準
-    d %= 8; if (d < 0) d += 8;
-    return d;
+    let k = Math.round(Math.atan2(-dy, dx) / (Math.PI / 4)) + 2; // E=2 基準（S,SE,E,...順）
+    k %= 8; if (k < 0) k += 8;
+    return (8 - k) % 8;
 }
 
 /** sim の facing {q,r}（軸座標ベクトル）→ 方向行。hexToPx と同じ射影。 */
@@ -47,8 +59,9 @@ function soldierDirFromFacing(f) {
 class SoldierUnitView extends UnitView {
     constructor(scene, unitLayer, hpLayer) {
         super(scene, unitLayer, hpLayer); // defineAnimations() はこの中で呼ばれる
-        this._faceDir = new Map();  // soldierId -> 直近の射線方向（SHOT イベント由来）
-        this._oneShot = new Map();  // soldierId -> { key, started } 一回性アニメ
+        this._faceDir = new Map();   // soldierId -> 直近の射線方向（SHOT イベント由来）
+        this._oneShot = new Map();   // soldierId -> { key, started } 一回性アニメ
+        this._underFire = new Map(); // soldierId -> 最後に撃たれた tick
         this._corpses = [];
     }
 
@@ -145,12 +158,44 @@ class SoldierUnitView extends UnitView {
             if (os.started) { this._syncShadowTex(visual, spr); return; }
         }
 
-        // ---- 姿勢（制圧度）× 動作（状態） ----
-        const T = (typeof SIM_TUNING !== 'undefined') ? SIM_TUNING : {};
-        let posture = 'stand';
-        if (s.state === 'pinned' || s.suppression >= (T.PINNED_AT || 999)) posture = 'prone';
-        else if (s.state === 'suppressed' || s.suppression >= (T.SUPPRESSED_AT || 999)) posture = 'kneel';
+        // ---- 姿勢（制圧度＋被弾）: 遷移アニメを挟んだステートマシン ----
+        const tick = (this.scene.sim && this.scene.sim._tick) || 0;
+        const target = this._postureLevelOf(s, tick);
+        if (visual.postureLv == null) visual.postureLv = target; // 出現時は即時
 
+        // ヒステリシス: 姿勢を上げ直す（伏せ→立ち方向）のは HOLD 経過後のみ
+        if (target > visual.postureLv) visual.postureHoldUntil = tick + POSTURE_HOLD_T;
+        let effTarget = target;
+        if (target < visual.postureLv && tick < (visual.postureHoldUntil || 0)) {
+            effTarget = visual.postureLv;
+        }
+
+        // 遷移再生中はそれを優先。終わっていたら段を確定
+        if (visual.postureTrans) {
+            const cur = spr.anims.currentAnim;
+            if (cur && cur.key === visual.postureTrans.key && spr.anims.isPlaying) {
+                this._syncShadowTex(visual, spr);
+                return;
+            }
+            visual.postureLv = visual.postureTrans.step;
+            visual.postureTrans = null;
+        }
+
+        // 目標姿勢へ1段ずつ遷移（stand↔kneel↔prone。stand↔prone は kneel 経由で連鎖）
+        if (effTarget !== visual.postureLv) {
+            const step = visual.postureLv + Math.sign(effTarget - visual.postureLv);
+            const name = POSTURE_TRANS[visual.postureLv + '>' + step];
+            const key = `sold_${name}_${dir}`;
+            if (name && this.scene.anims.exists(key)) {
+                visual.postureTrans = { key, step };
+                spr.play(key);
+                this._syncShadowTex(visual, spr);
+                return;
+            }
+            visual.postureLv = effTarget; // 遷移アセットが無ければ即時切替
+        }
+
+        const posture = POSTURE_NAMES[visual.postureLv] || 'stand';
         let action = 'idle';
         if (isMoving) action = 'forward';
         else if (s.state === 'engage') action = 'fire';
@@ -168,9 +213,13 @@ class SoldierUnitView extends UnitView {
         }
     }
 
-    /** scene の SHOT イベントから: 射手を射線方向へ向ける */
-    noteShot(shooterId, fromPx, toPx) {
+    /** scene の SHOT イベントから: 射手を射線方向へ向け、被弾側を「被射撃中」として記録 */
+    noteShot(shooterId, fromPx, toPx, targetId) {
         this._faceDir.set(shooterId, soldierDirFromDelta(toPx.x - fromPx.x, toPx.y - fromPx.y));
+        if (targetId != null) {
+            const tick = (this.scene.sim && this.scene.sim._tick) || 0;
+            this._underFire.set(targetId, tick);
+        }
     }
 
     /** scene の GRENADE イベントから: 投擲 one-shot（姿勢対応） */
@@ -192,7 +241,10 @@ class SoldierUnitView extends UnitView {
             : Renderer.hexToPx(simSoldier.q, simSoldier.r);
         const dir = this._faceDir.get(simSoldier.id)
             ?? (v && v.soldierDir) ?? soldierDirFromFacing(simSoldier.facing);
-        const posture = this._postureOf(simSoldier);
+        // 死亡時は「表示中の姿勢」から倒れる（遷移中なら sim 由来の姿勢へフォールバック）
+        const posture = (v && v.postureLv != null && !v.postureTrans)
+            ? (POSTURE_NAMES[v.postureLv] || 'stand')
+            : this._postureOf(simSoldier);
         const key = `sold_${posture}_dying_${dir}`;
         if (!this.scene.anims.exists(key)) return;
 
@@ -208,11 +260,25 @@ class SoldierUnitView extends UnitView {
         this._oneShot.delete(simSoldier.id);
     }
 
-    _postureOf(s) {
+    /**
+     * 姿勢レベル決定（0=stand, 1=kneel, 2=prone）:
+     *   制圧ベース: pinned/PINNED_AT→2, suppressed/SUPPRESSED_AT→1
+     *   被射撃中（直近 UNDER_FIRE_T tick 内に撃たれた）: 最低でも膝立ち、
+     *   制圧も受けているなら伏せ — 「撃たれたら身を低くする」
+     */
+    _postureLevelOf(s, tick) {
         const T = (typeof SIM_TUNING !== 'undefined') ? SIM_TUNING : {};
-        if (s.state === 'pinned' || s.suppression >= (T.PINNED_AT || 999)) return 'prone';
-        if (s.state === 'suppressed' || s.suppression >= (T.SUPPRESSED_AT || 999)) return 'kneel';
-        return 'stand';
+        let lv = 0;
+        if (s.state === 'pinned' || s.state === 'down' || s.suppression >= (T.PINNED_AT || 999)) lv = 2;
+        else if (s.state === 'suppressed' || s.suppression >= (T.SUPPRESSED_AT || 999)) lv = 1;
+        const uf = this._underFire.get(s.id);
+        if (uf != null && tick - uf <= UNDER_FIRE_T) lv = (lv >= 1) ? 2 : Math.max(lv, 1);
+        return lv;
+    }
+
+    _postureOf(s) {
+        const tick = (this.scene.sim && this.scene.sim._tick) || 0;
+        return POSTURE_NAMES[this._postureLevelOf(s, tick)] || 'stand';
     }
 
     clear() {
@@ -221,6 +287,7 @@ class SoldierUnitView extends UnitView {
         this._corpses = [];
         this._faceDir.clear();
         this._oneShot.clear();
+        this._underFire.clear();
     }
 }
 
