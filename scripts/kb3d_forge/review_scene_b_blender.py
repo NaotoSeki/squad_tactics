@@ -2326,6 +2326,383 @@ def build():
         "hidden_challenge_assets":["ROUND1_CAMP","towered_farmstead_full_recipe"]}
 
 
+LOCATION_SPECS={
+ "loc_crossroad":{
+  "roads":[
+    {"controls":[(30,2),(32,12),(34,24),(33,36),(31,48),(33,60),(36,66)],"main":True},
+    {"controls":[(7.5,39.5),(14,37),(24,36.5),(33,36),(44,34),(56,31),(62,29.5)],"main":False},
+  ],
+  "buildings":[("farmstead",(44,46),5),("barn",(24,45),-80)],
+  "ruins":[],
+  "fields":[("FieldEast",(50,21),(17,10),-4,7,()),
+            ("Garden",(46,57),(13,9),8,8,())],
+  "fences":"auto",
+  "craters":[{"road":0,"near":(32,28),"size":(2.5,1.8),"angle":30},
+             {"pos":(52,18),"size":(2.6,2.0),"angle":-15}],
+  "tree_seed":61027,"dressing_seed":61127,
+ },
+ "loc_forest_farm":{
+  "roads":[{"controls":[(7.5,60.5),(12,58),(18,50),(22,40),(24,30),(22,20),(16,12),(7,3.5)],"main":True}],
+  "buildings":[("cottage",(36,44),10),("barn",(48,52),-12)],
+  "ruins":[],
+  "fields":[("BigField",(47,23),(22,13),3,9,()),
+            ("Garden",(30,55),(12,8),-6,8,())],
+  "fences":"auto",
+  "craters":[{"pos":(38,16),"size":(2.4,1.9),"angle":10}],
+  "tree_seed":62027,"dressing_seed":62127,"tree_density":1.35,
+ },
+ "loc_shelled":{
+  "roads":[{"controls":[(3,7),(16,16),(26,24),(36,32),(46,40),(56,48),(64,58)],"main":True},
+           {"controls":[(36,32),(30,42),(26,52),(24,68)],"main":False}],
+  "buildings":[("farmstead",(54,58),-30)],
+  "ruins":[((46,26),25,71001),((28,44),-60,71002)],
+  "fields":[("FieldWest",(18,34),(18,11),12,6,((18,34,3.0,2.2),)),
+            ("FieldSE",(52,12),(14,9),-8,6,())],
+  "fences":"auto_damaged",
+  "craters":[{"road":0,"near":(26,24),"size":(2.5,1.8),"angle":20},
+             {"road":0,"near":(46,40),"size":(2.3,1.7),"angle":-40},
+             {"pos":(18,34),"size":(2.9,2.1),"angle":-18}],
+  "tree_seed":63027,"dressing_seed":63127,
+ },
+}
+
+LOCATION_ASSET_MAP={
+    "farmstead":("ROUND1_FARMSTEAD_CLEAN","RW_ASSET_FARMSTEAD_CURATED_CLEAN"),
+    "barn":("ROUND1_BARN","RW_ASSET_BARN_CURATED"),
+    "cottage":("ROUND1_COTTAGE","RW_ASSET_COTTAGE_BEAUTY"),
+}
+
+
+def _validate_location_spec(spec):
+    """Hard self-checks on the supervisor-authored spec; raise (don't silently fix)."""
+    margin=1.0
+    for asset_name,center,_angle in spec["buildings"]:
+        if not inside_board(center,margin):
+            raise AssertionError("building %s outside board (margin %.1f): %s"%(
+                asset_name,margin,center))
+    for center,_bearing,_seed in spec["ruins"]:
+        if not inside_board(center,margin):
+            raise AssertionError("ruin outside board (margin %.1f): %s"%(margin,center))
+    for name,center,size,bearing,_rows,_holes in spec["fields"]:
+        angle=math.radians(bearing)
+        ux,uy=(math.cos(angle),math.sin(angle)),(-math.sin(angle),math.cos(angle))
+        hx,hy=size[0]/2,size[1]/2
+        for sx,sy in ((-hx,-hy),(hx,-hy),(hx,hy),(-hx,hy)):
+            corner=(center[0]+ux[0]*sx+uy[0]*sy,center[1]+ux[1]*sx+uy[1]*sy)
+            if not inside_board(corner,margin):
+                raise AssertionError("field %s corner outside board: %s"%(name,corner))
+    centers=[center for _,center,_ in spec["buildings"]]
+    for i in range(len(centers)):
+        for j in range(i+1,len(centers)):
+            distance=math.hypot(centers[i][0]-centers[j][0],centers[i][1]-centers[j][1])
+            if distance<=9.0:
+                raise AssertionError("buildings %d/%d too close: %.2fm"%(i,j,distance))
+    for ruin_center,_bearing,_seed in spec["ruins"]:
+        for building_center in centers:
+            distance=math.hypot(ruin_center[0]-building_center[0],
+                                 ruin_center[1]-building_center[1])
+            if distance<=8.0:
+                raise AssertionError("ruin/building too close: %.2fm"%distance)
+    for name,fcenter,size,bearing,_rows,_holes in spec["fields"]:
+        angle=math.radians(bearing)
+        ux,uy=(math.cos(angle),math.sin(angle)),(-math.sin(angle),math.cos(angle))
+        hx,hy=size[0]/2,size[1]/2
+        for building_name,building_center,_angle in spec["buildings"]:
+            dx,dy=building_center[0]-fcenter[0],building_center[1]-fcenter[1]
+            local_x=dx*ux[0]+dy*ux[1]
+            local_y=dx*uy[0]+dy*uy[1]
+            if abs(local_x)<hx and abs(local_y)<hy:
+                raise AssertionError("building %s overlaps field %s"%(building_name,name))
+    for road_spec in spec["roads"]:
+        points=catmull(road_spec["controls"],9)
+        for point in (points[0],points[-1]):
+            if not (inside_board(point,0.0) and not inside_board(point,3.0)):
+                raise AssertionError("road endpoint not within 3m of board edge: %s"%(point,))
+
+
+def _offset_rect_corners(center,size,bearing,offset):
+    angle=math.radians(bearing)
+    ux,uy=(math.cos(angle),math.sin(angle)),(-math.sin(angle),math.cos(angle))
+    hx,hy=size[0]/2+offset,size[1]/2+offset
+    local=((-hx,-hy),(hx,-hy),(hx,hy),(-hx,hy))
+    return [(center[0]+ux[0]*x+uy[0]*y,center[1]+ux[1]*x+uy[1]*y) for x,y in local]
+
+
+def _damaged_fence_side(a,b,rng):
+    """Split one fence side into surviving rails plus a random breach gap."""
+    gap_len=rng.uniform(.30,.50)
+    gap_start=rng.uniform(.20,max(.20,1.0-gap_len-.20))
+    gap_end=gap_start+gap_len
+    def lerp(t):
+        return (a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t)
+    survivors=[]
+    if gap_start>.05:
+        survivors.append((a,lerp(gap_start)))
+    if gap_end<.95:
+        survivors.append((lerp(gap_end),b))
+    return survivors,[lerp(gap_start),lerp(gap_end)]
+
+
+def _leaning_fence_post(col,name,point,mats,rng):
+    height=rng.uniform(1.1,1.5)
+    lean_angle=rng.uniform(0,math.tau)
+    lean_dist=height*rng.uniform(.28,.45)
+    base=(point[0],point[1],GROUND_Z)
+    top=(point[0]+math.cos(lean_angle)*lean_dist,
+         point[1]+math.sin(lean_angle)*lean_dist,
+         GROUND_Z+height*rng.uniform(.55,.75))
+    curve_ridge(col,name,(base,top),.075,mats["wood"])
+
+
+def _loc_road_ps_vocabulary(col,paths,rng):
+    """Restrained PS road-surface stamping for procedural locations (no fork decal)."""
+    surfaces=0
+    for path_index,path in enumerate(paths):
+        ns=normals(path)
+        step=10 if path_index==0 else 7
+        for index in range(6,len(path)-5,step):
+            before,after=path[index-1],path[index+1]
+            bearing=math.degrees(math.atan2(after[1]-before[1],after[0]-before[0]))
+            pos=(path[index][0]+ns[index][0]*rng.uniform(-.20,.20),
+                 path[index][1]+ns[index][1]*rng.uniform(-.20,.20))
+            ground_decal(col,"RWB_LocPSRoad_%d_%02d"%(path_index,surfaces),
+                         "road_straight",0,pos,rng.uniform(.21,.25),bearing,
+                         GROUND_Z+.108,.16)
+            surfaces+=1
+    return {"surface_stamps":surfaces}
+
+
+def build_location_scene(spec,seed_offset=0):
+    """Generic spec-driven builder for a fresh road/building/field/ruin layout.
+
+    Reuses the same visual vocabulary (roads, fields, fences, craters, trees,
+    understory, life props, terrain) as build(), but with a road network,
+    building placement, fields, ruins, and craters read from `spec` instead
+    of the frozen v29 literals. Never touches build()/build_legacy()."""
+    global SEED
+    _validate_location_spec(spec)
+    scene=bpy.data.scenes[SCENE]
+    old=bpy.data.collections["REVIEW_WORLD"]
+    source_ground=bpy.data.objects["RW_GroundContinuous"]
+    for obj in list(old.objects):
+        if obj != source_ground:
+            bpy.data.objects.remove(obj,do_unlink=True)
+    mats=materials(source_ground)
+    col=clear_collection(scene,"REVIEW_WORLD_B")
+    source_ground.hide_render=True
+    hex_board_ground(col,mats)
+
+    tree_seed=spec["tree_seed"]+seed_offset
+    dressing_seed=spec["dressing_seed"]+seed_offset
+    rng=random.Random(dressing_seed)
+
+    camp=bpy.data.collections.get("ROUND1_CAMP")
+    if camp:
+        for obj in camp.objects:
+            obj.hide_render=True
+    used_assets={asset_name for asset_name,_,_ in spec["buildings"]}
+    for asset_name,(collection_name,_root_name) in LOCATION_ASSET_MAP.items():
+        collection=bpy.data.collections[collection_name]
+        hide=asset_name not in used_assets
+        for obj in collection.objects:
+            obj.hide_render=hide
+    for asset_name,center,angle in spec["buildings"]:
+        collection_name,root_name=LOCATION_ASSET_MAP[asset_name]
+        collection=bpy.data.collections[collection_name]
+        place_collection_center(bpy.data.objects[root_name],collection,center,angle)
+
+    road_paths=[catmull(road_spec["controls"],9) for road_spec in spec["roads"]]
+    for index,(road_spec,points) in enumerate(zip(spec["roads"],road_paths)):
+        is_main=bool(road_spec.get("main"))
+        if is_main:
+            shoulders=[2.12+.24*math.sin(i*.42)+.10*math.sin(i*1.31) for i in range(len(points))]
+            cores=[1.30+.14*math.sin(i*.51)+.06*math.sin(i*1.73) for i in range(len(points))]
+        else:
+            shoulders=[1.30+.14*math.sin(i*.42) for i in range(len(points))]
+            cores=[.80+.08*math.sin(i*.51) for i in range(len(points))]
+        strip(col,"RWB_LocRoadShoulder_%d"%index,points,shoulders,mats["shoulder"],GROUND_Z+.055)
+        strip(col,"RWB_LocRoadCore_%d"%index,points,cores,mats["road"],GROUND_Z+.095)
+        if is_main:
+            segmented_ruts(col,points,mats,rng,"RWB_LocRut_%d"%index)
+            road_edge_scars(col,points,mats,rng)
+            road_puddles(col,points,mats,rng)
+    road_ps_metrics=_loc_road_ps_vocabulary(col,road_paths,rng)
+
+    field_metrics={}
+    field_rects=[]
+    for name,center,size,bearing,rows,holes in spec["fields"]:
+        field_metrics[name]=target_field(col,"RWB_Loc_%s"%name,center,size,bearing,
+                                          rows,mats,rng,holes)
+        angle=math.radians(bearing)
+        ux,uy=(math.cos(angle),math.sin(angle)),(-math.sin(angle),math.cos(angle))
+        field_rects.append((center,ux,uy,size[0]/2+1.0,size[1]/2+1.0))
+
+    def in_any_field_rect(pos):
+        for center,ux,uy,hx,hy in field_rects:
+            dx,dy=pos[0]-center[0],pos[1]-center[1]
+            local_x,local_y=dx*ux[0]+dy*ux[1],dx*uy[0]+dy*uy[1]
+            if abs(local_x)<hx and abs(local_y)<hy:
+                return True
+        return False
+
+    fence_mode=spec.get("fences","auto")
+    fence_segments=[]
+    leaning_posts=0
+    if fence_mode in ("auto","auto_damaged"):
+        for name,center,size,bearing,_rows,_holes in spec["fields"]:
+            corners=_offset_rect_corners(center,size,bearing,1.6)
+            for side in range(4):
+                a,b=corners[side],corners[(side+1)%4]
+                mid=((a[0]+b[0])/2,(a[1]+b[1])/2)
+                if (path_network_distance(mid,road_paths)<3.2
+                        or path_network_distance(a,road_paths)<3.2
+                        or path_network_distance(b,road_paths)<3.2):
+                    continue
+                if fence_mode=="auto_damaged":
+                    survivors,gap_points=_damaged_fence_side(a,b,rng)
+                    fence_segments.extend(survivors)
+                    for gap_point in gap_points:
+                        _leaning_fence_post(col,"RWB_LocLeaningPost_%03d"%leaning_posts,
+                                             gap_point,mats,rng)
+                        leaning_posts+=1
+                else:
+                    fence_segments.append((a,b))
+    if fence_segments:
+        fences(col,fence_segments,mats["wood"],rng)
+
+    crater_metrics=[]
+    for index,crater_spec in enumerate(spec["craters"]):
+        if "road" in crater_spec:
+            road_points=road_paths[crater_spec["road"]]
+            near_point=crater_spec["near"]
+            center=min(road_points,key=lambda p:math.hypot(
+                p[0]-near_point[0],p[1]-near_point[1]))
+        else:
+            center=crater_spec["pos"]
+        crater_metrics.append(crater(col,"RWB_LocCrater_%02d"%index,center,
+                                      crater_spec["size"],mats,rng,crater_spec["angle"]))
+
+    ruin_metrics=[]
+    saved_seed=SEED
+    for index,(center,bearing,seed) in enumerate(spec["ruins"]):
+        SEED=seed
+        try:
+            compat_rng=random.Random(seed)
+            ruin_metrics.append(add_ruined_cottage(col,center,mats,compat_rng,bearing=bearing))
+        finally:
+            SEED=saved_seed
+
+    tree_species=["tree_oak","tree_linden","tree_willow","tree_poplar",
+                  "tree_robinia","tree_fir","tree_spruce","tree_blossom"]
+    tree_scales=[.56,.66,.52,.50,.60,.74,.76,.70]
+    tree_rng=random.Random(tree_seed)
+    target_tree_count=max(1,round(52*spec.get("tree_density",1.0)))
+    accepted_trees=[]
+    attempts=0
+    max_attempts=target_tree_count*80
+    while len(accepted_trees)<target_tree_count and attempts<max_attempts:
+        attempts+=1
+        edge_biased=tree_rng.random()<0.70
+        candidate=(tree_rng.uniform(3,67),tree_rng.uniform(.5,75))
+        if not inside_board(candidate,0.8):
+            continue
+        if edge_biased and inside_board(candidate,9.0):
+            continue
+        if path_network_distance(candidate,road_paths)<3.5:
+            continue
+        if any(math.hypot(candidate[0]-bc[0],candidate[1]-bc[1])<7.0
+               for _,bc,_ in spec["buildings"]):
+            continue
+        if any(math.hypot(candidate[0]-rc[0],candidate[1]-rc[1])<6.0
+               for rc,_,_ in spec["ruins"]):
+            continue
+        if in_any_field_rect(candidate):
+            continue
+        if any(math.hypot(candidate[0]-ex[0],candidate[1]-ex[1])<4.5
+               for ex in accepted_trees):
+            continue
+        accepted_trees.append(candidate)
+    for index,pos in enumerate(accepted_trees):
+        _wood,crown=build_target_tree(col,"RWB_LocTree_%02d"%index,pos,index%5,mats,
+                                       tree_seed+700+index*37)
+        crown.hide_render=True
+        billboard(col,"RWB_LocCanopy_%02d"%index,tree_species[index%len(tree_species)],
+                  2,pos,tree_scales[index%len(tree_scales)])
+
+    shrubs=[("bush_big",2),("bush_medium",0),("bush_medium",1),("bush_small",0),
+            ("flower_phlox",0),("flower_phlox",1),("flower_primula",0),("fern",2)]
+    understory_rng=random.Random(dressing_seed+101)
+    accepted_understory=0
+    attempts=0
+    target_understory=80
+    while accepted_understory<target_understory and attempts<target_understory*30:
+        attempts+=1
+        pos=(understory_rng.uniform(3,67),understory_rng.uniform(.5,75))
+        if not inside_board(pos,.5):
+            continue
+        if path_network_distance(pos,road_paths)<2.0:
+            continue
+        if in_any_field_rect(pos):
+            continue
+        if any(math.hypot(pos[0]-bc[0],pos[1]-bc[1])<4.6 for _,bc,_ in spec["buildings"]):
+            continue
+        item,slot=shrubs[accepted_understory%len(shrubs)]
+        billboard(col,"RWB_LocUnderstory_%03d"%accepted_understory,item,slot,pos,
+                  understory_rng.uniform(.42,.68))
+        accepted_understory+=1
+
+    life_items=[("washing",2),("well",2),("woodpile",2),("cart",2),
+                ("compose_farm_a",1),("compose_farm_b",2),("barrel",2),
+                ("bench",2),("barrel",1),("woodpile",1)]
+    life_rng=random.Random(dressing_seed+202)
+    all_road_points=[point for path in road_paths for point in path]
+    life_count=0
+    for building_index,(asset_name,center,angle) in enumerate(spec["buildings"]):
+        near_point=min(all_road_points,key=lambda p:math.hypot(
+            p[0]-center[0],p[1]-center[1]))
+        dx,dy=near_point[0]-center[0],near_point[1]-center[1]
+        length=max(1e-6,math.hypot(dx,dy))
+        direction=(dx/length,dy/length)
+        perpendicular=(-direction[1],direction[0])
+        item_count=life_rng.randint(3,5)
+        for member in range(item_count):
+            item,slot=life_items[(building_index*5+member)%len(life_items)]
+            distance=life_rng.uniform(3.0,6.0)
+            lateral=life_rng.uniform(-2.0,2.0)
+            pos=(center[0]+direction[0]*distance+perpendicular[0]*lateral,
+                 center[1]+direction[1]*distance+perpendicular[1]*lateral)
+            try:
+                billboard(col,"RWB_LocLife_%03d"%life_count,item,slot,pos,.75)
+            except FileNotFoundError:
+                continue
+            life_count+=1
+
+    mottle_count=terrain_mottle(col,mats,rng)
+    grass(col,tuple(road_paths),mats,rng,count=1250)
+    stone_scatter(col,mats,rng,320)
+    camera_light(scene)
+
+    return scene,{
+        "schema":"squad-tactics.review-scene-loc/v1",
+        "variant":VARIANT,"seed":SEED,
+        "roads":len(spec["roads"]),
+        "buildings":[name for name,_,_ in spec["buildings"]],
+        "ruins":len(spec["ruins"]),
+        "fields":[name for name,_,_,_,_,_ in spec["fields"]],
+        "trees":len(accepted_trees),
+        "craters":len(spec["craters"]),
+        "understory":accepted_understory,
+        "life_props":life_count,
+        "fences":{"segments":len(fence_segments),"leaning_posts":leaning_posts,
+                  "mode":fence_mode},
+        "terrain":{"mottle_patches":mottle_count,"grass_clumps":1250,"stone_scatter":320},
+        "road_ps_vocabulary":road_ps_metrics,
+        "field_metrics":field_metrics,
+        "crater_metrics":crater_metrics,
+        "ruin_metrics":ruin_metrics,
+    }
+
+
 def main(argv=None):
     global SEED,VARIANT,SWAP_BUILDINGS
     argv=sys.argv[sys.argv.index("--")+1:] if argv is None and "--" in sys.argv else (argv or [])
@@ -2333,13 +2710,17 @@ def main(argv=None):
     parser.add_argument("--render",type=Path,default=DEFAULT_RENDER)
     parser.add_argument("--save-blend",type=Path,default=DEFAULT_BLEND)
     parser.add_argument("--seed",type=int,default=SEED)
-    parser.add_argument("--variant",choices=["v29","rot180"],default="v29")
+    parser.add_argument("--variant",choices=["v29","rot180"]+list(LOCATION_SPECS.keys()),
+                        default="v29")
     parser.add_argument("--swap-buildings",action="store_true")
     args=parser.parse_args(argv)
     SEED=args.seed
     VARIANT=args.variant
     SWAP_BUILDINGS=args.swap_buildings
-    scene,metrics=build()
+    if VARIANT in LOCATION_SPECS:
+        scene,metrics=build_location_scene(LOCATION_SPECS[VARIANT],seed_offset=SEED-41027)
+    else:
+        scene,metrics=build()
     render_path=args.render.resolve()
     blend_path=args.save_blend.resolve()
     render_path.parent.mkdir(parents=True,exist_ok=True)

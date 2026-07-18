@@ -34,10 +34,58 @@ window.RuralV29Map = {
    */
   VARIANTS: [
     { key: 'p1', texture: 'rural_v29',    file: 'asset/environment/maps/rural_v29.png',    rot180: false, ready: true },
-    { key: 'p2', texture: 'rural_v29_p2', file: 'asset/environment/maps/rural_v29_p2.png', rot180: true,  ready: true },
-    { key: 'p3', texture: 'rural_v29_p3', file: 'asset/environment/maps/rural_v29_p3.png', rot180: false, ready: true },
-    { key: 'p4', texture: 'rural_v29_p4', file: 'asset/environment/maps/rural_v29_p4.png', rot180: true,  ready: true },
+    // p2〜p4(回転/建物スワップ実験)はオーナー評価「場所が同じで意味薄い」により
+    // ランダムプールから除外。fixedVariant 指定でのみ選択可。
+    { key: 'p2', texture: 'rural_v29_p2', file: 'asset/environment/maps/rural_v29_p2.png', rot180: true,  ready: false },
+    { key: 'p3', texture: 'rural_v29_p3', file: 'asset/environment/maps/rural_v29_p3.png', rot180: false, ready: false },
+    { key: 'p4', texture: 'rural_v29_p4', file: 'asset/environment/maps/rural_v29_p4.png', rot180: true,  ready: false },
+    // 別ロケーション3種(2026-07-19): 道路網・建物・破壊度が異なる独立構図。
+    // table キーで _locationRows の専用地形テーブルを参照する。
+    { key: 'loc_crossroad',   texture: 'rural_loc_crossroad',   file: 'asset/environment/maps/rural_loc_crossroad.png',   rot180: false, ready: true, table: 'loc_crossroad' },
+    { key: 'loc_forest_farm', texture: 'rural_loc_forest_farm', file: 'asset/environment/maps/rural_loc_forest_farm.png', rot180: false, ready: true, table: 'loc_forest_farm' },
+    { key: 'loc_shelled',     texture: 'rural_loc_shelled',     file: 'asset/environment/maps/rural_loc_shelled.png',     rot180: false, ready: true, table: 'loc_shelled' },
   ],
+
+  /**
+   * 別ロケーションの地形テーブル(コンパクト行形式)。
+   * [r, 開始q, [左から右へのbase列]] — 盤面の行開始qは r7→7, r8→6, r9→6, r10→5, r11→5, r12→4。
+   * 目視検収済みレンダー(scratchpad注釈グリッド)に基づき監督官が確定。
+   */
+  _locationRows: {
+    loc_crossroad: [
+      [7, 7, ['FOREST', 'ROAD', 'GRASS', 'FIELD', 'FOREST']],
+      [8, 6, ['FOREST', 'GRASS', 'ROAD', 'BLDG', 'FIELD']],
+      [9, 6, ['GRASS', 'BLDG', 'ROAD', 'GRASS', 'FOREST']],
+      [10, 5, ['ROAD', 'ROAD', 'ROAD', 'ROAD', 'ROAD']],
+      [11, 5, ['GRASS', 'ROAD', 'GRASS', 'FIELD', 'FOREST']],
+      [12, 4, ['GRASS', 'GRASS', 'ROAD', 'GRASS', 'FIELD']],
+    ],
+    loc_forest_farm: [
+      [7, 7, ['ROAD', 'FIELD', 'GRASS', 'BLDG', 'FOREST']],
+      [8, 6, ['FOREST', 'ROAD', 'BLDG', 'GRASS', 'FOREST']],
+      [9, 6, ['FOREST', 'ROAD', 'GRASS', 'GRASS', 'FOREST']],
+      [10, 5, ['FOREST', 'ROAD', 'FOREST', 'FIELD', 'FIELD']],
+      [11, 5, ['GRASS', 'ROAD', 'FIELD', 'FIELD', 'FOREST']],
+      [12, 4, ['ROAD', 'ROAD', 'FOREST', 'GRASS', 'FOREST']],
+    ],
+    loc_shelled: [
+      [7, 7, ['GRASS', 'ROAD', 'GRASS', 'BLDG', 'FOREST']],
+      [8, 6, ['FOREST', 'GRASS', 'RUIN', 'GRASS', 'ROAD']],
+      [9, 6, ['FIELD', 'RUIN', 'ROAD', 'ROAD', 'GRASS']],
+      [10, 5, ['FIELD', 'FIELD', 'ROAD', 'RUIN', 'FOREST']],
+      [11, 5, ['ROAD', 'ROAD', 'GRASS', 'GRASS', 'FOREST']],
+      [12, 4, ['ROAD', 'GRASS', 'GRASS', 'GRASS', 'FIELD']],
+    ],
+  },
+
+  /** コンパクト行形式 → {q,r,base} 配列へ展開 */
+  _rowsToTable(rows) {
+    const out = [];
+    for (const [r, q0, bases] of rows) {
+      bases.forEach((base, i) => out.push({ q: q0 + i, r, base }));
+    }
+    return out;
+  },
 
   /**
    * バリアント選択制御
@@ -168,6 +216,12 @@ window.RuralV29Map = {
       return this._terrain_table_base;
     }
 
+    // 別ロケーションは専用テーブル(rot180と排他)
+    if (this.lastVariant.table) {
+      const rows = this._locationRows[this.lastVariant.table];
+      if (rows) return this._rowsToTable(rows);
+      console.error(`location table '${this.lastVariant.table}' not found, using base table`);
+    }
     let table = [...this._terrain_table_base];
     if (this.lastVariant.rot180) {
       table = this._rotateTable180(table);

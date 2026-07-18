@@ -270,11 +270,48 @@ function testRandomVariantSelection() {
   console.log('✓ testRandomVariantSelection passed');
 }
 
+// 別ロケーション地形テーブルの検証
+function testLocationTables() {
+  // 盤面の正当なセル集合 = P1基準テーブルの座標集合
+  const boardCoords = new Set();
+  for (const e of RuralV29Map._terrain_table_base) boardCoords.add(`${e.q},${e.r}`);
+
+  for (const key of ['loc_crossroad', 'loc_forest_farm', 'loc_shelled']) {
+    RuralV29Map.fixedVariant = key;
+    const game = { map: null };
+    RuralV29Map.generate(game);
+    assert.strictEqual(RuralV29Map.lastVariant.key, key, `lastVariant should be ${key}`);
+
+    let nonVoid = 0, roads = 0, blocked = 0, playerZone = 0, enemyZone = 0;
+    for (let q = 0; q < MAP_W; q++) {
+      for (let r = 0; r < MAP_H; r++) {
+        const t = game.map[q][r];
+        if (t.id === -1) continue;
+        nonVoid++;
+        assert.ok(boardCoords.has(`${q},${r}`),
+          `${key}: cell (${q},${r}) must be within the 30hex board footprint`);
+        if (t.id === 3) roads++;
+        if (t.cost >= 99) blocked++;
+        if (t.cost < 99 && r >= 10) playerZone++;
+        if (t.cost < 99 && r < 10) enemyZone++;
+      }
+    }
+    assert.strictEqual(nonVoid, 30, `${key}: should have exactly 30 cells, got ${nonVoid}`);
+    assert.ok(roads >= 3, `${key}: should have at least 3 road hexes`);
+    assert.ok(blocked >= 1 && blocked <= 4, `${key}: blocked(BLDG) hexes should be 1..4, got ${blocked}`);
+    assert.ok(playerZone >= 5, `${key}: player spawn zone (r>=10) needs walkable hexes`);
+    assert.ok(enemyZone >= 5, `${key}: enemy spawn zone (r<10) needs walkable hexes`);
+  }
+  RuralV29Map.fixedVariant = null;
+  console.log('✓ testLocationTables passed');
+}
+
 // メインテスト実行
 testGenerateP1Fixed();
 testRot180Mapping();
 testRot180SpecificCell();
 testFixedVariantP2();
 testRandomVariantSelection();
+testLocationTables();
 
 console.log('✓ All tests passed');
