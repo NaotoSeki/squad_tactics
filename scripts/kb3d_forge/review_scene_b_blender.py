@@ -20,12 +20,53 @@ DEFAULT_BLEND = ROOT / "scratch/kb3d_review/round2_review_candidate_b_blender.bl
 SCENE = "REVIEW_ROUND1_RENDER"
 GROUND_Z = 0.08
 SEED = 41027
+VARIANT = "v29"
+SWAP_BUILDINGS = False
 BOARD_R = 7.2
 BOARD_CENTERS = tuple(
     (6.8 + math.sqrt(3)*BOARD_R*(q + (0.5 if r%2 else 0.0)),
      8.0 + 1.5*BOARD_R*r)
     for q in range(5) for r in range(6)
 )
+
+# 180deg self-mapping of the 5x6 offset-hex board (BOARD_R=7.2).
+ROT_A = 13.6 + math.sqrt(3) * BOARD_R * 4.5   # ~= 69.7185
+ROT_B = 70.0                                   # y_r = 8 + 10.8r, r=0..5
+
+
+def T(point):
+    """Layout coordinate transform selected by --variant.
+
+    v29 (default) is the identity: the original tuple is returned
+    unchanged (no arithmetic at all), so the default render stays
+    bit-identical to the pre-variant output. rot180 rotates a point
+    180deg about the board center; only the x/y pair is touched.
+    """
+    if VARIANT != "rot180":
+        return point
+    return (ROT_A - point[0], ROT_B - point[1])
+
+
+def T3(point):
+    """Like T() but preserves a trailing z (or any 3rd component)."""
+    x, y = T((point[0], point[1]))
+    return (x, y, point[2])
+
+
+def T_angle(angle):
+    """Building/bearing angle transform paired with T(); v29 is the identity."""
+    return angle if VARIANT != "rot180" else angle + 180
+
+
+def T_bounds(x0, y0, x1, y1):
+    """Transform an axis-aligned rect's two corners, then re-derive min/max.
+
+    Used for hardcoded exclusion boxes that must stay axis-aligned under a
+    180deg board rotation. v29 returns the bounds unchanged.
+    """
+    p0, p1 = T((x0, y0)), T((x1, y1))
+    return (min(p0[0], p1[0]), max(p0[0], p1[0]),
+            min(p0[1], p1[1]), max(p0[1], p1[1]))
 
 
 def inside_board(point,margin=0.0):
@@ -578,29 +619,29 @@ def fence_effective_clearance(segment,path,widths,safety=.135):
 
 def damaged_ruin_fences(col,mats):
     """Localized blast/structural damage around the cottage ruin only."""
-    survivors=(
+    survivors=tuple((T(a),T(b)) for a,b in (
         ((12.00,35.50),(14.55,35.39)),
         ((21.85,35.10),(24.00,35.00)),
         ((24.00,35.00),(24.22,37.35)),
         ((11.50,38.50),(11.50,40.30)),
-        ((11.50,44.80),(11.50,47.00)))
+        ((11.50,44.80),(11.50,47.00))))
     survivor_rng=random.Random(SEED+5610)
     survivor_obj=fences(col,survivors,mats["wood"],survivor_rng)
     survivor_obj.name="RWB_RuinFenceSurvivors"
 
-    leaning=(
+    leaning=tuple((T3(a),T3(b)) for a,b in (
         ((14.65,35.40,.08),(15.20,35.78,.94)),
         ((20.95,35.16,.08),(20.38,35.74,.78)),
         ((24.25,37.55,.08),(23.62,38.10,.90)),
         ((11.50,40.48,.08),(12.16,40.92,.76)),
-        ((11.50,44.58,.08),(12.02,44.06,.70)))
-    fallen=(
+        ((11.50,44.58,.08),(12.02,44.06,.70))))
+    fallen=tuple((T3(a),T3(b)) for a,b in (
         ((14.72,35.34,.12),(18.08,34.86,.17)),
         ((18.35,35.02,.11),(21.18,35.72,.16)),
         ((23.94,37.52,.13),(22.30,40.16,.19)),
         ((11.58,40.36,.12),(13.02,43.34,.18)),
         ((11.42,44.38,.12),(13.48,43.62,.16)),
-        ((16.10,35.22,.10),(16.72,36.46,.15)))
+        ((16.10,35.22,.10),(16.72,36.46,.15))))
     def raised(path):
         return tuple((x,y,GROUND_Z+z) for x,y,z in path)
     for index,path in enumerate(leaning):
@@ -665,12 +706,14 @@ def field(col, name, center, size, bearing, count, mats, rng):
 def grass(col, roads, mats, rng, count=720):
     verts, faces, indices, fv, ff = [], [], [], [], []
     accepted = attempts = 0
+    excl1 = T_bounds(32,4,68,40)
+    excl2 = T_bounds(48,40,66,55)
     while accepted < count and attempts < count*7:
         attempts += 1
         x, y = rng.uniform(3,67), rng.uniform(.5,75)
         if (not inside_board((x,y),.35) or path_network_distance((x,y),roads) < 3.2
-                or (32<x<68 and 4<y<40)
-                or (48<x<66 and 40<y<55)):
+                or (excl1[0]<x<excl1[1] and excl1[2]<y<excl1[3])
+                or (excl2[0]<x<excl2[1] and excl2[2]<y<excl2[3])):
             continue
         h, w, angle = rng.uniform(.14,.39), rng.uniform(.07,.18), rng.random()*math.tau
         for cross in (0,math.pi/2):
@@ -1461,17 +1504,32 @@ def grade_target_building_materials():
             "slot_replacements":len(replacements)}
 
 
-def target_assets(scene):
+def build_building_layout():
+    """Resolve farmstead/barn/cottage (center, angle) after --swap-buildings
+    and --variant. v29 without swap reproduces the original literals exactly."""
+    farmstead_center,farmstead_angle=(53,55),-7
+    barn_center,barn_angle=(39,54),8
+    cottage_center,cottage_angle=(18,41),-12
+    if SWAP_BUILDINGS:
+        farmstead_center,barn_center=(39,54),(53,55)
+    return {
+        "farmstead":(T(farmstead_center),T_angle(farmstead_angle)),
+        "barn":(T(barn_center),T_angle(barn_angle)),
+        "cottage":(T(cottage_center),T_angle(cottage_angle)),
+    }
+
+
+def target_assets(scene,building_layout):
     camp=bpy.data.collections.get("ROUND1_CAMP")
     if camp:
         for obj in camp.objects:
             obj.hide_render=True
     placements=(("ROUND1_FARMSTEAD_CLEAN","RW_ASSET_FARMSTEAD_CURATED_CLEAN",
-                 (53,55),-7,"farmstead"),
+                 *building_layout["farmstead"],"farmstead"),
                 ("ROUND1_BARN","RW_ASSET_BARN_CURATED",
-                 (39,54),8,"barn"),
+                 *building_layout["barn"],"barn"),
                 ("ROUND1_COTTAGE","RW_ASSET_COTTAGE_BEAUTY",
-                 (18,41),-12,"cottage"))
+                 *building_layout["cottage"],"cottage"))
     result=[]
     for collection_name,root_name,center,angle,label in placements:
         collection=bpy.data.collections[collection_name]
@@ -1484,10 +1542,13 @@ def target_assets(scene):
                     obj.hide_render=True
         result.append((label,center))
     return result
-def target_soft_contacts(col,mats,rng):
-    specs=(("RWB_ContactRuin",(18,41),(9.5,7.0),-12),
-           ("RWB_ContactBarn",(39,54),(10.0,8.0),8),
-           ("RWB_ContactFarm",(53,55),(16.0,11.5),-7))
+def target_soft_contacts(col,mats,rng,building_layout):
+    cottage_center,cottage_angle=building_layout["cottage"]
+    barn_center,barn_angle=building_layout["barn"]
+    farmstead_center,farmstead_angle=building_layout["farmstead"]
+    specs=(("RWB_ContactRuin",cottage_center,(9.5,7.0),cottage_angle),
+           ("RWB_ContactBarn",barn_center,(10.0,8.0),barn_angle),
+           ("RWB_ContactFarm",farmstead_center,(16.0,11.5),farmstead_angle))
     for name,center,size,bearing in specs:
         rotated_patch(col,name,center,size,bearing,mats["contact"],rng,GROUND_Z+.041)
     return len(specs)
@@ -1752,14 +1813,14 @@ def add_ruined_cottage(col,center,mats,rng,bearing=-12):
 
 
 def target_vocabulary(col,rng,road,buildings,mats):
-    tree_positions=[(6,10),(9,15),(7,58),(14,64),(24,65),(35,66),
+    tree_positions=[T(p) for p in [(6,10),(9,15),(7,58),(14,64),(24,65),(35,66),
                     (50,65),(62,63),(64,56),(64,18),(60,9),(50,7),
                     (33,7),(19,8),(10,28),(24,59),(62,38),(29,63),
                     (12,20),(16,24),(5,48),(20,62),(43,64),(58,60),(18,7),(27,7),
                     (7,12),(11,18),(7,25),(8,53),(12,57),(18,60),(27,62),
                     (38,64),(47,63),(57,61),(62,53),(63,47),(58,11),(31,9),
                     (5,17),(8,22),(6,42),(10,50),(16,58),(22,63),(32,64),(41,65),
-                    (52,63),(60,58),(63,50),(62,44),(61,14),(54,10),(44,8),(25,8)]
+                    (52,63),(60,58),(63,50),(62,44),(61,14),(54,10),(44,8),(25,8)]]
     species=["tree_oak","tree_linden","tree_willow","tree_poplar",
              "tree_robinia","tree_fir","tree_spruce","tree_blossom"]
     scales=[.56,.66,.52,.50,.60,.74,.76,.70]
@@ -1772,12 +1833,14 @@ def target_vocabulary(col,rng,road,buildings,mats):
     shrubs=[("bush_big",2),("bush_medium",0),("bush_medium",1),
             ("bush_small",0),("flower_phlox",0),("flower_primula",0),("fern",2)]
     accepted=attempts=0
+    excl1=T_bounds(32,4,68,40)
+    excl2=T_bounds(48,40,66,55)
     while accepted<92 and attempts<1600:
         attempts+=1
         pos=(rng.uniform(3,67),rng.uniform(.5,75))
         if (not inside_board(pos,.65) or path_network_distance(pos,road)<2.0
-                or (32<pos[0]<68 and 4<pos[1]<40)
-                or (48<pos[0]<66 and 40<pos[1]<55)):
+                or (excl1[0]<pos[0]<excl1[1] and excl1[2]<pos[1]<excl1[3])
+                or (excl2[0]<pos[0]<excl2[1] and excl2[2]<pos[1]<excl2[3])):
             continue
         if any(math.hypot(pos[0]-center[0],pos[1]-center[1])<4.6
                for _,center in buildings):
@@ -1785,10 +1848,11 @@ def target_vocabulary(col,rng,road,buildings,mats):
         item,slot=shrubs[accepted%len(shrubs)]
         billboard(col,"RWB_LowPS_%03d"%accepted,item,slot,pos,rng.uniform(.42,.68))
         accepted+=1
-    life=[("washing",2,(49,51)),("well",2,(56,49)),("woodpile",2,(44,55)),
+    life=[(item,slot,T(pos)) for item,slot,pos in [
+          ("washing",2,(49,51)),("well",2,(56,49)),("woodpile",2,(44,55)),
           ("cart",2,(47,58)),("compose_farm_a",1,(57,57)),
           ("compose_farm_b",2,(36,50)),("barrel",2,(21,39)),
-          ("bench",2,(18,45)),("barrel",1,(50,53)),("woodpile",1,(41,57))]
+          ("bench",2,(18,45)),("barrel",1,(50,53)),("woodpile",1,(41,57))]]
     for i,(item,slot,pos) in enumerate(life):
         try:
             billboard(col,"RWB_Life_%02d"%i,item,slot,pos,.68)
@@ -2126,8 +2190,8 @@ def build():
     source_ground.hide_render=True
     ground=hex_board_ground(col,mats)
     rng=random.Random(SEED)
-    controls=[(6,2),(9,8),(20,13),(32,22),(36,33),(29,43),
-              (18,51),(21,61),(35,66),(51,68)]
+    controls=[T(p) for p in [(6,2),(9,8),(20,13),(32,22),(36,33),(29,43),
+              (18,51),(21,61),(35,66),(51,68)]]
     road=catmull(controls,9)
     ns=normals(road)
     for i in range(1,len(road)-1):
@@ -2139,8 +2203,10 @@ def build():
     cores=[1.30+.14*math.sin(i*.51)+.06*math.sin(i*1.73) for i in range(len(road))]
     strip(col,"RWB_RoadShoulder",road,shoulders,mats["shoulder"],GROUND_Z+.055)
     strip(col,"RWB_RoadCore",road,cores,mats["road"],GROUND_Z+.095)
-    junction=min(road,key=lambda point:math.hypot(point[0]-29,point[1]-43))
-    branch=catmull([junction,(37,45.5),(46,48.5),(56,49.5)],8)
+    _junction_target=T((29,43))
+    junction=min(road,key=lambda point:math.hypot(
+        point[0]-_junction_target[0],point[1]-_junction_target[1]))
+    branch=catmull([junction,T((37,45.5)),T((46,48.5)),T((56,49.5))],8)
     branch_shoulders=[1.38+.14*math.sin(i*.61) for i in range(len(branch))]
     branch_cores=[.84+.09*math.sin(i*.47) for i in range(len(branch))]
     strip(col,"RWB_RoadBranchShoulder",branch,branch_shoulders,
@@ -2161,17 +2227,23 @@ def build():
                road[i][1]+ns[i][1]*shoulders[i]*side),
               rng.uniform(.7,1.5),rng.uniform(.30,.72),
               mats["shoulder"],rng,GROUND_Z+.1,12)
-    buildings=target_assets(scene)
+    building_layout=build_building_layout()
+    buildings=target_assets(scene,building_layout)
     building_finish_metrics=grade_target_building_materials()
     interface_metrics=target_interfaces(col,buildings,road+branch,mats,rng)
-    ruin_metrics=add_ruined_cottage(col,(18,41),mats,rng)
-    contact_count=target_soft_contacts(col,mats,rng)
-    field_hole=((50.5,20.5,3.35,2.40),)
-    north_field=target_field(col,"RWB_MainFieldNorth",(51.2,26.2),(25.5,10.5),13,7,
+    cottage_center,cottage_angle=building_layout["cottage"]
+    ruin_metrics=add_ruined_cottage(col,cottage_center,mats,rng,bearing=cottage_angle)
+    contact_count=target_soft_contacts(col,mats,rng,building_layout)
+    _field_hole_center=T((50.5,20.5))
+    field_hole=((_field_hole_center[0],_field_hole_center[1],3.35,2.40),)
+    north_field=target_field(col,"RWB_MainFieldNorth",T((51.2,26.2)),(25.5,10.5),13,7,
                              mats,rng,field_hole)
-    south_field=target_field(col,"RWB_MainFieldSouth",(51.3,13.8),(23.5,10.5),-5,7,
+    south_field=target_field(col,"RWB_MainFieldSouth",T((51.3,13.8)),(23.5,10.5),-5,7,
                              mats,rng,field_hole)
-    garden_field=target_field(col,"RWB_Garden",(57,47),(15,11),-8,8,mats,rng)
+    garden_field=target_field(col,"RWB_Garden",T((57,47)),(15,11),-8,8,mats,rng)
+    # v26_fence_segments feeds consume_v26_fence_random_stream() only, to keep
+    # the shared rng stream byte-for-byte compatible with the v26 fence pass.
+    # It is NOT real geometry and must NEVER be run through T()/T_angle().
     v26_fence_segments=(
         ((39.5,5.5),(52.5,8.4)),((54,8.8),(66.6,11.5)),
         ((66.6,11.5),(63.6,24.5)),((63.2,26),(60.5,38.7)),
@@ -2184,7 +2256,7 @@ def build():
         ((60.5,62.5),(65,55)),((31.5,48),(42.5,47)),
         ((12,35.5),(24,35)),((24,35),(25,46)),
         ((11.5,47),(11.5,38.5)))
-    fence_segments=(
+    fence_segments=tuple((T(a),T(b)) for a,b in (
         ((38.50,9.83),(52.50,8.61)),((54.00,8.48),(64.50,7.56)),
         ((64.50,7.56),(65.59,20.02)),((63.2,26),(60.5,38.7)),
         ((60.5,38.7),(47.5,35.7)),((46.00,35.40),(39.20,33.85)),
@@ -2194,7 +2266,7 @@ def build():
         ((56.4,52.7),(50.3,53.5)),
         ((50.30,53.50),(50.00,51.30)),((49.35,46.60),(48.80,42.60)),
         ((44.50,50.60),(44.50,60.00)),((44.5,60),(60.5,62.5)),
-        ((60.5,62.5),(65,55)),((31.50,48.00),(36.30,47.56)))
+        ((60.5,62.5),(65,55)),((31.50,48.00),(36.30,47.56))))
     fence_rng=random.Random()
     fence_rng.setstate(rng.getstate())
     fences(col,fence_segments,mats["wood"],fence_rng)
@@ -2228,7 +2300,7 @@ def build():
     vocabulary=target_vocabulary(col,rng,(road,branch),buildings,mats)
     vocabulary["pastoral_cluster_sprites"]=pastoral_clusters(col,rng)
     road_crater_metrics=crater(col,"RWB_RoadCrater",road[43],(2.50,1.80),mats,rng,32)
-    field_crater_metrics=crater(col,"RWB_FieldCrater",(50.5,20.5),(2.85,2.05),mats,rng,-18)
+    field_crater_metrics=crater(col,"RWB_FieldCrater",_field_hole_center,(2.85,2.05),mats,rng,-18)
     camera_light(scene)
     return scene,{
         "schema":"squad-tactics.review-scene-b-blender/v3",
@@ -2255,11 +2327,18 @@ def build():
 
 
 def main(argv=None):
+    global SEED,VARIANT,SWAP_BUILDINGS
     argv=sys.argv[sys.argv.index("--")+1:] if argv is None and "--" in sys.argv else (argv or [])
     parser=argparse.ArgumentParser()
     parser.add_argument("--render",type=Path,default=DEFAULT_RENDER)
     parser.add_argument("--save-blend",type=Path,default=DEFAULT_BLEND)
+    parser.add_argument("--seed",type=int,default=SEED)
+    parser.add_argument("--variant",choices=["v29","rot180"],default="v29")
+    parser.add_argument("--swap-buildings",action="store_true")
     args=parser.parse_args(argv)
+    SEED=args.seed
+    VARIANT=args.variant
+    SWAP_BUILDINGS=args.swap_buildings
     scene,metrics=build()
     render_path=args.render.resolve()
     blend_path=args.save_blend.resolve()

@@ -4,6 +4,9 @@
  * RuralV29Map が生成したマップを背景にして、
  * Blender-rendered 30hex PNG (1600px/image, isometric projection 55°) を配置する。
  *
+ * バリアント対応: RuralV29Map.lastVariant から textureKey・textureFile を動的に取得
+ * テクスチャロード失敗時は console.warn で警告し、背景なしで続行する
+ *
  * 計算:
  *   IMG_PPM = 1600 / 72 px/m (レンダー密度)
  *   SIN55 = sin(55°), COS55 = cos(55°)
@@ -15,6 +18,16 @@
  */
 window.TerrainRenderRuralV29 = {
   buildMap(scene, hexGroup, map) {
+    // RuralV29Map から選択されたバリアント情報を取得
+    if (!window.RuralV29Map || !window.RuralV29Map.lastVariant) {
+      console.warn('RuralV29Map.lastVariant not set, skipping terrain render');
+      return;
+    }
+
+    const variant = window.RuralV29Map.lastVariant;
+    const textureKey = variant.texture;
+    const textureFile = variant.file;
+
     const IMG_PPM = 1600 / 72;                     // レンダー密度: px/m
     const SIN55 = Math.sin(55 * Math.PI / 180);
     const COS55 = Math.cos(55 * Math.PI / 180);
@@ -32,23 +45,36 @@ window.TerrainRenderRuralV29 = {
     const topLeftX = anchor.x - imgX * sx;
     const topLeftY = anchor.y - imgY * sy;
 
-    // テクスチャ 'rural_v29' がまだロードされていなければ実行時ロード
-    if (!scene.textures.exists('rural_v29')) {
+    // 指定されたテクスチャキーがロード済みか確認
+    if (!scene.textures.exists(textureKey)) {
       const loadAndDraw = () => {
-        if (!scene.textures.exists('rural_v29')) return; // キャンセルされた場合
-        this._drawImage(scene, hexGroup, topLeftX, topLeftY, sx, sy);
+        if (!scene.textures.exists(textureKey)) {
+          console.warn(`failed to load texture '${textureKey}' from ${textureFile}`);
+          return; // ロード失敗、背景なしで続行
+        }
+        this._drawImage(scene, hexGroup, topLeftX, topLeftY, sx, sy, textureKey);
       };
-      scene.load.image('rural_v29', 'asset/environment/maps/rural_v29.png');
+      scene.load.image(textureKey, textureFile);
       scene.load.once('complete', loadAndDraw);
       scene.load.start();
     } else {
       // 既にロード済み
-      this._drawImage(scene, hexGroup, topLeftX, topLeftY, sx, sy);
+      this._drawImage(scene, hexGroup, topLeftX, topLeftY, sx, sy, textureKey);
     }
   },
 
-  _drawImage(scene, hexGroup, topLeftX, topLeftY, sx, sy) {
-    const img = scene.add.image(topLeftX, topLeftY, 'rural_v29')
+  /**
+   * 背景画像を描画
+   * @param {Phaser.Scene} scene
+   * @param {Phaser.Physics.Arcade.Group} hexGroup
+   * @param {number} topLeftX - 左上隅のゲーム座標X
+   * @param {number} topLeftY - 左上隅のゲーム座標Y
+   * @param {number} sx - X軸スケール
+   * @param {number} sy - Y軸スケール
+   * @param {string} textureKey - Phaserテクスチャキー
+   */
+  _drawImage(scene, hexGroup, topLeftX, topLeftY, sx, sy, textureKey) {
+    const img = scene.add.image(topLeftX, topLeftY, textureKey)
       .setOrigin(0, 0)
       .setScale(sx, sy)
       .setDepth(-10000);
