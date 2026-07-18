@@ -39,6 +39,33 @@
       "recipe": "scratch/kb3d_review/round1_barn_curated.json",
       "scale": 1.0,
       "rotation_deg": 0
+    },
+    {
+      "id": "residential_a_curated",
+      "role": "settlement",
+      "anchor_cell": "cell_r00_c00",
+      "offset_m": [-4.0, 4.0],
+      "recipe": "scratch/kb3d_review/round2_residential_a_curated.json",
+      "scale": 1.0,
+      "rotation_deg": 0
+    },
+    {
+      "id": "residential_b_curated",
+      "role": "settlement",
+      "anchor_cell": "cell_r01_c00",
+      "offset_m": [-4.0, -3.0],
+      "recipe": "scratch/kb3d_review/round2_residential_b_curated.json",
+      "scale": 1.0,
+      "rotation_deg": 0
+    },
+    {
+      "id": "church_broken_curated",
+      "role": "settlement",
+      "anchor_cell": "cell_r02_c01",
+      "offset_m": [3.0, 3.0],
+      "recipe": "scratch/kb3d_review/round2_church_broken_curated.json",
+      "scale": 1.0,
+      "rotation_deg": 0
     }
   ]
 }

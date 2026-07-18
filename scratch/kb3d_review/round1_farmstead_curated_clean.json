@@ -1,0 +1,27 @@
+{
+  "seed": 4305,
+  "name": "round1_farmstead_curated_clean",
+  "template": "BldgLgFarmhouse_A",
+  "core_keep": [
+    "KB3D_WWT_BldgLgFarmhouse_A_BuildingA",
+    "KB3D_WWT_BldgLgFarmhouse_A_BuildingB",
+    "KB3D_WWT_BldgLgFarmhouse_A_WoodenStructure"
+  ],
+  "core_swaps": {},
+  "openings": [
+    {"anchor_id": "BldgLgFarmhouse_A_op_00", "op": "remove"},
+    {"anchor_id": "BldgLgFarmhouse_A_op_01", "op": "keep"},
+    {"anchor_id": "BldgLgFarmhouse_A_op_02", "op": "keep"},
+    {"anchor_id": "BldgLgFarmhouse_A_op_03", "op": "keep"}
+  ],
+  "decals": {"density": 0.0, "sets": ["grunge"]},
+  "debris": {"density": 0.0, "import_extra": 0},
+  "props": {"density": 0.0, "theme": "domestic"},
+  "struct": {"keep": false},
+  "quality": {"render_displacement": true},
+  "output": {
+    "collection": "ROUND1_FARMSTEAD_CLEAN",
+    "save_blend": "",
+    "thumb": ""
+  }
+}

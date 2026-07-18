@@ -1,0 +1,169 @@
+{
+  "seed": 5001,
+  "name": "ROUND2_residential_a_curated",
+  "template": "BldgMdResidential_A",
+  "core_swaps": {},
+  "openings": [
+    {
+      "anchor_id": "BldgMdResidential_A_op_00",
+      "op": "keep"
+    },
+    {
+      "anchor_id": "BldgMdResidential_A_op_01",
+      "op": "keep"
+    },
+    {
+      "anchor_id": "BldgMdResidential_A_op_02",
+      "op": "keep"
+    },
+    {
+      "anchor_id": "BldgMdResidential_A_op_03",
+      "op": "keep"
+    },
+    {
+      "anchor_id": "BldgMdResidential_A_op_04",
+      "op": "keep"
+    },
+    {
+      "anchor_id": "BldgMdResidential_A_op_05",
+      "op": "keep"
+    },
+    {
+      "anchor_id": "BldgMdResidential_A_op_06",
+      "op": "keep"
+    },
+    {
+      "anchor_id": "BldgMdResidential_A_op_07",
+      "op": "keep"
+    },
+    {
+      "anchor_id": "BldgMdResidential_A_op_08",
+      "op": "keep"
+    },
+    {
+      "anchor_id": "BldgMdResidential_A_op_09",
+      "op": "keep"
+    },
+    {
+      "anchor_id": "BldgMdResidential_A_op_10",
+      "op": "keep"
+    },
+    {
+      "anchor_id": "BldgMdResidential_A_op_11",
+      "op": "keep"
+    },
+    {
+      "anchor_id": "BldgMdResidential_A_op_12",
+      "op": "keep"
+    },
+    {
+      "anchor_id": "BldgMdResidential_A_op_13",
+      "op": "keep"
+    },
+    {
+      "anchor_id": "BldgMdResidential_A_op_14",
+      "op": "keep"
+    },
+    {
+      "anchor_id": "BldgMdResidential_A_op_15",
+      "op": "keep"
+    },
+    {
+      "anchor_id": "BldgMdResidential_A_op_16",
+      "op": "keep"
+    },
+    {
+      "anchor_id": "BldgMdResidential_A_op_17",
+      "op": "keep"
+    },
+    {
+      "anchor_id": "BldgMdResidential_A_op_18",
+      "op": "keep"
+    },
+    {
+      "anchor_id": "BldgMdResidential_A_op_19",
+      "op": "keep"
+    },
+    {
+      "anchor_id": "BldgMdResidential_A_op_20",
+      "op": "keep"
+    },
+    {
+      "anchor_id": "BldgMdResidential_A_op_21",
+      "op": "keep"
+    },
+    {
+      "anchor_id": "BldgMdResidential_A_op_22",
+      "op": "keep"
+    },
+    {
+      "anchor_id": "BldgMdResidential_A_op_23",
+      "op": "keep"
+    },
+    {
+      "anchor_id": "BldgMdResidential_A_op_24",
+      "op": "keep"
+    },
+    {
+      "anchor_id": "BldgMdResidential_A_op_25",
+      "op": "keep"
+    },
+    {
+      "anchor_id": "BldgMdResidential_A_op_26",
+      "op": "keep"
+    },
+    {
+      "anchor_id": "BldgMdResidential_A_op_27",
+      "op": "keep"
+    },
+    {
+      "anchor_id": "BldgMdResidential_A_op_28",
+      "op": "keep"
+    },
+    {
+      "anchor_id": "BldgMdResidential_A_op_29",
+      "op": "keep"
+    },
+    {
+      "anchor_id": "BldgMdResidential_A_op_30",
+      "op": "keep"
+    },
+    {
+      "anchor_id": "BldgMdResidential_A_op_31",
+      "op": "keep"
+    },
+    {
+      "anchor_id": "BldgMdResidential_A_op_32",
+      "op": "keep"
+    },
+    {
+      "anchor_id": "BldgMdResidential_A_op_33",
+      "op": "keep"
+    }
+  ],
+  "decals": {
+    "density": 0.0,
+    "sets": [
+      "grunge"
+    ]
+  },
+  "debris": {
+    "density": 0.0,
+    "import_extra": 0
+  },
+  "props": {
+    "density": 0.0,
+    "theme": "domestic"
+  },
+  "struct": {
+    "keep": false
+  },
+  "quality": {
+    "render_displacement": true
+  },
+  "output": {
+    "collection": "ROUND2_RESIDENTIAL_A",
+    "save_blend": "",
+    "thumb": "C:\\Projects\\squad_tactics\\scratch\\kb3d_review\\round2_residential_a_curated.png"
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "seed": 4302,
+  "name": "round1_cottage_beauty",
+  "template": "BldgSmHideout_A",
+  "core_swaps": {},
+  "openings": [
+    {"anchor_id": "BldgSmHideout_A_op_00", "op": "keep"},
+    {"anchor_id": "BldgSmHideout_A_op_01", "op": "keep"}
+  ],
+  "decals": {"density": 0.22, "sets": ["grunge"]},
+  "debris": {"density": 0.05, "import_extra": 0},
+  "props": {"density": 0.62, "theme": "domestic"},
+  "struct": {"keep": true},
+  "quality": {"render_displacement": true},
+  "output": {
+    "collection": "ROUND1_COTTAGE",
+    "save_blend": "",
+    "thumb": ""
+  }
+}

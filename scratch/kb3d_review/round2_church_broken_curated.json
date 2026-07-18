@@ -1,0 +1,51 @@
+{
+  "seed": 5003,
+  "name": "ROUND2_church_broken_curated",
+  "template": "BldgLgBrokenChurch_A",
+  "core_swaps": {},
+  "openings": [
+    {
+      "anchor_id": "BldgLgBrokenChurch_A_op_00",
+      "op": "keep"
+    },
+    {
+      "anchor_id": "BldgLgBrokenChurch_A_op_01",
+      "op": "keep"
+    },
+    {
+      "anchor_id": "BldgLgBrokenChurch_A_op_02",
+      "op": "keep"
+    },
+    {
+      "anchor_id": "BldgLgBrokenChurch_A_op_03",
+      "op": "keep"
+    }
+  ],
+  "decals": {
+    "density": 0.35,
+    "sets": [
+      "bullet",
+      "crack",
+      "grunge"
+    ]
+  },
+  "debris": {
+    "density": 0.15,
+    "import_extra": 0
+  },
+  "props": {
+    "density": 0.2,
+    "theme": "church"
+  },
+  "struct": {
+    "keep": true
+  },
+  "quality": {
+    "render_displacement": true
+  },
+  "output": {
+    "collection": "ROUND2_CHURCH_BROKEN",
+    "save_blend": "",
+    "thumb": "C:\\Projects\\squad_tactics\\scratch\\kb3d_review\\round2_church_broken_curated.png"
+  }
+}

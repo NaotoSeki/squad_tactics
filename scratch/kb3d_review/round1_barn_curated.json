@@ -1,0 +1,21 @@
+{
+  "seed": 4304,
+  "name": "round1_barn_curated",
+  "template": "BldgMdHideout_A",
+  "core_keep": ["KB3D_WWT_BldgMdHideout_A_Building"],
+  "core_swaps": {},
+  "openings": [
+    {"anchor_id": "BldgMdHideout_A_op_00", "op": "keep"},
+    {"anchor_id": "BldgMdHideout_A_op_01", "op": "keep"}
+  ],
+  "decals": {"density": 0.2, "sets": ["grunge"]},
+  "debris": {"density": 0.04, "import_extra": 0},
+  "props": {"density": 0.08, "theme": "domestic"},
+  "struct": {"keep": false},
+  "quality": {"render_displacement": true},
+  "output": {
+    "collection": "ROUND1_BARN",
+    "save_blend": "",
+    "thumb": ""
+  }
+}

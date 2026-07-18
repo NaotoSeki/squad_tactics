@@ -1,0 +1,17 @@
+{
+  "seed": 4300,
+  "name": "round1_camp_beauty",
+  "template": "BldgSmCamp_A",
+  "core_swaps": {},
+  "openings": [
+    {"anchor_id": "BldgSmCamp_A_op_00", "op": "keep"},
+    {"anchor_id": "BldgSmCamp_A_op_01", "op": "keep"},
+    {"anchor_id": "BldgSmCamp_A_op_02", "op": "keep"}
+  ],
+  "decals": {"density": 0.28, "sets": ["grunge"]},
+  "debris": {"density": 0.12, "import_extra": 0},
+  "props": {"density": 0.72, "theme": "military"},
+  "struct": {"keep": true},
+  "quality": {"render_displacement": true},
+  "output": {"collection": "ROUND1_CAMP", "save_blend": "", "thumb": ""}
+}

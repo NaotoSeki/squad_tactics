@@ -1,0 +1,77 @@
+{
+  "seed": 5002,
+  "name": "ROUND2_residential_b_curated",
+  "template": "BldgMdResidential_C",
+  "core_swaps": {},
+  "openings": [
+    {
+      "anchor_id": "BldgMdResidential_C_op_00",
+      "op": "keep"
+    },
+    {
+      "anchor_id": "BldgMdResidential_C_op_01",
+      "op": "keep"
+    },
+    {
+      "anchor_id": "BldgMdResidential_C_op_02",
+      "op": "keep"
+    },
+    {
+      "anchor_id": "BldgMdResidential_C_op_03",
+      "op": "keep"
+    },
+    {
+      "anchor_id": "BldgMdResidential_C_op_04",
+      "op": "keep"
+    },
+    {
+      "anchor_id": "BldgMdResidential_C_op_05",
+      "op": "keep"
+    },
+    {
+      "anchor_id": "BldgMdResidential_C_op_06",
+      "op": "keep"
+    },
+    {
+      "anchor_id": "BldgMdResidential_C_op_07",
+      "op": "keep"
+    },
+    {
+      "anchor_id": "BldgMdResidential_C_op_08",
+      "op": "keep"
+    },
+    {
+      "anchor_id": "BldgMdResidential_C_op_09",
+      "op": "keep"
+    },
+    {
+      "anchor_id": "BldgMdResidential_C_op_10",
+      "op": "keep"
+    }
+  ],
+  "decals": {
+    "density": 0.15,
+    "sets": [
+      "grunge"
+    ]
+  },
+  "debris": {
+    "density": 0.05,
+    "import_extra": 0
+  },
+  "props": {
+    "density": 0.1,
+    "theme": "domestic"
+  },
+  "struct": {
+    "keep": true
+  },
+  "quality": {
+    "render_displacement": true
+  },
+  "output": {
+    "collection": "ROUND2_RESIDENTIAL_B",
+    "save_blend": "",
+    "thumb": "C:\\Projects\\squad_tactics\\scratch\\kb3d_review\\round2_residential_b_curated.png"
+  }
+}

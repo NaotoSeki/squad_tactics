@@ -119,6 +119,22 @@
       "content_slots": ["farmhouse", "outbuilding", "working_yard", "road_frontage"]
     },
     {
+      "id": "round2.cluster.settlement",
+      "type": "multihex_cluster",
+      "role": "settlement",
+      "cells": [
+        "cell_r00_c00", "cell_r00_c01", "cell_r01_c00", "cell_r01_c01",
+        "cell_r02_c00", "cell_r02_c01", "cell_r02_c02"
+      ],
+      "anchor_cell": "cell_r01_c01",
+      "placement_mode": "world_space_then_hex_clip",
+      "scale": 1.0,
+      "fit_to_cell": false,
+      "asset_rotation_deg": 0,
+      "source_query": {"themes": ["residential", "church_broken"], "use": "exact_scale_reference"},
+      "content_slots": ["residential_a", "residential_b", "church_broken"]
+    },
+    {
       "id": "round1.parcel.raised_field",
       "type": "raised_field_parcel",
       "cells": [
