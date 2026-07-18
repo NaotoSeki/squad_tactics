@@ -23,3 +23,14 @@ scripts/survey_output.txt
 
 # 個人メモ
 PC_PURCHASE_NOTES_2026.md
+
+# 巨大生成物・レビュー中間物(23GB級) — コミット厳禁
+scratch/
+
+# 3Dソースキット(ライセンス品・530MB)
+asset/environment/01_max_RCityWW2b_standard/
+asset/environment/02_max_RCityWW2b_Vray/
+
+# 一時抽出物
+tmp/
+waveletNoiseTile.bin
