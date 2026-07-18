@@ -1,0 +1,199 @@
+{
+  "schema_version": 1,
+  "scene_id": "review.round1.rural_30hex",
+  "revision": 1,
+  "purpose": "Owner-facing Round-1 scale, density, continuity, and grade review; not production art.",
+  "determinism": {
+    "random_placement": false,
+    "seed": null,
+    "asset_rotation_policy": "rot0_only",
+    "content_variation_between_presentations": false
+  },
+  "grade": {
+    "profile_id": "A",
+    "config_file": "grade_config.json",
+    "intent": "Panzer Strike dark earth, yellow-olive vegetation, restrained red-brown structures, compressed highlights",
+    "required_for_all_presentations": true
+  },
+  "grid": {
+    "orientation": "pointy_top",
+    "coordinate_system": "odd_r_offset_with_axial",
+    "columns": 5,
+    "rows": 6,
+    "cell_count": 30,
+    "hex_radius_m": 9.0,
+    "cells": [
+      {"id": "cell_r00_c00", "col": 0, "row": 0, "q": 0, "r": 0, "world_center_m": [0.0, 0.0], "base_ground": "grass_olive", "land_use": "meadow_road_entry"},
+      {"id": "cell_r00_c01", "col": 1, "row": 0, "q": 1, "r": 0, "world_center_m": [15.588457, 0.0], "base_ground": "grass_worn", "land_use": "road_verge"},
+      {"id": "cell_r00_c02", "col": 2, "row": 0, "q": 2, "r": 0, "world_center_m": [31.176915, 0.0], "base_ground": "camp_worn_earth", "land_use": "camp_edge"},
+      {"id": "cell_r00_c03", "col": 3, "row": 0, "q": 3, "r": 0, "world_center_m": [46.765372, 0.0], "base_ground": "camp_worn_earth", "land_use": "camp_core"},
+      {"id": "cell_r00_c04", "col": 4, "row": 0, "q": 4, "r": 0, "world_center_m": [62.353829, 0.0], "base_ground": "grass_olive", "land_use": "camp_wood_edge"},
+
+      {"id": "cell_r01_c00", "col": 0, "row": 1, "q": 0, "r": 1, "world_center_m": [7.794229, 13.5], "base_ground": "grass_olive", "land_use": "meadow"},
+      {"id": "cell_r01_c01", "col": 1, "row": 1, "q": 1, "r": 1, "world_center_m": [23.382686, 13.5], "base_ground": "grass_worn", "land_use": "road_verge"},
+      {"id": "cell_r01_c02", "col": 2, "row": 1, "q": 2, "r": 1, "world_center_m": [38.971143, 13.5], "base_ground": "grass_worn", "land_use": "camp_approach"},
+      {"id": "cell_r01_c03", "col": 3, "row": 1, "q": 3, "r": 1, "world_center_m": [54.559600, 13.5], "base_ground": "camp_worn_earth", "land_use": "camp_core"},
+      {"id": "cell_r01_c04", "col": 4, "row": 1, "q": 4, "r": 1, "world_center_m": [70.148057, 13.5], "base_ground": "grass_olive", "land_use": "camp_wood_edge"},
+
+      {"id": "cell_r02_c00", "col": 0, "row": 2, "q": -1, "r": 2, "world_center_m": [0.0, 27.0], "base_ground": "grass_olive", "land_use": "meadow"},
+      {"id": "cell_r02_c01", "col": 1, "row": 2, "q": 0, "r": 2, "world_center_m": [15.588457, 27.0], "base_ground": "grass_worn", "land_use": "damaged_road"},
+      {"id": "cell_r02_c02", "col": 2, "row": 2, "q": 1, "r": 2, "world_center_m": [31.176915, 27.0], "base_ground": "grass_worn", "land_use": "road_verge"},
+      {"id": "cell_r02_c03", "col": 3, "row": 2, "q": 2, "r": 2, "world_center_m": [46.765372, 27.0], "base_ground": "camp_worn_earth", "land_use": "camp_service"},
+      {"id": "cell_r02_c04", "col": 4, "row": 2, "q": 3, "r": 2, "world_center_m": [62.353829, 27.0], "base_ground": "grass_olive", "land_use": "camp_wood_edge"},
+
+      {"id": "cell_r03_c00", "col": 0, "row": 3, "q": -1, "r": 3, "world_center_m": [7.794229, 40.5], "base_ground": "farmyard_earth", "land_use": "farm_road_frontage"},
+      {"id": "cell_r03_c01", "col": 1, "row": 3, "q": 0, "r": 3, "world_center_m": [23.382686, 40.5], "base_ground": "farmyard_earth", "land_use": "farm_road_frontage"},
+      {"id": "cell_r03_c02", "col": 2, "row": 3, "q": 1, "r": 3, "world_center_m": [38.971143, 40.5], "base_ground": "field_soil", "land_use": "raised_field"},
+      {"id": "cell_r03_c03", "col": 3, "row": 3, "q": 2, "r": 3, "world_center_m": [54.559600, 40.5], "base_ground": "field_soil", "land_use": "raised_field"},
+      {"id": "cell_r03_c04", "col": 4, "row": 3, "q": 3, "r": 3, "world_center_m": [70.148057, 40.5], "base_ground": "field_soil", "land_use": "raised_field_wood_edge"},
+
+      {"id": "cell_r04_c00", "col": 0, "row": 4, "q": -2, "r": 4, "world_center_m": [0.0, 54.0], "base_ground": "farmyard_earth", "land_use": "farm_core"},
+      {"id": "cell_r04_c01", "col": 1, "row": 4, "q": -1, "r": 4, "world_center_m": [15.588457, 54.0], "base_ground": "farmyard_earth", "land_use": "farm_road_frontage"},
+      {"id": "cell_r04_c02", "col": 2, "row": 4, "q": 0, "r": 4, "world_center_m": [31.176915, 54.0], "base_ground": "field_soil", "land_use": "raised_field"},
+      {"id": "cell_r04_c03", "col": 3, "row": 4, "q": 1, "r": 4, "world_center_m": [46.765372, 54.0], "base_ground": "field_soil", "land_use": "damaged_raised_field"},
+      {"id": "cell_r04_c04", "col": 4, "row": 4, "q": 2, "r": 4, "world_center_m": [62.353829, 54.0], "base_ground": "field_soil", "land_use": "raised_field_wood_edge"},
+
+      {"id": "cell_r05_c00", "col": 0, "row": 5, "q": -2, "r": 5, "world_center_m": [7.794229, 67.5], "base_ground": "farmyard_earth", "land_use": "farm_service"},
+      {"id": "cell_r05_c01", "col": 1, "row": 5, "q": -1, "r": 5, "world_center_m": [23.382686, 67.5], "base_ground": "grass_worn", "land_use": "farm_road_exit"},
+      {"id": "cell_r05_c02", "col": 2, "row": 5, "q": 0, "r": 5, "world_center_m": [38.971143, 67.5], "base_ground": "grass_worn", "land_use": "field_road_edge"},
+      {"id": "cell_r05_c03", "col": 3, "row": 5, "q": 1, "r": 5, "world_center_m": [54.559600, 67.5], "base_ground": "grass_worn", "land_use": "field_road_edge"},
+      {"id": "cell_r05_c04", "col": 4, "row": 5, "q": 2, "r": 5, "world_center_m": [70.148057, 67.5], "base_ground": "grass_olive", "land_use": "road_exit"}
+    ]
+  },
+  "features": [
+    {
+      "id": "round1.road.main_s",
+      "type": "road_spline",
+      "shape": "s_curve",
+      "cell_path": [
+        "cell_r00_c00", "cell_r00_c01", "cell_r01_c01", "cell_r01_c02",
+        "cell_r02_c02", "cell_r02_c01", "cell_r03_c01", "cell_r03_c00",
+        "cell_r04_c00", "cell_r04_c01", "cell_r05_c01", "cell_r05_c02",
+        "cell_r05_c03", "cell_r05_c04"
+      ],
+      "placement_mode": "world_spline_then_hex_clip",
+      "spline": {
+        "interpolation": "catmull_rom",
+        "control_cells": ["cell_r00_c00", "cell_r01_c02", "cell_r03_c00", "cell_r05_c04"],
+        "clip_after_rasterization": true
+      },
+      "surface": {
+        "kind": "compacted_dirt",
+        "width_m": 3.4,
+        "shoulder_m": 1.2,
+        "rut_count": 2,
+        "organic_edges": true,
+        "align_to_hex_edges": false
+      }
+    },
+    {
+      "id": "round1.cluster.camp_a",
+      "type": "multihex_cluster",
+      "role": "camp",
+      "cells": [
+        "cell_r00_c03", "cell_r00_c04", "cell_r01_c02", "cell_r01_c03",
+        "cell_r01_c04", "cell_r02_c03", "cell_r02_c04"
+      ],
+      "anchor_cell": "cell_r01_c03",
+      "placement_mode": "world_space_then_hex_clip",
+      "scale": 1.0,
+      "fit_to_cell": false,
+      "asset_rotation_deg": 0,
+      "source_query": {"family": "BldgSmCamp", "variant": "A", "use": "exact_scale_reference"},
+      "content_slots": ["main_tent", "secondary_shelter", "supply_yard", "perimeter_detail"]
+    },
+    {
+      "id": "round1.cluster.farmstead",
+      "type": "multihex_cluster",
+      "role": "farmstead",
+      "cells": [
+        "cell_r03_c00", "cell_r03_c01", "cell_r04_c00",
+        "cell_r04_c01", "cell_r05_c00", "cell_r05_c01"
+      ],
+      "anchor_cell": "cell_r04_c00",
+      "placement_mode": "world_space_then_hex_clip",
+      "scale": 1.0,
+      "fit_to_cell": false,
+      "asset_rotation_deg": 0,
+      "source_query": {"themes": ["farmhouse", "outbuilding"], "use": "exact_scale_reference"},
+      "content_slots": ["farmhouse", "outbuilding", "working_yard", "road_frontage"]
+    },
+    {
+      "id": "round1.parcel.raised_field",
+      "type": "raised_field_parcel",
+      "cells": [
+        "cell_r03_c02", "cell_r03_c03", "cell_r03_c04",
+        "cell_r04_c02", "cell_r04_c03", "cell_r04_c04"
+      ],
+      "anchor_cell": "cell_r03_c03",
+      "placement_mode": "single_world_mesh_then_hex_clip",
+      "raised_rows": true,
+      "row_bearing_deg": 17.0,
+      "row_spacing_m": 0.85,
+      "row_height_m": 0.22,
+      "include_crop_stocks": true,
+      "hard_hex_edges": false
+    },
+    {
+      "id": "round1.edge.hedgerow_wood",
+      "type": "hedgerow_wood_edge",
+      "cell_path": ["cell_r01_c04", "cell_r02_c04", "cell_r03_c04", "cell_r04_c04"],
+      "placement_mode": "world_spline_then_hex_clip",
+      "layering": ["low_hedge", "brush", "mixed_tree_canopy"],
+      "continuous_canopy": true,
+      "align_to_hex_edges": false
+    },
+    {
+      "id": "round1.damage.road_crater",
+      "type": "contextual_crater",
+      "context": "road",
+      "anchor_cell": "cell_r02_c01",
+      "placement_mode": "context_surface_deformation",
+      "shape": "asymmetric",
+      "preserve_underlying_context": true,
+      "rim_profile": "broken_with_ejecta_fan",
+      "asset_rotation_deg": 0
+    },
+    {
+      "id": "round1.damage.field_crater",
+      "type": "contextual_crater",
+      "context": "field",
+      "anchor_cell": "cell_r04_c03",
+      "placement_mode": "context_surface_deformation",
+      "shape": "asymmetric",
+      "preserve_underlying_context": true,
+      "rim_profile": "broken_rows_with_ejecta_fan",
+      "asset_rotation_deg": 0
+    },
+    {
+      "id": "round1.vignette.camp_supply",
+      "type": "contextual_vignette",
+      "context_feature_id": "round1.cluster.camp_a",
+      "anchor_cell": "cell_r02_c03",
+      "placement_mode": "world_space_overlay",
+      "asset_rotation_deg": 0,
+      "content_slots": ["sandbags", "ammo_boxes", "woodpile"]
+    },
+    {
+      "id": "round1.vignette.farm_cart",
+      "type": "contextual_vignette",
+      "context_feature_id": "round1.cluster.farmstead",
+      "anchor_cell": "cell_r05_c00",
+      "placement_mode": "world_space_overlay",
+      "asset_rotation_deg": 0,
+      "content_slots": ["cart", "barrels", "chopped_wood"]
+    }
+  ],
+  "compositor_contract": {
+    "layer_order": ["base_ground", "raised_field", "road", "multihex_clusters", "hedgerow", "vignettes", "contextual_damage", "review_overlay"],
+    "multihex_features_are_atomic": true,
+    "render_world_features_before_hex_clipping": true,
+    "forbid_per_cell_fit_scaling": true,
+    "resolve_cells_by_stable_id": true
+  },
+  "presentations": [
+    {"id": "round1.grade_a.clean", "grade_profile_id": "A", "grid_overlay": "none", "labels": false},
+    {"id": "round1.grade_a.faint_hex", "grade_profile_id": "A", "grid_overlay": "faint", "labels": false},
+    {"id": "round1.grade_a.labeled", "grade_profile_id": "A", "grid_overlay": "faint", "labels": true}
+  ]
+}

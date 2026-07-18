@@ -1,0 +1,302 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "squad-tactics.navigation/v1",
+  "title": "Squad Tactics Navigation Schema v1",
+  "description": "Navigation layer for Squad Tactics assets: obstacles, portals, regions, barriers, surfaces, slots",
+  "type": "object",
+  "required": ["$schema", "asset_id", "space", "owner", "profiles", "states", "source"],
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "const": "squad-tactics.navigation/v1"
+    },
+    "asset_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Unique asset identifier"
+    },
+    "space": {
+      "type": "object",
+      "required": ["units", "basis", "hex_layout", "hex_radius_m"],
+      "properties": {
+        "units": {
+          "type": "string",
+          "const": "meter"
+        },
+        "basis": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Coordinate space basis (e.g. asset_local_xy)"
+        },
+        "hex_layout": {
+          "type": "string",
+          "const": "pointy_axial"
+        },
+        "hex_radius_m": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "Hex radius in meters"
+        }
+      }
+    },
+    "owner": {
+      "type": "object",
+      "required": ["base_cell", "occupied_cells"],
+      "properties": {
+        "base_cell": {
+          "type": "array",
+          "items": {"type": "integer"},
+          "minItems": 2,
+          "maxItems": 2,
+          "description": "[q, r] axial hex coordinate"
+        },
+        "occupied_cells": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {"type": "integer"},
+            "minItems": 2,
+            "maxItems": 2
+          },
+          "minItems": 1,
+          "description": "Array of [q, r] axial coordinates. Must include base_cell. No duplicates."
+        }
+      }
+    },
+    "profiles": {
+      "type": "array",
+      "items": {"type": "string", "minLength": 1},
+      "minItems": 1,
+      "uniqueItems": true,
+      "description": "Unique profile names (e.g. infantry, vehicle)"
+    },
+    "states": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": false,
+      "patternProperties": {
+        "^(d0|d1|d2|destroyed)$": {
+          "type": "object",
+          "required": ["obstacles", "portals", "regions", "barriers", "surfaces", "slots"],
+          "additionalProperties": false,
+          "properties": {
+            "obstacles": {
+              "type": "array",
+              "items": {"$ref": "#/$defs/obstacle"}
+            },
+            "portals": {
+              "type": "array",
+              "items": {"$ref": "#/$defs/portal"}
+            },
+            "regions": {
+              "type": "array",
+              "items": {"$ref": "#/$defs/region"}
+            },
+            "barriers": {
+              "type": "array",
+              "items": {"$ref": "#/$defs/barrier"}
+            },
+            "surfaces": {
+              "type": "array",
+              "items": {"$ref": "#/$defs/surface"}
+            },
+            "slots": {
+              "type": "array",
+              "items": {"$ref": "#/$defs/slot"}
+            }
+          }
+        }
+      },
+      "description": "State variants: d0 (undamaged), d1/d2 (damaged), destroyed"
+    },
+    "source": {
+      "type": "object",
+      "required": ["generator"],
+      "properties": {
+        "generator": {"type": "string"},
+        "blend": {"type": "string"},
+        "state": {"type": "string"}
+      }
+    }
+  },
+  "$defs": {
+    "point": {
+      "type": "array",
+      "items": {"type": "number"},
+      "minItems": 2,
+      "maxItems": 2,
+      "description": "[x, y]"
+    },
+    "polygon": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/point"},
+      "minItems": 3,
+      "description": "Polygon vertices (3+ points, no self-intersection, area > 0)"
+    },
+    "segment": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/point"},
+      "minItems": 2,
+      "maxItems": 2,
+      "description": "Line segment [p1, p2], p1 != p2"
+    },
+    "polyline": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/point"},
+      "minItems": 2,
+      "description": "Polyline: 2+ connected points"
+    },
+    "element": {
+      "type": "object",
+      "required": ["id", "profiles"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "profiles": {
+          "type": "array",
+          "items": {"type": "string", "minLength": 1},
+          "minItems": 1,
+          "uniqueItems": true,
+          "description": "Subset of top-level profiles"
+        }
+      }
+    },
+    "obstacle": {
+      "allOf": [
+        {"$ref": "#/$defs/element"},
+        {
+          "type": "object",
+          "required": ["polygon"],
+          "properties": {
+            "polygon": {"$ref": "#/$defs/polygon"},
+            "blocks_los": {"type": "boolean"},
+            "blocks_projectile": {"type": "boolean"},
+            "height_m": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            }
+          }
+        }
+      ]
+    },
+    "portal": {
+      "allOf": [
+        {"$ref": "#/$defs/element"},
+        {
+          "type": "object",
+          "required": ["segment", "connects"],
+          "properties": {
+            "segment": {"$ref": "#/$defs/segment"},
+            "connects": {
+              "type": "array",
+              "items": {"type": "string", "minLength": 1},
+              "minItems": 2,
+              "maxItems": 2,
+              "description": "Two region ids or 'exterior'. Not both 'exterior'."
+            },
+            "width_m": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            }
+          }
+        }
+      ]
+    },
+    "region": {
+      "allOf": [
+        {"$ref": "#/$defs/element"},
+        {
+          "type": "object",
+          "required": ["polygon"],
+          "properties": {
+            "polygon": {"$ref": "#/$defs/polygon"},
+            "movement_cost_milli": {
+              "type": "integer",
+              "exclusiveMinimum": 0
+            },
+            "capacity": {
+              "type": "integer",
+              "exclusiveMinimum": 0
+            },
+            "allows": {
+              "type": "array",
+              "items": {"type": "string", "minLength": 1},
+              "uniqueItems": true
+            }
+          }
+        }
+      ]
+    },
+    "barrier": {
+      "allOf": [
+        {"$ref": "#/$defs/element"},
+        {
+          "type": "object",
+          "required": ["polyline"],
+          "properties": {
+            "polyline": {"$ref": "#/$defs/polyline"},
+            "width_m": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "passable_gaps": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["segment"],
+                "properties": {
+                  "segment": {"$ref": "#/$defs/segment"},
+                  "width_m": {"type": "number", "exclusiveMinimum": 0}
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "surface": {
+      "allOf": [
+        {"$ref": "#/$defs/element"},
+        {
+          "type": "object",
+          "required": ["kind", "polygon", "movement_cost_milli"],
+          "properties": {
+            "kind": {
+              "type": "string",
+              "minLength": 1
+            },
+            "polygon": {"$ref": "#/$defs/polygon"},
+            "movement_cost_milli": {
+              "type": "integer",
+              "exclusiveMinimum": 0
+            }
+          }
+        }
+      ]
+    },
+    "slot": {
+      "allOf": [
+        {"$ref": "#/$defs/element"},
+        {
+          "type": "object",
+          "required": ["point", "region", "kind"],
+          "properties": {
+            "point": {"$ref": "#/$defs/point"},
+            "region": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Region id or 'exterior'"
+            },
+            "kind": {
+              "type": "string",
+              "minLength": 1
+            },
+            "facing_deg": {"type": "number"}
+          }
+        }
+      ]
+    }
+  }
+}

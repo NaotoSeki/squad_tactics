@@ -1,0 +1,8 @@
+{
+ "knee_start": 0.85,
+ "knee_compress": 0.55,
+ "gamma": 1.08,
+ "sat_scale": 0.90,
+ "warm_hue": {"h_min_deg": 0, "h_max_deg": 40, "scale": 1.05},
+ "white_balance_amber": 0.03
+}

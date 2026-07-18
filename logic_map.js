@@ -6,6 +6,18 @@ class MapSystem {
   }
 
   generate() {
+    // 農村V29モード (logic_map_rural_v29.js)。優先度: RuralV29 > CityMap > 田園
+    if (window.RuralV29Map && window.RuralV29Map.enabled) {
+      window.RuralV29Map.generate(this.game);
+      return;
+    }
+    if (window.RuralV29Map) window.RuralV29Map.active = false;
+    // WW2廃墟都市モード (logic_map_city.js)。無効時は従来の田園ジェネレータへ。
+    if (window.CityMap && window.CityMap.enabled) {
+      window.CityMap.generate(this.game);
+      return;
+    }
+    if (window.CityMap) window.CityMap.active = false;
     this.game.map = [];
     for (let q = 0; q < MAP_W; q++) {
       this.game.map[q] = [];
@@ -299,7 +311,8 @@ class MapSystem {
         const hexCap = this.game.getHexMoveBlock ? this.game.getHexMoveBlock() : 4;
         if (this.game.getUnitsInHex(n.q, n.r).length >= hexCap && (n.q !== tq || n.r !== tr)) { return; }
         const cost = this.game.getTerrainMoveCost ? this.game.getTerrainMoveCost(u, n.q, n.r) : this.game.map[n.q][n.r].cost;
-        if (this.game.map[n.q][n.r].cost >= 99) { return; }
+        const blocked = this.game.isHexBlockedForUnit ? this.game.isHexBlockedForUnit(u, n.q, n.r) : this.game.map[n.q][n.r].cost >= 99;
+        if (blocked) { return; }
         const nc = cs[`${c.q},${c.r}`] + cost;
         if (nc <= maxCost) {
           const k = `${n.q},${n.r}`;

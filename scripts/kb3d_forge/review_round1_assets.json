@@ -1,0 +1,44 @@
+{
+  "schema": "squad-tactics.review-round1-assets/v1",
+  "scene": "KB3D_WorldWarTwo-Native",
+  "manifest": "scripts/kb3d_forge/review_scene_round1.json",
+  "catalog": "scratch/kb3d_forge/parts_catalog.json",
+  "assets": [
+    {
+      "id": "camp",
+      "role": "camp",
+      "anchor_cell": "cell_r01_c03",
+      "offset_m": [0.0, 0.0],
+      "recipe": "scratch/kb3d_review/round1_camp_beauty.json",
+      "scale": 1.0,
+      "rotation_deg": 0
+    },
+    {
+      "id": "farmstead_curated_clean",
+      "role": "farmstead",
+      "anchor_cell": "cell_r04_c01",
+      "offset_m": [6.411543, -4.0],
+      "recipe": "scratch/kb3d_review/round1_farmstead_curated_clean.json",
+      "scale": 1.0,
+      "rotation_deg": 0
+    },
+    {
+      "id": "cottage_beauty",
+      "role": "farmstead",
+      "anchor_cell": "cell_r03_c00",
+      "offset_m": [2.205771, 5.5],
+      "recipe": "scratch/kb3d_review/round1_cottage_beauty.json",
+      "scale": 1.0,
+      "rotation_deg": 0
+    },
+    {
+      "id": "barn_curated",
+      "role": "farmstead",
+      "anchor_cell": "cell_r05_c00",
+      "offset_m": [4.205771, -5.5],
+      "recipe": "scratch/kb3d_review/round1_barn_curated.json",
+      "scale": 1.0,
+      "rotation_deg": 0
+    }
+  ]
+}

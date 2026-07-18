@@ -204,10 +204,32 @@ const Renderer = {
         return false; 
     },
     playAttackAnim(attacker, target) { const main = this.game.scene.getScene('MainScene'); if (main && main.unitView) main.unitView.triggerAttack(attacker, target); },
-    playExplosion(x, y) { const main = this.game.scene.getScene('MainScene'); if (main) main.triggerExplosion(x, y); },
+    playExplosion(x, y, tier, hex, opts) { const main = this.game.scene.getScene('MainScene'); if (main) main.triggerExplosion(x, y, tier, hex, opts); },
+    playMuzzleFlash(x, y, angle) { const main = this.game.scene.getScene('MainScene'); if (main && main.triggerMuzzleFlash) main.triggerMuzzleFlash(x, y, angle); },
     generateFaceIcon(seed) { const c = document.createElement('canvas'); c.width = 64; c.height = 64; const ctx = c.getContext('2d'); const rnd = function() { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; }; ctx.fillStyle = "#334"; ctx.fillRect(0,0,64,64); const skinTones = ["#ffdbac", "#f1c27d", "#e0ac69", "#8d5524"]; ctx.fillStyle = skinTones[Math.floor(rnd() * skinTones.length)]; ctx.beginPath(); ctx.arc(32, 36, 18, 0, Math.PI*2); ctx.fill(); ctx.fillStyle = "#343"; ctx.beginPath(); ctx.arc(32, 28, 20, Math.PI, 0); ctx.lineTo(54, 30); ctx.lineTo(10, 30); ctx.fill(); ctx.strokeStyle = "#121"; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(10,28); ctx.lineTo(54,28); ctx.stroke(); ctx.fillStyle = "#000"; const eyeY = 36; const eyeOff = 6 + rnd()*2; ctx.fillRect(32-eyeOff-2, eyeY, 4, 2); ctx.fillRect(32+eyeOff-2, eyeY, 4, 2); ctx.strokeStyle = "#a76"; ctx.lineWidth = 1; ctx.beginPath(); const mouthW = 4 + rnd()*6; ctx.moveTo(32-mouthW/2, 48); ctx.lineTo(32+mouthW/2, 48); ctx.stroke(); if (rnd() < 0.5) { ctx.fillStyle = "rgba(0,0,0,0.2)"; ctx.fillRect(20 + rnd()*20, 30 + rnd()*20, 4, 2); } return c.toDataURL(); }
 };
 window.Renderer = Renderer;
+
+/**
+ * KHAOS製シネマティック爆発 (asset/explosion_khaos_*_384.png, 5ティア×3バリアント)。
+ * メタデータは各シートの .json サイドカーと一致させること。
+ * sizeMul はヘックス幅(√3*HEX_SIZE)に対する表示倍率。
+ * shake は Phaser cameras.main.shake(duration, intensity)。
+ */
+window.KHAOS_FX = {
+    TIERS: {
+        t1_12mm:       { frames: 8,  fps: 20, sizeMul: 1.0 },
+        t2_grenade:    { frames: 12, fps: 20, sizeMul: 1.3 },
+        t3_mortar60:   { frames: 18, fps: 20, sizeMul: 1.7 },
+        t4_shell120:   { frames: 32, fps: 24, sizeMul: 2.3, shake: { dur: 320, int: 0.006 }, damageBuilding: true },
+        t5_aerialbomb: { frames: 40, fps: 24, sizeMul: 3.0, shake: { dur: 600, int: 0.014 }, damageBuilding: true },
+    },
+    VARIANTS: ['', '_v2', '_v3'],
+    FRAME: 384,
+    key(tier, v) { return `khaos_${tier}${v}`; },
+    /** asset/muzzle_flash_128.png (4フレーム、2026-07-13納品) */
+    MUZZLE_READY: true
+};
 
 /** デッキカードをサイドバー装備スロットへ D&D できるか */
 function cardCanEquipToLoadout(cardOrCode) {
@@ -512,7 +534,7 @@ class Card extends Phaser.GameObjects.Container {
             if (this.cardType === 'aerial') {
                 if (window.gameLogic.isValidHex(hex.q, hex.r)) canDeploy = true; 
                 else if(window.gameLogic.log) window.gameLogic.log("配置不可: マップ範囲外です"); 
-            } else { canDeploy = window.gameLogic.checkDeploy(hex); } 
+            } else { canDeploy = window.gameLogic.checkDeploy(hex, this.cardType); }
         } 
         if (canDeploy) this.burnAndConsume(hex); else this.returnToHand(); 
     }
@@ -782,6 +804,20 @@ class MainScene extends Phaser.Scene {
         this.load.spritesheet('soldier_sheet', 'asset/soldier_sheet_1.png', { frameWidth: 128, frameHeight: 128 });
         this.load.spritesheet('tank_sheet', 'asset/tank_sheet_1.png', { frameWidth: 128, frameHeight: 128 });
         this.load.spritesheet('explosion_sheet', 'asset/explosion_sheet_1.png', { frameWidth: 64, frameHeight: 64 });
+        if (window.KHAOS_FX && KHAOS_FX.MUZZLE_READY) {
+            // 4形状(行) x pop/fade(列) = 8フレーム。frame = variant*2 + step
+            this.load.spritesheet('muzzle_flash', 'asset/muzzle_flash_128.png',
+                { frameWidth: 128, frameHeight: 128, endFrame: 7 });
+        }
+        // KHAOS爆発 5ティア×3バリアント（384pxシネマティック版）
+        if (window.KHAOS_FX) {
+            Object.entries(KHAOS_FX.TIERS).forEach(([tier, m]) => {
+                KHAOS_FX.VARIANTS.forEach(v => {
+                    this.load.spritesheet(KHAOS_FX.key(tier, v), `asset/explosion_khaos_${tier}${v}_384.png`,
+                        { frameWidth: KHAOS_FX.FRAME, frameHeight: KHAOS_FX.FRAME, endFrame: m.frames - 1 });
+                });
+            });
+        }
         // fir_tree: 128x128 x32コマ。レイアウト 16列x2行（0-15=弱い揺れ、16-31=強風）
         this.load.spritesheet('fir_tree', 'asset/environment/fir_tree.png', { frameWidth: 128, frameHeight: 128, endFrame: 31 });
         for (let i = 1; i <= (typeof PORTRAIT_AVAILABLE !== 'undefined' ? PORTRAIT_AVAILABLE : 7); i++) {
@@ -893,7 +929,71 @@ class MainScene extends Phaser.Scene {
             this.cameras.main.setViewport(0, 0, this.scale.width, this.scale.height);
         }
     }
-    triggerExplosion(x, y) {
+    triggerExplosion(x, y, tier, hex, opts) {
+        const meta = tier && window.KHAOS_FX && KHAOS_FX.TIERS[tier];
+        if (!meta) { this._triggerLegacyExplosion(x, y); return; }
+        const v = KHAOS_FX.VARIANTS[(Math.random() * KHAOS_FX.VARIANTS.length) | 0];
+        const key = KHAOS_FX.key(tier, v);
+        if (!this.textures.exists(key)) { this._triggerLegacyExplosion(x, y); return; }
+        const animKey = key + '_anim';
+        if (!this.anims.exists(animKey)) {
+            this.anims.create({
+                key: animKey,
+                frames: this.anims.generateFrameNumbers(key, { start: 0, end: meta.frames - 1 }),
+                frameRate: meta.fps, repeat: 0
+            });
+        }
+        // プレビュー(map_preview_explosions.html)と同じアンカー: 水平中央・爆心をヘックス
+        // 中心のやや下に置き、立ち上る煙柱がタイルから上へ抜ける
+        const size = Math.sqrt(3) * HEX_SIZE * meta.sizeMul * ((opts && opts.sizeScale) || 1);
+        const spr = this.add.sprite(x, y, key, 0);
+        spr.setOrigin(0.5, 0.62);
+        spr.setScale(size / KHAOS_FX.FRAME);
+        spr.setDepth(1999);
+        spr.play(animKey);
+        spr.once('animationcomplete', () => { spr.destroy(); });
+
+        if (meta.shake) this.cameras.main.shake(meta.shake.dur, meta.shake.int);
+        // 直撃地点の段階破壊: 煙がタイルを覆った頃に差し替える。
+        // 建物があれば建物を、なければ地面（道路寸断・石畳クレーター化）を損傷
+        if (meta.damageBuilding && hex && window.TerrainRenderV7 && window.CityMap && window.CityMap.active) {
+            const collapseDelay = (meta.frames / meta.fps) * 1000 * 0.45;
+            setTimeout(() => {
+                if (!window.TerrainRenderV7.damageBuilding(this, hex.q, hex.r)) {
+                    window.TerrainRenderV7.damageGround(this, hex.q, hex.r);
+                }
+            }, collapseDelay);
+        }
+    }
+    /**
+     * 銃口炎。4つの独立した燃焼形状(pop+fade各2フレーム)を毎回ラウンドロビンで
+     * 切り替える — 実銃の発射ガスは毎回不揃いに燃えるため、単一クリップの
+     * 使い回しでなく形状自体を変えることで連射時の高速点滅が「同じ絵の反復」
+     * にならない(2026-07-13 ユーザー要望)。+X向きレンダーを射線方向へ回転。
+     * アセット未納品(テクスチャなし)なら静かに何もしない。
+     */
+    triggerMuzzleFlash(x, y, angle) {
+        if (!this.textures.exists('muzzle_flash')) return;
+        const meta = window.KHAOS_FX;
+        const variant = meta._muzzleRR = ((meta._muzzleRR || 0) + 1) % 4;
+        const animKey = 'muzzle_flash_anim_' + variant;
+        if (!this.anims.exists(animKey)) {
+            this.anims.create({
+                key: animKey,
+                frames: this.anims.generateFrameNumbers('muzzle_flash', { start: variant * 2, end: variant * 2 + 1 }),
+                frameRate: 40, repeat: 0
+            });
+        }
+        const spr = this.add.sprite(x, y, 'muzzle_flash', variant * 2);
+        spr.setOrigin(0.34, 0.5);            // コア実測位置(x≈47-57/128)を銃口支点に
+        spr.setRotation(angle);
+        spr.setScale(0.32 + Math.random() * 0.08);
+        spr.setBlendMode(Phaser.BlendModes.ADD);
+        spr.setDepth(1998);
+        spr.play(animKey);
+        spr.once('animationcomplete', () => { spr.destroy(); });
+    }
+    _triggerLegacyExplosion(x, y) {
         const explosion = this.add.sprite(x, y, 'explosion_sheet');
         explosion.setDepth(1999);
         explosion.setScale(1.5);
@@ -916,18 +1016,55 @@ class MainScene extends Phaser.Scene {
     }
     centerCamera(q, r) { const p = Renderer.hexToPx(q, r); this.cameras.main.centerOn(p.x, p.y); }
     centerMap() {
-        const mapW = MAP_W * HEX_SIZE * Math.sqrt(3);
-        const mapH = MAP_H * HEX_SIZE * 1.5;
-        this.cameras.main.centerOn(mapW / 2, mapH / 2);
-        const vw = this.cameras.main.width;
-        const vh = this.cameras.main.height;
-        const zoomFit = Math.min(vw / mapW, vh / mapH) * 0.92;
-        this.cameras.main.zoom = Phaser.Math.Clamp(zoomFit, 0.25, 4);
+        const map = window.gameLogic && window.gameLogic.map;
+        if (!map) return;
+
+        // v7 ground tiles extend about 61 px sideways from their hex anchor;
+        // tall buildings need substantially more room above than below it.
+        const extents = { left: 61, right: 61, top: 100, bottom: 45 };
+        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+        for (let q = 0; q < map.length; q++) {
+            const column = map[q];
+            if (!column) continue;
+            for (let r = 0; r < column.length; r++) {
+                const cell = column[r];
+                if (!cell || (cell.id === -1 && !cell.city)) continue;
+                const p = Renderer.hexToPx(q, r);
+                minX = Math.min(minX, p.x - extents.left);
+                maxX = Math.max(maxX, p.x + extents.right);
+                minY = Math.min(minY, p.y - extents.top);
+                maxY = Math.max(maxY, p.y + extents.bottom);
+            }
+        }
+        if (!Number.isFinite(minX)) return;
+
+        const camera = this.cameras.main;
+        const mapW = maxX - minX;
+        const mapH = maxY - minY;
+        camera.centerOn((minX + maxX) / 2, (minY + maxY) / 2);
+        const zoomFit = Math.min(camera.width / mapW, camera.height / mapH) * 0.92;
+        camera.zoom = Phaser.Math.Clamp(zoomFit, 0.25, 4);
     }
-    createMap() { 
+    createMap() {
         if(!window.gameLogic || !window.gameLogic.map) return;
-        const map = window.gameLogic.map; this.hexGroup.removeAll(true); this.decorGroup.removeAll(true); this.unitGroup.removeAll(true); if(this.rubbleFrontGroup) this.rubbleFrontGroup.removeAll(true); this.treeGroup.removeAll(true); this.hpGroup.removeAll(true); 
+        const map = window.gameLogic.map; this.hexGroup.removeAll(true); this.decorGroup.removeAll(true); this.unitGroup.removeAll(true); if(this.rubbleFrontGroup) this.rubbleFrontGroup.removeAll(true); this.treeGroup.removeAll(true); this.hpGroup.removeAll(true);
         if(this.unitView) this.unitView.clear();
+        // 農村V29モード: 背景画像レンダラへ全面委譲
+        const ruralMode = window.RuralV29Map && window.RuralV29Map.active && window.TerrainRenderRuralV29;
+        if (ruralMode) {
+            if (this.roadGraphics) this.roadGraphics.clear();
+            window.TerrainRenderRuralV29.buildMap(this, this.hexGroup, map);
+            this.centerMap();
+            return;
+        }
+        // WW2廃墟都市モード: v7タイルレンダラへ全面委譲（旧デコレーションも湧かせない）
+        const cityMode = window.CityMap && window.CityMap.active && window.TerrainRenderV7;
+        if (cityMode) {
+            if (this.roadGraphics) this.roadGraphics.clear();
+            window.TerrainRenderV7.buildMap(this, this.hexGroup, map);
+            this.centerMap();
+            return;
+        }
         const useTileTerrain = window.TerrainRender && window.TerrainRender.enabled;
         if (useTileTerrain) {
             window.TerrainRender.buildMap(this, this.hexGroup, map, this.decorGroup, this.roadGraphics);
@@ -935,7 +1072,7 @@ class MainScene extends Phaser.Scene {
             this.roadGraphics.clear();
         }
         this.centerMap();
-        for(let q=0; q<MAP_W; q++) { 
+        for(let q=0; q<MAP_W; q++) {
             for(let r=0; r<MAP_H; r++) { 
                 const t = map[q][r]; if(t.id===-1)continue; const pos = Renderer.hexToPx(q, r); 
                 const decorId = (t.id === 3 && t.underId != null) ? t.underId : t.id;
