@@ -38,15 +38,59 @@ class UnitView {
     // 死亡時フック（hp<=0 で視覚破棄される直前に呼ばれる。既定は何もしない）
     onUnitDead(u, visual) { }
 
+    // ユニット位置の決定論的ジッタ[0,1)×2を得る（同じヘックスなら不変、移動で変化）
+    _jitterHash(u) {
+        let h = 2166136261 >>> 0;
+        const s = `${u.id}|${u.q}|${u.r}`;
+        for (let i = 0; i < s.length; i++) {
+            h ^= s.charCodeAt(i);
+            h = Math.imul(h, 16777619) >>> 0;
+        }
+        const a = ((h >>> 8) & 0xffff) / 0x10000;
+        const b = ((h >>> 20) & 0xfff) / 0x1000;
+        return [a, b];
+    }
+
+    // ユニット表示オフセットを計算（単独vs複数、戦車vs歩兵で振り分け）
+    _calcUnitOffset(u, index, count, safe) {
+        const [ja, jb] = this._jitterHash(u);
+        const isTankU = !!(u.def && u.def.isTank);
+        const maxJitter = isTankU ? 4 : (safe ? 8 : 15);
+        let offsetX = 0, offsetY = 0;
+
+        if (count <= 1) {
+            // 単独: ヘックス内の一様ディスク散布（y は0.72倍で射影感）
+            const ang = ja * Math.PI * 2;
+            const rad = Math.sqrt(jb) * maxJitter;
+            offsetX = Math.cos(ang) * rad;
+            offsetY = Math.sin(ang) * rad * 0.72;
+        } else {
+            // 複数: 黄金角スパイラル基本 + ジッタ±30%
+            const spread = safe ? 9 : 18;
+            const baseAng = index * 2.399963;  // 黄金角 ≈137.5°
+            const baseRad = spread * Math.sqrt((index + 0.6) / count) * 1.35;
+            const ang = baseAng + (ja - 0.5) * 0.9;
+            let rad = baseRad * (0.85 + jb * 0.3);
+            // 戦車は複数時も rad を抑える（車体が大きい）
+            if (isTankU) rad *= 0.5;
+            offsetX = Math.cos(ang) * rad;
+            offsetY = Math.sin(ang) * rad * 0.72;
+        }
+
+        return { offsetX, offsetY };
+    }
+
     // 歩兵スプライト生成（createVisual から純粋抽出。サブクラスの差し替えフック）
     buildInfantrySprite(u) {
-        const shadow = this.scene.add.sprite(2, -18, 'soldier_crawl', 0);
+        // SoldierUnitView(v2 manifest)未使用時のフォールバックのみ。
+        // SOLDIER_VIEW_H=20px(2026-07-13実測改訂)に合わせて比例縮小。
+        const shadow = this.scene.add.sprite(5, -9, 'soldier_crawl', 0);
         shadow.setTint(0x000000);
-        shadow.setAlpha(0.35);
-        shadow.setScale(0.16, 0.048);
+        shadow.setAlpha(0.3);
+        shadow.setScale(0.083, 0.025);
         shadow.setOrigin(0.5, 0.52);
-        const sprite = this.scene.add.sprite(0, -20, 'soldier_crawl', 0);
-        sprite.setScale(0.15); // 256px → 約38px（気持ち大きめ）
+        const sprite = this.scene.add.sprite(0, -10, 'soldier_crawl', 0);
+        sprite.setScale(0.078); // 256px → 約20px
         sprite.play('anim_crawl_0');
         if (u.team === 'player') sprite.setTint(0xeeeeff); else sprite.setTint(0x9955ff);
         return { shadow, sprite };
@@ -165,8 +209,10 @@ class UnitView {
                     this.updateVisual(visual, u, delta, index, count);
 
                     const isSelected = (window.gameLogic.selectedUnit === u);
+                    // Yソート: 建物・樹木(TerrainRenderV7が同レイヤへdepth=Y-0.5で配置)との
+                    // 前後関係を出す。選択中ユニットは視認性優先で常に最前面
+                    visual.container.setDepth(visual.container.y + (isSelected ? 100000 : 0));
                     if (isSelected) {
-                        if (this.unitLayer.exists(visual.container)) { this.unitLayer.remove(visual.container); this.hpLayer.add(visual.container); }
                         if (visual.fusionGlowFx && visual.sprite) {
                             visual.sprite.postFX.remove(visual.fusionGlowFx);
                             visual.fusionGlowFx = null;
@@ -175,7 +221,6 @@ class UnitView {
                             visual.glowFx = visual.sprite.postFX.addGlow(0xffff00, 2, 0, false, 0.1, 12);
                         }
                     } else {
-                        if (this.hpLayer.exists(visual.container)) { this.hpLayer.remove(visual.container); this.unitLayer.add(visual.container); }
                         if (visual.glowFx && visual.sprite) {
                             visual.sprite.postFX.remove(visual.glowFx);
                             visual.glowFx = null;
@@ -217,10 +262,10 @@ class UnitView {
         if (u.def.name === "Rifleman" || u.def.role === "infantry" || !u.def.isTank) {
             ({ shadow, sprite } = this.buildInfantrySprite(u));
         } else if (u.def.isTank) {
-            shadow = this.scene.add.sprite(-1, -8, 'tank_sheet', 7);
+            shadow = this.scene.add.sprite(7, -7, 'tank_sheet', 7);
             shadow.setTint(0x000000);
-            shadow.setAlpha(0.38);
-            shadow.setScale(0.42, 0.14);
+            shadow.setAlpha(0.34);
+            shadow.setScale(0.44, 0.14);
             shadow.setOrigin(0.5, 0.5);
             sprite = this.scene.add.sprite(0, -10, 'tank_sheet');
             sprite.setScale(0.4);
@@ -261,9 +306,21 @@ class UnitView {
             glowFx: null, fusionGlowFx: null, lastDx: 0, lastDy: 0, crawlStopDelay: 0
         };
         this.visuals.set(u.id, visual);
-        
+
         if(typeof Renderer !== 'undefined') {
             const pos = Renderer.hexToPx(u.q, u.r);
+            // 建物ヘックスへ直接出現(初期配置/増援)する場合、初回から壁際オフセット
+            // 込みで置く — updateVisualのクロール移動で毎回にじり寄る見た目を防ぐ
+            const t = window.gameLogic && window.gameLogic.map[u.q] && window.gameLogic.map[u.q][u.r];
+            const safe = t && t.building && window.TerrainRenderV7 && window.CityMap && window.CityMap.active
+                ? window.TerrainRenderV7.getBuildingSafeOffset(u.q, u.r) : null;
+            if (safe) { pos.x += safe.dx; pos.y += safe.dy; }
+
+            // 初回配置でも自然な散布位置を乗せる（count=1で単独扱い）
+            const { offsetX, offsetY } = this._calcUnitOffset(u, 0, 1, safe);
+            pos.x += offsetX;
+            pos.y += offsetY;
+
             container.setPosition(pos.x, pos.y);
             container.targetX = pos.x; container.targetY = pos.y;
         }
@@ -274,17 +331,22 @@ class UnitView {
     updateVisual(visual, u, delta, index, count) {
         if(typeof Renderer === 'undefined' || !Renderer.hexToPx) return;
         const basePos = Renderer.hexToPx(u.q, u.r);
-        
-        let offsetX = 0, offsetY = 0;
-        if (count > 1) {
-            const spread = 18;
-            const angle = (index / count) * Math.PI * 2 - Math.PI / 2;
-            const ring = Math.floor(index / 8);
-            const radius = spread * (0.85 + ring * 0.55);
-            offsetX = Math.cos(angle) * radius;
-            offsetY = Math.sin(angle) * radius;
+
+        // 建物ヘックス内: 壁/屋根に重ならない位置(実測オフセット)へ寄せる。
+        // 「市街戦なのに地面に伏せているだけ」を解消 — 歩兵は建物内へ進入でき、
+        // 壁際の物陰に身を隠す(2026-07-13)。複数ユニット共存時のばらけ幅は
+        // 壁からはみ出さないよう通常の半分に絞る。
+        let inBuilding = false;
+        if (window.gameLogic) {
+            const t = window.gameLogic.map[u.q] && window.gameLogic.map[u.q][u.r];
+            inBuilding = !!(t && t.building);
         }
-        
+        const safe = inBuilding && window.TerrainRenderV7 && window.CityMap && window.CityMap.active
+            ? window.TerrainRenderV7.getBuildingSafeOffset(u.q, u.r) : null;
+        if (safe) { basePos.x += safe.dx; basePos.y += safe.dy; }
+
+        const { offsetX, offsetY } = this._calcUnitOffset(u, index, count, safe);
+
         visual.targetX = basePos.x + offsetX;
         visual.targetY = basePos.y + offsetY;
 
@@ -321,12 +383,21 @@ class UnitView {
                 sh.setFlipX(spr.flipX);
                 sh.setVisible(spr.visible);
             }
+            // v7タイル実測に合わせた影: 方向=真東(tree_v0実測 vec(+37,0))、
+            // 濃度α≈0.45(接地部0.65)。姿勢連動 — 立位は影が東へ伸び、
+            // 伏せは体の直下にほぼ重ねる（潰して離すと浮いて見える）
             if (!u.def.isTank) {
-                sh.setScale(spr.scaleX * 1.05, spr.scaleY * 0.32);
-                sh.setPosition(spr.x + 2, spr.y + 2);
+                const lv = visual.postureLv || 0; // 0=stand 1=kneel 2=prone
+                const conf = lv === 2 ? { sx: 1.02, sy: 0.85, ox: 3,  oy: 1, a: 0.32 }
+                           : lv === 1 ? { sx: 1.1,  sy: 0.45, ox: 6,  oy: 1, a: 0.4 }
+                                      : { sx: 1.2,  sy: 0.32, ox: 10, oy: 1, a: 0.42 };
+                sh.setScale(spr.scaleX * conf.sx, spr.scaleY * conf.sy);
+                sh.setPosition(spr.x + conf.ox, spr.y + conf.oy);
+                sh.setAlpha(conf.a);
             } else if (u.def.isTank) {
                 sh.setScale(spr.scaleX * 1.04, spr.scaleY * 0.34);
-                sh.setPosition(spr.x - 1, spr.y + 3);
+                sh.setPosition(spr.x + 9, spr.y + 2);
+                sh.setAlpha(0.42);
             }
         }
 
@@ -348,7 +419,7 @@ class UnitView {
             visual.infoContainer.setPosition(visual.container.x, infoY);
 
             let infoText = "";
-            if(u.hands && u.hands.isBroken) infoText += "⚠ ";
+            if(Array.isArray(u.hands) && u.hands.some(item => item && item.isBroken)) infoText += "⚠ ";
             if(u.hp < u.maxHp*0.5) infoText += "➕ ";
 
             const skillsArr = (u.skills && Array.isArray(u.skills)) ? [...new Set(u.skills)] : [];
