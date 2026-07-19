@@ -44,6 +44,7 @@ window.RuralV29Map = {
     { key: 'loc_crossroad',   texture: 'rural_loc_crossroad',   file: 'asset/environment/maps/rural_loc_crossroad.png',   rot180: false, ready: true, table: 'loc_crossroad' },
     { key: 'loc_forest_farm', texture: 'rural_loc_forest_farm', file: 'asset/environment/maps/rural_loc_forest_farm.png', rot180: false, ready: true, table: 'loc_forest_farm' },
     { key: 'loc_shelled',     texture: 'rural_loc_shelled',     file: 'asset/environment/maps/rural_loc_shelled.png',     rot180: false, ready: true, table: 'loc_shelled' },
+    { key: 'loc_church_square', texture: 'rural_loc_church_square', file: 'asset/environment/maps/rural_loc_church_square.png', rot180: false, ready: true, table: 'loc_church_square' },
   ],
 
   /**
@@ -75,6 +76,16 @@ window.RuralV29Map = {
       [10, 5, ['FIELD', 'FIELD', 'ROAD', 'RUIN', 'FOREST']],
       [11, 5, ['ROAD', 'ROAD', 'GRASS', 'GRASS', 'FOREST']],
       [12, 4, ['ROAD', 'GRASS', 'GRASS', 'GRASS', 'FIELD']],
+    ],
+    loc_church_square: [
+      [7, 7, ['FOREST', 'ROAD', 'BLDG', 'FOREST', 'FOREST']],
+      [8, 6, ['FOREST', 'GRASS', 'ROAD', 'BLDG', 'GRASS']],
+      [9, 6, ['GRASS', 'BLDG', 'ROAD', 'BLDG', 'GRASS']],
+      // (9,10)は住宅裏手の小径としてGRASSに開放 — BLDGのままだと東北隅
+      // (10,7)(11,7)(10,8)(10,9)の4hexが盤面から完全に孤立する(接続性検証で発見)。
+      [10, 5, ['GRASS', 'BLDG', 'ROAD', 'BLDG', 'GRASS']],
+      [11, 5, ['FOREST', 'BLDG', 'ROAD', 'BLDG', 'FOREST']],
+      [12, 4, ['FOREST', 'GRASS', 'ROAD', 'GRASS', 'FOREST']],
     ],
   },
 

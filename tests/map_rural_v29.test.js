@@ -276,7 +276,7 @@ function testLocationTables() {
   const boardCoords = new Set();
   for (const e of RuralV29Map._terrain_table_base) boardCoords.add(`${e.q},${e.r}`);
 
-  for (const key of ['loc_crossroad', 'loc_forest_farm', 'loc_shelled']) {
+  for (const key of ['loc_crossroad', 'loc_forest_farm', 'loc_shelled', 'loc_church_square']) {
     RuralV29Map.fixedVariant = key;
     const game = { map: null };
     RuralV29Map.generate(game);
@@ -298,9 +298,45 @@ function testLocationTables() {
     }
     assert.strictEqual(nonVoid, 30, `${key}: should have exactly 30 cells, got ${nonVoid}`);
     assert.ok(roads >= 3, `${key}: should have at least 3 road hexes`);
-    assert.ok(blocked >= 1 && blocked <= 4, `${key}: blocked(BLDG) hexes should be 1..4, got ${blocked}`);
+    // loc_church_squareは密な市街ブロック(教会+住宅2棟)につきBLDGが多め。他ロケーションは1-2。
+    assert.ok(blocked >= 1 && blocked <= 10, `${key}: blocked(BLDG) hexes should be 1..10, got ${blocked}`);
     assert.ok(playerZone >= 5, `${key}: player spawn zone (r>=10) needs walkable hexes`);
     assert.ok(enemyZone >= 5, `${key}: enemy spawn zone (r<10) needs walkable hexes`);
+
+    // 南北連結性: r7側とr12側の歩行可能hexが、歩行可能hexだけを辿って到達可能であること
+    // (建物ブロックで盤面が完全分断されていないことを保証)
+    const passable = (q, r) => {
+      const t = game.map[q] && game.map[q][r];
+      return !!t && t.cost < 99;
+    };
+    const start = [];
+    for (let q = 0; q < MAP_W; q++) if (passable(q, 7)) start.push([q, 7]);
+    assert.ok(start.length > 0, `${key}: r=7 row needs at least one walkable hex`);
+    const DIRS = [[1, 0], [1, -1], [0, -1], [-1, 0], [-1, 1], [0, 1]];
+    const visited = new Set(start.map(([q, r]) => `${q},${r}`));
+    const queue = [...start];
+    while (queue.length) {
+      const [q, r] = queue.pop();
+      for (const [dq, dr] of DIRS) {
+        const nq = q + dq, nr = r + dr, k = `${nq},${nr}`;
+        if (visited.has(k) || !passable(nq, nr)) continue;
+        visited.add(k);
+        queue.push([nq, nr]);
+      }
+    }
+    let reachedSouth = false;
+    for (let q = 0; q < MAP_W; q++) if (visited.has(`${q},12`)) reachedSouth = true;
+    assert.ok(reachedSouth, `${key}: r=7 side must be able to reach r=12 side via walkable hexes only`);
+
+    // 全walkable hexが単一の連結成分であること(孤立ポケットを許さない)
+    let totalWalkable = 0;
+    for (let q = 0; q < MAP_W; q++) {
+      for (let r = 0; r < MAP_H; r++) {
+        if (passable(q, r)) totalWalkable++;
+      }
+    }
+    assert.strictEqual(visited.size, totalWalkable,
+      `${key}: all walkable hexes must form a single connected component (found isolated pocket: visited=${visited.size} vs total=${totalWalkable})`);
   }
   RuralV29Map.fixedVariant = null;
   console.log('✓ testLocationTables passed');

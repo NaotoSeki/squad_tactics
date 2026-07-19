@@ -199,6 +199,16 @@
 - 3ロケーション: loc_crossroad(十字路の集落)、loc_forest_farm(森際の孤立農家・無傷cottage初使用)、loc_shelled(廃屋2棟+砲痕の砲撃郊外)。`scratch/kb3d_review/variants/loc_*.png` とゲームアセット `asset/environment/maps/rural_loc_*.png`。
 - 本編ランダムプール = P1 + 3ロケーション。地形テーブルは注釈グリッドの目視で監督官が確定(_locationRows のコンパクト行形式)。
 
+## loc_church_square: 市街ビネット第1弾の盤面配置(Fable5 / 2026-07-19)
+
+- 承認済み市街3棟(residential_a/b, church_broken)を30hex盤へ配置。当初「辻(二本道路の交差点)」構図を狙ったが、教会footprint(半径16-19m)がこの盤面規模には大きすぎ、権限内(±6m/±20°)のあらゆる位置・角度でcross道路が教会footprintを貫通することが厳密な線分交差判定で確定(初期のサンプリング式クリアランス検証にバグがあり、道路が矩形内部を貫通するケースを見逃していたため発覚)。
+- 監督官裁定により構図を「教会前の広場」へ変更: cross(副道路)を削除しmain道路1本のみに単純化。教会は盤面東側で自由配置探索し、church core(建物+塔+アーチウェイ)を道路から1.5m以上・residential2棟から9m以上・盤面margin1.0m以上を満たす座標へ確定。最良解でもcore-道路クリアランスは1.183m(目標1.5mに0.317m不足)だが、目視で道路貫通や不自然な重なりは無く許容。
+- road_style="cobble"新設(灰青系プロシージャル材質、既存の土道モードは無指定時に完全維持)。
+- 最終配置: church_broken center(48.5,33.0)/0°、residential_a center(20,26)/80°、residential_b center(52,20)/-5°。
+- v29既定ビルドはmetrics JSON byte一致で回帰確認済み(build_location_sceneはbuild()と別コードパス)。
+- 本編組み込み時に接続性バグを発見: 東北隅(10,7)(11,7)(10,8)(10,9)の4hexが教会+住宅ブロックで完全に孤立(袋地)。地形テーブル側で(9,10)をBLDGからGRASS(住宅裏手の小径)へ変更して解消。以後のロケーションテーブル作成では「全walkable hexが単一連結成分か」のBFS検証を必須項目とする。
+- 本編ランダムプールに4番目のロケーションとして追加(P1+loc_crossroad+loc_forest_farm+loc_shelled+loc_church_square)。
+
 ## Fable5引継ぎ作成と量産停止
 
 - 2026-07-18、オーナー判断により、v29を方向性の凍結チェックポイントとして採用し、量産は明示的に停止した。これは量産承認ではない。

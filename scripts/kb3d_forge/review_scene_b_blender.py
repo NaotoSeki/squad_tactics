@@ -371,7 +371,7 @@ def soft_contact_material(name="RWB_SoftContact", strength=.18):
 
 
 
-def materials(ground):
+def materials(ground, road_style="dirt"):
     mats = {
         "grass": photo_ground_material("RWB_Grass",ROOT/"asset/environment/terrain_forest.jpg",8.0,.22,.97,(.42,.62,.45),.28,.82,1.08),
         "worn": photo_ground_material("RWB_Worn",ROOT/"asset/environment/terrain_dirt.jpg",4.5,.18,.96,(.78,.58,.36),.34,.75,1.15),
@@ -408,6 +408,12 @@ def materials(ground):
         "leaf1": base_material("RWB_Leaf1", (31, 48, 18), (91, 101, 39), 2.9, 0.20),
         "leaf2": base_material("RWB_Leaf2", (42, 52, 20), (112, 105, 43), 2.7, 0.18),
     }
+    if road_style == "cobble":
+        # Bluish-grey procedural cobblestone stand-in (no photo texture yet): fine noise
+        # scale + high roughness reads as paving from render distance without a bespoke
+        # cobble texture. Only used by locations that opt in via spec["road_style"].
+        mats["road"] = base_material("RWB_RoadCobble", (54, 55, 58), (96, 97, 100), 7.5, 0.32, 0.90)
+        mats["shoulder"] = base_material("RWB_ShoulderCobble", (60, 60, 62), (100, 99, 96), 6.2, 0.26, 0.92)
     ground.data.materials.clear()
     for key in ("grass", "worn", "field", "edge"):
         ground.data.materials.append(mats[key])
@@ -1349,6 +1355,21 @@ def collection_xy_bounds(collection):
     if not points:
         raise RuntimeError("No visible mesh bounds in "+collection.name)
     return min(p.x for p in points),max(p.x for p in points),min(p.y for p in points),max(p.y for p in points)
+
+
+def _building_bbox_half_extents(collection_name,root_name,angle):
+    """World-space AABB half-width/height of a building's collection at a given
+    installation angle. Side-effect free: rotation is restored before returning.
+    Used only for pre-placement validation (inside_board bbox-corner checks)."""
+    collection=bpy.data.collections[collection_name]
+    root=bpy.data.objects[root_name]
+    saved=root.rotation_euler.copy()
+    root.rotation_euler=(0,0,math.radians(angle))
+    bpy.context.view_layer.update()
+    x0,x1,y0,y1=collection_xy_bounds(collection)
+    root.rotation_euler=saved
+    bpy.context.view_layer.update()
+    return (x1-x0)/2,(y1-y0)/2
 
 
 def place_collection_center(root,collection,center,angle):
@@ -2364,6 +2385,41 @@ LOCATION_SPECS={
              {"pos":(18,34),"size":(2.9,2.1),"angle":-18}],
   "tree_seed":63027,"dressing_seed":63127,
  },
+ "loc_church_square":{
+  # Urban vignette on the round2 curated base blend (ROUND2_RESIDENTIAL_A/B,
+  # ROUND2_CHURCH_BROKEN). Originally briefed as a two-road crossroads with the
+  # church at the corner, but the church's real curated footprint (core
+  # building+towers+archways alone spans ~27x32m) cannot sit at that corner
+  # with any reachable adjustment without the roads running through it -
+  # confirmed by an exhaustive exact segment-intersection search, not a
+  # sampling artifact. Supervisor-approved redesign (2026-07-19): drop the
+  # secondary (cross) road entirely and place the church in the open
+  # east/southeast area, oriented (angle 0) to minimize its footprint width
+  # against the single remaining main road.
+  "roads":[{"controls":[(30,3),(32,14),(33,26),(34,36),(33,48),(32,58),(31,66)],"main":True}],
+  "buildings":[("church_broken",(48.5,33.0),0),
+               ("residential_a",(20,26),80),
+               ("residential_b",(52,20),-5)],
+  "ruins":[],
+  "fields":[],
+  "fences":"none",
+  "craters":[{"road":0,"near":(33,30),"size":(2.5,1.8),"angle":25}],
+  "tree_seed":71027,"dressing_seed":71127,"tree_density":0.55,
+  "road_style":"cobble",
+  "base_assets":{
+      "residential_a":("ROUND2_RESIDENTIAL_A","RW_ASSET_RESIDENTIAL_A_CURATED"),
+      "residential_b":("ROUND2_RESIDENTIAL_B","RW_ASSET_RESIDENTIAL_B_CURATED"),
+      "church_broken":("ROUND2_CHURCH_BROKEN","RW_ASSET_CHURCH_BROKEN_CURATED"),
+  },
+  # Non-structural clutter meshes on the church asset that sit outside its own
+  # curated "footprint" silhouette (rubble/sandbag props scattered wider than
+  # the building itself); hiding them keeps the compound bbox close to the
+  # actual building mass. Supervisor-approved 2026-07-19.
+  "hide_objects":[
+      "FORGE_KB3D_WWT_BldgLgBrokenChurch_A_DebrisO",
+      "FORGE_KB3D_WWT_BldgLgBrokenChurch_A_SandBagsC",
+  ],
+ },
 }
 
 LOCATION_ASSET_MAP={
@@ -2371,6 +2427,13 @@ LOCATION_ASSET_MAP={
     "barn":("ROUND1_BARN","RW_ASSET_BARN_CURATED"),
     "cottage":("ROUND1_COTTAGE","RW_ASSET_COTTAGE_BEAUTY"),
 }
+
+
+def _location_asset_map(spec):
+    """Resolve which (collection,root) map a spec's buildings use: a spec-provided
+    base_assets override (e.g. a non-rural base .blend with its own curated
+    buildings), or the default rural LOCATION_ASSET_MAP."""
+    return spec.get("base_assets",LOCATION_ASSET_MAP)
 
 
 def _validate_location_spec(spec):
@@ -2418,6 +2481,24 @@ def _validate_location_spec(spec):
         for point in (points[0],points[-1]):
             if not (inside_board(point,0.0) and not inside_board(point,3.0)):
                 raise AssertionError("road endpoint not within 3m of board edge: %s"%(point,))
+    if "base_assets" in spec:
+        # Extra bbox-corner sanity check for specs bringing their own (non-rural)
+        # base-blend assets, whose real footprints can be large/irregular enough
+        # that a center-only inside_board check (above) isn't sufficient. Gated to
+        # base_assets specs only so the three frozen rural loc_* locations (whose
+        # building placements were validated under the older, weaker check) keep
+        # their exact historical behavior.
+        asset_map=_location_asset_map(spec)
+        for asset_name,center,angle in spec["buildings"]:
+            collection_name,root_name=asset_map[asset_name]
+            hw,hh=_building_bbox_half_extents(collection_name,root_name,angle)
+            corners=((center[0]-hw,center[1]-hh),(center[0]+hw,center[1]-hh),
+                     (center[0]+hw,center[1]+hh),(center[0]-hw,center[1]+hh))
+            for corner in corners:
+                if not inside_board(corner,margin):
+                    raise AssertionError(
+                        "building %s bbox corner outside board (margin %.1f): %s"%(
+                            asset_name,margin,corner))
 
 
 def _offset_rect_corners(center,size,bearing,offset):
@@ -2480,6 +2561,13 @@ def build_location_scene(spec,seed_offset=0):
     building placement, fields, ruins, and craters read from `spec` instead
     of the frozen v29 literals. Never touches build()/build_legacy()."""
     global SEED
+    # Named-object hides (e.g. curated-asset clutter that doesn't fit this specific
+    # site) run before validation so the bbox-corner check below measures the same
+    # footprint that will actually render.
+    for object_name in spec.get("hide_objects",()):
+        hidden_obj=bpy.data.objects.get(object_name)
+        if hidden_obj is not None:
+            hidden_obj.hide_render=True
     _validate_location_spec(spec)
     scene=bpy.data.scenes[SCENE]
     old=bpy.data.collections["REVIEW_WORLD"]
@@ -2487,7 +2575,7 @@ def build_location_scene(spec,seed_offset=0):
     for obj in list(old.objects):
         if obj != source_ground:
             bpy.data.objects.remove(obj,do_unlink=True)
-    mats=materials(source_ground)
+    mats=materials(source_ground,spec.get("road_style","dirt"))
     col=clear_collection(scene,"REVIEW_WORLD_B")
     source_ground.hide_render=True
     hex_board_ground(col,mats)
@@ -2500,14 +2588,28 @@ def build_location_scene(spec,seed_offset=0):
     if camp:
         for obj in camp.objects:
             obj.hide_render=True
+    asset_map=_location_asset_map(spec)
     used_assets={asset_name for asset_name,_,_ in spec["buildings"]}
-    for asset_name,(collection_name,_root_name) in LOCATION_ASSET_MAP.items():
-        collection=bpy.data.collections[collection_name]
+    for asset_name,(collection_name,_root_name) in asset_map.items():
+        collection=bpy.data.collections.get(collection_name)
+        if collection is None:
+            continue
         hide=asset_name not in used_assets
         for obj in collection.objects:
             obj.hide_render=hide
+    if "base_assets" in spec:
+        # A non-rural base .blend is in play: the stock rural asset collections
+        # (ROUND1_FARMSTEAD_CLEAN/BARN/COTTAGE) still physically coexist in it as
+        # unused geometry, so hide them outright rather than leaving them to the
+        # loop above (which only knows about `asset_map`'s own entries).
+        for _asset_name,(collection_name,_root_name) in LOCATION_ASSET_MAP.items():
+            collection=bpy.data.collections.get(collection_name)
+            if collection is None:
+                continue
+            for obj in collection.objects:
+                obj.hide_render=True
     for asset_name,center,angle in spec["buildings"]:
-        collection_name,root_name=LOCATION_ASSET_MAP[asset_name]
+        collection_name,root_name=asset_map[asset_name]
         collection=bpy.data.collections[collection_name]
         place_collection_center(bpy.data.objects[root_name],collection,center,angle)
 
