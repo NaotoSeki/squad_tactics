@@ -240,6 +240,8 @@ window.BattleLogic = class BattleLogic {
       });
       // 被弾リアクション状態をリセット（毎ターン1回の退避を可能にする）
       this.units.forEach(u => { u.reactedThisTurn = false; });
+      // 制圧状態をカウントダウン
+      this.units.forEach(u => { u.suppressedTurns = Math.max(0, (u.suppressedTurns || 0) - 1); });
       await this.processMarchOrders();
       this.ui.log("-- PLAYER PHASE --");
       this.state = 'PLAY';
@@ -550,6 +552,8 @@ window.BattleLogic = class BattleLogic {
       }
       // REALISM_PACK.WOUNDED_STATE: 重傷状態は命中率-10%
       if (typeof REALISM_PACK !== 'undefined' && REALISM_PACK.WOUNDED_STATE && a.wounded) hitChance -= 10;
+      // 射手が制圧中なら命中率-15
+      if (a.suppressedTurns && a.suppressedTurns > 0) hitChance -= 15;
       const rtCfg = this.getRtTacticsCfg();
       if (rtCfg && rtCfg.RT_HIT_PENALTY) hitChance -= rtCfg.RT_HIT_PENALTY;
     }
@@ -671,6 +675,8 @@ window.BattleLogic = class BattleLogic {
             areaVictims.forEach(v => {
               game.applyDamage(v, Math.floor(wDmg / 4), "爆風");
             });
+            // 迫撃砲による制圧
+            game.applySuppression(targetHex.q, targetHex.r, w, a);
 
           } else if (isAreaAttack) {
             const victims = game.getUnitsInHex(targetHex.q, targetHex.r).filter(v => v.team !== a.team);
@@ -691,6 +697,8 @@ window.BattleLogic = class BattleLogic {
                 }
               }
             });
+            // 面制圧による制圧
+            game.applySuppression(targetHex.q, targetHex.r, w, a);
 
           } else {
             const mainDmg = Math.floor(getWeaponDmg(w) * (0.8 + Math.random() * 0.4));
@@ -725,6 +733,8 @@ window.BattleLogic = class BattleLogic {
                 if (sd > 0) game.applyDamage(v, sd, isShell ? "破片" : "流弾", { isFire: true });
               }
             });
+            // 直接射撃による制圧（命中・外れを問わず）
+            game.applySuppression(targetHex.q, targetHex.r, w, a);
           }
         }, flightTime);
 
@@ -788,6 +798,50 @@ window.BattleLogic = class BattleLogic {
       }
     } else if (u.wounded) {
       u.wounded = false;
+    }
+  }
+
+  /**
+   * 着弾点周辺への制圧を適用
+   * 弾種に基づく suppress_range 内の敵味方歩兵に suppressedTurns=1 を付与
+   * @param {number} centerQ - 着弾点Q座標
+   * @param {number} centerR - 着弾点R座標
+   * @param {Object} weapon - 武器オブジェクト
+   * @param {Object} attacker - 攻撃者ユニット
+   */
+  applySuppression(centerQ, centerR, weapon, attacker) {
+    if (!weapon || !window.ReactionRules) return;
+    const radius = window.ReactionRules.suppressionRadius(weapon);
+    if (radius <= 0) return; // 制圧なし
+
+    const affectedUnits = [];
+    // 中心から radius 以内の全hexを走査
+    for (let q = centerQ - radius; q <= centerQ + radius; q++) {
+      const qr_map = this.map[q];
+      if (!qr_map) continue;
+      for (let r = centerR - radius; r <= centerR + radius; r++) {
+        if (!qr_map[r]) continue;
+        const dist = this.hexDist({ q, r }, { q: centerQ, r: centerR });
+        if (dist <= radius) {
+          const unitsInHex = this.getUnitsInHex(q, r);
+          if (unitsInHex) {
+            unitsInHex.forEach(u => {
+              // attacker自身、味方、撃破済み：除外
+              if (u === attacker || u.team === attacker.team || u.hp <= 0) return;
+              // 制圧対象（歩兵のみ）ならば
+              if (window.ReactionRules.shouldSuppress(u)) {
+                affectedUnits.push(u);
+                u.suppressedTurns = 1;
+                if (u.stance === 'stand') u.stance = 'crouch';
+              }
+            });
+          }
+        }
+      }
+    }
+
+    if (affectedUnits.length > 0) {
+      this.ui.log(`>> 制圧: ${affectedUnits.length}名が頭を下げた`);
     }
   }
 

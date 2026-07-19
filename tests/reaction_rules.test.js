@@ -199,8 +199,73 @@ function testPickCoverHex() {
   console.log('✓ testPickCoverHex passed');
 }
 
+// ===== suppressionRadius テスト =====
+function testSuppressionRadius() {
+  // 迫撃砲（type: shell、indirect: true）→ 2hex
+  const mortar = { code: 'm2_mortar', type: 'shell', name: 'M2 60mm Mortar' };
+  assert.strictEqual(ReactionRules.suppressionRadius(mortar), 2, 'mortar should have 2hex radius');
+
+  // 手榴弾（type: shell）→ 2hex
+  const grenade = { code: 'nade', type: 'shell', name: 'Mk2 Grenade' };
+  assert.strictEqual(ReactionRules.suppressionRadius(grenade), 2, 'grenade should have 2hex radius');
+
+  // 戦車砲（type: shell_fast）→ 1hex
+  const kwk = { code: 'kwk', type: 'shell_fast', name: '75mm KwK' };
+  assert.strictEqual(ReactionRules.suppressionRadius(kwk), 1, 'shell_fast should have 1hex radius');
+
+  // MG42（type: bullet、code に mg を含む）→ 1hex
+  const mg42 = { code: 'mg42', type: 'bullet', name: 'MG42', burst: 10 };
+  assert.strictEqual(ReactionRules.suppressionRadius(mg42), 1, 'mg42 should have 1hex radius');
+
+  // BAR（type: bullet、burst: 2）→ 0hex（burst < 5）
+  const bar = { code: 'bar', type: 'bullet', name: 'M1918 BAR', burst: 2 };
+  assert.strictEqual(ReactionRules.suppressionRadius(bar), 0, 'BAR should have 0hex radius');
+
+  // BAR でも burst >= 5 なら 1hex（高バースト設定の場合）
+  const barHighBurst = { code: 'bar_mod', type: 'bullet', name: 'BAR High Burst', burst: 5 };
+  assert.strictEqual(ReactionRules.suppressionRadius(barHighBurst), 1, 'BAR with burst>=5 should have 1hex radius');
+
+  // M1 Garand（type: bullet、code に mg なし、burst: 2）→ 0hex
+  const m1 = { code: 'm1', type: 'bullet', name: 'M1 Garand', burst: 2 };
+  assert.strictEqual(ReactionRules.suppressionRadius(m1), 0, 'M1 should have 0hex radius');
+
+  // 拳銃（type: bullet、burst: 1）→ 0hex
+  const luger = { code: 'luger', type: 'bullet', name: 'Luger P08', burst: 1 };
+  assert.strictEqual(ReactionRules.suppressionRadius(luger), 0, 'pistol should have 0hex radius');
+
+  // null/undefined weapon
+  assert.strictEqual(ReactionRules.suppressionRadius(null), 0, 'null weapon should have 0hex radius');
+  assert.strictEqual(ReactionRules.suppressionRadius(undefined), 0, 'undefined weapon should have 0hex radius');
+
+  console.log('✓ testSuppressionRadius passed');
+}
+
+// ===== shouldSuppress テスト =====
+function testShouldSuppress() {
+  // 歩兵（isTank なし）→ true
+  const infantryUnit = { def: {}, name: 'Soldier' };
+  assert.strictEqual(ReactionRules.shouldSuppress(infantryUnit), true, 'infantry should be suppressible');
+
+  // 戦車（isTank: true）→ false
+  const tankUnit = { def: { isTank: true }, name: 'Panzer' };
+  assert.strictEqual(ReactionRules.shouldSuppress(tankUnit), false, 'tank should not be suppressible');
+
+  // null unit → false
+  assert.strictEqual(ReactionRules.shouldSuppress(null), false, 'null unit should return false');
+
+  // undefined unit → false
+  assert.strictEqual(ReactionRules.shouldSuppress(undefined), false, 'undefined unit should return false');
+
+  // unit without def → false
+  assert.strictEqual(ReactionRules.shouldSuppress({}), false, 'unit without def should return false');
+
+  console.log('✓ testShouldSuppress passed');
+}
+
 // メインテスト実行
 testShouldGoProne();
 testPickCoverHex();
+testSuppressionRadius();
+testShouldSuppress();
 
 console.log('✓ All reaction_rules tests passed');

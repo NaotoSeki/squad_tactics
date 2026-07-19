@@ -6,6 +6,43 @@
 
 window.ReactionRules = {
   /**
+   * 弾種に基づく制圧半径(hex)を返す。
+   * 迫撃砲・榴弾・爆発系: 2 / MG・自動火器: 1 / その他: 0(目標hexのみ)
+   * @param {Object} weapon - 武器オブジェクト { name, type, code, burst, ... }
+   * @returns {number} 制圧半径（hex）
+   */
+  suppressionRadius(weapon) {
+    if (!weapon) return 0;
+    // 迫撃砲・榴弾・爆発系（type に shell を含む、indirect が真）
+    if (weapon.type && weapon.type.includes('shell')) {
+      // shell_fast（戦車砲）は 1hex
+      if (weapon.type === 'shell_fast') return 1;
+      // 通常の shell（迫撃砲など）は 2hex
+      return 2;
+    }
+    // MG・自動火器（type が bullet かつ burst >= 5、またはコード名に mg を含む）
+    if (weapon.type === 'bullet' && weapon.code && weapon.code.toLowerCase().includes('mg')) {
+      return 1;
+    }
+    if (weapon.type === 'bullet' && weapon.burst && weapon.burst >= 5) {
+      return 1;
+    }
+    // その他（小銃・拳銃など）: 0
+    return 0;
+  },
+
+  /**
+   * ユニットが制圧の対象となるべきか判定（歩兵のみ、戦車は除外）
+   * @param {Object} unit - ユニット
+   * @returns {boolean} true = 制圧対象
+   */
+  shouldSuppress(unit) {
+    if (!unit || !unit.def) return false;
+    if (unit.def.isTank) return false; // 戦車は制圧の対象外
+    return true;
+  },
+
+  /**
    * 歩兵が敵射撃で damage>=5 を受けたら伏せるか判定
    * @param {Object} unit - ユニット
    * @param {number} damage - 被弾ダメージ値
