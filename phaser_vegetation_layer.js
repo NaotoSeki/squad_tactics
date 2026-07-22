@@ -191,14 +191,11 @@ window.VegetationLayer = {
                             shadowKey = null;
                         }
 
-                        // Trees are low-res pixel-art; the game runs pixelArt:false (LINEAR),
-                        // which blurs magnified foliage into "green noise". Force NEAREST on
-                        // tree textures only so the leaf detail stays crisp when zoomed
-                        // (ground/soldiers keep LINEAR).
-                        if (Phaser.Textures && Phaser.Textures.FilterMode) {
-                            scene.textures.get(bodyKey).setFilter(Phaser.Textures.FilterMode.NEAREST);
-                            if (shadowKey) scene.textures.get(shadowKey).setFilter(Phaser.Textures.FilterMode.NEAREST);
-                        }
+                        // Keep LINEAR (Phaser default). PS renders sprites as GPU textures
+                        // with hardware bilinear filtering (config: device:hardware,
+                        // driver:direct3d9) — the dither in the source resolves via the HW
+                        // sampler at draw scale. NEAREST (an earlier mistake) crisps the
+                        // dither into "salt-and-pepper" and is exactly wrong for the PS look.
 
                         pools[tree.kind].push({
                             bodyKey: bodyKey,

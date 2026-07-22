@@ -1055,6 +1055,7 @@ class MainScene extends Phaser.Scene {
             if (this.roadGraphics) this.roadGraphics.clear();
             window.TerrainRenderRuralV29.buildMap(this, this.hexGroup, map);
             if (window.VegetationLayer) window.VegetationLayer.build(this, map);
+            if (window.SceneComposition) window.SceneComposition.applyGrade(this);
             this.centerMap();
             return;
         }
