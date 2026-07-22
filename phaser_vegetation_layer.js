@@ -191,6 +191,15 @@ window.VegetationLayer = {
                             shadowKey = null;
                         }
 
+                        // Trees are low-res pixel-art; the game runs pixelArt:false (LINEAR),
+                        // which blurs magnified foliage into "green noise". Force NEAREST on
+                        // tree textures only so the leaf detail stays crisp when zoomed
+                        // (ground/soldiers keep LINEAR).
+                        if (Phaser.Textures && Phaser.Textures.FilterMode) {
+                            scene.textures.get(bodyKey).setFilter(Phaser.Textures.FilterMode.NEAREST);
+                            if (shadowKey) scene.textures.get(shadowKey).setFilter(Phaser.Textures.FilterMode.NEAREST);
+                        }
+
                         pools[tree.kind].push({
                             bodyKey: bodyKey,
                             shadowKey: shadowKey,
