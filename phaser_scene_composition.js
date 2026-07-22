@@ -26,6 +26,10 @@ window.SceneComposition = {
   _registered: false,
   _premultMode: undefined,
 
+  // Reproduces Panzer Strike's actual post shaders (disassembled from
+  // Driver.Direct3D9.dll): a LUMA-based 5-tap unsharp (Rec.709 weights, the
+  // exact def constant c1=(0.2126,0.7152,0.0722), 0.25 neighbour weight) that
+  // sharpens luminance while preserving chroma, then pow() gamma + contrast.
   _frag: [
     'precision mediump float;',
     'uniform sampler2D uMainSampler;',
@@ -35,18 +39,21 @@ window.SceneComposition = {
     'uniform float uSaturate;',
     'uniform float uGamma;',
     'varying vec2 outTexCoord;',
+    'const vec3 LUMA = vec3(0.2126, 0.7152, 0.0722);', // PS shader def c1 (Rec.709)
     'void main(){',
     '  vec2 px = 1.0 / uResolution;',
     '  vec3 c = texture2D(uMainSampler, outTexCoord).rgb;',
-    '  vec3 b = (texture2D(uMainSampler, outTexCoord + vec2(px.x,0.0)).rgb',
-    '         +  texture2D(uMainSampler, outTexCoord - vec2(px.x,0.0)).rgb',
-    '         +  texture2D(uMainSampler, outTexCoord + vec2(0.0,px.y)).rgb',
-    '         +  texture2D(uMainSampler, outTexCoord - vec2(0.0,px.y)).rgb) * 0.25;',
-    '  c = c + uSharp * (c - b);',                    // unsharp-mask sharpen
+    '  float lc = dot(c, LUMA);',
+    '  float ln = 0.25 * (',                          // PS def c2.z = 0.25 (4-neighbour avg)
+    '      dot(texture2D(uMainSampler, outTexCoord + vec2(px.x,0.0)).rgb, LUMA)',
+    '    + dot(texture2D(uMainSampler, outTexCoord - vec2(px.x,0.0)).rgb, LUMA)',
+    '    + dot(texture2D(uMainSampler, outTexCoord + vec2(0.0,px.y)).rgb, LUMA)',
+    '    + dot(texture2D(uMainSampler, outTexCoord - vec2(0.0,px.y)).rgb, LUMA));',
+    '  float ls = lc + uSharp * (lc - ln);',          // luma-only unsharp mask
+    '  c *= ls / max(lc, 1e-4);',                     // rescale colour to sharpened luma (keep chroma)
     '  c = (c - 0.5) * uContrast + 0.5;',             // contrast
-    '  float l = dot(c, vec3(0.299, 0.587, 0.114));',
-    '  c = mix(vec3(l), c, uSaturate);',              // saturation
-    '  c = pow(max(c, vec3(0.0)), vec3(1.0 / uGamma));', // gamma
+    '  c = mix(vec3(dot(c, LUMA)), c, uSaturate);',   // saturation
+    '  c = pow(max(c, vec3(0.0)), vec3(1.0 / uGamma));', // pow() gamma (PS log/exp)
     '  gl_FragColor = vec4(clamp(c, 0.0, 1.0), 1.0);',
     '}'
   ].join('\n'),
