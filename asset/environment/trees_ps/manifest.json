@@ -34,21 +34,21 @@
    "id": "cedrus-deodara_a_02",
    "kind": "conifer",
    "body": "cedrus-deodara_a_02.png",
-   "w": 163,
-   "h": 189,
+   "w": 138,
+   "h": 160,
    "shadow": "cedrus-deodara_a_02_shadow.png",
-   "sw": 174,
-   "sh": 86
+   "sw": 160,
+   "sh": 79
   },
   {
    "id": "pinus-ponderosa_b_02",
    "kind": "conifer",
    "body": "pinus-ponderosa_b_02.png",
-   "w": 202,
-   "h": 244,
+   "w": 132,
+   "h": 160,
    "shadow": "pinus-ponderosa_b_02_shadow.png",
-   "sw": 228,
-   "sh": 122
+   "sw": 160,
+   "sh": 86
   },
   {
    "id": "pseudotsuga-menziesii_a_01",
@@ -84,18 +84,18 @@
    "id": "quercus-cerris_a_02",
    "kind": "broadleaf",
    "body": "quercus-cerris_a_02.png",
-   "w": 181,
-   "h": 208,
+   "w": 139,
+   "h": 160,
    "shadow": "quercus-cerris_a_02_shadow.png",
-   "sw": 192,
-   "sh": 107
+   "sw": 160,
+   "sh": 89
   },
   {
    "id": "tilia-europaea_a_02",
    "kind": "broadleaf",
    "body": "tilia-europaea_a_02.png",
-   "w": 136,
-   "h": 171,
+   "w": 127,
+   "h": 160,
    "shadow": "tilia-europaea_a_02_shadow.png",
    "sw": 153,
    "sh": 89
@@ -104,28 +104,28 @@
    "id": "ulmus-minor_a_02",
    "kind": "broadleaf",
    "body": "ulmus-minor_a_02.png",
-   "w": 177,
-   "h": 207,
+   "w": 137,
+   "h": 160,
    "shadow": "ulmus-minor_a_02_shadow.png",
-   "sw": 192,
-   "sh": 101
+   "sw": 160,
+   "sh": 84
   },
   {
    "id": "populus-tremuloides_a_02",
    "kind": "broadleaf",
    "body": "populus-tremuloides_a_02.png",
-   "w": 195,
-   "h": 211,
+   "w": 148,
+   "h": 160,
    "shadow": "populus-tremuloides_a_02_shadow.png",
-   "sw": 213,
-   "sh": 113
+   "sw": 160,
+   "sh": 85
   },
   {
    "id": "robinia-pseudoacacia_a_02",
    "kind": "broadleaf",
    "body": "robinia-pseudoacacia_a_02.png",
-   "w": 118,
-   "h": 180,
+   "w": 105,
+   "h": 160,
    "shadow": "robinia-pseudoacacia_a_02_shadow.png",
    "sw": 126,
    "sh": 86
@@ -134,8 +134,8 @@
    "id": "salix-babylonica_a_02",
    "kind": "broadleaf",
    "body": "salix-babylonica_a_02.png",
-   "w": 117,
-   "h": 192,
+   "w": 98,
+   "h": 160,
    "shadow": "salix-babylonica_a_02_shadow.png",
    "sw": 128,
    "sh": 101
@@ -154,11 +154,11 @@
    "id": "quercus-agrifolia_a_02",
    "kind": "broadleaf",
    "body": "quercus-agrifolia_a_02.png",
-   "w": 182,
-   "h": 145,
+   "w": 160,
+   "h": 127,
    "shadow": "quercus-agrifolia_a_02_shadow.png",
-   "sw": 186,
-   "sh": 85
+   "sw": 160,
+   "sh": 73
   }
  ]
 }
