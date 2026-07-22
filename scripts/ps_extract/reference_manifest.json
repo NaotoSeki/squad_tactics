@@ -1,0 +1,66 @@
+{
+  "schema": "squad-tactics.panzer-strike-reference/v1",
+  "items": [
+    {"id": "grass_base_a", "category": "Grass", "ssc": "grass_green_large_001.ssc", "spl": "grass_green_01.spl", "slots": [0, 1]},
+    {"id": "grass_base_b", "category": "Grass", "ssc": "grass_green_large_004.ssc", "spl": "grass_green_01.spl"},
+    {"id": "grass_flowers", "category": "Grass", "ssc": "grass_green_flowers_large_001.ssc", "spl": "grass_green_flowers_01.spl"},
+
+    {"id": "soil_a", "category": "Terrains", "ssc": "terrain_soil_01_000.ssc", "spl": "terrain_soil_01.spl"},
+    {"id": "soil_b", "category": "Terrains", "ssc": "terrain_soil_01_004.ssc", "spl": "terrain_soil_01.spl"},
+    {"id": "soil_c", "category": "Terrains", "ssc": "terrain_soil_02_006.ssc", "spl": "terrain_soil_02.spl"},
+    {"id": "forest_floor", "category": "Terrains", "ssc": "terrain_forest_01_003.ssc", "spl": "terrain_forest_01.spl"},
+
+    {"id": "field_a", "category": "Fields", "ssc": "field_01_000.ssc", "spl": "field_01.spl"},
+    {"id": "field_b", "category": "Fields", "ssc": "field_01_002.ssc", "spl": "field_01.spl"},
+    {"id": "field_c", "category": "Fields", "ssc": "field_01_004.ssc", "spl": "field_01.spl"},
+
+    {"id": "road_cap", "category": "Roads", "ssc": "road_ground_0000s_0000_01.ssc", "spl": "road_ground.spl"},
+    {"id": "road_straight", "category": "Roads", "ssc": "road_ground_0001s_0000_straight_08.ssc", "spl": "road_ground.spl"},
+    {"id": "road_curve_a", "category": "Roads", "ssc": "road_ground_0003s_0000_curve_8.ssc", "spl": "road_ground.spl"},
+    {"id": "road_curve_b", "category": "Roads", "ssc": "road_ground_0004s_0000_curve_08.ssc", "spl": "road_ground.spl"},
+    {"id": "road_fork", "category": "Roads", "ssc": "road_ground_0005s_0000_06.ssc", "spl": "road_ground.spl"},
+
+    {"id": "yard_a", "category": "Spots", "ssc": "spot_01_yard_002.ssc", "spl": "spot_01.spl"},
+    {"id": "yard_b", "category": "Spots", "ssc": "spot_01_yard_008.ssc", "spl": "spot_01.spl"},
+    {"id": "ground_patch", "category": "Spots", "ssc": "spot_01_ground_006.ssc", "spl": "spot_01.spl"},
+    {"id": "yard_entrance", "category": "Spots", "ssc": "spot_01_entrance_003.ssc", "spl": "spot_01.spl"},
+
+    {"id": "tree_fir", "category": "Trees", "ssc": "abies-concolor_a_01.ssc", "spl": "abies-concolor_a_01.spl", "slots": [2]},
+    {"id": "tree_spruce", "category": "Trees", "ssc": "picea-abies_b_02.ssc", "spl": "picea-abies_b_02.spl", "slots": [2]},
+    {"id": "tree_linden", "category": "Trees", "ssc": "tilia-europaea_c_01.ssc", "spl": "tilia-europaea_c_01.spl", "slots": [2]},
+    {"id": "tree_oak", "category": "Trees", "ssc": "quercus-cerris_a_02.ssc", "spl": "quercus-cerris_a_02.spl", "slots": [2]},
+    {"id": "tree_willow", "category": "Trees", "ssc": "salix-babylonica_b_01.ssc", "spl": "salix-babylonica_b_01.spl", "slots": [2]},
+    {"id": "tree_poplar", "category": "Trees", "ssc": "populus-tremuloides_a_02.ssc", "spl": "populus-tremuloides_a_02.spl", "slots": [2]},
+    {"id": "tree_blossom", "category": "Trees", "ssc": "prunus-cerasifera_b_01.ssc", "spl": "prunus-cerasifera_b_01.spl", "slots": [2]},
+    {"id": "tree_robinia", "category": "Trees", "ssc": "robinia-pseudoacacia_c_02.ssc", "spl": "robinia-pseudoacacia_c_02.spl", "slots": [2]},
+
+    {"id": "bush_big", "category": "Plants", "ssc": "bush_big_03.ssc", "spl": "bush_big.spl", "slots": [2]},
+    {"id": "bush_medium", "category": "Plants", "ssc": "bush_medium_04.ssc", "spl": "bush_medium.spl", "slots": [0, 1]},
+    {"id": "bush_small", "category": "Plants", "ssc": "bush_small_02.ssc", "spl": "bush_small.spl", "slots": [0, 1]},
+    {"id": "flower_phlox", "category": "Plants", "ssc": "flower_phlox-paniculata_c_03.ssc", "spl": "flower_phlox-paniculata_01.spl", "slots": [0, 1]},
+    {"id": "flower_primula", "category": "Plants", "ssc": "flower_primula-veris_d_02.ssc", "spl": "flower_primula-veris.spl", "slots": [0]},
+    {"id": "fern", "category": "Plants", "ssc": "plant_dryopteris-carthusiana_c_01.ssc", "spl": "plant_dryopteris-carthusiana.spl", "slots": [2]},
+    {"id": "sunflower", "category": "Plants", "ssc": "sunflower_07.ssc", "spl": "sunflower.spl", "slots": [2]},
+    {"id": "wheat_ripe", "category": "Plants", "ssc": "wheat_ripe_05.ssc", "spl": "wheat_ripe.spl", "slots": [2]},
+
+    {"id": "compose_farm_a", "category": "Stands", "ssc": "compose_004_0.ssc", "spl": "compose_004_0.spl", "slots": [1, 2]},
+    {"id": "compose_farm_b", "category": "Stands", "ssc": "compose_006_2.ssc", "spl": "compose_006_2.spl", "slots": [1, 2]},
+    {"id": "washing", "category": "Stands", "ssc": "washing_001_0.ssc", "spl": "washing_001_0.spl", "slots": [1, 2]},
+    {"id": "well", "category": "Stands", "ssc": "well_001.ssc", "spl": "well_001.spl", "slots": [1, 2]},
+    {"id": "woodpile", "category": "Stands", "ssc": "woodpile_002_0.ssc", "spl": "woodpile_002_0.spl", "slots": [1, 2]},
+    {"id": "cart", "category": "Stands", "ssc": "cart_001_0.ssc", "spl": "cart_001_0.spl", "slots": [1, 2]},
+    {"id": "barrel", "category": "Stands", "ssc": "barrel_001.ssc", "spl": "barrel_001.spl", "slots": [1, 2]},
+    {"id": "bench", "category": "Stands", "ssc": "bench_001_0.ssc", "spl": "bench_001_0.spl", "slots": [1, 2]},
+
+    {"id": "fences", "category": "Fences", "ssc": "village_fence_frontage.ssc", "spl": "village_fence_frontage.spl", "slots": [24, 28, 32, 36, 40, 44, 48, 52]},
+
+    {"id": "crater_light", "category": "Craters", "ssc": "crater_gun_light_02.ssc", "spl": "crater_gun_light.spl"},
+    {"id": "crater_heavy", "category": "Craters", "ssc": "crater_gun_heavy_03.ssc", "spl": "crater_gun_heavy.spl"},
+    {"id": "tank_tracks", "category": "Tracks", "ssc": "tracks_tank_18.ssc", "spl": "tracks_tank.spl", "slots": [0, 8, 16, 24]},
+
+    {"id": "house_rural", "category": "Buildings", "ssc": "german_rural_house_001_ver_01.ssc", "spl": "german_rural_house_001_ver_01.spl", "slots": [5, 7, 9, 10]},
+    {"id": "house_village", "category": "Buildings", "ssc": "german_village_house_003_ver_01.ssc", "spl": "german_village_house_003_ver_01.spl", "slots": [5, 7, 9]},
+    {"id": "barn_village", "category": "Buildings", "ssc": "german_village_barn_003_ver_01.ssc", "spl": "german_village_barn_003_ver_01.spl", "slots": [5, 7, 9]},
+    {"id": "soviet_house", "category": "Buildings", "ssc": "soviet_village_house_003_ver_01.ssc", "spl": "soviet_village_house_003_ver_01.spl", "slots": [5, 7, 9]}
+  ]
+}

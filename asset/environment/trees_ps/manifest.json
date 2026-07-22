@@ -1,0 +1,164 @@
+{
+ "trees": [
+  {
+   "id": "picea-abies_b_02",
+   "kind": "conifer",
+   "body": "picea-abies_b_02.png",
+   "w": 81,
+   "h": 119,
+   "shadow": "picea-abies_b_02_shadow.png",
+   "sw": 95,
+   "sh": 60
+  },
+  {
+   "id": "picea-abies_c_02",
+   "kind": "conifer",
+   "body": "picea-abies_c_02.png",
+   "w": 101,
+   "h": 152,
+   "shadow": "picea-abies_c_02_shadow.png",
+   "sw": 104,
+   "sh": 62
+  },
+  {
+   "id": "abies-concolor_a_02",
+   "kind": "conifer",
+   "body": "abies-concolor_a_02.png",
+   "w": 79,
+   "h": 133,
+   "shadow": "abies-concolor_a_02_shadow.png",
+   "sw": 87,
+   "sh": 48
+  },
+  {
+   "id": "cedrus-deodara_a_02",
+   "kind": "conifer",
+   "body": "cedrus-deodara_a_02.png",
+   "w": 163,
+   "h": 189,
+   "shadow": "cedrus-deodara_a_02_shadow.png",
+   "sw": 174,
+   "sh": 86
+  },
+  {
+   "id": "pinus-ponderosa_b_02",
+   "kind": "conifer",
+   "body": "pinus-ponderosa_b_02.png",
+   "w": 202,
+   "h": 244,
+   "shadow": "pinus-ponderosa_b_02_shadow.png",
+   "sw": 228,
+   "sh": 122
+  },
+  {
+   "id": "pseudotsuga-menziesii_a_01",
+   "kind": "conifer",
+   "body": "pseudotsuga-menziesii_a_01.png",
+   "w": 71,
+   "h": 89,
+   "shadow": "pseudotsuga-menziesii_a_01_shadow.png",
+   "sw": 71,
+   "sh": 38
+  },
+  {
+   "id": "larix-decidua_a_02",
+   "kind": "conifer",
+   "body": "larix-decidua_a_02.png",
+   "w": 103,
+   "h": 138,
+   "shadow": "larix-decidua_a_02_shadow.png",
+   "sw": 118,
+   "sh": 62
+  },
+  {
+   "id": "picea-obovata_a_02",
+   "kind": "conifer",
+   "body": "picea-obovata_a_02.png",
+   "w": 99,
+   "h": 134,
+   "shadow": "picea-obovata_a_02_shadow.png",
+   "sw": 106,
+   "sh": 63
+  },
+  {
+   "id": "quercus-cerris_a_02",
+   "kind": "broadleaf",
+   "body": "quercus-cerris_a_02.png",
+   "w": 181,
+   "h": 208,
+   "shadow": "quercus-cerris_a_02_shadow.png",
+   "sw": 192,
+   "sh": 107
+  },
+  {
+   "id": "tilia-europaea_a_02",
+   "kind": "broadleaf",
+   "body": "tilia-europaea_a_02.png",
+   "w": 136,
+   "h": 171,
+   "shadow": "tilia-europaea_a_02_shadow.png",
+   "sw": 153,
+   "sh": 89
+  },
+  {
+   "id": "ulmus-minor_a_02",
+   "kind": "broadleaf",
+   "body": "ulmus-minor_a_02.png",
+   "w": 177,
+   "h": 207,
+   "shadow": "ulmus-minor_a_02_shadow.png",
+   "sw": 192,
+   "sh": 101
+  },
+  {
+   "id": "populus-tremuloides_a_02",
+   "kind": "broadleaf",
+   "body": "populus-tremuloides_a_02.png",
+   "w": 195,
+   "h": 211,
+   "shadow": "populus-tremuloides_a_02_shadow.png",
+   "sw": 213,
+   "sh": 113
+  },
+  {
+   "id": "robinia-pseudoacacia_a_02",
+   "kind": "broadleaf",
+   "body": "robinia-pseudoacacia_a_02.png",
+   "w": 118,
+   "h": 180,
+   "shadow": "robinia-pseudoacacia_a_02_shadow.png",
+   "sw": 126,
+   "sh": 86
+  },
+  {
+   "id": "salix-babylonica_a_02",
+   "kind": "broadleaf",
+   "body": "salix-babylonica_a_02.png",
+   "w": 117,
+   "h": 192,
+   "shadow": "salix-babylonica_a_02_shadow.png",
+   "sw": 128,
+   "sh": 101
+  },
+  {
+   "id": "prunus-cerasifera_a_02",
+   "kind": "broadleaf",
+   "body": "prunus-cerasifera_a_02.png",
+   "w": 87,
+   "h": 82,
+   "shadow": "prunus-cerasifera_a_02_shadow.png",
+   "sw": 86,
+   "sh": 51
+  },
+  {
+   "id": "quercus-agrifolia_a_02",
+   "kind": "broadleaf",
+   "body": "quercus-agrifolia_a_02.png",
+   "w": 182,
+   "h": 145,
+   "shadow": "quercus-agrifolia_a_02_shadow.png",
+   "sw": 186,
+   "sh": 85
+  }
+ ]
+}
