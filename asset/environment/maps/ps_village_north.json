@@ -1,0 +1,311 @@
+{
+  "schema": "ps_battlefield/v1",
+  "name": "ps_village_north",
+  "image": "ps_village_north.png",
+  "image_width": 620,
+  "image_height": 620,
+  "projection": {
+    "scale": 0.84,
+    "top_left_x": 885.3516092068122,
+    "top_left_y": 509.1,
+    "note": "game_px = top_left + image_px * scale (等方。PS 2:1等角のまま歪ませない)"
+  },
+  "source": {
+    "psm": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Panzer Strike Demo\\Maps\\Single\\demo_campaign_battle_01.psm",
+    "crop": {
+      "x": 12800,
+      "y": 3440,
+      "width": 620,
+      "height": 620,
+      "coordinate_space": "isometric",
+      "scale": "native SSC pixels; no resampling"
+    },
+    "placements_audited": 726,
+    "missing_instances": 0
+  },
+  "rows": [
+    [
+      7,
+      7,
+      [
+        "ROAD",
+        "BLDG",
+        "ROAD",
+        "BLDG",
+        "GRASS"
+      ]
+    ],
+    [
+      8,
+      6,
+      [
+        "ROAD",
+        "FIELD",
+        "ROAD",
+        "FOREST",
+        "GRASS"
+      ]
+    ],
+    [
+      9,
+      6,
+      [
+        "GRASS",
+        "FIELD",
+        "GRASS",
+        "FIELD",
+        "FIELD"
+      ]
+    ],
+    [
+      10,
+      5,
+      [
+        "BLDG",
+        "FOREST",
+        "GRASS",
+        "FIELD",
+        "GRASS"
+      ]
+    ],
+    [
+      11,
+      5,
+      [
+        "FIELD",
+        "ROAD",
+        "GRASS",
+        "GRASS",
+        "BLDG"
+      ]
+    ],
+    [
+      12,
+      4,
+      [
+        "FIELD",
+        "ROAD",
+        "GRASS",
+        "GRASS",
+        "FIELD"
+      ]
+    ]
+  ],
+  "audit": {
+    "coverage_ok": true,
+    "required_image_px": [
+      612,
+      611
+    ],
+    "placements_on_board": 515,
+    "placements_off_board": 211,
+    "terrain_counts": {
+      "GRASS": 10,
+      "FIELD": 8,
+      "ROAD": 6,
+      "BLDG": 4,
+      "FOREST": 2
+    },
+    "connectivity": {
+      "ok": true,
+      "passable": 26,
+      "component_sizes": [
+        26
+      ],
+      "isolated": []
+    },
+    "per_hex_families": {
+      "7,7": {
+        "shrub": 11,
+        "fence": 3,
+        "grass": 2,
+        "road": 2,
+        "large_prop": 2,
+        "terrain": 1,
+        "flower": 1
+      },
+      "8,7": {
+        "large_prop": 5,
+        "terrain": 2,
+        "fence": 2,
+        "shrub": 2,
+        "grass": 1,
+        "building": 1
+      },
+      "9,7": {
+        "road": 2,
+        "terrain": 1
+      },
+      "10,7": {
+        "terrain": 2,
+        "road": 2,
+        "building": 1,
+        "large_prop": 1
+      },
+      "11,7": {
+        "terrain": 2
+      },
+      "6,8": {
+        "shrub": 11,
+        "terrain": 2,
+        "road": 2,
+        "fence": 1,
+        "flower": 1
+      },
+      "7,8": {
+        "shrub": 13,
+        "flower": 3,
+        "field": 2,
+        "terrain": 1,
+        "road": 1
+      },
+      "8,8": {
+        "flower": 19,
+        "terrain": 4,
+        "road": 2,
+        "fence": 2,
+        "small_prop": 2,
+        "shrub": 2
+      },
+      "9,8": {
+        "fence": 3,
+        "tree": 2,
+        "flower": 2,
+        "grass": 1,
+        "shrub": 1,
+        "large_prop": 1
+      },
+      "10,8": {
+        "shrub": 4,
+        "fence": 3,
+        "large_prop": 2,
+        "terrain": 1,
+        "grass": 1
+      },
+      "6,9": {
+        "shrub": 8,
+        "flower": 8,
+        "terrain": 4,
+        "fence": 3,
+        "large_prop": 1
+      },
+      "7,9": {
+        "flower": 20,
+        "shrub": 11,
+        "terrain": 3,
+        "field": 2,
+        "fence": 2
+      },
+      "8,9": {
+        "flower": 13,
+        "shrub": 11,
+        "terrain": 2,
+        "fence": 2,
+        "large_prop": 2
+      },
+      "9,9": {
+        "shrub": 34,
+        "terrain": 4,
+        "field": 2,
+        "large_prop": 2,
+        "road": 1,
+        "flower": 1
+      },
+      "10,9": {
+        "shrub": 12,
+        "field": 2,
+        "ground_feature": 1
+      },
+      "5,10": {
+        "road": 3,
+        "large_prop": 3,
+        "terrain": 2,
+        "shrub": 2,
+        "grass": 1,
+        "building": 1
+      },
+      "6,10": {
+        "tree": 3,
+        "terrain": 2,
+        "fence": 1
+      },
+      "7,10": {
+        "flower": 15,
+        "terrain": 5,
+        "fence": 3
+      },
+      "8,10": {
+        "flower": 36,
+        "field": 4,
+        "terrain": 3,
+        "fence": 1
+      },
+      "9,10": {
+        "shrub": 11,
+        "flower": 10,
+        "terrain": 3,
+        "road": 1
+      },
+      "5,11": {
+        "large_prop": 8,
+        "road": 2,
+        "flower": 2,
+        "grass": 1,
+        "field": 1
+      },
+      "6,11": {
+        "road": 3,
+        "grass": 1
+      },
+      "7,11": {
+        "terrain": 2,
+        "road": 1,
+        "small_prop": 1,
+        "flower": 1
+      },
+      "8,11": {
+        "flower": 3,
+        "fence": 3,
+        "terrain": 2,
+        "road": 1,
+        "large_prop": 1
+      },
+      "9,11": {
+        "grass": 1,
+        "ground_spot": 1,
+        "building": 1
+      },
+      "4,12": {
+        "large_prop": 32,
+        "field": 4,
+        "flower": 3,
+        "road": 2,
+        "terrain": 1
+      },
+      "5,12": {
+        "grass": 2,
+        "road": 2,
+        "large_prop": 2,
+        "flower": 2
+      },
+      "6,12": {
+        "fence": 2
+      },
+      "7,12": {
+        "large_prop": 6,
+        "shrub": 4,
+        "fence": 3,
+        "terrain": 1,
+        "flower": 1
+      },
+      "8,12": {
+        "shrub": 7,
+        "terrain": 4,
+        "fence": 2,
+        "grass": 1,
+        "field": 1,
+        "large_prop": 1
+      }
+    }
+  }
+}

@@ -128,7 +128,7 @@ const Renderer = {
     },
 
     _boot(canvasElement) {
-        const config = { type: Phaser.AUTO, parent: 'game-view', width: document.getElementById('game-view').clientWidth, height: document.getElementById('game-view').clientHeight, backgroundColor: '#2a2824', pixelArt: false, scene: [MainScene, UIScene], fps: { target: 30 }, physics: { default: 'arcade', arcade: { debug: false } }, input: { activePointers: 1 } };
+        const config = { type: Phaser.AUTO, parent: 'game-view', width: document.getElementById('game-view').clientWidth, height: document.getElementById('game-view').clientHeight, backgroundColor: '#2a2824', pixelArt: false, render: { mipmapFilter: 'LINEAR_MIPMAP_LINEAR' }, scene: [MainScene, UIScene], fps: { target: 30 }, physics: { default: 'arcade', arcade: { debug: false } }, input: { activePointers: 1 } };
         this.game = new Phaser.Game(config); 
         phaserGame = this.game;
         window.phaserGame = this.game;
@@ -845,7 +845,8 @@ class MainScene extends Phaser.Scene {
         const UnitViewClass = (window.SoldierUnitView && window.SOLDIER_MANIFEST && this.textures.exists('sold_stand_idle'))
             ? window.SoldierUnitView : UnitView;
         this.unitView = new UnitViewClass(this, this.unitGroup, this.hpGroup);
-        this.battleCloudRenderer = new BattleCloudRenderer(this);
+        // 戦雲一時廃止中(window.BATTLE_CLOUD_ENABLED=false)はレンダラ自体を作らない。
+        this.battleCloudRenderer = window.BATTLE_CLOUD_ENABLED ? new BattleCloudRenderer(this) : null;
         this.input.on('wheel', (pointer, gameObjects, deltaX, deltaY, deltaZ) => { let newZoom = this.cameras.main.zoom; if (deltaY > 0) newZoom -= 0.5; else if (deltaY < 0) newZoom += 0.5; newZoom = Phaser.Math.Clamp(newZoom, 0.25, 4.0); this.tweens.add({ targets: this.cameras.main, zoom: newZoom, duration: 150, ease: 'Cubic.out' }); });
         
         this.getUnitAtScreenPosition = (screenX, screenY) => {
@@ -1054,7 +1055,9 @@ class MainScene extends Phaser.Scene {
         if (ruralMode) {
             if (this.roadGraphics) this.roadGraphics.clear();
             window.TerrainRenderRuralV29.buildMap(this, this.hexGroup, map);
-            if (window.VegetationLayer) window.VegetationLayer.build(this, map);
+            // PS正本キャンバスは木・低木まで背景に焼き込み済み。上から散布すると二重になる。
+            const psNativeBg = !!(window.RuralV29Map.lastVariant && window.RuralV29Map.lastVariant.psNative);
+            if (window.VegetationLayer && !psNativeBg) window.VegetationLayer.build(this, map);
             if (window.SceneComposition) window.SceneComposition.applyGrade(this);
             this.centerMap();
             return;

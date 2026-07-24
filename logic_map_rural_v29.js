@@ -45,7 +45,71 @@ window.RuralV29Map = {
     { key: 'loc_forest_farm', texture: 'rural_loc_forest_farm', file: 'asset/environment/maps/rural_loc_forest_farm.png', rot180: false, ready: true, table: 'loc_forest_farm' },
     { key: 'loc_shelled',     texture: 'rural_loc_shelled',     file: 'asset/environment/maps/rural_loc_shelled.png',     rot180: false, ready: true, table: 'loc_shelled' },
     { key: 'loc_church_square', texture: 'rural_loc_church_square', file: 'asset/environment/maps/rural_loc_church_square.png', rot180: false, ready: true, table: 'loc_church_square' },
+    // PS正本キャンバス(2026-07-25)。Blenderレンダーではなく Panzer Strike の実マップ
+    // 配置をSSC原寸で再構成したもの。地形テーブルは手描きではなく配置台帳から機械導出
+    // (scripts/build_ps_battlefield.py)。psNative キーで window.PS_BATTLEFIELDS を引き、
+    // 背景の投影値もそこから取る(Blenderの55°投影定数は使わない)。
+    { key: 'ps_village_north', texture: 'ps_village_north', file: 'asset/environment/maps/ps_village_north.png', rot180: false, ready: true, psNative: 'ps_village_north' },
   ],
+
+  /**
+   * KIT_PIECES: 北ピース(r7-9) × 南ピース(r10-12) の 2×2 = 4 パターン
+   * 実行時にランダム/固定選択で組み合わせ、継ぎ目で結合する。
+   * ファイル未存在でも ready:false のまま動作(監督官がPNG到着時に ready:true に変更)。
+   * 継ぎ目契約: r9のq=7=ROAD, r10のq=7=ROAD (本ピース完成時も維持すること)。
+   */
+  KIT_PIECES: {
+    north: [
+      {
+        key: 'kit_north_a', texture: 'kit_north_a', file: 'asset/environment/maps/kit_north_a.png', ready: false,
+        rows: [
+          [7, 7, ['FOREST', 'ROAD', 'GRASS', 'FIELD', 'FOREST']],
+          [8, 6, ['FOREST', 'ROAD', 'ROAD', 'GRASS', 'FIELD']],
+          [9, 6, ['RUIN', 'ROAD', 'ROAD', 'GRASS', 'FOREST']]
+        ]
+      },
+      {
+        key: 'kit_north_b', texture: 'kit_north_b', file: 'asset/environment/maps/kit_north_b.png', ready: false,
+        rows: [
+          [7, 7, ['FOREST', 'ROAD', 'BLDG', 'FIELD', 'FOREST']],
+          [8, 6, ['GRASS', 'ROAD', 'FIELD', 'GRASS', 'FOREST']],
+          [9, 6, ['GRASS', 'ROAD', 'FIELD', 'GRASS', 'FOREST']]
+        ]
+      }
+    ],
+    south: [
+      {
+        key: 'kit_south_a', texture: 'kit_south_a', file: 'asset/environment/maps/kit_south_a.png', ready: false,
+        rows: [
+          [10, 5, ['GRASS', 'GRASS', 'ROAD', 'FIELD', 'FIELD']],
+          [11, 5, ['GRASS', 'ROAD', 'FIELD', 'FIELD', 'FOREST']],
+          [12, 4, ['ROAD', 'GRASS', 'FOREST', 'FIELD', 'FIELD']]
+        ]
+      },
+      {
+        key: 'kit_south_b', texture: 'kit_south_b', file: 'asset/environment/maps/kit_south_b.png', ready: false,
+        rows: [
+          [10, 5, ['FOREST', 'BLDG', 'ROAD', 'FOREST', 'GRASS']],
+          [11, 5, ['ROAD', 'ROAD', 'GRASS', 'FIELD', 'GRASS']],
+          [12, 4, ['GRASS', 'ROAD', 'GRASS', 'GRASS', 'FOREST']]
+        ]
+      }
+    ]
+  },
+
+  /**
+   * kit モード制御
+   * - enabled: kit 生成を試みるかどうか
+   * - fixedNorth/fixedSouth: null = ランダム選択、'kit_north_a' 等で固定
+   * - lastNorth/lastSouth: 最後に生成されたピース（デバッグ用）
+   */
+  kitMode: {
+    enabled: true,
+    fixedNorth: null,
+    fixedSouth: null,
+    lastNorth: null,
+    lastSouth: null
+  },
 
   /**
    * 別ロケーションの地形テーブル(コンパクト行形式)。
@@ -96,6 +160,39 @@ window.RuralV29Map = {
       bases.forEach((base, i) => out.push({ q: q0 + i, r, base }));
     }
     return out;
+  },
+
+  /**
+   * KIT_PIECES から north/south を選択
+   * - fixedNorth/fixedSouth があれば優先
+   * - 無ければ ready=true のものからランダム選択
+   * - ready な north/south が両方1つ以上あれば { north, south } を返す
+   * - 不足なら null を返す
+   */
+  _selectKitPieces() {
+    const readyNorth = this.KIT_PIECES.north.filter(p => p.ready);
+    const readySouth = this.KIT_PIECES.south.filter(p => p.ready);
+
+    if (readyNorth.length === 0 || readySouth.length === 0) {
+      // 不足、フォールバック
+      return null;
+    }
+
+    let north = this.kitMode.fixedNorth
+      ? this.KIT_PIECES.north.find(p => p.key === this.kitMode.fixedNorth)
+      : readyNorth[Math.floor(Math.random() * readyNorth.length)];
+
+    let south = this.kitMode.fixedSouth
+      ? this.KIT_PIECES.south.find(p => p.key === this.kitMode.fixedSouth)
+      : readySouth[Math.floor(Math.random() * readySouth.length)];
+
+    if (!north || !south) {
+      return null;
+    }
+
+    this.kitMode.lastNorth = north;
+    this.kitMode.lastSouth = south;
+    return { north, south };
   },
 
   /**
@@ -153,10 +250,34 @@ window.RuralV29Map = {
   /**
    * ゲームマップ game.map を初期化して、30hexのテーブルを配置する
    * 冒頭でバリアント選択を行い、rot180が必要な場合は座標を変換
+   * kitMode が有効で、ready な north/south が両方1つ以上あれば、一定確率で kit 生成を試みる
    */
   generate(game) {
-    // バリアント選択（fixedVariant=null ならランダム、さもなくば固定）
-    this._selectVariant();
+    // Kit モード試行（30%確率で、かつ条件満たしていれば）
+    let terrainTable = null;
+    if (this.kitMode.enabled && Math.random() < 0.30) {
+      const kitPieces = this._selectKitPieces();
+      if (kitPieces) {
+        // kit 生成成功
+        const { north, south } = kitPieces;
+        const northRows = north.rows;
+        const southRows = south.rows;
+        // 北3行 + 南3行を連結
+        const allRows = [...northRows, ...southRows];
+        terrainTable = this._rowsToTable(allRows);
+        this.lastVariant = {
+          key: `kit:${north.key}+${south.key}`,
+          kit: true,
+          north,
+          south
+        };
+      }
+    }
+
+    // kit 不成立またはスキップ時は従来のバリアント選択へ
+    if (!terrainTable) {
+      this._selectVariant();
+    }
 
     game.map = [];
     for (let q = 0; q < MAP_W; q++) {
@@ -166,8 +287,10 @@ window.RuralV29Map = {
       }
     }
 
-    // 選択されたバリアントに応じた地形テーブルを取得
-    const terrainTable = this._getTerrainTable();
+    // 選択されたバリアントに応じた地形テーブルを取得（kit未生成なら通常選択から）
+    if (!terrainTable) {
+      terrainTable = this._getTerrainTable();
+    }
 
     // 30hexテーブルを配置（各セルは TERRAIN またはローカル地形定義のシャローコピー）
     for (const entry of terrainTable) {
@@ -224,6 +347,14 @@ window.RuralV29Map = {
   _getTerrainTable() {
     if (!this.lastVariant) {
       console.error('lastVariant is not set, using base table');
+      return this._terrain_table_base;
+    }
+
+    // PS正本キャンバスは生成済みレジストリから行を取る(rot180と排他)
+    if (this.lastVariant.psNative) {
+      const bf = window.PS_BATTLEFIELDS && window.PS_BATTLEFIELDS[this.lastVariant.psNative];
+      if (bf && bf.rows) return this._rowsToTable(bf.rows);
+      console.error(`PS battlefield '${this.lastVariant.psNative}' not in window.PS_BATTLEFIELDS, using base table`);
       return this._terrain_table_base;
     }
 

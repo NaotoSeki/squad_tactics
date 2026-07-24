@@ -24,6 +24,13 @@ const sandbox = {
 sandbox.window = sandbox;
 vm.createContext(sandbox);
 
+// PS正本キャンバスのレジストリ(生成物)を先にロード。本番の index.html と同じ順序。
+// これが無いと psNative バリアントは base テーブルへフォールバックしてしまう。
+const registryPath = path.join(ROOT, 'asset/environment/maps/ps_battlefields.js');
+if (fs.existsSync(registryPath)) {
+  vm.runInContext(fs.readFileSync(registryPath, 'utf8'), sandbox, { filename: 'ps_battlefields.js' });
+}
+
 // logic_map_rural_v29.js をロード
 const source = fs.readFileSync(path.join(ROOT, 'logic_map_rural_v29.js'), 'utf8');
 vm.runInContext(source, sandbox, { filename: 'logic_map_rural_v29.js' });
@@ -276,7 +283,17 @@ function testLocationTables() {
   const boardCoords = new Set();
   for (const e of RuralV29Map._terrain_table_base) boardCoords.add(`${e.q},${e.r}`);
 
-  for (const key of ['loc_crossroad', 'loc_forest_farm', 'loc_shelled', 'loc_church_square']) {
+  // PS正本キャンバス(psNative)も同じ盤面契約を満たさねばならない。地形テーブルが
+  // 手描きではなく配置台帳からの機械導出なので、閾値変更で盤面が壊れても
+  // ここで捕まる(BLDGだらけで分断、道が消える等)。
+  const locationKeys = ['loc_crossroad', 'loc_forest_farm', 'loc_shelled', 'loc_church_square'];
+  if (sandbox.PS_BATTLEFIELDS) {
+    for (const v of RuralV29Map.VARIANTS) {
+      if (v.psNative && sandbox.PS_BATTLEFIELDS[v.psNative]) locationKeys.push(v.key);
+    }
+  }
+
+  for (const key of locationKeys) {
     RuralV29Map.fixedVariant = key;
     const game = { map: null };
     RuralV29Map.generate(game);
@@ -342,6 +359,149 @@ function testLocationTables() {
   console.log('✓ testLocationTables passed');
 }
 
+// KIT_PIECES の継ぎ目契約テスト: r9のq=7がROAD、r10のq=7もROAD
+function testKitSeamContract() {
+  const KIT_PIECES = RuralV29Map.KIT_PIECES;
+
+  for (const northPiece of KIT_PIECES.north) {
+    // r9(最後の行)のq=7がROADであることを確認
+    const r9Row = northPiece.rows.find(([r]) => r === 9);
+    assert.ok(r9Row, `north piece '${northPiece.key}' must have r=9 row`);
+    const [r, q0, bases] = r9Row;
+    const q7Index = 7 - q0;
+    assert.ok(q7Index >= 0 && q7Index < bases.length,
+      `north piece '${northPiece.key}' r=9 must include q=7 (found q0=${q0}, len=${bases.length})`);
+    assert.strictEqual(bases[q7Index], 'ROAD',
+      `north piece '${northPiece.key}' r=9 q=7 must be ROAD (contract: r9/r10 seam), got ${bases[q7Index]}`);
+  }
+
+  for (const southPiece of KIT_PIECES.south) {
+    // r10(最初の行)のq=7がROADであることを確認
+    const r10Row = southPiece.rows.find(([r]) => r === 10);
+    assert.ok(r10Row, `south piece '${southPiece.key}' must have r=10 row`);
+    const [r, q0, bases] = r10Row;
+    const q7Index = 7 - q0;
+    assert.ok(q7Index >= 0 && q7Index < bases.length,
+      `south piece '${southPiece.key}' r=10 must include q=7 (found q0=${q0}, len=${bases.length})`);
+    assert.strictEqual(bases[q7Index], 'ROAD',
+      `south piece '${southPiece.key}' r=10 q=7 must be ROAD (contract: r9/r10 seam), got ${bases[q7Index]}`);
+  }
+
+  console.log('✓ testKitSeamContract passed');
+}
+
+// kit モード全組み合わせの接続性テスト
+function testKitAllCombinationsConnectivity() {
+  const KIT_PIECES = RuralV29Map.KIT_PIECES;
+  const northPieces = KIT_PIECES.north;
+  const southPieces = KIT_PIECES.south;
+
+  // 各north×south組み合わせについて、結合テーブルの接続性を確認
+  for (const northPiece of northPieces) {
+    for (const southPiece of southPieces) {
+      const allRows = [...northPiece.rows, ...southPiece.rows];
+      const terrainTable = RuralV29Map._rowsToTable(allRows);
+
+      // 30セルであることを確認
+      assert.strictEqual(terrainTable.length, 30,
+        `kit (${northPiece.key}+${southPiece.key}): should have exactly 30 cells, got ${terrainTable.length}`);
+
+      // game.map を構築（テスト用）
+      const game = { map: [] };
+      for (let q = 0; q < MAP_W; q++) {
+        game.map[q] = [];
+        for (let r = 0; r < MAP_H; r++) {
+          game.map[q][r] = sandbox.TERRAIN.VOID;
+        }
+      }
+
+      // 地形を配置
+      for (const entry of terrainTable) {
+        const { q, r, base } = entry;
+        if (q < 0 || q >= MAP_W || r < 0 || r >= MAP_H) continue;
+        let terrainDef;
+        if (base === 'FIELD') terrainDef = RuralV29Map.FIELD;
+        else if (base === 'RUIN') terrainDef = RuralV29Map.RUIN;
+        else if (base === 'BLDG') terrainDef = RuralV29Map.BLDG;
+        else terrainDef = terrain[base];
+        game.map[q][r] = { ...terrainDef };
+      }
+
+      // 接続性チェック: 全walkable hexが単一連結成分
+      const passable = (q, r) => {
+        const t = game.map[q] && game.map[q][r];
+        return !!t && t.cost < 99;
+      };
+
+      const start = [];
+      for (let q = 0; q < MAP_W; q++) if (passable(q, 7)) start.push([q, 7]);
+      assert.ok(start.length > 0,
+        `kit (${northPiece.key}+${southPiece.key}): r=7 row needs at least one walkable hex`);
+
+      const DIRS = [[1, 0], [1, -1], [0, -1], [-1, 0], [-1, 1], [0, 1]];
+      const visited = new Set(start.map(([q, r]) => `${q},${r}`));
+      const queue = [...start];
+      while (queue.length) {
+        const [q, r] = queue.pop();
+        for (const [dq, dr] of DIRS) {
+          const nq = q + dq, nr = r + dr, k = `${nq},${nr}`;
+          if (visited.has(k) || !passable(nq, nr)) continue;
+          visited.add(k);
+          queue.push([nq, nr]);
+        }
+      }
+
+      // 全walkable hexが訪問されたことを確認（孤立なし）
+      let totalWalkable = 0;
+      for (let q = 0; q < MAP_W; q++) {
+        for (let r = 0; r < MAP_H; r++) {
+          if (passable(q, r)) totalWalkable++;
+        }
+      }
+      assert.strictEqual(visited.size, totalWalkable,
+        `kit (${northPiece.key}+${southPiece.key}): all walkable hexes must form single connected component ` +
+        `(visited=${visited.size} vs total=${totalWalkable})`);
+    }
+  }
+
+  console.log('✓ testKitAllCombinationsConnectivity passed');
+}
+
+// _selectKitPieces フォールバックテスト
+function testSelectKitPiecesFallback() {
+  const originalNorthReady = RuralV29Map.KIT_PIECES.north.map(p => p.ready);
+  const originalSouthReady = RuralV29Map.KIT_PIECES.south.map(p => p.ready);
+
+  // ケース1: north ready=0, south ready≥1 → null が返される
+  RuralV29Map.KIT_PIECES.north.forEach(p => { p.ready = false; });
+  RuralV29Map.KIT_PIECES.south.forEach((p, i) => { p.ready = (i === 0); });
+  assert.strictEqual(RuralV29Map._selectKitPieces(), null,
+    'should return null when no ready north pieces');
+
+  // ケース2: north ready≥1, south ready=0 → null が返される
+  RuralV29Map.KIT_PIECES.north.forEach((p, i) => { p.ready = (i === 0); });
+  RuralV29Map.KIT_PIECES.south.forEach(p => { p.ready = false; });
+  assert.strictEqual(RuralV29Map._selectKitPieces(), null,
+    'should return null when no ready south pieces');
+
+  // ケース3: 両方ready≥1 → 選択される
+  RuralV29Map.KIT_PIECES.north.forEach((p, i) => { p.ready = (i === 0); });
+  RuralV29Map.KIT_PIECES.south.forEach((p, i) => { p.ready = (i === 0); });
+  const result = RuralV29Map._selectKitPieces();
+  assert.ok(result, 'should return { north, south } when both have ready pieces');
+  assert.ok(result.north && result.south, 'result should have north and south properties');
+
+  // ready フラグを復元
+  for (let i = 0; i < originalNorthReady.length; i++) {
+    RuralV29Map.KIT_PIECES.north[i].ready = originalNorthReady[i];
+  }
+  for (let i = 0; i < originalSouthReady.length; i++) {
+    RuralV29Map.KIT_PIECES.south[i].ready = originalSouthReady[i];
+  }
+
+  console.log('✓ testSelectKitPiecesFallback passed');
+}
+
 // メインテスト実行
 testGenerateP1Fixed();
 testRot180Mapping();
@@ -349,5 +509,8 @@ testRot180SpecificCell();
 testFixedVariantP2();
 testRandomVariantSelection();
 testLocationTables();
+testKitSeamContract();
+testKitAllCombinationsConnectivity();
+testSelectKitPiecesFallback();
 
 console.log('✓ All tests passed');
