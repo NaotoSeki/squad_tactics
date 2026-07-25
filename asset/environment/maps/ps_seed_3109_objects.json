@@ -1,0 +1,1984 @@
+{
+  "schema": "ps_objects/v1",
+  "name": "ps_seed_3109",
+  "projection": {
+    "scale": 0.84,
+    "top_left_x": 885.3516092068122,
+    "top_left_y": 509.1
+  },
+  "image_width": 620,
+  "image_height": 620,
+  "objects": [
+    {
+      "asset": "robinia-pseudoacacia_c_02",
+      "family": "tree",
+      "x": 310,
+      "y": 60,
+      "body_slot": 2,
+      "shadow_slot": 4,
+      "states": null,
+      "hex": [
+        9,
+        7
+      ]
+    },
+    {
+      "asset": "quercus-cerris_t_01",
+      "family": "tree",
+      "x": 375,
+      "y": 64,
+      "body_slot": 2,
+      "shadow_slot": 4,
+      "states": null,
+      "hex": [
+        9,
+        7
+      ]
+    },
+    {
+      "asset": "cedrus-deodara_a_03",
+      "family": "tree",
+      "x": 302,
+      "y": 63,
+      "body_slot": 2,
+      "shadow_slot": 4,
+      "states": null,
+      "hex": [
+        9,
+        7
+      ]
+    },
+    {
+      "asset": "heteromeles-arbutifolia_a_02",
+      "family": "tree",
+      "x": 328,
+      "y": 95,
+      "body_slot": 2,
+      "shadow_slot": 4,
+      "states": null,
+      "hex": [
+        9,
+        7
+      ]
+    },
+    {
+      "asset": "shrub_ficus-carica_b_02",
+      "family": "shrub",
+      "x": 416,
+      "y": 76,
+      "body_slot": 2,
+      "shadow_slot": 4,
+      "states": {
+        "body": [
+          2,
+          1
+        ],
+        "shadow": [
+          4,
+          null
+        ]
+      },
+      "hex": [
+        10,
+        7
+      ]
+    },
+    {
+      "asset": "robinia-pseudoacacia_a_02",
+      "family": "tree",
+      "x": 571,
+      "y": 84,
+      "body_slot": 2,
+      "shadow_slot": 4,
+      "states": null,
+      "hex": [
+        11,
+        7
+      ]
+    },
+    {
+      "asset": "heteromeles-arbutifolia_a_01",
+      "family": "tree",
+      "x": 528,
+      "y": 50,
+      "body_slot": 2,
+      "shadow_slot": 4,
+      "states": null,
+      "hex": [
+        11,
+        7
+      ]
+    },
+    {
+      "asset": "quercus-agrifolia_a_02",
+      "family": "tree",
+      "x": 534,
+      "y": 42,
+      "body_slot": 2,
+      "shadow_slot": 4,
+      "states": null,
+      "hex": [
+        11,
+        7
+      ]
+    },
+    {
+      "asset": "quercus-agrifolia_a_02",
+      "family": "tree",
+      "x": 581,
+      "y": 57,
+      "body_slot": 2,
+      "shadow_slot": 4,
+      "states": null,
+      "hex": [
+        11,
+        7
+      ]
+    },
+    {
+      "asset": "shrub_cedrus-deodara_a_01",
+      "family": "shrub",
+      "x": 563,
+      "y": 55,
+      "body_slot": 2,
+      "shadow_slot": 4,
+      "states": null,
+      "hex": [
+        11,
+        7
+      ]
+    },
+    {
+      "asset": "shrub_ficus-carica_a_01",
+      "family": "shrub",
+      "x": 538,
+      "y": 40,
+      "body_slot": 2,
+      "shadow_slot": 4,
+      "states": {
+        "body": [
+          2,
+          1
+        ],
+        "shadow": [
+          4,
+          null
+        ]
+      },
+      "hex": [
+        11,
+        7
+      ]
+    },
+    {
+      "asset": "bush_big_05",
+      "family": "shrub",
+      "x": 202,
+      "y": 143,
+      "body_slot": 2,
+      "shadow_slot": 4,
+      "states": {
+        "body": [
+          2,
+          1
+        ],
+        "shadow": [
+          4,
+          null
+        ]
+      },
+      "hex": [
+        7,
+        8
+      ]
+    },
+    {
+      "asset": "shrub_ficus-carica_c_01",
+      "family": "shrub",
+      "x": 517,
+      "y": 162,
+      "body_slot": 2,
+      "shadow_slot": 4,
+      "states": {
+        "body": [
+          2,
+          1
+        ],
+        "shadow": [
+          4,
+          null
+        ]
+      },
+      "hex": [
+        10,
+        8
+      ]
+    },
+    {
+      "asset": "german_village_barn_010_ver_01",
+      "family": "building",
+      "x": 115,
+      "y": 262,
+      "body_slot": 4,
+      "shadow_slot": 8,
+      "states": {
+        "body": [
+          4,
+          5,
+          6,
+          7
+        ],
+        "shadow": [
+          8,
+          9,
+          10,
+          11
+        ]
+      },
+      "hex": [
+        6,
+        9
+      ]
+    },
+    {
+      "asset": "village_fence_frontage",
+      "family": "fence",
+      "x": 35,
+      "y": 272,
+      "composite": true,
+      "body_slots": [
+        71,
+        75,
+        59
+      ],
+      "shadow_slots": [
+        127,
+        131,
+        115
+      ],
+      "crushed_slots": [
+        87,
+        91,
+        63
+      ],
+      "crushed_shadow_slots": [
+        143,
+        147,
+        119
+      ],
+      "hex": null
+    },
+    {
+      "asset": "shrub_taxus-baccata_a_04",
+      "family": "shrub",
+      "x": 41,
+      "y": 307,
+      "body_slot": 2,
+      "shadow_slot": 4,
+      "states": {
+        "body": [
+          2,
+          1
+        ],
+        "shadow": [
+          4,
+          null
+        ]
+      },
+      "hex": [
+        5,
+        10
+      ]
+    },
+    {
+      "asset": "village_fence_frontage",
+      "family": "fence",
+      "x": -5,
+      "y": 252,
+      "composite": true,
+      "body_slots": [
+        64,
+        56
+      ],
+      "shadow_slots": [
+        120,
+        112
+      ],
+      "crushed_slots": [
+        80,
+        60
+      ],
+      "crushed_shadow_slots": [
+        136,
+        116
+      ],
+      "hex": null
+    },
+    {
+      "asset": "shrub_taxus-baccata_a_03",
+      "family": "shrub",
+      "x": -3,
+      "y": 277,
+      "body_slot": 2,
+      "shadow_slot": 4,
+      "states": {
+        "body": [
+          2,
+          1
+        ],
+        "shadow": [
+          4,
+          null
+        ]
+      },
+      "hex": null
+    },
+    {
+      "asset": "village_fence_frontage",
+      "family": "fence",
+      "x": -5,
+      "y": 292,
+      "composite": true,
+      "body_slots": [
+        79,
+        59
+      ],
+      "shadow_slots": [
+        135,
+        115
+      ],
+      "crushed_slots": [
+        95,
+        63
+      ],
+      "crushed_shadow_slots": [
+        151,
+        119
+      ],
+      "hex": null
+    },
+    {
+      "asset": "shrub_taxus-baccata_a_03",
+      "family": "shrub",
+      "x": 81,
+      "y": 327,
+      "body_slot": 2,
+      "shadow_slot": 4,
+      "states": {
+        "body": [
+          2,
+          1
+        ],
+        "shadow": [
+          4,
+          null
+        ]
+      },
+      "hex": [
+        5,
+        10
+      ]
+    },
+    {
+      "asset": "shrub_syringa-vulgaris_a_01",
+      "family": "shrub",
+      "x": -25,
+      "y": 270,
+      "body_slot": 2,
+      "shadow_slot": 4,
+      "states": {
+        "body": [
+          2,
+          1
+        ],
+        "shadow": [
+          4,
+          null
+        ]
+      },
+      "hex": null
+    },
+    {
+      "asset": "shrub_cedrus-deodara_a_02",
+      "family": "shrub",
+      "x": 9,
+      "y": 200,
+      "body_slot": 2,
+      "shadow_slot": 4,
+      "states": null,
+      "hex": [
+        6,
+        8
+      ]
+    },
+    {
+      "asset": "cedrus-brevifolia_b_03",
+      "family": "tree",
+      "x": -25,
+      "y": 209,
+      "body_slot": 2,
+      "shadow_slot": 4,
+      "states": null,
+      "hex": null
+    },
+    {
+      "asset": "shrub_taxus-baccata_a_02",
+      "family": "shrub",
+      "x": 141,
+      "y": 363,
+      "body_slot": 2,
+      "shadow_slot": 4,
+      "states": {
+        "body": [
+          2,
+          1
+        ],
+        "shadow": [
+          4,
+          null
+        ]
+      },
+      "hex": [
+        6,
+        10
+      ]
+    },
+    {
+      "asset": "shrub_cedrus-deodara_a_03",
+      "family": "shrub",
+      "x": -7,
+      "y": 177,
+      "body_slot": 2,
+      "shadow_slot": 4,
+      "states": null,
+      "hex": null
+    },
+    {
+      "asset": "shrub_cedrus-deodara_a_04",
+      "family": "shrub",
+      "x": 3,
+      "y": 173,
+      "body_slot": 2,
+      "shadow_slot": 4,
+      "states": null,
+      "hex": null
+    },
+    {
+      "asset": "shrub_cedrus-deodara_a_02",
+      "family": "shrub",
+      "x": -5,
+      "y": 175,
+      "body_slot": 2,
+      "shadow_slot": 4,
+      "states": null,
+      "hex": null
+    },
+    {
+      "asset": "village_fence_frontage",
+      "family": "fence",
+      "x": -5,
+      "y": 172,
+      "composite": true,
+      "body_slots": [
+        76,
+        56
+      ],
+      "shadow_slots": [
+        132,
+        112
+      ],
+      "crushed_slots": [
+        92,
+        60
+      ],
+      "crushed_shadow_slots": [
+        148,
+        116
+      ],
+      "hex": null
+    },
+    {
+      "asset": "village_fence_frontage",
+      "family": "fence",
+      "x": 35,
+      "y": 152,
+      "composite": true,
+      "body_slots": [
+        69,
+        77,
+        57
+      ],
+      "shadow_slots": [
+        125,
+        133,
+        113
+      ],
+      "crushed_slots": [
+        85,
+        93,
+        61
+      ],
+      "crushed_shadow_slots": [
+        141,
+        149,
+        117
+      ],
+      "hex": [
+        6,
+        8
+      ]
+    },
+    {
+      "asset": "shrub_taxus-baccata_a_02",
+      "family": "shrub",
+      "x": 179,
+      "y": 381,
+      "body_slot": 2,
+      "shadow_slot": 4,
+      "states": {
+        "body": [
+          2,
+          1
+        ],
+        "shadow": [
+          4,
+          null
+        ]
+      },
+      "hex": [
+        6,
+        10
+      ]
+    },
+    {
+      "asset": "village_fence_frontage",
+      "family": "fence",
+      "x": 75,
+      "y": 132,
+      "composite": true,
+      "body_slots": [
+        70,
+        78,
+        58
+      ],
+      "shadow_slots": [
+        126,
+        134,
+        114
+      ],
+      "crushed_slots": [
+        86,
+        94,
+        62
+      ],
+      "crushed_shadow_slots": [
+        142,
+        150,
+        118
+      ],
+      "hex": [
+        6,
+        8
+      ]
+    },
+    {
+      "asset": "quercus-agrifolia_a_01",
+      "family": "tree",
+      "x": 135,
+      "y": 127,
+      "body_slot": 2,
+      "shadow_slot": 4,
+      "states": null,
+      "hex": [
+        7,
+        8
+      ]
+    },
+    {
+      "asset": "village_fence_frontage",
+      "family": "fence",
+      "x": 115,
+      "y": 112,
+      "composite": true,
+      "body_slots": [
+        71,
+        59
+      ],
+      "shadow_slots": [
+        127,
+        115
+      ],
+      "crushed_slots": [
+        87,
+        63
+      ],
+      "crushed_shadow_slots": [
+        143,
+        119
+      ],
+      "hex": [
+        7,
+        7
+      ]
+    },
+    {
+      "asset": "german_village_house_006_ver_01",
+      "family": "building",
+      "x": 338,
+      "y": 262,
+      "body_slot": 4,
+      "shadow_slot": 8,
+      "states": {
+        "body": [
+          4,
+          5,
+          6,
+          7
+        ],
+        "shadow": [
+          8,
+          9,
+          10,
+          11
+        ]
+      },
+      "hex": [
+        8,
+        9
+      ]
+    },
+    {
+      "asset": "village_fence_frontage",
+      "family": "fence",
+      "x": 298,
+      "y": 252,
+      "composite": true,
+      "body_slots": [
+        76,
+        56
+      ],
+      "shadow_slots": [
+        132,
+        112
+      ],
+      "crushed_slots": [
+        92,
+        60
+      ],
+      "crushed_shadow_slots": [
+        148,
+        116
+      ],
+      "hex": [
+        8,
+        9
+      ]
+    },
+    {
+      "asset": "village_fence_frontage",
+      "family": "fence",
+      "x": 338,
+      "y": 232,
+      "composite": true,
+      "body_slots": [
+        71,
+        59
+      ],
+      "shadow_slots": [
+        127,
+        115
+      ],
+      "crushed_slots": [
+        87,
+        63
+      ],
+      "crushed_shadow_slots": [
+        143,
+        119
+      ],
+      "hex": [
+        8,
+        9
+      ]
+    },
+    {
+      "asset": "village_fence_frontage",
+      "family": "fence",
+      "x": 258,
+      "y": 312,
+      "composite": true,
+      "body_slots": [
+        67,
+        75,
+        59
+      ],
+      "shadow_slots": [
+        123,
+        131,
+        115
+      ],
+      "crushed_slots": [
+        83,
+        91,
+        63
+      ],
+      "crushed_shadow_slots": [
+        139,
+        147,
+        119
+      ],
+      "hex": [
+        7,
+        10
+      ]
+    },
+    {
+      "asset": "village_fence_frontage",
+      "family": "fence",
+      "x": 218,
+      "y": 292,
+      "composite": true,
+      "body_slots": [
+        66,
+        58
+      ],
+      "shadow_slots": [
+        122,
+        114
+      ],
+      "crushed_slots": [
+        82,
+        62
+      ],
+      "crushed_shadow_slots": [
+        138,
+        118
+      ],
+      "hex": [
+        7,
+        9
+      ]
+    },
+    {
+      "asset": "shrub_taxus-baccata_a_06",
+      "family": "shrub",
+      "x": 402,
+      "y": 326,
+      "body_slot": 2,
+      "shadow_slot": 4,
+      "states": {
+        "body": [
+          2,
+          1
+        ],
+        "shadow": [
+          4,
+          null
+        ]
+      },
+      "hex": [
+        8,
+        10
+      ]
+    },
+    {
+      "asset": "village_fence_frontage",
+      "family": "fence",
+      "x": 298,
+      "y": 332,
+      "composite": true,
+      "body_slots": [
+        64,
+        72,
+        56
+      ],
+      "shadow_slots": [
+        120,
+        128,
+        112
+      ],
+      "crushed_slots": [
+        80,
+        88,
+        60
+      ],
+      "crushed_shadow_slots": [
+        136,
+        144,
+        116
+      ],
+      "hex": [
+        7,
+        10
+      ]
+    },
+    {
+      "asset": "village_fence_frontage",
+      "family": "fence",
+      "x": 338,
+      "y": 352,
+      "composite": true,
+      "body_slots": [
+        65,
+        73,
+        57
+      ],
+      "shadow_slots": [
+        121,
+        129,
+        113
+      ],
+      "crushed_slots": [
+        81,
+        89,
+        61
+      ],
+      "crushed_shadow_slots": [
+        137,
+        145,
+        117
+      ],
+      "hex": [
+        8,
+        10
+      ]
+    },
+    {
+      "asset": "quercus-agrifolia_a_02",
+      "family": "tree",
+      "x": 228,
+      "y": 337,
+      "body_slot": 2,
+      "shadow_slot": 4,
+      "states": null,
+      "hex": [
+        7,
+        10
+      ]
+    },
+    {
+      "asset": "village_fence_frontage",
+      "family": "fence",
+      "x": 218,
+      "y": 172,
+      "composite": true,
+      "body_slots": [
+        79,
+        59
+      ],
+      "shadow_slots": [
+        135,
+        115
+      ],
+      "crushed_slots": [
+        95,
+        63
+      ],
+      "crushed_shadow_slots": [
+        151,
+        119
+      ],
+      "hex": [
+        7,
+        8
+      ]
+    },
+    {
+      "asset": "bush_big_04",
+      "family": "shrub",
+      "x": 266,
+      "y": 158,
+      "body_slot": 2,
+      "shadow_slot": 4,
+      "states": {
+        "body": [
+          2,
+          1
+        ],
+        "shadow": [
+          4,
+          null
+        ]
+      },
+      "hex": [
+        8,
+        8
+      ]
+    },
+    {
+      "asset": "village_fence_frontage",
+      "family": "fence",
+      "x": 378,
+      "y": 372,
+      "composite": true,
+      "body_slots": [
+        74,
+        58
+      ],
+      "shadow_slots": [
+        130,
+        114
+      ],
+      "crushed_slots": [
+        90,
+        62
+      ],
+      "crushed_shadow_slots": [
+        146,
+        118
+      ],
+      "hex": [
+        8,
+        10
+      ]
+    },
+    {
+      "asset": "village_fence_frontage",
+      "family": "fence",
+      "x": 258,
+      "y": 152,
+      "composite": true,
+      "body_slots": [
+        71,
+        79,
+        59
+      ],
+      "shadow_slots": [
+        127,
+        135,
+        115
+      ],
+      "crushed_slots": [
+        87,
+        95,
+        63
+      ],
+      "crushed_shadow_slots": [
+        143,
+        151,
+        119
+      ],
+      "hex": [
+        8,
+        8
+      ]
+    },
+    {
+      "asset": "village_fence_frontage",
+      "family": "fence",
+      "x": 298,
+      "y": 132,
+      "composite": true,
+      "body_slots": [
+        71,
+        79,
+        59
+      ],
+      "shadow_slots": [
+        127,
+        135,
+        115
+      ],
+      "crushed_slots": [
+        87,
+        95,
+        63
+      ],
+      "crushed_shadow_slots": [
+        143,
+        151,
+        119
+      ],
+      "hex": [
+        8,
+        8
+      ]
+    },
+    {
+      "asset": "shrub_ficus-carica_b_02",
+      "family": "shrub",
+      "x": 324,
+      "y": 128,
+      "body_slot": 2,
+      "shadow_slot": 4,
+      "states": {
+        "body": [
+          2,
+          1
+        ],
+        "shadow": [
+          4,
+          null
+        ]
+      },
+      "hex": [
+        8,
+        8
+      ]
+    },
+    {
+      "asset": "shrub_ficus-carica_a_02",
+      "family": "shrub",
+      "x": 336,
+      "y": 121,
+      "body_slot": 2,
+      "shadow_slot": 4,
+      "states": {
+        "body": [
+          2,
+          1
+        ],
+        "shadow": [
+          4,
+          null
+        ]
+      },
+      "hex": [
+        9,
+        7
+      ]
+    },
+    {
+      "asset": "bench_001_1",
+      "family": "large_prop",
+      "x": 376,
+      "y": 119,
+      "body_slot": 2,
+      "shadow_slot": 4,
+      "states": null,
+      "hex": [
+        9,
+        8
+      ]
+    },
+    {
+      "asset": "village_fence_frontage",
+      "family": "fence",
+      "x": 338,
+      "y": 112,
+      "composite": true,
+      "body_slots": [
+        71,
+        59
+      ],
+      "shadow_slots": [
+        127,
+        115
+      ],
+      "crushed_slots": [
+        87,
+        63
+      ],
+      "crushed_shadow_slots": [
+        143,
+        119
+      ],
+      "hex": [
+        9,
+        7
+      ]
+    },
+    {
+      "asset": "shrub_cedrus-deodara_a_02",
+      "family": "shrub",
+      "x": 529,
+      "y": 241,
+      "body_slot": 2,
+      "shadow_slot": 4,
+      "states": null,
+      "hex": [
+        10,
+        9
+      ]
+    },
+    {
+      "asset": "tilia-europaea_c_01",
+      "family": "tree",
+      "x": 31,
+      "y": 343,
+      "body_slot": 2,
+      "shadow_slot": 4,
+      "states": null,
+      "hex": [
+        5,
+        10
+      ]
+    },
+    {
+      "asset": "abies-concolor_a_02",
+      "family": "tree",
+      "x": 29,
+      "y": 337,
+      "body_slot": 2,
+      "shadow_slot": 4,
+      "states": null,
+      "hex": [
+        5,
+        10
+      ]
+    },
+    {
+      "asset": "quercus-cerris_t_01",
+      "family": "tree",
+      "x": 76,
+      "y": 351,
+      "body_slot": 2,
+      "shadow_slot": 4,
+      "states": null,
+      "hex": [
+        5,
+        10
+      ]
+    },
+    {
+      "asset": "prunus-cerasifera_b_02",
+      "family": "tree",
+      "x": 43,
+      "y": 366,
+      "body_slot": 2,
+      "shadow_slot": 4,
+      "states": null,
+      "hex": [
+        5,
+        10
+      ]
+    },
+    {
+      "asset": "shrub_ficus-carica_c_02",
+      "family": "shrub",
+      "x": 46,
+      "y": 373,
+      "body_slot": 2,
+      "shadow_slot": 4,
+      "states": {
+        "body": [
+          2,
+          1
+        ],
+        "shadow": [
+          4,
+          null
+        ]
+      },
+      "hex": [
+        5,
+        10
+      ]
+    },
+    {
+      "asset": "shrub_cedrus-deodara_a_01",
+      "family": "shrub",
+      "x": 20,
+      "y": 359,
+      "body_slot": 2,
+      "shadow_slot": 4,
+      "states": null,
+      "hex": [
+        5,
+        10
+      ]
+    },
+    {
+      "asset": "bush_big_05",
+      "family": "shrub",
+      "x": 411,
+      "y": 385,
+      "body_slot": 2,
+      "shadow_slot": 4,
+      "states": {
+        "body": [
+          2,
+          1
+        ],
+        "shadow": [
+          4,
+          null
+        ]
+      },
+      "hex": [
+        8,
+        10
+      ]
+    },
+    {
+      "asset": "robinia-pseudoacacia_b_01",
+      "family": "tree",
+      "x": 469,
+      "y": 331,
+      "body_slot": 2,
+      "shadow_slot": 4,
+      "states": null,
+      "hex": [
+        9,
+        10
+      ]
+    },
+    {
+      "asset": "robinia-pseudoacacia_a_02",
+      "family": "tree",
+      "x": 508,
+      "y": 347,
+      "body_slot": 2,
+      "shadow_slot": 4,
+      "states": null,
+      "hex": [
+        9,
+        10
+      ]
+    },
+    {
+      "asset": "heteromeles-arbutifolia_a_01",
+      "family": "tree",
+      "x": 513,
+      "y": 354,
+      "body_slot": 2,
+      "shadow_slot": 4,
+      "states": null,
+      "hex": [
+        9,
+        10
+      ]
+    },
+    {
+      "asset": "populus-tremuloides_a_01",
+      "family": "tree",
+      "x": 532,
+      "y": 362,
+      "body_slot": 2,
+      "shadow_slot": 4,
+      "states": null,
+      "hex": [
+        9,
+        10
+      ]
+    },
+    {
+      "asset": "shrub_cedrus-deodara_a_02",
+      "family": "shrub",
+      "x": 502,
+      "y": 342,
+      "body_slot": 2,
+      "shadow_slot": 4,
+      "states": null,
+      "hex": [
+        9,
+        10
+      ]
+    },
+    {
+      "asset": "shrub_ficus-carica_b_01",
+      "family": "shrub",
+      "x": 507,
+      "y": 356,
+      "body_slot": 2,
+      "shadow_slot": 4,
+      "states": {
+        "body": [
+          2,
+          1
+        ],
+        "shadow": [
+          4,
+          null
+        ]
+      },
+      "hex": [
+        9,
+        10
+      ]
+    },
+    {
+      "asset": "german_village_barn_016_ver_01",
+      "family": "building",
+      "x": 171,
+      "y": 551,
+      "body_slot": 4,
+      "shadow_slot": 8,
+      "states": {
+        "body": [
+          4,
+          5,
+          6,
+          7
+        ],
+        "shadow": [
+          8,
+          9,
+          10,
+          11
+        ]
+      },
+      "hex": [
+        5,
+        12
+      ]
+    },
+    {
+      "asset": "bench_001_0",
+      "family": "large_prop",
+      "x": 155,
+      "y": 564,
+      "body_slot": 2,
+      "shadow_slot": 4,
+      "states": null,
+      "hex": [
+        5,
+        12
+      ]
+    },
+    {
+      "asset": "shrub_fagus-sylvatica_c_04",
+      "family": "shrub",
+      "x": 153,
+      "y": 584,
+      "body_slot": 2,
+      "shadow_slot": 4,
+      "states": {
+        "body": [
+          2,
+          1
+        ],
+        "shadow": [
+          4,
+          null
+        ]
+      },
+      "hex": [
+        5,
+        12
+      ]
+    },
+    {
+      "asset": "shrub_taxus-baccata_a_03",
+      "family": "shrub",
+      "x": 91,
+      "y": 565,
+      "body_slot": 2,
+      "shadow_slot": 4,
+      "states": {
+        "body": [
+          2,
+          1
+        ],
+        "shadow": [
+          4,
+          null
+        ]
+      },
+      "hex": [
+        4,
+        12
+      ]
+    },
+    {
+      "asset": "village_fence_frontage",
+      "family": "fence",
+      "x": 251,
+      "y": 521,
+      "composite": true,
+      "body_slots": [
+        67,
+        75,
+        59
+      ],
+      "shadow_slots": [
+        123,
+        131,
+        115
+      ],
+      "crushed_slots": [
+        83,
+        91,
+        63
+      ],
+      "crushed_shadow_slots": [
+        139,
+        147,
+        119
+      ],
+      "hex": [
+        6,
+        12
+      ]
+    },
+    {
+      "asset": "village_fence_frontage",
+      "family": "fence",
+      "x": 211,
+      "y": 501,
+      "composite": true,
+      "body_slots": [
+        67,
+        75,
+        59
+      ],
+      "shadow_slots": [
+        123,
+        131,
+        115
+      ],
+      "crushed_slots": [
+        83,
+        91,
+        63
+      ],
+      "crushed_shadow_slots": [
+        139,
+        147,
+        119
+      ],
+      "hex": [
+        6,
+        11
+      ]
+    },
+    {
+      "asset": "village_fence_frontage",
+      "family": "fence",
+      "x": 291,
+      "y": 541,
+      "composite": true,
+      "body_slots": [
+        75,
+        59
+      ],
+      "shadow_slots": [
+        131,
+        115
+      ],
+      "crushed_slots": [
+        91,
+        63
+      ],
+      "crushed_shadow_slots": [
+        147,
+        119
+      ],
+      "hex": [
+        6,
+        12
+      ]
+    },
+    {
+      "asset": "shrub_fagus-sylvatica_c_02",
+      "family": "shrub",
+      "x": 101,
+      "y": 606,
+      "body_slot": 2,
+      "shadow_slot": 4,
+      "states": {
+        "body": [
+          2,
+          1
+        ],
+        "shadow": [
+          4,
+          null
+        ]
+      },
+      "hex": null
+    },
+    {
+      "asset": "shrub_cedrus-deodara_b_01",
+      "family": "shrub",
+      "x": 175,
+      "y": 617,
+      "body_slot": 2,
+      "shadow_slot": 4,
+      "states": {
+        "body": [
+          2,
+          1
+        ],
+        "shadow": [
+          4,
+          null
+        ]
+      },
+      "hex": null
+    },
+    {
+      "asset": "village_fence_frontage",
+      "family": "fence",
+      "x": 171,
+      "y": 481,
+      "composite": true,
+      "body_slots": [
+        67,
+        75,
+        59
+      ],
+      "shadow_slots": [
+        123,
+        131,
+        115
+      ],
+      "crushed_slots": [
+        83,
+        91,
+        63
+      ],
+      "crushed_shadow_slots": [
+        139,
+        147,
+        119
+      ],
+      "hex": [
+        6,
+        11
+      ]
+    },
+    {
+      "asset": "shrub_taxus-baccata_a_08",
+      "family": "shrub",
+      "x": 265,
+      "y": 603,
+      "body_slot": 2,
+      "shadow_slot": 4,
+      "states": {
+        "body": [
+          2,
+          1
+        ],
+        "shadow": [
+          4,
+          null
+        ]
+      },
+      "hex": [
+        6,
+        12
+      ]
+    },
+    {
+      "asset": "shrub_taxus-baccata_a_02",
+      "family": "shrub",
+      "x": 307,
+      "y": 577,
+      "body_slot": 2,
+      "shadow_slot": 4,
+      "states": {
+        "body": [
+          2,
+          1
+        ],
+        "shadow": [
+          4,
+          null
+        ]
+      },
+      "hex": [
+        6,
+        12
+      ]
+    },
+    {
+      "asset": "shrub_taxus-baccata_a_02",
+      "family": "shrub",
+      "x": 223,
+      "y": 620,
+      "body_slot": 2,
+      "shadow_slot": 4,
+      "states": {
+        "body": [
+          2,
+          1
+        ],
+        "shadow": [
+          4,
+          null
+        ]
+      },
+      "hex": null
+    },
+    {
+      "asset": "shrub_taxus-baccata_a_09",
+      "family": "shrub",
+      "x": 37,
+      "y": 587,
+      "body_slot": 2,
+      "shadow_slot": 4,
+      "states": {
+        "body": [
+          2,
+          1
+        ],
+        "shadow": [
+          4,
+          null
+        ]
+      },
+      "hex": [
+        4,
+        12
+      ]
+    },
+    {
+      "asset": "shrub_carpinus-betulus_a_02",
+      "family": "shrub",
+      "x": 35,
+      "y": 511,
+      "body_slot": 2,
+      "shadow_slot": 4,
+      "states": {
+        "body": [
+          2,
+          1
+        ],
+        "shadow": [
+          4,
+          null
+        ]
+      },
+      "hex": [
+        4,
+        12
+      ]
+    },
+    {
+      "asset": "village_fence_frontage",
+      "family": "fence",
+      "x": 291,
+      "y": 621,
+      "composite": true,
+      "body_slots": [
+        71,
+        59
+      ],
+      "shadow_slots": [
+        127,
+        115
+      ],
+      "crushed_slots": [
+        87,
+        63
+      ],
+      "crushed_shadow_slots": [
+        143,
+        119
+      ],
+      "hex": null
+    },
+    {
+      "asset": "village_fence_frontage",
+      "family": "fence",
+      "x": 131,
+      "y": 461,
+      "composite": true,
+      "body_slots": [
+        67,
+        75,
+        59
+      ],
+      "shadow_slots": [
+        123,
+        131,
+        115
+      ],
+      "crushed_slots": [
+        83,
+        91,
+        63
+      ],
+      "crushed_shadow_slots": [
+        139,
+        147,
+        119
+      ],
+      "hex": [
+        5,
+        11
+      ]
+    },
+    {
+      "asset": "village_fence_frontage",
+      "family": "fence",
+      "x": 251,
+      "y": 641,
+      "composite": true,
+      "body_slots": [
+        71,
+        79,
+        59
+      ],
+      "shadow_slots": [
+        127,
+        135,
+        115
+      ],
+      "crushed_slots": [
+        87,
+        95,
+        63
+      ],
+      "crushed_shadow_slots": [
+        143,
+        151,
+        119
+      ],
+      "hex": null
+    },
+    {
+      "asset": "shrub_taxus-baccata_a_06",
+      "family": "shrub",
+      "x": 235,
+      "y": 455,
+      "body_slot": 2,
+      "shadow_slot": 4,
+      "states": {
+        "body": [
+          2,
+          1
+        ],
+        "shadow": [
+          4,
+          null
+        ]
+      },
+      "hex": [
+        6,
+        11
+      ]
+    },
+    {
+      "asset": "quercus-agrifolia_a_02",
+      "family": "tree",
+      "x": 61,
+      "y": 466,
+      "body_slot": 2,
+      "shadow_slot": 4,
+      "states": null,
+      "hex": [
+        5,
+        11
+      ]
+    },
+    {
+      "asset": "village_fence_frontage",
+      "family": "fence",
+      "x": 211,
+      "y": 661,
+      "composite": true,
+      "body_slots": [
+        71,
+        79,
+        59
+      ],
+      "shadow_slots": [
+        127,
+        135,
+        115
+      ],
+      "crushed_slots": [
+        87,
+        95,
+        63
+      ],
+      "crushed_shadow_slots": [
+        143,
+        151,
+        119
+      ],
+      "hex": null
+    },
+    {
+      "asset": "village_fence_frontage",
+      "family": "fence",
+      "x": 91,
+      "y": 441,
+      "composite": true,
+      "body_slots": [
+        67,
+        59
+      ],
+      "shadow_slots": [
+        123,
+        115
+      ],
+      "crushed_slots": [
+        83,
+        63
+      ],
+      "crushed_shadow_slots": [
+        139,
+        119
+      ],
+      "hex": [
+        5,
+        11
+      ]
+    },
+    {
+      "asset": "village_fence_frontage",
+      "family": "fence",
+      "x": 171,
+      "y": 681,
+      "composite": true,
+      "body_slots": [
+        79,
+        59
+      ],
+      "shadow_slots": [
+        135,
+        115
+      ],
+      "crushed_slots": [
+        95,
+        63
+      ],
+      "crushed_shadow_slots": [
+        151,
+        119
+      ],
+      "hex": null
+    },
+    {
+      "asset": "heteromeles-arbutifolia_a_02",
+      "family": "tree",
+      "x": 277,
+      "y": 568,
+      "body_slot": 2,
+      "shadow_slot": 4,
+      "states": null,
+      "hex": [
+        6,
+        12
+      ]
+    },
+    {
+      "asset": "prunus-cerasifera_a_01",
+      "family": "tree",
+      "x": 266,
+      "y": 540,
+      "body_slot": 2,
+      "shadow_slot": 4,
+      "states": null,
+      "hex": [
+        6,
+        12
+      ]
+    },
+    {
+      "asset": "heteromeles-arbutifolia_a_01",
+      "family": "tree",
+      "x": 256,
+      "y": 568,
+      "body_slot": 2,
+      "shadow_slot": 4,
+      "states": null,
+      "hex": [
+        6,
+        12
+      ]
+    },
+    {
+      "asset": "populus-tremuloides_b_01",
+      "family": "tree",
+      "x": 270,
+      "y": 558,
+      "body_slot": 2,
+      "shadow_slot": 4,
+      "states": null,
+      "hex": [
+        6,
+        12
+      ]
+    },
+    {
+      "asset": "shrub_carpinus-betulus_a_01",
+      "family": "shrub",
+      "x": 286,
+      "y": 565,
+      "body_slot": 2,
+      "shadow_slot": 4,
+      "states": {
+        "body": [
+          2,
+          1
+        ],
+        "shadow": [
+          4,
+          null
+        ]
+      },
+      "hex": [
+        6,
+        12
+      ]
+    },
+    {
+      "asset": "quercus-agrifolia_a_02",
+      "family": "tree",
+      "x": 401,
+      "y": 550,
+      "body_slot": 2,
+      "shadow_slot": 4,
+      "states": null,
+      "hex": [
+        7,
+        12
+      ]
+    },
+    {
+      "asset": "quercus-agrifolia_a_01",
+      "family": "tree",
+      "x": 398,
+      "y": 521,
+      "body_slot": 2,
+      "shadow_slot": 4,
+      "states": null,
+      "hex": [
+        7,
+        12
+      ]
+    },
+    {
+      "asset": "prunus-cerasifera_c_02",
+      "family": "tree",
+      "x": 364,
+      "y": 573,
+      "body_slot": 2,
+      "shadow_slot": 4,
+      "states": null,
+      "hex": [
+        7,
+        12
+      ]
+    },
+    {
+      "asset": "cedrus-brevifolia_a_03",
+      "family": "tree",
+      "x": 379,
+      "y": 543,
+      "body_slot": 2,
+      "shadow_slot": 4,
+      "states": null,
+      "hex": [
+        7,
+        12
+      ]
+    },
+    {
+      "asset": "shrub_syringa-vulgaris_a_01",
+      "family": "shrub",
+      "x": 431,
+      "y": 533,
+      "body_slot": 2,
+      "shadow_slot": 4,
+      "states": {
+        "body": [
+          2,
+          1
+        ],
+        "shadow": [
+          4,
+          null
+        ]
+      },
+      "hex": [
+        7,
+        12
+      ]
+    }
+  ]
+}

@@ -99,7 +99,8 @@
         28
       ]
     },
-    "placements_drawn": 1226,
+    "placements_drawn": 1058,
+    "tall_objects": 92,
     "missing_assets": {
       "board_004_01": 2,
       "bush_small_03": 4,

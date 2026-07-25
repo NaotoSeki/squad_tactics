@@ -1,0 +1,4591 @@
+{
+  "schema": "ps_object_assets/v1",
+  "note": "貼付規約: left = x + ox, top = y + oy（正本レンダラと同じ）",
+  "sprites": {
+    "abies-concolor_a_02_s2": {
+      "file": "abies-concolor_a_02_s2.png",
+      "w": 79,
+      "h": 133,
+      "ox": -39,
+      "oy": -117
+    },
+    "abies-concolor_a_02_s4": {
+      "file": "abies-concolor_a_02_s4.png",
+      "w": 87,
+      "h": 48,
+      "ox": -35,
+      "oy": -13
+    },
+    "abies-concolor_b_01_s2": {
+      "file": "abies-concolor_b_01_s2.png",
+      "w": 59,
+      "h": 84,
+      "ox": -30,
+      "oy": -78
+    },
+    "abies-concolor_b_01_s4": {
+      "file": "abies-concolor_b_01_s4.png",
+      "w": 62,
+      "h": 36,
+      "ox": -21,
+      "oy": -8
+    },
+    "abies-concolor_b_02_s2": {
+      "file": "abies-concolor_b_02_s2.png",
+      "w": 49,
+      "h": 74,
+      "ox": -28,
+      "oy": -70
+    },
+    "abies-concolor_b_02_s4": {
+      "file": "abies-concolor_b_02_s4.png",
+      "w": 51,
+      "h": 32,
+      "ox": -21,
+      "oy": -8
+    },
+    "barrel_001_s2": {
+      "file": "barrel_001_s2.png",
+      "w": 11,
+      "h": 16,
+      "ox": -6,
+      "oy": -14
+    },
+    "barrel_001_s4": {
+      "file": "barrel_001_s4.png",
+      "w": 14,
+      "h": 8,
+      "ox": -6,
+      "oy": -2
+    },
+    "bench_001_0_s2": {
+      "file": "bench_001_0_s2.png",
+      "w": 28,
+      "h": 19,
+      "ox": -14,
+      "oy": -13
+    },
+    "bench_001_0_s4": {
+      "file": "bench_001_0_s4.png",
+      "w": 28,
+      "h": 16,
+      "ox": -13,
+      "oy": -7
+    },
+    "bench_001_1_s2": {
+      "file": "bench_001_1_s2.png",
+      "w": 28,
+      "h": 19,
+      "ox": -14,
+      "oy": -13
+    },
+    "bench_001_1_s4": {
+      "file": "bench_001_1_s4.png",
+      "w": 29,
+      "h": 15,
+      "ox": -13,
+      "oy": -6
+    },
+    "bench_002_0_s2": {
+      "file": "bench_002_0_s2.png",
+      "w": 22,
+      "h": 15,
+      "ox": -11,
+      "oy": -11
+    },
+    "bench_002_0_s4": {
+      "file": "bench_002_0_s4.png",
+      "w": 23,
+      "h": 12,
+      "ox": -10,
+      "oy": -6
+    },
+    "bench_002_1_s2": {
+      "file": "bench_002_1_s2.png",
+      "w": 23,
+      "h": 16,
+      "ox": -10,
+      "oy": -11
+    },
+    "bench_002_1_s4": {
+      "file": "bench_002_1_s4.png",
+      "w": 23,
+      "h": 11,
+      "ox": -9,
+      "oy": -4
+    },
+    "bush_big_01_s1": {
+      "file": "bush_big_01_s1.png",
+      "w": 32,
+      "h": 22,
+      "ox": -17,
+      "oy": -12
+    },
+    "bush_big_01_s2": {
+      "file": "bush_big_01_s2.png",
+      "w": 19,
+      "h": 19,
+      "ox": -10,
+      "oy": -16
+    },
+    "bush_big_01_s4": {
+      "file": "bush_big_01_s4.png",
+      "w": 20,
+      "h": 13,
+      "ox": -8,
+      "oy": -4
+    },
+    "bush_big_02_s1": {
+      "file": "bush_big_02_s1.png",
+      "w": 31,
+      "h": 22,
+      "ox": -15,
+      "oy": -11
+    },
+    "bush_big_02_s2": {
+      "file": "bush_big_02_s2.png",
+      "w": 22,
+      "h": 19,
+      "ox": -11,
+      "oy": -16
+    },
+    "bush_big_02_s4": {
+      "file": "bush_big_02_s4.png",
+      "w": 23,
+      "h": 12,
+      "ox": -9,
+      "oy": -4
+    },
+    "bush_big_03_s1": {
+      "file": "bush_big_03_s1.png",
+      "w": 29,
+      "h": 16,
+      "ox": -15,
+      "oy": -9
+    },
+    "bush_big_03_s2": {
+      "file": "bush_big_03_s2.png",
+      "w": 19,
+      "h": 21,
+      "ox": -9,
+      "oy": -18
+    },
+    "bush_big_03_s4": {
+      "file": "bush_big_03_s4.png",
+      "w": 21,
+      "h": 13,
+      "ox": -8,
+      "oy": -4
+    },
+    "bush_big_04_s1": {
+      "file": "bush_big_04_s1.png",
+      "w": 20,
+      "h": 20,
+      "ox": -11,
+      "oy": -11
+    },
+    "bush_big_04_s2": {
+      "file": "bush_big_04_s2.png",
+      "w": 22,
+      "h": 20,
+      "ox": -11,
+      "oy": -17
+    },
+    "bush_big_04_s4": {
+      "file": "bush_big_04_s4.png",
+      "w": 22,
+      "h": 12,
+      "ox": -8,
+      "oy": -4
+    },
+    "bush_big_05_s1": {
+      "file": "bush_big_05_s1.png",
+      "w": 27,
+      "h": 15,
+      "ox": -14,
+      "oy": -9
+    },
+    "bush_big_05_s2": {
+      "file": "bush_big_05_s2.png",
+      "w": 21,
+      "h": 19,
+      "ox": -10,
+      "oy": -16
+    },
+    "bush_big_05_s4": {
+      "file": "bush_big_05_s4.png",
+      "w": 22,
+      "h": 12,
+      "ox": -8,
+      "oy": -4
+    },
+    "cart_001_0_s2": {
+      "file": "cart_001_0_s2.png",
+      "w": 30,
+      "h": 27,
+      "ox": -19,
+      "oy": -17
+    },
+    "cart_001_0_s4": {
+      "file": "cart_001_0_s4.png",
+      "w": 33,
+      "h": 14,
+      "ox": -19,
+      "oy": -4
+    },
+    "cart_001_1_s2": {
+      "file": "cart_001_1_s2.png",
+      "w": 30,
+      "h": 17,
+      "ox": -16,
+      "oy": -9
+    },
+    "cart_001_1_s4": {
+      "file": "cart_001_1_s4.png",
+      "w": 32,
+      "h": 18,
+      "ox": -15,
+      "oy": -6
+    },
+    "cart_001_3_s2": {
+      "file": "cart_001_3_s2.png",
+      "w": 30,
+      "h": 26,
+      "ox": -10,
+      "oy": -16
+    },
+    "cart_001_3_s4": {
+      "file": "cart_001_3_s4.png",
+      "w": 29,
+      "h": 15,
+      "ox": -9,
+      "oy": -5
+    },
+    "cedrus-brevifolia_a_03_s2": {
+      "file": "cedrus-brevifolia_a_03_s2.png",
+      "w": 41,
+      "h": 79,
+      "ox": -22,
+      "oy": -75
+    },
+    "cedrus-brevifolia_a_03_s4": {
+      "file": "cedrus-brevifolia_a_03_s4.png",
+      "w": 46,
+      "h": 27,
+      "ox": -18,
+      "oy": -11
+    },
+    "cedrus-brevifolia_b_02_s2": {
+      "file": "cedrus-brevifolia_b_02_s2.png",
+      "w": 55,
+      "h": 81,
+      "ox": -30,
+      "oy": -68
+    },
+    "cedrus-brevifolia_b_02_s4": {
+      "file": "cedrus-brevifolia_b_02_s4.png",
+      "w": 54,
+      "h": 35,
+      "ox": -27,
+      "oy": -12
+    },
+    "cedrus-brevifolia_b_03_s2": {
+      "file": "cedrus-brevifolia_b_03_s2.png",
+      "w": 67,
+      "h": 92,
+      "ox": -33,
+      "oy": -77
+    },
+    "cedrus-brevifolia_b_03_s4": {
+      "file": "cedrus-brevifolia_b_03_s4.png",
+      "w": 70,
+      "h": 45,
+      "ox": -30,
+      "oy": -12
+    },
+    "cedrus-brevifolia_b_04_s2": {
+      "file": "cedrus-brevifolia_b_04_s2.png",
+      "w": 52,
+      "h": 82,
+      "ox": -25,
+      "oy": -70
+    },
+    "cedrus-brevifolia_b_04_s4": {
+      "file": "cedrus-brevifolia_b_04_s4.png",
+      "w": 55,
+      "h": 31,
+      "ox": -24,
+      "oy": -9
+    },
+    "cedrus-deodara_a_01_s2": {
+      "file": "cedrus-deodara_a_01_s2.png",
+      "w": 135,
+      "h": 164,
+      "ox": -65,
+      "oy": -150
+    },
+    "cedrus-deodara_a_01_s4": {
+      "file": "cedrus-deodara_a_01_s4.png",
+      "w": 135,
+      "h": 79,
+      "ox": -51,
+      "oy": -25
+    },
+    "cedrus-deodara_a_02_s2": {
+      "file": "cedrus-deodara_a_02_s2.png",
+      "w": 163,
+      "h": 189,
+      "ox": -91,
+      "oy": -169
+    },
+    "cedrus-deodara_a_02_s4": {
+      "file": "cedrus-deodara_a_02_s4.png",
+      "w": 174,
+      "h": 86,
+      "ox": -76,
+      "oy": -26
+    },
+    "cedrus-deodara_a_03_s2": {
+      "file": "cedrus-deodara_a_03_s2.png",
+      "w": 140,
+      "h": 165,
+      "ox": -65,
+      "oy": -153
+    },
+    "cedrus-deodara_a_03_s4": {
+      "file": "cedrus-deodara_a_03_s4.png",
+      "w": 148,
+      "h": 89,
+      "ox": -58,
+      "oy": -27
+    },
+    "compose_001_0_s2": {
+      "file": "compose_001_0_s2.png",
+      "w": 48,
+      "h": 33,
+      "ox": -25,
+      "oy": -9
+    },
+    "compose_001_0_s4": {
+      "file": "compose_001_0_s4.png",
+      "w": 49,
+      "h": 21,
+      "ox": -24,
+      "oy": 5
+    },
+    "compose_001_1_s2": {
+      "file": "compose_001_1_s2.png",
+      "w": 46,
+      "h": 29,
+      "ox": -24,
+      "oy": -7
+    },
+    "compose_001_1_s4": {
+      "file": "compose_001_1_s4.png",
+      "w": 47,
+      "h": 22,
+      "ox": -23,
+      "oy": 3
+    },
+    "compose_002_0_s2": {
+      "file": "compose_002_0_s2.png",
+      "w": 12,
+      "h": 22,
+      "ox": -3,
+      "oy": -21
+    },
+    "compose_002_0_s4": {
+      "file": "compose_002_0_s4.png",
+      "w": 24,
+      "h": 11,
+      "ox": -11,
+      "oy": -5
+    },
+    "compose_002_1_s2": {
+      "file": "compose_002_1_s2.png",
+      "w": 12,
+      "h": 22,
+      "ox": -9,
+      "oy": -17
+    },
+    "compose_002_1_s4": {
+      "file": "compose_002_1_s4.png",
+      "w": 23,
+      "h": 11,
+      "ox": -12,
+      "oy": -3
+    },
+    "compose_003_0_s2": {
+      "file": "compose_003_0_s2.png",
+      "w": 25,
+      "h": 22,
+      "ox": -12,
+      "oy": -15
+    },
+    "compose_003_0_s4": {
+      "file": "compose_003_0_s4.png",
+      "w": 24,
+      "h": 13,
+      "ox": -11,
+      "oy": -5
+    },
+    "compose_004_0_s2": {
+      "file": "compose_004_0_s2.png",
+      "w": 37,
+      "h": 28,
+      "ox": -16,
+      "oy": -20
+    },
+    "compose_004_0_s4": {
+      "file": "compose_004_0_s4.png",
+      "w": 37,
+      "h": 14,
+      "ox": -16,
+      "oy": -5
+    },
+    "compose_004_1_s2": {
+      "file": "compose_004_1_s2.png",
+      "w": 30,
+      "h": 26,
+      "ox": -14,
+      "oy": -20
+    },
+    "compose_004_1_s4": {
+      "file": "compose_004_1_s4.png",
+      "w": 30,
+      "h": 17,
+      "ox": -13,
+      "oy": -8
+    },
+    "compose_005_0_s2": {
+      "file": "compose_005_0_s2.png",
+      "w": 34,
+      "h": 26,
+      "ox": -14,
+      "oy": -21
+    },
+    "compose_005_0_s4": {
+      "file": "compose_005_0_s4.png",
+      "w": 48,
+      "h": 17,
+      "ox": -23,
+      "oy": -7
+    },
+    "compose_005_1_s2": {
+      "file": "compose_005_1_s2.png",
+      "w": 25,
+      "h": 24,
+      "ox": -17,
+      "oy": -12
+    },
+    "compose_005_1_s4": {
+      "file": "compose_005_1_s4.png",
+      "w": 43,
+      "h": 22,
+      "ox": -27,
+      "oy": -4
+    },
+    "compose_005_2_s2": {
+      "file": "compose_005_2_s2.png",
+      "w": 25,
+      "h": 27,
+      "ox": -12,
+      "oy": -18
+    },
+    "compose_005_2_s4": {
+      "file": "compose_005_2_s4.png",
+      "w": 43,
+      "h": 22,
+      "ox": -19,
+      "oy": -9
+    },
+    "compose_006_0_s2": {
+      "file": "compose_006_0_s2.png",
+      "w": 30,
+      "h": 22,
+      "ox": -13,
+      "oy": -16
+    },
+    "compose_006_0_s4": {
+      "file": "compose_006_0_s4.png",
+      "w": 34,
+      "h": 15,
+      "ox": -13,
+      "oy": -4
+    },
+    "compose_006_1_s2": {
+      "file": "compose_006_1_s2.png",
+      "w": 26,
+      "h": 22,
+      "ox": -11,
+      "oy": -17
+    },
+    "compose_006_1_s4": {
+      "file": "compose_006_1_s4.png",
+      "w": 41,
+      "h": 11,
+      "ox": -19,
+      "oy": -1
+    },
+    "compose_006_3_s2": {
+      "file": "compose_006_3_s2.png",
+      "w": 25,
+      "h": 23,
+      "ox": -14,
+      "oy": -17
+    },
+    "compose_006_3_s4": {
+      "file": "compose_006_3_s4.png",
+      "w": 41,
+      "h": 11,
+      "ox": -21,
+      "oy": 0
+    },
+    "compose_007_0_s2": {
+      "file": "compose_007_0_s2.png",
+      "w": 28,
+      "h": 24,
+      "ox": -13,
+      "oy": -19
+    },
+    "compose_007_0_s4": {
+      "file": "compose_007_0_s4.png",
+      "w": 30,
+      "h": 14,
+      "ox": -13,
+      "oy": -7
+    },
+    "compose_007_1_s2": {
+      "file": "compose_007_1_s2.png",
+      "w": 26,
+      "h": 22,
+      "ox": -15,
+      "oy": -16
+    },
+    "compose_007_1_s4": {
+      "file": "compose_007_1_s4.png",
+      "w": 26,
+      "h": 13,
+      "ox": -14,
+      "oy": -5
+    },
+    "compose_007_2_s2": {
+      "file": "compose_007_2_s2.png",
+      "w": 28,
+      "h": 20,
+      "ox": -15,
+      "oy": -13
+    },
+    "compose_007_2_s4": {
+      "file": "compose_007_2_s4.png",
+      "w": 29,
+      "h": 13,
+      "ox": -14,
+      "oy": -3
+    },
+    "compose_007_3_s2": {
+      "file": "compose_007_3_s2.png",
+      "w": 26,
+      "h": 23,
+      "ox": -11,
+      "oy": -16
+    },
+    "compose_007_3_s4": {
+      "file": "compose_007_3_s4.png",
+      "w": 29,
+      "h": 16,
+      "ox": -11,
+      "oy": -6
+    },
+    "compose_008_1_s2": {
+      "file": "compose_008_1_s2.png",
+      "w": 28,
+      "h": 23,
+      "ox": -16,
+      "oy": -17
+    },
+    "compose_008_1_s4": {
+      "file": "compose_008_1_s4.png",
+      "w": 29,
+      "h": 16,
+      "ox": -15,
+      "oy": -8
+    },
+    "compose_008_3_s2": {
+      "file": "compose_008_3_s2.png",
+      "w": 28,
+      "h": 22,
+      "ox": -12,
+      "oy": -14
+    },
+    "compose_008_3_s4": {
+      "file": "compose_008_3_s4.png",
+      "w": 27,
+      "h": 12,
+      "ox": -11,
+      "oy": -3
+    },
+    "cross_008_s2": {
+      "file": "cross_008_s2.png",
+      "w": 19,
+      "h": 23,
+      "ox": -10,
+      "oy": -22
+    },
+    "cross_008_s4": {
+      "file": "cross_008_s4.png",
+      "w": 20,
+      "h": 11,
+      "ox": -8,
+      "oy": -3
+    },
+    "flag_01_s2": {
+      "file": "flag_01_s2.png",
+      "w": 45,
+      "h": 98,
+      "ox": -16,
+      "oy": -89
+    },
+    "flag_01_s4": {
+      "file": "flag_01_s4.png",
+      "w": 44,
+      "h": 98,
+      "ox": -16,
+      "oy": -89
+    },
+    "german_village_barn_001_ver_01_s10": {
+      "file": "german_village_barn_001_ver_01_s10.png",
+      "w": 118,
+      "h": 42,
+      "ox": -24,
+      "oy": -16
+    },
+    "german_village_barn_001_ver_01_s11": {
+      "file": "german_village_barn_001_ver_01_s11.png",
+      "w": 121,
+      "h": 39,
+      "ox": -24,
+      "oy": -12
+    },
+    "german_village_barn_001_ver_01_s4": {
+      "file": "german_village_barn_001_ver_01_s4.png",
+      "w": 101,
+      "h": 96,
+      "ox": -15,
+      "oy": -82
+    },
+    "german_village_barn_001_ver_01_s5": {
+      "file": "german_village_barn_001_ver_01_s5.png",
+      "w": 110,
+      "h": 96,
+      "ox": -24,
+      "oy": -82
+    },
+    "german_village_barn_001_ver_01_s6": {
+      "file": "german_village_barn_001_ver_01_s6.png",
+      "w": 110,
+      "h": 95,
+      "ox": -24,
+      "oy": -81
+    },
+    "german_village_barn_001_ver_01_s7": {
+      "file": "german_village_barn_001_ver_01_s7.png",
+      "w": 110,
+      "h": 66,
+      "ox": -24,
+      "oy": -52
+    },
+    "german_village_barn_001_ver_01_s8": {
+      "file": "german_village_barn_001_ver_01_s8.png",
+      "w": 108,
+      "h": 42,
+      "ox": -14,
+      "oy": -16
+    },
+    "german_village_barn_001_ver_01_s9": {
+      "file": "german_village_barn_001_ver_01_s9.png",
+      "w": 118,
+      "h": 42,
+      "ox": -24,
+      "oy": -16
+    },
+    "german_village_barn_003_ver_02_s10": {
+      "file": "german_village_barn_003_ver_02_s10.png",
+      "w": 110,
+      "h": 37,
+      "ox": -58,
+      "oy": -2
+    },
+    "german_village_barn_003_ver_02_s11": {
+      "file": "german_village_barn_003_ver_02_s11.png",
+      "w": 140,
+      "h": 52,
+      "ox": -77,
+      "oy": -13
+    },
+    "german_village_barn_003_ver_02_s4": {
+      "file": "german_village_barn_003_ver_02_s4.png",
+      "w": 68,
+      "h": 61,
+      "ox": -35,
+      "oy": -33
+    },
+    "german_village_barn_003_ver_02_s5": {
+      "file": "german_village_barn_003_ver_02_s5.png",
+      "w": 75,
+      "h": 63,
+      "ox": -42,
+      "oy": -34
+    },
+    "german_village_barn_003_ver_02_s6": {
+      "file": "german_village_barn_003_ver_02_s6.png",
+      "w": 76,
+      "h": 63,
+      "ox": -42,
+      "oy": -32
+    },
+    "german_village_barn_003_ver_02_s7": {
+      "file": "german_village_barn_003_ver_02_s7.png",
+      "w": 74,
+      "h": 48,
+      "ox": -42,
+      "oy": -19
+    },
+    "german_village_barn_003_ver_02_s8": {
+      "file": "german_village_barn_003_ver_02_s8.png",
+      "w": 74,
+      "h": 26,
+      "ox": -35,
+      "oy": 10
+    },
+    "german_village_barn_003_ver_02_s9": {
+      "file": "german_village_barn_003_ver_02_s9.png",
+      "w": 81,
+      "h": 28,
+      "ox": -42,
+      "oy": 8
+    },
+    "german_village_barn_004_ver_02_s10": {
+      "file": "german_village_barn_004_ver_02_s10.png",
+      "w": 86,
+      "h": 43,
+      "ox": -38,
+      "oy": -2
+    },
+    "german_village_barn_004_ver_02_s11": {
+      "file": "german_village_barn_004_ver_02_s11.png",
+      "w": 94,
+      "h": 49,
+      "ox": -43,
+      "oy": -8
+    },
+    "german_village_barn_004_ver_02_s4": {
+      "file": "german_village_barn_004_ver_02_s4.png",
+      "w": 68,
+      "h": 59,
+      "ox": -34,
+      "oy": -29
+    },
+    "german_village_barn_004_ver_02_s5": {
+      "file": "german_village_barn_004_ver_02_s5.png",
+      "w": 66,
+      "h": 59,
+      "ox": -34,
+      "oy": -29
+    },
+    "german_village_barn_004_ver_02_s6": {
+      "file": "german_village_barn_004_ver_02_s6.png",
+      "w": 72,
+      "h": 58,
+      "ox": -36,
+      "oy": -30
+    },
+    "german_village_barn_004_ver_02_s7": {
+      "file": "german_village_barn_004_ver_02_s7.png",
+      "w": 65,
+      "h": 37,
+      "ox": -36,
+      "oy": -11
+    },
+    "german_village_barn_004_ver_02_s8": {
+      "file": "german_village_barn_004_ver_02_s8.png",
+      "w": 70,
+      "h": 25,
+      "ox": -34,
+      "oy": 13
+    },
+    "german_village_barn_004_ver_02_s9": {
+      "file": "german_village_barn_004_ver_02_s9.png",
+      "w": 82,
+      "h": 25,
+      "ox": -34,
+      "oy": 13
+    },
+    "german_village_barn_006_ver_01_s10": {
+      "file": "german_village_barn_006_ver_01_s10.png",
+      "w": 93,
+      "h": 36,
+      "ox": -44,
+      "oy": -4
+    },
+    "german_village_barn_006_ver_01_s11": {
+      "file": "german_village_barn_006_ver_01_s11.png",
+      "w": 103,
+      "h": 57,
+      "ox": -47,
+      "oy": -21
+    },
+    "german_village_barn_006_ver_01_s4": {
+      "file": "german_village_barn_006_ver_01_s4.png",
+      "w": 87,
+      "h": 60,
+      "ox": -43,
+      "oy": -37
+    },
+    "german_village_barn_006_ver_01_s5": {
+      "file": "german_village_barn_006_ver_01_s5.png",
+      "w": 88,
+      "h": 61,
+      "ox": -43,
+      "oy": -38
+    },
+    "german_village_barn_006_ver_01_s6": {
+      "file": "german_village_barn_006_ver_01_s6.png",
+      "w": 88,
+      "h": 61,
+      "ox": -44,
+      "oy": -38
+    },
+    "german_village_barn_006_ver_01_s7": {
+      "file": "german_village_barn_006_ver_01_s7.png",
+      "w": 94,
+      "h": 58,
+      "ox": -47,
+      "oy": -33
+    },
+    "german_village_barn_006_ver_01_s8": {
+      "file": "german_village_barn_006_ver_01_s8.png",
+      "w": 93,
+      "h": 30,
+      "ox": -43,
+      "oy": 1
+    },
+    "german_village_barn_006_ver_01_s9": {
+      "file": "german_village_barn_006_ver_01_s9.png",
+      "w": 94,
+      "h": 30,
+      "ox": -43,
+      "oy": 1
+    },
+    "german_village_barn_007_ver_01_s10": {
+      "file": "german_village_barn_007_ver_01_s10.png",
+      "w": 201,
+      "h": 71,
+      "ox": -44,
+      "oy": -28
+    },
+    "german_village_barn_007_ver_01_s11": {
+      "file": "german_village_barn_007_ver_01_s11.png",
+      "w": 215,
+      "h": 96,
+      "ox": -44,
+      "oy": -49
+    },
+    "german_village_barn_007_ver_01_s4": {
+      "file": "german_village_barn_007_ver_01_s4.png",
+      "w": 175,
+      "h": 143,
+      "ox": -28,
+      "oy": -111
+    },
+    "german_village_barn_007_ver_01_s5": {
+      "file": "german_village_barn_007_ver_01_s5.png",
+      "w": 175,
+      "h": 143,
+      "ox": -28,
+      "oy": -111
+    },
+    "german_village_barn_007_ver_01_s6": {
+      "file": "german_village_barn_007_ver_01_s6.png",
+      "w": 170,
+      "h": 146,
+      "ox": -23,
+      "oy": -111
+    },
+    "german_village_barn_007_ver_01_s7": {
+      "file": "german_village_barn_007_ver_01_s7.png",
+      "w": 162,
+      "h": 105,
+      "ox": -21,
+      "oy": -73
+    },
+    "german_village_barn_007_ver_01_s8": {
+      "file": "german_village_barn_007_ver_01_s8.png",
+      "w": 184,
+      "h": 66,
+      "ox": -27,
+      "oy": -20
+    },
+    "german_village_barn_007_ver_01_s9": {
+      "file": "german_village_barn_007_ver_01_s9.png",
+      "w": 201,
+      "h": 74,
+      "ox": -44,
+      "oy": -28
+    },
+    "german_village_barn_007_ver_02_s10": {
+      "file": "german_village_barn_007_ver_02_s10.png",
+      "w": 251,
+      "h": 95,
+      "ox": -73,
+      "oy": -5
+    },
+    "german_village_barn_007_ver_02_s11": {
+      "file": "german_village_barn_007_ver_02_s11.png",
+      "w": 252,
+      "h": 117,
+      "ox": -74,
+      "oy": -21
+    },
+    "german_village_barn_007_ver_02_s4": {
+      "file": "german_village_barn_007_ver_02_s4.png",
+      "w": 200,
+      "h": 171,
+      "ox": -45,
+      "oy": -101
+    },
+    "german_village_barn_007_ver_02_s5": {
+      "file": "german_village_barn_007_ver_02_s5.png",
+      "w": 198,
+      "h": 171,
+      "ox": -43,
+      "oy": -101
+    },
+    "german_village_barn_007_ver_02_s6": {
+      "file": "german_village_barn_007_ver_02_s6.png",
+      "w": 196,
+      "h": 162,
+      "ox": -41,
+      "oy": -92
+    },
+    "german_village_barn_007_ver_02_s7": {
+      "file": "german_village_barn_007_ver_02_s7.png",
+      "w": 191,
+      "h": 123,
+      "ox": -41,
+      "oy": -53
+    },
+    "german_village_barn_007_ver_02_s8": {
+      "file": "german_village_barn_007_ver_02_s8.png",
+      "w": 211,
+      "h": 82,
+      "ox": -41,
+      "oy": 9
+    },
+    "german_village_barn_007_ver_02_s9": {
+      "file": "german_village_barn_007_ver_02_s9.png",
+      "w": 227,
+      "h": 81,
+      "ox": -52,
+      "oy": 9
+    },
+    "german_village_barn_007_ver_03_s10": {
+      "file": "german_village_barn_007_ver_03_s10.png",
+      "w": 215,
+      "h": 71,
+      "ox": -49,
+      "oy": -7
+    },
+    "german_village_barn_007_ver_03_s11": {
+      "file": "german_village_barn_007_ver_03_s11.png",
+      "w": 215,
+      "h": 96,
+      "ox": -49,
+      "oy": -28
+    },
+    "german_village_barn_007_ver_03_s4": {
+      "file": "german_village_barn_007_ver_03_s4.png",
+      "w": 186,
+      "h": 139,
+      "ox": -37,
+      "oy": -89
+    },
+    "german_village_barn_007_ver_03_s5": {
+      "file": "german_village_barn_007_ver_03_s5.png",
+      "w": 186,
+      "h": 139,
+      "ox": -37,
+      "oy": -89
+    },
+    "german_village_barn_007_ver_03_s6": {
+      "file": "german_village_barn_007_ver_03_s6.png",
+      "w": 177,
+      "h": 139,
+      "ox": -37,
+      "oy": -89
+    },
+    "german_village_barn_007_ver_03_s7": {
+      "file": "german_village_barn_007_ver_03_s7.png",
+      "w": 177,
+      "h": 105,
+      "ox": -37,
+      "oy": -54
+    },
+    "german_village_barn_007_ver_03_s8": {
+      "file": "german_village_barn_007_ver_03_s8.png",
+      "w": 205,
+      "h": 58,
+      "ox": -45,
+      "oy": 9
+    },
+    "german_village_barn_007_ver_03_s9": {
+      "file": "german_village_barn_007_ver_03_s9.png",
+      "w": 215,
+      "h": 74,
+      "ox": -49,
+      "oy": -7
+    },
+    "german_village_barn_008_ver_01_s10": {
+      "file": "german_village_barn_008_ver_01_s10.png",
+      "w": 190,
+      "h": 84,
+      "ox": -83,
+      "oy": -39
+    },
+    "german_village_barn_008_ver_01_s11": {
+      "file": "german_village_barn_008_ver_01_s11.png",
+      "w": 197,
+      "h": 94,
+      "ox": -83,
+      "oy": -49
+    },
+    "german_village_barn_008_ver_01_s4": {
+      "file": "german_village_barn_008_ver_01_s4.png",
+      "w": 150,
+      "h": 139,
+      "ox": -69,
+      "oy": -113
+    },
+    "german_village_barn_008_ver_01_s5": {
+      "file": "german_village_barn_008_ver_01_s5.png",
+      "w": 150,
+      "h": 139,
+      "ox": -69,
+      "oy": -113
+    },
+    "german_village_barn_008_ver_01_s6": {
+      "file": "german_village_barn_008_ver_01_s6.png",
+      "w": 150,
+      "h": 134,
+      "ox": -69,
+      "oy": -108
+    },
+    "german_village_barn_008_ver_01_s7": {
+      "file": "german_village_barn_008_ver_01_s7.png",
+      "w": 148,
+      "h": 98,
+      "ox": -67,
+      "oy": -72
+    },
+    "german_village_barn_008_ver_01_s8": {
+      "file": "german_village_barn_008_ver_01_s8.png",
+      "w": 159,
+      "h": 56,
+      "ox": -66,
+      "oy": -14
+    },
+    "german_village_barn_008_ver_01_s9": {
+      "file": "german_village_barn_008_ver_01_s9.png",
+      "w": 176,
+      "h": 60,
+      "ox": -83,
+      "oy": -18
+    },
+    "german_village_barn_009_ver_01_s10": {
+      "file": "german_village_barn_009_ver_01_s10.png",
+      "w": 154,
+      "h": 60,
+      "ox": -83,
+      "oy": -14
+    },
+    "german_village_barn_009_ver_01_s11": {
+      "file": "german_village_barn_009_ver_01_s11.png",
+      "w": 188,
+      "h": 83,
+      "ox": -91,
+      "oy": -37
+    },
+    "german_village_barn_009_ver_01_s4": {
+      "file": "german_village_barn_009_ver_01_s4.png",
+      "w": 134,
+      "h": 118,
+      "ox": -71,
+      "oy": -85
+    },
+    "german_village_barn_009_ver_01_s5": {
+      "file": "german_village_barn_009_ver_01_s5.png",
+      "w": 131,
+      "h": 120,
+      "ox": -71,
+      "oy": -82
+    },
+    "german_village_barn_009_ver_01_s6": {
+      "file": "german_village_barn_009_ver_01_s6.png",
+      "w": 131,
+      "h": 111,
+      "ox": -71,
+      "oy": -78
+    },
+    "german_village_barn_009_ver_01_s7": {
+      "file": "german_village_barn_009_ver_01_s7.png",
+      "w": 124,
+      "h": 81,
+      "ox": -64,
+      "oy": -50
+    },
+    "german_village_barn_009_ver_01_s8": {
+      "file": "german_village_barn_009_ver_01_s8.png",
+      "w": 143,
+      "h": 47,
+      "ox": -71,
+      "oy": -5
+    },
+    "german_village_barn_009_ver_01_s9": {
+      "file": "german_village_barn_009_ver_01_s9.png",
+      "w": 142,
+      "h": 56,
+      "ox": -71,
+      "oy": -14
+    },
+    "german_village_barn_010_ver_01_s10": {
+      "file": "german_village_barn_010_ver_01_s10.png",
+      "w": 179,
+      "h": 75,
+      "ox": -45,
+      "oy": -23
+    },
+    "german_village_barn_010_ver_01_s11": {
+      "file": "german_village_barn_010_ver_01_s11.png",
+      "w": 192,
+      "h": 102,
+      "ox": -45,
+      "oy": -50
+    },
+    "german_village_barn_010_ver_01_s4": {
+      "file": "german_village_barn_010_ver_01_s4.png",
+      "w": 154,
+      "h": 116,
+      "ox": -29,
+      "oy": -78
+    },
+    "german_village_barn_010_ver_01_s5": {
+      "file": "german_village_barn_010_ver_01_s5.png",
+      "w": 154,
+      "h": 116,
+      "ox": -29,
+      "oy": -78
+    },
+    "german_village_barn_010_ver_01_s6": {
+      "file": "german_village_barn_010_ver_01_s6.png",
+      "w": 154,
+      "h": 115,
+      "ox": -29,
+      "oy": -72
+    },
+    "german_village_barn_010_ver_01_s7": {
+      "file": "german_village_barn_010_ver_01_s7.png",
+      "w": 147,
+      "h": 88,
+      "ox": -29,
+      "oy": -45
+    },
+    "german_village_barn_010_ver_01_s8": {
+      "file": "german_village_barn_010_ver_01_s8.png",
+      "w": 163,
+      "h": 52,
+      "ox": -29,
+      "oy": -2
+    },
+    "german_village_barn_010_ver_01_s9": {
+      "file": "german_village_barn_010_ver_01_s9.png",
+      "w": 175,
+      "h": 52,
+      "ox": -41,
+      "oy": 0
+    },
+    "german_village_barn_011_ver_01_s10": {
+      "file": "german_village_barn_011_ver_01_s10.png",
+      "w": 217,
+      "h": 88,
+      "ox": -57,
+      "oy": -4
+    },
+    "german_village_barn_011_ver_01_s11": {
+      "file": "german_village_barn_011_ver_01_s11.png",
+      "w": 217,
+      "h": 115,
+      "ox": -57,
+      "oy": -31
+    },
+    "german_village_barn_011_ver_01_s4": {
+      "file": "german_village_barn_011_ver_01_s4.png",
+      "w": 197,
+      "h": 150,
+      "ox": -42,
+      "oy": -75
+    },
+    "german_village_barn_011_ver_01_s5": {
+      "file": "german_village_barn_011_ver_01_s5.png",
+      "w": 197,
+      "h": 150,
+      "ox": -42,
+      "oy": -75
+    },
+    "german_village_barn_011_ver_01_s6": {
+      "file": "german_village_barn_011_ver_01_s6.png",
+      "w": 197,
+      "h": 150,
+      "ox": -42,
+      "oy": -75
+    },
+    "german_village_barn_011_ver_01_s7": {
+      "file": "german_village_barn_011_ver_01_s7.png",
+      "w": 193,
+      "h": 104,
+      "ox": -38,
+      "oy": -29
+    },
+    "german_village_barn_011_ver_01_s8": {
+      "file": "german_village_barn_011_ver_01_s8.png",
+      "w": 202,
+      "h": 77,
+      "ox": -39,
+      "oy": 11
+    },
+    "german_village_barn_011_ver_01_s9": {
+      "file": "german_village_barn_011_ver_01_s9.png",
+      "w": 204,
+      "h": 77,
+      "ox": -39,
+      "oy": 11
+    },
+    "german_village_barn_012_ver_01_s10": {
+      "file": "german_village_barn_012_ver_01_s10.png",
+      "w": 187,
+      "h": 87,
+      "ox": -54,
+      "oy": -23
+    },
+    "german_village_barn_012_ver_01_s11": {
+      "file": "german_village_barn_012_ver_01_s11.png",
+      "w": 187,
+      "h": 107,
+      "ox": -54,
+      "oy": -43
+    },
+    "german_village_barn_012_ver_01_s4": {
+      "file": "german_village_barn_012_ver_01_s4.png",
+      "w": 152,
+      "h": 117,
+      "ox": -32,
+      "oy": -72
+    },
+    "german_village_barn_012_ver_01_s5": {
+      "file": "german_village_barn_012_ver_01_s5.png",
+      "w": 152,
+      "h": 117,
+      "ox": -32,
+      "oy": -72
+    },
+    "german_village_barn_012_ver_01_s6": {
+      "file": "german_village_barn_012_ver_01_s6.png",
+      "w": 151,
+      "h": 99,
+      "ox": -32,
+      "oy": -54
+    },
+    "german_village_barn_012_ver_01_s7": {
+      "file": "german_village_barn_012_ver_01_s7.png",
+      "w": 151,
+      "h": 85,
+      "ox": -32,
+      "oy": -40
+    },
+    "german_village_barn_012_ver_01_s8": {
+      "file": "german_village_barn_012_ver_01_s8.png",
+      "w": 159,
+      "h": 55,
+      "ox": -31,
+      "oy": 2
+    },
+    "german_village_barn_012_ver_01_s9": {
+      "file": "german_village_barn_012_ver_01_s9.png",
+      "w": 181,
+      "h": 70,
+      "ox": -48,
+      "oy": -6
+    },
+    "german_village_barn_013_ver_01_s10": {
+      "file": "german_village_barn_013_ver_01_s10.png",
+      "w": 227,
+      "h": 100,
+      "ox": -38,
+      "oy": -48
+    },
+    "german_village_barn_013_ver_01_s11": {
+      "file": "german_village_barn_013_ver_01_s11.png",
+      "w": 223,
+      "h": 102,
+      "ox": -37,
+      "oy": -53
+    },
+    "german_village_barn_013_ver_01_s4": {
+      "file": "german_village_barn_013_ver_01_s4.png",
+      "w": 177,
+      "h": 144,
+      "ox": -12,
+      "oy": -103
+    },
+    "german_village_barn_013_ver_01_s5": {
+      "file": "german_village_barn_013_ver_01_s5.png",
+      "w": 177,
+      "h": 144,
+      "ox": -12,
+      "oy": -103
+    },
+    "german_village_barn_013_ver_01_s6": {
+      "file": "german_village_barn_013_ver_01_s6.png",
+      "w": 173,
+      "h": 111,
+      "ox": -12,
+      "oy": -69
+    },
+    "german_village_barn_013_ver_01_s7": {
+      "file": "german_village_barn_013_ver_01_s7.png",
+      "w": 172,
+      "h": 107,
+      "ox": -11,
+      "oy": -65
+    },
+    "german_village_barn_013_ver_01_s8": {
+      "file": "german_village_barn_013_ver_01_s8.png",
+      "w": 185,
+      "h": 64,
+      "ox": -11,
+      "oy": -15
+    },
+    "german_village_barn_013_ver_01_s9": {
+      "file": "german_village_barn_013_ver_01_s9.png",
+      "w": 209,
+      "h": 83,
+      "ox": -27,
+      "oy": -34
+    },
+    "german_village_barn_015_ver_01_s10": {
+      "file": "german_village_barn_015_ver_01_s10.png",
+      "w": 197,
+      "h": 86,
+      "ox": -81,
+      "oy": -37
+    },
+    "german_village_barn_015_ver_01_s11": {
+      "file": "german_village_barn_015_ver_01_s11.png",
+      "w": 211,
+      "h": 118,
+      "ox": -85,
+      "oy": -69
+    },
+    "german_village_barn_015_ver_01_s4": {
+      "file": "german_village_barn_015_ver_01_s4.png",
+      "w": 185,
+      "h": 144,
+      "ox": -70,
+      "oy": -108
+    },
+    "german_village_barn_015_ver_01_s5": {
+      "file": "german_village_barn_015_ver_01_s5.png",
+      "w": 185,
+      "h": 144,
+      "ox": -70,
+      "oy": -108
+    },
+    "german_village_barn_015_ver_01_s6": {
+      "file": "german_village_barn_015_ver_01_s6.png",
+      "w": 185,
+      "h": 141,
+      "ox": -70,
+      "oy": -105
+    },
+    "german_village_barn_015_ver_01_s7": {
+      "file": "german_village_barn_015_ver_01_s7.png",
+      "w": 185,
+      "h": 141,
+      "ox": -70,
+      "oy": -105
+    },
+    "german_village_barn_015_ver_01_s8": {
+      "file": "german_village_barn_015_ver_01_s8.png",
+      "w": 193,
+      "h": 74,
+      "ox": -68,
+      "oy": -25
+    },
+    "german_village_barn_015_ver_01_s9": {
+      "file": "german_village_barn_015_ver_01_s9.png",
+      "w": 193,
+      "h": 74,
+      "ox": -68,
+      "oy": -25
+    },
+    "german_village_barn_016_ver_01_s10": {
+      "file": "german_village_barn_016_ver_01_s10.png",
+      "w": 251,
+      "h": 111,
+      "ox": -78,
+      "oy": -43
+    },
+    "german_village_barn_016_ver_01_s11": {
+      "file": "german_village_barn_016_ver_01_s11.png",
+      "w": 251,
+      "h": 131,
+      "ox": -78,
+      "oy": -63
+    },
+    "german_village_barn_016_ver_01_s4": {
+      "file": "german_village_barn_016_ver_01_s4.png",
+      "w": 207,
+      "h": 157,
+      "ox": -53,
+      "oy": -101
+    },
+    "german_village_barn_016_ver_01_s5": {
+      "file": "german_village_barn_016_ver_01_s5.png",
+      "w": 207,
+      "h": 157,
+      "ox": -53,
+      "oy": -101
+    },
+    "german_village_barn_016_ver_01_s6": {
+      "file": "german_village_barn_016_ver_01_s6.png",
+      "w": 207,
+      "h": 153,
+      "ox": -53,
+      "oy": -97
+    },
+    "german_village_barn_016_ver_01_s7": {
+      "file": "german_village_barn_016_ver_01_s7.png",
+      "w": 207,
+      "h": 119,
+      "ox": -53,
+      "oy": -63
+    },
+    "german_village_barn_016_ver_01_s8": {
+      "file": "german_village_barn_016_ver_01_s8.png",
+      "w": 216,
+      "h": 88,
+      "ox": -53,
+      "oy": -18
+    },
+    "german_village_barn_016_ver_01_s9": {
+      "file": "german_village_barn_016_ver_01_s9.png",
+      "w": 225,
+      "h": 94,
+      "ox": -62,
+      "oy": -24
+    },
+    "german_village_house_001_ver_01_s10": {
+      "file": "german_village_house_001_ver_01_s10.png",
+      "w": 213,
+      "h": 62,
+      "ox": -53,
+      "oy": -17
+    },
+    "german_village_house_001_ver_01_s11": {
+      "file": "german_village_house_001_ver_01_s11.png",
+      "w": 203,
+      "h": 79,
+      "ox": -47,
+      "oy": -37
+    },
+    "german_village_house_001_ver_01_s4": {
+      "file": "german_village_house_001_ver_01_s4.png",
+      "w": 146,
+      "h": 138,
+      "ox": -25,
+      "oy": -107
+    },
+    "german_village_house_001_ver_01_s5": {
+      "file": "german_village_house_001_ver_01_s5.png",
+      "w": 150,
+      "h": 139,
+      "ox": -25,
+      "oy": -108
+    },
+    "german_village_house_001_ver_01_s6": {
+      "file": "german_village_house_001_ver_01_s6.png",
+      "w": 150,
+      "h": 134,
+      "ox": -25,
+      "oy": -103
+    },
+    "german_village_house_001_ver_01_s7": {
+      "file": "german_village_house_001_ver_01_s7.png",
+      "w": 158,
+      "h": 115,
+      "ox": -29,
+      "oy": -88
+    },
+    "german_village_house_001_ver_01_s8": {
+      "file": "german_village_house_001_ver_01_s8.png",
+      "w": 152,
+      "h": 37,
+      "ox": -24,
+      "oy": 1
+    },
+    "german_village_house_001_ver_01_s9": {
+      "file": "german_village_house_001_ver_01_s9.png",
+      "w": 156,
+      "h": 41,
+      "ox": -24,
+      "oy": 0
+    },
+    "german_village_house_002_ver_01_s10": {
+      "file": "german_village_house_002_ver_01_s10.png",
+      "w": 166,
+      "h": 60,
+      "ox": -30,
+      "oy": -27
+    },
+    "german_village_house_002_ver_01_s11": {
+      "file": "german_village_house_002_ver_01_s11.png",
+      "w": 224,
+      "h": 114,
+      "ox": -69,
+      "oy": -71
+    },
+    "german_village_house_002_ver_01_s4": {
+      "file": "german_village_house_002_ver_01_s4.png",
+      "w": 134,
+      "h": 134,
+      "ox": -21,
+      "oy": -116
+    },
+    "german_village_house_002_ver_01_s5": {
+      "file": "german_village_house_002_ver_01_s5.png",
+      "w": 137,
+      "h": 128,
+      "ox": -24,
+      "oy": -109
+    },
+    "german_village_house_002_ver_01_s6": {
+      "file": "german_village_house_002_ver_01_s6.png",
+      "w": 140,
+      "h": 130,
+      "ox": -27,
+      "oy": -108
+    },
+    "german_village_house_002_ver_01_s7": {
+      "file": "german_village_house_002_ver_01_s7.png",
+      "w": 142,
+      "h": 92,
+      "ox": -27,
+      "oy": -70
+    },
+    "german_village_house_002_ver_01_s8": {
+      "file": "german_village_house_002_ver_01_s8.png",
+      "w": 139,
+      "h": 49,
+      "ox": -19,
+      "oy": -21
+    },
+    "german_village_house_002_ver_01_s9": {
+      "file": "german_village_house_002_ver_01_s9.png",
+      "w": 148,
+      "h": 61,
+      "ox": -28,
+      "oy": -28
+    },
+    "german_village_house_003_ver_01_s10": {
+      "file": "german_village_house_003_ver_01_s10.png",
+      "w": 232,
+      "h": 60,
+      "ox": -52,
+      "oy": -14
+    },
+    "german_village_house_003_ver_01_s11": {
+      "file": "german_village_house_003_ver_01_s11.png",
+      "w": 245,
+      "h": 123,
+      "ox": -57,
+      "oy": -64
+    },
+    "german_village_house_003_ver_01_s4": {
+      "file": "german_village_house_003_ver_01_s4.png",
+      "w": 202,
+      "h": 171,
+      "ox": -33,
+      "oy": -142
+    },
+    "german_village_house_003_ver_01_s5": {
+      "file": "german_village_house_003_ver_01_s5.png",
+      "w": 202,
+      "h": 170,
+      "ox": -33,
+      "oy": -142
+    },
+    "german_village_house_003_ver_01_s6": {
+      "file": "german_village_house_003_ver_01_s6.png",
+      "w": 212,
+      "h": 173,
+      "ox": -43,
+      "oy": -142
+    },
+    "german_village_house_003_ver_01_s7": {
+      "file": "german_village_house_003_ver_01_s7.png",
+      "w": 200,
+      "h": 144,
+      "ox": -37,
+      "oy": -117
+    },
+    "german_village_house_003_ver_01_s8": {
+      "file": "german_village_house_003_ver_01_s8.png",
+      "w": 202,
+      "h": 63,
+      "ox": -22,
+      "oy": -10
+    },
+    "german_village_house_003_ver_01_s9": {
+      "file": "german_village_house_003_ver_01_s9.png",
+      "w": 211,
+      "h": 74,
+      "ox": -31,
+      "oy": -25
+    },
+    "german_village_house_004_ver_01_s10": {
+      "file": "german_village_house_004_ver_01_s10.png",
+      "w": 160,
+      "h": 72,
+      "ox": -54,
+      "oy": -2
+    },
+    "german_village_house_004_ver_01_s11": {
+      "file": "german_village_house_004_ver_01_s11.png",
+      "w": 182,
+      "h": 91,
+      "ox": -76,
+      "oy": -36
+    },
+    "german_village_house_004_ver_01_s4": {
+      "file": "german_village_house_004_ver_01_s4.png",
+      "w": 139,
+      "h": 123,
+      "ox": -42,
+      "oy": -88
+    },
+    "german_village_house_004_ver_01_s5": {
+      "file": "german_village_house_004_ver_01_s5.png",
+      "w": 137,
+      "h": 123,
+      "ox": -40,
+      "oy": -88
+    },
+    "german_village_house_004_ver_01_s6": {
+      "file": "german_village_house_004_ver_01_s6.png",
+      "w": 137,
+      "h": 122,
+      "ox": -40,
+      "oy": -84
+    },
+    "german_village_house_004_ver_01_s7": {
+      "file": "german_village_house_004_ver_01_s7.png",
+      "w": 130,
+      "h": 122,
+      "ox": -33,
+      "oy": -84
+    },
+    "german_village_house_004_ver_01_s8": {
+      "file": "german_village_house_004_ver_01_s8.png",
+      "w": 146,
+      "h": 49,
+      "ox": -40,
+      "oy": -2
+    },
+    "german_village_house_004_ver_01_s9": {
+      "file": "german_village_house_004_ver_01_s9.png",
+      "w": 153,
+      "h": 59,
+      "ox": -47,
+      "oy": -2
+    },
+    "german_village_house_004_ver_02_s10": {
+      "file": "german_village_house_004_ver_02_s10.png",
+      "w": 168,
+      "h": 63,
+      "ox": -20,
+      "oy": -4
+    },
+    "german_village_house_004_ver_02_s11": {
+      "file": "german_village_house_004_ver_02_s11.png",
+      "w": 180,
+      "h": 86,
+      "ox": -20,
+      "oy": -27
+    },
+    "german_village_house_004_ver_02_s4": {
+      "file": "german_village_house_004_ver_02_s4.png",
+      "w": 153,
+      "h": 131,
+      "ox": -20,
+      "oy": -90
+    },
+    "german_village_house_004_ver_02_s5": {
+      "file": "german_village_house_004_ver_02_s5.png",
+      "w": 156,
+      "h": 131,
+      "ox": -21,
+      "oy": -90
+    },
+    "german_village_house_004_ver_02_s6": {
+      "file": "german_village_house_004_ver_02_s6.png",
+      "w": 159,
+      "h": 122,
+      "ox": -21,
+      "oy": -81
+    },
+    "german_village_house_004_ver_02_s7": {
+      "file": "german_village_house_004_ver_02_s7.png",
+      "w": 152,
+      "h": 122,
+      "ox": -21,
+      "oy": -81
+    },
+    "german_village_house_004_ver_02_s8": {
+      "file": "german_village_house_004_ver_02_s8.png",
+      "w": 158,
+      "h": 47,
+      "ox": -19,
+      "oy": 3
+    },
+    "german_village_house_004_ver_02_s9": {
+      "file": "german_village_house_004_ver_02_s9.png",
+      "w": 162,
+      "h": 64,
+      "ox": -20,
+      "oy": -4
+    },
+    "german_village_house_005_ver_02_s10": {
+      "file": "german_village_house_005_ver_02_s10.png",
+      "w": 200,
+      "h": 55,
+      "ox": -38,
+      "oy": -14
+    },
+    "german_village_house_005_ver_02_s11": {
+      "file": "german_village_house_005_ver_02_s11.png",
+      "w": 226,
+      "h": 110,
+      "ox": -46,
+      "oy": -64
+    },
+    "german_village_house_005_ver_02_s4": {
+      "file": "german_village_house_005_ver_02_s4.png",
+      "w": 176,
+      "h": 141,
+      "ox": -21,
+      "oy": -110
+    },
+    "german_village_house_005_ver_02_s5": {
+      "file": "german_village_house_005_ver_02_s5.png",
+      "w": 177,
+      "h": 140,
+      "ox": -21,
+      "oy": -107
+    },
+    "german_village_house_005_ver_02_s6": {
+      "file": "german_village_house_005_ver_02_s6.png",
+      "w": 174,
+      "h": 121,
+      "ox": -18,
+      "oy": -88
+    },
+    "german_village_house_005_ver_02_s7": {
+      "file": "german_village_house_005_ver_02_s7.png",
+      "w": 171,
+      "h": 112,
+      "ox": -17,
+      "oy": -79
+    },
+    "german_village_house_005_ver_02_s8": {
+      "file": "german_village_house_005_ver_02_s8.png",
+      "w": 180,
+      "h": 54,
+      "ox": -19,
+      "oy": -13
+    },
+    "german_village_house_005_ver_02_s9": {
+      "file": "german_village_house_005_ver_02_s9.png",
+      "w": 190,
+      "h": 54,
+      "ox": -28,
+      "oy": -13
+    },
+    "german_village_house_006_ver_01_s10": {
+      "file": "german_village_house_006_ver_01_s10.png",
+      "w": 192,
+      "h": 69,
+      "ox": -37,
+      "oy": -21
+    },
+    "german_village_house_006_ver_01_s11": {
+      "file": "german_village_house_006_ver_01_s11.png",
+      "w": 204,
+      "h": 103,
+      "ox": -52,
+      "oy": -59
+    },
+    "german_village_house_006_ver_01_s4": {
+      "file": "german_village_house_006_ver_01_s4.png",
+      "w": 169,
+      "h": 145,
+      "ox": -27,
+      "oy": -119
+    },
+    "german_village_house_006_ver_01_s5": {
+      "file": "german_village_house_006_ver_01_s5.png",
+      "w": 169,
+      "h": 146,
+      "ox": -27,
+      "oy": -119
+    },
+    "german_village_house_006_ver_01_s6": {
+      "file": "german_village_house_006_ver_01_s6.png",
+      "w": 169,
+      "h": 145,
+      "ox": -27,
+      "oy": -119
+    },
+    "german_village_house_006_ver_01_s7": {
+      "file": "german_village_house_006_ver_01_s7.png",
+      "w": 175,
+      "h": 93,
+      "ox": -39,
+      "oy": -66
+    },
+    "german_village_house_006_ver_01_s8": {
+      "file": "german_village_house_006_ver_01_s8.png",
+      "w": 182,
+      "h": 58,
+      "ox": -27,
+      "oy": -21
+    },
+    "german_village_house_006_ver_01_s9": {
+      "file": "german_village_house_006_ver_01_s9.png",
+      "w": 192,
+      "h": 58,
+      "ox": -37,
+      "oy": -21
+    },
+    "german_village_house_006_ver_02_s10": {
+      "file": "german_village_house_006_ver_02_s10.png",
+      "w": 174,
+      "h": 56,
+      "ox": -43,
+      "oy": 6
+    },
+    "german_village_house_006_ver_02_s11": {
+      "file": "german_village_house_006_ver_02_s11.png",
+      "w": 180,
+      "h": 85,
+      "ox": -53,
+      "oy": -23
+    },
+    "german_village_house_006_ver_02_s4": {
+      "file": "german_village_house_006_ver_02_s4.png",
+      "w": 167,
+      "h": 143,
+      "ox": -41,
+      "oy": -99
+    },
+    "german_village_house_006_ver_02_s5": {
+      "file": "german_village_house_006_ver_02_s5.png",
+      "w": 167,
+      "h": 141,
+      "ox": -41,
+      "oy": -99
+    },
+    "german_village_house_006_ver_02_s6": {
+      "file": "german_village_house_006_ver_02_s6.png",
+      "w": 167,
+      "h": 141,
+      "ox": -41,
+      "oy": -99
+    },
+    "german_village_house_006_ver_02_s7": {
+      "file": "german_village_house_006_ver_02_s7.png",
+      "w": 177,
+      "h": 136,
+      "ox": -51,
+      "oy": -94
+    },
+    "german_village_house_006_ver_02_s8": {
+      "file": "german_village_house_006_ver_02_s8.png",
+      "w": 177,
+      "h": 50,
+      "ox": -40,
+      "oy": 6
+    },
+    "german_village_house_006_ver_02_s9": {
+      "file": "german_village_house_006_ver_02_s9.png",
+      "w": 180,
+      "h": 60,
+      "ox": -43,
+      "oy": 6
+    },
+    "heteromeles-arbutifolia_a_01_s2": {
+      "file": "heteromeles-arbutifolia_a_01_s2.png",
+      "w": 100,
+      "h": 82,
+      "ox": -50,
+      "oy": -81
+    },
+    "heteromeles-arbutifolia_a_01_s4": {
+      "file": "heteromeles-arbutifolia_a_01_s4.png",
+      "w": 103,
+      "h": 53,
+      "ox": -36,
+      "oy": -14
+    },
+    "heteromeles-arbutifolia_a_02_s2": {
+      "file": "heteromeles-arbutifolia_a_02_s2.png",
+      "w": 95,
+      "h": 75,
+      "ox": -48,
+      "oy": -73
+    },
+    "heteromeles-arbutifolia_a_02_s4": {
+      "file": "heteromeles-arbutifolia_a_02_s4.png",
+      "w": 95,
+      "h": 49,
+      "ox": -36,
+      "oy": -12
+    },
+    "larix-decidua_a_01_s2": {
+      "file": "larix-decidua_a_01_s2.png",
+      "w": 108,
+      "h": 140,
+      "ox": -52,
+      "oy": -138
+    },
+    "larix-decidua_a_01_s4": {
+      "file": "larix-decidua_a_01_s4.png",
+      "w": 111,
+      "h": 66,
+      "ox": -43,
+      "oy": -17
+    },
+    "larix-decidua_b_01_s2": {
+      "file": "larix-decidua_b_01_s2.png",
+      "w": 51,
+      "h": 70,
+      "ox": -25,
+      "oy": -65
+    },
+    "larix-decidua_b_01_s4": {
+      "file": "larix-decidua_b_01_s4.png",
+      "w": 57,
+      "h": 33,
+      "ox": -25,
+      "oy": -11
+    },
+    "larix-decidua_b_02_s2": {
+      "file": "larix-decidua_b_02_s2.png",
+      "w": 60,
+      "h": 75,
+      "ox": -30,
+      "oy": -71
+    },
+    "larix-decidua_b_02_s4": {
+      "file": "larix-decidua_b_02_s4.png",
+      "w": 61,
+      "h": 36,
+      "ox": -25,
+      "oy": -13
+    },
+    "larix-decidua_b_03_s2": {
+      "file": "larix-decidua_b_03_s2.png",
+      "w": 65,
+      "h": 86,
+      "ox": -31,
+      "oy": -82
+    },
+    "larix-decidua_b_03_s4": {
+      "file": "larix-decidua_b_03_s4.png",
+      "w": 68,
+      "h": 37,
+      "ox": -29,
+      "oy": -15
+    },
+    "picea-abies_a_01_s2": {
+      "file": "picea-abies_a_01_s2.png",
+      "w": 56,
+      "h": 81,
+      "ox": -28,
+      "oy": -76
+    },
+    "picea-abies_a_01_s4": {
+      "file": "picea-abies_a_01_s4.png",
+      "w": 57,
+      "h": 36,
+      "ox": -25,
+      "oy": -11
+    },
+    "picea-abies_c_01_s2": {
+      "file": "picea-abies_c_01_s2.png",
+      "w": 101,
+      "h": 157,
+      "ox": -52,
+      "oy": -143
+    },
+    "picea-abies_c_01_s4": {
+      "file": "picea-abies_c_01_s4.png",
+      "w": 108,
+      "h": 67,
+      "ox": -45,
+      "oy": -23
+    },
+    "picea-abies_c_03_s2": {
+      "file": "picea-abies_c_03_s2.png",
+      "w": 108,
+      "h": 163,
+      "ox": -51,
+      "oy": -151
+    },
+    "picea-abies_c_03_s4": {
+      "file": "picea-abies_c_03_s4.png",
+      "w": 113,
+      "h": 72,
+      "ox": -44,
+      "oy": -22
+    },
+    "picea-obovata_a_02_s2": {
+      "file": "picea-obovata_a_02_s2.png",
+      "w": 99,
+      "h": 134,
+      "ox": -50,
+      "oy": -127
+    },
+    "picea-obovata_a_02_s4": {
+      "file": "picea-obovata_a_02_s4.png",
+      "w": 106,
+      "h": 63,
+      "ox": -43,
+      "oy": -21
+    },
+    "pinus-jeffreyi_a_06_s2": {
+      "file": "pinus-jeffreyi_a_06_s2.png",
+      "w": 139,
+      "h": 275,
+      "ox": -66,
+      "oy": -272
+    },
+    "pinus-jeffreyi_a_06_s4": {
+      "file": "pinus-jeffreyi_a_06_s4.png",
+      "w": 143,
+      "h": 91,
+      "ox": -38,
+      "oy": -4
+    },
+    "pinus-jeffreyi_c_01_s2": {
+      "file": "pinus-jeffreyi_c_01_s2.png",
+      "w": 108,
+      "h": 275,
+      "ox": -55,
+      "oy": -272
+    },
+    "pinus-jeffreyi_c_01_s4": {
+      "file": "pinus-jeffreyi_c_01_s4.png",
+      "w": 114,
+      "h": 85,
+      "ox": -17,
+      "oy": -1
+    },
+    "pinus-jeffreyi_d_01_s2": {
+      "file": "pinus-jeffreyi_d_01_s2.png",
+      "w": 104,
+      "h": 290,
+      "ox": -53,
+      "oy": -286
+    },
+    "pinus-jeffreyi_d_01_s4": {
+      "file": "pinus-jeffreyi_d_01_s4.png",
+      "w": 128,
+      "h": 94,
+      "ox": -15,
+      "oy": 0
+    },
+    "pinus-ponderosa_a_02_s2": {
+      "file": "pinus-ponderosa_a_02_s2.png",
+      "w": 94,
+      "h": 209,
+      "ox": -42,
+      "oy": -205
+    },
+    "pinus-ponderosa_a_02_s4": {
+      "file": "pinus-ponderosa_a_02_s4.png",
+      "w": 109,
+      "h": 77,
+      "ox": -17,
+      "oy": -1
+    },
+    "pinus-ponderosa_a_03_s2": {
+      "file": "pinus-ponderosa_a_03_s2.png",
+      "w": 99,
+      "h": 225,
+      "ox": -55,
+      "oy": -222
+    },
+    "pinus-ponderosa_a_03_s4": {
+      "file": "pinus-ponderosa_a_03_s4.png",
+      "w": 107,
+      "h": 71,
+      "ox": -25,
+      "oy": -3
+    },
+    "pinus-ponderosa_b_03_s2": {
+      "file": "pinus-ponderosa_b_03_s2.png",
+      "w": 192,
+      "h": 244,
+      "ox": -94,
+      "oy": -240
+    },
+    "pinus-ponderosa_b_03_s4": {
+      "file": "pinus-ponderosa_b_03_s4.png",
+      "w": 220,
+      "h": 114,
+      "ox": -70,
+      "oy": -16
+    },
+    "populus-tremuloides_a_01_s2": {
+      "file": "populus-tremuloides_a_01_s2.png",
+      "w": 195,
+      "h": 202,
+      "ox": -100,
+      "oy": -200
+    },
+    "populus-tremuloides_a_01_s4": {
+      "file": "populus-tremuloides_a_01_s4.png",
+      "w": 205,
+      "h": 109,
+      "ox": -77,
+      "oy": -30
+    },
+    "populus-tremuloides_a_02_s2": {
+      "file": "populus-tremuloides_a_02_s2.png",
+      "w": 195,
+      "h": 211,
+      "ox": -97,
+      "oy": -208
+    },
+    "populus-tremuloides_a_02_s4": {
+      "file": "populus-tremuloides_a_02_s4.png",
+      "w": 213,
+      "h": 113,
+      "ox": -82,
+      "oy": -32
+    },
+    "populus-tremuloides_b_01_s2": {
+      "file": "populus-tremuloides_b_01_s2.png",
+      "w": 117,
+      "h": 206,
+      "ox": -60,
+      "oy": -204
+    },
+    "populus-tremuloides_b_01_s4": {
+      "file": "populus-tremuloides_b_01_s4.png",
+      "w": 127,
+      "h": 75,
+      "ox": -43,
+      "oy": -8
+    },
+    "populus-tremuloides_b_02_s2": {
+      "file": "populus-tremuloides_b_02_s2.png",
+      "w": 105,
+      "h": 207,
+      "ox": -55,
+      "oy": -205
+    },
+    "populus-tremuloides_b_02_s4": {
+      "file": "populus-tremuloides_b_02_s4.png",
+      "w": 119,
+      "h": 78,
+      "ox": -36,
+      "oy": -12
+    },
+    "prunus-cerasifera_a_01_s2": {
+      "file": "prunus-cerasifera_a_01_s2.png",
+      "w": 96,
+      "h": 86,
+      "ox": -48,
+      "oy": -85
+    },
+    "prunus-cerasifera_a_01_s4": {
+      "file": "prunus-cerasifera_a_01_s4.png",
+      "w": 99,
+      "h": 52,
+      "ox": -36,
+      "oy": -15
+    },
+    "prunus-cerasifera_a_02_s2": {
+      "file": "prunus-cerasifera_a_02_s2.png",
+      "w": 87,
+      "h": 82,
+      "ox": -41,
+      "oy": -81
+    },
+    "prunus-cerasifera_a_02_s4": {
+      "file": "prunus-cerasifera_a_02_s4.png",
+      "w": 86,
+      "h": 51,
+      "ox": -30,
+      "oy": -15
+    },
+    "prunus-cerasifera_b_01_s2": {
+      "file": "prunus-cerasifera_b_01_s2.png",
+      "w": 59,
+      "h": 75,
+      "ox": -31,
+      "oy": -76
+    },
+    "prunus-cerasifera_b_01_s4": {
+      "file": "prunus-cerasifera_b_01_s4.png",
+      "w": 59,
+      "h": 32,
+      "ox": -16,
+      "oy": -6
+    },
+    "prunus-cerasifera_b_02_s2": {
+      "file": "prunus-cerasifera_b_02_s2.png",
+      "w": 55,
+      "h": 80,
+      "ox": -28,
+      "oy": -80
+    },
+    "prunus-cerasifera_b_02_s4": {
+      "file": "prunus-cerasifera_b_02_s4.png",
+      "w": 55,
+      "h": 32,
+      "ox": -14,
+      "oy": -3
+    },
+    "prunus-cerasifera_c_01_s2": {
+      "file": "prunus-cerasifera_c_01_s2.png",
+      "w": 102,
+      "h": 79,
+      "ox": -55,
+      "oy": -78
+    },
+    "prunus-cerasifera_c_01_s4": {
+      "file": "prunus-cerasifera_c_01_s4.png",
+      "w": 102,
+      "h": 55,
+      "ox": -46,
+      "oy": -18
+    },
+    "prunus-cerasifera_c_02_s2": {
+      "file": "prunus-cerasifera_c_02_s2.png",
+      "w": 100,
+      "h": 80,
+      "ox": -52,
+      "oy": -75
+    },
+    "prunus-cerasifera_c_02_s4": {
+      "file": "prunus-cerasifera_c_02_s4.png",
+      "w": 105,
+      "h": 50,
+      "ox": -45,
+      "oy": -16
+    },
+    "pseudotsuga-menziesii_a_01_s2": {
+      "file": "pseudotsuga-menziesii_a_01_s2.png",
+      "w": 71,
+      "h": 89,
+      "ox": -34,
+      "oy": -84
+    },
+    "pseudotsuga-menziesii_a_01_s4": {
+      "file": "pseudotsuga-menziesii_a_01_s4.png",
+      "w": 71,
+      "h": 38,
+      "ox": -27,
+      "oy": -10
+    },
+    "pseudotsuga-menziesii_b_01_s2": {
+      "file": "pseudotsuga-menziesii_b_01_s2.png",
+      "w": 59,
+      "h": 88,
+      "ox": -29,
+      "oy": -84
+    },
+    "pseudotsuga-menziesii_b_01_s4": {
+      "file": "pseudotsuga-menziesii_b_01_s4.png",
+      "w": 60,
+      "h": 36,
+      "ox": -25,
+      "oy": -9
+    },
+    "pseudotsuga-menziesii_c_01_s2": {
+      "file": "pseudotsuga-menziesii_c_01_s2.png",
+      "w": 106,
+      "h": 156,
+      "ox": -47,
+      "oy": -155
+    },
+    "pseudotsuga-menziesii_c_01_s4": {
+      "file": "pseudotsuga-menziesii_c_01_s4.png",
+      "w": 105,
+      "h": 66,
+      "ox": -34,
+      "oy": -16
+    },
+    "pseudotsuga-menziesii_d_02_s2": {
+      "file": "pseudotsuga-menziesii_d_02_s2.png",
+      "w": 114,
+      "h": 158,
+      "ox": -59,
+      "oy": -155
+    },
+    "pseudotsuga-menziesii_d_02_s4": {
+      "file": "pseudotsuga-menziesii_d_02_s4.png",
+      "w": 123,
+      "h": 72,
+      "ox": -47,
+      "oy": -16
+    },
+    "quercus-agrifolia_a_01_s2": {
+      "file": "quercus-agrifolia_a_01_s2.png",
+      "w": 150,
+      "h": 147,
+      "ox": -82,
+      "oy": -144
+    },
+    "quercus-agrifolia_a_01_s4": {
+      "file": "quercus-agrifolia_a_01_s4.png",
+      "w": 156,
+      "h": 78,
+      "ox": -68,
+      "oy": -22
+    },
+    "quercus-agrifolia_a_02_s2": {
+      "file": "quercus-agrifolia_a_02_s2.png",
+      "w": 182,
+      "h": 145,
+      "ox": -87,
+      "oy": -140
+    },
+    "quercus-agrifolia_a_02_s4": {
+      "file": "quercus-agrifolia_a_02_s4.png",
+      "w": 186,
+      "h": 85,
+      "ox": -71,
+      "oy": -19
+    },
+    "quercus-cerris_a_01_s2": {
+      "file": "quercus-cerris_a_01_s2.png",
+      "w": 159,
+      "h": 194,
+      "ox": -82,
+      "oy": -191
+    },
+    "quercus-cerris_a_01_s4": {
+      "file": "quercus-cerris_a_01_s4.png",
+      "w": 166,
+      "h": 100,
+      "ox": -58,
+      "oy": -27
+    },
+    "quercus-cerris_a_02_s2": {
+      "file": "quercus-cerris_a_02_s2.png",
+      "w": 181,
+      "h": 208,
+      "ox": -92,
+      "oy": -204
+    },
+    "quercus-cerris_a_02_s4": {
+      "file": "quercus-cerris_a_02_s4.png",
+      "w": 192,
+      "h": 107,
+      "ox": -73,
+      "oy": -22
+    },
+    "quercus-cerris_t_01_s2": {
+      "file": "quercus-cerris_t_01_s2.png",
+      "w": 247,
+      "h": 236,
+      "ox": -123,
+      "oy": -232
+    },
+    "quercus-cerris_t_01_s4": {
+      "file": "quercus-cerris_t_01_s4.png",
+      "w": 254,
+      "h": 139,
+      "ox": -107,
+      "oy": -75
+    },
+    "robinia-pseudoacacia_a_01_s2": {
+      "file": "robinia-pseudoacacia_a_01_s2.png",
+      "w": 125,
+      "h": 161,
+      "ox": -68,
+      "oy": -159
+    },
+    "robinia-pseudoacacia_a_01_s4": {
+      "file": "robinia-pseudoacacia_a_01_s4.png",
+      "w": 127,
+      "h": 71,
+      "ox": -48,
+      "oy": -12
+    },
+    "robinia-pseudoacacia_a_02_s2": {
+      "file": "robinia-pseudoacacia_a_02_s2.png",
+      "w": 118,
+      "h": 180,
+      "ox": -60,
+      "oy": -178
+    },
+    "robinia-pseudoacacia_a_02_s4": {
+      "file": "robinia-pseudoacacia_a_02_s4.png",
+      "w": 126,
+      "h": 86,
+      "ox": -40,
+      "oy": -13
+    },
+    "robinia-pseudoacacia_b_01_s2": {
+      "file": "robinia-pseudoacacia_b_01_s2.png",
+      "w": 141,
+      "h": 186,
+      "ox": -79,
+      "oy": -183
+    },
+    "robinia-pseudoacacia_b_01_s4": {
+      "file": "robinia-pseudoacacia_b_01_s4.png",
+      "w": 135,
+      "h": 98,
+      "ox": -53,
+      "oy": -16
+    },
+    "robinia-pseudoacacia_b_02_s2": {
+      "file": "robinia-pseudoacacia_b_02_s2.png",
+      "w": 124,
+      "h": 193,
+      "ox": -60,
+      "oy": -191
+    },
+    "robinia-pseudoacacia_b_02_s4": {
+      "file": "robinia-pseudoacacia_b_02_s4.png",
+      "w": 123,
+      "h": 88,
+      "ox": -37,
+      "oy": -19
+    },
+    "robinia-pseudoacacia_c_01_s2": {
+      "file": "robinia-pseudoacacia_c_01_s2.png",
+      "w": 136,
+      "h": 171,
+      "ox": -72,
+      "oy": -169
+    },
+    "robinia-pseudoacacia_c_01_s4": {
+      "file": "robinia-pseudoacacia_c_01_s4.png",
+      "w": 133,
+      "h": 65,
+      "ox": -51,
+      "oy": -8
+    },
+    "robinia-pseudoacacia_c_02_s2": {
+      "file": "robinia-pseudoacacia_c_02_s2.png",
+      "w": 118,
+      "h": 172,
+      "ox": -66,
+      "oy": -170
+    },
+    "robinia-pseudoacacia_c_02_s4": {
+      "file": "robinia-pseudoacacia_c_02_s4.png",
+      "w": 121,
+      "h": 81,
+      "ox": -43,
+      "oy": -21
+    },
+    "robinia-pseudoacacia_d_01_s2": {
+      "file": "robinia-pseudoacacia_d_01_s2.png",
+      "w": 153,
+      "h": 204,
+      "ox": -69,
+      "oy": -202
+    },
+    "robinia-pseudoacacia_d_01_s4": {
+      "file": "robinia-pseudoacacia_d_01_s4.png",
+      "w": 160,
+      "h": 106,
+      "ox": -37,
+      "oy": -24
+    },
+    "robinia-pseudoacacia_d_02_s2": {
+      "file": "robinia-pseudoacacia_d_02_s2.png",
+      "w": 168,
+      "h": 197,
+      "ox": -73,
+      "oy": -195
+    },
+    "robinia-pseudoacacia_d_02_s4": {
+      "file": "robinia-pseudoacacia_d_02_s4.png",
+      "w": 168,
+      "h": 99,
+      "ox": -43,
+      "oy": -20
+    },
+    "salix-babylonica_a_02_s2": {
+      "file": "salix-babylonica_a_02_s2.png",
+      "w": 117,
+      "h": 192,
+      "ox": -53,
+      "oy": -189
+    },
+    "salix-babylonica_a_02_s4": {
+      "file": "salix-babylonica_a_02_s4.png",
+      "w": 128,
+      "h": 101,
+      "ox": -37,
+      "oy": -23
+    },
+    "shrub_carpinus-betulus_a_01_s1": {
+      "file": "shrub_carpinus-betulus_a_01_s1.png",
+      "w": 43,
+      "h": 19,
+      "ox": -22,
+      "oy": -10
+    },
+    "shrub_carpinus-betulus_a_01_s2": {
+      "file": "shrub_carpinus-betulus_a_01_s2.png",
+      "w": 25,
+      "h": 20,
+      "ox": -12,
+      "oy": -15
+    },
+    "shrub_carpinus-betulus_a_01_s4": {
+      "file": "shrub_carpinus-betulus_a_01_s4.png",
+      "w": 25,
+      "h": 14,
+      "ox": -11,
+      "oy": -6
+    },
+    "shrub_carpinus-betulus_a_02_s1": {
+      "file": "shrub_carpinus-betulus_a_02_s1.png",
+      "w": 49,
+      "h": 27,
+      "ox": -25,
+      "oy": -14
+    },
+    "shrub_carpinus-betulus_a_02_s2": {
+      "file": "shrub_carpinus-betulus_a_02_s2.png",
+      "w": 39,
+      "h": 29,
+      "ox": -20,
+      "oy": -22
+    },
+    "shrub_carpinus-betulus_a_02_s4": {
+      "file": "shrub_carpinus-betulus_a_02_s4.png",
+      "w": 40,
+      "h": 21,
+      "ox": -18,
+      "oy": -9
+    },
+    "shrub_carpinus-betulus_a_03_s1": {
+      "file": "shrub_carpinus-betulus_a_03_s1.png",
+      "w": 36,
+      "h": 30,
+      "ox": -17,
+      "oy": -16
+    },
+    "shrub_carpinus-betulus_a_03_s2": {
+      "file": "shrub_carpinus-betulus_a_03_s2.png",
+      "w": 28,
+      "h": 22,
+      "ox": -14,
+      "oy": -16
+    },
+    "shrub_carpinus-betulus_a_03_s4": {
+      "file": "shrub_carpinus-betulus_a_03_s4.png",
+      "w": 29,
+      "h": 15,
+      "ox": -13,
+      "oy": -6
+    },
+    "shrub_carpinus-betulus_b_01_s2": {
+      "file": "shrub_carpinus-betulus_b_01_s2.png",
+      "w": 97,
+      "h": 96,
+      "ox": -53,
+      "oy": -77
+    },
+    "shrub_carpinus-betulus_b_01_s4": {
+      "file": "shrub_carpinus-betulus_b_01_s4.png",
+      "w": 97,
+      "h": 51,
+      "ox": -47,
+      "oy": -21
+    },
+    "shrub_carpinus-betulus_b_02_s2": {
+      "file": "shrub_carpinus-betulus_b_02_s2.png",
+      "w": 91,
+      "h": 92,
+      "ox": -46,
+      "oy": -75
+    },
+    "shrub_carpinus-betulus_b_02_s4": {
+      "file": "shrub_carpinus-betulus_b_02_s4.png",
+      "w": 90,
+      "h": 49,
+      "ox": -42,
+      "oy": -20
+    },
+    "shrub_carpinus-betulus_b_03_s2": {
+      "file": "shrub_carpinus-betulus_b_03_s2.png",
+      "w": 87,
+      "h": 86,
+      "ox": -45,
+      "oy": -70
+    },
+    "shrub_carpinus-betulus_b_03_s4": {
+      "file": "shrub_carpinus-betulus_b_03_s4.png",
+      "w": 86,
+      "h": 52,
+      "ox": -41,
+      "oy": -22
+    },
+    "shrub_cedrus-deodara_a_01_s2": {
+      "file": "shrub_cedrus-deodara_a_01_s2.png",
+      "w": 25,
+      "h": 21,
+      "ox": -8,
+      "oy": -20
+    },
+    "shrub_cedrus-deodara_a_01_s4": {
+      "file": "shrub_cedrus-deodara_a_01_s4.png",
+      "w": 27,
+      "h": 15,
+      "ox": -7,
+      "oy": -3
+    },
+    "shrub_cedrus-deodara_a_02_s2": {
+      "file": "shrub_cedrus-deodara_a_02_s2.png",
+      "w": 22,
+      "h": 19,
+      "ox": -7,
+      "oy": -18
+    },
+    "shrub_cedrus-deodara_a_02_s4": {
+      "file": "shrub_cedrus-deodara_a_02_s4.png",
+      "w": 22,
+      "h": 11,
+      "ox": -5,
+      "oy": -5
+    },
+    "shrub_cedrus-deodara_a_03_s2": {
+      "file": "shrub_cedrus-deodara_a_03_s2.png",
+      "w": 21,
+      "h": 18,
+      "ox": -8,
+      "oy": -16
+    },
+    "shrub_cedrus-deodara_a_03_s4": {
+      "file": "shrub_cedrus-deodara_a_03_s4.png",
+      "w": 23,
+      "h": 13,
+      "ox": -7,
+      "oy": -2
+    },
+    "shrub_cedrus-deodara_a_04_s2": {
+      "file": "shrub_cedrus-deodara_a_04_s2.png",
+      "w": 23,
+      "h": 17,
+      "ox": -12,
+      "oy": -16
+    },
+    "shrub_cedrus-deodara_a_04_s4": {
+      "file": "shrub_cedrus-deodara_a_04_s4.png",
+      "w": 23,
+      "h": 9,
+      "ox": -9,
+      "oy": -5
+    },
+    "shrub_cedrus-deodara_b_01_s1": {
+      "file": "shrub_cedrus-deodara_b_01_s1.png",
+      "w": 48,
+      "h": 30,
+      "ox": -25,
+      "oy": -16
+    },
+    "shrub_cedrus-deodara_b_01_s2": {
+      "file": "shrub_cedrus-deodara_b_01_s2.png",
+      "w": 43,
+      "h": 32,
+      "ox": -21,
+      "oy": -25
+    },
+    "shrub_cedrus-deodara_b_01_s4": {
+      "file": "shrub_cedrus-deodara_b_01_s4.png",
+      "w": 42,
+      "h": 21,
+      "ox": -19,
+      "oy": -8
+    },
+    "shrub_cedrus-deodara_b_02_s1": {
+      "file": "shrub_cedrus-deodara_b_02_s1.png",
+      "w": 60,
+      "h": 30,
+      "ox": -31,
+      "oy": -16
+    },
+    "shrub_cedrus-deodara_b_02_s2": {
+      "file": "shrub_cedrus-deodara_b_02_s2.png",
+      "w": 33,
+      "h": 24,
+      "ox": -17,
+      "oy": -20
+    },
+    "shrub_cedrus-deodara_b_02_s4": {
+      "file": "shrub_cedrus-deodara_b_02_s4.png",
+      "w": 35,
+      "h": 18,
+      "ox": -16,
+      "oy": -8
+    },
+    "shrub_cedrus-deodara_b_03_s1": {
+      "file": "shrub_cedrus-deodara_b_03_s1.png",
+      "w": 33,
+      "h": 26,
+      "ox": -15,
+      "oy": -14
+    },
+    "shrub_cedrus-deodara_b_03_s2": {
+      "file": "shrub_cedrus-deodara_b_03_s2.png",
+      "w": 34,
+      "h": 25,
+      "ox": -16,
+      "oy": -21
+    },
+    "shrub_cedrus-deodara_b_03_s4": {
+      "file": "shrub_cedrus-deodara_b_03_s4.png",
+      "w": 33,
+      "h": 20,
+      "ox": -14,
+      "oy": -9
+    },
+    "shrub_fagus-sylvatica_c_01_s1": {
+      "file": "shrub_fagus-sylvatica_c_01_s1.png",
+      "w": 66,
+      "h": 32,
+      "ox": -31,
+      "oy": -16
+    },
+    "shrub_fagus-sylvatica_c_01_s2": {
+      "file": "shrub_fagus-sylvatica_c_01_s2.png",
+      "w": 37,
+      "h": 43,
+      "ox": -14,
+      "oy": -42
+    },
+    "shrub_fagus-sylvatica_c_01_s4": {
+      "file": "shrub_fagus-sylvatica_c_01_s4.png",
+      "w": 38,
+      "h": 22,
+      "ox": -7,
+      "oy": -6
+    },
+    "shrub_fagus-sylvatica_c_02_s1": {
+      "file": "shrub_fagus-sylvatica_c_02_s1.png",
+      "w": 65,
+      "h": 50,
+      "ox": -35,
+      "oy": -23
+    },
+    "shrub_fagus-sylvatica_c_02_s2": {
+      "file": "shrub_fagus-sylvatica_c_02_s2.png",
+      "w": 36,
+      "h": 39,
+      "ox": -19,
+      "oy": -39
+    },
+    "shrub_fagus-sylvatica_c_02_s4": {
+      "file": "shrub_fagus-sylvatica_c_02_s4.png",
+      "w": 39,
+      "h": 20,
+      "ox": -15,
+      "oy": -5
+    },
+    "shrub_fagus-sylvatica_c_03_s1": {
+      "file": "shrub_fagus-sylvatica_c_03_s1.png",
+      "w": 63,
+      "h": 36,
+      "ox": -33,
+      "oy": -19
+    },
+    "shrub_fagus-sylvatica_c_03_s2": {
+      "file": "shrub_fagus-sylvatica_c_03_s2.png",
+      "w": 38,
+      "h": 43,
+      "ox": -19,
+      "oy": -43
+    },
+    "shrub_fagus-sylvatica_c_03_s4": {
+      "file": "shrub_fagus-sylvatica_c_03_s4.png",
+      "w": 42,
+      "h": 23,
+      "ox": -14,
+      "oy": -2
+    },
+    "shrub_fagus-sylvatica_c_04_s1": {
+      "file": "shrub_fagus-sylvatica_c_04_s1.png",
+      "w": 54,
+      "h": 34,
+      "ox": -29,
+      "oy": -17
+    },
+    "shrub_fagus-sylvatica_c_04_s2": {
+      "file": "shrub_fagus-sylvatica_c_04_s2.png",
+      "w": 43,
+      "h": 49,
+      "ox": -21,
+      "oy": -48
+    },
+    "shrub_fagus-sylvatica_c_04_s4": {
+      "file": "shrub_fagus-sylvatica_c_04_s4.png",
+      "w": 41,
+      "h": 25,
+      "ox": -12,
+      "oy": -4
+    },
+    "shrub_ficus-carica_a_01_s1": {
+      "file": "shrub_ficus-carica_a_01_s1.png",
+      "w": 38,
+      "h": 24,
+      "ox": -19,
+      "oy": -12
+    },
+    "shrub_ficus-carica_a_01_s2": {
+      "file": "shrub_ficus-carica_a_01_s2.png",
+      "w": 17,
+      "h": 15,
+      "ox": -9,
+      "oy": -15
+    },
+    "shrub_ficus-carica_a_01_s4": {
+      "file": "shrub_ficus-carica_a_01_s4.png",
+      "w": 19,
+      "h": 9,
+      "ox": -7,
+      "oy": -3
+    },
+    "shrub_ficus-carica_a_02_s1": {
+      "file": "shrub_ficus-carica_a_02_s1.png",
+      "w": 48,
+      "h": 22,
+      "ox": -23,
+      "oy": -11
+    },
+    "shrub_ficus-carica_a_02_s2": {
+      "file": "shrub_ficus-carica_a_02_s2.png",
+      "w": 20,
+      "h": 17,
+      "ox": -8,
+      "oy": -17
+    },
+    "shrub_ficus-carica_a_02_s4": {
+      "file": "shrub_ficus-carica_a_02_s4.png",
+      "w": 21,
+      "h": 13,
+      "ox": -6,
+      "oy": -4
+    },
+    "shrub_ficus-carica_b_01_s1": {
+      "file": "shrub_ficus-carica_b_01_s1.png",
+      "w": 48,
+      "h": 25,
+      "ox": -24,
+      "oy": -11
+    },
+    "shrub_ficus-carica_b_01_s2": {
+      "file": "shrub_ficus-carica_b_01_s2.png",
+      "w": 22,
+      "h": 25,
+      "ox": -13,
+      "oy": -24
+    },
+    "shrub_ficus-carica_b_01_s4": {
+      "file": "shrub_ficus-carica_b_01_s4.png",
+      "w": 24,
+      "h": 15,
+      "ox": -10,
+      "oy": -5
+    },
+    "shrub_ficus-carica_b_02_s1": {
+      "file": "shrub_ficus-carica_b_02_s1.png",
+      "w": 43,
+      "h": 21,
+      "ox": -20,
+      "oy": -11
+    },
+    "shrub_ficus-carica_b_02_s2": {
+      "file": "shrub_ficus-carica_b_02_s2.png",
+      "w": 21,
+      "h": 19,
+      "ox": -10,
+      "oy": -19
+    },
+    "shrub_ficus-carica_b_02_s4": {
+      "file": "shrub_ficus-carica_b_02_s4.png",
+      "w": 21,
+      "h": 12,
+      "ox": -7,
+      "oy": -2
+    },
+    "shrub_ficus-carica_c_01_s1": {
+      "file": "shrub_ficus-carica_c_01_s1.png",
+      "w": 49,
+      "h": 22,
+      "ox": -20,
+      "oy": -10
+    },
+    "shrub_ficus-carica_c_01_s2": {
+      "file": "shrub_ficus-carica_c_01_s2.png",
+      "w": 19,
+      "h": 17,
+      "ox": -10,
+      "oy": -17
+    },
+    "shrub_ficus-carica_c_01_s4": {
+      "file": "shrub_ficus-carica_c_01_s4.png",
+      "w": 20,
+      "h": 13,
+      "ox": -7,
+      "oy": -5
+    },
+    "shrub_ficus-carica_c_02_s1": {
+      "file": "shrub_ficus-carica_c_02_s1.png",
+      "w": 38,
+      "h": 24,
+      "ox": -19,
+      "oy": -12
+    },
+    "shrub_ficus-carica_c_02_s2": {
+      "file": "shrub_ficus-carica_c_02_s2.png",
+      "w": 19,
+      "h": 18,
+      "ox": -9,
+      "oy": -18
+    },
+    "shrub_ficus-carica_c_02_s4": {
+      "file": "shrub_ficus-carica_c_02_s4.png",
+      "w": 18,
+      "h": 14,
+      "ox": -5,
+      "oy": -5
+    },
+    "shrub_syringa-vulgaris_a_01_s1": {
+      "file": "shrub_syringa-vulgaris_a_01_s1.png",
+      "w": 78,
+      "h": 52,
+      "ox": -42,
+      "oy": -26
+    },
+    "shrub_syringa-vulgaris_a_01_s2": {
+      "file": "shrub_syringa-vulgaris_a_01_s2.png",
+      "w": 59,
+      "h": 56,
+      "ox": -28,
+      "oy": -55
+    },
+    "shrub_syringa-vulgaris_a_01_s4": {
+      "file": "shrub_syringa-vulgaris_a_01_s4.png",
+      "w": 64,
+      "h": 35,
+      "ox": -20,
+      "oy": -7
+    },
+    "shrub_syringa-vulgaris_b_02_s1": {
+      "file": "shrub_syringa-vulgaris_b_02_s1.png",
+      "w": 78,
+      "h": 51,
+      "ox": -41,
+      "oy": -24
+    },
+    "shrub_syringa-vulgaris_b_02_s2": {
+      "file": "shrub_syringa-vulgaris_b_02_s2.png",
+      "w": 77,
+      "h": 60,
+      "ox": -36,
+      "oy": -60
+    },
+    "shrub_syringa-vulgaris_b_02_s4": {
+      "file": "shrub_syringa-vulgaris_b_02_s4.png",
+      "w": 80,
+      "h": 47,
+      "ox": -29,
+      "oy": -15
+    },
+    "shrub_syringa-vulgaris_c_03_s2": {
+      "file": "shrub_syringa-vulgaris_c_03_s2.png",
+      "w": 32,
+      "h": 33,
+      "ox": -15,
+      "oy": -32
+    },
+    "shrub_syringa-vulgaris_c_03_s4": {
+      "file": "shrub_syringa-vulgaris_c_03_s4.png",
+      "w": 32,
+      "h": 21,
+      "ox": -10,
+      "oy": -6
+    },
+    "shrub_taxus-baccata_a_01_s1": {
+      "file": "shrub_taxus-baccata_a_01_s1.png",
+      "w": 70,
+      "h": 39,
+      "ox": -38,
+      "oy": -22
+    },
+    "shrub_taxus-baccata_a_01_s2": {
+      "file": "shrub_taxus-baccata_a_01_s2.png",
+      "w": 49,
+      "h": 36,
+      "ox": -24,
+      "oy": -30
+    },
+    "shrub_taxus-baccata_a_01_s4": {
+      "file": "shrub_taxus-baccata_a_01_s4.png",
+      "w": 49,
+      "h": 26,
+      "ox": -20,
+      "oy": -8
+    },
+    "shrub_taxus-baccata_a_02_s1": {
+      "file": "shrub_taxus-baccata_a_02_s1.png",
+      "w": 93,
+      "h": 48,
+      "ox": -54,
+      "oy": -29
+    },
+    "shrub_taxus-baccata_a_02_s2": {
+      "file": "shrub_taxus-baccata_a_02_s2.png",
+      "w": 46,
+      "h": 42,
+      "ox": -24,
+      "oy": -37
+    },
+    "shrub_taxus-baccata_a_02_s4": {
+      "file": "shrub_taxus-baccata_a_02_s4.png",
+      "w": 46,
+      "h": 25,
+      "ox": -20,
+      "oy": -9
+    },
+    "shrub_taxus-baccata_a_03_s1": {
+      "file": "shrub_taxus-baccata_a_03_s1.png",
+      "w": 88,
+      "h": 48,
+      "ox": -48,
+      "oy": -27
+    },
+    "shrub_taxus-baccata_a_03_s2": {
+      "file": "shrub_taxus-baccata_a_03_s2.png",
+      "w": 46,
+      "h": 33,
+      "ox": -23,
+      "oy": -28
+    },
+    "shrub_taxus-baccata_a_03_s4": {
+      "file": "shrub_taxus-baccata_a_03_s4.png",
+      "w": 45,
+      "h": 24,
+      "ox": -18,
+      "oy": -8
+    },
+    "shrub_taxus-baccata_a_04_s1": {
+      "file": "shrub_taxus-baccata_a_04_s1.png",
+      "w": 75,
+      "h": 50,
+      "ox": -46,
+      "oy": -29
+    },
+    "shrub_taxus-baccata_a_04_s2": {
+      "file": "shrub_taxus-baccata_a_04_s2.png",
+      "w": 37,
+      "h": 34,
+      "ox": -20,
+      "oy": -30
+    },
+    "shrub_taxus-baccata_a_04_s4": {
+      "file": "shrub_taxus-baccata_a_04_s4.png",
+      "w": 36,
+      "h": 19,
+      "ox": -16,
+      "oy": -8
+    },
+    "shrub_taxus-baccata_a_05_s1": {
+      "file": "shrub_taxus-baccata_a_05_s1.png",
+      "w": 88,
+      "h": 58,
+      "ox": -46,
+      "oy": -29
+    },
+    "shrub_taxus-baccata_a_05_s2": {
+      "file": "shrub_taxus-baccata_a_05_s2.png",
+      "w": 59,
+      "h": 43,
+      "ox": -30,
+      "oy": -39
+    },
+    "shrub_taxus-baccata_a_05_s4": {
+      "file": "shrub_taxus-baccata_a_05_s4.png",
+      "w": 58,
+      "h": 27,
+      "ox": -25,
+      "oy": -11
+    },
+    "shrub_taxus-baccata_a_06_s1": {
+      "file": "shrub_taxus-baccata_a_06_s1.png",
+      "w": 70,
+      "h": 39,
+      "ox": -38,
+      "oy": -22
+    },
+    "shrub_taxus-baccata_a_06_s2": {
+      "file": "shrub_taxus-baccata_a_06_s2.png",
+      "w": 58,
+      "h": 44,
+      "ox": -31,
+      "oy": -39
+    },
+    "shrub_taxus-baccata_a_06_s4": {
+      "file": "shrub_taxus-baccata_a_06_s4.png",
+      "w": 57,
+      "h": 27,
+      "ox": -26,
+      "oy": -9
+    },
+    "shrub_taxus-baccata_a_07_s1": {
+      "file": "shrub_taxus-baccata_a_07_s1.png",
+      "w": 93,
+      "h": 48,
+      "ox": -54,
+      "oy": -29
+    },
+    "shrub_taxus-baccata_a_07_s2": {
+      "file": "shrub_taxus-baccata_a_07_s2.png",
+      "w": 49,
+      "h": 50,
+      "ox": -25,
+      "oy": -41
+    },
+    "shrub_taxus-baccata_a_07_s4": {
+      "file": "shrub_taxus-baccata_a_07_s4.png",
+      "w": 51,
+      "h": 32,
+      "ox": -21,
+      "oy": -10
+    },
+    "shrub_taxus-baccata_a_08_s1": {
+      "file": "shrub_taxus-baccata_a_08_s1.png",
+      "w": 88,
+      "h": 48,
+      "ox": -48,
+      "oy": -27
+    },
+    "shrub_taxus-baccata_a_08_s2": {
+      "file": "shrub_taxus-baccata_a_08_s2.png",
+      "w": 59,
+      "h": 43,
+      "ox": -30,
+      "oy": -39
+    },
+    "shrub_taxus-baccata_a_08_s4": {
+      "file": "shrub_taxus-baccata_a_08_s4.png",
+      "w": 58,
+      "h": 27,
+      "ox": -25,
+      "oy": -11
+    },
+    "shrub_taxus-baccata_a_09_s1": {
+      "file": "shrub_taxus-baccata_a_09_s1.png",
+      "w": 75,
+      "h": 50,
+      "ox": -46,
+      "oy": -29
+    },
+    "shrub_taxus-baccata_a_09_s2": {
+      "file": "shrub_taxus-baccata_a_09_s2.png",
+      "w": 37,
+      "h": 34,
+      "ox": -17,
+      "oy": -28
+    },
+    "shrub_taxus-baccata_a_09_s4": {
+      "file": "shrub_taxus-baccata_a_09_s4.png",
+      "w": 37,
+      "h": 24,
+      "ox": -14,
+      "oy": -9
+    },
+    "shrub_taxus-baccata_a_10_s1": {
+      "file": "shrub_taxus-baccata_a_10_s1.png",
+      "w": 88,
+      "h": 58,
+      "ox": -46,
+      "oy": -29
+    },
+    "shrub_taxus-baccata_a_10_s2": {
+      "file": "shrub_taxus-baccata_a_10_s2.png",
+      "w": 46,
+      "h": 33,
+      "ox": -23,
+      "oy": -28
+    },
+    "shrub_taxus-baccata_a_10_s4": {
+      "file": "shrub_taxus-baccata_a_10_s4.png",
+      "w": 45,
+      "h": 24,
+      "ox": -18,
+      "oy": -8
+    },
+    "shrub_taxus-baccata_a_11_s1": {
+      "file": "shrub_taxus-baccata_a_11_s1.png",
+      "w": 70,
+      "h": 39,
+      "ox": -38,
+      "oy": -22
+    },
+    "shrub_taxus-baccata_a_11_s2": {
+      "file": "shrub_taxus-baccata_a_11_s2.png",
+      "w": 46,
+      "h": 42,
+      "ox": -24,
+      "oy": -37
+    },
+    "shrub_taxus-baccata_a_11_s4": {
+      "file": "shrub_taxus-baccata_a_11_s4.png",
+      "w": 46,
+      "h": 25,
+      "ox": -20,
+      "oy": -9
+    },
+    "shrub_taxus-baccata_a_12_s1": {
+      "file": "shrub_taxus-baccata_a_12_s1.png",
+      "w": 93,
+      "h": 48,
+      "ox": -54,
+      "oy": -29
+    },
+    "shrub_taxus-baccata_a_12_s2": {
+      "file": "shrub_taxus-baccata_a_12_s2.png",
+      "w": 49,
+      "h": 36,
+      "ox": -24,
+      "oy": -30
+    },
+    "shrub_taxus-baccata_a_12_s4": {
+      "file": "shrub_taxus-baccata_a_12_s4.png",
+      "w": 49,
+      "h": 26,
+      "ox": -20,
+      "oy": -8
+    },
+    "soviet_village_bathhouse_001_ver_01_s10": {
+      "file": "soviet_village_bathhouse_001_ver_01_s10.png",
+      "w": 122,
+      "h": 42,
+      "ox": -27,
+      "oy": -12
+    },
+    "soviet_village_bathhouse_001_ver_01_s11": {
+      "file": "soviet_village_bathhouse_001_ver_01_s11.png",
+      "w": 130,
+      "h": 46,
+      "ox": -35,
+      "oy": -16
+    },
+    "soviet_village_bathhouse_001_ver_01_s4": {
+      "file": "soviet_village_bathhouse_001_ver_01_s4.png",
+      "w": 100,
+      "h": 91,
+      "ox": -20,
+      "oy": -71
+    },
+    "soviet_village_bathhouse_001_ver_01_s5": {
+      "file": "soviet_village_bathhouse_001_ver_01_s5.png",
+      "w": 102,
+      "h": 91,
+      "ox": -20,
+      "oy": -71
+    },
+    "soviet_village_bathhouse_001_ver_01_s6": {
+      "file": "soviet_village_bathhouse_001_ver_01_s6.png",
+      "w": 109,
+      "h": 91,
+      "ox": -27,
+      "oy": -69
+    },
+    "soviet_village_bathhouse_001_ver_01_s7": {
+      "file": "soviet_village_bathhouse_001_ver_01_s7.png",
+      "w": 109,
+      "h": 63,
+      "ox": -27,
+      "oy": -41
+    },
+    "soviet_village_bathhouse_001_ver_01_s8": {
+      "file": "soviet_village_bathhouse_001_ver_01_s8.png",
+      "w": 101,
+      "h": 37,
+      "ox": -18,
+      "oy": -9
+    },
+    "soviet_village_bathhouse_001_ver_01_s9": {
+      "file": "soviet_village_bathhouse_001_ver_01_s9.png",
+      "w": 106,
+      "h": 40,
+      "ox": -23,
+      "oy": -12
+    },
+    "soviet_village_house_003_ver_01_s10": {
+      "file": "soviet_village_house_003_ver_01_s10.png",
+      "w": 183,
+      "h": 59,
+      "ox": -44,
+      "oy": -7
+    },
+    "soviet_village_house_003_ver_01_s11": {
+      "file": "soviet_village_house_003_ver_01_s11.png",
+      "w": 183,
+      "h": 83,
+      "ox": -44,
+      "oy": -31
+    },
+    "soviet_village_house_003_ver_01_s4": {
+      "file": "soviet_village_house_003_ver_01_s4.png",
+      "w": 152,
+      "h": 141,
+      "ox": -18,
+      "oy": -94
+    },
+    "soviet_village_house_003_ver_01_s5": {
+      "file": "soviet_village_house_003_ver_01_s5.png",
+      "w": 152,
+      "h": 141,
+      "ox": -18,
+      "oy": -94
+    },
+    "soviet_village_house_003_ver_01_s6": {
+      "file": "soviet_village_house_003_ver_01_s6.png",
+      "w": 156,
+      "h": 143,
+      "ox": -19,
+      "oy": -94
+    },
+    "soviet_village_house_003_ver_01_s7": {
+      "file": "soviet_village_house_003_ver_01_s7.png",
+      "w": 152,
+      "h": 95,
+      "ox": -15,
+      "oy": -46
+    },
+    "soviet_village_house_003_ver_01_s8": {
+      "file": "soviet_village_house_003_ver_01_s8.png",
+      "w": 154,
+      "h": 62,
+      "ox": -15,
+      "oy": -9
+    },
+    "soviet_village_house_003_ver_01_s9": {
+      "file": "soviet_village_house_003_ver_01_s9.png",
+      "w": 162,
+      "h": 56,
+      "ox": -23,
+      "oy": -3
+    },
+    "sunflower_01_s2": {
+      "file": "sunflower_01_s2.png",
+      "w": 42,
+      "h": 36,
+      "ox": -19,
+      "oy": -26
+    },
+    "sunflower_01_s4": {
+      "file": "sunflower_01_s4.png",
+      "w": 42,
+      "h": 29,
+      "ox": -17,
+      "oy": -12
+    },
+    "sunflower_02_s2": {
+      "file": "sunflower_02_s2.png",
+      "w": 37,
+      "h": 36,
+      "ox": -18,
+      "oy": -28
+    },
+    "sunflower_02_s4": {
+      "file": "sunflower_02_s4.png",
+      "w": 39,
+      "h": 26,
+      "ox": -17,
+      "oy": -11
+    },
+    "sunflower_03_s2": {
+      "file": "sunflower_03_s2.png",
+      "w": 43,
+      "h": 37,
+      "ox": -21,
+      "oy": -26
+    },
+    "sunflower_03_s4": {
+      "file": "sunflower_03_s4.png",
+      "w": 44,
+      "h": 29,
+      "ox": -20,
+      "oy": -11
+    },
+    "sunflower_04_s2": {
+      "file": "sunflower_04_s2.png",
+      "w": 42,
+      "h": 34,
+      "ox": -21,
+      "oy": -25
+    },
+    "sunflower_04_s4": {
+      "file": "sunflower_04_s4.png",
+      "w": 44,
+      "h": 27,
+      "ox": -20,
+      "oy": -11
+    },
+    "sunflower_05_s2": {
+      "file": "sunflower_05_s2.png",
+      "w": 39,
+      "h": 37,
+      "ox": -20,
+      "oy": -28
+    },
+    "sunflower_05_s4": {
+      "file": "sunflower_05_s4.png",
+      "w": 39,
+      "h": 27,
+      "ox": -19,
+      "oy": -12
+    },
+    "sunflower_07_s2": {
+      "file": "sunflower_07_s2.png",
+      "w": 36,
+      "h": 37,
+      "ox": -17,
+      "oy": -30
+    },
+    "sunflower_07_s4": {
+      "file": "sunflower_07_s4.png",
+      "w": 34,
+      "h": 26,
+      "ox": -14,
+      "oy": -6
+    },
+    "sunflower_08_s2": {
+      "file": "sunflower_08_s2.png",
+      "w": 39,
+      "h": 33,
+      "ox": -18,
+      "oy": -25
+    },
+    "sunflower_08_s4": {
+      "file": "sunflower_08_s4.png",
+      "w": 42,
+      "h": 23,
+      "ox": -17,
+      "oy": -7
+    },
+    "sunflower_09_s2": {
+      "file": "sunflower_09_s2.png",
+      "w": 40,
+      "h": 31,
+      "ox": -18,
+      "oy": -23
+    },
+    "sunflower_09_s4": {
+      "file": "sunflower_09_s4.png",
+      "w": 40,
+      "h": 22,
+      "ox": -17,
+      "oy": -7
+    },
+    "sunflower_11_s2": {
+      "file": "sunflower_11_s2.png",
+      "w": 28,
+      "h": 35,
+      "ox": -15,
+      "oy": -30
+    },
+    "sunflower_11_s4": {
+      "file": "sunflower_11_s4.png",
+      "w": 30,
+      "h": 17,
+      "ox": -13,
+      "oy": -6
+    },
+    "sunflower_12_s2": {
+      "file": "sunflower_12_s2.png",
+      "w": 23,
+      "h": 26,
+      "ox": -13,
+      "oy": -22
+    },
+    "sunflower_12_s4": {
+      "file": "sunflower_12_s4.png",
+      "w": 22,
+      "h": 18,
+      "ox": -10,
+      "oy": -3
+    },
+    "sunflower_14_s2": {
+      "file": "sunflower_14_s2.png",
+      "w": 17,
+      "h": 22,
+      "ox": -8,
+      "oy": -21
+    },
+    "sunflower_14_s4": {
+      "file": "sunflower_14_s4.png",
+      "w": 18,
+      "h": 14,
+      "ox": -7,
+      "oy": -4
+    },
+    "tilia-europaea_c_01_s2": {
+      "file": "tilia-europaea_c_01_s2.png",
+      "w": 95,
+      "h": 140,
+      "ox": -49,
+      "oy": -139
+    },
+    "tilia-europaea_c_01_s4": {
+      "file": "tilia-europaea_c_01_s4.png",
+      "w": 104,
+      "h": 59,
+      "ox": -40,
+      "oy": -18
+    },
+    "tilia-europaea_c_02_s2": {
+      "file": "tilia-europaea_c_02_s2.png",
+      "w": 100,
+      "h": 135,
+      "ox": -51,
+      "oy": -134
+    },
+    "tilia-europaea_c_02_s4": {
+      "file": "tilia-europaea_c_02_s4.png",
+      "w": 109,
+      "h": 62,
+      "ox": -42,
+      "oy": -15
+    },
+    "tilia-europaea_d_02_s2": {
+      "file": "tilia-europaea_d_02_s2.png",
+      "w": 88,
+      "h": 124,
+      "ox": -44,
+      "oy": -122
+    },
+    "tilia-europaea_d_02_s4": {
+      "file": "tilia-europaea_d_02_s4.png",
+      "w": 93,
+      "h": 54,
+      "ox": -38,
+      "oy": -25
+    },
+    "ulmus-minor_c_01_s2": {
+      "file": "ulmus-minor_c_01_s2.png",
+      "w": 181,
+      "h": 210,
+      "ox": -98,
+      "oy": -207
+    },
+    "ulmus-minor_c_01_s4": {
+      "file": "ulmus-minor_c_01_s4.png",
+      "w": 188,
+      "h": 104,
+      "ox": -76,
+      "oy": -28
+    },
+    "village_fence_frontage_s112": {
+      "file": "village_fence_frontage_s112.png",
+      "w": 10,
+      "h": 8,
+      "ox": -2,
+      "oy": -1
+    },
+    "village_fence_frontage_s113": {
+      "file": "village_fence_frontage_s113.png",
+      "w": 9,
+      "h": 7,
+      "ox": -2,
+      "oy": -1
+    },
+    "village_fence_frontage_s114": {
+      "file": "village_fence_frontage_s114.png",
+      "w": 9,
+      "h": 7,
+      "ox": -2,
+      "oy": -1
+    },
+    "village_fence_frontage_s115": {
+      "file": "village_fence_frontage_s115.png",
+      "w": 9,
+      "h": 7,
+      "ox": -2,
+      "oy": -1
+    },
+    "village_fence_frontage_s116": {
+      "file": "village_fence_frontage_s116.png",
+      "w": 5,
+      "h": 3,
+      "ox": -2,
+      "oy": -1
+    },
+    "village_fence_frontage_s117": {
+      "file": "village_fence_frontage_s117.png",
+      "w": 6,
+      "h": 4,
+      "ox": -2,
+      "oy": -1
+    },
+    "village_fence_frontage_s118": {
+      "file": "village_fence_frontage_s118.png",
+      "w": 6,
+      "h": 4,
+      "ox": -2,
+      "oy": -1
+    },
+    "village_fence_frontage_s119": {
+      "file": "village_fence_frontage_s119.png",
+      "w": 6,
+      "h": 4,
+      "ox": -2,
+      "oy": -1
+    },
+    "village_fence_frontage_s120": {
+      "file": "village_fence_frontage_s120.png",
+      "w": 25,
+      "h": 16,
+      "ox": 0,
+      "oy": -1
+    },
+    "village_fence_frontage_s121": {
+      "file": "village_fence_frontage_s121.png",
+      "w": 24,
+      "h": 14,
+      "ox": 2,
+      "oy": 0
+    },
+    "village_fence_frontage_s122": {
+      "file": "village_fence_frontage_s122.png",
+      "w": 26,
+      "h": 16,
+      "ox": 0,
+      "oy": -1
+    },
+    "village_fence_frontage_s123": {
+      "file": "village_fence_frontage_s123.png",
+      "w": 26,
+      "h": 16,
+      "ox": 0,
+      "oy": -1
+    },
+    "village_fence_frontage_s124": {
+      "file": "village_fence_frontage_s124.png",
+      "w": 26,
+      "h": 16,
+      "ox": -22,
+      "oy": 0
+    },
+    "village_fence_frontage_s125": {
+      "file": "village_fence_frontage_s125.png",
+      "w": 26,
+      "h": 16,
+      "ox": -22,
+      "oy": 0
+    },
+    "village_fence_frontage_s126": {
+      "file": "village_fence_frontage_s126.png",
+      "w": 27,
+      "h": 16,
+      "ox": -22,
+      "oy": 0
+    },
+    "village_fence_frontage_s127": {
+      "file": "village_fence_frontage_s127.png",
+      "w": 25,
+      "h": 15,
+      "ox": -21,
+      "oy": 0
+    },
+    "village_fence_frontage_s128": {
+      "file": "village_fence_frontage_s128.png",
+      "w": 25,
+      "h": 15,
+      "ox": -20,
+      "oy": -11
+    },
+    "village_fence_frontage_s129": {
+      "file": "village_fence_frontage_s129.png",
+      "w": 25,
+      "h": 15,
+      "ox": -20,
+      "oy": -11
+    },
+    "village_fence_frontage_s130": {
+      "file": "village_fence_frontage_s130.png",
+      "w": 26,
+      "h": 16,
+      "ox": -20,
+      "oy": -11
+    },
+    "village_fence_frontage_s131": {
+      "file": "village_fence_frontage_s131.png",
+      "w": 25,
+      "h": 15,
+      "ox": -20,
+      "oy": -11
+    },
+    "village_fence_frontage_s132": {
+      "file": "village_fence_frontage_s132.png",
+      "w": 25,
+      "h": 15,
+      "ox": -1,
+      "oy": -10
+    },
+    "village_fence_frontage_s133": {
+      "file": "village_fence_frontage_s133.png",
+      "w": 22,
+      "h": 14,
+      "ox": 2,
+      "oy": -10
+    },
+    "village_fence_frontage_s134": {
+      "file": "village_fence_frontage_s134.png",
+      "w": 25,
+      "h": 15,
+      "ox": -1,
+      "oy": -10
+    },
+    "village_fence_frontage_s135": {
+      "file": "village_fence_frontage_s135.png",
+      "w": 25,
+      "h": 14,
+      "ox": -1,
+      "oy": -10
+    },
+    "village_fence_frontage_s136": {
+      "file": "village_fence_frontage_s136.png",
+      "w": 34,
+      "h": 15,
+      "ox": -11,
+      "oy": -2
+    },
+    "village_fence_frontage_s137": {
+      "file": "village_fence_frontage_s137.png",
+      "w": 26,
+      "h": 9,
+      "ox": -8,
+      "oy": 2
+    },
+    "village_fence_frontage_s138": {
+      "file": "village_fence_frontage_s138.png",
+      "w": 20,
+      "h": 13,
+      "ox": 0,
+      "oy": -1
+    },
+    "village_fence_frontage_s139": {
+      "file": "village_fence_frontage_s139.png",
+      "w": 25,
+      "h": 15,
+      "ox": -2,
+      "oy": -3
+    },
+    "village_fence_frontage_s140": {
+      "file": "village_fence_frontage_s140.png",
+      "w": 48,
+      "h": 9,
+      "ox": -38,
+      "oy": 0
+    },
+    "village_fence_frontage_s141": {
+      "file": "village_fence_frontage_s141.png",
+      "w": 30,
+      "h": 11,
+      "ox": -15,
+      "oy": 1
+    },
+    "village_fence_frontage_s142": {
+      "file": "village_fence_frontage_s142.png",
+      "w": 31,
+      "h": 16,
+      "ox": -25,
+      "oy": 0
+    },
+    "village_fence_frontage_s143": {
+      "file": "village_fence_frontage_s143.png",
+      "w": 25,
+      "h": 13,
+      "ox": -16,
+      "oy": 0
+    },
+    "village_fence_frontage_s144": {
+      "file": "village_fence_frontage_s144.png",
+      "w": 31,
+      "h": 22,
+      "ox": -26,
+      "oy": -18
+    },
+    "village_fence_frontage_s145": {
+      "file": "village_fence_frontage_s145.png",
+      "w": 20,
+      "h": 13,
+      "ox": -17,
+      "oy": -7
+    },
+    "village_fence_frontage_s146": {
+      "file": "village_fence_frontage_s146.png",
+      "w": 33,
+      "h": 16,
+      "ox": -27,
+      "oy": -12
+    },
+    "village_fence_frontage_s147": {
+      "file": "village_fence_frontage_s147.png",
+      "w": 30,
+      "h": 10,
+      "ox": -25,
+      "oy": -6
+    },
+    "village_fence_frontage_s148": {
+      "file": "village_fence_frontage_s148.png",
+      "w": 36,
+      "h": 17,
+      "ox": -2,
+      "oy": -11
+    },
+    "village_fence_frontage_s149": {
+      "file": "village_fence_frontage_s149.png",
+      "w": 25,
+      "h": 14,
+      "ox": 2,
+      "oy": -9
+    },
+    "village_fence_frontage_s150": {
+      "file": "village_fence_frontage_s150.png",
+      "w": 22,
+      "h": 11,
+      "ox": -2,
+      "oy": -7
+    },
+    "village_fence_frontage_s151": {
+      "file": "village_fence_frontage_s151.png",
+      "w": 32,
+      "h": 16,
+      "ox": -9,
+      "oy": -11
+    },
+    "village_fence_frontage_s56": {
+      "file": "village_fence_frontage_s56.png",
+      "w": 4,
+      "h": 23,
+      "ox": -2,
+      "oy": -22
+    },
+    "village_fence_frontage_s57": {
+      "file": "village_fence_frontage_s57.png",
+      "w": 4,
+      "h": 20,
+      "ox": -2,
+      "oy": -19
+    },
+    "village_fence_frontage_s58": {
+      "file": "village_fence_frontage_s58.png",
+      "w": 4,
+      "h": 19,
+      "ox": -2,
+      "oy": -18
+    },
+    "village_fence_frontage_s59": {
+      "file": "village_fence_frontage_s59.png",
+      "w": 4,
+      "h": 21,
+      "ox": -2,
+      "oy": -20
+    },
+    "village_fence_frontage_s60": {
+      "file": "village_fence_frontage_s60.png",
+      "w": 4,
+      "h": 7,
+      "ox": -2,
+      "oy": -6
+    },
+    "village_fence_frontage_s61": {
+      "file": "village_fence_frontage_s61.png",
+      "w": 4,
+      "h": 12,
+      "ox": -2,
+      "oy": -11
+    },
+    "village_fence_frontage_s62": {
+      "file": "village_fence_frontage_s62.png",
+      "w": 5,
+      "h": 7,
+      "ox": -2,
+      "oy": -6
+    },
+    "village_fence_frontage_s63": {
+      "file": "village_fence_frontage_s63.png",
+      "w": 4,
+      "h": 9,
+      "ox": -2,
+      "oy": -8
+    },
+    "village_fence_frontage_s64": {
+      "file": "village_fence_frontage_s64.png",
+      "w": 20,
+      "h": 28,
+      "ox": 1,
+      "oy": -18
+    },
+    "village_fence_frontage_s65": {
+      "file": "village_fence_frontage_s65.png",
+      "w": 20,
+      "h": 28,
+      "ox": 1,
+      "oy": -18
+    },
+    "village_fence_frontage_s66": {
+      "file": "village_fence_frontage_s66.png",
+      "w": 20,
+      "h": 29,
+      "ox": 1,
+      "oy": -19
+    },
+    "village_fence_frontage_s67": {
+      "file": "village_fence_frontage_s67.png",
+      "w": 20,
+      "h": 29,
+      "ox": 1,
+      "oy": -19
+    },
+    "village_fence_frontage_s68": {
+      "file": "village_fence_frontage_s68.png",
+      "w": 21,
+      "h": 28,
+      "ox": -22,
+      "oy": -18
+    },
+    "village_fence_frontage_s69": {
+      "file": "village_fence_frontage_s69.png",
+      "w": 21,
+      "h": 28,
+      "ox": -22,
+      "oy": -18
+    },
+    "village_fence_frontage_s70": {
+      "file": "village_fence_frontage_s70.png",
+      "w": 21,
+      "h": 29,
+      "ox": -22,
+      "oy": -19
+    },
+    "village_fence_frontage_s71": {
+      "file": "village_fence_frontage_s71.png",
+      "w": 21,
+      "h": 29,
+      "ox": -22,
+      "oy": -19
+    },
+    "village_fence_frontage_s72": {
+      "file": "village_fence_frontage_s72.png",
+      "w": 22,
+      "h": 28,
+      "ox": -21,
+      "oy": -30
+    },
+    "village_fence_frontage_s73": {
+      "file": "village_fence_frontage_s73.png",
+      "w": 22,
+      "h": 27,
+      "ox": -21,
+      "oy": -29
+    },
+    "village_fence_frontage_s74": {
+      "file": "village_fence_frontage_s74.png",
+      "w": 23,
+      "h": 28,
+      "ox": -21,
+      "oy": -29
+    },
+    "village_fence_frontage_s75": {
+      "file": "village_fence_frontage_s75.png",
+      "w": 22,
+      "h": 29,
+      "ox": -21,
+      "oy": -30
+    },
+    "village_fence_frontage_s76": {
+      "file": "village_fence_frontage_s76.png",
+      "w": 22,
+      "h": 28,
+      "ox": -2,
+      "oy": -29
+    },
+    "village_fence_frontage_s77": {
+      "file": "village_fence_frontage_s77.png",
+      "w": 22,
+      "h": 28,
+      "ox": -2,
+      "oy": -29
+    },
+    "village_fence_frontage_s78": {
+      "file": "village_fence_frontage_s78.png",
+      "w": 22,
+      "h": 28,
+      "ox": -2,
+      "oy": -29
+    },
+    "village_fence_frontage_s79": {
+      "file": "village_fence_frontage_s79.png",
+      "w": 22,
+      "h": 29,
+      "ox": -2,
+      "oy": -30
+    },
+    "village_fence_frontage_s80": {
+      "file": "village_fence_frontage_s80.png",
+      "w": 10,
+      "h": 21,
+      "ox": 1,
+      "oy": -18
+    },
+    "village_fence_frontage_s81": {
+      "file": "village_fence_frontage_s81.png",
+      "w": 15,
+      "h": 25,
+      "ox": 1,
+      "oy": -19
+    },
+    "village_fence_frontage_s82": {
+      "file": "village_fence_frontage_s82.png",
+      "w": 16,
+      "h": 27,
+      "ox": 1,
+      "oy": -18
+    },
+    "village_fence_frontage_s83": {
+      "file": "village_fence_frontage_s83.png",
+      "w": 11,
+      "h": 25,
+      "ox": 1,
+      "oy": -19
+    },
+    "village_fence_frontage_s84": {
+      "file": "village_fence_frontage_s84.png",
+      "w": 16,
+      "h": 24,
+      "ox": -17,
+      "oy": -17
+    },
+    "village_fence_frontage_s85": {
+      "file": "village_fence_frontage_s85.png",
+      "w": 18,
+      "h": 24,
+      "ox": -17,
+      "oy": -17
+    },
+    "village_fence_frontage_s86": {
+      "file": "village_fence_frontage_s86.png",
+      "w": 15,
+      "h": 25,
+      "ox": -16,
+      "oy": -19
+    },
+    "village_fence_frontage_s87": {
+      "file": "village_fence_frontage_s87.png",
+      "w": 16,
+      "h": 26,
+      "ox": -17,
+      "oy": -19
+    },
+    "village_fence_frontage_s88": {
+      "file": "village_fence_frontage_s88.png",
+      "w": 17,
+      "h": 23,
+      "ox": -16,
+      "oy": -24
+    },
+    "village_fence_frontage_s89": {
+      "file": "village_fence_frontage_s89.png",
+      "w": 19,
+      "h": 24,
+      "ox": -17,
+      "oy": -25
+    },
+    "village_fence_frontage_s90": {
+      "file": "village_fence_frontage_s90.png",
+      "w": 12,
+      "h": 21,
+      "ox": -11,
+      "oy": -24
+    },
+    "village_fence_frontage_s91": {
+      "file": "village_fence_frontage_s91.png",
+      "w": 15,
+      "h": 24,
+      "ox": -14,
+      "oy": -25
+    },
+    "village_fence_frontage_s92": {
+      "file": "village_fence_frontage_s92.png",
+      "w": 12,
+      "h": 23,
+      "ox": -3,
+      "oy": -24
+    },
+    "village_fence_frontage_s93": {
+      "file": "village_fence_frontage_s93.png",
+      "w": 14,
+      "h": 20,
+      "ox": -1,
+      "oy": -22
+    },
+    "village_fence_frontage_s94": {
+      "file": "village_fence_frontage_s94.png",
+      "w": 21,
+      "h": 23,
+      "ox": -3,
+      "oy": -25
+    },
+    "village_fence_frontage_s95": {
+      "file": "village_fence_frontage_s95.png",
+      "w": 14,
+      "h": 21,
+      "ox": -2,
+      "oy": -23
+    },
+    "washing_001_1_s2": {
+      "file": "washing_001_1_s2.png",
+      "w": 59,
+      "h": 65,
+      "ox": -33,
+      "oy": -49
+    },
+    "washing_001_1_s4": {
+      "file": "washing_001_1_s4.png",
+      "w": 69,
+      "h": 38,
+      "ox": -34,
+      "oy": -13
+    },
+    "washing_002_0_s2": {
+      "file": "washing_002_0_s2.png",
+      "w": 78,
+      "h": 74,
+      "ox": -39,
+      "oy": -55
+    },
+    "washing_002_0_s4": {
+      "file": "washing_002_0_s4.png",
+      "w": 88,
+      "h": 49,
+      "ox": -39,
+      "oy": -20
+    },
+    "washing_002_1_s2": {
+      "file": "washing_002_1_s2.png",
+      "w": 78,
+      "h": 76,
+      "ox": -40,
+      "oy": -56
+    },
+    "washing_002_1_s4": {
+      "file": "washing_002_1_s4.png",
+      "w": 87,
+      "h": 50,
+      "ox": -39,
+      "oy": -20
+    },
+    "well_001_s2": {
+      "file": "well_001_s2.png",
+      "w": 42,
+      "h": 54,
+      "ox": -22,
+      "oy": -46
+    },
+    "well_001_s4": {
+      "file": "well_001_s4.png",
+      "w": 46,
+      "h": 21,
+      "ox": -17,
+      "oy": -2
+    },
+    "well_002_s2": {
+      "file": "well_002_s2.png",
+      "w": 72,
+      "h": 121,
+      "ox": -18,
+      "oy": -112
+    },
+    "well_002_s4": {
+      "file": "well_002_s4.png",
+      "w": 73,
+      "h": 56,
+      "ox": -15,
+      "oy": -22
+    },
+    "wheat_green_02_s2": {
+      "file": "wheat_green_02_s2.png",
+      "w": 37,
+      "h": 35,
+      "ox": -20,
+      "oy": -29
+    },
+    "wheat_green_02_s4": {
+      "file": "wheat_green_02_s4.png",
+      "w": 32,
+      "h": 22,
+      "ox": -12,
+      "oy": -7
+    },
+    "wheat_green_04_s2": {
+      "file": "wheat_green_04_s2.png",
+      "w": 33,
+      "h": 34,
+      "ox": -17,
+      "oy": -28
+    },
+    "wheat_green_04_s4": {
+      "file": "wheat_green_04_s4.png",
+      "w": 30,
+      "h": 17,
+      "ox": -12,
+      "oy": -5
+    },
+    "wheat_green_07_s2": {
+      "file": "wheat_green_07_s2.png",
+      "w": 31,
+      "h": 35,
+      "ox": -16,
+      "oy": -30
+    },
+    "wheat_green_07_s4": {
+      "file": "wheat_green_07_s4.png",
+      "w": 25,
+      "h": 16,
+      "ox": -10,
+      "oy": -5
+    },
+    "wheat_green_09_s2": {
+      "file": "wheat_green_09_s2.png",
+      "w": 23,
+      "h": 28,
+      "ox": -10,
+      "oy": -26
+    },
+    "wheat_green_09_s4": {
+      "file": "wheat_green_09_s4.png",
+      "w": 21,
+      "h": 14,
+      "ox": -8,
+      "oy": -5
+    },
+    "wheat_orange_01_s2": {
+      "file": "wheat_orange_01_s2.png",
+      "w": 27,
+      "h": 33,
+      "ox": -11,
+      "oy": -26
+    },
+    "wheat_orange_01_s4": {
+      "file": "wheat_orange_01_s4.png",
+      "w": 31,
+      "h": 21,
+      "ox": -11,
+      "oy": -9
+    },
+    "wheat_orange_05_s2": {
+      "file": "wheat_orange_05_s2.png",
+      "w": 28,
+      "h": 36,
+      "ox": -14,
+      "oy": -28
+    },
+    "wheat_orange_05_s4": {
+      "file": "wheat_orange_05_s4.png",
+      "w": 32,
+      "h": 17,
+      "ox": -13,
+      "oy": -6
+    },
+    "wheat_orange_06_s2": {
+      "file": "wheat_orange_06_s2.png",
+      "w": 28,
+      "h": 33,
+      "ox": -12,
+      "oy": -27
+    },
+    "wheat_orange_06_s4": {
+      "file": "wheat_orange_06_s4.png",
+      "w": 31,
+      "h": 18,
+      "ox": -10,
+      "oy": -6
+    },
+    "wheat_orange_09_s2": {
+      "file": "wheat_orange_09_s2.png",
+      "w": 17,
+      "h": 26,
+      "ox": -9,
+      "oy": -22
+    },
+    "wheat_orange_09_s4": {
+      "file": "wheat_orange_09_s4.png",
+      "w": 20,
+      "h": 11,
+      "ox": -8,
+      "oy": -1
+    },
+    "wheat_ripe_04_s2": {
+      "file": "wheat_ripe_04_s2.png",
+      "w": 43,
+      "h": 38,
+      "ox": -20,
+      "oy": -29
+    },
+    "wheat_ripe_04_s4": {
+      "file": "wheat_ripe_04_s4.png",
+      "w": 39,
+      "h": 25,
+      "ox": -18,
+      "oy": -7
+    },
+    "wheat_ripe_08_s2": {
+      "file": "wheat_ripe_08_s2.png",
+      "w": 47,
+      "h": 29,
+      "ox": -22,
+      "oy": -29
+    },
+    "wheat_ripe_08_s4": {
+      "file": "wheat_ripe_08_s4.png",
+      "w": 30,
+      "h": 20,
+      "ox": -10,
+      "oy": -6
+    },
+    "wheat_yellow_01_s2": {
+      "file": "wheat_yellow_01_s2.png",
+      "w": 27,
+      "h": 26,
+      "ox": -13,
+      "oy": -20
+    },
+    "wheat_yellow_01_s4": {
+      "file": "wheat_yellow_01_s4.png",
+      "w": 28,
+      "h": 10,
+      "ox": -12,
+      "oy": -2
+    },
+    "wheat_yellow_02_s2": {
+      "file": "wheat_yellow_02_s2.png",
+      "w": 28,
+      "h": 29,
+      "ox": -15,
+      "oy": -22
+    },
+    "wheat_yellow_02_s4": {
+      "file": "wheat_yellow_02_s4.png",
+      "w": 28,
+      "h": 14,
+      "ox": -13,
+      "oy": -2
+    },
+    "wheat_yellow_04_s2": {
+      "file": "wheat_yellow_04_s2.png",
+      "w": 22,
+      "h": 32,
+      "ox": -12,
+      "oy": -23
+    },
+    "wheat_yellow_04_s4": {
+      "file": "wheat_yellow_04_s4.png",
+      "w": 25,
+      "h": 15,
+      "ox": -11,
+      "oy": -5
+    },
+    "wheat_yellow_06_s2": {
+      "file": "wheat_yellow_06_s2.png",
+      "w": 24,
+      "h": 27,
+      "ox": -14,
+      "oy": -22
+    },
+    "wheat_yellow_06_s4": {
+      "file": "wheat_yellow_06_s4.png",
+      "w": 23,
+      "h": 13,
+      "ox": -10,
+      "oy": -4
+    },
+    "wheat_yellow_08_s2": {
+      "file": "wheat_yellow_08_s2.png",
+      "w": 12,
+      "h": 22,
+      "ox": -5,
+      "oy": -18
+    },
+    "wheat_yellow_08_s4": {
+      "file": "wheat_yellow_08_s4.png",
+      "w": 14,
+      "h": 8,
+      "ox": -5,
+      "oy": -3
+    },
+    "wheat_yellow_09_s2": {
+      "file": "wheat_yellow_09_s2.png",
+      "w": 14,
+      "h": 20,
+      "ox": -7,
+      "oy": -16
+    },
+    "wheat_yellow_09_s4": {
+      "file": "wheat_yellow_09_s4.png",
+      "w": 12,
+      "h": 6,
+      "ox": -6,
+      "oy": -2
+    },
+    "wheat_young_01_s2": {
+      "file": "wheat_young_01_s2.png",
+      "w": 35,
+      "h": 36,
+      "ox": -16,
+      "oy": -29
+    },
+    "wheat_young_01_s4": {
+      "file": "wheat_young_01_s4.png",
+      "w": 33,
+      "h": 21,
+      "ox": -14,
+      "oy": -10
+    },
+    "wheat_young_04_s2": {
+      "file": "wheat_young_04_s2.png",
+      "w": 37,
+      "h": 34,
+      "ox": -18,
+      "oy": -27
+    },
+    "wheat_young_04_s4": {
+      "file": "wheat_young_04_s4.png",
+      "w": 35,
+      "h": 22,
+      "ox": -15,
+      "oy": -10
+    },
+    "wheat_young_06_s2": {
+      "file": "wheat_young_06_s2.png",
+      "w": 36,
+      "h": 31,
+      "ox": -12,
+      "oy": -30
+    },
+    "wheat_young_06_s4": {
+      "file": "wheat_young_06_s4.png",
+      "w": 27,
+      "h": 19,
+      "ox": -10,
+      "oy": -5
+    },
+    "wheat_young_07_s2": {
+      "file": "wheat_young_07_s2.png",
+      "w": 37,
+      "h": 32,
+      "ox": -17,
+      "oy": -32
+    },
+    "wheat_young_07_s4": {
+      "file": "wheat_young_07_s4.png",
+      "w": 31,
+      "h": 17,
+      "ox": -10,
+      "oy": -7
+    },
+    "woodpile_001_0_s2": {
+      "file": "woodpile_001_0_s2.png",
+      "w": 54,
+      "h": 36,
+      "ox": -39,
+      "oy": -20
+    },
+    "woodpile_001_0_s4": {
+      "file": "woodpile_001_0_s4.png",
+      "w": 56,
+      "h": 23,
+      "ox": -38,
+      "oy": -6
+    },
+    "woodpile_001_1_s2": {
+      "file": "woodpile_001_1_s2.png",
+      "w": 45,
+      "h": 37,
+      "ox": -8,
+      "oy": -18
+    },
+    "woodpile_001_1_s4": {
+      "file": "woodpile_001_1_s4.png",
+      "w": 47,
+      "h": 23,
+      "ox": -8,
+      "oy": -1
+    },
+    "woodpile_002_0_s2": {
+      "file": "woodpile_002_0_s2.png",
+      "w": 41,
+      "h": 27,
+      "ox": -19,
+      "oy": -20
+    },
+    "woodpile_002_0_s4": {
+      "file": "woodpile_002_0_s4.png",
+      "w": 41,
+      "h": 20,
+      "ox": -19,
+      "oy": -7
+    },
+    "woodpile_003_s2": {
+      "file": "woodpile_003_s2.png",
+      "w": 38,
+      "h": 27,
+      "ox": -20,
+      "oy": -16
+    },
+    "woodpile_003_s4": {
+      "file": "woodpile_003_s4.png",
+      "w": 47,
+      "h": 25,
+      "ox": -20,
+      "oy": -8
+    }
+  }
+}

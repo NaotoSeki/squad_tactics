@@ -56,6 +56,9 @@ ManifestEntry = dict[str, Any]
 
 PASSABLE_TERRAINS: set[Terrain] = {"GRASS", "FOREST", "ROAD", "FIELD"}
 
+# slot1(倒伏地表) を持つ family。実測: Objects/Plants/ の112種が (1,2,4) 構成。
+PLANT_FAMILIES: set[str] = {"shrub", "flower", "plant"}
+
 # 地表として先に敷く低層family。立体物(影+本体)とは描画段が違う。
 LOW_FAMILIES: set[str] = {
     "terrain",
@@ -103,6 +106,20 @@ def local_neighbors(cell: tuple[int, int], valid_cells: set[tuple[int, int]]) ->
         (q, r - 1),
     ]
     return [candidate for candidate in candidates if candidate in valid_cells]
+
+
+def px_to_hex_local(x: float, y: float) -> tuple[int, int]:
+    """hex_to_px の逆。Renderer.roundHex と同じ cube 丸め。"""
+    rf = y / (HEX_SIZE * 1.5)
+    qf = x / (HEX_SIZE * math.sqrt(3.0)) - rf / 2.0
+    rq, rr = round(qf), round(rf)
+    rs = round(-qf - rf)
+    dq, dr, ds = abs(rq - qf), abs(rr - rf), abs(rs - (-qf - rf))
+    if dq > dr and dq > ds:
+        rq = -rr - rs
+    elif dr > ds:
+        rr = -rq - rs
+    return rq, rr
 
 
 def row_start_q(r: int) -> int:
@@ -433,18 +450,27 @@ class Renderer:
         vocabulary: dict[str, list[str]],
         rng: random.Random,
         cluster_radius: int,
+        top_left_x: float,
+        top_left_y: float,
+        scale: float,
     ) -> None:
         self.canvas = canvas
         self.index = index
         self.vocabulary = vocabulary
         self.rng = rng
         self.cluster_radius = cluster_radius
+        # 台帳のhex解決に使う。背景と同じ投影を共有するのが要。
+        self.top_left_x = top_left_x
+        self.top_left_y = top_left_y
+        self.scale = scale
+        self.board_cells = set(cells_from_board_rows())
         self.slot_cache: dict[tuple[str, int], list[ManifestEntry]] = {}
         self.all_slot_cache: dict[str, list[ManifestEntry]] = {}
         self.missing_assets: Counter[str] = Counter()
         self.placements_drawn = 0
-        self.shadows: list[tuple[ManifestEntry, int, int]] = []
-        self.bodies: list[tuple[ManifestEntry, int, int]] = []
+        # 立体物は背景PNGへ焼き込まない。台帳へ出して本編で生きたスプライトにする。
+        # こうしないと (1)破壊状態の差し替えができず (2)着弾痕デカールが樹冠の上に乗る。
+        self.tall: list[dict[str, Any]] = []
 
     def sample_asset(self, families: Iterable[str]) -> str | None:
         choices: list[str] = []
@@ -459,9 +485,13 @@ class Renderer:
             self.slot_cache[key] = [entry for entry in entries if entry]
         return self.slot_cache[key]
 
+    # 柵(village_fence_frontage)は最大slot 167まで使う(支柱/接続の4方向×変種×
+    # 無傷/圧壊 + それぞれの影)。64で打ち切ると影と圧壊版を取りこぼす。
+    MAX_SLOT = 200
+
     def all_slots(self, asset: str) -> list[ManifestEntry]:
         if asset not in self.all_slot_cache:
-            entries = self.index.slots(asset, list(range(64)))
+            entries = self.index.slots(asset, list(range(self.MAX_SLOT)))
             self.all_slot_cache[asset] = [entry for entry in entries if entry]
         return self.all_slot_cache[asset]
 
@@ -479,6 +509,45 @@ class Renderer:
         if entry is not None and stamp_entry(self.canvas, self.index, entry, x, y, 0, 0):
             self.placements_drawn += 1
 
+    def _states_for(self, asset: str, family: str) -> dict[str, list[int | None]] | None:
+        """そのアセットが持つ破壊状態のスロット列を返す。無ければ None。
+
+        - 建物: 本体の状態列と影の状態列がSSC内で同順・同数に並ぶ。
+          intact_body = first_shadow_slot - 影スロット数。以降が無傷→破壊の順。
+        - 植物/低木/作物: slot1 が倒伏した地表版。倒伏すると立体影は消える。
+        - 木: 状態列を持たない(PS実機でも木は倒伏対象外)。
+        """
+        entries = self.all_slots(asset)
+        slots = {
+            s: e for e in entries
+            for s in [entry_slot_number(e)] if s is not None
+        }
+
+        if family == "building":
+            shadow_slots = sorted(
+                s for s, e in slots.items() if entry_format_number(e) == 934
+            )
+            if not shadow_slots:
+                return None
+            first_shadow = shadow_slots[0]
+            intact_body = first_shadow - len(shadow_slots)
+            body_states = [s for s in range(intact_body, first_shadow) if s in slots]
+            if not body_states:
+                return None
+            return {"body": body_states, "shadow": shadow_slots}
+
+        if family in PLANT_FAMILIES and {1, 2, 4} <= set(slots):
+            return {"body": [2, 1], "shadow": [4, None]}
+
+        return None
+
+    def _hex_at(self, x: int, y: int) -> list[int] | None:
+        """キャンバス座標 -> 盤面hex。盤外なら None。"""
+        game_x = self.top_left_x + x * self.scale
+        game_y = self.top_left_y + y * self.scale
+        cell = px_to_hex_local(game_x, game_y)
+        return list(cell) if cell in self.board_cells else None
+
     def stamp_fence(
         self,
         asset: str,
@@ -491,32 +560,74 @@ class Renderer:
         """柵は単一スプライトではなく、支柱＋隣接方向の半柵の合成。
 
         接続判定は論理座標（40単位）で行うため、screen位置とは別に論理座標を渡す。
+        合成物なので台帳では composite:true とし、スロット列をそのまま持たせる。
+        圧壊版は post が +4(56→60)、connection が +16(64→80)、影は body+56。
         """
         bodies, shadows = resolve_fence_layers(self.index, asset, logical_x, logical_y, fence_points)
-        if not bodies:
+        body_slots = [entry_slot_number(e) for e in bodies if e]
+        body_slots = [s for s in body_slots if s is not None]
+        if not body_slots:
             self.missing_assets[asset] += 1
             return
-        for entry in shadows:
-            if entry:
-                self.shadows.append((entry, x, y))
-        for entry in bodies:
-            if entry:
-                self.bodies.append((entry, x, y))
 
-    def queue_object(self, asset: str | None, x: int, y: int, building: bool = False) -> None:
-        """立体物を影/本体に分けて後段の描画キューへ積む。"""
+        available = {
+            s for e in self.all_slots(asset)
+            for s in [entry_slot_number(e)] if s is not None
+        }
+
+        def crushed_of(slot: int) -> int:
+            # 支柱(56..59)は+4、接続(64..)は+16 で圧壊版になる
+            return slot + 4 if slot < 64 else slot + 16
+
+        crushed = [crushed_of(s) for s in body_slots]
+        crushed = [s for s in crushed if s in available]
+
+        self.tall.append({
+            "asset": asset,
+            "family": "fence",
+            "x": int(x),
+            "y": int(y),
+            "composite": True,
+            "body_slots": body_slots,
+            "shadow_slots": [s for s in ((sl + 56) for sl in body_slots) if s in available],
+            "crushed_slots": crushed,
+            "crushed_shadow_slots": [s for s in ((sl + 56) for sl in crushed) if s in available],
+            "hex": self._hex_at(x, y),
+        })
+        self.placements_drawn += 1
+
+    def queue_object(
+        self,
+        asset: str | None,
+        x: int,
+        y: int,
+        building: bool = False,
+        family: str = "prop",
+    ) -> None:
+        """立体物を台帳へ登録する（背景PNGには描かない）。"""
         if asset is None:
             return
         if building:
             shadow_entry, body_entry = self.intact_building_entries(asset, x, y)
+            family = "building"
         else:
             shadow_entry = self.choose_entry(asset, 4, x, y)
             body_entry = self.choose_entry(asset, 2, x, y)
 
-        if shadow_entry is not None:
-            self.shadows.append((shadow_entry, x, y))
-        if body_entry is not None:
-            self.bodies.append((body_entry, x, y))
+        if body_entry is None:
+            return
+
+        self.tall.append({
+            "asset": asset,
+            "family": family,
+            "x": int(x),
+            "y": int(y),
+            "body_slot": entry_slot_number(body_entry),
+            "shadow_slot": entry_slot_number(shadow_entry) if shadow_entry else None,
+            "states": self._states_for(asset, family),
+            "hex": self._hex_at(x, y),
+        })
+        self.placements_drawn += 1
 
     def intact_building_entries(
         self,
@@ -548,15 +659,6 @@ class Renderer:
             )
         # 影スロットを持たない資産は通常の立体規約へフォールバック。
         return self.choose_entry(asset, 4, x, y), self.choose_entry(asset, 2, x, y)
-
-    def flush_objects(self) -> None:
-        """独立影を先に全部描き、立体本体は screen Y 昇順で描く。"""
-        for entry, x, y in self.shadows:
-            if stamp_entry(self.canvas, self.index, entry, x, y, 0, 0):
-                self.placements_drawn += 1
-        for entry, x, y in sorted(self.bodies, key=lambda item: (item[2], item[1])):
-            if stamp_entry(self.canvas, self.index, entry, x, y, 0, 0):
-                self.placements_drawn += 1
 
 
 def stamp_hex_ground(renderer: Renderer, center_x: int, center_y: int) -> None:
@@ -629,12 +731,14 @@ def stamp_forest(renderer: Renderer, center_x: int, center_y: int) -> None:
             renderer.sample_asset(("tree",)),
             center_x + renderer.rng.randint(-38, 38),
             center_y + renderer.rng.randint(-30, 30),
+            family="tree",
         )
     for _ in range(renderer.rng.randint(1, 2)):
         renderer.queue_object(
             renderer.sample_asset(("shrub",)),
             center_x + renderer.rng.randint(-42, 42),
             center_y + renderer.rng.randint(-32, 32),
+            family="shrub",
         )
 
 
@@ -651,6 +755,7 @@ def stamp_grass(renderer: Renderer, center_x: int, center_y: int) -> None:
             renderer.sample_asset(("shrub",)),
             center_x + renderer.rng.randint(-38, 38),
             center_y + renderer.rng.randint(-28, 28),
+            family="shrub",
         )
 
 
@@ -725,7 +830,7 @@ def transfer_cluster(
         elif family in LOW_FAMILIES:
             renderer.stamp_ground(asset, x, y)
         else:
-            renderer.queue_object(asset, x, y)
+            renderer.queue_object(asset, x, y, family=family)
 
 
 def render_map(
@@ -749,9 +854,11 @@ def render_map(
         vocabulary=vocabulary,
         rng=random.Random(seed),
         cluster_radius=cluster_radius,
+        top_left_x=0.0, top_left_y=0.0, scale=scale,
     )
 
     top_left_x, top_left_y = center_projection(width, height, scale)
+    renderer.top_left_x, renderer.top_left_y = top_left_x, top_left_y
     centers = {
         cell: hex_center_image(cell[0], cell[1], top_left_x, top_left_y, scale) for cell in plan
     }
@@ -789,7 +896,6 @@ def render_map(
             if cluster is not None:
                 transfer_cluster(renderer, cluster, center_x, center_y, map_height)
 
-    renderer.flush_objects()
     return canvas, renderer, top_left_x, top_left_y
 
 
@@ -951,6 +1057,7 @@ def main() -> None:
             "terrain_counts": dict(sorted(counts.items())),
             "connectivity": connectivity,
             "placements_drawn": renderer.placements_drawn,
+            "tall_objects": len(renderer.tall),
             "missing_assets": dict(sorted(renderer.missing_assets.items())),
             "flat_background_fraction": flat_fraction,
         },
@@ -958,6 +1065,23 @@ def main() -> None:
 
     (out_dir / f"{stem}.json").write_text(
         json.dumps(metadata, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
+    )
+
+    # 立体物台帳。本編はこれを読んで生きたスプライトを生成し、破壊状態を差し替える。
+    objects_record = {
+        "schema": "ps_objects/v1",
+        "name": stem,
+        "projection": {
+            "scale": args.scale,
+            "top_left_x": top_left_x,
+            "top_left_y": top_left_y,
+        },
+        "image_width": args.width,
+        "image_height": args.height,
+        "objects": renderer.tall,
+    }
+    (out_dir / f"{stem}_objects.json").write_text(
+        json.dumps(objects_record, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
     )
 
     if overlay_path is not None:
@@ -972,6 +1096,8 @@ def main() -> None:
     print(f"connectivity: {connectivity}")
     print(f"flat_background_fraction: {flat_fraction:.4f} (coverage_ok={coverage_ok})")
     print(f"placements_drawn: {renderer.placements_drawn}")
+    fam = Counter(str(o.get("family")) for o in renderer.tall)
+    print(f"tall_objects: {len(renderer.tall)}  {dict(fam.most_common())}")
     if renderer.missing_assets:
         print(f"missing_assets: {len(renderer.missing_assets)} unique, {sum(renderer.missing_assets.values())} instances")
 

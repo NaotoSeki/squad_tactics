@@ -99,7 +99,8 @@
         26
       ]
     },
-    "placements_drawn": 1491,
+    "placements_drawn": 1222,
+    "tall_objects": 167,
     "missing_assets": {
       "board_001_01": 2,
       "board_002_00": 2,

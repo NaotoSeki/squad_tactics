@@ -119,6 +119,41 @@ window.TerrainRenderRuralV29 = {
     } else {
       this._drawImage(scene, hexGroup, topLeftX, topLeftY, scale, scale, textureKey);
     }
+
+    this._buildPsObjects(scene, variant.psNative, bf.projection);
+  },
+
+  /**
+   * 立体物台帳(ps_objects/v1)を読み、必要なスプライトだけ遅延ロードしてから生成する。
+   * 台帳→必要スプライト列挙→ロード→build の2段非同期。
+   * 台帳が無いマップ(旧世代の正本クロップ等)は静かにスキップする。
+   */
+  _buildPsObjects(scene, name, projection) {
+    const L = window.PsObjectLayer;
+    if (!L || !L.manifest) return;
+
+    const jsonKey = 'psobj_' + name;
+    const spawn = () => {
+      const ledger = scene.cache.json.get(jsonKey);
+      if (!ledger || !ledger.objects) return;
+
+      const needed = L.requiredSprites(ledger).filter(s => !scene.textures.exists(s.key));
+      if (!needed.length) {
+        L.build(scene, ledger, projection);
+        return;
+      }
+      needed.forEach(s => scene.load.image(s.key, 'asset/environment/ps_objects/' + s.file));
+      scene.load.once('complete', () => { L.build(scene, ledger, projection); });
+      scene.load.start();
+    };
+
+    if (scene.cache.json.exists(jsonKey)) {
+      spawn();
+    } else {
+      scene.load.json(jsonKey, `asset/environment/maps/${name}_objects.json`);
+      scene.load.once('complete', spawn);
+      scene.load.start();
+    }
   },
 
   /**

@@ -99,7 +99,8 @@
         28
       ]
     },
-    "placements_drawn": 1134,
+    "placements_drawn": 1068,
+    "tall_objects": 79,
     "missing_assets": {
       "bush_001": 8,
       "bush_002": 6,
@@ -115,6 +116,6 @@
       "plant_coriandrum-sativum_c_03": 1,
       "plant_dryopteris-carthusiana_c_01": 1
     },
-    "flat_background_fraction": 2.6014568158168575e-06
+    "flat_background_fraction": 0.0
   }
 }

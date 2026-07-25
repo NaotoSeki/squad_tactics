@@ -99,7 +99,8 @@
         28
       ]
     },
-    "placements_drawn": 1248,
+    "placements_drawn": 1136,
+    "tall_objects": 155,
     "missing_assets": {
       "board_003_03": 2,
       "bush_001": 4,
@@ -121,6 +122,6 @@
       "plant_dryopteris-carthusiana_c_01": 2,
       "plant_dryopteris-carthusiana_e_01": 2
     },
-    "flat_background_fraction": 2.6014568158168575e-06
+    "flat_background_fraction": 0.0
   }
 }

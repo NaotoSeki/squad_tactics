@@ -224,6 +224,19 @@ window.KHAOS_FX = {
         t4_shell120:   { frames: 32, fps: 24, sizeMul: 2.3, shake: { dur: 320, int: 0.006 }, damageBuilding: true },
         t5_aerialbomb: { frames: 40, fps: 24, sizeMul: 3.0, shake: { dur: 600, int: 0.014 }, damageBuilding: true },
     },
+    /**
+     * 立体物(建物/柵/低木)への破壊半径と段階数。半径はワールドpx。
+     * ヘックス幅(√3*HEX_SIZE≈93.5)を基準にティアの sizeMul と揃えてある。
+     * severity = 一度の着弾で進む破壊段階。建物は4〜6段階あるので、
+     * 小口径では崩れきらず、大口径は一撃で複数段階進む。
+     */
+    BLAST: {
+        t1_12mm:       { radius: 26,  severity: 0 },  // 銃弾。痕は残るが構造は壊さない
+        t2_grenade:    { radius: 45,  severity: 1 },
+        t3_mortar60:   { radius: 70,  severity: 1 },
+        t4_shell120:   { radius: 105, severity: 2 },
+        t5_aerialbomb: { radius: 150, severity: 3 },
+    },
     VARIANTS: ['', '_v2', '_v3'],
     FRAME: 384,
     key(tier, v) { return `khaos_${tier}${v}`; },
@@ -818,6 +831,12 @@ class MainScene extends Phaser.Scene {
                 });
             });
         }
+        // 立体物スプライトの台帳。PNG本体はマップ確定後に必要な分だけ遅延ロードする
+        // (全655枚=7MiBを常時読むのは無駄。1マップが使うのは一部)。
+        this.load.json('ps_object_manifest', 'asset/environment/ps_objects/manifest.json');
+        this.load.once('filecomplete-json-ps_object_manifest', (key, type, data) => {
+            if (window.PsObjectLayer) window.PsObjectLayer.manifest = data;
+        });
         // PSクレーターのデカール素材。manifest を先に読み、完了時に各PNGを追加投入する。
         // 焼き込み用(window.DecalLayer)なので生きたスプライトにはならない。
         this.load.json('decal_manifest', 'asset/environment/decals/manifest.json');
@@ -967,11 +986,19 @@ class MainScene extends Phaser.Scene {
 
         if (meta.shake) this.cameras.main.shake(meta.shake.dur, meta.shake.int);
 
-        // 着弾痕を地表へ焼き込む(不可逆)。煙がタイルを覆った頃に差し込むと、
-        // 晴れたときには既に痕が残っている、というPS的な見え方になる。
-        if (window.DecalLayer && window.DecalLayer.ready()) {
-            const burnDelay = (meta.frames / meta.fps) * 1000 * 0.45;
-            setTimeout(() => { window.DecalLayer.stamp(x, y, tier); }, burnDelay);
+        // 着弾痕を地表へ焼き込み、周囲の立体物を段階破壊する(いずれも不可逆)。
+        // 煙がタイルを覆った頃に差し込むと、晴れたときには既に痕が残り
+        // 建物が崩れている、というPS的な見え方になる。
+        const burnDelay = (meta.frames / meta.fps) * 1000 * 0.45;
+        const blast = window.KHAOS_FX && KHAOS_FX.BLAST[tier];
+        if ((window.DecalLayer && window.DecalLayer.ready()) || window.PsObjectLayer) {
+            setTimeout(() => {
+                if (window.DecalLayer && window.DecalLayer.ready()) window.DecalLayer.stamp(x, y, tier);
+                // severity 0 (銃弾) は痕だけ残し構造は壊さない
+                if (blast && blast.severity > 0 && window.PsObjectLayer && window.PsObjectLayer.count()) {
+                    window.PsObjectLayer.damageAt(x, y, blast.radius, blast.severity);
+                }
+            }, burnDelay);
         }
         // 直撃地点の段階破壊: 煙がタイルを覆った頃に差し替える。
         // 建物があれば建物を、なければ地面（道路寸断・石畳クレーター化）を損傷
