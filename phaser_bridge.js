@@ -818,6 +818,17 @@ class MainScene extends Phaser.Scene {
                 });
             });
         }
+        // PSクレーターのデカール素材。manifest を先に読み、完了時に各PNGを追加投入する。
+        // 焼き込み用(window.DecalLayer)なので生きたスプライトにはならない。
+        this.load.json('decal_manifest', 'asset/environment/decals/manifest.json');
+        this.load.once('filecomplete-json-decal_manifest', (key, type, data) => {
+            if (!window.DecalLayer || !data || !data.tiers) return;
+            window.DecalLayer.manifest = data;
+            Object.values(data.tiers).forEach(list => {
+                list.forEach(d => this.load.image('decal_' + d.id, 'asset/environment/decals/' + d.file));
+            });
+            this.load.start(); // preload中の追加投入を確実に走らせる
+        });
         // fir_tree: 128x128 x32コマ。レイアウト 16列x2行（0-15=弱い揺れ、16-31=強風）
         this.load.spritesheet('fir_tree', 'asset/environment/fir_tree.png', { frameWidth: 128, frameHeight: 128, endFrame: 31 });
         for (let i = 1; i <= (typeof PORTRAIT_AVAILABLE !== 'undefined' ? PORTRAIT_AVAILABLE : 7); i++) {
@@ -955,6 +966,13 @@ class MainScene extends Phaser.Scene {
         spr.once('animationcomplete', () => { spr.destroy(); });
 
         if (meta.shake) this.cameras.main.shake(meta.shake.dur, meta.shake.int);
+
+        // 着弾痕を地表へ焼き込む(不可逆)。煙がタイルを覆った頃に差し込むと、
+        // 晴れたときには既に痕が残っている、というPS的な見え方になる。
+        if (window.DecalLayer && window.DecalLayer.ready()) {
+            const burnDelay = (meta.frames / meta.fps) * 1000 * 0.45;
+            setTimeout(() => { window.DecalLayer.stamp(x, y, tier); }, burnDelay);
+        }
         // 直撃地点の段階破壊: 煙がタイルを覆った頃に差し替える。
         // 建物があれば建物を、なければ地面（道路寸断・石畳クレーター化）を損傷
         if (meta.damageBuilding && hex && window.TerrainRenderV7 && window.CityMap && window.CityMap.active) {

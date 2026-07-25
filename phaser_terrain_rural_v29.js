@@ -100,6 +100,12 @@ window.TerrainRenderRuralV29 = {
     const textureKey = variant.texture;
     const textureFile = variant.file;
 
+    // 着弾痕の焼き込みレイヤーを背景と同じ投影・同じ画素密度で敷く。
+    // 背景より後・立体物より前(depth -9990)。テクスチャの読み込み完了を待つ必要はない。
+    if (window.DecalLayer) {
+      window.DecalLayer.init(scene, bf.projection, bf.imageWidth, bf.imageHeight);
+    }
+
     if (!scene.textures.exists(textureKey)) {
       scene.load.image(textureKey, textureFile);
       scene.load.once('complete', () => {

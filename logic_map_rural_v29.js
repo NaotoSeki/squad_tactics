@@ -33,23 +33,27 @@ window.RuralV29Map = {
    * - ready: ファイルロード完了時 true（初期値はP1のみ）
    */
   VARIANTS: [
-    { key: 'p1', texture: 'rural_v29',    file: 'asset/environment/maps/rural_v29.png',    rot180: false, ready: true },
-    // p2〜p4(回転/建物スワップ実験)はオーナー評価「場所が同じで意味薄い」により
-    // ランダムプールから除外。fixedVariant 指定でのみ選択可。
+    // --- Blenderレンダー由来の固定マップ(2026-07-25 退役) ---
+    // 「セクタを進めると以前のレンダ済み5枚が出てくる」ため全て ready:false にした。
+    // 戦場は毎回PS実アセットからの生成物(psNative)を使う。
+    // 削除はせず fixedVariant 指定でのみ参照可能なまま残す(比較・回帰用)。
+    { key: 'p1', texture: 'rural_v29',    file: 'asset/environment/maps/rural_v29.png',    rot180: false, ready: false },
     { key: 'p2', texture: 'rural_v29_p2', file: 'asset/environment/maps/rural_v29_p2.png', rot180: true,  ready: false },
     { key: 'p3', texture: 'rural_v29_p3', file: 'asset/environment/maps/rural_v29_p3.png', rot180: false, ready: false },
     { key: 'p4', texture: 'rural_v29_p4', file: 'asset/environment/maps/rural_v29_p4.png', rot180: true,  ready: false },
     // 別ロケーション3種(2026-07-19): 道路網・建物・破壊度が異なる独立構図。
     // table キーで _locationRows の専用地形テーブルを参照する。
-    { key: 'loc_crossroad',   texture: 'rural_loc_crossroad',   file: 'asset/environment/maps/rural_loc_crossroad.png',   rot180: false, ready: true, table: 'loc_crossroad' },
-    { key: 'loc_forest_farm', texture: 'rural_loc_forest_farm', file: 'asset/environment/maps/rural_loc_forest_farm.png', rot180: false, ready: true, table: 'loc_forest_farm' },
-    { key: 'loc_shelled',     texture: 'rural_loc_shelled',     file: 'asset/environment/maps/rural_loc_shelled.png',     rot180: false, ready: true, table: 'loc_shelled' },
-    { key: 'loc_church_square', texture: 'rural_loc_church_square', file: 'asset/environment/maps/rural_loc_church_square.png', rot180: false, ready: true, table: 'loc_church_square' },
+    { key: 'loc_crossroad',   texture: 'rural_loc_crossroad',   file: 'asset/environment/maps/rural_loc_crossroad.png',   rot180: false, ready: false, table: 'loc_crossroad' },
+    { key: 'loc_forest_farm', texture: 'rural_loc_forest_farm', file: 'asset/environment/maps/rural_loc_forest_farm.png', rot180: false, ready: false, table: 'loc_forest_farm' },
+    { key: 'loc_shelled',     texture: 'rural_loc_shelled',     file: 'asset/environment/maps/rural_loc_shelled.png',     rot180: false, ready: false, table: 'loc_shelled' },
+    { key: 'loc_church_square', texture: 'rural_loc_church_square', file: 'asset/environment/maps/rural_loc_church_square.png', rot180: false, ready: false, table: 'loc_church_square' },
     // PS正本キャンバス(2026-07-25)。Blenderレンダーではなく Panzer Strike の実マップ
     // 配置をSSC原寸で再構成したもの。地形テーブルは手描きではなく配置台帳から機械導出
     // (scripts/build_ps_battlefield.py)。psNative キーで window.PS_BATTLEFIELDS を引き、
     // 背景の投影値もそこから取る(Blenderの55°投影定数は使わない)。
-    { key: 'ps_village_north', texture: 'ps_village_north', file: 'asset/environment/maps/ps_village_north.png', rot180: false, ready: true, psNative: 'ps_village_north' },
+    // 正本クロップ(実マップの一角)。構図が固定なので通常プールからは外し、
+    // 比較・回帰用に fixedVariant でのみ参照する。通常戦闘はシード生成物を使う。
+    { key: 'ps_village_north', texture: 'ps_village_north', file: 'asset/environment/maps/ps_village_north.png', rot180: false, ready: false, psNative: 'ps_village_north' },
   ],
 
   /**
@@ -104,7 +108,8 @@ window.RuralV29Map = {
    * - lastNorth/lastSouth: 最後に生成されたピース（デバッグ用）
    */
   kitMode: {
-    enabled: true,
+    // 2026-07-25 停止: kitピースもBlenderレンダー。PS生成物へ一本化した。
+    enabled: false,
     fixedNorth: null,
     fixedSouth: null,
     lastNorth: null,

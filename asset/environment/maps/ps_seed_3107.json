@@ -1,0 +1,120 @@
+{
+  "schema": "ps_battlefield/v1",
+  "name": "ps_seed_3107",
+  "image": "ps_seed_3107.png",
+  "image_width": 620,
+  "image_height": 620,
+  "projection": {
+    "scale": 0.84,
+    "top_left_x": 885.3516092068122,
+    "top_left_y": 509.1,
+    "note": "game_px = top_left + image_px * scale (等方。PS 2:1等角のまま歪ませない)"
+  },
+  "source": {
+    "generator": "gen_ps_seed_map",
+    "seed": 3107,
+    "grammar": "scratch\\ps_placement_grammar\\ps_demo_building_clusters_v1.json"
+  },
+  "rows": [
+    [
+      7,
+      7,
+      [
+        "GRASS",
+        "ROAD",
+        "FOREST",
+        "GRASS",
+        "FOREST"
+      ]
+    ],
+    [
+      8,
+      6,
+      [
+        "FOREST",
+        "GRASS",
+        "ROAD",
+        "GRASS",
+        "GRASS"
+      ]
+    ],
+    [
+      9,
+      6,
+      [
+        "FOREST",
+        "ROAD",
+        "GRASS",
+        "GRASS",
+        "GRASS"
+      ]
+    ],
+    [
+      10,
+      5,
+      [
+        "GRASS",
+        "BLDG",
+        "ROAD",
+        "GRASS",
+        "FOREST"
+      ]
+    ],
+    [
+      11,
+      5,
+      [
+        "FOREST",
+        "ROAD",
+        "BLDG",
+        "GRASS",
+        "FIELD"
+      ]
+    ],
+    [
+      12,
+      4,
+      [
+        "GRASS",
+        "ROAD",
+        "FIELD",
+        "FIELD",
+        "FIELD"
+      ]
+    ]
+  ],
+  "audit": {
+    "coverage_ok": true,
+    "terrain_counts": {
+      "BLDG": 2,
+      "FIELD": 4,
+      "FOREST": 6,
+      "GRASS": 12,
+      "ROAD": 6
+    },
+    "connectivity": {
+      "ok": true,
+      "passable": 28,
+      "component_sizes": [
+        28
+      ]
+    },
+    "placements_drawn": 1226,
+    "missing_assets": {
+      "board_004_01": 2,
+      "bush_small_03": 4,
+      "bush_small_04": 2,
+      "bush_small_05": 2,
+      "flower_rhododendron-ponticum_c_03": 1,
+      "flower_rudbeckia-hirta_a_01": 1,
+      "flower_rudbeckia-hirta_a_02": 1,
+      "flower_rudbeckia-hirta_d_01": 1,
+      "flower_zantedeschia-aethiopica_a_01": 1,
+      "plant_coriandrum-sativum_c_02": 2,
+      "plant_coriandrum-sativum_c_03": 2,
+      "plant_dryopteris-carthusiana_c_01": 2,
+      "plant_dryopteris-carthusiana_d_01": 1
+    },
+    "flat_background_fraction": 0.0
+  }
+}

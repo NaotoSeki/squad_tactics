@@ -159,6 +159,954 @@ window.PS_BATTLEFIELDS = {
       ]
     ]
   },
+  "ps_seed_3101": {
+    "name": "ps_seed_3101",
+    "image": "ps_seed_3101.png",
+    "imageWidth": 620,
+    "imageHeight": 620,
+    "projection": {
+      "scale": 0.84,
+      "topLeftX": 885.3516092068122,
+      "topLeftY": 509.1
+    },
+    "rows": [
+      [
+        7,
+        7,
+        [
+          "ROAD",
+          "BLDG",
+          "FIELD",
+          "FIELD",
+          "GRASS"
+        ]
+      ],
+      [
+        8,
+        6,
+        [
+          "GRASS",
+          "ROAD",
+          "FIELD",
+          "FIELD",
+          "FIELD"
+        ]
+      ],
+      [
+        9,
+        6,
+        [
+          "ROAD",
+          "FIELD",
+          "FIELD",
+          "GRASS",
+          "GRASS"
+        ]
+      ],
+      [
+        10,
+        5,
+        [
+          "BLDG",
+          "ROAD",
+          "BLDG",
+          "GRASS",
+          "FOREST"
+        ]
+      ],
+      [
+        11,
+        5,
+        [
+          "FOREST",
+          "ROAD",
+          "GRASS",
+          "GRASS",
+          "FOREST"
+        ]
+      ],
+      [
+        12,
+        4,
+        [
+          "BLDG",
+          "ROAD",
+          "FOREST",
+          "FOREST",
+          "FOREST"
+        ]
+      ]
+    ]
+  },
+  "ps_seed_3102": {
+    "name": "ps_seed_3102",
+    "image": "ps_seed_3102.png",
+    "imageWidth": 620,
+    "imageHeight": 620,
+    "projection": {
+      "scale": 0.84,
+      "topLeftX": 885.3516092068122,
+      "topLeftY": 509.1
+    },
+    "rows": [
+      [
+        7,
+        7,
+        [
+          "FOREST",
+          "FIELD",
+          "BLDG",
+          "ROAD",
+          "BLDG"
+        ]
+      ],
+      [
+        8,
+        6,
+        [
+          "GRASS",
+          "FIELD",
+          "GRASS",
+          "ROAD",
+          "FOREST"
+        ]
+      ],
+      [
+        9,
+        6,
+        [
+          "FIELD",
+          "FIELD",
+          "GRASS",
+          "ROAD",
+          "BLDG"
+        ]
+      ],
+      [
+        10,
+        5,
+        [
+          "GRASS",
+          "FIELD",
+          "FIELD",
+          "GRASS",
+          "ROAD"
+        ]
+      ],
+      [
+        11,
+        5,
+        [
+          "FOREST",
+          "FIELD",
+          "GRASS",
+          "BLDG",
+          "ROAD"
+        ]
+      ],
+      [
+        12,
+        4,
+        [
+          "FOREST",
+          "FOREST",
+          "FOREST",
+          "GRASS",
+          "ROAD"
+        ]
+      ]
+    ]
+  },
+  "ps_seed_3103": {
+    "name": "ps_seed_3103",
+    "image": "ps_seed_3103.png",
+    "imageWidth": 620,
+    "imageHeight": 620,
+    "projection": {
+      "scale": 0.84,
+      "topLeftX": 885.3516092068122,
+      "topLeftY": 509.1
+    },
+    "rows": [
+      [
+        7,
+        7,
+        [
+          "GRASS",
+          "FIELD",
+          "BLDG",
+          "ROAD",
+          "GRASS"
+        ]
+      ],
+      [
+        8,
+        6,
+        [
+          "FOREST",
+          "FIELD",
+          "FIELD",
+          "ROAD",
+          "BLDG"
+        ]
+      ],
+      [
+        9,
+        6,
+        [
+          "FIELD",
+          "GRASS",
+          "FIELD",
+          "ROAD",
+          "GRASS"
+        ]
+      ],
+      [
+        10,
+        5,
+        [
+          "FOREST",
+          "GRASS",
+          "GRASS",
+          "FIELD",
+          "ROAD"
+        ]
+      ],
+      [
+        11,
+        5,
+        [
+          "GRASS",
+          "GRASS",
+          "BLDG",
+          "ROAD",
+          "FOREST"
+        ]
+      ],
+      [
+        12,
+        4,
+        [
+          "GRASS",
+          "GRASS",
+          "GRASS",
+          "ROAD",
+          "GRASS"
+        ]
+      ]
+    ]
+  },
+  "ps_seed_3104": {
+    "name": "ps_seed_3104",
+    "image": "ps_seed_3104.png",
+    "imageWidth": 620,
+    "imageHeight": 620,
+    "projection": {
+      "scale": 0.84,
+      "topLeftX": 885.3516092068122,
+      "topLeftY": 509.1
+    },
+    "rows": [
+      [
+        7,
+        7,
+        [
+          "ROAD",
+          "GRASS",
+          "FOREST",
+          "GRASS",
+          "GRASS"
+        ]
+      ],
+      [
+        8,
+        6,
+        [
+          "ROAD",
+          "BLDG",
+          "FIELD",
+          "GRASS",
+          "FIELD"
+        ]
+      ],
+      [
+        9,
+        6,
+        [
+          "ROAD",
+          "GRASS",
+          "FIELD",
+          "FIELD",
+          "FOREST"
+        ]
+      ],
+      [
+        10,
+        5,
+        [
+          "ROAD",
+          "GRASS",
+          "FIELD",
+          "FIELD",
+          "FOREST"
+        ]
+      ],
+      [
+        11,
+        5,
+        [
+          "ROAD",
+          "FIELD",
+          "GRASS",
+          "GRASS",
+          "GRASS"
+        ]
+      ],
+      [
+        12,
+        4,
+        [
+          "ROAD",
+          "BLDG",
+          "GRASS",
+          "GRASS",
+          "GRASS"
+        ]
+      ]
+    ]
+  },
+  "ps_seed_3105": {
+    "name": "ps_seed_3105",
+    "image": "ps_seed_3105.png",
+    "imageWidth": 620,
+    "imageHeight": 620,
+    "projection": {
+      "scale": 0.84,
+      "topLeftX": 885.3516092068122,
+      "topLeftY": 509.1
+    },
+    "rows": [
+      [
+        7,
+        7,
+        [
+          "ROAD",
+          "GRASS",
+          "FIELD",
+          "FIELD",
+          "FIELD"
+        ]
+      ],
+      [
+        8,
+        6,
+        [
+          "ROAD",
+          "BLDG",
+          "FIELD",
+          "GRASS",
+          "GRASS"
+        ]
+      ],
+      [
+        9,
+        6,
+        [
+          "ROAD",
+          "GRASS",
+          "GRASS",
+          "GRASS",
+          "GRASS"
+        ]
+      ],
+      [
+        10,
+        5,
+        [
+          "ROAD",
+          "GRASS",
+          "GRASS",
+          "GRASS",
+          "GRASS"
+        ]
+      ],
+      [
+        11,
+        5,
+        [
+          "ROAD",
+          "GRASS",
+          "GRASS",
+          "GRASS",
+          "FOREST"
+        ]
+      ],
+      [
+        12,
+        4,
+        [
+          "FOREST",
+          "ROAD",
+          "BLDG",
+          "FOREST",
+          "GRASS"
+        ]
+      ]
+    ]
+  },
+  "ps_seed_3106": {
+    "name": "ps_seed_3106",
+    "image": "ps_seed_3106.png",
+    "imageWidth": 620,
+    "imageHeight": 620,
+    "projection": {
+      "scale": 0.84,
+      "topLeftX": 885.3516092068122,
+      "topLeftY": 509.1
+    },
+    "rows": [
+      [
+        7,
+        7,
+        [
+          "ROAD",
+          "FIELD",
+          "FIELD",
+          "FIELD",
+          "FOREST"
+        ]
+      ],
+      [
+        8,
+        6,
+        [
+          "FOREST",
+          "ROAD",
+          "BLDG",
+          "FIELD",
+          "FOREST"
+        ]
+      ],
+      [
+        9,
+        6,
+        [
+          "ROAD",
+          "GRASS",
+          "FIELD",
+          "GRASS",
+          "GRASS"
+        ]
+      ],
+      [
+        10,
+        5,
+        [
+          "BLDG",
+          "ROAD",
+          "BLDG",
+          "GRASS",
+          "GRASS"
+        ]
+      ],
+      [
+        11,
+        5,
+        [
+          "FOREST",
+          "ROAD",
+          "GRASS",
+          "GRASS",
+          "GRASS"
+        ]
+      ],
+      [
+        12,
+        4,
+        [
+          "GRASS",
+          "FOREST",
+          "ROAD",
+          "BLDG",
+          "GRASS"
+        ]
+      ]
+    ]
+  },
+  "ps_seed_3107": {
+    "name": "ps_seed_3107",
+    "image": "ps_seed_3107.png",
+    "imageWidth": 620,
+    "imageHeight": 620,
+    "projection": {
+      "scale": 0.84,
+      "topLeftX": 885.3516092068122,
+      "topLeftY": 509.1
+    },
+    "rows": [
+      [
+        7,
+        7,
+        [
+          "GRASS",
+          "ROAD",
+          "FOREST",
+          "GRASS",
+          "FOREST"
+        ]
+      ],
+      [
+        8,
+        6,
+        [
+          "FOREST",
+          "GRASS",
+          "ROAD",
+          "GRASS",
+          "GRASS"
+        ]
+      ],
+      [
+        9,
+        6,
+        [
+          "FOREST",
+          "ROAD",
+          "GRASS",
+          "GRASS",
+          "GRASS"
+        ]
+      ],
+      [
+        10,
+        5,
+        [
+          "GRASS",
+          "BLDG",
+          "ROAD",
+          "GRASS",
+          "FOREST"
+        ]
+      ],
+      [
+        11,
+        5,
+        [
+          "FOREST",
+          "ROAD",
+          "BLDG",
+          "GRASS",
+          "FIELD"
+        ]
+      ],
+      [
+        12,
+        4,
+        [
+          "GRASS",
+          "ROAD",
+          "FIELD",
+          "FIELD",
+          "FIELD"
+        ]
+      ]
+    ]
+  },
+  "ps_seed_3108": {
+    "name": "ps_seed_3108",
+    "image": "ps_seed_3108.png",
+    "imageWidth": 620,
+    "imageHeight": 620,
+    "projection": {
+      "scale": 0.84,
+      "topLeftX": 885.3516092068122,
+      "topLeftY": 509.1
+    },
+    "rows": [
+      [
+        7,
+        7,
+        [
+          "FOREST",
+          "GRASS",
+          "GRASS",
+          "ROAD",
+          "BLDG"
+        ]
+      ],
+      [
+        8,
+        6,
+        [
+          "GRASS",
+          "GRASS",
+          "GRASS",
+          "ROAD",
+          "FIELD"
+        ]
+      ],
+      [
+        9,
+        6,
+        [
+          "FOREST",
+          "GRASS",
+          "ROAD",
+          "FIELD",
+          "FIELD"
+        ]
+      ],
+      [
+        10,
+        5,
+        [
+          "FOREST",
+          "GRASS",
+          "GRASS",
+          "ROAD",
+          "FIELD"
+        ]
+      ],
+      [
+        11,
+        5,
+        [
+          "GRASS",
+          "GRASS",
+          "ROAD",
+          "BLDG",
+          "FIELD"
+        ]
+      ],
+      [
+        12,
+        4,
+        [
+          "GRASS",
+          "FOREST",
+          "ROAD",
+          "GRASS",
+          "GRASS"
+        ]
+      ]
+    ]
+  },
+  "ps_seed_3109": {
+    "name": "ps_seed_3109",
+    "image": "ps_seed_3109.png",
+    "imageWidth": 620,
+    "imageHeight": 620,
+    "projection": {
+      "scale": 0.84,
+      "topLeftX": 885.3516092068122,
+      "topLeftY": 509.1
+    },
+    "rows": [
+      [
+        7,
+        7,
+        [
+          "GRASS",
+          "ROAD",
+          "FOREST",
+          "GRASS",
+          "FOREST"
+        ]
+      ],
+      [
+        8,
+        6,
+        [
+          "GRASS",
+          "GRASS",
+          "ROAD",
+          "GRASS",
+          "GRASS"
+        ]
+      ],
+      [
+        9,
+        6,
+        [
+          "BLDG",
+          "ROAD",
+          "BLDG",
+          "GRASS",
+          "GRASS"
+        ]
+      ],
+      [
+        10,
+        5,
+        [
+          "FOREST",
+          "ROAD",
+          "GRASS",
+          "GRASS",
+          "FOREST"
+        ]
+      ],
+      [
+        11,
+        5,
+        [
+          "ROAD",
+          "FIELD",
+          "FIELD",
+          "FIELD",
+          "FIELD"
+        ]
+      ],
+      [
+        12,
+        4,
+        [
+          "ROAD",
+          "BLDG",
+          "FOREST",
+          "FOREST",
+          "FIELD"
+        ]
+      ]
+    ]
+  },
+  "ps_seed_3110": {
+    "name": "ps_seed_3110",
+    "image": "ps_seed_3110.png",
+    "imageWidth": 620,
+    "imageHeight": 620,
+    "projection": {
+      "scale": 0.84,
+      "topLeftX": 885.3516092068122,
+      "topLeftY": 509.1
+    },
+    "rows": [
+      [
+        7,
+        7,
+        [
+          "FOREST",
+          "GRASS",
+          "FOREST",
+          "ROAD",
+          "BLDG"
+        ]
+      ],
+      [
+        8,
+        6,
+        [
+          "GRASS",
+          "GRASS",
+          "GRASS",
+          "GRASS",
+          "ROAD"
+        ]
+      ],
+      [
+        9,
+        6,
+        [
+          "FIELD",
+          "FIELD",
+          "GRASS",
+          "ROAD",
+          "FOREST"
+        ]
+      ],
+      [
+        10,
+        5,
+        [
+          "FIELD",
+          "FIELD",
+          "GRASS",
+          "GRASS",
+          "ROAD"
+        ]
+      ],
+      [
+        11,
+        5,
+        [
+          "FIELD",
+          "GRASS",
+          "BLDG",
+          "ROAD",
+          "BLDG"
+        ]
+      ],
+      [
+        12,
+        4,
+        [
+          "FOREST",
+          "FOREST",
+          "GRASS",
+          "FOREST",
+          "ROAD"
+        ]
+      ]
+    ]
+  },
+  "ps_seed_3111": {
+    "name": "ps_seed_3111",
+    "image": "ps_seed_3111.png",
+    "imageWidth": 620,
+    "imageHeight": 620,
+    "projection": {
+      "scale": 0.84,
+      "topLeftX": 885.3516092068122,
+      "topLeftY": 509.1
+    },
+    "rows": [
+      [
+        7,
+        7,
+        [
+          "FOREST",
+          "FOREST",
+          "GRASS",
+          "BLDG",
+          "ROAD"
+        ]
+      ],
+      [
+        8,
+        6,
+        [
+          "GRASS",
+          "GRASS",
+          "GRASS",
+          "GRASS",
+          "ROAD"
+        ]
+      ],
+      [
+        9,
+        6,
+        [
+          "GRASS",
+          "FIELD",
+          "GRASS",
+          "GRASS",
+          "ROAD"
+        ]
+      ],
+      [
+        10,
+        5,
+        [
+          "GRASS",
+          "FIELD",
+          "FIELD",
+          "BLDG",
+          "ROAD"
+        ]
+      ],
+      [
+        11,
+        5,
+        [
+          "FOREST",
+          "FIELD",
+          "FIELD",
+          "GRASS",
+          "ROAD"
+        ]
+      ],
+      [
+        12,
+        4,
+        [
+          "FOREST",
+          "FOREST",
+          "FIELD",
+          "FOREST",
+          "ROAD"
+        ]
+      ]
+    ]
+  },
+  "ps_seed_3112": {
+    "name": "ps_seed_3112",
+    "image": "ps_seed_3112.png",
+    "imageWidth": 620,
+    "imageHeight": 620,
+    "projection": {
+      "scale": 0.84,
+      "topLeftX": 885.3516092068122,
+      "topLeftY": 509.1
+    },
+    "rows": [
+      [
+        7,
+        7,
+        [
+          "ROAD",
+          "GRASS",
+          "FOREST",
+          "FOREST",
+          "FOREST"
+        ]
+      ],
+      [
+        8,
+        6,
+        [
+          "ROAD",
+          "BLDG",
+          "GRASS",
+          "GRASS",
+          "FOREST"
+        ]
+      ],
+      [
+        9,
+        6,
+        [
+          "ROAD",
+          "GRASS",
+          "GRASS",
+          "FIELD",
+          "FOREST"
+        ]
+      ],
+      [
+        10,
+        5,
+        [
+          "ROAD",
+          "GRASS",
+          "GRASS",
+          "GRASS",
+          "FIELD"
+        ]
+      ],
+      [
+        11,
+        5,
+        [
+          "ROAD",
+          "BLDG",
+          "GRASS",
+          "FIELD",
+          "FIELD"
+        ]
+      ],
+      [
+        12,
+        4,
+        [
+          "ROAD",
+          "FOREST",
+          "FIELD",
+          "FIELD",
+          "FIELD"
+        ]
+      ]
+    ]
+  },
   "ps_village_north": {
     "name": "ps_village_north",
     "image": "ps_village_north.png",
