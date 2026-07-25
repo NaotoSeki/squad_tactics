@@ -196,6 +196,32 @@ window.RuralV29Map = {
   },
 
   /**
+   * window.PS_BATTLEFIELDS の全エントリを VARIANTS へ自動登録する。
+   *
+   * シード生成(scripts/gen_ps_seed_map.py)で新しいマップを作るたびにJSを編集
+   * しなくて済むようにするための機構。レジストリ(生成物)に載っていれば、
+   * それだけでマップ候補になる。VARIANTS に手書きしたキーは上書きしない。
+   */
+  _registerPsBattlefields() {
+    const registry = window.PS_BATTLEFIELDS;
+    if (!registry) return;
+    const known = new Set(this.VARIANTS.map(v => v.key));
+    Object.keys(registry).forEach(name => {
+      if (known.has(name)) return;
+      const bf = registry[name];
+      if (!bf || !bf.rows || !bf.image) return;
+      this.VARIANTS.push({
+        key: name,
+        texture: name,
+        file: `asset/environment/maps/${bf.image}`,
+        rot180: false,
+        ready: true,
+        psNative: name
+      });
+    });
+  },
+
+  /**
    * バリアント選択制御
    * - fixedVariant: null = ランダム選択、'p1'/'p2' 等で固定
    * - lastVariant: 最後に generate() で選択されたVARIANTSエントリ
@@ -253,6 +279,9 @@ window.RuralV29Map = {
    * kitMode が有効で、ready な north/south が両方1つ以上あれば、一定確率で kit 生成を試みる
    */
   generate(game) {
+    // 生成済みPSキャンバス(レジストリ)を毎回取り込む。冪等。
+    this._registerPsBattlefields();
+
     // Kit モード試行（30%確率で、かつ条件満たしていれば）
     let terrainTable = null;
     if (this.kitMode.enabled && Math.random() < 0.30) {

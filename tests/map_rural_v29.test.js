@@ -287,6 +287,11 @@ function testLocationTables() {
   // 手描きではなく配置台帳からの機械導出なので、閾値変更で盤面が壊れても
   // ここで捕まる(BLDGだらけで分断、道が消える等)。
   const locationKeys = ['loc_crossroad', 'loc_forest_farm', 'loc_shelled', 'loc_church_square'];
+  // 生成済みPSキャンバスは generate() 時に自動登録される。テストの実行順に依存
+  // させないよう、ここで明示的に取り込んでから検証対象へ加える。
+  if (typeof RuralV29Map._registerPsBattlefields === 'function') {
+    RuralV29Map._registerPsBattlefields();
+  }
   if (sandbox.PS_BATTLEFIELDS) {
     for (const v of RuralV29Map.VARIANTS) {
       if (v.psNative && sandbox.PS_BATTLEFIELDS[v.psNative]) locationKeys.push(v.key);

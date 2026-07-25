@@ -1,0 +1,120 @@
+{
+  "schema": "ps_battlefield/v1",
+  "name": "ps_seed_2026",
+  "image": "ps_seed_2026.png",
+  "image_width": 620,
+  "image_height": 620,
+  "projection": {
+    "scale": 0.84,
+    "top_left_x": 885.3516092068122,
+    "top_left_y": 509.1,
+    "note": "game_px = top_left + image_px * scale (等方。PS 2:1等角のまま歪ませない)"
+  },
+  "source": {
+    "generator": "gen_ps_seed_map",
+    "seed": 2026,
+    "grammar": "scratch\\ps_placement_grammar\\ps_demo_building_clusters_v1.json"
+  },
+  "rows": [
+    [
+      7,
+      7,
+      [
+        "ROAD",
+        "FIELD",
+        "FIELD",
+        "FIELD",
+        "GRASS"
+      ]
+    ],
+    [
+      8,
+      6,
+      [
+        "ROAD",
+        "FIELD",
+        "GRASS",
+        "FIELD",
+        "FOREST"
+      ]
+    ],
+    [
+      9,
+      6,
+      [
+        "ROAD",
+        "FIELD",
+        "GRASS",
+        "GRASS",
+        "GRASS"
+      ]
+    ],
+    [
+      10,
+      5,
+      [
+        "BLDG",
+        "ROAD",
+        "BLDG",
+        "GRASS",
+        "FOREST"
+      ]
+    ],
+    [
+      11,
+      5,
+      [
+        "ROAD",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS"
+      ]
+    ],
+    [
+      12,
+      4,
+      [
+        "ROAD",
+        "GRASS",
+        "FOREST",
+        "GRASS",
+        "FOREST"
+      ]
+    ]
+  ],
+  "audit": {
+    "coverage_ok": true,
+    "terrain_counts": {
+      "BLDG": 2,
+      "FIELD": 6,
+      "FOREST": 4,
+      "GRASS": 12,
+      "ROAD": 6
+    },
+    "connectivity": {
+      "ok": true,
+      "passable": 28,
+      "component_sizes": [
+        28
+      ]
+    },
+    "placements_drawn": 1240,
+    "missing_assets": {
+      "board_001_03": 2,
+      "board_003_01": 2,
+      "bush_001": 2,
+      "bush_small_01": 2,
+      "compose_001_03": 2,
+      "compose_002_04": 2,
+      "flower_phlox-paniculata_a_02": 1,
+      "flower_rhododendron-ponticum_b_02": 1,
+      "flower_rudbeckia-hirta_a_01": 1,
+      "flower_rudbeckia-hirta_b_01": 1,
+      "flower_rudbeckia-hirta_d_01": 1,
+      "flower_zantedeschia-aethiopica_a_01": 1,
+      "plant_dryopteris-carthusiana_b_01": 2
+    },
+    "flat_background_fraction": 0.0
+  }
+}
