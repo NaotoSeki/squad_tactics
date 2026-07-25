@@ -1,0 +1,369 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PSネイティブ・マップアセンブラ 第1試験</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0e110d;
+      --panel: #191e17;
+      --panel2: #22281f;
+      --line: #414b3b;
+      --text: #ececdf;
+      --muted: #aeb3a2;
+      --gold: #dcc56d;
+      font-family: Inter, "Yu Gothic UI", Meiryo, system-ui, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 16% 0%, #2a3022 0, transparent 34rem),
+        var(--bg);
+    }
+    main {
+      width: min(1400px, calc(100% - 28px));
+      margin: 0 auto;
+      padding: 22px 0 40px;
+    }
+    header {
+      display: flex;
+      justify-content: space-between;
+      gap: 22px;
+      align-items: end;
+      margin-bottom: 15px;
+    }
+    h1 {
+      margin: 0;
+      font-size: clamp(23px, 3vw, 36px);
+    }
+    header p {
+      max-width: 860px;
+      margin: 8px 0 0;
+      color: var(--muted);
+      line-height: 1.65;
+    }
+    .badge {
+      flex: 0 0 auto;
+      border: 1px solid #776d3e;
+      border-radius: 999px;
+      padding: 8px 12px;
+      color: #f4df89;
+      background: #2d2817;
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: .08em;
+    }
+    .layout {
+      display: grid;
+      grid-template-columns: 278px minmax(0, 1fr);
+      gap: 14px;
+      align-items: start;
+    }
+    .panel {
+      border: 1px solid var(--line);
+      border-radius: 13px;
+      background: var(--panel);
+      box-shadow: 0 20px 55px #0007;
+    }
+    aside {
+      position: sticky;
+      top: 14px;
+      padding: 16px;
+    }
+    .control + .control {
+      margin-top: 17px;
+      padding-top: 17px;
+      border-top: 1px solid #343c30;
+    }
+    .label {
+      margin-bottom: 9px;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 900;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+    .buttons {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 7px;
+    }
+    button {
+      min-height: 39px;
+      border: 1px solid #4d5846;
+      border-radius: 8px;
+      color: var(--text);
+      background: #252b21;
+      cursor: pointer;
+      font: inherit;
+      font-size: 13px;
+      font-weight: 800;
+    }
+    button:hover { border-color: #7e8c70; }
+    button.active {
+      border-color: var(--gold);
+      color: #fff0ad;
+      background: #4a4020;
+    }
+    .metric {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+      color: #d8dccd;
+      font-size: 12px;
+      line-height: 1.7;
+    }
+    .metric strong { color: #f0d879; }
+    .hint {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.58;
+    }
+    .legend {
+      display: grid;
+      gap: 7px;
+      margin-top: 8px;
+      font-size: 12px;
+      color: #d4d8cb;
+    }
+    .legend span {
+      display: grid;
+      grid-template-columns: 10px 1fr;
+      gap: 8px;
+      align-items: center;
+    }
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+    .viewer { padding: 13px; }
+    .viewer-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 10px;
+      font-size: 13px;
+    }
+    #status { font-weight: 900; }
+    .viewer-head span:last-child { color: var(--muted); }
+    .stage {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 3 / 2;
+      overflow: hidden;
+      border: 1px solid #606957;
+      border-radius: 9px;
+      background: #4a583a;
+    }
+    .stage img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+      image-rendering: auto;
+    }
+    .notes {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 9px;
+      margin-top: 11px;
+    }
+    .note {
+      padding: 12px;
+      border: 1px solid #3c4536;
+      border-radius: 9px;
+      background: var(--panel2);
+    }
+    .note strong {
+      display: block;
+      margin-bottom: 6px;
+      color: #e7d781;
+      font-size: 13px;
+    }
+    .note span {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.55;
+    }
+    @media (max-width: 840px) {
+      .badge { display: none; }
+      .layout { grid-template-columns: 1fr; }
+      aside { position: static; }
+      .notes { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <div>
+        <h1>PSネイティブ・マップアセンブラ 第1試験</h1>
+        <p>
+          demo_campaign_battle_01 の実配置レコードから、世界座標
+          (4000, 1550) を起点とする960×640区画を再構成しました。
+          全SSCを原寸・補間なし・正本原点で配置しています。
+        </p>
+      </div>
+      <div class="badge">NATIVE PSM PLACEMENTS</div>
+    </header>
+
+    <div class="layout">
+      <aside class="panel">
+        <div class="control">
+          <div class="label">実マップ区画</div>
+          <div class="buttons">
+            <button data-map="battle" class="active">Battle農村</button>
+            <button data-map="tutorial">Tutorial農村</button>
+          </div>
+        </div>
+
+        <div class="control">
+          <div class="label">描画段階</div>
+          <div class="buttons">
+            <button data-mode="final" class="active">完成区画</button>
+            <button data-mode="low">地表400件</button>
+            <button data-mode="shadows">影まで</button>
+            <button data-mode="anchors">配置原点</button>
+          </div>
+        </div>
+
+        <div class="control">
+          <div class="label">配置監査</div>
+          <div class="metric"><span>実配置総数</span><strong id="total">924</strong></div>
+          <div class="metric"><span>地表・装飾</span><strong id="low-count">400</strong></div>
+          <div class="metric"><span>立体オブジェクト</span><strong id="object-count">507</strong></div>
+          <div class="metric"><span>建物</span><strong id="building-count">17</strong></div>
+          <div class="metric"><span>欠落アセット</span><strong id="missing-count">0</strong></div>
+        </div>
+
+        <div class="control">
+          <div class="label">原点表示の色</div>
+          <div class="legend">
+            <span><i class="dot" style="background:#f6d154"></i>MAP_DECORS</span>
+            <span><i class="dot" style="background:#57cdff"></i>MAP_OBJECTS</span>
+            <span><i class="dot" style="background:#ff4f48"></i>MAP_BUILDINGS</span>
+          </div>
+        </div>
+
+        <div class="control">
+          <div class="label">まだ未確定</div>
+          <div class="hint">
+            MAP_BRIGHTNESSの適用式、MAP_TILESの意味、少数の非ゼロ建物orientation。
+            この区画はorientation=0のみで構成されています。
+          </div>
+        </div>
+      </aside>
+
+      <section class="panel viewer">
+        <div class="viewer-head">
+          <span id="status">完成区画</span>
+          <span>1 world coordinate = 1 pixel / resamplingなし</span>
+        </div>
+        <div class="stage">
+          <img id="map" alt="PS実アセットから再構成した農村区画">
+        </div>
+        <div class="notes">
+          <div class="note">
+            <strong>景観密度は配置データ由来</strong>
+            <span>道路、畑、柵、花、瓦礫、樹木をこちらで描き足していません。すべて元マップの実レコードです。</span>
+          </div>
+          <div class="note">
+            <strong>明暗はSSCに内在</strong>
+            <span>本体と影を独立スロットから読み、正本のオフセットで重ねています。生成画像処理や色調補正はありません。</span>
+          </div>
+          <div class="note">
+            <strong>次の段階</strong>
+            <span>この配置群から道路沿い・農家周囲・畑縁の局所文法を抽出し、同じ実アセットで新規seed配置を作ります。</span>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script>
+    'use strict';
+    const base = './scratch/ps_native_map_crop/';
+    const maps = {
+      battle: {
+        label: 'Battle農村',
+        prefix: 'demo_campaign_battle_01_x4000_y1550_',
+        total: 924,
+        low: 400,
+        objects: 507,
+        buildings: 17,
+        missing: 0
+      },
+      tutorial: {
+        label: 'Tutorial農村',
+        prefix: 'demo_campaign_tutorial_01_x1800_y400_',
+        total: 1175,
+        low: 449,
+        objects: 709,
+        buildings: 17,
+        missing: 0
+      }
+    };
+    const labels = {
+      final: '完成区画',
+      low: '地表400件',
+      shadows: '地表＋独立影',
+      anchors: '配置原点監査'
+    };
+    const image = document.getElementById('map');
+    const status = document.getElementById('status');
+    const state = { map: 'battle', mode: 'final' };
+
+    function setMode(mode) {
+      state.mode = mode;
+      paint();
+    }
+
+    function setMap(map) {
+      state.map = map;
+      paint();
+    }
+
+    function paint() {
+      const entry = maps[state.map];
+      const suffix = {
+        final: 'native.png',
+        low: 'low.png',
+        shadows: 'shadows.png',
+        anchors: 'anchors.png'
+      }[state.mode];
+      image.src = base + entry.prefix + suffix;
+      status.textContent = `${entry.label}・${labels[state.mode]}`;
+      document.getElementById('total').textContent = entry.total;
+      document.getElementById('low-count').textContent = entry.low;
+      document.getElementById('object-count').textContent = entry.objects;
+      document.getElementById('building-count').textContent = entry.buildings;
+      document.getElementById('missing-count').textContent = entry.missing;
+      document.querySelectorAll('[data-mode]').forEach(button => {
+        button.classList.toggle(
+          'active',
+          button.dataset.mode === state.mode
+        );
+      });
+      document.querySelectorAll('[data-map]').forEach(button => {
+        button.classList.toggle(
+          'active',
+          button.dataset.map === state.map
+        );
+      });
+    }
+    document.querySelectorAll('[data-mode]').forEach(button => {
+      button.addEventListener('click', () => setMode(button.dataset.mode));
+    });
+    document.querySelectorAll('[data-map]').forEach(button => {
+      button.addEventListener('click', () => setMap(button.dataset.map));
+    });
+    paint();
+  </script>
+</body>
+</html>
