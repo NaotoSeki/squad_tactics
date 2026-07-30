@@ -194,8 +194,14 @@ function buildSim(orderType) {
   } else if (orderType === 'MOVE_TO') {
     sim.issueOrder({ type: 'MOVE_TO', soldierIds: ['a1'], payload: { path: [{ q: 0, r: 3 }] } });
   }
-  // 命令が伝達されるまで回す
-  for (let i = 0; i < 40; i++) sim.tick();
+  // 命令が伝達されるまで回す。到達判定のため経路をこの段階から記録する
+  // （ウォームアップ中に命令先へ着いてしまうため、後半だけ見ると見落とす）
+  sim._trail = [];
+  for (let i = 0; i < 40; i++) {
+    const c = sim._soldiers.get('a1');
+    sim._trail.push(c.q + ',' + c.r);
+    sim.tick();
+  }
   return sim;
 }
 
@@ -211,8 +217,10 @@ const SPAWN_HEX = { q: 0, r: 0 };
 
 function runUnderFire(sim) {
   const spawnCover = sim.map.cover(SPAWN_HEX);
+  const visited = (sim._trail || []).slice();
   for (let i = 0; i < 30; i++) {
     const cur = sim._soldiers.get('a1');
+    visited.push(cur.q + ',' + cur.r);
     if (cur.suppression < SIM_TUNING.PINNED_AT) {
       cur.suppression = (SIM_TUNING.COVER_SEEK_AT + SIM_TUNING.PINNED_AT) / 2;
     }
@@ -224,6 +232,8 @@ function runUnderFire(sim) {
     spawnCover: spawnCover,
     endCover: sim.map.cover({ q: end.q, r: end.r }),
     relocated: end.q !== SPAWN_HEX.q || end.r !== SPAWN_HEX.r,
+    visited: visited,
+    reached: (hex) => visited.indexOf(hex.q + ',' + hex.r) !== -1,
   };
 }
 
@@ -240,12 +250,13 @@ function runUnderFire(sim) {
 }
 
 {
-  // MOVE_TO 中は自衛が割り込まないこと。命令先は遮蔽の薄い (0,3) なので、
-  // 自衛が割り込めば濃い遮蔽 (1,0) へ寄り道してしまう。
+  // MOVE_TO 中は自衛が割り込まないこと。命令先は遮蔽の薄い (0,3)。
+  // 検証は「命令先へ到達したか」で行う — 到達**後**に自衛が発動して濃い遮蔽へ
+  // 移るのは命令の中断ではなく完了後の自己判断なので、最終位置では判定できない。
   const sim = buildSim('MOVE_TO');
   const r = runUnderFire(sim);
-  check(!(r.s.q === 1 && r.s.r === 0),
-    'MOVE_TO 命令には自衛が割り込まない（プレイヤーの機動を二度手間にしない）');
+  check(r.reached({ q: 0, r: 3 }),
+    'MOVE_TO 命令は自衛に中断されず命令先へ到達する');
 }
 
 {

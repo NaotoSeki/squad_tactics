@@ -407,6 +407,12 @@ const SIM_TUNING = {
 
     SUPPRESS_PER_BURST: { rifle: 8, smg: 10, mg: 22, sniper: 15 },
     SUPPRESS_DECAY: 6, // /秒（静穏3秒後から）
+    // 制圧値の1秒あたり加算上限（2026-07-30）。集中射撃で複数人が同一目標へ撃つと
+    // 素の加算では 0→100 が一瞬で、ゲージが二値になっていた（§7.4 基準1
+    // 「制圧ゲージが観察できる」に反する）。26 なら PINNED(80) まで最短約3秒かかり、
+    // suppressed(50) を経由する中間帯が生まれて自衛の反射も効くようになる。
+    // 単発の武器差(SUPPRESS_PER_BURST)は従来どおり効く（mg22 は1バーストで通る）。
+    SUPPRESS_MAX_PER_SEC: 26,
     SUPPRESSED_AT: 50,
     PINNED_AT: 80,
     // 自動Cover（反射／2026-07-30）: 制圧 [COVER_SEEK_AT, PINNED_AT) の帯で、
@@ -428,6 +434,10 @@ const SIM_TUNING = {
     COVER_SEEK_AT: 30,
     COVER_SEEK_MAX_COVER: 0.35,
     COVER_SEEK_MIN_GAIN: 0.10,
+    // 遮蔽を探す最大距離(hex)。1hex先しか見ないと大きな畑の中では隣接6マスすべてが
+    // 同じ薄い遮蔽で逃げ場が無く動けない（2026-07-30 実測）。PINNED 時は匍匐扱いで
+    // 1hex に制限される（policy 側）。
+    COVER_SEEK_MAX_STEPS: 4,
 
     MORALE_CASUALTY_NEAR: -15, // 3hex内の味方死亡
     MORALE_LEADER_DOWN: -25,

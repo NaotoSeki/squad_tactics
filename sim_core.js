@@ -676,13 +676,43 @@ SimCore.prototype._resolveBurst = function (shooter, target, T) {
   this._emit('SHOT', { shooterId: shooter.id, targetId: target.id, hit: hit, killed: killed, crit: crit });
 
   // suppression (applied on hit or miss -- near-misses suppress too)
-  target.suppression = Math.min(100, target.suppression + shooter.weapon.suppressPerBurst);
-  // 「今撃たれている」時刻。制圧値は集中射撃で 0 か 100 に張り付き中間帯を通らない
-  // ため、自衛の反射は値ではなくこの時刻で判定する（弾が来たから動く、が自然）。
+  this._addSuppression(target, shooter.weapon.suppressPerBurst, T);
+  // 「今撃たれている」時刻。自衛の反射は制圧値ではなくこの時刻で判定する
+  // （弾が来たから動く、が自然）。
   target.underFireT = this._tick;
   this._checkSuppressionThresholds(target, T);
 
   shooter.facing = { q: target.q - shooter.q, r: target.r - shooter.r };
+};
+
+/**
+ * 制圧値を加算する。**単位時間あたりの上限**を掛けるのが本体。
+ *
+ * 集中射撃で複数人が同一目標へ撃つと、素の加算だと 0 から 100 へ即座に飽和し、
+ * 制圧ゲージが 0/100 の二値になっていた（2026-07-30 実測: 10名が
+ * 0,0,0,0,4,6,26,0,100,100）。これは NORTH_STAR §7.4 基準1「散発射撃と制圧ゲージが
+ * 観察できる」に反し、中間帯を条件にした自衛の反射も原理的に発火しなくなる。
+ *
+ * 「人はどれだけ多人数に撃たれても、単位時間あたりに怖くなれる量には上限がある」と
+ * 解釈して 1秒窓の加算量を頭打ちにする。武器ごとの差(SUPPRESS_PER_BURST)は
+ * 単発では従来どおり効く。
+ */
+SimCore.prototype._addSuppression = function (target, amount, T) {
+  const maxPerSec = T.SUPPRESS_MAX_PER_SEC;
+  let add = amount;
+
+  if (maxPerSec != null && maxPerSec > 0) {
+    const ticksPerSec = 1000 / (T.TICK_MS || 100);
+    if (target.supWinStartT == null || (this._tick - target.supWinStartT) >= ticksPerSec) {
+      target.supWinStartT = this._tick;
+      target.supWinSum = 0;
+    }
+    const room = Math.max(0, maxPerSec - (target.supWinSum || 0));
+    add = Math.min(add, room);
+    target.supWinSum = (target.supWinSum || 0) + add;
+  }
+
+  target.suppression = Math.min(100, target.suppression + add);
 };
 
 SimCore.prototype._isFlank = function (shooter, target) {

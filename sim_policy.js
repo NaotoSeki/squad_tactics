@@ -35,6 +35,68 @@ const TRAIT_MODS = {
 // TraitPolicy
 // ---------------------------------------------------------------------------
 
+/**
+ * 進入可能か。moveCost が Infinity/0/負なら不可。実装差で不明なら通す。
+ */
+function isPassable(map, from, to) {
+  if (typeof map.moveCost !== 'function') return true;
+  let cost = null;
+  try { cost = map.moveCost(from, to); } catch (e) { cost = null; }
+  if (typeof cost !== 'number') return true;
+  return isFinite(cost) && cost > 0;
+}
+
+/**
+ * 遮蔽へ向かう短距離経路を幅優先で探す。
+ *
+ * 隣接1マスしか見ないと、大きな畑の中にいる兵士は隣接6マスすべてが同じ薄い遮蔽で
+ * **逃げ場が無く**動けない（2026-07-30 実測: A1/A3 が畑の真ん中で候補0）。
+ * 「野原から林へ走る」を成立させるには数マス先を見る必要がある。
+ *
+ * 距離優先（近いものから）、同距離なら遮蔽の濃い方を選ぶ。
+ * v1 は経路途中の露出リスクを評価しない — 最短で入れる遮蔽へ向かうだけ。
+ *
+ * @returns {{path: Array<{q,r}>, cover: number}|null}
+ */
+function findCoverPath(map, start, required, minDest, maxSteps) {
+  const keyOf = (h) => h.q + ',' + h.r;
+  const seen = {};
+  seen[keyOf(start)] = true;
+  let frontier = [{ hex: start, path: [] }];
+
+  for (let depth = 1; depth <= maxSteps; depth++) {
+    const next = [];
+    let best = null;
+
+    for (let i = 0; i < frontier.length; i++) {
+      const node = frontier[i];
+      const cells = map.neighbors(node.hex) || [];
+      for (let j = 0; j < cells.length; j++) {
+        const cell = cells[j];
+        if (!cell) continue;
+        const k = keyOf(cell);
+        if (seen[k]) continue;
+        seen[k] = true;
+        if (!isPassable(map, node.hex, cell)) continue;
+
+        const c = map.cover(cell);
+        if (typeof c !== 'number') continue;
+        const path = node.path.concat([{ q: cell.q, r: cell.r }]);
+
+        if (c >= minDest && c >= required - 1e-9) {
+          if (!best || c > best.cover) best = { path: path, cover: c };
+        }
+        next.push({ hex: cell, path: path });
+      }
+    }
+
+    if (best) return best;   // この距離で見つかった中の最良（=最短距離優先）
+    frontier = next;
+    if (!frontier.length) break;
+  }
+  return null;
+}
+
 const TraitPolicy = {
   /**
    * 自衛の反射（自動Cover）。撃たれて露出しているなら隣接のより濃い遮蔽へ退避する。
@@ -72,9 +134,14 @@ const TraitPolicy = {
       : false;
     const inSuppressionBand = s.suppression >= coverSeekAt;
     if (!recentlyShotAt && !inSuppressionBand) return null;
-    // PINNED 以上は頭を上げていられない状態で、開けた地面を走るのは自殺なので
-    // 伏せたまま動かない（NORTH_STAR §3.2「自衛のみ」）。
-    if (s.suppression >= pinnedAt) return null;
+
+    // PINNED でも「匍匐で隣の遮蔽へ」だけは許す。§3.2 は pinned を「自衛のみ」と
+    // 定めており、弾雨の中で遮蔽へ這うのはまさに自衛そのもの。ただし走って
+    // 数マス渡るのは自殺なので、PINNED 時は 1hex に制限する。
+    const pinned = s.suppression >= pinnedAt;
+    const maxSteps = pinned
+      ? 1
+      : (T.COVER_SEEK_MAX_STEPS != null ? T.COVER_SEEK_MAX_STEPS : 4);
     if (s.state === 'move' || (s.movePath && s.movePath.length > 0)) return null;
     if (!map || typeof map.neighbors !== 'function' || typeof map.cover !== 'function') return null;
     // timid は自発行動が止まる（SS13）。竦んで動けない方が性格として正しい。
@@ -86,35 +153,20 @@ const TraitPolicy = {
 
     // cautious は薄い遮蔽へは動かない。既存の movePath ガードと同じ閾値を使う。
     const minDest = has('cautious') ? TRAIT_MODS.cautious.MIN_SELF_MOVE_COVER : 0;
-    const cells = map.neighbors(here) || [];
     // 必要な遮蔽。**以上**で採用する（超過ではない）。地形の遮蔽値は 0.05 刻みに
     // 量子化されていて（草0.10/畑0.15/林0.25/道0.35/町0.40）、改善幅がちょうど
     // 閾値に一致するケースが頻発する。厳密不等号だと畑0.15→林0.25(要求0.25)が
     // 常に落ちて、実質どこへも退避できなかった（2026-07-30 実機で確認）。
     const required = hereCover + seekMinGain;
-    let best = null;
-    let bestCover = -1;
 
-    for (let i = 0; i < cells.length; i++) {
-      const cell = cells[i];
-      if (!cell) continue;
-      if (typeof map.moveCost === 'function') {
-        let cost = null;
-        try { cost = map.moveCost(here, cell); } catch (e) { cost = null; }
-        // 進入不可(Infinity/0/負)は除外。moveCost の実装差で不明なら通す。
-        if (typeof cost === 'number' && !(isFinite(cost) && cost > 0)) continue;
-      }
-      const c = map.cover(cell);
-      if (typeof c !== 'number' || c < minDest) continue;
-      if (c < required - 1e-9) continue;   // 改善幅が足りない
-      if (c > bestCover) { bestCover = c; best = cell; }
-    }
+    const found = findCoverPath(map, here, required, minDest, maxSteps);
+    if (!found) return null;
 
-    if (!best) return null;
+    const label = pinned ? '匍匐で遮蔽へ' : '遮蔽へ退避';
     return {
       type: 'MOVE_TO', soldierIds: [s.id],
-      payload: { path: [{ q: best.q, r: best.r }] },
-      note: has('cautious') ? '慎重: 被制圧、濃い遮蔽へ退避' : '被制圧: 遮蔽へ退避',
+      payload: { path: found.path },
+      note: (has('cautious') ? '慎重: 被制圧、' : '被制圧: ') + label,
     };
   },
 
