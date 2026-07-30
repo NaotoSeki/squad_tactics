@@ -217,12 +217,119 @@ SimBattleAdapter.prototype.selectById = function (id) {
   this.selectedUnit = found || null;
 };
 
+// ---------------------------------------------------------------------------
+// 4. PS正本マップ上で sim を回す（2026-07-30）
+//
+// 合成グリッド(buildBattleMap)は「遮蔽0.5の市街に全員が潜る」盤面なので、開豁地が
+// 存在せず自動Coverを観察できない。本編と同じ PS 30hex 地形の上で回すための経路。
+// RuralV29Map.generate() が game.map[q][r] へ TERRAIN セルを敷く形は buildBattleMap
+// の返す grid と同形なので、そのまま MapApi へ載せられる。
+// ---------------------------------------------------------------------------
+
+/**
+ * PS正本マップ(ps_seed_*)の地形を sim 用グリッドとして得る。
+ * @param {string} [seedName] - PS_BATTLEFIELDS のキー。省略時は RuralV29Map の通常選択
+ * @returns {{grid: Array<Array<Object>>, W: number, H: number, variant: Object}}
+ */
+function buildPsBattleMap(seedName) {
+  const rural = (typeof window !== 'undefined') ? window.RuralV29Map : null;
+  if (!rural || typeof rural.generate !== 'function') {
+    throw new Error('RuralV29Map が読み込まれていません（logic_map_rural_v29.js）');
+  }
+  if (seedName) rural.fixedVariant = seedName;
+
+  // generate が触るのは game.map だけなのでスタブで足りる
+  const stub = {};
+  rural.generate(stub);
+  if (!stub.map) throw new Error('RuralV29Map.generate が map を生成しませんでした');
+
+  return { grid: stub.map, W: MAP_W, H: MAP_H, variant: rural.lastVariant };
+}
+
+/**
+ * PS地形グリッド上の sim_core MapApi。
+ *
+ * 合成マップ用の makeBattleMapApi と違い、遮蔽は id 参照表ではなく**セルが持つ
+ * cover 値(0..100)を直接**使う。PS地形には FIELD(id7) や BLDG(id6) のように
+ * SIM_TUNING.TERRAIN_COVER に無い id が出るため、id 表では 0 に落ちてしまう。
+ *
+ * 進入不可（建物・cost>=IMPASSABLE_COST）は moveCost で **Infinity** を返す。
+ * 99 のような「高いだけの有限値」だと自衛の退避先として選ばれて建物へ突っ込む。
+ *
+ * @param {{grid, W, H}} mapData
+ * @returns {Object} MapApi
+ */
+const IMPASSABLE_COST = 99;
+
+function makePsBattleMapApi(mapData) {
+  const grid = mapData.grid, W = mapData.W, H = mapData.H;
+  const coverTable = (typeof SIM_TUNING !== 'undefined' && SIM_TUNING.TERRAIN_COVER) || {};
+
+  const cellAt = (hex) => {
+    if (!hex || hex.q < 0 || hex.q >= W || hex.r < 0 || hex.r >= H) return null;
+    const col = grid[hex.q];
+    return col ? col[hex.r] : null;
+  };
+  // 30hexの盤面は MAP_W×MAP_H キャンバス内の島で、外側は VOID(id -1)
+  const isPlayable = (cell) => !!cell && cell.id !== -1;
+
+  return {
+    _grid: grid, _W: W, _H: H,
+    dist: (a, b) => {
+      const dq = a.q - b.q, dr = a.r - b.r;
+      return (Math.abs(dq) + Math.abs(dq + dr) + Math.abs(dr)) / 2;
+    },
+    // v1: LOS は常に true（SPEC §17 façade の簡略化に合わせる）
+    hasLos: () => true,
+    cover: (hex) => {
+      const cell = cellAt(hex);
+      if (!isPlayable(cell)) return 0;
+      if (typeof cell.cover === 'number') return Math.max(0, Math.min(1, cell.cover / 100));
+      return coverTable[cell.id] != null ? coverTable[cell.id] : 0;
+    },
+    moveCost: (from, to) => {
+      const cell = cellAt(to || from);
+      if (!isPlayable(cell)) return Infinity;
+      if (cell.building) return Infinity;
+      const cost = typeof cell.cost === 'number' ? cell.cost : IMPASSABLE_COST;
+      return cost >= IMPASSABLE_COST ? Infinity : cost;
+    },
+    neighbors: (hex) => [
+      { q: hex.q + 1, r: hex.r }, { q: hex.q - 1, r: hex.r },
+      { q: hex.q, r: hex.r + 1 }, { q: hex.q, r: hex.r - 1 },
+      { q: hex.q + 1, r: hex.r - 1 }, { q: hex.q - 1, r: hex.r + 1 },
+    ].filter((h) => isPlayable(cellAt(h))),
+  };
+}
+
+/**
+ * 盤面から「配置に使える hex」を集める。開豁地(遮蔽薄)と遮蔽地を分けて返すので、
+ * 自動Coverが観察できる初期配置（露出した兵士を混ぜる）を組める。
+ * @param {Object} api - makePsBattleMapApi の返り値
+ * @param {number} [exposedBelow=0.2] - これ未満を開豁地とみなす
+ */
+function collectPlayableHexes(api, exposedBelow) {
+  const limit = exposedBelow != null ? exposedBelow : 0.2;
+  const exposed = [], covered = [];
+  for (let q = 0; q < api._W; q++) {
+    for (let r = 0; r < api._H; r++) {
+      const hex = { q: q, r: r };
+      if (!isFinite(api.moveCost(hex, hex))) continue;
+      (api.cover(hex) < limit ? exposed : covered).push(hex);
+    }
+  }
+  return { exposed: exposed, covered: covered };
+}
+
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
     SimBattleAdapter,
     buildBattleMap,
     makeBattleMapApi,
     toRenderGrid,
+    buildPsBattleMap,
+    makePsBattleMapApi,
+    collectPlayableHexes,
     BATTLE_MAP_W,
     BATTLE_MAP_H,
   };
@@ -232,4 +339,7 @@ if (typeof window !== 'undefined') {
   window.buildBattleMap = buildBattleMap;
   window.makeBattleMapApi = makeBattleMapApi;
   window.toRenderGrid = toRenderGrid;
+  window.buildPsBattleMap = buildPsBattleMap;
+  window.makePsBattleMapApi = makePsBattleMapApi;
+  window.collectPlayableHexes = collectPlayableHexes;
 }

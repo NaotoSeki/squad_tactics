@@ -57,6 +57,16 @@
 <script src="phaser_terrain.js"></script>
 <script src="phaser_unit.js"></script>
 <script src="phaser_soldier_view.js"></script>
+<!-- PS正本HDマップ（2026-07-30）: 合成グリッドでは開豁地が無く自動Coverを観察できないため、
+     本編と同じ PS 30hex 地形＋HD地面＋立体物の上で sim を回す。本編の起動経路
+     (phaser_bridge.js) は読み込まない — 描画モジュールだけを共有する。 -->
+<script src="asset/environment/maps/ps_battlefields.js"></script>
+<script src="logic_map_rural_v29.js"></script>
+<script src="phaser_terrain_rural_v29.js"></script>
+<script src="phaser_decals.js"></script>
+<script src="phaser_ps_objects.js"></script>
+<script src="phaser_vegetation_layer.js"></script>
+<script src="phaser_scene_composition.js"></script>
 <script>
 /**
  * sim_battle.html -- WS-G (docs/SIM_CORE_SPEC.md SS17). Product-view integration:
@@ -149,6 +159,22 @@ class SimBattleScene extends Phaser.Scene {
     // animations even though v1 only spawns infantry -- these textures must exist.
     this.load.spritesheet('tank_sheet', 'asset/tank_sheet_1.png', { frameWidth: 128, frameHeight: 128 });
     this.load.spritesheet('explosion_sheet', 'asset/explosion_sheet_1.png', { frameWidth: 64, frameHeight: 64 });
+
+    // PS立体物の台帳3種。背景画像とスプライト本体は TerrainRenderRuralV29 が
+    // 自己遅延ロードするので、ここで要るのは manifest だけ
+    // （_buildPsObjects は PsObjectLayer.manifest が無いと黙ってスキップする）。
+    this.load.json('ps_objects_manifest', 'asset/environment/ps_objects/manifest.json');
+    this.load.once('filecomplete-json-ps_objects_manifest', (k, t, data) => {
+      if (window.PsObjectLayer) window.PsObjectLayer.manifest = data;
+    });
+    this.load.json('raised_hd_manifest', 'asset/environment/raised_hd/manifest.json');
+    this.load.once('filecomplete-json-raised_hd_manifest', (k, t, data) => {
+      if (window.PsObjectLayer) window.PsObjectLayer.hdManifest = data;
+    });
+    this.load.json('tree_hd_ps_manifest', 'asset/environment/trees_hd/production/runtime_ps_manifest.json');
+    this.load.once('filecomplete-json-tree_hd_ps_manifest', (k, t, data) => {
+      if (window.PsObjectLayer) window.PsObjectLayer.treeHdManifest = data;
+    });
   }
 
   create() {
@@ -157,8 +183,20 @@ class SimBattleScene extends Phaser.Scene {
     window.simBattleScene = this;
 
     // ---- sim_core wiring (logic layer only, unmodified modules) ----
-    this.mapData = window.buildBattleMap();
-    this.map = window.makeBattleMapApi(this.mapData);
+    // PS正本マップ(既定)。?map=synthetic で旧合成グリッドへ戻せる。
+    // 合成グリッドは全員が遮蔽0.5に潜る盤面なので開豁地が無く、自動Coverを観察できない。
+    const params = new URLSearchParams(location.search);
+    const mapArg = params.get('map');
+    this.psMode = mapArg !== 'synthetic';
+    if (this.psMode) {
+      const seedName = (mapArg && mapArg !== 'ps') ? mapArg : 'ps_seed_3102';
+      this.mapData = window.buildPsBattleMap(seedName);
+      this.map = window.makePsBattleMapApi(this.mapData);
+      this.psVariant = this.mapData.variant;
+    } else {
+      this.mapData = window.buildBattleMap();
+      this.map = window.makeBattleMapApi(this.mapData);
+    }
     const seed = this.seed || 1;
     const rng = mulberry32(seed);
     this.sim = new SimCore({ map: this.map, tuning: SIM_TUNING, rng, policy: TraitPolicy });
@@ -183,8 +221,19 @@ class SimBattleScene extends Phaser.Scene {
     this.tracerGraphics = this.add.graphics().setDepth(1900);
     this.noteLayer = this.add.container(0, 0).setDepth(2100);
 
-    const renderGrid = window.toRenderGrid(this.mapData);
-    window.TerrainRender.buildMap(this, this.hexGroup, renderGrid, this.decorGroup, this.roadGraphics);
+    if (this.psMode) {
+      // 本編 phaser_bridge.createMap() の農村V29モードと同じ順序。
+      // PS正本背景は木・低木まで焼き込み済みなので植生の再散布はしない（二重になる）。
+      window.TerrainRenderRuralV29.buildMap(this, this.hexGroup, this.mapData.grid);
+      const psNativeBg = !!(this.psVariant && this.psVariant.psNative);
+      if (window.VegetationLayer && !psNativeBg) {
+        window.VegetationLayer.build(this, this.mapData.grid);
+      }
+      if (window.SceneComposition) window.SceneComposition.applyGrade(this);
+    } else {
+      const renderGrid = window.toRenderGrid(this.mapData);
+      window.TerrainRender.buildMap(this, this.hexGroup, renderGrid, this.decorGroup, this.roadGraphics);
+    }
 
     // ---- ③ SimBattleAdapter façade drives UnitView (無改変) ----
     this.gameLogic = new SimBattleAdapter(this.sim);
@@ -197,9 +246,19 @@ class SimBattleScene extends Phaser.Scene {
     this.buildOverlays();
 
     // camera centered on the battle grid
-    const c = Renderer.hexToPx(this.mapData.W / 2, this.mapData.H / 2);
+    // PS盤面は MAP_W×MAP_H キャンバス内の30hexの島なので、キャンバス中央ではなく
+    // 実際に進入できる hex の重心へ寄せる（そうしないと VOID の海を見てしまう）。
+    let c;
+    if (this.psMode) {
+      const all = this.sim.soldiers();
+      const cq = all.reduce((a, s) => a + s.q, 0) / Math.max(1, all.length);
+      const cr = all.reduce((a, s) => a + s.r, 0) / Math.max(1, all.length);
+      c = Renderer.hexToPx(cq, cr);
+    } else {
+      c = Renderer.hexToPx(this.mapData.W / 2, this.mapData.H / 2);
+    }
     this.cameras.main.centerOn(c.x, c.y);
-    this.cameras.main.setZoom(1.1);
+    this.cameras.main.setZoom(this.psMode ? 0.8 : 1.1);
 
     this.setupInput();
     this.game.events.emit('sim-ready');
@@ -216,13 +275,43 @@ class SimBattleScene extends Phaser.Scene {
     const TRAITS = [[], ['aggressive'], ['cautious'], ['calm'], ['timid']];
     const magsFor = (w) => (SIM_TUNING.DEFAULT_MAGS && SIM_TUNING.DEFAULT_MAGS[w.class]) || 6;
     const W = this.mapData.W;
+
+    if (!this.psMode) {
+      for (let i = 0; i < 5; i++) {
+        const w = (i === 0) ? mg : rifle;
+        this.sim.addSoldier({ id: 'A' + i, team: 'A', q: 1, r: i + 1, weapon: w, ammo: { mags: magsFor(w) }, skill: 1.0, isLeader: i === 0, traits: TRAITS[i], facing: { q: 1, r: 0 } });
+      }
+      for (let i = 0; i < 5; i++) {
+        const w = (i === 0) ? smg : rifle;
+        this.sim.addSoldier({ id: 'B' + i, team: 'B', q: W - 2, r: i + 1, weapon: w, ammo: { mags: magsFor(w) }, skill: 1.0, isLeader: i === 0, traits: TRAITS[i], facing: { q: -1, r: 0 } });
+      }
+      return;
+    }
+
+    // PS盤面: 実際に進入できる hex へ配置する。**A隊は意図的に開豁地へ置く** —
+    // 自動Coverが観察できる初期条件（撃たれたら遮蔽へ走る絵）を作るため。
+    // B隊は遮蔽側へ置いて撃たせる。
+    const cells = window.collectPlayableHexes(this.map);
+    const cover = this.map.cover.bind(this.map);
+    const byQ = (a, b) => (a.q - b.q) || (a.r - b.r);
+    // 盤面を左右に割り、A=左寄りの開豁地、B=右寄りの遮蔽地から選ぶ
+    const midQ = cells.exposed.concat(cells.covered)
+      .reduce((acc, h) => acc + h.q, 0) / Math.max(1, cells.exposed.length + cells.covered.length);
+    const aPool = cells.exposed.filter(h => h.q <= midQ).sort(byQ);
+    const bPool = cells.covered.filter(h => h.q > midQ).sort((a, b) => cover(b) - cover(a));
+    const fallback = cells.exposed.concat(cells.covered).sort(byQ);
+
+    const pick = (pool, i) => pool[Math.floor(i * Math.max(1, pool.length - 1) / 4)] || fallback[i] || { q: 1, r: 1 };
+
     for (let i = 0; i < 5; i++) {
       const w = (i === 0) ? mg : rifle;
-      this.sim.addSoldier({ id: 'A' + i, team: 'A', q: 1, r: i + 1, weapon: w, ammo: { mags: magsFor(w) }, skill: 1.0, isLeader: i === 0, traits: TRAITS[i], facing: { q: 1, r: 0 } });
+      const h = pick(aPool.length >= 5 ? aPool : fallback, i);
+      this.sim.addSoldier({ id: 'A' + i, team: 'A', q: h.q, r: h.r, weapon: w, ammo: { mags: magsFor(w) }, skill: 1.0, isLeader: i === 0, traits: TRAITS[i], facing: { q: 1, r: 0 } });
     }
     for (let i = 0; i < 5; i++) {
       const w = (i === 0) ? smg : rifle;
-      this.sim.addSoldier({ id: 'B' + i, team: 'B', q: W - 2, r: i + 1, weapon: w, ammo: { mags: magsFor(w) }, skill: 1.0, isLeader: i === 0, traits: TRAITS[i], facing: { q: -1, r: 0 } });
+      const h = pick(bPool.length >= 5 ? bPool : fallback.slice().reverse(), i);
+      this.sim.addSoldier({ id: 'B' + i, team: 'B', q: h.q, r: h.r, weapon: w, ammo: { mags: magsFor(w) }, skill: 1.0, isLeader: i === 0, traits: TRAITS[i], facing: { q: -1, r: 0 } });
     }
   }
 
@@ -482,12 +571,24 @@ class SimBattleScene extends Phaser.Scene {
 // ---------------------------------------------------------------------------
 const gv = document.getElementById('game-view');
 
+// ?bare=1 : サイドバー(320px)とHUDを畳んで盤面を全面表示する検分モード。
+// 狭いペイン(500px級)だと #side に押し出されてキャンバスが数十pxになり、
+// 盤面が事実上見えないため（2026-07-30、14pxまで潰れた）。
+if (new URLSearchParams(location.search).get('bare') === '1') {
+  const side = document.getElementById('side');
+  const hud = document.getElementById('hud');
+  if (side) side.style.display = 'none';
+  if (hud) hud.style.display = 'none';
+}
+
 function scene() { return window.simGame ? window.simGame.scene.getScene('SimBattleScene') : null; }
 
 function bootGame() {
   const config = {
     type: Phaser.AUTO, parent: 'game-view',
-    width: gv.clientWidth, height: gv.clientHeight,
+    // レイアウト確定前に clientWidth が 0 付近になることがあるので下限を設ける
+    width: Math.max(320, gv.clientWidth || window.innerWidth),
+    height: Math.max(240, gv.clientHeight || window.innerHeight),
     backgroundColor: '#16140f', pixelArt: false,
     fps: { target: 60 },
     scene: [SimBattleScene],

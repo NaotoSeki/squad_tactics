@@ -303,7 +303,7 @@ SimCore.prototype._snapshot = function (s) {
     weapon: s.weapon, ammo: { mags: s.magsLeft }, grenades: s.grenades, skill: s.skill,
     isLeader: s.isLeader, traits: s.traits.slice(),
     hp: s.hp, state: s.state, stateT: s.stateT,
-    suppression: s.suppression, morale: s.morale,
+    suppression: s.suppression, morale: s.morale, underFireT: s.underFireT,
     magRemaining: s.magRemaining, magsLeft: s.magsLeft, fireMode: s.fireMode,
     facing: s.facing, currentOrder: s.currentOrder, movePath: s.movePath ? s.movePath.slice() : null,
     aimT: s.aimT, reloadT: s.reloadT,
@@ -369,7 +369,8 @@ SimCore.prototype._phaseDeliverOrders = function () {
 SimCore.prototype._phaseDecide = function () {
   const T = this.tuning;
   const interval = Math.max(1, T.DECISION_INTERVAL_T);
-  const worldView = { soldiers: this.soldiers(), map: this.map, tuning: T };
+  // tick は policy が「今撃たれているか」(underFireT との差) を判定するのに使う
+  const worldView = { soldiers: this.soldiers(), map: this.map, tuning: T, tick: this._tick };
 
   this._soldiers.forEach((s) => {
     if (s.hp <= 0) return;
@@ -676,6 +677,9 @@ SimCore.prototype._resolveBurst = function (shooter, target, T) {
 
   // suppression (applied on hit or miss -- near-misses suppress too)
   target.suppression = Math.min(100, target.suppression + shooter.weapon.suppressPerBurst);
+  // 「今撃たれている」時刻。制圧値は集中射撃で 0 か 100 に張り付き中間帯を通らない
+  // ため、自衛の反射は値ではなくこの時刻で判定する（弾が来たから動く、が自然）。
+  target.underFireT = this._tick;
   this._checkSuppressionThresholds(target, T);
 
   shooter.facing = { q: target.q - shooter.q, r: target.r - shooter.r };

@@ -199,18 +199,32 @@ function buildSim(orderType) {
   return sim;
 }
 
-/** a1 を制圧帯へ押し上げ、数tick回して結果を見る。 */
-function pushIntoBand(sim) {
-  const s = sim._soldiers.get('a1');
-  s.suppression = (SIM_TUNING.COVER_SEEK_AT + SIM_TUNING.PINNED_AT) / 2; // 帯の中央
+/**
+ * a1 を撃たれ続けている状態で回し、**生成位置(0,0 / 遮蔽0.05)から遮蔽が改善したか**を見る。
+ *
+ * 検証を movePath の残存にしないこと: 隣接1マスの移動は1tickで完走するため
+ * サンプル時点では空配列に戻っている。また新トリガ（撃たれた時刻）は反応が早く、
+ * ウォームアップ中に退避が完了してしまう。よって「どこから撃たれ始めたか」ではなく
+ * 「生成位置と比べて濃い遮蔽に居るか」で判定する（2026-07-30、両方で一度誤って落ちた）。
+ */
+const SPAWN_HEX = { q: 0, r: 0 };
+
+function runUnderFire(sim) {
+  const spawnCover = sim.map.cover(SPAWN_HEX);
   for (let i = 0; i < 30; i++) {
-    sim.tick();
     const cur = sim._soldiers.get('a1');
-    if (cur.movePath && cur.movePath.length > 0) return cur;
-    if (cur.suppression >= SIM_TUNING.PINNED_AT) break;
-    cur.suppression = (SIM_TUNING.COVER_SEEK_AT + SIM_TUNING.PINNED_AT) / 2; // 減衰を打ち消す
+    if (cur.suppression < SIM_TUNING.PINNED_AT) {
+      cur.suppression = (SIM_TUNING.COVER_SEEK_AT + SIM_TUNING.PINNED_AT) / 2;
+    }
+    sim.tick();
   }
-  return sim._soldiers.get('a1');
+  const end = sim._soldiers.get('a1');
+  return {
+    s: end,
+    spawnCover: spawnCover,
+    endCover: sim.map.cover({ q: end.q, r: end.r }),
+    relocated: end.q !== SPAWN_HEX.q || end.r !== SPAWN_HEX.r,
+  };
 }
 
 {
@@ -218,28 +232,26 @@ function pushIntoBand(sim) {
   const before = sim._soldiers.get('a1');
   check(before.currentOrder && before.currentOrder.type === 'TARGET',
     'TARGET 命令が実際に立っている（前提確認）');
-  const after = pushIntoBand(sim);
-  check(!!(after.movePath && after.movePath.length > 0),
-    'TARGET 命令下でも、制圧されて露出していれば遮蔽へ退避する');
-  check(after.lastPolicyNote && after.lastPolicyNote.indexOf('遮蔽') !== -1,
+  const r = runUnderFire(sim);
+  check(r.relocated && r.endCover > r.spawnCover,
+    'TARGET 命令下でも、撃たれて露出していれば遮蔽へ退避する');
+  check(r.s.lastPolicyNote && r.s.lastPolicyNote.indexOf('遮蔽') !== -1,
     '退避が POLICY ノートとして可視化される');
 }
 
 {
+  // MOVE_TO 中は自衛が割り込まないこと。命令先は遮蔽の薄い (0,3) なので、
+  // 自衛が割り込めば濃い遮蔽 (1,0) へ寄り道してしまう。
   const sim = buildSim('MOVE_TO');
-  const s0 = sim._soldiers.get('a1');
-  const target = s0.movePath && s0.movePath.length ? s0.movePath[s0.movePath.length - 1] : null;
-  const after = pushIntoBand(sim);
-  const stillGoing = after.movePath && after.movePath.length
-    ? after.movePath[after.movePath.length - 1] : null;
-  check(target === null || stillGoing === null || (stillGoing.q === target.q && stillGoing.r === target.r),
-    'MOVE_TO 命令には割り込まない（プレイヤーの機動を二度手間にしない）');
+  const r = runUnderFire(sim);
+  check(!(r.s.q === 1 && r.s.r === 0),
+    'MOVE_TO 命令には自衛が割り込まない（プレイヤーの機動を二度手間にしない）');
 }
 
 {
   const sim = buildSim(null);
-  const after = pushIntoBand(sim);
-  check(!!(after.movePath && after.movePath.length > 0),
+  const r = runUnderFire(sim);
+  check(r.relocated && r.endCover > r.spawnCover,
     '無命令でも従来通り退避する（decide 経路の回帰確認）');
 }
 

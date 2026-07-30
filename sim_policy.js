@@ -60,10 +60,21 @@ const TraitPolicy = {
     const pinnedAt = T.PINNED_AT != null ? T.PINNED_AT : 80;
     const seekMaxCover = T.COVER_SEEK_MAX_COVER != null ? T.COVER_SEEK_MAX_COVER : 0.35;
     const seekMinGain = T.COVER_SEEK_MIN_GAIN != null ? T.COVER_SEEK_MIN_GAIN : 0.2;
+    const underFireWindow = T.COVER_SEEK_UNDER_FIRE_T != null ? T.COVER_SEEK_UNDER_FIRE_T : 30;
 
-    // 発火帯は [COVER_SEEK_AT, PINNED_AT)。PINNED 以上は頭を上げていられない状態で
-    // 開けた地面を走るのは自殺なので伏せたまま動かない。
-    if (!(s.suppression >= coverSeekAt && s.suppression < pinnedAt)) return null;
+    // 主トリガは「今撃たれているか」。制圧値は集中射撃で 0 か 100 に張り付き、
+    // 中間帯をほぼ通過しないため（2026-07-30 実測: 10名が 0,0,0,0,4,6,26,0,100,100)、
+    // 値の帯だけを条件にすると原理的にほぼ発火しない。弾が来たから動く方が自然。
+    // 制圧値の帯は補助トリガとして残す（撃たれていなくても既に制圧されているケース）。
+    const tick = (typeof worldView.tick === 'number') ? worldView.tick : null;
+    const recentlyShotAt = (tick != null && typeof s.underFireT === 'number')
+      ? (tick - s.underFireT) <= underFireWindow
+      : false;
+    const inSuppressionBand = s.suppression >= coverSeekAt;
+    if (!recentlyShotAt && !inSuppressionBand) return null;
+    // PINNED 以上は頭を上げていられない状態で、開けた地面を走るのは自殺なので
+    // 伏せたまま動かない（NORTH_STAR §3.2「自衛のみ」）。
+    if (s.suppression >= pinnedAt) return null;
     if (s.state === 'move' || (s.movePath && s.movePath.length > 0)) return null;
     if (!map || typeof map.neighbors !== 'function' || typeof map.cover !== 'function') return null;
     // timid は自発行動が止まる（SS13）。竦んで動けない方が性格として正しい。
@@ -76,8 +87,13 @@ const TraitPolicy = {
     // cautious は薄い遮蔽へは動かない。既存の movePath ガードと同じ閾値を使う。
     const minDest = has('cautious') ? TRAIT_MODS.cautious.MIN_SELF_MOVE_COVER : 0;
     const cells = map.neighbors(here) || [];
+    // 必要な遮蔽。**以上**で採用する（超過ではない）。地形の遮蔽値は 0.05 刻みに
+    // 量子化されていて（草0.10/畑0.15/林0.25/道0.35/町0.40）、改善幅がちょうど
+    // 閾値に一致するケースが頻発する。厳密不等号だと畑0.15→林0.25(要求0.25)が
+    // 常に落ちて、実質どこへも退避できなかった（2026-07-30 実機で確認）。
+    const required = hereCover + seekMinGain;
     let best = null;
-    let bestCover = hereCover + seekMinGain;
+    let bestCover = -1;
 
     for (let i = 0; i < cells.length; i++) {
       const cell = cells[i];
@@ -90,6 +106,7 @@ const TraitPolicy = {
       }
       const c = map.cover(cell);
       if (typeof c !== 'number' || c < minDest) continue;
+      if (c < required - 1e-9) continue;   // 改善幅が足りない
       if (c > bestCover) { bestCover = c; best = cell; }
     }
 

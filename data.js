@@ -411,11 +411,23 @@ const SIM_TUNING = {
     PINNED_AT: 80,
     // 自動Cover（反射／2026-07-30）: 制圧 [COVER_SEEK_AT, PINNED_AT) の帯で、
     // 現在地の遮蔽が COVER_SEEK_MAX_COVER 未満なら隣接のより濃い遮蔽へ自発退避する。
-    // PINNED 以上は伏せたまま動かない。COVER_SEEK_MIN_GAIN 未満の改善では動かない
-    // （わずかな差で右往左往させない）。命令があるときは sim_core が優先するので競合しない。
-    COVER_SEEK_AT: 50,
+    // PINNED 以上は伏せたまま動かない（NORTH_STAR §3.2「自衛のみ」）。
+    // 命令があっても自衛は割り込む（sim_core が selfPreserve を別途参照）。
+    //
+    // 実測調整（2026-07-30、PS seed 3102 で観察）:
+    // - AT=50 だと発火しなかった。制圧値は実戦だと 0 か 100 に張り付き、[50,80) を
+    //   ほぼ通過しない。30 にして「初弾が来た時点で動く」= 制圧されきる前に退避させる。
+    //   timid の FREEZE_AT_SUPPRESSION(40) との間に窓ができ、性格差も出る。
+    // - MIN_GAIN=0.2 も過大だった。地形の遮蔽値は圧縮されていて
+    //   （草0.10 / 畑0.15 / 林0.25 / 道0.35 / 町0.40）、**畑から林へ移る**という
+    //   最も自然な行動が +0.10 しかなく弾かれていた。0.10 なら通り、
+    //   草→畑(+0.05)のような無意味な移動は依然弾く。
+    // 主トリガ: 最後に撃たれてから何tick以内なら「今撃たれている」とみなすか。
+    // 30tick = 3秒(100ms/tick)。制圧値の帯(COVER_SEEK_AT)は補助トリガとして残す。
+    COVER_SEEK_UNDER_FIRE_T: 30,
+    COVER_SEEK_AT: 30,
     COVER_SEEK_MAX_COVER: 0.35,
-    COVER_SEEK_MIN_GAIN: 0.2,
+    COVER_SEEK_MIN_GAIN: 0.10,
 
     MORALE_CASUALTY_NEAR: -15, // 3hex内の味方死亡
     MORALE_LEADER_DOWN: -25,
