@@ -1,0 +1,7 @@
+{
+  "_comment": "パリティ/方向判定専用。sp_render_frames.py に直接渡す(sp_pipeline.py経由では使わない)。step大でframe 1のみ ×8方向。",
+  "jobs": [
+    { "name": "parity_stand_idle", "action": "Stand.Idle", "step": 300 },
+    { "name": "parity_prone_fire", "action": "Prone.Fire", "step": 300 }
+  ]
+}

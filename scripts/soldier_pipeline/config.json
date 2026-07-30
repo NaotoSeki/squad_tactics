@@ -1,0 +1,16 @@
+{
+  "blender_exe": "C:/Program Files/Blender Foundation/Blender 5.0/blender.exe",
+  "master_blend": "C:/Users/aware.梨花のPC/Documents/sprite_sheet_multi_motions_2.blend",
+  "work_blend": "C:/Projects/squad_tactics/scratch/soldier_pipeline/work.blend",
+  "fbx_drop_dir": "C:/Projects/squad_tactics/asset_src/soldier_fbx",
+  "fbx_map": "C:/Projects/squad_tactics/asset_src/soldier_fbx/map.json",
+  "frames_dir": "C:/Projects/squad_tactics/scratch/soldier_pipeline/frames",
+  "sheets_dir": "C:/Users/aware.梨花のPC/Documents/output/spritesheets",
+  "jobs": "C:/Projects/squad_tactics/scripts/soldier_pipeline/jobs.json",
+  "transitions": "C:/Projects/squad_tactics/scripts/soldier_pipeline/transitions.json",
+  "synth_clips": "C:/Projects/squad_tactics/scripts/soldier_pipeline/synth_clips.json",
+  "repack": "C:/Projects/squad_tactics/scripts/repack_soldier_sheets_v2.py",
+  "scripts_dir": "C:/Projects/squad_tactics/scripts/soldier_pipeline",
+  "repack_args": ["--char-h", "72"],
+  "render_args": ["--camera", "SpriteCam", "--ortho-scale", "4.67", "--shift-up", "0.43", "--rot-sign", "-1"]
+}

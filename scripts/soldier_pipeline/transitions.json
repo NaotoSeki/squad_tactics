@@ -1,0 +1,18 @@
+{
+  "transitions": [
+    { "from": "Stand.Idle", "to": "Stand.Fire", "name": "Trans.Stand.Idle__Stand.Fire", "frames": 6 },
+    { "from": "Stand.Fire", "to": "Stand.Idle", "name": "Trans.Stand.Fire__Stand.Idle", "frames": 10 },
+    { "from": "Kneel.Idle", "to": "Kneel.Fire", "name": "Trans.Kneel.Idle__Kneel.Fire", "frames": 6 },
+    { "from": "Kneel.Fire", "to": "Kneel.Idle", "name": "Trans.Kneel.Fire__Kneel.Idle", "frames": 10 },
+    { "from": "Prone.Idle", "to": "Prone.Fire", "name": "Trans.Prone.Idle__Prone.Fire", "frames": 6 },
+    { "from": "Prone.Fire", "to": "Prone.Idle", "name": "Trans.Prone.Fire__Prone.Idle", "frames": 10 },
+    { "from": "Stand.Throw_Grenade", "to": "Stand.Idle", "name": "Trans.Stand.Throw_Grenade__Stand.Idle", "frames": 10 },
+    { "from": "Kneel.Throw_Grenade", "to": "Kneel.Idle", "name": "Trans.Kneel.Throw_Grenade__Kneel.Idle", "frames": 10 },
+    { "from": "Prone.Throw_Grenade", "to": "Prone.Idle", "name": "Trans.Prone.Throw_Grenade__Prone.Idle", "frames": 10 }
+  ],
+  "loop_close": [
+    { "action": "Stand.Forward", "name": "Loop.Stand.Forward", "blend_frames": 6 },
+    { "action": "Kneel.Forward", "name": "Loop.Kneel.Forward", "blend_frames": 6 },
+    { "action": "Prone.Forward", "name": "Loop.Prone.Forward", "blend_frames": 8 }
+  ]
+}

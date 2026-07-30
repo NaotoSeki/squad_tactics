@@ -259,7 +259,7 @@ def repack_sheet(sheet_path, action_bbox, scale, action_charH_src, yG):
         "file_size_kb": output_path.stat().st_size / 1024
     }
 
-def main():
+def main(char_h=108):
     # Ensure output directory exists
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -320,7 +320,10 @@ def main():
         print(f"  {action_name}: bbox={bbox}, w={bbox_w}, h={bbox_h}")
 
     # Global scale (from charH_src)
-    scale = 108 / charH_src
+    # char_h はスケール正規化後の立ち身長px。表示側は manifest.charH で正規化する
+    # ため見た目サイズは不変。VRAM予算に効く（2026-07-20、遷移クリップ追加に伴い
+    # 既定108→パイプラインからは72を渡す。表示20px基準で3.6倍のオーバーサンプル）
+    scale = char_h / charH_src
     scale = min(scale, 0.8)
     print(f"\nGlobal scale: {scale:.4f}")
 
@@ -521,4 +524,9 @@ def main():
         return 0
 
 if __name__ == "__main__":
-    sys.exit(main())
+    import argparse
+    ap = argparse.ArgumentParser(description="Repack soldier spritesheets v2")
+    ap.add_argument("--char-h", type=int, default=108,
+                    help="正規化後の立ち身長px（既定108。パイプラインは72を渡す）")
+    args = ap.parse_args()
+    sys.exit(main(args.char_h))
