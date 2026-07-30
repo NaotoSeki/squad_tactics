@@ -339,9 +339,9 @@ class SoldierUnitView extends UnitView {
             // 「被弾中の移動」を唯一の確かな走行トリガとして使う（自動Coverの退避と一致する）。
             next = this._firstAnim([`${posture}_run`, next], dispDir) || next;
         } else if (action === 'reload') {
-            // 伏せリロードは graft が破綻（腕が地面に潜る）したため非採用。姿勢を保ったまま
-            // その姿勢の idle へ落とす。下の大域フォールバックは stand_idle なので、
-            // ここで受け止めないと伏せた兵士が立ち上がってしまう。
+            // 姿勢別リロードが無い環境では「その姿勢の idle」へ落とす。下の大域
+            // フォールバックは stand_idle なので、ここで受け止めないと伏せた兵士が
+            // 立ち上がってしまう（伏せリロードは graft では作れず専用クリップが必要）。
             next = this._firstAnim([`${posture}_reload`, `${posture}_idle`], dispDir) || next;
         }
         let key = `sold_${next}_${dispDir}`;

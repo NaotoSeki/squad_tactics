@@ -379,6 +379,22 @@ SimCore.prototype._phaseDecide = function () {
     let intent = null;
     if (s.currentOrder) {
       intent = s.currentOrder;
+      // 自衛は命令に割り込める（NORTH_STAR §3.2「pinned: 自衛のみ」）。
+      // TARGET は一度も消費されず永続するため、これが無いと「一度撃てと言われた兵士は
+      // 以後永久に自己判断せず、撃たれても遮蔽へ移らない」状態になる。
+      // 割り込むのは射撃系の命令だけ。MOVE_TO へは割り込まない（プレイヤーが意図した
+      // 機動を二度手間にしない）。policy が selfPreserve を持たない場合は従来通り。
+      if ((intent.type === 'TARGET' || intent.type === 'FIRE_MODE')
+        && typeof this.policy.selfPreserve === 'function') {
+        const preserve = this.policy.selfPreserve(this._snapshot(s), worldView, this.rng);
+        if (preserve && preserve.type === 'MOVE_TO') {
+          intent = preserve;
+          if (preserve.note && preserve.note !== s.lastPolicyNote) {
+            s.lastPolicyNote = preserve.note;
+            this._emit('POLICY', { id: s.id, note: preserve.note });
+          }
+        }
+      }
     } else {
       intent = this.policy.decide(this._snapshot(s), worldView, this.rng);
       // trait visibility: surface policy notes as events, once per distinct note

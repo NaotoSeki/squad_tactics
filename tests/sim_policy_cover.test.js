@@ -150,5 +150,98 @@ function decide(soldier, map) {
     'neighbors 未実装のマップでは例外を出さず退避もしない');
 }
 
+// ===========================================================================
+// SimCore 統合: 射撃命令が立っていても自衛は割り込めること
+//
+// TARGET は一度も消費されず永続するため、これが効かないと「一度撃てと言われた
+// 兵士は以後永久に自己判断せず、撃たれても遮蔽へ移らない」状態になる。
+// 実機(sim_battle)で10名中9名がこの状態だったのが発見の経緯。
+// ===========================================================================
+const { SimCore, mulberry32, toSimWeapon } = require(path.join(__dirname, '..', 'sim_core.js'));
+const { CommsOrders } = require(path.join(__dirname, '..', 'sim_orders.js'));
+
+function loadWpns() {
+  const code = fs.readFileSync(path.join(__dirname, '..', 'data.js'), 'utf8');
+  const sandbox = { module: { exports: {} }, console: console };
+  sandbox.window = sandbox;
+  vm.createContext(sandbox);
+  vm.runInContext(code + '\n;this.WPNS = WPNS;\n', sandbox, { filename: 'data.js' });
+  return sandbox.WPNS;
+}
+const WPNS = loadWpns();
+
+/** 露出hex(0.05)の隣に濃い遮蔽(0.9)を1つ置いたマップ。 */
+function exposedMap() {
+  return makeMap({ '0,0': 0.05, '1,0': 0.9 }, 0.05);
+}
+
+function buildSim(orderType) {
+  const map = exposedMap();
+  const sim = new SimCore({
+    map: map, tuning: SIM_TUNING, rng: mulberry32(7), policy: TraitPolicy,
+  });
+  sim.orders = new CommsOrders({
+    getSoldier: (id) => sim.getSoldier(id),
+    soldiers: () => sim.soldiers(),
+    map: map, tuning: SIM_TUNING,
+  });
+  const w = toSimWeapon('m1', WPNS.m1, SIM_TUNING);
+  sim.addSoldier({ id: 'a1', team: 'A', q: 0, r: 0, weapon: w, traits: [], isLeader: true });
+  sim.addSoldier({ id: 'b1', team: 'B', q: 6, r: 0, weapon: w, traits: [] });
+
+  if (orderType === 'TARGET') {
+    sim.issueOrder({ type: 'TARGET', soldierIds: ['a1'], payload: { targetId: 'b1', mode: 'aimed' } });
+  } else if (orderType === 'MOVE_TO') {
+    sim.issueOrder({ type: 'MOVE_TO', soldierIds: ['a1'], payload: { path: [{ q: 0, r: 3 }] } });
+  }
+  // 命令が伝達されるまで回す
+  for (let i = 0; i < 40; i++) sim.tick();
+  return sim;
+}
+
+/** a1 を制圧帯へ押し上げ、数tick回して結果を見る。 */
+function pushIntoBand(sim) {
+  const s = sim._soldiers.get('a1');
+  s.suppression = (SIM_TUNING.COVER_SEEK_AT + SIM_TUNING.PINNED_AT) / 2; // 帯の中央
+  for (let i = 0; i < 30; i++) {
+    sim.tick();
+    const cur = sim._soldiers.get('a1');
+    if (cur.movePath && cur.movePath.length > 0) return cur;
+    if (cur.suppression >= SIM_TUNING.PINNED_AT) break;
+    cur.suppression = (SIM_TUNING.COVER_SEEK_AT + SIM_TUNING.PINNED_AT) / 2; // 減衰を打ち消す
+  }
+  return sim._soldiers.get('a1');
+}
+
+{
+  const sim = buildSim('TARGET');
+  const before = sim._soldiers.get('a1');
+  check(before.currentOrder && before.currentOrder.type === 'TARGET',
+    'TARGET 命令が実際に立っている（前提確認）');
+  const after = pushIntoBand(sim);
+  check(!!(after.movePath && after.movePath.length > 0),
+    'TARGET 命令下でも、制圧されて露出していれば遮蔽へ退避する');
+  check(after.lastPolicyNote && after.lastPolicyNote.indexOf('遮蔽') !== -1,
+    '退避が POLICY ノートとして可視化される');
+}
+
+{
+  const sim = buildSim('MOVE_TO');
+  const s0 = sim._soldiers.get('a1');
+  const target = s0.movePath && s0.movePath.length ? s0.movePath[s0.movePath.length - 1] : null;
+  const after = pushIntoBand(sim);
+  const stillGoing = after.movePath && after.movePath.length
+    ? after.movePath[after.movePath.length - 1] : null;
+  check(target === null || stillGoing === null || (stillGoing.q === target.q && stillGoing.r === target.r),
+    'MOVE_TO 命令には割り込まない（プレイヤーの機動を二度手間にしない）');
+}
+
+{
+  const sim = buildSim(null);
+  const after = pushIntoBand(sim);
+  check(!!(after.movePath && after.movePath.length > 0),
+    '無命令でも従来通り退避する（decide 経路の回帰確認）');
+}
+
 console.log('\n' + passCount + ' passed, ' + failCount + ' failed');
 if (failCount) { failures.forEach((f) => console.log('  - ' + f)); process.exit(1); }

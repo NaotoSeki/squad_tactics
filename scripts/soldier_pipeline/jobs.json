@@ -49,6 +49,7 @@
     { "name": "stand_run",     "action": "Loop.Stand.Run",   "step": 1, "sheet_name": "Stand.Run" },
     { "name": "kneel_run",     "action": "Loop.Kneel.Run",   "step": 1, "sheet_name": "Kneel.Run" },
     { "name": "stand_reload",  "action": "Clip.Stand.Reload", "step": 1, "sheet_name": "Stand.Reload" },
-    { "name": "kneel_reload",  "action": "Kneel.Reload",     "step": 1, "sheet_name": "Kneel.Reload" }
+    { "name": "kneel_reload",  "action": "Kneel.Reload",     "step": 1, "sheet_name": "Kneel.Reload" },
+    { "name": "prone_reload",  "action": "Prone.Reload",     "step": 1, "sheet_name": "Prone.Reload" }
   ]
 }

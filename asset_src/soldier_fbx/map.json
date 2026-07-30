@@ -4,6 +4,7 @@
 
   "Reloading.fbx": "Stand.Reload",
   "Rifle Run.fbx": "Stand.Run",
+  "Prone Reloading.fbx": "Prone.Reload_src",
 
   "_example_Hit Reaction.fbx": "Stand.Hit"
 }

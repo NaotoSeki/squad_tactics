@@ -270,6 +270,20 @@
       "sheetW": 7874,
       "sheetH": 72
     },
+    "prone_reload": {
+      "file": "prone_reload.png",
+      "srcFrames": 26,
+      "stride": 1,
+      "frames": 26,
+      "cols": 64,
+      "rows": 4,
+      "frameW": 125,
+      "frameH": 56,
+      "originX": 0.5156,
+      "originY": 1.2656,
+      "sheetW": 8000,
+      "sheetH": 224
+    },
     "prone_throw_grenade": {
       "file": "prone_throw_grenade.png",
       "srcFrames": 36,
