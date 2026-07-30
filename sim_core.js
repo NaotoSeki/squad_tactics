@@ -361,6 +361,7 @@ SimCore.prototype._phaseDeliverOrders = function () {
     const s = this._soldiers.get(d.soldierId);
     if (!s || s.hp <= 0) continue;
     s.currentOrder = d.order;
+    s.currentOrderT = this._tick;   // 失効判定用（下の _phaseDecide 参照）
     this._emit('ORDER_DELIVERED', { id: s.id, order: d.order });
   }
 };
@@ -376,6 +377,30 @@ SimCore.prototype._phaseDecide = function () {
     if (s.hp <= 0) return;
     if (s.state === 'rout' || s.state === 'assault') return;
     if ((this._tick + s.decisionPhase) % interval !== 0) return;
+
+    // 命令の失効。TARGET は他の命令型と違い誰も消費しないため、放置すると
+    // **永続する**。すると decide() が二度と呼ばれず、その兵士は以後まったく
+    // 自己判断しなくなる — §3.4「命令が届くまでの間、兵は自分のトレイトに従って
+    // 行動する」も §7.4 基準4「無命令時間にトレイト由来の行動」も、無命令時間が
+    // 存在しないので原理的に成立しなくなる（2026-07-31 実測: 分隊長AIありで
+    // トレイト行動を見せた兵は5シードとも0名、AIを止めると4〜7名）。
+    // 下士官の「あいつを狙え」は永久命令ではない。的が死ぬか、一定時間で失効する。
+    if (s.currentOrder && s.currentOrder.type === 'TARGET') {
+      const expireT = T.ORDER_TARGET_EXPIRE_T;
+      const targetId = s.currentOrder.payload && s.currentOrder.payload.targetId;
+      const target = targetId ? this._soldiers.get(targetId) : null;
+      const targetGone = !target || target.hp <= 0;
+      // 遂行中(engage)には切れない。射撃の途中で「やっぱり自分で考えます」と
+      // 抜けるのは兵の振る舞いとして不自然だし、制圧射撃のような**持続する任務**が
+      // 途中で崩れる（弾薬経済の前提も壊れる: tests/sim_core.test.js T4）。
+      // 手が空いた時に自分の判断へ戻る、が正しい単位。
+      const timedOut = expireT != null && s.state !== 'engage'
+        && (this._tick - (s.currentOrderT || 0)) >= expireT;
+      if (targetGone || timedOut) {
+        s.currentOrder = null;
+        this._emit('ORDER_LAPSED', { id: s.id, reason: targetGone ? 'target_down' : 'expired' });
+      }
+    }
 
     let intent = null;
     if (s.currentOrder) {
