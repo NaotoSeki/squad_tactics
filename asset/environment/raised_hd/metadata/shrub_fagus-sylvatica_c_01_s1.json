@@ -1,0 +1,155 @@
+{
+  "schema": "raised-hd-job/v1",
+  "jobId": "shrub_fagus-sylvatica_c_01_s1",
+  "id": "shrub_fagus-sylvatica_c_01",
+  "family": "shrub",
+  "roles": [
+    "stateBody"
+  ],
+  "bodySlot": 1,
+  "pairedShadowSlot": null,
+  "pixelRatio": 2,
+  "lightingContract": "ps-overcast-upper-left-v1",
+  "bodyOrigin": [
+    -31,
+    -16
+  ],
+  "shadowOrigin": null,
+  "references": {
+    "body": "../../../scratch/ps_sprites_canonical_v1/Objects/Plants/shrub_fagus-sylvatica_c_01_s1.png",
+    "shadowCalibration": null,
+    "bodyRole": "numeric canvas/bbox/origin/contact/color calibration",
+    "shadowRole": null,
+    "canonicalPixelsCopied": false
+  },
+  "provenance": {
+    "source": "built-in ImageGen selected output",
+    "sourceCopy": "C:\\Projects\\squad_tactics\\tmp\\raised_hd\\shrub_fagus-sylvatica_c_01_s1_source.png",
+    "sourceSha256": "255688cd0eb003ab3177eeb66ed14d7044fe8aa4b3d8507f60b9902627d3b499",
+    "cutout": "C:\\Projects\\squad_tactics\\tmp\\raised_hd\\shrub_fagus-sylvatica_c_01_s1_cutout.png",
+    "cutoutSha256": "ee78fb60d69be2a9dec4b0a4271888363da3d0183309cbb3eafc8d61c52a826d",
+    "cutoutAlphaSha256": "6e645832a9f2b590a4503269c7fcf56a2b0223c10b762f9c8ab863a275f8d220",
+    "chromaHelper": "C:\\Users\\aware.梨花のPC\\.codex\\skills\\.system\\imagegen\\scripts\\remove_chroma_key.py"
+  },
+  "outputs": {
+    "body": "body/shrub_fagus-sylvatica_c_01_s1_body_hd_v1.png",
+    "shadow": null,
+    "review": "review/shrub_fagus-sylvatica_c_01_s1_world_review.png",
+    "metadata": "metadata/shrub_fagus-sylvatica_c_01_s1.json"
+  },
+  "body": {
+    "normalization": {
+      "sourceSize": [
+        1774,
+        887
+      ],
+      "sourceBbox": [
+        184,
+        62,
+        1536,
+        790
+      ],
+      "sourceContact": [
+        828.5,
+        437.5
+      ],
+      "canonicalBbox": [
+        0,
+        0,
+        66,
+        32
+      ],
+      "canonicalContact": [
+        31.0,
+        16.0
+      ],
+      "targetSize": [
+        132,
+        64
+      ],
+      "targetBbox": [
+        0,
+        0,
+        132,
+        64
+      ],
+      "targetContact": [
+        62.0,
+        32.0
+      ],
+      "resultBbox": [
+        0,
+        0,
+        130,
+        62
+      ],
+      "resultContact": [
+        62.0,
+        32.0
+      ],
+      "scale": [
+        0.09696521,
+        0.0866575
+      ],
+      "generatedAlphaSha256": "6e645832a9f2b590a4503269c7fcf56a2b0223c10b762f9c8ab863a275f8d220",
+      "normalizedAlphaSha256": "b891a395f02c3384491321f0c6967e3f43ebe6e691dc5862bdc4b1e9c8154a97",
+      "canonicalAlphaSha256": "cfd87cfc3739f3b7c49255d8a5a4437c23900ba64d6188270fe8b36ce5711c06",
+      "alphaAuthority": "accepted generated cutout",
+      "canonicalAlphaRole": "numeric bbox/contact calibration only"
+    },
+    "quality": {
+      "size": [
+        132,
+        64
+      ],
+      "bbox": [
+        0,
+        0,
+        130,
+        62
+      ],
+      "visiblePixels": 3824,
+      "canonicalVisiblePixels": 4672,
+      "coverageRatio": 0.818493,
+      "contact": [
+        62.0,
+        32.0
+      ],
+      "expectedContact": [
+        62.0,
+        32.0
+      ],
+      "contactErrorPx": 0.0,
+      "magentaSpillPixels": 0,
+      "magentaSpillLimit": 2,
+      "canonicalAlphaIdentical": false
+    },
+    "fileSha256": "9025905d33c97af9ff2153fcedd514895c650d1297cbaaaad874e55dddfe9ca9",
+    "alphaSha256": "b891a395f02c3384491321f0c6967e3f43ebe6e691dc5862bdc4b1e9c8154a97"
+  },
+  "shadow": {
+    "method": "intentionally-shadowless-state",
+    "canonicalShadowPixelsCopied": false
+  },
+  "review": {
+    "file": "C:/Projects/squad_tactics/asset/environment/raised_hd/review/shrub_fagus-sylvatica_c_01_s1_world_review.png",
+    "size": [
+      192,
+      162
+    ],
+    "worldOriginMarker": [
+      92,
+      100
+    ],
+    "shadowVector": [
+      0.72,
+      0.69
+    ],
+    "contactMarkers": {
+      "bodyWorld": [
+        0.0,
+        0.0
+      ]
+    }
+  }
+}

@@ -1,0 +1,353 @@
+{
+  "schema": "raised-hd-job/v1",
+  "jobId": "shrub_taxus-baccata_a_06_s2",
+  "id": "shrub_taxus-baccata_a_06",
+  "family": "shrub",
+  "roles": [
+    "body",
+    "stateBody"
+  ],
+  "bodySlot": 2,
+  "pairedShadowSlot": 4,
+  "pixelRatio": 2,
+  "lightingContract": "ps-overcast-upper-left-v1",
+  "bodyOrigin": [
+    -31,
+    -39
+  ],
+  "shadowOrigin": [
+    -26,
+    -9
+  ],
+  "references": {
+    "body": "../../../scratch/ps_sprites_canonical_v1/Objects/Plants/shrub_taxus-baccata_a_06_s2.png",
+    "shadowCalibration": "../../../scratch/ps_sprites_canonical_v1/Objects/Plants/shrub_taxus-baccata_a_06_s4.png",
+    "bodyRole": "numeric canvas/bbox/origin/contact/color calibration",
+    "shadowRole": "numeric world-origin/contact/bbox/extent/penumbra/density calibration only",
+    "canonicalPixelsCopied": false
+  },
+  "provenance": {
+    "source": "built-in ImageGen selected output",
+    "sourceCopy": "C:\\Projects\\squad_tactics\\tmp\\raised_hd\\shrub_taxus-baccata_a_06_s2_source.png",
+    "sourceSha256": "4e038b13e5dc1096c7017989cc58a2fbfd459714ba892cf83aa4e54483e4ce09",
+    "cutout": "C:\\Projects\\squad_tactics\\tmp\\raised_hd\\shrub_taxus-baccata_a_06_s2_cutout.png",
+    "cutoutSha256": "9602d272d7667ee8dfbfda9fc3cecaa3480366ea4591603d46c2404c1151ff94",
+    "cutoutAlphaSha256": "7fc75ebe7c9e6ef1a6400def93b8b1057c976dbbde8408deb28f912f710b2e33",
+    "chromaHelper": "C:\\Users\\aware.梨花のPC\\.codex\\skills\\.system\\imagegen\\scripts\\remove_chroma_key.py"
+  },
+  "outputs": {
+    "body": "body/shrub_taxus-baccata_a_06_s2_body_hd_v1.png",
+    "shadow": "shadow/shrub_taxus-baccata_a_06_s4_shadow_hd_v1.png",
+    "review": "review/shrub_taxus-baccata_a_06_s2_world_review.png",
+    "metadata": "metadata/shrub_taxus-baccata_a_06_s2.json"
+  },
+  "body": {
+    "normalization": {
+      "sourceSize": [
+        1408,
+        1117
+      ],
+      "sourceBbox": [
+        28,
+        37,
+        1308,
+        1058
+      ],
+      "sourceContact": [
+        726.25,
+        955.0
+      ],
+      "canonicalBbox": [
+        0,
+        0,
+        58,
+        44
+      ],
+      "canonicalContact": [
+        31.1183,
+        38.6997
+      ],
+      "targetSize": [
+        116,
+        88
+      ],
+      "targetBbox": [
+        0,
+        0,
+        116,
+        88
+      ],
+      "targetContact": [
+        62.2367,
+        77.3994
+      ],
+      "resultBbox": [
+        0,
+        0,
+        114,
+        86
+      ],
+      "resultContact": [
+        62.5,
+        77.5
+      ],
+      "scale": [
+        0.089914,
+        0.08529412
+      ],
+      "generatedAlphaSha256": "7fc75ebe7c9e6ef1a6400def93b8b1057c976dbbde8408deb28f912f710b2e33",
+      "normalizedAlphaSha256": "3dcd311ee7c6602711de73bd734c0e3dcc2bacf84ddb50fa7ca7eaef250e3f1e",
+      "canonicalAlphaSha256": "7d8d3a8246fa716d20dd23af11e3b3ad53f614b57305d24b54ba2beebdd6b690",
+      "alphaAuthority": "accepted generated cutout",
+      "canonicalAlphaRole": "numeric bbox/contact calibration only"
+    },
+    "quality": {
+      "size": [
+        116,
+        88
+      ],
+      "bbox": [
+        0,
+        0,
+        114,
+        86
+      ],
+      "visiblePixels": 5602,
+      "canonicalVisiblePixels": 6244,
+      "coverageRatio": 0.897181,
+      "contact": [
+        62.5,
+        77.5
+      ],
+      "expectedContact": [
+        62.2367,
+        77.3994
+      ],
+      "contactErrorPx": 0.281874,
+      "magentaSpillPixels": 0,
+      "magentaSpillLimit": 2,
+      "canonicalAlphaIdentical": false
+    },
+    "fileSha256": "c729cc29db2158930d2e48fa9ee5c16e369588d82f5c43f57425c7a16abaeb13",
+    "alphaSha256": "3dcd311ee7c6602711de73bd734c0e3dcc2bacf84ddb50fa7ca7eaef250e3f1e"
+  },
+  "shadow": {
+    "method": "paired-canonical-body-transform-v4-light-only",
+    "bodyAlphaAuthority": "3dcd311ee7c6602711de73bd734c0e3dcc2bacf84ddb50fa7ca7eaef250e3f1e",
+    "calibration": {
+      "referenceSize": [
+        57,
+        27
+      ],
+      "targetSize": [
+        114,
+        54
+      ],
+      "referenceOrigin": [
+        -26,
+        -9
+      ],
+      "worldOriginLocal": [
+        52.0,
+        18.0
+      ],
+      "referenceBbox": [
+        0,
+        0,
+        57,
+        27
+      ],
+      "targetBbox": [
+        0,
+        0,
+        114,
+        54
+      ],
+      "referenceContact": [
+        25.9988,
+        8.9938
+      ],
+      "referenceCentroid": [
+        28.456,
+        13.1728
+      ],
+      "referenceCovariance": [
+        [
+          151.83633,
+          7.666022
+        ],
+        [
+          7.666022,
+          32.249429
+        ]
+      ],
+      "referenceMajorAxisAngleDeg": -176.347028,
+      "referenceFillRatio": 0.649773,
+      "referenceAspectRatio": 2.190011,
+      "referenceBboxAspectRatio": 2.111111,
+      "targetMeanVisibleAlpha": 115.122002,
+      "targetMaxAlpha": 176,
+      "alphaFloor": 8,
+      "visiblePixels": 1000,
+      "targetVisiblePixels": 4000,
+      "partialAlphaFraction": 0.509,
+      "blurRadiusPx": 3.1396,
+      "referenceRole": "numeric world-origin/contact/bbox/extent/penumbra/density calibration only",
+      "forbiddenPixelReuse": true
+    },
+    "derivation": {
+      "method": "family-specific projection from accepted generated BODY alpha; paired canonical BODY/SHADOW supplies transform calibration only",
+      "version": "shadow-v4-paired-transform",
+      "family": "shrub",
+      "bodyAlphaSha256": "3dcd311ee7c6602711de73bd734c0e3dcc2bacf84ddb50fa7ca7eaef250e3f1e",
+      "canonicalShadowRole": "numeric world-origin/contact/bbox/extent/penumbra/density calibration only",
+      "canonicalShadowPixelsCopied": false,
+      "lightingContract": "ps-overcast-upper-left-v1",
+      "shadowScreenVector": [
+        0.72,
+        0.69
+      ],
+      "projectionMatrix": [
+        0.9866543,
+        0.05339261,
+        -0.05203931,
+        0.59771673
+      ],
+      "layers": {
+        "sourceLayer": "generated shrub alpha",
+        "shapeFit": {
+          "matrix": [
+            0.986654304520412,
+            0.053392614879399745,
+            -0.05203931369025577,
+            0.5977167290947281
+          ],
+          "offset": [
+            10.43705174815942,
+            26.56489943577785
+          ],
+          "objective": 0.0032619534454870406,
+          "converged": true,
+          "iterations": 13,
+          "rawProjectedBbox": [
+            -1.5004284167408173,
+            -0.5743782325309077,
+            114.51320243460916,
+            52.87004674342083
+          ],
+          "rawProjectedCentroid": [
+            56.91199999999993,
+            26.345600000000022
+          ],
+          "projectedCovariance": [
+            [
+              606.1662196557647,
+              29.13148263454553
+            ],
+            [
+              29.131482634545534,
+              130.90635499462107
+            ]
+          ]
+        }
+      },
+      "bodyContact": [
+        62.5,
+        77.5
+      ],
+      "bodyWorldContact": [
+        0.5,
+        -0.5
+      ],
+      "shadowContact": [
+        51.9976,
+        17.9876
+      ],
+      "shadowContactWorld": [
+        -0.0024,
+        -0.0124
+      ],
+      "contactWorldDelta": [
+        -0.5024,
+        0.4876
+      ],
+      "resultContact": [
+        52.0,
+        18.0
+      ],
+      "contactErrorPx": 0.01263,
+      "resultBbox": [
+        0,
+        0,
+        114,
+        53
+      ],
+      "targetMeanVisibleAlpha": 115.122002,
+      "meanVisibleAlpha": 60.283443,
+      "targetMaxAlpha": 176,
+      "maxAlpha": 76,
+      "darkCoreRemoved": true,
+      "lightOnlyKneeAlpha": 52.0,
+      "lightOnlyCapAlpha": 76.0,
+      "blurRadiusPx": 1.25584,
+      "outputAlphaSha256": "97adb3dae0a976968ee25532c674631b76bbd3eb82dbe37245f5aa88894fb125"
+    },
+    "quality": {
+      "contract": "shadow-v4-light-only",
+      "size": [
+        114,
+        54
+      ],
+      "bbox": [
+        0,
+        0,
+        114,
+        53
+      ],
+      "visiblePixels": 4717,
+      "meanVisibleAlpha": 60.283443,
+      "maxAlpha": 76,
+      "darkCoreRemoved": true,
+      "contact": [
+        52.0,
+        18.0
+      ],
+      "expectedContact": [
+        51.9976,
+        17.9876
+      ],
+      "contactErrorPx": 0.01263,
+      "parityBias": 0.00571181,
+      "lowerRightTrunkCastPerHeightPx": null,
+      "canonicalPixelIdentical": false
+    },
+    "fileSha256": "f2341f9fb0222a7d056c0a4d900dbef3aaf945fd804441ccc7a3d4524a2fb520",
+    "alphaSha256": "97adb3dae0a976968ee25532c674631b76bbd3eb82dbe37245f5aa88894fb125",
+    "canonicalShadowPixelsCopied": false
+  },
+  "review": {
+    "file": "C:/Projects/squad_tactics/output/shadow_v4_light_staging/raised/review/shrub_taxus-baccata_a_06_s2_world_review.png",
+    "size": [
+      184,
+      212
+    ],
+    "worldOriginMarker": [
+      92,
+      146
+    ],
+    "shadowVector": [
+      0.72,
+      0.69
+    ],
+    "contactMarkers": {
+      "bodyWorld": [
+        0.5,
+        -0.5
+      ],
+      "shadowWorld": [
+        -0.0024,
+        -0.0124
+      ]
+    }
+  }
+}

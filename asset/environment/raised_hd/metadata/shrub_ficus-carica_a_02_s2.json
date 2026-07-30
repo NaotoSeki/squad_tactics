@@ -1,0 +1,353 @@
+{
+  "schema": "raised-hd-job/v1",
+  "jobId": "shrub_ficus-carica_a_02_s2",
+  "id": "shrub_ficus-carica_a_02",
+  "family": "shrub",
+  "roles": [
+    "body",
+    "stateBody"
+  ],
+  "bodySlot": 2,
+  "pairedShadowSlot": 4,
+  "pixelRatio": 2,
+  "lightingContract": "ps-overcast-upper-left-v1",
+  "bodyOrigin": [
+    -8,
+    -17
+  ],
+  "shadowOrigin": [
+    -6,
+    -4
+  ],
+  "references": {
+    "body": "../../../scratch/ps_sprites_canonical_v1/Objects/Plants/shrub_ficus-carica_a_02_s2.png",
+    "shadowCalibration": "../../../scratch/ps_sprites_canonical_v1/Objects/Plants/shrub_ficus-carica_a_02_s4.png",
+    "bodyRole": "numeric canvas/bbox/origin/contact/color calibration",
+    "shadowRole": "numeric world-origin/contact/bbox/extent/penumbra/density calibration only",
+    "canonicalPixelsCopied": false
+  },
+  "provenance": {
+    "source": "built-in ImageGen selected output",
+    "sourceCopy": "C:\\Projects\\squad_tactics\\tmp\\raised_hd\\shrub_ficus-carica_a_02_s2_source.png",
+    "sourceSha256": "cdad4c08c6d7b34896c9f20fba3e7b0afacee78eb7df55008363b0db3989de90",
+    "cutout": "C:\\Projects\\squad_tactics\\tmp\\raised_hd\\shrub_ficus-carica_a_02_s2_cutout.png",
+    "cutoutSha256": "23297c10efd3de62c0de15c340952336f5d9493ae97e293b937eeef876c63a1e",
+    "cutoutAlphaSha256": "6fe9b3d674c9ea4e31f375b315a25c7d4a3146bbc2025054fc9b14dc6434756c",
+    "chromaHelper": "C:\\Users\\aware.梨花のPC\\.codex\\skills\\.system\\imagegen\\scripts\\remove_chroma_key.py"
+  },
+  "outputs": {
+    "body": "body/shrub_ficus-carica_a_02_s2_body_hd_v1.png",
+    "shadow": "shadow/shrub_ficus-carica_a_02_s4_shadow_hd_v1.png",
+    "review": "review/shrub_ficus-carica_a_02_s2_world_review.png",
+    "metadata": "metadata/shrub_ficus-carica_a_02_s2.json"
+  },
+  "body": {
+    "normalization": {
+      "sourceSize": [
+        1521,
+        1034
+      ],
+      "sourceBbox": [
+        186,
+        123,
+        1342,
+        902
+      ],
+      "sourceContact": [
+        648.0,
+        875.0
+      ],
+      "canonicalBbox": [
+        0,
+        0,
+        20,
+        17
+      ],
+      "canonicalContact": [
+        7.5809,
+        16.0
+      ],
+      "targetSize": [
+        40,
+        34
+      ],
+      "targetBbox": [
+        0,
+        0,
+        40,
+        34
+      ],
+      "targetContact": [
+        15.1618,
+        32.0
+      ],
+      "resultBbox": [
+        0,
+        0,
+        39,
+        33
+      ],
+      "resultContact": [
+        15.0,
+        31.0
+      ],
+      "scale": [
+        0.03376623,
+        0.04241645
+      ],
+      "generatedAlphaSha256": "6fe9b3d674c9ea4e31f375b315a25c7d4a3146bbc2025054fc9b14dc6434756c",
+      "normalizedAlphaSha256": "09c341b779d45f87b17026d71b99808e48fc05ed8120fc8815d8d40b4ae72213",
+      "canonicalAlphaSha256": "7af750a912f4202e0c4bda741439bf681da41dcf504c90d24f4a2cfd0082b4ef",
+      "alphaAuthority": "accepted generated cutout",
+      "canonicalAlphaRole": "numeric bbox/contact calibration only"
+    },
+    "quality": {
+      "size": [
+        40,
+        34
+      ],
+      "bbox": [
+        0,
+        0,
+        39,
+        33
+      ],
+      "visiblePixels": 793,
+      "canonicalVisiblePixels": 836,
+      "coverageRatio": 0.948565,
+      "contact": [
+        15.0,
+        31.0
+      ],
+      "expectedContact": [
+        15.1618,
+        32.0
+      ],
+      "contactErrorPx": 1.012999,
+      "magentaSpillPixels": 0,
+      "magentaSpillLimit": 2,
+      "canonicalAlphaIdentical": false
+    },
+    "fileSha256": "0b6d28cf339a7148907730bdc499104691a713f1e9b298a4c07fa2a2e631748d",
+    "alphaSha256": "09c341b779d45f87b17026d71b99808e48fc05ed8120fc8815d8d40b4ae72213"
+  },
+  "shadow": {
+    "method": "paired-canonical-body-transform-v4-light-only",
+    "bodyAlphaAuthority": "09c341b779d45f87b17026d71b99808e48fc05ed8120fc8815d8d40b4ae72213",
+    "calibration": {
+      "referenceSize": [
+        21,
+        13
+      ],
+      "targetSize": [
+        42,
+        26
+      ],
+      "referenceOrigin": [
+        -6,
+        -4
+      ],
+      "worldOriginLocal": [
+        12.0,
+        8.0
+      ],
+      "referenceBbox": [
+        0,
+        0,
+        21,
+        13
+      ],
+      "targetBbox": [
+        0,
+        0,
+        42,
+        26
+      ],
+      "referenceContact": [
+        6.1302,
+        4.0684
+      ],
+      "referenceCentroid": [
+        9.8021,
+        6.0058
+      ],
+      "referenceCovariance": [
+        [
+          23.055112,
+          0.035806
+        ],
+        [
+          0.035806,
+          7.678503
+        ]
+      ],
+      "referenceMajorAxisAngleDeg": -179.866583,
+      "referenceFillRatio": 0.703297,
+      "referenceAspectRatio": 1.7328,
+      "referenceBboxAspectRatio": 1.615385,
+      "targetMeanVisibleAlpha": 94.197914,
+      "targetMaxAlpha": 168,
+      "alphaFloor": 8,
+      "visiblePixels": 192,
+      "targetVisiblePixels": 768,
+      "partialAlphaFraction": 0.765625,
+      "blurRadiusPx": 3.2,
+      "referenceRole": "numeric world-origin/contact/bbox/extent/penumbra/density calibration only",
+      "forbiddenPixelReuse": true
+    },
+    "derivation": {
+      "method": "family-specific projection from accepted generated BODY alpha; paired canonical BODY/SHADOW supplies transform calibration only",
+      "version": "shadow-v4-paired-transform",
+      "family": "shrub",
+      "bodyAlphaSha256": "09c341b779d45f87b17026d71b99808e48fc05ed8120fc8815d8d40b4ae72213",
+      "canonicalShadowRole": "numeric world-origin/contact/bbox/extent/penumbra/density calibration only",
+      "canonicalShadowPixelsCopied": false,
+      "lightingContract": "ps-overcast-upper-left-v1",
+      "shadowScreenVector": [
+        0.72,
+        0.69
+      ],
+      "projectionMatrix": [
+        1.02562731,
+        -0.0494694,
+        0.14144581,
+        0.76293778
+      ],
+      "layers": {
+        "sourceLayer": "generated shrub alpha",
+        "shapeFit": {
+          "matrix": [
+            1.0256273108062592,
+            -0.049469401121490855,
+            0.14144581252723987,
+            0.7629377751816628
+          ],
+          "offset": [
+            2.5398282661735223,
+            16.23758102347839
+          ],
+          "objective": 0.010003304126024367,
+          "converged": true,
+          "iterations": 8,
+          "rawProjectedBbox": [
+            -0.1389567858269487,
+            0.016080930210641498,
+            41.50361055019655,
+            27.324594011423436
+          ],
+          "rawProjectedCentroid": [
+            19.604200000000024,
+            12.011599999999989
+          ],
+          "projectedCovariance": [
+            [
+              92.33304086672798,
+              0.19423590179558292
+            ],
+            [
+              0.1942359017955849,
+              27.918639097502925
+            ]
+          ]
+        }
+      },
+      "bodyContact": [
+        15.0,
+        31.0
+      ],
+      "bodyWorldContact": [
+        -1.0,
+        -3.0
+      ],
+      "shadowContact": [
+        12.2604,
+        8.1368
+      ],
+      "shadowContactWorld": [
+        0.2604,
+        0.1368
+      ],
+      "contactWorldDelta": [
+        1.2604,
+        3.1368
+      ],
+      "resultContact": [
+        12.5,
+        8.5
+      ],
+      "contactErrorPx": 0.435112,
+      "resultBbox": [
+        0,
+        0,
+        42,
+        26
+      ],
+      "targetMeanVisibleAlpha": 94.197914,
+      "meanVisibleAlpha": 56.469285,
+      "targetMaxAlpha": 168,
+      "maxAlpha": 76,
+      "darkCoreRemoved": true,
+      "lightOnlyKneeAlpha": 52.0,
+      "lightOnlyCapAlpha": 76.0,
+      "blurRadiusPx": 1.28,
+      "outputAlphaSha256": "ebd2b9d4a02b016cd15ad9f30e60b3fb90be79281f348e0301f7e32aa330bebf"
+    },
+    "quality": {
+      "contract": "shadow-v4-light-only",
+      "size": [
+        42,
+        26
+      ],
+      "bbox": [
+        0,
+        0,
+        42,
+        26
+      ],
+      "visiblePixels": 993,
+      "meanVisibleAlpha": 56.469285,
+      "maxAlpha": 76,
+      "darkCoreRemoved": true,
+      "contact": [
+        12.5,
+        8.5
+      ],
+      "expectedContact": [
+        12.2604,
+        8.1368
+      ],
+      "contactErrorPx": 0.435112,
+      "parityBias": 0.00155262,
+      "lowerRightTrunkCastPerHeightPx": null,
+      "canonicalPixelIdentical": false
+    },
+    "fileSha256": "40848b8dafc0bd93acf0854ff904b9630b284f26d2eda8e20f92cffce0517c51",
+    "alphaSha256": "ebd2b9d4a02b016cd15ad9f30e60b3fb90be79281f348e0301f7e32aa330bebf",
+    "canonicalShadowPixelsCopied": false
+  },
+  "review": {
+    "file": "C:/Projects/squad_tactics/output/shadow_v4_light_staging/raised/review/shrub_ficus-carica_a_02_s2_world_review.png",
+    "size": [
+      106,
+      150
+    ],
+    "worldOriginMarker": [
+      46,
+      102
+    ],
+    "shadowVector": [
+      0.72,
+      0.69
+    ],
+    "contactMarkers": {
+      "bodyWorld": [
+        -1.0,
+        -3.0
+      ],
+      "shadowWorld": [
+        0.2604,
+        0.1368
+      ]
+    }
+  }
+}

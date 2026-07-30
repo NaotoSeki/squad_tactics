@@ -837,6 +837,44 @@ class MainScene extends Phaser.Scene {
         this.load.once('filecomplete-json-ps_object_manifest', (key, type, data) => {
             if (window.PsObjectLayer) window.PsObjectLayer.manifest = data;
         });
+        // Raised 2x overrides are optional and resolved per asset+slot.
+        // A manifest.js can set window.RAISED_HD_MANIFEST before this scene;
+        // otherwise try the JSON form. A missing JSON leaves canonical PS
+        // loading and rendering unchanged.
+        const inlineRaisedHdManifest = window.RAISED_HD_MANIFEST
+            || (window.PsObjectLayer && window.PsObjectLayer.hdManifest);
+        if (inlineRaisedHdManifest) {
+            if (window.PsObjectLayer) {
+                window.PsObjectLayer.hdManifest = inlineRaisedHdManifest;
+            }
+        } else {
+            this.load.json(
+                'raised_hd_manifest',
+                'asset/environment/raised_hd/manifest.json'
+            );
+            this.load.once('filecomplete-json-raised_hd_manifest', (key, type, data) => {
+                if (window.PsObjectLayer) window.PsObjectLayer.hdManifest = data;
+            });
+        }
+        // Map-priority trees use the exact-2x PS slot contract. Their catalog
+        // stays separate from the padded vegetation textures.
+        const inlineTreeHdManifest = window.TREE_HD_PS_MANIFEST
+            || (window.PsObjectLayer && window.PsObjectLayer.treeHdManifest);
+        if (inlineTreeHdManifest) {
+            if (window.PsObjectLayer) {
+                window.PsObjectLayer.treeHdManifest = inlineTreeHdManifest;
+            }
+        } else {
+            this.load.json(
+                'tree_hd_ps_manifest',
+                'asset/environment/trees_hd/production/runtime_ps_manifest.json'
+            );
+            this.load.once('filecomplete-json-tree_hd_ps_manifest', (key, type, data) => {
+                if (window.PsObjectLayer) {
+                    window.PsObjectLayer.treeHdManifest = data;
+                }
+            });
+        }
         // PSクレーターのデカール素材。manifest を先に読み、完了時に各PNGを追加投入する。
         // 焼き込み用(window.DecalLayer)なので生きたスプライトにはならない。
         this.load.json('decal_manifest', 'asset/environment/decals/manifest.json');

@@ -97,10 +97,18 @@ window.TerrainRenderRuralV29 = {
     }
 
     const { scale, topLeftX, topLeftY } = bf.projection;
+    // HD背景は論理キャンバスの各1pxを pixelRatio^2 画素で持つ。
+    // 左上座標は共有したまま、背景スプライトだけ縮尺を補正する。
+    // 立体物とデカールは引き続きPS原寸の論理投影を使う。
+    const configuredPixelRatio = variant.pixelRatio ?? bf.pixelRatio ?? 1;
+    const pixelRatio = Number.isFinite(configuredPixelRatio) && configuredPixelRatio > 0
+      ? configuredPixelRatio
+      : 1;
+    const backgroundScale = scale / pixelRatio;
     const textureKey = variant.texture;
     const textureFile = variant.file;
 
-    // 着弾痕の焼き込みレイヤーを背景と同じ投影・同じ画素密度で敷く。
+    // 着弾痕の焼き込みレイヤーはPS原寸の論理投影で敷く。
     // 背景より後・立体物より前(depth -9990)。テクスチャの読み込み完了を待つ必要はない。
     if (window.DecalLayer) {
       window.DecalLayer.init(scene, bf.projection, bf.imageWidth, bf.imageHeight);
@@ -113,11 +121,11 @@ window.TerrainRenderRuralV29 = {
           console.warn(`failed to load texture '${textureKey}' from ${textureFile}`);
           return;
         }
-        this._drawImage(scene, hexGroup, topLeftX, topLeftY, scale, scale, textureKey);
+        this._drawImage(scene, hexGroup, topLeftX, topLeftY, backgroundScale, backgroundScale, textureKey);
       });
       scene.load.start();
     } else {
-      this._drawImage(scene, hexGroup, topLeftX, topLeftY, scale, scale, textureKey);
+      this._drawImage(scene, hexGroup, topLeftX, topLeftY, backgroundScale, backgroundScale, textureKey);
     }
 
     this._buildPsObjects(scene, variant.psNative, bf.projection);
@@ -139,11 +147,16 @@ window.TerrainRenderRuralV29 = {
 
       const needed = L.requiredSprites(ledger).filter(s => !scene.textures.exists(s.key));
       if (!needed.length) {
-        L.build(scene, ledger, projection);
+        L.build(scene, ledger, this._ledgerProjection(ledger) || projection);
         return;
       }
-      needed.forEach(s => scene.load.image(s.key, 'asset/environment/ps_objects/' + s.file));
-      scene.load.once('complete', () => { L.build(scene, ledger, projection); });
+      needed.forEach(s => {
+        const canonicalBase = L.CANONICAL_BASE_PATH || 'asset/environment/ps_objects/';
+        scene.load.image(s.key, s.path || (canonicalBase + s.file));
+      });
+      scene.load.once('complete', () => {
+        L.build(scene, ledger, this._ledgerProjection(ledger) || projection);
+      });
       scene.load.start();
     };
 
@@ -154,6 +167,20 @@ window.TerrainRenderRuralV29 = {
       scene.load.once('complete', spawn);
       scene.load.start();
     }
+  },
+
+  /**
+   * ps_objects/v1 の保存済み論理投影をランタイム形式へ揃える。
+   * 旧台帳は snake_case、新台帳は camelCase のどちらでも読める。
+   */
+  _ledgerProjection(ledger) {
+    const projection = ledger && ledger.projection;
+    if (!projection) return null;
+    const scale = projection.scale;
+    const topLeftX = projection.topLeftX ?? projection.top_left_x;
+    const topLeftY = projection.topLeftY ?? projection.top_left_y;
+    if (![scale, topLeftX, topLeftY].every(Number.isFinite)) return null;
+    return { scale, topLeftX, topLeftY };
   },
 
   /**

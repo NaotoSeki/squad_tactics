@@ -1,0 +1,361 @@
+{
+  "schema": "raised-hd-job/v1",
+  "jobId": "pinus-ponderosa_a_03_s2",
+  "id": "pinus-ponderosa_a_03",
+  "family": "tree",
+  "roles": [
+    "body"
+  ],
+  "bodySlot": 2,
+  "pairedShadowSlot": 4,
+  "pixelRatio": 2,
+  "lightingContract": "ps-overcast-upper-left-v1",
+  "bodyOrigin": [
+    -55,
+    -222
+  ],
+  "shadowOrigin": [
+    -25,
+    -3
+  ],
+  "references": {
+    "body": "../ps_objects/pinus-ponderosa_a_03_s2.png",
+    "shadowCalibration": "../ps_objects/pinus-ponderosa_a_03_s4.png",
+    "bodyRole": "numeric canvas/bbox/origin/contact/color calibration",
+    "shadowRole": "numeric world-origin/contact/bbox/extent/penumbra/density calibration only",
+    "canonicalPixelsCopied": false
+  },
+  "provenance": {
+    "source": "built-in ImageGen selected output",
+    "sourceCopy": "C:\\Projects\\squad_tactics\\tmp\\tree_hd\\pinus-ponderosa_a_03_s2_source.png",
+    "sourceSha256": "0992b93f083df38c00c2a32b6bdab7de57749d44bfeae381ad8c9dee64810fb3",
+    "cutout": "C:\\Projects\\squad_tactics\\tmp\\tree_hd\\pinus-ponderosa_a_03_s2_cutout.png",
+    "cutoutSha256": "f588069812fa3cebfa9d6f3fa8721c6dc548ebd6e489967056b4fbd27492b49a",
+    "cutoutAlphaSha256": "5f2236daba0bcc07aa90988226d383be57f4605af7a60f084387f9a65deca4cc",
+    "chromaHelper": "C:\\Users\\aware.梨花のPC\\.codex\\skills\\.system\\imagegen\\scripts\\remove_chroma_key.py"
+  },
+  "outputs": {
+    "body": "body/pinus-ponderosa_a_03_s2_body_hd_v1.png",
+    "shadow": "shadow/pinus-ponderosa_a_03_s4_shadow_hd_v1.png",
+    "review": "review/pinus-ponderosa_a_03_s2_world_review.png",
+    "metadata": "metadata/pinus-ponderosa_a_03_s2.json"
+  },
+  "body": {
+    "normalization": {
+      "sourceSize": [
+        846,
+        1860
+      ],
+      "sourceBbox": [
+        0,
+        12,
+        801,
+        1837
+      ],
+      "sourceContact": [
+        448.8,
+        1819.6
+      ],
+      "canonicalBbox": [
+        0,
+        1,
+        99,
+        225
+      ],
+      "canonicalContact": [
+        55.0,
+        222.0
+      ],
+      "targetSize": [
+        198,
+        450
+      ],
+      "targetBbox": [
+        0,
+        2,
+        198,
+        450
+      ],
+      "targetContact": [
+        110.0,
+        444.0
+      ],
+      "resultBbox": [
+        0,
+        1,
+        196,
+        448
+      ],
+      "resultContact": [
+        110.0,
+        444.0
+      ],
+      "scale": [
+        0.24625,
+        0.24506579
+      ],
+      "generatedAlphaSha256": "5f2236daba0bcc07aa90988226d383be57f4605af7a60f084387f9a65deca4cc",
+      "normalizedAlphaSha256": "487bf5e56466152e5fc4cb5818666f456022773bc7f04853a5669168ba442194",
+      "canonicalAlphaSha256": "708497d5f7193bfb88c50076b556ceb2e0ed93c756b6589659fa3e6623539c48",
+      "alphaAuthority": "accepted generated cutout",
+      "canonicalAlphaRole": "numeric bbox/contact calibration only"
+    },
+    "quality": {
+      "size": [
+        198,
+        450
+      ],
+      "bbox": [
+        0,
+        1,
+        196,
+        448
+      ],
+      "visiblePixels": 36482,
+      "canonicalVisiblePixels": 39328,
+      "coverageRatio": 0.927634,
+      "contact": [
+        110.0,
+        444.0
+      ],
+      "expectedContact": [
+        110.0,
+        444.0
+      ],
+      "contactErrorPx": 0.0,
+      "magentaSpillPixels": 0,
+      "magentaSpillLimit": 4,
+      "canonicalAlphaIdentical": false
+    },
+    "fileSha256": "59685d12f5facf3a2a4f97b43acc5524e94ee8c1bc1b82fe532e869577f56206",
+    "alphaSha256": "487bf5e56466152e5fc4cb5818666f456022773bc7f04853a5669168ba442194"
+  },
+  "shadow": {
+    "method": "paired-canonical-body-transform-v4-light-only",
+    "bodyAlphaAuthority": "487bf5e56466152e5fc4cb5818666f456022773bc7f04853a5669168ba442194",
+    "calibration": {
+      "referenceSize": [
+        107,
+        71
+      ],
+      "targetSize": [
+        214,
+        142
+      ],
+      "referenceOrigin": [
+        -25,
+        -3
+      ],
+      "worldOriginLocal": [
+        50.0,
+        6.0
+      ],
+      "referenceBbox": [
+        0,
+        0,
+        107,
+        71
+      ],
+      "targetBbox": [
+        0,
+        0,
+        214,
+        142
+      ],
+      "referenceContact": [
+        25.0,
+        5.0
+      ],
+      "referenceCentroid": [
+        52.6205,
+        36.2909
+      ],
+      "referenceCovariance": [
+        [
+          612.477809,
+          119.29511
+        ],
+        [
+          119.29511,
+          259.708948
+        ]
+      ],
+      "referenceMajorAxisAngleDeg": -162.964051,
+      "referenceFillRatio": 0.647492,
+      "referenceAspectRatio": 1.705414,
+      "referenceBboxAspectRatio": 1.507042,
+      "targetMeanVisibleAlpha": 118.782883,
+      "targetMaxAlpha": 176,
+      "alphaFloor": 8,
+      "visiblePixels": 4919,
+      "targetVisiblePixels": 19676,
+      "partialAlphaFraction": 0.941045,
+      "blurRadiusPx": 3.2,
+      "referenceRole": "numeric world-origin/contact/bbox/extent/penumbra/density calibration only",
+      "forbiddenPixelReuse": true
+    },
+    "derivation": {
+      "method": "family-specific projection from accepted generated BODY alpha; paired canonical BODY/SHADOW supplies transform calibration only",
+      "version": "shadow-v4-paired-transform",
+      "family": "tree",
+      "bodyAlphaSha256": "487bf5e56466152e5fc4cb5818666f456022773bc7f04853a5669168ba442194",
+      "canonicalShadowRole": "numeric world-origin/contact/bbox/extent/penumbra/density calibration only",
+      "canonicalShadowPixelsCopied": false,
+      "lightingContract": "ps-overcast-upper-left-v1",
+      "shadowScreenVector": [
+        0.72,
+        0.69
+      ],
+      "projectionMatrix": [
+        1.07924367,
+        0.11574162,
+        0.02407985,
+        0.33335045
+      ],
+      "layers": {
+        "sourceLayer": "generated canopy and trunk alpha; transform fitted from paired canonical BODY/SHADOW",
+        "canopyFit": {
+          "matrix": [
+            1.079243670610263,
+            0.11574162485999946,
+            0.024079845183701473,
+            0.33335044542027015
+          ],
+          "offset": [
+            96.31211193561418,
+            150.26456044791757
+          ],
+          "objective": 0.053043895133872435,
+          "converged": true,
+          "iterations": 12,
+          "rawProjectedBbox": [
+            -4.740243182823264,
+            11.510487480622885,
+            217.71076143212719,
+            163.26843050759075
+          ],
+          "rawProjectedCentroid": [
+            105.24099999999959,
+            72.58180000000006
+          ],
+          "projectedCovariance": [
+            [
+              2406.7437293123508,
+              542.1263642816947
+            ],
+            [
+              542.1263642816946,
+              999.5803900811935
+            ]
+          ]
+        },
+        "trunkProjectionMatrix": [
+          0.9,
+          -0.1304712907555251,
+          0.04,
+          -0.1250349869740449
+        ],
+        "canopyOcclusionKernel": 3,
+        "notchDirection": "canvas top to generated trunk-base contact",
+        "projectedTrunkWidth": 3
+      },
+      "bodyContact": [
+        110.0,
+        444.0
+      ],
+      "bodyWorldContact": [
+        0.0,
+        0.0
+      ],
+      "shadowContact": [
+        50.0,
+        10.0
+      ],
+      "shadowContactWorld": [
+        0.0,
+        4.0
+      ],
+      "contactWorldDelta": [
+        0.0,
+        4.0
+      ],
+      "resultContact": [
+        50.0,
+        10.0
+      ],
+      "contactErrorPx": 0.0,
+      "resultBbox": [
+        0,
+        9,
+        214,
+        142
+      ],
+      "targetMeanVisibleAlpha": 118.782883,
+      "meanVisibleAlpha": 67.901542,
+      "targetMaxAlpha": 176,
+      "maxAlpha": 76,
+      "darkCoreRemoved": true,
+      "lightOnlyKneeAlpha": 52.0,
+      "lightOnlyCapAlpha": 76.0,
+      "blurRadiusPx": 1.344,
+      "outputAlphaSha256": "4b03d0a46f8547ececd154844b93ea3a6669023f588e24f92c9f631590c6f5b3"
+    },
+    "quality": {
+      "contract": "shadow-v4-light-only",
+      "size": [
+        214,
+        142
+      ],
+      "bbox": [
+        0,
+        9,
+        214,
+        142
+      ],
+      "visiblePixels": 18353,
+      "meanVisibleAlpha": 67.901542,
+      "maxAlpha": 76,
+      "darkCoreRemoved": true,
+      "contact": [
+        50.0,
+        10.0
+      ],
+      "expectedContact": [
+        50.0,
+        10.0
+      ],
+      "contactErrorPx": 0.0,
+      "parityBias": 0.00097085,
+      "lowerRightTrunkCastPerHeightPx": 0.180711,
+      "canonicalPixelIdentical": false
+    },
+    "fileSha256": "be83d5603e80e13613cb52739c0b2c050f8a9189af1f1a9cf3a1af77840ff01c",
+    "alphaSha256": "4b03d0a46f8547ececd154844b93ea3a6669023f588e24f92c9f631590c6f5b3",
+    "canonicalShadowPixelsCopied": false
+  },
+  "review": {
+    "file": "C:/Projects/squad_tactics/output/shadow_v4_light_staging/trees/review/pinus-ponderosa_a_03_s2_world_review.png",
+    "size": [
+      334,
+      678
+    ],
+    "worldOriginMarker": [
+      140,
+      512
+    ],
+    "shadowVector": [
+      0.72,
+      0.69
+    ],
+    "contactMarkers": {
+      "bodyWorld": [
+        0.0,
+        0.0
+      ],
+      "shadowWorld": [
+        0.0,
+        4.0
+      ]
+    }
+  }
+}

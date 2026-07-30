@@ -1,0 +1,155 @@
+{
+  "schema": "raised-hd-job/v1",
+  "jobId": "shrub_cedrus-deodara_b_03_s1",
+  "id": "shrub_cedrus-deodara_b_03",
+  "family": "shrub",
+  "roles": [
+    "stateBody"
+  ],
+  "bodySlot": 1,
+  "pairedShadowSlot": null,
+  "pixelRatio": 2,
+  "lightingContract": "ps-overcast-upper-left-v1",
+  "bodyOrigin": [
+    -15,
+    -14
+  ],
+  "shadowOrigin": null,
+  "references": {
+    "body": "../../../scratch/ps_sprites_canonical_v1/Objects/Plants/shrub_cedrus-deodara_b_03_s1.png",
+    "shadowCalibration": null,
+    "bodyRole": "numeric canvas/bbox/origin/contact/color calibration",
+    "shadowRole": null,
+    "canonicalPixelsCopied": false
+  },
+  "provenance": {
+    "source": "built-in ImageGen selected output",
+    "sourceCopy": "C:\\Projects\\squad_tactics\\tmp\\raised_hd\\shrub_cedrus-deodara_b_03_s1_source.png",
+    "sourceSha256": "d0878a6c400831e22c9d324c7d9c2be0910ec15c929a56e1eb34807f26afb455",
+    "cutout": "C:\\Projects\\squad_tactics\\tmp\\raised_hd\\shrub_cedrus-deodara_b_03_s1_cutout.png",
+    "cutoutSha256": "66ed2f56813ab1d622922bbb709be644e7f3372a2b3bde994806ef076a39e820",
+    "cutoutAlphaSha256": "dba21d3d3157b65b3322f9cea43cd1d73f57ba94d7a0968a7ce52bb25b228771",
+    "chromaHelper": "C:\\Users\\aware.梨花のPC\\.codex\\skills\\.system\\imagegen\\scripts\\remove_chroma_key.py"
+  },
+  "outputs": {
+    "body": "body/shrub_cedrus-deodara_b_03_s1_body_hd_v1.png",
+    "shadow": null,
+    "review": "review/shrub_cedrus-deodara_b_03_s1_world_review.png",
+    "metadata": "metadata/shrub_cedrus-deodara_b_03_s1.json"
+  },
+  "body": {
+    "normalization": {
+      "sourceSize": [
+        1546,
+        1017
+      ],
+      "sourceBbox": [
+        92,
+        50,
+        1452,
+        923
+      ],
+      "sourceContact": [
+        723.5,
+        540.5
+      ],
+      "canonicalBbox": [
+        0,
+        0,
+        33,
+        26
+      ],
+      "canonicalContact": [
+        14.8624,
+        14.0595
+      ],
+      "targetSize": [
+        66,
+        52
+      ],
+      "targetBbox": [
+        0,
+        0,
+        66,
+        52
+      ],
+      "targetContact": [
+        29.7248,
+        28.1191
+      ],
+      "resultBbox": [
+        0,
+        0,
+        65,
+        50
+      ],
+      "resultContact": [
+        29.6,
+        28.2
+      ],
+      "scale": [
+        0.04782929,
+        0.05848624
+      ],
+      "generatedAlphaSha256": "dba21d3d3157b65b3322f9cea43cd1d73f57ba94d7a0968a7ce52bb25b228771",
+      "normalizedAlphaSha256": "b2686776d8bbc0847eadc3b462d84aa6b4cdf005269607e2b31245d67dee8a91",
+      "canonicalAlphaSha256": "035cda5fc0c9c416c94bfb5a06baf79361116440c9bbc5952c54fcbddb387164",
+      "alphaAuthority": "accepted generated cutout",
+      "canonicalAlphaRole": "numeric bbox/contact calibration only"
+    },
+    "quality": {
+      "size": [
+        66,
+        52
+      ],
+      "bbox": [
+        0,
+        0,
+        65,
+        50
+      ],
+      "visiblePixels": 1265,
+      "canonicalVisiblePixels": 1336,
+      "coverageRatio": 0.946856,
+      "contact": [
+        29.6,
+        28.2
+      ],
+      "expectedContact": [
+        29.7248,
+        28.1191
+      ],
+      "contactErrorPx": 0.148768,
+      "magentaSpillPixels": 0,
+      "magentaSpillLimit": 2,
+      "canonicalAlphaIdentical": false
+    },
+    "fileSha256": "04d5c810729e7cebc553e844ae1a9351c96b0e25c0d0dfc0266ffa953dfb7852",
+    "alphaSha256": "b2686776d8bbc0847eadc3b462d84aa6b4cdf005269607e2b31245d67dee8a91"
+  },
+  "shadow": {
+    "method": "intentionally-shadowless-state",
+    "canonicalShadowPixelsCopied": false
+  },
+  "review": {
+    "file": "C:/Projects/squad_tactics/asset/environment/raised_hd/review/shrub_cedrus-deodara_b_03_s1_world_review.png",
+    "size": [
+      126,
+      150
+    ],
+    "worldOriginMarker": [
+      60,
+      96
+    ],
+    "shadowVector": [
+      0.72,
+      0.69
+    ],
+    "contactMarkers": {
+      "bodyWorld": [
+        -0.4,
+        0.2
+      ]
+    }
+  }
+}

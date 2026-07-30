@@ -1,0 +1,353 @@
+{
+  "schema": "raised-hd-job/v1",
+  "jobId": "village_fence_frontage_s74",
+  "id": "village_fence_frontage",
+  "family": "fence",
+  "roles": [
+    "body"
+  ],
+  "bodySlot": 74,
+  "pairedShadowSlot": 130,
+  "pixelRatio": 2,
+  "lightingContract": "ps-overcast-upper-left-v1",
+  "bodyOrigin": [
+    -21,
+    -29
+  ],
+  "shadowOrigin": [
+    -20,
+    -11
+  ],
+  "references": {
+    "body": "../../../scratch/ps_sprites_canonical_v1/Objects/Fences/village_fence_frontage_s74.png",
+    "shadowCalibration": "../../../scratch/ps_sprites_canonical_v1/Objects/Fences/village_fence_frontage_s130.png",
+    "bodyRole": "numeric canvas/bbox/origin/contact/color calibration",
+    "shadowRole": "numeric world-origin/contact/bbox/extent/penumbra/density calibration only",
+    "canonicalPixelsCopied": false
+  },
+  "provenance": {
+    "source": "built-in ImageGen selected output",
+    "sourceCopy": "C:\\Projects\\squad_tactics\\tmp\\raised_hd\\village_fence_frontage_s74_source.png",
+    "sourceSha256": "24eed57f26085765c9e9bf69227a62134f9d5bc4160a121fc0ac9d68aa6a5e51",
+    "cutout": "C:\\Projects\\squad_tactics\\tmp\\raised_hd\\village_fence_frontage_s74_cutout.png",
+    "cutoutSha256": "ef25b0cba7f0d896caa48ec410715d3bcbd18af88942c4d1c4ff8842d71279fc",
+    "cutoutAlphaSha256": "e4c3ab134cd4bdc6fbb2daa710e4763f785254ff1f67d0215c00febb44e6d3fc",
+    "chromaHelper": "C:\\Users\\aware.梨花のPC\\.codex\\skills\\.system\\imagegen\\scripts\\remove_chroma_key.py"
+  },
+  "outputs": {
+    "body": "body/village_fence_frontage_s74_body_hd_v1.png",
+    "shadow": "shadow/village_fence_frontage_s130_shadow_hd_v1.png",
+    "review": "review/village_fence_frontage_s74_world_review.png",
+    "metadata": "metadata/village_fence_frontage_s74.json"
+  },
+  "body": {
+    "normalization": {
+      "sourceSize": [
+        1086,
+        1448
+      ],
+      "sourceBbox": [
+        175,
+        123,
+        969,
+        1286
+      ],
+      "sourceContact": [
+        905.6,
+        1198.8
+      ],
+      "canonicalBbox": [
+        0,
+        0,
+        23,
+        28
+      ],
+      "canonicalContact": [
+        20.269,
+        25.0
+      ],
+      "targetSize": [
+        46,
+        56
+      ],
+      "targetBbox": [
+        0,
+        0,
+        46,
+        56
+      ],
+      "targetContact": [
+        40.5381,
+        50.0
+      ],
+      "resultBbox": [
+        0,
+        0,
+        44,
+        54
+      ],
+      "resultContact": [
+        40.5,
+        50.0
+      ],
+      "scale": [
+        0.05674653,
+        0.04733219
+      ],
+      "generatedAlphaSha256": "e4c3ab134cd4bdc6fbb2daa710e4763f785254ff1f67d0215c00febb44e6d3fc",
+      "normalizedAlphaSha256": "7a06091a12cf40e3d0d2954c9cb0e53e544bab524422851e47209b60c45a057a",
+      "canonicalAlphaSha256": "5242d60c8447f4a546bb5f8bf4999f10a72fb04bb59fd9dc6ad86629a357d3cf",
+      "alphaAuthority": "accepted generated cutout",
+      "canonicalAlphaRole": "numeric bbox/contact calibration only"
+    },
+    "quality": {
+      "size": [
+        46,
+        56
+      ],
+      "bbox": [
+        0,
+        0,
+        44,
+        54
+      ],
+      "visiblePixels": 1209,
+      "canonicalVisiblePixels": 1440,
+      "coverageRatio": 0.839583,
+      "contact": [
+        40.5,
+        50.0
+      ],
+      "expectedContact": [
+        40.5381,
+        50.0
+      ],
+      "contactErrorPx": 0.038071,
+      "magentaSpillPixels": 0,
+      "magentaSpillLimit": 2,
+      "canonicalAlphaIdentical": false
+    },
+    "fileSha256": "758f4b339645ffc4bc8bdcaa259b490e770f762d70bba8059a5e1caa210aee92",
+    "alphaSha256": "7a06091a12cf40e3d0d2954c9cb0e53e544bab524422851e47209b60c45a057a"
+  },
+  "shadow": {
+    "method": "paired-canonical-body-transform-v4-light-only",
+    "bodyAlphaAuthority": "7a06091a12cf40e3d0d2954c9cb0e53e544bab524422851e47209b60c45a057a",
+    "calibration": {
+      "referenceSize": [
+        26,
+        16
+      ],
+      "targetSize": [
+        52,
+        32
+      ],
+      "referenceOrigin": [
+        -20,
+        -11
+      ],
+      "worldOriginLocal": [
+        40.0,
+        22.0
+      ],
+      "referenceBbox": [
+        0,
+        0,
+        26,
+        16
+      ],
+      "targetBbox": [
+        0,
+        0,
+        52,
+        32
+      ],
+      "referenceContact": [
+        19.8834,
+        11.0544
+      ],
+      "referenceCentroid": [
+        11.9423,
+        7.8071
+      ],
+      "referenceCovariance": [
+        [
+          36.494995,
+          19.224438
+        ],
+        [
+          19.224438,
+          11.385764
+        ]
+      ],
+      "referenceMajorAxisAngleDeg": -151.573373,
+      "referenceFillRatio": 0.257212,
+      "referenceAspectRatio": 6.919381,
+      "referenceBboxAspectRatio": 1.625,
+      "targetMeanVisibleAlpha": 94.897194,
+      "targetMaxAlpha": 176,
+      "alphaFloor": 8,
+      "visiblePixels": 107,
+      "targetVisiblePixels": 428,
+      "partialAlphaFraction": 0.663551,
+      "blurRadiusPx": 3.2,
+      "referenceRole": "numeric world-origin/contact/bbox/extent/penumbra/density calibration only",
+      "forbiddenPixelReuse": true
+    },
+    "derivation": {
+      "method": "family-specific projection from accepted generated BODY alpha; paired canonical BODY/SHADOW supplies transform calibration only",
+      "version": "shadow-v4-paired-transform",
+      "family": "fence",
+      "bodyAlphaSha256": "7a06091a12cf40e3d0d2954c9cb0e53e544bab524422851e47209b60c45a057a",
+      "canonicalShadowRole": "numeric world-origin/contact/bbox/extent/penumbra/density calibration only",
+      "canonicalShadowPixelsCopied": false,
+      "lightingContract": "ps-overcast-upper-left-v1",
+      "shadowScreenVector": [
+        0.72,
+        0.69
+      ],
+      "projectionMatrix": [
+        0.96358717,
+        -0.07938892,
+        0.15101429,
+        0.84788511
+      ],
+      "layers": {
+        "sourceLayer": "generated lower-envelope contact alpha",
+        "shapeFit": {
+          "matrix": [
+            0.9635871668818079,
+            -0.07938892112358219,
+            0.15101428973468733,
+            0.847885108526209
+          ],
+          "offset": [
+            0.0,
+            0.0
+          ],
+          "objective": 0.03444997736275123,
+          "converged": true,
+          "iterations": 9,
+          "rawProjectedBbox": [
+            1.6147978736461894,
+            -0.8139666150443325,
+            45.18233117209172,
+            27.574746977233076
+          ],
+          "rawProjectedCentroid": [
+            22.148886163459746,
+            17.09761438309211
+          ],
+          "projectedCovariance": [
+            [
+              146.58424775189795,
+              76.53310795776562
+            ],
+            [
+              76.53310795776564,
+              47.84204351983042
+            ]
+          ]
+        },
+        "fillKernel": 1
+      },
+      "bodyContact": [
+        40.5,
+        50.0
+      ],
+      "bodyWorldContact": [
+        -1.5,
+        -8.0
+      ],
+      "shadowContact": [
+        39.7668,
+        22.1088
+      ],
+      "shadowContactWorld": [
+        -0.2332,
+        0.1088
+      ],
+      "contactWorldDelta": [
+        1.2668,
+        8.1088
+      ],
+      "resultContact": [
+        39.74,
+        22.148
+      ],
+      "contactErrorPx": 0.047486,
+      "resultBbox": [
+        0,
+        0,
+        45,
+        27
+      ],
+      "targetMeanVisibleAlpha": 94.897194,
+      "meanVisibleAlpha": 64.446991,
+      "targetMaxAlpha": 176,
+      "maxAlpha": 76,
+      "darkCoreRemoved": true,
+      "lightOnlyKneeAlpha": 52.0,
+      "lightOnlyCapAlpha": 76.0,
+      "blurRadiusPx": 0.512,
+      "outputAlphaSha256": "442bcbf44b48cc455059057af8a048111fd03732fc1720b3df9f9c0f321501d9"
+    },
+    "quality": {
+      "contract": "shadow-v4-light-only",
+      "size": [
+        52,
+        32
+      ],
+      "bbox": [
+        0,
+        0,
+        45,
+        27
+      ],
+      "visiblePixels": 349,
+      "meanVisibleAlpha": 64.446991,
+      "maxAlpha": 76,
+      "darkCoreRemoved": true,
+      "contact": [
+        39.74,
+        22.148
+      ],
+      "expectedContact": [
+        39.7668,
+        22.1088
+      ],
+      "contactErrorPx": 0.047486,
+      "parityBias": 0.01022698,
+      "lowerRightTrunkCastPerHeightPx": null,
+      "canonicalPixelIdentical": false
+    },
+    "fileSha256": "3daf72e9ce119c14b3da58878bea5d9f7a5f9dcedfbc0c162d82d8b0a347a08c",
+    "alphaSha256": "442bcbf44b48cc455059057af8a048111fd03732fc1720b3df9f9c0f321501d9",
+    "canonicalShadowPixelsCopied": false
+  },
+  "review": {
+    "file": "C:/Projects/squad_tactics/output/shadow_v4_light_staging/raised/review/village_fence_frontage_s74_world_review.png",
+    "size": [
+      114,
+      166
+    ],
+    "worldOriginMarker": [
+      72,
+      126
+    ],
+    "shadowVector": [
+      0.72,
+      0.69
+    ],
+    "contactMarkers": {
+      "bodyWorld": [
+        -1.5,
+        -8.0
+      ],
+      "shadowWorld": [
+        -0.2332,
+        0.1088
+      ]
+    }
+  }
+}

@@ -2,11 +2,14 @@
 
 var VEGETATION_ASSET_BASE = 'asset/environment/trees_ps/';
 var VEGETATION_MANIFEST_URL = VEGETATION_ASSET_BASE + 'manifest.json';
+var VEGETATION_HD_MANIFEST_URL = 'asset/environment/trees_hd/manifest.json';
 var VEGETATION_SEED = 0x51F0;
-var VEGETATION_TREES_PER_HEX = 5;
-var VEGETATION_MIN_SPACING = HEX_SIZE * 0.34;
-var VEGETATION_SCATTER_RADIUS = HEX_SIZE * 0.62;
-var VEGETATION_TARGET_HEIGHT = HEX_SIZE * 1.9;
+// v3: trees render at native sprite size (PS 1:1) — roughly 2x the old
+// normalized height — so fewer trees per hex with wider spacing.
+var VEGETATION_TREES_PER_HEX = 2;
+var VEGETATION_MIN_SPACING = HEX_SIZE * 0.85;
+var VEGETATION_SCATTER_RADIUS = HEX_SIZE * 0.7;
+var VEGETATION_TARGET_HEIGHT = HEX_SIZE * 1.9; // legacy (unused since v3 native scale)
 var VEGETATION_NEIGHBORS = [
     [1, 0],
     [-1, 0],
@@ -27,6 +30,81 @@ function vegetationMulberry32(seed) {
 
 function vegetationTextureKey(filename) {
     return 'veg_' + String(filename).replace(/^.*[\\/]/, '').replace(/\.[^.]+$/, '');
+}
+
+function vegetationFetchJson(url, optional) {
+    return fetch(url)
+        .then(function (response) {
+            if (!response || !response.ok) {
+                throw new Error('manifest request failed: ' + url);
+            }
+            return response.json();
+        })
+        .catch(function (error) {
+            if (optional) {
+                console.warn('[VegetationLayer] optional HD manifest unavailable:', error);
+                return null;
+            }
+            throw error;
+        });
+}
+
+function vegetationMergeOverrides(manifest, overrideManifest) {
+    if (!manifest || !Array.isArray(manifest.trees) ||
+        !overrideManifest || !Array.isArray(overrideManifest.overrides)) {
+        return manifest;
+    }
+
+    var overridesById = {};
+    overrideManifest.overrides.forEach(function (override) {
+        if (override && override.id) {
+            overridesById[override.id] = override;
+        }
+    });
+
+    manifest.trees = manifest.trees.map(function (tree) {
+        var override = tree && overridesById[tree.id];
+        return override ? Object.assign({}, tree, override) : tree;
+    });
+    return manifest;
+}
+
+function vegetationApplySway(scene, body, tree, px, py, baseScale) {
+    var sway = tree && tree.sway;
+    if (!sway || !sway.enabled || !scene.tweens) {
+        return;
+    }
+
+    var angle = Number(sway.angleDeg);
+    var scaleXAmount = Number(sway.scaleX);
+    var duration = Number(sway.durationMs);
+    if (!isFinite(angle) || angle <= 0 ||
+        !isFinite(scaleXAmount) || scaleXAmount < 0 ||
+        !isFinite(duration) || duration <= 0) {
+        return;
+    }
+
+    var hash = (
+        Math.imul(Math.round(px * 16), 73856093) ^
+        Math.imul(Math.round(py * 16), 19349663)
+    ) >>> 0;
+    var direction = (hash & 1) === 0 ? 1 : -1;
+    var phaseDelay = (hash >>> 8) % Math.max(1, Math.round(duration));
+
+    scene.tweens.add({
+        targets: body,
+        angle: { from: -angle * direction, to: angle * direction },
+        scaleX: {
+            from: baseScale * (1 - scaleXAmount),
+            to: baseScale * (1 + scaleXAmount)
+        },
+        scaleY: baseScale,
+        duration: duration * (0.92 + ((hash % 17) / 100)),
+        delay: phaseDelay,
+        ease: 'Sine.inOut',
+        yoyo: true,
+        repeat: -1
+    });
 }
 
 function vegetationCellAt(map, q, r) {
@@ -91,14 +169,12 @@ window.VegetationLayer = {
             return;
         }
 
-        fetch(VEGETATION_MANIFEST_URL)
-            .then(function (response) {
-                if (!response || !response.ok) {
-                    throw new Error('manifest request failed');
-                }
-                return response.json();
-            })
-            .then(function (manifest) {
+        Promise.all([
+            vegetationFetchJson(VEGETATION_MANIFEST_URL, false),
+            vegetationFetchJson(VEGETATION_HD_MANIFEST_URL, true)
+        ])
+            .then(function (manifests) {
+                var manifest = vegetationMergeOverrides(manifests[0], manifests[1]);
                 if (buildId !== api._buildId) {
                     return;
                 }
@@ -200,7 +276,19 @@ window.VegetationLayer = {
                         pools[tree.kind].push({
                             bodyKey: bodyKey,
                             shadowKey: shadowKey,
-                            h: height
+                            h: height,
+                            // v3 manifest: exact PS anchor-origin fractions inside the
+                            // POT-padded texture (body anchor = trunk base, shadow anchor
+                            // shares the same world point).
+                            ox: isFinite(tree.ox) ? tree.ox : 0.5,
+                            oy: isFinite(tree.oy) ? tree.oy : 1,
+                            sox: isFinite(tree.sox) ? tree.sox : 0.5,
+                            soy: isFinite(tree.soy) ? tree.soy : 0.5,
+                            renderScale: isFinite(tree.renderScale) && tree.renderScale > 0
+                                ? tree.renderScale
+                                : 1,
+                            sampleGuarantee: !!tree.sampleGuarantee,
+                            sway: tree.sway || null
                         });
                     });
 
@@ -216,6 +304,7 @@ window.VegetationLayer = {
                     var prng = vegetationMulberry32(VEGETATION_SEED);
                     var acceptedPositions = [];
                     var treeCount = 0;
+                    var guaranteedSamplePlaced = false;
 
                     function hasMinimumSpacing(px, py) {
                         var minimumSquared = VEGETATION_MIN_SPACING * VEGETATION_MIN_SPACING;
@@ -244,6 +333,14 @@ window.VegetationLayer = {
                             return null;
                         }
 
+                        if (!guaranteedSamplePlaced) {
+                            for (var i = 0; i < selectedPool.length; i++) {
+                                if (selectedPool[i].sampleGuarantee) {
+                                    return selectedPool[i];
+                                }
+                            }
+                        }
+
                         return selectedPool[Math.floor(prng() * selectedPool.length)];
                     }
 
@@ -261,25 +358,32 @@ window.VegetationLayer = {
                                 continue;
                             }
 
-                            var scaleVar = 0.82 + prng() * 0.36;
-                            var scale = (VEGETATION_TARGET_HEIGHT / tree.h) * scaleVar;
+                            // PS draws sprites 1:1 into the world buffer (no size
+                            // normalization) — on-screen size comes from camera zoom.
+                            // Mild variance only; big/small species stay big/small.
+                            var scale = (0.9 + prng() * 0.25) * tree.renderScale;
 
                             if (tree.shadowKey) {
+                                // v3 shadows carry TRUE color+coverage (~0.5) from the
+                                // differential-blit extraction — no extra alpha needed.
                                 var shadow = scene.add.image(px, py, tree.shadowKey)
-                                    .setOrigin(0.5, 0.5)
+                                    .setOrigin(tree.sox, tree.soy)
                                     .setScale(scale)
-                                    .setAlpha(0.5)
                                     .setDepth(py - 0.6);
 
                                 layer.add(shadow);
                             }
 
                             var body = scene.add.image(px, py, tree.bodyKey)
-                                .setOrigin(0.5, 1)
+                                .setOrigin(tree.ox, tree.oy)
                                 .setScale(scale)
                                 .setDepth(py);
 
                             layer.add(body);
+                            vegetationApplySway(scene, body, tree, px, py, scale);
+                            if (tree.sampleGuarantee) {
+                                guaranteedSamplePlaced = true;
+                            }
 
                             acceptedPositions.push({ x: px, y: py });
                             treeCount++;

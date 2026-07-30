@@ -1,0 +1,4582 @@
+{
+  "schema": "raised-hd-inventory/v1",
+  "status": "production-queue-ready",
+  "selection": {
+    "families": [
+      "tree"
+    ],
+    "assetRule": "unique tree ids actually placed by the 14 checked-in ps_seed object ledgers",
+    "slotRule": "BODY slot 2 paired with SHADOW slot 4",
+    "approvedExternalSample": "quercus-cerris_a_02",
+    "queuedAssetCount": 57,
+    "completeTargetAssetCount": 58
+  },
+  "lightingContract": {
+    "id": "ps-overcast-upper-left-v1",
+    "spec": "../../../docs/ASSET_LIGHTING_CONTRACT.md",
+    "keyOrigin": "screen upper-left",
+    "shadowDirection": "screen lower-right",
+    "shadowScreenVector": [
+      0.72,
+      0.69
+    ],
+    "elevationDegrees": 55,
+    "ambientFill": 0.72,
+    "colorTemperatureK": 6000
+  },
+  "shadowPolicy": {
+    "method": "generated-body-derived",
+    "bodyAuthority": "accepted generated tree BODY alpha",
+    "canonicalShadowRole": "numeric anchor/contact/bbox/extent/penumbra/density calibration only",
+    "forbidden": "reuse of canonical shadow pixels",
+    "alignmentInvariant": "generated trunk base begins at the canonical notch and casts toward screen lower-right"
+  },
+  "animationContract": {
+    "method": "runtime-subtle-whole-body-sway",
+    "staticShadow": true,
+    "angleDeg": 0.42,
+    "scaleX": 0.0035,
+    "durationMs": 4200,
+    "anchor": "trunk base"
+  },
+  "sources": {
+    "canonicalManifest": "../ps_objects/manifest.json",
+    "mapDirectory": "../maps",
+    "ledgers": [
+      {
+        "name": "ps_seed_1001",
+        "objectCount": 142,
+        "selectedUsageCount": 23,
+        "file": "../maps/ps_seed_1001_objects.json"
+      },
+      {
+        "name": "ps_seed_2026",
+        "objectCount": 103,
+        "selectedUsageCount": 16,
+        "file": "../maps/ps_seed_2026_objects.json"
+      },
+      {
+        "name": "ps_seed_3101",
+        "objectCount": 167,
+        "selectedUsageCount": 30,
+        "file": "../maps/ps_seed_3101_objects.json"
+      },
+      {
+        "name": "ps_seed_3102",
+        "objectCount": 110,
+        "selectedUsageCount": 26,
+        "file": "../maps/ps_seed_3102_objects.json"
+      },
+      {
+        "name": "ps_seed_3103",
+        "objectCount": 107,
+        "selectedUsageCount": 14,
+        "file": "../maps/ps_seed_3103_objects.json"
+      },
+      {
+        "name": "ps_seed_3104",
+        "objectCount": 79,
+        "selectedUsageCount": 14,
+        "file": "../maps/ps_seed_3104_objects.json"
+      },
+      {
+        "name": "ps_seed_3105",
+        "objectCount": 155,
+        "selectedUsageCount": 16,
+        "file": "../maps/ps_seed_3105_objects.json"
+      },
+      {
+        "name": "ps_seed_3106",
+        "objectCount": 131,
+        "selectedUsageCount": 29,
+        "file": "../maps/ps_seed_3106_objects.json"
+      },
+      {
+        "name": "ps_seed_3107",
+        "objectCount": 92,
+        "selectedUsageCount": 25,
+        "file": "../maps/ps_seed_3107_objects.json"
+      },
+      {
+        "name": "ps_seed_3108",
+        "objectCount": 73,
+        "selectedUsageCount": 16,
+        "file": "../maps/ps_seed_3108_objects.json"
+      },
+      {
+        "name": "ps_seed_3109",
+        "objectCount": 98,
+        "selectedUsageCount": 28,
+        "file": "../maps/ps_seed_3109_objects.json"
+      },
+      {
+        "name": "ps_seed_3110",
+        "objectCount": 132,
+        "selectedUsageCount": 28,
+        "file": "../maps/ps_seed_3110_objects.json"
+      },
+      {
+        "name": "ps_seed_3111",
+        "objectCount": 94,
+        "selectedUsageCount": 27,
+        "file": "../maps/ps_seed_3111_objects.json"
+      },
+      {
+        "name": "ps_seed_3112",
+        "objectCount": 115,
+        "selectedUsageCount": 25,
+        "file": "../maps/ps_seed_3112_objects.json"
+      }
+    ]
+  },
+  "summary": {
+    "assetCount": 57,
+    "completeTargetAssetCount": 58,
+    "approvedExternalSampleCount": 1,
+    "usageCount": 313,
+    "completeTargetUsageCount": 317,
+    "mapCount": 14,
+    "bodyVariantCount": 57,
+    "pairedShadowVariantCount": 57,
+    "shadowlessBodyVariantCount": 0,
+    "canonicalSlotCount": 114,
+    "assetsByFamily": {
+      "tree": 57
+    },
+    "usageByFamily": {
+      "tree": 313
+    },
+    "bodyVariantsByFamily": {
+      "tree": 57
+    },
+    "pairedShadowVariantsByFamily": {
+      "tree": 57
+    },
+    "canonicalSlotsByFamily": {
+      "tree": 114
+    },
+    "usageByMap": {
+      "ps_seed_1001": 22,
+      "ps_seed_2026": 15,
+      "ps_seed_3101": 30,
+      "ps_seed_3102": 25,
+      "ps_seed_3103": 14,
+      "ps_seed_3104": 14,
+      "ps_seed_3105": 16,
+      "ps_seed_3106": 29,
+      "ps_seed_3107": 25,
+      "ps_seed_3108": 16,
+      "ps_seed_3109": 28,
+      "ps_seed_3110": 27,
+      "ps_seed_3111": 27,
+      "ps_seed_3112": 25
+    },
+    "allObjectsByMap": {
+      "ps_seed_1001": 142,
+      "ps_seed_2026": 103,
+      "ps_seed_3101": 167,
+      "ps_seed_3102": 110,
+      "ps_seed_3103": 107,
+      "ps_seed_3104": 79,
+      "ps_seed_3105": 155,
+      "ps_seed_3106": 131,
+      "ps_seed_3107": 92,
+      "ps_seed_3108": 73,
+      "ps_seed_3109": 98,
+      "ps_seed_3110": 132,
+      "ps_seed_3111": 94,
+      "ps_seed_3112": 115
+    }
+  },
+  "assets": [
+    {
+      "id": "abies-concolor_a_02",
+      "family": "tree",
+      "usageCount": 1,
+      "usageByMap": {
+        "ps_seed_1001": 0,
+        "ps_seed_2026": 0,
+        "ps_seed_3101": 0,
+        "ps_seed_3102": 0,
+        "ps_seed_3103": 0,
+        "ps_seed_3104": 0,
+        "ps_seed_3105": 0,
+        "ps_seed_3106": 0,
+        "ps_seed_3107": 0,
+        "ps_seed_3108": 0,
+        "ps_seed_3109": 1,
+        "ps_seed_3110": 0,
+        "ps_seed_3111": 0,
+        "ps_seed_3112": 0
+      },
+      "composite": false,
+      "slotRoles": {
+        "body": [
+          2
+        ],
+        "shadow": [
+          4
+        ],
+        "stateBody": [],
+        "stateShadow": [],
+        "crushedBody": [],
+        "crushedShadow": []
+      },
+      "bodyVariants": [
+        {
+          "bodySlot": 2,
+          "roles": [
+            "body"
+          ],
+          "pairedShadowSlot": 4
+        }
+      ],
+      "canonicalSlots": [
+        {
+          "slot": 2,
+          "roles": [
+            "body"
+          ],
+          "reference": "../ps_objects/abies-concolor_a_02_s2.png",
+          "referenceSize": [
+            79,
+            133
+          ],
+          "origin": [
+            -39,
+            -117
+          ],
+          "formatId": 723
+        },
+        {
+          "slot": 4,
+          "roles": [
+            "shadow"
+          ],
+          "reference": "../ps_objects/abies-concolor_a_02_s4.png",
+          "referenceSize": [
+            87,
+            48
+          ],
+          "origin": [
+            -35,
+            -13
+          ],
+          "formatId": 934
+        }
+      ]
+    },
+    {
+      "id": "abies-concolor_b_01",
+      "family": "tree",
+      "usageCount": 1,
+      "usageByMap": {
+        "ps_seed_1001": 0,
+        "ps_seed_2026": 0,
+        "ps_seed_3101": 1,
+        "ps_seed_3102": 0,
+        "ps_seed_3103": 0,
+        "ps_seed_3104": 0,
+        "ps_seed_3105": 0,
+        "ps_seed_3106": 0,
+        "ps_seed_3107": 0,
+        "ps_seed_3108": 0,
+        "ps_seed_3109": 0,
+        "ps_seed_3110": 0,
+        "ps_seed_3111": 0,
+        "ps_seed_3112": 0
+      },
+      "composite": false,
+      "slotRoles": {
+        "body": [
+          2
+        ],
+        "shadow": [
+          4
+        ],
+        "stateBody": [],
+        "stateShadow": [],
+        "crushedBody": [],
+        "crushedShadow": []
+      },
+      "bodyVariants": [
+        {
+          "bodySlot": 2,
+          "roles": [
+            "body"
+          ],
+          "pairedShadowSlot": 4
+        }
+      ],
+      "canonicalSlots": [
+        {
+          "slot": 2,
+          "roles": [
+            "body"
+          ],
+          "reference": "../ps_objects/abies-concolor_b_01_s2.png",
+          "referenceSize": [
+            59,
+            84
+          ],
+          "origin": [
+            -30,
+            -78
+          ],
+          "formatId": 723
+        },
+        {
+          "slot": 4,
+          "roles": [
+            "shadow"
+          ],
+          "reference": "../ps_objects/abies-concolor_b_01_s4.png",
+          "referenceSize": [
+            62,
+            36
+          ],
+          "origin": [
+            -21,
+            -8
+          ],
+          "formatId": 934
+        }
+      ]
+    },
+    {
+      "id": "abies-concolor_b_02",
+      "family": "tree",
+      "usageCount": 1,
+      "usageByMap": {
+        "ps_seed_1001": 0,
+        "ps_seed_2026": 0,
+        "ps_seed_3101": 0,
+        "ps_seed_3102": 0,
+        "ps_seed_3103": 0,
+        "ps_seed_3104": 0,
+        "ps_seed_3105": 0,
+        "ps_seed_3106": 0,
+        "ps_seed_3107": 0,
+        "ps_seed_3108": 1,
+        "ps_seed_3109": 0,
+        "ps_seed_3110": 0,
+        "ps_seed_3111": 0,
+        "ps_seed_3112": 0
+      },
+      "composite": false,
+      "slotRoles": {
+        "body": [
+          2
+        ],
+        "shadow": [
+          4
+        ],
+        "stateBody": [],
+        "stateShadow": [],
+        "crushedBody": [],
+        "crushedShadow": []
+      },
+      "bodyVariants": [
+        {
+          "bodySlot": 2,
+          "roles": [
+            "body"
+          ],
+          "pairedShadowSlot": 4
+        }
+      ],
+      "canonicalSlots": [
+        {
+          "slot": 2,
+          "roles": [
+            "body"
+          ],
+          "reference": "../ps_objects/abies-concolor_b_02_s2.png",
+          "referenceSize": [
+            49,
+            74
+          ],
+          "origin": [
+            -28,
+            -70
+          ],
+          "formatId": 723
+        },
+        {
+          "slot": 4,
+          "roles": [
+            "shadow"
+          ],
+          "reference": "../ps_objects/abies-concolor_b_02_s4.png",
+          "referenceSize": [
+            51,
+            32
+          ],
+          "origin": [
+            -21,
+            -8
+          ],
+          "formatId": 934
+        }
+      ]
+    },
+    {
+      "id": "cedrus-brevifolia_a_03",
+      "family": "tree",
+      "usageCount": 9,
+      "usageByMap": {
+        "ps_seed_1001": 1,
+        "ps_seed_2026": 0,
+        "ps_seed_3101": 0,
+        "ps_seed_3102": 2,
+        "ps_seed_3103": 0,
+        "ps_seed_3104": 1,
+        "ps_seed_3105": 0,
+        "ps_seed_3106": 0,
+        "ps_seed_3107": 0,
+        "ps_seed_3108": 1,
+        "ps_seed_3109": 1,
+        "ps_seed_3110": 1,
+        "ps_seed_3111": 1,
+        "ps_seed_3112": 1
+      },
+      "composite": false,
+      "slotRoles": {
+        "body": [
+          2
+        ],
+        "shadow": [
+          4
+        ],
+        "stateBody": [],
+        "stateShadow": [],
+        "crushedBody": [],
+        "crushedShadow": []
+      },
+      "bodyVariants": [
+        {
+          "bodySlot": 2,
+          "roles": [
+            "body"
+          ],
+          "pairedShadowSlot": 4
+        }
+      ],
+      "canonicalSlots": [
+        {
+          "slot": 2,
+          "roles": [
+            "body"
+          ],
+          "reference": "../ps_objects/cedrus-brevifolia_a_03_s2.png",
+          "referenceSize": [
+            41,
+            79
+          ],
+          "origin": [
+            -22,
+            -75
+          ],
+          "formatId": 723
+        },
+        {
+          "slot": 4,
+          "roles": [
+            "shadow"
+          ],
+          "reference": "../ps_objects/cedrus-brevifolia_a_03_s4.png",
+          "referenceSize": [
+            46,
+            27
+          ],
+          "origin": [
+            -18,
+            -11
+          ],
+          "formatId": 934
+        }
+      ]
+    },
+    {
+      "id": "cedrus-brevifolia_b_02",
+      "family": "tree",
+      "usageCount": 3,
+      "usageByMap": {
+        "ps_seed_1001": 0,
+        "ps_seed_2026": 0,
+        "ps_seed_3101": 1,
+        "ps_seed_3102": 0,
+        "ps_seed_3103": 0,
+        "ps_seed_3104": 0,
+        "ps_seed_3105": 0,
+        "ps_seed_3106": 0,
+        "ps_seed_3107": 0,
+        "ps_seed_3108": 0,
+        "ps_seed_3109": 0,
+        "ps_seed_3110": 0,
+        "ps_seed_3111": 0,
+        "ps_seed_3112": 2
+      },
+      "composite": false,
+      "slotRoles": {
+        "body": [
+          2
+        ],
+        "shadow": [
+          4
+        ],
+        "stateBody": [],
+        "stateShadow": [],
+        "crushedBody": [],
+        "crushedShadow": []
+      },
+      "bodyVariants": [
+        {
+          "bodySlot": 2,
+          "roles": [
+            "body"
+          ],
+          "pairedShadowSlot": 4
+        }
+      ],
+      "canonicalSlots": [
+        {
+          "slot": 2,
+          "roles": [
+            "body"
+          ],
+          "reference": "../ps_objects/cedrus-brevifolia_b_02_s2.png",
+          "referenceSize": [
+            55,
+            81
+          ],
+          "origin": [
+            -30,
+            -68
+          ],
+          "formatId": 723
+        },
+        {
+          "slot": 4,
+          "roles": [
+            "shadow"
+          ],
+          "reference": "../ps_objects/cedrus-brevifolia_b_02_s4.png",
+          "referenceSize": [
+            54,
+            35
+          ],
+          "origin": [
+            -27,
+            -12
+          ],
+          "formatId": 934
+        }
+      ]
+    },
+    {
+      "id": "cedrus-brevifolia_b_03",
+      "family": "tree",
+      "usageCount": 8,
+      "usageByMap": {
+        "ps_seed_1001": 2,
+        "ps_seed_2026": 0,
+        "ps_seed_3101": 1,
+        "ps_seed_3102": 1,
+        "ps_seed_3103": 0,
+        "ps_seed_3104": 0,
+        "ps_seed_3105": 0,
+        "ps_seed_3106": 1,
+        "ps_seed_3107": 0,
+        "ps_seed_3108": 1,
+        "ps_seed_3109": 1,
+        "ps_seed_3110": 0,
+        "ps_seed_3111": 1,
+        "ps_seed_3112": 0
+      },
+      "composite": false,
+      "slotRoles": {
+        "body": [
+          2
+        ],
+        "shadow": [
+          4
+        ],
+        "stateBody": [],
+        "stateShadow": [],
+        "crushedBody": [],
+        "crushedShadow": []
+      },
+      "bodyVariants": [
+        {
+          "bodySlot": 2,
+          "roles": [
+            "body"
+          ],
+          "pairedShadowSlot": 4
+        }
+      ],
+      "canonicalSlots": [
+        {
+          "slot": 2,
+          "roles": [
+            "body"
+          ],
+          "reference": "../ps_objects/cedrus-brevifolia_b_03_s2.png",
+          "referenceSize": [
+            67,
+            92
+          ],
+          "origin": [
+            -33,
+            -77
+          ],
+          "formatId": 723
+        },
+        {
+          "slot": 4,
+          "roles": [
+            "shadow"
+          ],
+          "reference": "../ps_objects/cedrus-brevifolia_b_03_s4.png",
+          "referenceSize": [
+            70,
+            45
+          ],
+          "origin": [
+            -30,
+            -12
+          ],
+          "formatId": 934
+        }
+      ]
+    },
+    {
+      "id": "cedrus-brevifolia_b_04",
+      "family": "tree",
+      "usageCount": 6,
+      "usageByMap": {
+        "ps_seed_1001": 0,
+        "ps_seed_2026": 0,
+        "ps_seed_3101": 2,
+        "ps_seed_3102": 0,
+        "ps_seed_3103": 1,
+        "ps_seed_3104": 0,
+        "ps_seed_3105": 2,
+        "ps_seed_3106": 1,
+        "ps_seed_3107": 0,
+        "ps_seed_3108": 0,
+        "ps_seed_3109": 0,
+        "ps_seed_3110": 0,
+        "ps_seed_3111": 0,
+        "ps_seed_3112": 0
+      },
+      "composite": false,
+      "slotRoles": {
+        "body": [
+          2
+        ],
+        "shadow": [
+          4
+        ],
+        "stateBody": [],
+        "stateShadow": [],
+        "crushedBody": [],
+        "crushedShadow": []
+      },
+      "bodyVariants": [
+        {
+          "bodySlot": 2,
+          "roles": [
+            "body"
+          ],
+          "pairedShadowSlot": 4
+        }
+      ],
+      "canonicalSlots": [
+        {
+          "slot": 2,
+          "roles": [
+            "body"
+          ],
+          "reference": "../ps_objects/cedrus-brevifolia_b_04_s2.png",
+          "referenceSize": [
+            52,
+            82
+          ],
+          "origin": [
+            -25,
+            -70
+          ],
+          "formatId": 723
+        },
+        {
+          "slot": 4,
+          "roles": [
+            "shadow"
+          ],
+          "reference": "../ps_objects/cedrus-brevifolia_b_04_s4.png",
+          "referenceSize": [
+            55,
+            31
+          ],
+          "origin": [
+            -24,
+            -9
+          ],
+          "formatId": 934
+        }
+      ]
+    },
+    {
+      "id": "cedrus-deodara_a_01",
+      "family": "tree",
+      "usageCount": 8,
+      "usageByMap": {
+        "ps_seed_1001": 1,
+        "ps_seed_2026": 0,
+        "ps_seed_3101": 1,
+        "ps_seed_3102": 0,
+        "ps_seed_3103": 1,
+        "ps_seed_3104": 0,
+        "ps_seed_3105": 1,
+        "ps_seed_3106": 1,
+        "ps_seed_3107": 1,
+        "ps_seed_3108": 0,
+        "ps_seed_3109": 0,
+        "ps_seed_3110": 1,
+        "ps_seed_3111": 1,
+        "ps_seed_3112": 0
+      },
+      "composite": false,
+      "slotRoles": {
+        "body": [
+          2
+        ],
+        "shadow": [
+          4
+        ],
+        "stateBody": [],
+        "stateShadow": [],
+        "crushedBody": [],
+        "crushedShadow": []
+      },
+      "bodyVariants": [
+        {
+          "bodySlot": 2,
+          "roles": [
+            "body"
+          ],
+          "pairedShadowSlot": 4
+        }
+      ],
+      "canonicalSlots": [
+        {
+          "slot": 2,
+          "roles": [
+            "body"
+          ],
+          "reference": "../ps_objects/cedrus-deodara_a_01_s2.png",
+          "referenceSize": [
+            135,
+            164
+          ],
+          "origin": [
+            -65,
+            -150
+          ],
+          "formatId": 723
+        },
+        {
+          "slot": 4,
+          "roles": [
+            "shadow"
+          ],
+          "reference": "../ps_objects/cedrus-deodara_a_01_s4.png",
+          "referenceSize": [
+            135,
+            79
+          ],
+          "origin": [
+            -51,
+            -25
+          ],
+          "formatId": 934
+        }
+      ]
+    },
+    {
+      "id": "cedrus-deodara_a_02",
+      "family": "tree",
+      "usageCount": 2,
+      "usageByMap": {
+        "ps_seed_1001": 0,
+        "ps_seed_2026": 0,
+        "ps_seed_3101": 0,
+        "ps_seed_3102": 0,
+        "ps_seed_3103": 0,
+        "ps_seed_3104": 0,
+        "ps_seed_3105": 0,
+        "ps_seed_3106": 0,
+        "ps_seed_3107": 0,
+        "ps_seed_3108": 1,
+        "ps_seed_3109": 0,
+        "ps_seed_3110": 1,
+        "ps_seed_3111": 0,
+        "ps_seed_3112": 0
+      },
+      "composite": false,
+      "slotRoles": {
+        "body": [
+          2
+        ],
+        "shadow": [
+          4
+        ],
+        "stateBody": [],
+        "stateShadow": [],
+        "crushedBody": [],
+        "crushedShadow": []
+      },
+      "bodyVariants": [
+        {
+          "bodySlot": 2,
+          "roles": [
+            "body"
+          ],
+          "pairedShadowSlot": 4
+        }
+      ],
+      "canonicalSlots": [
+        {
+          "slot": 2,
+          "roles": [
+            "body"
+          ],
+          "reference": "../ps_objects/cedrus-deodara_a_02_s2.png",
+          "referenceSize": [
+            163,
+            189
+          ],
+          "origin": [
+            -91,
+            -169
+          ],
+          "formatId": 723
+        },
+        {
+          "slot": 4,
+          "roles": [
+            "shadow"
+          ],
+          "reference": "../ps_objects/cedrus-deodara_a_02_s4.png",
+          "referenceSize": [
+            174,
+            86
+          ],
+          "origin": [
+            -76,
+            -26
+          ],
+          "formatId": 934
+        }
+      ]
+    },
+    {
+      "id": "cedrus-deodara_a_03",
+      "family": "tree",
+      "usageCount": 5,
+      "usageByMap": {
+        "ps_seed_1001": 0,
+        "ps_seed_2026": 0,
+        "ps_seed_3101": 1,
+        "ps_seed_3102": 0,
+        "ps_seed_3103": 0,
+        "ps_seed_3104": 0,
+        "ps_seed_3105": 0,
+        "ps_seed_3106": 1,
+        "ps_seed_3107": 0,
+        "ps_seed_3108": 1,
+        "ps_seed_3109": 1,
+        "ps_seed_3110": 0,
+        "ps_seed_3111": 0,
+        "ps_seed_3112": 1
+      },
+      "composite": false,
+      "slotRoles": {
+        "body": [
+          2
+        ],
+        "shadow": [
+          4
+        ],
+        "stateBody": [],
+        "stateShadow": [],
+        "crushedBody": [],
+        "crushedShadow": []
+      },
+      "bodyVariants": [
+        {
+          "bodySlot": 2,
+          "roles": [
+            "body"
+          ],
+          "pairedShadowSlot": 4
+        }
+      ],
+      "canonicalSlots": [
+        {
+          "slot": 2,
+          "roles": [
+            "body"
+          ],
+          "reference": "../ps_objects/cedrus-deodara_a_03_s2.png",
+          "referenceSize": [
+            140,
+            165
+          ],
+          "origin": [
+            -65,
+            -153
+          ],
+          "formatId": 723
+        },
+        {
+          "slot": 4,
+          "roles": [
+            "shadow"
+          ],
+          "reference": "../ps_objects/cedrus-deodara_a_03_s4.png",
+          "referenceSize": [
+            148,
+            89
+          ],
+          "origin": [
+            -58,
+            -27
+          ],
+          "formatId": 934
+        }
+      ]
+    },
+    {
+      "id": "heteromeles-arbutifolia_a_01",
+      "family": "tree",
+      "usageCount": 28,
+      "usageByMap": {
+        "ps_seed_1001": 1,
+        "ps_seed_2026": 3,
+        "ps_seed_3101": 3,
+        "ps_seed_3102": 1,
+        "ps_seed_3103": 1,
+        "ps_seed_3104": 0,
+        "ps_seed_3105": 3,
+        "ps_seed_3106": 1,
+        "ps_seed_3107": 2,
+        "ps_seed_3108": 2,
+        "ps_seed_3109": 3,
+        "ps_seed_3110": 1,
+        "ps_seed_3111": 4,
+        "ps_seed_3112": 3
+      },
+      "composite": false,
+      "slotRoles": {
+        "body": [
+          2
+        ],
+        "shadow": [
+          4
+        ],
+        "stateBody": [],
+        "stateShadow": [],
+        "crushedBody": [],
+        "crushedShadow": []
+      },
+      "bodyVariants": [
+        {
+          "bodySlot": 2,
+          "roles": [
+            "body"
+          ],
+          "pairedShadowSlot": 4
+        }
+      ],
+      "canonicalSlots": [
+        {
+          "slot": 2,
+          "roles": [
+            "body"
+          ],
+          "reference": "../ps_objects/heteromeles-arbutifolia_a_01_s2.png",
+          "referenceSize": [
+            100,
+            82
+          ],
+          "origin": [
+            -50,
+            -81
+          ],
+          "formatId": 723
+        },
+        {
+          "slot": 4,
+          "roles": [
+            "shadow"
+          ],
+          "reference": "../ps_objects/heteromeles-arbutifolia_a_01_s4.png",
+          "referenceSize": [
+            103,
+            53
+          ],
+          "origin": [
+            -36,
+            -14
+          ],
+          "formatId": 934
+        }
+      ]
+    },
+    {
+      "id": "heteromeles-arbutifolia_a_02",
+      "family": "tree",
+      "usageCount": 26,
+      "usageByMap": {
+        "ps_seed_1001": 1,
+        "ps_seed_2026": 2,
+        "ps_seed_3101": 1,
+        "ps_seed_3102": 4,
+        "ps_seed_3103": 1,
+        "ps_seed_3104": 1,
+        "ps_seed_3105": 1,
+        "ps_seed_3106": 2,
+        "ps_seed_3107": 3,
+        "ps_seed_3108": 0,
+        "ps_seed_3109": 2,
+        "ps_seed_3110": 3,
+        "ps_seed_3111": 3,
+        "ps_seed_3112": 2
+      },
+      "composite": false,
+      "slotRoles": {
+        "body": [
+          2
+        ],
+        "shadow": [
+          4
+        ],
+        "stateBody": [],
+        "stateShadow": [],
+        "crushedBody": [],
+        "crushedShadow": []
+      },
+      "bodyVariants": [
+        {
+          "bodySlot": 2,
+          "roles": [
+            "body"
+          ],
+          "pairedShadowSlot": 4
+        }
+      ],
+      "canonicalSlots": [
+        {
+          "slot": 2,
+          "roles": [
+            "body"
+          ],
+          "reference": "../ps_objects/heteromeles-arbutifolia_a_02_s2.png",
+          "referenceSize": [
+            95,
+            75
+          ],
+          "origin": [
+            -48,
+            -73
+          ],
+          "formatId": 723
+        },
+        {
+          "slot": 4,
+          "roles": [
+            "shadow"
+          ],
+          "reference": "../ps_objects/heteromeles-arbutifolia_a_02_s4.png",
+          "referenceSize": [
+            95,
+            49
+          ],
+          "origin": [
+            -36,
+            -12
+          ],
+          "formatId": 934
+        }
+      ]
+    },
+    {
+      "id": "larix-decidua_a_01",
+      "family": "tree",
+      "usageCount": 5,
+      "usageByMap": {
+        "ps_seed_1001": 0,
+        "ps_seed_2026": 0,
+        "ps_seed_3101": 0,
+        "ps_seed_3102": 1,
+        "ps_seed_3103": 0,
+        "ps_seed_3104": 0,
+        "ps_seed_3105": 0,
+        "ps_seed_3106": 0,
+        "ps_seed_3107": 0,
+        "ps_seed_3108": 0,
+        "ps_seed_3109": 0,
+        "ps_seed_3110": 2,
+        "ps_seed_3111": 1,
+        "ps_seed_3112": 1
+      },
+      "composite": false,
+      "slotRoles": {
+        "body": [
+          2
+        ],
+        "shadow": [
+          4
+        ],
+        "stateBody": [],
+        "stateShadow": [],
+        "crushedBody": [],
+        "crushedShadow": []
+      },
+      "bodyVariants": [
+        {
+          "bodySlot": 2,
+          "roles": [
+            "body"
+          ],
+          "pairedShadowSlot": 4
+        }
+      ],
+      "canonicalSlots": [
+        {
+          "slot": 2,
+          "roles": [
+            "body"
+          ],
+          "reference": "../ps_objects/larix-decidua_a_01_s2.png",
+          "referenceSize": [
+            108,
+            140
+          ],
+          "origin": [
+            -52,
+            -138
+          ],
+          "formatId": 723
+        },
+        {
+          "slot": 4,
+          "roles": [
+            "shadow"
+          ],
+          "reference": "../ps_objects/larix-decidua_a_01_s4.png",
+          "referenceSize": [
+            111,
+            66
+          ],
+          "origin": [
+            -43,
+            -17
+          ],
+          "formatId": 934
+        }
+      ]
+    },
+    {
+      "id": "larix-decidua_b_01",
+      "family": "tree",
+      "usageCount": 3,
+      "usageByMap": {
+        "ps_seed_1001": 1,
+        "ps_seed_2026": 0,
+        "ps_seed_3101": 1,
+        "ps_seed_3102": 0,
+        "ps_seed_3103": 1,
+        "ps_seed_3104": 0,
+        "ps_seed_3105": 0,
+        "ps_seed_3106": 0,
+        "ps_seed_3107": 0,
+        "ps_seed_3108": 0,
+        "ps_seed_3109": 0,
+        "ps_seed_3110": 0,
+        "ps_seed_3111": 0,
+        "ps_seed_3112": 0
+      },
+      "composite": false,
+      "slotRoles": {
+        "body": [
+          2
+        ],
+        "shadow": [
+          4
+        ],
+        "stateBody": [],
+        "stateShadow": [],
+        "crushedBody": [],
+        "crushedShadow": []
+      },
+      "bodyVariants": [
+        {
+          "bodySlot": 2,
+          "roles": [
+            "body"
+          ],
+          "pairedShadowSlot": 4
+        }
+      ],
+      "canonicalSlots": [
+        {
+          "slot": 2,
+          "roles": [
+            "body"
+          ],
+          "reference": "../ps_objects/larix-decidua_b_01_s2.png",
+          "referenceSize": [
+            51,
+            70
+          ],
+          "origin": [
+            -25,
+            -65
+          ],
+          "formatId": 723
+        },
+        {
+          "slot": 4,
+          "roles": [
+            "shadow"
+          ],
+          "reference": "../ps_objects/larix-decidua_b_01_s4.png",
+          "referenceSize": [
+            57,
+            33
+          ],
+          "origin": [
+            -25,
+            -11
+          ],
+          "formatId": 934
+        }
+      ]
+    },
+    {
+      "id": "larix-decidua_b_02",
+      "family": "tree",
+      "usageCount": 3,
+      "usageByMap": {
+        "ps_seed_1001": 1,
+        "ps_seed_2026": 0,
+        "ps_seed_3101": 0,
+        "ps_seed_3102": 0,
+        "ps_seed_3103": 0,
+        "ps_seed_3104": 0,
+        "ps_seed_3105": 0,
+        "ps_seed_3106": 0,
+        "ps_seed_3107": 0,
+        "ps_seed_3108": 1,
+        "ps_seed_3109": 0,
+        "ps_seed_3110": 1,
+        "ps_seed_3111": 0,
+        "ps_seed_3112": 0
+      },
+      "composite": false,
+      "slotRoles": {
+        "body": [
+          2
+        ],
+        "shadow": [
+          4
+        ],
+        "stateBody": [],
+        "stateShadow": [],
+        "crushedBody": [],
+        "crushedShadow": []
+      },
+      "bodyVariants": [
+        {
+          "bodySlot": 2,
+          "roles": [
+            "body"
+          ],
+          "pairedShadowSlot": 4
+        }
+      ],
+      "canonicalSlots": [
+        {
+          "slot": 2,
+          "roles": [
+            "body"
+          ],
+          "reference": "../ps_objects/larix-decidua_b_02_s2.png",
+          "referenceSize": [
+            60,
+            75
+          ],
+          "origin": [
+            -30,
+            -71
+          ],
+          "formatId": 723
+        },
+        {
+          "slot": 4,
+          "roles": [
+            "shadow"
+          ],
+          "reference": "../ps_objects/larix-decidua_b_02_s4.png",
+          "referenceSize": [
+            61,
+            36
+          ],
+          "origin": [
+            -25,
+            -13
+          ],
+          "formatId": 934
+        }
+      ]
+    },
+    {
+      "id": "larix-decidua_b_03",
+      "family": "tree",
+      "usageCount": 3,
+      "usageByMap": {
+        "ps_seed_1001": 0,
+        "ps_seed_2026": 0,
+        "ps_seed_3101": 0,
+        "ps_seed_3102": 1,
+        "ps_seed_3103": 0,
+        "ps_seed_3104": 0,
+        "ps_seed_3105": 0,
+        "ps_seed_3106": 1,
+        "ps_seed_3107": 0,
+        "ps_seed_3108": 0,
+        "ps_seed_3109": 0,
+        "ps_seed_3110": 1,
+        "ps_seed_3111": 0,
+        "ps_seed_3112": 0
+      },
+      "composite": false,
+      "slotRoles": {
+        "body": [
+          2
+        ],
+        "shadow": [
+          4
+        ],
+        "stateBody": [],
+        "stateShadow": [],
+        "crushedBody": [],
+        "crushedShadow": []
+      },
+      "bodyVariants": [
+        {
+          "bodySlot": 2,
+          "roles": [
+            "body"
+          ],
+          "pairedShadowSlot": 4
+        }
+      ],
+      "canonicalSlots": [
+        {
+          "slot": 2,
+          "roles": [
+            "body"
+          ],
+          "reference": "../ps_objects/larix-decidua_b_03_s2.png",
+          "referenceSize": [
+            65,
+            86
+          ],
+          "origin": [
+            -31,
+            -82
+          ],
+          "formatId": 723
+        },
+        {
+          "slot": 4,
+          "roles": [
+            "shadow"
+          ],
+          "reference": "../ps_objects/larix-decidua_b_03_s4.png",
+          "referenceSize": [
+            68,
+            37
+          ],
+          "origin": [
+            -29,
+            -15
+          ],
+          "formatId": 934
+        }
+      ]
+    },
+    {
+      "id": "picea-abies_a_01",
+      "family": "tree",
+      "usageCount": 2,
+      "usageByMap": {
+        "ps_seed_1001": 0,
+        "ps_seed_2026": 0,
+        "ps_seed_3101": 0,
+        "ps_seed_3102": 0,
+        "ps_seed_3103": 0,
+        "ps_seed_3104": 1,
+        "ps_seed_3105": 0,
+        "ps_seed_3106": 0,
+        "ps_seed_3107": 1,
+        "ps_seed_3108": 0,
+        "ps_seed_3109": 0,
+        "ps_seed_3110": 0,
+        "ps_seed_3111": 0,
+        "ps_seed_3112": 0
+      },
+      "composite": false,
+      "slotRoles": {
+        "body": [
+          2
+        ],
+        "shadow": [
+          4
+        ],
+        "stateBody": [],
+        "stateShadow": [],
+        "crushedBody": [],
+        "crushedShadow": []
+      },
+      "bodyVariants": [
+        {
+          "bodySlot": 2,
+          "roles": [
+            "body"
+          ],
+          "pairedShadowSlot": 4
+        }
+      ],
+      "canonicalSlots": [
+        {
+          "slot": 2,
+          "roles": [
+            "body"
+          ],
+          "reference": "../ps_objects/picea-abies_a_01_s2.png",
+          "referenceSize": [
+            56,
+            81
+          ],
+          "origin": [
+            -28,
+            -76
+          ],
+          "formatId": 723
+        },
+        {
+          "slot": 4,
+          "roles": [
+            "shadow"
+          ],
+          "reference": "../ps_objects/picea-abies_a_01_s4.png",
+          "referenceSize": [
+            57,
+            36
+          ],
+          "origin": [
+            -25,
+            -11
+          ],
+          "formatId": 934
+        }
+      ]
+    },
+    {
+      "id": "picea-abies_c_01",
+      "family": "tree",
+      "usageCount": 2,
+      "usageByMap": {
+        "ps_seed_1001": 0,
+        "ps_seed_2026": 0,
+        "ps_seed_3101": 0,
+        "ps_seed_3102": 0,
+        "ps_seed_3103": 0,
+        "ps_seed_3104": 0,
+        "ps_seed_3105": 0,
+        "ps_seed_3106": 1,
+        "ps_seed_3107": 0,
+        "ps_seed_3108": 0,
+        "ps_seed_3109": 0,
+        "ps_seed_3110": 1,
+        "ps_seed_3111": 0,
+        "ps_seed_3112": 0
+      },
+      "composite": false,
+      "slotRoles": {
+        "body": [
+          2
+        ],
+        "shadow": [
+          4
+        ],
+        "stateBody": [],
+        "stateShadow": [],
+        "crushedBody": [],
+        "crushedShadow": []
+      },
+      "bodyVariants": [
+        {
+          "bodySlot": 2,
+          "roles": [
+            "body"
+          ],
+          "pairedShadowSlot": 4
+        }
+      ],
+      "canonicalSlots": [
+        {
+          "slot": 2,
+          "roles": [
+            "body"
+          ],
+          "reference": "../ps_objects/picea-abies_c_01_s2.png",
+          "referenceSize": [
+            101,
+            157
+          ],
+          "origin": [
+            -52,
+            -143
+          ],
+          "formatId": 723
+        },
+        {
+          "slot": 4,
+          "roles": [
+            "shadow"
+          ],
+          "reference": "../ps_objects/picea-abies_c_01_s4.png",
+          "referenceSize": [
+            108,
+            67
+          ],
+          "origin": [
+            -45,
+            -23
+          ],
+          "formatId": 934
+        }
+      ]
+    },
+    {
+      "id": "picea-abies_c_03",
+      "family": "tree",
+      "usageCount": 1,
+      "usageByMap": {
+        "ps_seed_1001": 0,
+        "ps_seed_2026": 0,
+        "ps_seed_3101": 0,
+        "ps_seed_3102": 0,
+        "ps_seed_3103": 0,
+        "ps_seed_3104": 0,
+        "ps_seed_3105": 0,
+        "ps_seed_3106": 0,
+        "ps_seed_3107": 0,
+        "ps_seed_3108": 0,
+        "ps_seed_3109": 0,
+        "ps_seed_3110": 0,
+        "ps_seed_3111": 0,
+        "ps_seed_3112": 1
+      },
+      "composite": false,
+      "slotRoles": {
+        "body": [
+          2
+        ],
+        "shadow": [
+          4
+        ],
+        "stateBody": [],
+        "stateShadow": [],
+        "crushedBody": [],
+        "crushedShadow": []
+      },
+      "bodyVariants": [
+        {
+          "bodySlot": 2,
+          "roles": [
+            "body"
+          ],
+          "pairedShadowSlot": 4
+        }
+      ],
+      "canonicalSlots": [
+        {
+          "slot": 2,
+          "roles": [
+            "body"
+          ],
+          "reference": "../ps_objects/picea-abies_c_03_s2.png",
+          "referenceSize": [
+            108,
+            163
+          ],
+          "origin": [
+            -51,
+            -151
+          ],
+          "formatId": 723
+        },
+        {
+          "slot": 4,
+          "roles": [
+            "shadow"
+          ],
+          "reference": "../ps_objects/picea-abies_c_03_s4.png",
+          "referenceSize": [
+            113,
+            72
+          ],
+          "origin": [
+            -44,
+            -22
+          ],
+          "formatId": 934
+        }
+      ]
+    },
+    {
+      "id": "picea-obovata_a_02",
+      "family": "tree",
+      "usageCount": 1,
+      "usageByMap": {
+        "ps_seed_1001": 0,
+        "ps_seed_2026": 0,
+        "ps_seed_3101": 0,
+        "ps_seed_3102": 0,
+        "ps_seed_3103": 0,
+        "ps_seed_3104": 0,
+        "ps_seed_3105": 0,
+        "ps_seed_3106": 1,
+        "ps_seed_3107": 0,
+        "ps_seed_3108": 0,
+        "ps_seed_3109": 0,
+        "ps_seed_3110": 0,
+        "ps_seed_3111": 0,
+        "ps_seed_3112": 0
+      },
+      "composite": false,
+      "slotRoles": {
+        "body": [
+          2
+        ],
+        "shadow": [
+          4
+        ],
+        "stateBody": [],
+        "stateShadow": [],
+        "crushedBody": [],
+        "crushedShadow": []
+      },
+      "bodyVariants": [
+        {
+          "bodySlot": 2,
+          "roles": [
+            "body"
+          ],
+          "pairedShadowSlot": 4
+        }
+      ],
+      "canonicalSlots": [
+        {
+          "slot": 2,
+          "roles": [
+            "body"
+          ],
+          "reference": "../ps_objects/picea-obovata_a_02_s2.png",
+          "referenceSize": [
+            99,
+            134
+          ],
+          "origin": [
+            -50,
+            -127
+          ],
+          "formatId": 723
+        },
+        {
+          "slot": 4,
+          "roles": [
+            "shadow"
+          ],
+          "reference": "../ps_objects/picea-obovata_a_02_s4.png",
+          "referenceSize": [
+            106,
+            63
+          ],
+          "origin": [
+            -43,
+            -21
+          ],
+          "formatId": 934
+        }
+      ]
+    },
+    {
+      "id": "pinus-jeffreyi_a_06",
+      "family": "tree",
+      "usageCount": 1,
+      "usageByMap": {
+        "ps_seed_1001": 0,
+        "ps_seed_2026": 0,
+        "ps_seed_3101": 0,
+        "ps_seed_3102": 0,
+        "ps_seed_3103": 0,
+        "ps_seed_3104": 0,
+        "ps_seed_3105": 0,
+        "ps_seed_3106": 1,
+        "ps_seed_3107": 0,
+        "ps_seed_3108": 0,
+        "ps_seed_3109": 0,
+        "ps_seed_3110": 0,
+        "ps_seed_3111": 0,
+        "ps_seed_3112": 0
+      },
+      "composite": false,
+      "slotRoles": {
+        "body": [
+          2
+        ],
+        "shadow": [
+          4
+        ],
+        "stateBody": [],
+        "stateShadow": [],
+        "crushedBody": [],
+        "crushedShadow": []
+      },
+      "bodyVariants": [
+        {
+          "bodySlot": 2,
+          "roles": [
+            "body"
+          ],
+          "pairedShadowSlot": 4
+        }
+      ],
+      "canonicalSlots": [
+        {
+          "slot": 2,
+          "roles": [
+            "body"
+          ],
+          "reference": "../ps_objects/pinus-jeffreyi_a_06_s2.png",
+          "referenceSize": [
+            139,
+            275
+          ],
+          "origin": [
+            -66,
+            -272
+          ],
+          "formatId": 723
+        },
+        {
+          "slot": 4,
+          "roles": [
+            "shadow"
+          ],
+          "reference": "../ps_objects/pinus-jeffreyi_a_06_s4.png",
+          "referenceSize": [
+            143,
+            91
+          ],
+          "origin": [
+            -38,
+            -4
+          ],
+          "formatId": 934
+        }
+      ]
+    },
+    {
+      "id": "pinus-jeffreyi_c_01",
+      "family": "tree",
+      "usageCount": 1,
+      "usageByMap": {
+        "ps_seed_1001": 0,
+        "ps_seed_2026": 0,
+        "ps_seed_3101": 0,
+        "ps_seed_3102": 0,
+        "ps_seed_3103": 0,
+        "ps_seed_3104": 0,
+        "ps_seed_3105": 0,
+        "ps_seed_3106": 0,
+        "ps_seed_3107": 0,
+        "ps_seed_3108": 0,
+        "ps_seed_3109": 0,
+        "ps_seed_3110": 0,
+        "ps_seed_3111": 0,
+        "ps_seed_3112": 1
+      },
+      "composite": false,
+      "slotRoles": {
+        "body": [
+          2
+        ],
+        "shadow": [
+          4
+        ],
+        "stateBody": [],
+        "stateShadow": [],
+        "crushedBody": [],
+        "crushedShadow": []
+      },
+      "bodyVariants": [
+        {
+          "bodySlot": 2,
+          "roles": [
+            "body"
+          ],
+          "pairedShadowSlot": 4
+        }
+      ],
+      "canonicalSlots": [
+        {
+          "slot": 2,
+          "roles": [
+            "body"
+          ],
+          "reference": "../ps_objects/pinus-jeffreyi_c_01_s2.png",
+          "referenceSize": [
+            108,
+            275
+          ],
+          "origin": [
+            -55,
+            -272
+          ],
+          "formatId": 723
+        },
+        {
+          "slot": 4,
+          "roles": [
+            "shadow"
+          ],
+          "reference": "../ps_objects/pinus-jeffreyi_c_01_s4.png",
+          "referenceSize": [
+            114,
+            85
+          ],
+          "origin": [
+            -17,
+            -1
+          ],
+          "formatId": 934
+        }
+      ]
+    },
+    {
+      "id": "pinus-jeffreyi_d_01",
+      "family": "tree",
+      "usageCount": 1,
+      "usageByMap": {
+        "ps_seed_1001": 0,
+        "ps_seed_2026": 0,
+        "ps_seed_3101": 0,
+        "ps_seed_3102": 0,
+        "ps_seed_3103": 0,
+        "ps_seed_3104": 0,
+        "ps_seed_3105": 0,
+        "ps_seed_3106": 0,
+        "ps_seed_3107": 0,
+        "ps_seed_3108": 0,
+        "ps_seed_3109": 0,
+        "ps_seed_3110": 0,
+        "ps_seed_3111": 1,
+        "ps_seed_3112": 0
+      },
+      "composite": false,
+      "slotRoles": {
+        "body": [
+          2
+        ],
+        "shadow": [
+          4
+        ],
+        "stateBody": [],
+        "stateShadow": [],
+        "crushedBody": [],
+        "crushedShadow": []
+      },
+      "bodyVariants": [
+        {
+          "bodySlot": 2,
+          "roles": [
+            "body"
+          ],
+          "pairedShadowSlot": 4
+        }
+      ],
+      "canonicalSlots": [
+        {
+          "slot": 2,
+          "roles": [
+            "body"
+          ],
+          "reference": "../ps_objects/pinus-jeffreyi_d_01_s2.png",
+          "referenceSize": [
+            104,
+            290
+          ],
+          "origin": [
+            -53,
+            -286
+          ],
+          "formatId": 723
+        },
+        {
+          "slot": 4,
+          "roles": [
+            "shadow"
+          ],
+          "reference": "../ps_objects/pinus-jeffreyi_d_01_s4.png",
+          "referenceSize": [
+            128,
+            94
+          ],
+          "origin": [
+            -15,
+            0
+          ],
+          "formatId": 934
+        }
+      ]
+    },
+    {
+      "id": "pinus-ponderosa_a_02",
+      "family": "tree",
+      "usageCount": 2,
+      "usageByMap": {
+        "ps_seed_1001": 0,
+        "ps_seed_2026": 1,
+        "ps_seed_3101": 0,
+        "ps_seed_3102": 0,
+        "ps_seed_3103": 0,
+        "ps_seed_3104": 1,
+        "ps_seed_3105": 0,
+        "ps_seed_3106": 0,
+        "ps_seed_3107": 0,
+        "ps_seed_3108": 0,
+        "ps_seed_3109": 0,
+        "ps_seed_3110": 0,
+        "ps_seed_3111": 0,
+        "ps_seed_3112": 0
+      },
+      "composite": false,
+      "slotRoles": {
+        "body": [
+          2
+        ],
+        "shadow": [
+          4
+        ],
+        "stateBody": [],
+        "stateShadow": [],
+        "crushedBody": [],
+        "crushedShadow": []
+      },
+      "bodyVariants": [
+        {
+          "bodySlot": 2,
+          "roles": [
+            "body"
+          ],
+          "pairedShadowSlot": 4
+        }
+      ],
+      "canonicalSlots": [
+        {
+          "slot": 2,
+          "roles": [
+            "body"
+          ],
+          "reference": "../ps_objects/pinus-ponderosa_a_02_s2.png",
+          "referenceSize": [
+            94,
+            209
+          ],
+          "origin": [
+            -42,
+            -205
+          ],
+          "formatId": 723
+        },
+        {
+          "slot": 4,
+          "roles": [
+            "shadow"
+          ],
+          "reference": "../ps_objects/pinus-ponderosa_a_02_s4.png",
+          "referenceSize": [
+            109,
+            77
+          ],
+          "origin": [
+            -17,
+            -1
+          ],
+          "formatId": 934
+        }
+      ]
+    },
+    {
+      "id": "pinus-ponderosa_a_03",
+      "family": "tree",
+      "usageCount": 1,
+      "usageByMap": {
+        "ps_seed_1001": 1,
+        "ps_seed_2026": 0,
+        "ps_seed_3101": 0,
+        "ps_seed_3102": 0,
+        "ps_seed_3103": 0,
+        "ps_seed_3104": 0,
+        "ps_seed_3105": 0,
+        "ps_seed_3106": 0,
+        "ps_seed_3107": 0,
+        "ps_seed_3108": 0,
+        "ps_seed_3109": 0,
+        "ps_seed_3110": 0,
+        "ps_seed_3111": 0,
+        "ps_seed_3112": 0
+      },
+      "composite": false,
+      "slotRoles": {
+        "body": [
+          2
+        ],
+        "shadow": [
+          4
+        ],
+        "stateBody": [],
+        "stateShadow": [],
+        "crushedBody": [],
+        "crushedShadow": []
+      },
+      "bodyVariants": [
+        {
+          "bodySlot": 2,
+          "roles": [
+            "body"
+          ],
+          "pairedShadowSlot": 4
+        }
+      ],
+      "canonicalSlots": [
+        {
+          "slot": 2,
+          "roles": [
+            "body"
+          ],
+          "reference": "../ps_objects/pinus-ponderosa_a_03_s2.png",
+          "referenceSize": [
+            99,
+            225
+          ],
+          "origin": [
+            -55,
+            -222
+          ],
+          "formatId": 723
+        },
+        {
+          "slot": 4,
+          "roles": [
+            "shadow"
+          ],
+          "reference": "../ps_objects/pinus-ponderosa_a_03_s4.png",
+          "referenceSize": [
+            107,
+            71
+          ],
+          "origin": [
+            -25,
+            -3
+          ],
+          "formatId": 934
+        }
+      ]
+    },
+    {
+      "id": "pinus-ponderosa_b_03",
+      "family": "tree",
+      "usageCount": 1,
+      "usageByMap": {
+        "ps_seed_1001": 0,
+        "ps_seed_2026": 1,
+        "ps_seed_3101": 0,
+        "ps_seed_3102": 0,
+        "ps_seed_3103": 0,
+        "ps_seed_3104": 0,
+        "ps_seed_3105": 0,
+        "ps_seed_3106": 0,
+        "ps_seed_3107": 0,
+        "ps_seed_3108": 0,
+        "ps_seed_3109": 0,
+        "ps_seed_3110": 0,
+        "ps_seed_3111": 0,
+        "ps_seed_3112": 0
+      },
+      "composite": false,
+      "slotRoles": {
+        "body": [
+          2
+        ],
+        "shadow": [
+          4
+        ],
+        "stateBody": [],
+        "stateShadow": [],
+        "crushedBody": [],
+        "crushedShadow": []
+      },
+      "bodyVariants": [
+        {
+          "bodySlot": 2,
+          "roles": [
+            "body"
+          ],
+          "pairedShadowSlot": 4
+        }
+      ],
+      "canonicalSlots": [
+        {
+          "slot": 2,
+          "roles": [
+            "body"
+          ],
+          "reference": "../ps_objects/pinus-ponderosa_b_03_s2.png",
+          "referenceSize": [
+            192,
+            244
+          ],
+          "origin": [
+            -94,
+            -240
+          ],
+          "formatId": 723
+        },
+        {
+          "slot": 4,
+          "roles": [
+            "shadow"
+          ],
+          "reference": "../ps_objects/pinus-ponderosa_b_03_s4.png",
+          "referenceSize": [
+            220,
+            114
+          ],
+          "origin": [
+            -70,
+            -16
+          ],
+          "formatId": 934
+        }
+      ]
+    },
+    {
+      "id": "populus-tremuloides_a_01",
+      "family": "tree",
+      "usageCount": 3,
+      "usageByMap": {
+        "ps_seed_1001": 0,
+        "ps_seed_2026": 0,
+        "ps_seed_3101": 0,
+        "ps_seed_3102": 0,
+        "ps_seed_3103": 1,
+        "ps_seed_3104": 1,
+        "ps_seed_3105": 0,
+        "ps_seed_3106": 0,
+        "ps_seed_3107": 0,
+        "ps_seed_3108": 0,
+        "ps_seed_3109": 1,
+        "ps_seed_3110": 0,
+        "ps_seed_3111": 0,
+        "ps_seed_3112": 0
+      },
+      "composite": false,
+      "slotRoles": {
+        "body": [
+          2
+        ],
+        "shadow": [
+          4
+        ],
+        "stateBody": [],
+        "stateShadow": [],
+        "crushedBody": [],
+        "crushedShadow": []
+      },
+      "bodyVariants": [
+        {
+          "bodySlot": 2,
+          "roles": [
+            "body"
+          ],
+          "pairedShadowSlot": 4
+        }
+      ],
+      "canonicalSlots": [
+        {
+          "slot": 2,
+          "roles": [
+            "body"
+          ],
+          "reference": "../ps_objects/populus-tremuloides_a_01_s2.png",
+          "referenceSize": [
+            195,
+            202
+          ],
+          "origin": [
+            -100,
+            -200
+          ],
+          "formatId": 723
+        },
+        {
+          "slot": 4,
+          "roles": [
+            "shadow"
+          ],
+          "reference": "../ps_objects/populus-tremuloides_a_01_s4.png",
+          "referenceSize": [
+            205,
+            109
+          ],
+          "origin": [
+            -77,
+            -30
+          ],
+          "formatId": 934
+        }
+      ]
+    },
+    {
+      "id": "populus-tremuloides_a_02",
+      "family": "tree",
+      "usageCount": 7,
+      "usageByMap": {
+        "ps_seed_1001": 0,
+        "ps_seed_2026": 0,
+        "ps_seed_3101": 1,
+        "ps_seed_3102": 1,
+        "ps_seed_3103": 0,
+        "ps_seed_3104": 1,
+        "ps_seed_3105": 0,
+        "ps_seed_3106": 2,
+        "ps_seed_3107": 1,
+        "ps_seed_3108": 0,
+        "ps_seed_3109": 0,
+        "ps_seed_3110": 1,
+        "ps_seed_3111": 0,
+        "ps_seed_3112": 0
+      },
+      "composite": false,
+      "slotRoles": {
+        "body": [
+          2
+        ],
+        "shadow": [
+          4
+        ],
+        "stateBody": [],
+        "stateShadow": [],
+        "crushedBody": [],
+        "crushedShadow": []
+      },
+      "bodyVariants": [
+        {
+          "bodySlot": 2,
+          "roles": [
+            "body"
+          ],
+          "pairedShadowSlot": 4
+        }
+      ],
+      "canonicalSlots": [
+        {
+          "slot": 2,
+          "roles": [
+            "body"
+          ],
+          "reference": "../ps_objects/populus-tremuloides_a_02_s2.png",
+          "referenceSize": [
+            195,
+            211
+          ],
+          "origin": [
+            -97,
+            -208
+          ],
+          "formatId": 723
+        },
+        {
+          "slot": 4,
+          "roles": [
+            "shadow"
+          ],
+          "reference": "../ps_objects/populus-tremuloides_a_02_s4.png",
+          "referenceSize": [
+            213,
+            113
+          ],
+          "origin": [
+            -82,
+            -32
+          ],
+          "formatId": 934
+        }
+      ]
+    },
+    {
+      "id": "populus-tremuloides_b_01",
+      "family": "tree",
+      "usageCount": 10,
+      "usageByMap": {
+        "ps_seed_1001": 0,
+        "ps_seed_2026": 0,
+        "ps_seed_3101": 1,
+        "ps_seed_3102": 0,
+        "ps_seed_3103": 0,
+        "ps_seed_3104": 0,
+        "ps_seed_3105": 0,
+        "ps_seed_3106": 4,
+        "ps_seed_3107": 1,
+        "ps_seed_3108": 1,
+        "ps_seed_3109": 1,
+        "ps_seed_3110": 1,
+        "ps_seed_3111": 0,
+        "ps_seed_3112": 1
+      },
+      "composite": false,
+      "slotRoles": {
+        "body": [
+          2
+        ],
+        "shadow": [
+          4
+        ],
+        "stateBody": [],
+        "stateShadow": [],
+        "crushedBody": [],
+        "crushedShadow": []
+      },
+      "bodyVariants": [
+        {
+          "bodySlot": 2,
+          "roles": [
+            "body"
+          ],
+          "pairedShadowSlot": 4
+        }
+      ],
+      "canonicalSlots": [
+        {
+          "slot": 2,
+          "roles": [
+            "body"
+          ],
+          "reference": "../ps_objects/populus-tremuloides_b_01_s2.png",
+          "referenceSize": [
+            117,
+            206
+          ],
+          "origin": [
+            -60,
+            -204
+          ],
+          "formatId": 723
+        },
+        {
+          "slot": 4,
+          "roles": [
+            "shadow"
+          ],
+          "reference": "../ps_objects/populus-tremuloides_b_01_s4.png",
+          "referenceSize": [
+            127,
+            75
+          ],
+          "origin": [
+            -43,
+            -8
+          ],
+          "formatId": 934
+        }
+      ]
+    },
+    {
+      "id": "populus-tremuloides_b_02",
+      "family": "tree",
+      "usageCount": 7,
+      "usageByMap": {
+        "ps_seed_1001": 0,
+        "ps_seed_2026": 0,
+        "ps_seed_3101": 0,
+        "ps_seed_3102": 0,
+        "ps_seed_3103": 0,
+        "ps_seed_3104": 0,
+        "ps_seed_3105": 2,
+        "ps_seed_3106": 0,
+        "ps_seed_3107": 1,
+        "ps_seed_3108": 2,
+        "ps_seed_3109": 0,
+        "ps_seed_3110": 0,
+        "ps_seed_3111": 1,
+        "ps_seed_3112": 1
+      },
+      "composite": false,
+      "slotRoles": {
+        "body": [
+          2
+        ],
+        "shadow": [
+          4
+        ],
+        "stateBody": [],
+        "stateShadow": [],
+        "crushedBody": [],
+        "crushedShadow": []
+      },
+      "bodyVariants": [
+        {
+          "bodySlot": 2,
+          "roles": [
+            "body"
+          ],
+          "pairedShadowSlot": 4
+        }
+      ],
+      "canonicalSlots": [
+        {
+          "slot": 2,
+          "roles": [
+            "body"
+          ],
+          "reference": "../ps_objects/populus-tremuloides_b_02_s2.png",
+          "referenceSize": [
+            105,
+            207
+          ],
+          "origin": [
+            -55,
+            -205
+          ],
+          "formatId": 723
+        },
+        {
+          "slot": 4,
+          "roles": [
+            "shadow"
+          ],
+          "reference": "../ps_objects/populus-tremuloides_b_02_s4.png",
+          "referenceSize": [
+            119,
+            78
+          ],
+          "origin": [
+            -36,
+            -12
+          ],
+          "formatId": 934
+        }
+      ]
+    },
+    {
+      "id": "prunus-cerasifera_a_01",
+      "family": "tree",
+      "usageCount": 3,
+      "usageByMap": {
+        "ps_seed_1001": 0,
+        "ps_seed_2026": 0,
+        "ps_seed_3101": 0,
+        "ps_seed_3102": 0,
+        "ps_seed_3103": 1,
+        "ps_seed_3104": 0,
+        "ps_seed_3105": 0,
+        "ps_seed_3106": 0,
+        "ps_seed_3107": 0,
+        "ps_seed_3108": 0,
+        "ps_seed_3109": 1,
+        "ps_seed_3110": 1,
+        "ps_seed_3111": 0,
+        "ps_seed_3112": 0
+      },
+      "composite": false,
+      "slotRoles": {
+        "body": [
+          2
+        ],
+        "shadow": [
+          4
+        ],
+        "stateBody": [],
+        "stateShadow": [],
+        "crushedBody": [],
+        "crushedShadow": []
+      },
+      "bodyVariants": [
+        {
+          "bodySlot": 2,
+          "roles": [
+            "body"
+          ],
+          "pairedShadowSlot": 4
+        }
+      ],
+      "canonicalSlots": [
+        {
+          "slot": 2,
+          "roles": [
+            "body"
+          ],
+          "reference": "../ps_objects/prunus-cerasifera_a_01_s2.png",
+          "referenceSize": [
+            96,
+            86
+          ],
+          "origin": [
+            -48,
+            -85
+          ],
+          "formatId": 723
+        },
+        {
+          "slot": 4,
+          "roles": [
+            "shadow"
+          ],
+          "reference": "../ps_objects/prunus-cerasifera_a_01_s4.png",
+          "referenceSize": [
+            99,
+            52
+          ],
+          "origin": [
+            -36,
+            -15
+          ],
+          "formatId": 934
+        }
+      ]
+    },
+    {
+      "id": "prunus-cerasifera_a_02",
+      "family": "tree",
+      "usageCount": 7,
+      "usageByMap": {
+        "ps_seed_1001": 0,
+        "ps_seed_2026": 0,
+        "ps_seed_3101": 1,
+        "ps_seed_3102": 0,
+        "ps_seed_3103": 0,
+        "ps_seed_3104": 0,
+        "ps_seed_3105": 1,
+        "ps_seed_3106": 1,
+        "ps_seed_3107": 1,
+        "ps_seed_3108": 1,
+        "ps_seed_3109": 0,
+        "ps_seed_3110": 2,
+        "ps_seed_3111": 0,
+        "ps_seed_3112": 0
+      },
+      "composite": false,
+      "slotRoles": {
+        "body": [
+          2
+        ],
+        "shadow": [
+          4
+        ],
+        "stateBody": [],
+        "stateShadow": [],
+        "crushedBody": [],
+        "crushedShadow": []
+      },
+      "bodyVariants": [
+        {
+          "bodySlot": 2,
+          "roles": [
+            "body"
+          ],
+          "pairedShadowSlot": 4
+        }
+      ],
+      "canonicalSlots": [
+        {
+          "slot": 2,
+          "roles": [
+            "body"
+          ],
+          "reference": "../ps_objects/prunus-cerasifera_a_02_s2.png",
+          "referenceSize": [
+            87,
+            82
+          ],
+          "origin": [
+            -41,
+            -81
+          ],
+          "formatId": 723
+        },
+        {
+          "slot": 4,
+          "roles": [
+            "shadow"
+          ],
+          "reference": "../ps_objects/prunus-cerasifera_a_02_s4.png",
+          "referenceSize": [
+            86,
+            51
+          ],
+          "origin": [
+            -30,
+            -15
+          ],
+          "formatId": 934
+        }
+      ]
+    },
+    {
+      "id": "prunus-cerasifera_b_01",
+      "family": "tree",
+      "usageCount": 6,
+      "usageByMap": {
+        "ps_seed_1001": 0,
+        "ps_seed_2026": 0,
+        "ps_seed_3101": 1,
+        "ps_seed_3102": 0,
+        "ps_seed_3103": 0,
+        "ps_seed_3104": 1,
+        "ps_seed_3105": 0,
+        "ps_seed_3106": 3,
+        "ps_seed_3107": 0,
+        "ps_seed_3108": 0,
+        "ps_seed_3109": 0,
+        "ps_seed_3110": 1,
+        "ps_seed_3111": 0,
+        "ps_seed_3112": 0
+      },
+      "composite": false,
+      "slotRoles": {
+        "body": [
+          2
+        ],
+        "shadow": [
+          4
+        ],
+        "stateBody": [],
+        "stateShadow": [],
+        "crushedBody": [],
+        "crushedShadow": []
+      },
+      "bodyVariants": [
+        {
+          "bodySlot": 2,
+          "roles": [
+            "body"
+          ],
+          "pairedShadowSlot": 4
+        }
+      ],
+      "canonicalSlots": [
+        {
+          "slot": 2,
+          "roles": [
+            "body"
+          ],
+          "reference": "../ps_objects/prunus-cerasifera_b_01_s2.png",
+          "referenceSize": [
+            59,
+            75
+          ],
+          "origin": [
+            -31,
+            -76
+          ],
+          "formatId": 723
+        },
+        {
+          "slot": 4,
+          "roles": [
+            "shadow"
+          ],
+          "reference": "../ps_objects/prunus-cerasifera_b_01_s4.png",
+          "referenceSize": [
+            59,
+            32
+          ],
+          "origin": [
+            -16,
+            -6
+          ],
+          "formatId": 934
+        }
+      ]
+    },
+    {
+      "id": "prunus-cerasifera_b_02",
+      "family": "tree",
+      "usageCount": 11,
+      "usageByMap": {
+        "ps_seed_1001": 2,
+        "ps_seed_2026": 1,
+        "ps_seed_3101": 0,
+        "ps_seed_3102": 1,
+        "ps_seed_3103": 1,
+        "ps_seed_3104": 0,
+        "ps_seed_3105": 0,
+        "ps_seed_3106": 0,
+        "ps_seed_3107": 2,
+        "ps_seed_3108": 0,
+        "ps_seed_3109": 1,
+        "ps_seed_3110": 2,
+        "ps_seed_3111": 1,
+        "ps_seed_3112": 0
+      },
+      "composite": false,
+      "slotRoles": {
+        "body": [
+          2
+        ],
+        "shadow": [
+          4
+        ],
+        "stateBody": [],
+        "stateShadow": [],
+        "crushedBody": [],
+        "crushedShadow": []
+      },
+      "bodyVariants": [
+        {
+          "bodySlot": 2,
+          "roles": [
+            "body"
+          ],
+          "pairedShadowSlot": 4
+        }
+      ],
+      "canonicalSlots": [
+        {
+          "slot": 2,
+          "roles": [
+            "body"
+          ],
+          "reference": "../ps_objects/prunus-cerasifera_b_02_s2.png",
+          "referenceSize": [
+            55,
+            80
+          ],
+          "origin": [
+            -28,
+            -80
+          ],
+          "formatId": 723
+        },
+        {
+          "slot": 4,
+          "roles": [
+            "shadow"
+          ],
+          "reference": "../ps_objects/prunus-cerasifera_b_02_s4.png",
+          "referenceSize": [
+            55,
+            32
+          ],
+          "origin": [
+            -14,
+            -3
+          ],
+          "formatId": 934
+        }
+      ]
+    },
+    {
+      "id": "prunus-cerasifera_c_01",
+      "family": "tree",
+      "usageCount": 7,
+      "usageByMap": {
+        "ps_seed_1001": 0,
+        "ps_seed_2026": 0,
+        "ps_seed_3101": 2,
+        "ps_seed_3102": 0,
+        "ps_seed_3103": 1,
+        "ps_seed_3104": 1,
+        "ps_seed_3105": 1,
+        "ps_seed_3106": 0,
+        "ps_seed_3107": 1,
+        "ps_seed_3108": 1,
+        "ps_seed_3109": 0,
+        "ps_seed_3110": 0,
+        "ps_seed_3111": 0,
+        "ps_seed_3112": 0
+      },
+      "composite": false,
+      "slotRoles": {
+        "body": [
+          2
+        ],
+        "shadow": [
+          4
+        ],
+        "stateBody": [],
+        "stateShadow": [],
+        "crushedBody": [],
+        "crushedShadow": []
+      },
+      "bodyVariants": [
+        {
+          "bodySlot": 2,
+          "roles": [
+            "body"
+          ],
+          "pairedShadowSlot": 4
+        }
+      ],
+      "canonicalSlots": [
+        {
+          "slot": 2,
+          "roles": [
+            "body"
+          ],
+          "reference": "../ps_objects/prunus-cerasifera_c_01_s2.png",
+          "referenceSize": [
+            102,
+            79
+          ],
+          "origin": [
+            -55,
+            -78
+          ],
+          "formatId": 723
+        },
+        {
+          "slot": 4,
+          "roles": [
+            "shadow"
+          ],
+          "reference": "../ps_objects/prunus-cerasifera_c_01_s4.png",
+          "referenceSize": [
+            102,
+            55
+          ],
+          "origin": [
+            -46,
+            -18
+          ],
+          "formatId": 934
+        }
+      ]
+    },
+    {
+      "id": "prunus-cerasifera_c_02",
+      "family": "tree",
+      "usageCount": 12,
+      "usageByMap": {
+        "ps_seed_1001": 0,
+        "ps_seed_2026": 1,
+        "ps_seed_3101": 3,
+        "ps_seed_3102": 1,
+        "ps_seed_3103": 2,
+        "ps_seed_3104": 1,
+        "ps_seed_3105": 0,
+        "ps_seed_3106": 3,
+        "ps_seed_3107": 0,
+        "ps_seed_3108": 0,
+        "ps_seed_3109": 1,
+        "ps_seed_3110": 0,
+        "ps_seed_3111": 0,
+        "ps_seed_3112": 0
+      },
+      "composite": false,
+      "slotRoles": {
+        "body": [
+          2
+        ],
+        "shadow": [
+          4
+        ],
+        "stateBody": [],
+        "stateShadow": [],
+        "crushedBody": [],
+        "crushedShadow": []
+      },
+      "bodyVariants": [
+        {
+          "bodySlot": 2,
+          "roles": [
+            "body"
+          ],
+          "pairedShadowSlot": 4
+        }
+      ],
+      "canonicalSlots": [
+        {
+          "slot": 2,
+          "roles": [
+            "body"
+          ],
+          "reference": "../ps_objects/prunus-cerasifera_c_02_s2.png",
+          "referenceSize": [
+            100,
+            80
+          ],
+          "origin": [
+            -52,
+            -75
+          ],
+          "formatId": 723
+        },
+        {
+          "slot": 4,
+          "roles": [
+            "shadow"
+          ],
+          "reference": "../ps_objects/prunus-cerasifera_c_02_s4.png",
+          "referenceSize": [
+            105,
+            50
+          ],
+          "origin": [
+            -45,
+            -16
+          ],
+          "formatId": 934
+        }
+      ]
+    },
+    {
+      "id": "pseudotsuga-menziesii_a_01",
+      "family": "tree",
+      "usageCount": 2,
+      "usageByMap": {
+        "ps_seed_1001": 0,
+        "ps_seed_2026": 0,
+        "ps_seed_3101": 1,
+        "ps_seed_3102": 0,
+        "ps_seed_3103": 0,
+        "ps_seed_3104": 0,
+        "ps_seed_3105": 0,
+        "ps_seed_3106": 0,
+        "ps_seed_3107": 0,
+        "ps_seed_3108": 0,
+        "ps_seed_3109": 0,
+        "ps_seed_3110": 0,
+        "ps_seed_3111": 1,
+        "ps_seed_3112": 0
+      },
+      "composite": false,
+      "slotRoles": {
+        "body": [
+          2
+        ],
+        "shadow": [
+          4
+        ],
+        "stateBody": [],
+        "stateShadow": [],
+        "crushedBody": [],
+        "crushedShadow": []
+      },
+      "bodyVariants": [
+        {
+          "bodySlot": 2,
+          "roles": [
+            "body"
+          ],
+          "pairedShadowSlot": 4
+        }
+      ],
+      "canonicalSlots": [
+        {
+          "slot": 2,
+          "roles": [
+            "body"
+          ],
+          "reference": "../ps_objects/pseudotsuga-menziesii_a_01_s2.png",
+          "referenceSize": [
+            71,
+            89
+          ],
+          "origin": [
+            -34,
+            -84
+          ],
+          "formatId": 723
+        },
+        {
+          "slot": 4,
+          "roles": [
+            "shadow"
+          ],
+          "reference": "../ps_objects/pseudotsuga-menziesii_a_01_s4.png",
+          "referenceSize": [
+            71,
+            38
+          ],
+          "origin": [
+            -27,
+            -10
+          ],
+          "formatId": 934
+        }
+      ]
+    },
+    {
+      "id": "pseudotsuga-menziesii_b_01",
+      "family": "tree",
+      "usageCount": 1,
+      "usageByMap": {
+        "ps_seed_1001": 0,
+        "ps_seed_2026": 0,
+        "ps_seed_3101": 0,
+        "ps_seed_3102": 0,
+        "ps_seed_3103": 0,
+        "ps_seed_3104": 0,
+        "ps_seed_3105": 0,
+        "ps_seed_3106": 0,
+        "ps_seed_3107": 0,
+        "ps_seed_3108": 0,
+        "ps_seed_3109": 0,
+        "ps_seed_3110": 1,
+        "ps_seed_3111": 0,
+        "ps_seed_3112": 0
+      },
+      "composite": false,
+      "slotRoles": {
+        "body": [
+          2
+        ],
+        "shadow": [
+          4
+        ],
+        "stateBody": [],
+        "stateShadow": [],
+        "crushedBody": [],
+        "crushedShadow": []
+      },
+      "bodyVariants": [
+        {
+          "bodySlot": 2,
+          "roles": [
+            "body"
+          ],
+          "pairedShadowSlot": 4
+        }
+      ],
+      "canonicalSlots": [
+        {
+          "slot": 2,
+          "roles": [
+            "body"
+          ],
+          "reference": "../ps_objects/pseudotsuga-menziesii_b_01_s2.png",
+          "referenceSize": [
+            59,
+            88
+          ],
+          "origin": [
+            -29,
+            -84
+          ],
+          "formatId": 723
+        },
+        {
+          "slot": 4,
+          "roles": [
+            "shadow"
+          ],
+          "reference": "../ps_objects/pseudotsuga-menziesii_b_01_s4.png",
+          "referenceSize": [
+            60,
+            36
+          ],
+          "origin": [
+            -25,
+            -9
+          ],
+          "formatId": 934
+        }
+      ]
+    },
+    {
+      "id": "pseudotsuga-menziesii_c_01",
+      "family": "tree",
+      "usageCount": 1,
+      "usageByMap": {
+        "ps_seed_1001": 0,
+        "ps_seed_2026": 0,
+        "ps_seed_3101": 1,
+        "ps_seed_3102": 0,
+        "ps_seed_3103": 0,
+        "ps_seed_3104": 0,
+        "ps_seed_3105": 0,
+        "ps_seed_3106": 0,
+        "ps_seed_3107": 0,
+        "ps_seed_3108": 0,
+        "ps_seed_3109": 0,
+        "ps_seed_3110": 0,
+        "ps_seed_3111": 0,
+        "ps_seed_3112": 0
+      },
+      "composite": false,
+      "slotRoles": {
+        "body": [
+          2
+        ],
+        "shadow": [
+          4
+        ],
+        "stateBody": [],
+        "stateShadow": [],
+        "crushedBody": [],
+        "crushedShadow": []
+      },
+      "bodyVariants": [
+        {
+          "bodySlot": 2,
+          "roles": [
+            "body"
+          ],
+          "pairedShadowSlot": 4
+        }
+      ],
+      "canonicalSlots": [
+        {
+          "slot": 2,
+          "roles": [
+            "body"
+          ],
+          "reference": "../ps_objects/pseudotsuga-menziesii_c_01_s2.png",
+          "referenceSize": [
+            106,
+            156
+          ],
+          "origin": [
+            -47,
+            -155
+          ],
+          "formatId": 723
+        },
+        {
+          "slot": 4,
+          "roles": [
+            "shadow"
+          ],
+          "reference": "../ps_objects/pseudotsuga-menziesii_c_01_s4.png",
+          "referenceSize": [
+            105,
+            66
+          ],
+          "origin": [
+            -34,
+            -16
+          ],
+          "formatId": 934
+        }
+      ]
+    },
+    {
+      "id": "pseudotsuga-menziesii_d_02",
+      "family": "tree",
+      "usageCount": 7,
+      "usageByMap": {
+        "ps_seed_1001": 1,
+        "ps_seed_2026": 1,
+        "ps_seed_3101": 0,
+        "ps_seed_3102": 1,
+        "ps_seed_3103": 0,
+        "ps_seed_3104": 0,
+        "ps_seed_3105": 0,
+        "ps_seed_3106": 0,
+        "ps_seed_3107": 1,
+        "ps_seed_3108": 0,
+        "ps_seed_3109": 0,
+        "ps_seed_3110": 1,
+        "ps_seed_3111": 2,
+        "ps_seed_3112": 0
+      },
+      "composite": false,
+      "slotRoles": {
+        "body": [
+          2
+        ],
+        "shadow": [
+          4
+        ],
+        "stateBody": [],
+        "stateShadow": [],
+        "crushedBody": [],
+        "crushedShadow": []
+      },
+      "bodyVariants": [
+        {
+          "bodySlot": 2,
+          "roles": [
+            "body"
+          ],
+          "pairedShadowSlot": 4
+        }
+      ],
+      "canonicalSlots": [
+        {
+          "slot": 2,
+          "roles": [
+            "body"
+          ],
+          "reference": "../ps_objects/pseudotsuga-menziesii_d_02_s2.png",
+          "referenceSize": [
+            114,
+            158
+          ],
+          "origin": [
+            -59,
+            -155
+          ],
+          "formatId": 723
+        },
+        {
+          "slot": 4,
+          "roles": [
+            "shadow"
+          ],
+          "reference": "../ps_objects/pseudotsuga-menziesii_d_02_s4.png",
+          "referenceSize": [
+            123,
+            72
+          ],
+          "origin": [
+            -47,
+            -16
+          ],
+          "formatId": 934
+        }
+      ]
+    },
+    {
+      "id": "quercus-agrifolia_a_01",
+      "family": "tree",
+      "usageCount": 12,
+      "usageByMap": {
+        "ps_seed_1001": 1,
+        "ps_seed_2026": 1,
+        "ps_seed_3101": 0,
+        "ps_seed_3102": 0,
+        "ps_seed_3103": 1,
+        "ps_seed_3104": 1,
+        "ps_seed_3105": 2,
+        "ps_seed_3106": 0,
+        "ps_seed_3107": 2,
+        "ps_seed_3108": 0,
+        "ps_seed_3109": 2,
+        "ps_seed_3110": 0,
+        "ps_seed_3111": 1,
+        "ps_seed_3112": 1
+      },
+      "composite": false,
+      "slotRoles": {
+        "body": [
+          2
+        ],
+        "shadow": [
+          4
+        ],
+        "stateBody": [],
+        "stateShadow": [],
+        "crushedBody": [],
+        "crushedShadow": []
+      },
+      "bodyVariants": [
+        {
+          "bodySlot": 2,
+          "roles": [
+            "body"
+          ],
+          "pairedShadowSlot": 4
+        }
+      ],
+      "canonicalSlots": [
+        {
+          "slot": 2,
+          "roles": [
+            "body"
+          ],
+          "reference": "../ps_objects/quercus-agrifolia_a_01_s2.png",
+          "referenceSize": [
+            150,
+            147
+          ],
+          "origin": [
+            -82,
+            -144
+          ],
+          "formatId": 723
+        },
+        {
+          "slot": 4,
+          "roles": [
+            "shadow"
+          ],
+          "reference": "../ps_objects/quercus-agrifolia_a_01_s4.png",
+          "referenceSize": [
+            156,
+            78
+          ],
+          "origin": [
+            -68,
+            -22
+          ],
+          "formatId": 934
+        }
+      ]
+    },
+    {
+      "id": "quercus-agrifolia_a_02",
+      "family": "tree",
+      "usageCount": 23,
+      "usageByMap": {
+        "ps_seed_1001": 0,
+        "ps_seed_2026": 1,
+        "ps_seed_3101": 2,
+        "ps_seed_3102": 5,
+        "ps_seed_3103": 0,
+        "ps_seed_3104": 0,
+        "ps_seed_3105": 1,
+        "ps_seed_3106": 2,
+        "ps_seed_3107": 1,
+        "ps_seed_3108": 1,
+        "ps_seed_3109": 5,
+        "ps_seed_3110": 1,
+        "ps_seed_3111": 2,
+        "ps_seed_3112": 2
+      },
+      "composite": false,
+      "slotRoles": {
+        "body": [
+          2
+        ],
+        "shadow": [
+          4
+        ],
+        "stateBody": [],
+        "stateShadow": [],
+        "crushedBody": [],
+        "crushedShadow": []
+      },
+      "bodyVariants": [
+        {
+          "bodySlot": 2,
+          "roles": [
+            "body"
+          ],
+          "pairedShadowSlot": 4
+        }
+      ],
+      "canonicalSlots": [
+        {
+          "slot": 2,
+          "roles": [
+            "body"
+          ],
+          "reference": "../ps_objects/quercus-agrifolia_a_02_s2.png",
+          "referenceSize": [
+            182,
+            145
+          ],
+          "origin": [
+            -87,
+            -140
+          ],
+          "formatId": 723
+        },
+        {
+          "slot": 4,
+          "roles": [
+            "shadow"
+          ],
+          "reference": "../ps_objects/quercus-agrifolia_a_02_s4.png",
+          "referenceSize": [
+            186,
+            85
+          ],
+          "origin": [
+            -71,
+            -19
+          ],
+          "formatId": 934
+        }
+      ]
+    },
+    {
+      "id": "quercus-cerris_a_01",
+      "family": "tree",
+      "usageCount": 8,
+      "usageByMap": {
+        "ps_seed_1001": 1,
+        "ps_seed_2026": 2,
+        "ps_seed_3101": 0,
+        "ps_seed_3102": 1,
+        "ps_seed_3103": 0,
+        "ps_seed_3104": 0,
+        "ps_seed_3105": 0,
+        "ps_seed_3106": 0,
+        "ps_seed_3107": 0,
+        "ps_seed_3108": 0,
+        "ps_seed_3109": 0,
+        "ps_seed_3110": 1,
+        "ps_seed_3111": 2,
+        "ps_seed_3112": 1
+      },
+      "composite": false,
+      "slotRoles": {
+        "body": [
+          2
+        ],
+        "shadow": [
+          4
+        ],
+        "stateBody": [],
+        "stateShadow": [],
+        "crushedBody": [],
+        "crushedShadow": []
+      },
+      "bodyVariants": [
+        {
+          "bodySlot": 2,
+          "roles": [
+            "body"
+          ],
+          "pairedShadowSlot": 4
+        }
+      ],
+      "canonicalSlots": [
+        {
+          "slot": 2,
+          "roles": [
+            "body"
+          ],
+          "reference": "../ps_objects/quercus-cerris_a_01_s2.png",
+          "referenceSize": [
+            159,
+            194
+          ],
+          "origin": [
+            -82,
+            -191
+          ],
+          "formatId": 723
+        },
+        {
+          "slot": 4,
+          "roles": [
+            "shadow"
+          ],
+          "reference": "../ps_objects/quercus-cerris_a_01_s4.png",
+          "referenceSize": [
+            166,
+            100
+          ],
+          "origin": [
+            -58,
+            -27
+          ],
+          "formatId": 934
+        }
+      ]
+    },
+    {
+      "id": "quercus-cerris_t_01",
+      "family": "tree",
+      "usageCount": 17,
+      "usageByMap": {
+        "ps_seed_1001": 2,
+        "ps_seed_2026": 0,
+        "ps_seed_3101": 2,
+        "ps_seed_3102": 1,
+        "ps_seed_3103": 1,
+        "ps_seed_3104": 2,
+        "ps_seed_3105": 1,
+        "ps_seed_3106": 1,
+        "ps_seed_3107": 2,
+        "ps_seed_3108": 1,
+        "ps_seed_3109": 2,
+        "ps_seed_3110": 0,
+        "ps_seed_3111": 0,
+        "ps_seed_3112": 2
+      },
+      "composite": false,
+      "slotRoles": {
+        "body": [
+          2
+        ],
+        "shadow": [
+          4
+        ],
+        "stateBody": [],
+        "stateShadow": [],
+        "crushedBody": [],
+        "crushedShadow": []
+      },
+      "bodyVariants": [
+        {
+          "bodySlot": 2,
+          "roles": [
+            "body"
+          ],
+          "pairedShadowSlot": 4
+        }
+      ],
+      "canonicalSlots": [
+        {
+          "slot": 2,
+          "roles": [
+            "body"
+          ],
+          "reference": "../ps_objects/quercus-cerris_t_01_s2.png",
+          "referenceSize": [
+            247,
+            236
+          ],
+          "origin": [
+            -123,
+            -232
+          ],
+          "formatId": 723
+        },
+        {
+          "slot": 4,
+          "roles": [
+            "shadow"
+          ],
+          "reference": "../ps_objects/quercus-cerris_t_01_s4.png",
+          "referenceSize": [
+            254,
+            139
+          ],
+          "origin": [
+            -107,
+            -75
+          ],
+          "formatId": 934
+        }
+      ]
+    },
+    {
+      "id": "robinia-pseudoacacia_a_01",
+      "family": "tree",
+      "usageCount": 3,
+      "usageByMap": {
+        "ps_seed_1001": 1,
+        "ps_seed_2026": 0,
+        "ps_seed_3101": 0,
+        "ps_seed_3102": 1,
+        "ps_seed_3103": 0,
+        "ps_seed_3104": 1,
+        "ps_seed_3105": 0,
+        "ps_seed_3106": 0,
+        "ps_seed_3107": 0,
+        "ps_seed_3108": 0,
+        "ps_seed_3109": 0,
+        "ps_seed_3110": 0,
+        "ps_seed_3111": 0,
+        "ps_seed_3112": 0
+      },
+      "composite": false,
+      "slotRoles": {
+        "body": [
+          2
+        ],
+        "shadow": [
+          4
+        ],
+        "stateBody": [],
+        "stateShadow": [],
+        "crushedBody": [],
+        "crushedShadow": []
+      },
+      "bodyVariants": [
+        {
+          "bodySlot": 2,
+          "roles": [
+            "body"
+          ],
+          "pairedShadowSlot": 4
+        }
+      ],
+      "canonicalSlots": [
+        {
+          "slot": 2,
+          "roles": [
+            "body"
+          ],
+          "reference": "../ps_objects/robinia-pseudoacacia_a_01_s2.png",
+          "referenceSize": [
+            125,
+            161
+          ],
+          "origin": [
+            -68,
+            -159
+          ],
+          "formatId": 723
+        },
+        {
+          "slot": 4,
+          "roles": [
+            "shadow"
+          ],
+          "reference": "../ps_objects/robinia-pseudoacacia_a_01_s4.png",
+          "referenceSize": [
+            127,
+            71
+          ],
+          "origin": [
+            -48,
+            -12
+          ],
+          "formatId": 934
+        }
+      ]
+    },
+    {
+      "id": "robinia-pseudoacacia_a_02",
+      "family": "tree",
+      "usageCount": 2,
+      "usageByMap": {
+        "ps_seed_1001": 0,
+        "ps_seed_2026": 0,
+        "ps_seed_3101": 0,
+        "ps_seed_3102": 0,
+        "ps_seed_3103": 0,
+        "ps_seed_3104": 0,
+        "ps_seed_3105": 0,
+        "ps_seed_3106": 0,
+        "ps_seed_3107": 0,
+        "ps_seed_3108": 0,
+        "ps_seed_3109": 2,
+        "ps_seed_3110": 0,
+        "ps_seed_3111": 0,
+        "ps_seed_3112": 0
+      },
+      "composite": false,
+      "slotRoles": {
+        "body": [
+          2
+        ],
+        "shadow": [
+          4
+        ],
+        "stateBody": [],
+        "stateShadow": [],
+        "crushedBody": [],
+        "crushedShadow": []
+      },
+      "bodyVariants": [
+        {
+          "bodySlot": 2,
+          "roles": [
+            "body"
+          ],
+          "pairedShadowSlot": 4
+        }
+      ],
+      "canonicalSlots": [
+        {
+          "slot": 2,
+          "roles": [
+            "body"
+          ],
+          "reference": "../ps_objects/robinia-pseudoacacia_a_02_s2.png",
+          "referenceSize": [
+            118,
+            180
+          ],
+          "origin": [
+            -60,
+            -178
+          ],
+          "formatId": 723
+        },
+        {
+          "slot": 4,
+          "roles": [
+            "shadow"
+          ],
+          "reference": "../ps_objects/robinia-pseudoacacia_a_02_s4.png",
+          "referenceSize": [
+            126,
+            86
+          ],
+          "origin": [
+            -40,
+            -13
+          ],
+          "formatId": 934
+        }
+      ]
+    },
+    {
+      "id": "robinia-pseudoacacia_b_01",
+      "family": "tree",
+      "usageCount": 2,
+      "usageByMap": {
+        "ps_seed_1001": 0,
+        "ps_seed_2026": 0,
+        "ps_seed_3101": 0,
+        "ps_seed_3102": 0,
+        "ps_seed_3103": 0,
+        "ps_seed_3104": 0,
+        "ps_seed_3105": 0,
+        "ps_seed_3106": 0,
+        "ps_seed_3107": 0,
+        "ps_seed_3108": 0,
+        "ps_seed_3109": 1,
+        "ps_seed_3110": 0,
+        "ps_seed_3111": 0,
+        "ps_seed_3112": 1
+      },
+      "composite": false,
+      "slotRoles": {
+        "body": [
+          2
+        ],
+        "shadow": [
+          4
+        ],
+        "stateBody": [],
+        "stateShadow": [],
+        "crushedBody": [],
+        "crushedShadow": []
+      },
+      "bodyVariants": [
+        {
+          "bodySlot": 2,
+          "roles": [
+            "body"
+          ],
+          "pairedShadowSlot": 4
+        }
+      ],
+      "canonicalSlots": [
+        {
+          "slot": 2,
+          "roles": [
+            "body"
+          ],
+          "reference": "../ps_objects/robinia-pseudoacacia_b_01_s2.png",
+          "referenceSize": [
+            141,
+            186
+          ],
+          "origin": [
+            -79,
+            -183
+          ],
+          "formatId": 723
+        },
+        {
+          "slot": 4,
+          "roles": [
+            "shadow"
+          ],
+          "reference": "../ps_objects/robinia-pseudoacacia_b_01_s4.png",
+          "referenceSize": [
+            135,
+            98
+          ],
+          "origin": [
+            -53,
+            -16
+          ],
+          "formatId": 934
+        }
+      ]
+    },
+    {
+      "id": "robinia-pseudoacacia_b_02",
+      "family": "tree",
+      "usageCount": 4,
+      "usageByMap": {
+        "ps_seed_1001": 1,
+        "ps_seed_2026": 0,
+        "ps_seed_3101": 0,
+        "ps_seed_3102": 0,
+        "ps_seed_3103": 0,
+        "ps_seed_3104": 0,
+        "ps_seed_3105": 0,
+        "ps_seed_3106": 0,
+        "ps_seed_3107": 0,
+        "ps_seed_3108": 1,
+        "ps_seed_3109": 0,
+        "ps_seed_3110": 1,
+        "ps_seed_3111": 1,
+        "ps_seed_3112": 0
+      },
+      "composite": false,
+      "slotRoles": {
+        "body": [
+          2
+        ],
+        "shadow": [
+          4
+        ],
+        "stateBody": [],
+        "stateShadow": [],
+        "crushedBody": [],
+        "crushedShadow": []
+      },
+      "bodyVariants": [
+        {
+          "bodySlot": 2,
+          "roles": [
+            "body"
+          ],
+          "pairedShadowSlot": 4
+        }
+      ],
+      "canonicalSlots": [
+        {
+          "slot": 2,
+          "roles": [
+            "body"
+          ],
+          "reference": "../ps_objects/robinia-pseudoacacia_b_02_s2.png",
+          "referenceSize": [
+            124,
+            193
+          ],
+          "origin": [
+            -60,
+            -191
+          ],
+          "formatId": 723
+        },
+        {
+          "slot": 4,
+          "roles": [
+            "shadow"
+          ],
+          "reference": "../ps_objects/robinia-pseudoacacia_b_02_s4.png",
+          "referenceSize": [
+            123,
+            88
+          ],
+          "origin": [
+            -37,
+            -19
+          ],
+          "formatId": 934
+        }
+      ]
+    },
+    {
+      "id": "robinia-pseudoacacia_c_01",
+      "family": "tree",
+      "usageCount": 1,
+      "usageByMap": {
+        "ps_seed_1001": 0,
+        "ps_seed_2026": 0,
+        "ps_seed_3101": 0,
+        "ps_seed_3102": 0,
+        "ps_seed_3103": 0,
+        "ps_seed_3104": 0,
+        "ps_seed_3105": 0,
+        "ps_seed_3106": 0,
+        "ps_seed_3107": 0,
+        "ps_seed_3108": 0,
+        "ps_seed_3109": 0,
+        "ps_seed_3110": 0,
+        "ps_seed_3111": 0,
+        "ps_seed_3112": 1
+      },
+      "composite": false,
+      "slotRoles": {
+        "body": [
+          2
+        ],
+        "shadow": [
+          4
+        ],
+        "stateBody": [],
+        "stateShadow": [],
+        "crushedBody": [],
+        "crushedShadow": []
+      },
+      "bodyVariants": [
+        {
+          "bodySlot": 2,
+          "roles": [
+            "body"
+          ],
+          "pairedShadowSlot": 4
+        }
+      ],
+      "canonicalSlots": [
+        {
+          "slot": 2,
+          "roles": [
+            "body"
+          ],
+          "reference": "../ps_objects/robinia-pseudoacacia_c_01_s2.png",
+          "referenceSize": [
+            136,
+            171
+          ],
+          "origin": [
+            -72,
+            -169
+          ],
+          "formatId": 723
+        },
+        {
+          "slot": 4,
+          "roles": [
+            "shadow"
+          ],
+          "reference": "../ps_objects/robinia-pseudoacacia_c_01_s4.png",
+          "referenceSize": [
+            133,
+            65
+          ],
+          "origin": [
+            -51,
+            -8
+          ],
+          "formatId": 934
+        }
+      ]
+    },
+    {
+      "id": "robinia-pseudoacacia_c_02",
+      "family": "tree",
+      "usageCount": 5,
+      "usageByMap": {
+        "ps_seed_1001": 0,
+        "ps_seed_2026": 1,
+        "ps_seed_3101": 0,
+        "ps_seed_3102": 0,
+        "ps_seed_3103": 0,
+        "ps_seed_3104": 0,
+        "ps_seed_3105": 0,
+        "ps_seed_3106": 0,
+        "ps_seed_3107": 1,
+        "ps_seed_3108": 0,
+        "ps_seed_3109": 1,
+        "ps_seed_3110": 0,
+        "ps_seed_3111": 0,
+        "ps_seed_3112": 2
+      },
+      "composite": false,
+      "slotRoles": {
+        "body": [
+          2
+        ],
+        "shadow": [
+          4
+        ],
+        "stateBody": [],
+        "stateShadow": [],
+        "crushedBody": [],
+        "crushedShadow": []
+      },
+      "bodyVariants": [
+        {
+          "bodySlot": 2,
+          "roles": [
+            "body"
+          ],
+          "pairedShadowSlot": 4
+        }
+      ],
+      "canonicalSlots": [
+        {
+          "slot": 2,
+          "roles": [
+            "body"
+          ],
+          "reference": "../ps_objects/robinia-pseudoacacia_c_02_s2.png",
+          "referenceSize": [
+            118,
+            172
+          ],
+          "origin": [
+            -66,
+            -170
+          ],
+          "formatId": 723
+        },
+        {
+          "slot": 4,
+          "roles": [
+            "shadow"
+          ],
+          "reference": "../ps_objects/robinia-pseudoacacia_c_02_s4.png",
+          "referenceSize": [
+            121,
+            81
+          ],
+          "origin": [
+            -43,
+            -21
+          ],
+          "formatId": 934
+        }
+      ]
+    },
+    {
+      "id": "robinia-pseudoacacia_d_01",
+      "family": "tree",
+      "usageCount": 1,
+      "usageByMap": {
+        "ps_seed_1001": 0,
+        "ps_seed_2026": 0,
+        "ps_seed_3101": 0,
+        "ps_seed_3102": 0,
+        "ps_seed_3103": 0,
+        "ps_seed_3104": 0,
+        "ps_seed_3105": 0,
+        "ps_seed_3106": 0,
+        "ps_seed_3107": 1,
+        "ps_seed_3108": 0,
+        "ps_seed_3109": 0,
+        "ps_seed_3110": 0,
+        "ps_seed_3111": 0,
+        "ps_seed_3112": 0
+      },
+      "composite": false,
+      "slotRoles": {
+        "body": [
+          2
+        ],
+        "shadow": [
+          4
+        ],
+        "stateBody": [],
+        "stateShadow": [],
+        "crushedBody": [],
+        "crushedShadow": []
+      },
+      "bodyVariants": [
+        {
+          "bodySlot": 2,
+          "roles": [
+            "body"
+          ],
+          "pairedShadowSlot": 4
+        }
+      ],
+      "canonicalSlots": [
+        {
+          "slot": 2,
+          "roles": [
+            "body"
+          ],
+          "reference": "../ps_objects/robinia-pseudoacacia_d_01_s2.png",
+          "referenceSize": [
+            153,
+            204
+          ],
+          "origin": [
+            -69,
+            -202
+          ],
+          "formatId": 723
+        },
+        {
+          "slot": 4,
+          "roles": [
+            "shadow"
+          ],
+          "reference": "../ps_objects/robinia-pseudoacacia_d_01_s4.png",
+          "referenceSize": [
+            160,
+            106
+          ],
+          "origin": [
+            -37,
+            -24
+          ],
+          "formatId": 934
+        }
+      ]
+    },
+    {
+      "id": "robinia-pseudoacacia_d_02",
+      "family": "tree",
+      "usageCount": 6,
+      "usageByMap": {
+        "ps_seed_1001": 1,
+        "ps_seed_2026": 0,
+        "ps_seed_3101": 2,
+        "ps_seed_3102": 1,
+        "ps_seed_3103": 0,
+        "ps_seed_3104": 0,
+        "ps_seed_3105": 0,
+        "ps_seed_3106": 2,
+        "ps_seed_3107": 0,
+        "ps_seed_3108": 0,
+        "ps_seed_3109": 0,
+        "ps_seed_3110": 0,
+        "ps_seed_3111": 0,
+        "ps_seed_3112": 0
+      },
+      "composite": false,
+      "slotRoles": {
+        "body": [
+          2
+        ],
+        "shadow": [
+          4
+        ],
+        "stateBody": [],
+        "stateShadow": [],
+        "crushedBody": [],
+        "crushedShadow": []
+      },
+      "bodyVariants": [
+        {
+          "bodySlot": 2,
+          "roles": [
+            "body"
+          ],
+          "pairedShadowSlot": 4
+        }
+      ],
+      "canonicalSlots": [
+        {
+          "slot": 2,
+          "roles": [
+            "body"
+          ],
+          "reference": "../ps_objects/robinia-pseudoacacia_d_02_s2.png",
+          "referenceSize": [
+            168,
+            197
+          ],
+          "origin": [
+            -73,
+            -195
+          ],
+          "formatId": 723
+        },
+        {
+          "slot": 4,
+          "roles": [
+            "shadow"
+          ],
+          "reference": "../ps_objects/robinia-pseudoacacia_d_02_s4.png",
+          "referenceSize": [
+            168,
+            99
+          ],
+          "origin": [
+            -43,
+            -20
+          ],
+          "formatId": 934
+        }
+      ]
+    },
+    {
+      "id": "salix-babylonica_a_02",
+      "family": "tree",
+      "usageCount": 1,
+      "usageByMap": {
+        "ps_seed_1001": 0,
+        "ps_seed_2026": 0,
+        "ps_seed_3101": 0,
+        "ps_seed_3102": 0,
+        "ps_seed_3103": 0,
+        "ps_seed_3104": 0,
+        "ps_seed_3105": 0,
+        "ps_seed_3106": 0,
+        "ps_seed_3107": 1,
+        "ps_seed_3108": 0,
+        "ps_seed_3109": 0,
+        "ps_seed_3110": 0,
+        "ps_seed_3111": 0,
+        "ps_seed_3112": 0
+      },
+      "composite": false,
+      "slotRoles": {
+        "body": [
+          2
+        ],
+        "shadow": [
+          4
+        ],
+        "stateBody": [],
+        "stateShadow": [],
+        "crushedBody": [],
+        "crushedShadow": []
+      },
+      "bodyVariants": [
+        {
+          "bodySlot": 2,
+          "roles": [
+            "body"
+          ],
+          "pairedShadowSlot": 4
+        }
+      ],
+      "canonicalSlots": [
+        {
+          "slot": 2,
+          "roles": [
+            "body"
+          ],
+          "reference": "../ps_objects/salix-babylonica_a_02_s2.png",
+          "referenceSize": [
+            117,
+            192
+          ],
+          "origin": [
+            -53,
+            -189
+          ],
+          "formatId": 723
+        },
+        {
+          "slot": 4,
+          "roles": [
+            "shadow"
+          ],
+          "reference": "../ps_objects/salix-babylonica_a_02_s4.png",
+          "referenceSize": [
+            128,
+            101
+          ],
+          "origin": [
+            -37,
+            -23
+          ],
+          "formatId": 934
+        }
+      ]
+    },
+    {
+      "id": "tilia-europaea_c_01",
+      "family": "tree",
+      "usageCount": 8,
+      "usageByMap": {
+        "ps_seed_1001": 1,
+        "ps_seed_2026": 0,
+        "ps_seed_3101": 1,
+        "ps_seed_3102": 0,
+        "ps_seed_3103": 1,
+        "ps_seed_3104": 0,
+        "ps_seed_3105": 0,
+        "ps_seed_3106": 0,
+        "ps_seed_3107": 1,
+        "ps_seed_3108": 0,
+        "ps_seed_3109": 1,
+        "ps_seed_3110": 0,
+        "ps_seed_3111": 2,
+        "ps_seed_3112": 1
+      },
+      "composite": false,
+      "slotRoles": {
+        "body": [
+          2
+        ],
+        "shadow": [
+          4
+        ],
+        "stateBody": [],
+        "stateShadow": [],
+        "crushedBody": [],
+        "crushedShadow": []
+      },
+      "bodyVariants": [
+        {
+          "bodySlot": 2,
+          "roles": [
+            "body"
+          ],
+          "pairedShadowSlot": 4
+        }
+      ],
+      "canonicalSlots": [
+        {
+          "slot": 2,
+          "roles": [
+            "body"
+          ],
+          "reference": "../ps_objects/tilia-europaea_c_01_s2.png",
+          "referenceSize": [
+            95,
+            140
+          ],
+          "origin": [
+            -49,
+            -139
+          ],
+          "formatId": 723
+        },
+        {
+          "slot": 4,
+          "roles": [
+            "shadow"
+          ],
+          "reference": "../ps_objects/tilia-europaea_c_01_s4.png",
+          "referenceSize": [
+            104,
+            59
+          ],
+          "origin": [
+            -40,
+            -18
+          ],
+          "formatId": 934
+        }
+      ]
+    },
+    {
+      "id": "tilia-europaea_c_02",
+      "family": "tree",
+      "usageCount": 3,
+      "usageByMap": {
+        "ps_seed_1001": 1,
+        "ps_seed_2026": 0,
+        "ps_seed_3101": 0,
+        "ps_seed_3102": 0,
+        "ps_seed_3103": 0,
+        "ps_seed_3104": 0,
+        "ps_seed_3105": 0,
+        "ps_seed_3106": 0,
+        "ps_seed_3107": 0,
+        "ps_seed_3108": 0,
+        "ps_seed_3109": 0,
+        "ps_seed_3110": 1,
+        "ps_seed_3111": 1,
+        "ps_seed_3112": 0
+      },
+      "composite": false,
+      "slotRoles": {
+        "body": [
+          2
+        ],
+        "shadow": [
+          4
+        ],
+        "stateBody": [],
+        "stateShadow": [],
+        "crushedBody": [],
+        "crushedShadow": []
+      },
+      "bodyVariants": [
+        {
+          "bodySlot": 2,
+          "roles": [
+            "body"
+          ],
+          "pairedShadowSlot": 4
+        }
+      ],
+      "canonicalSlots": [
+        {
+          "slot": 2,
+          "roles": [
+            "body"
+          ],
+          "reference": "../ps_objects/tilia-europaea_c_02_s2.png",
+          "referenceSize": [
+            100,
+            135
+          ],
+          "origin": [
+            -51,
+            -134
+          ],
+          "formatId": 723
+        },
+        {
+          "slot": 4,
+          "roles": [
+            "shadow"
+          ],
+          "reference": "../ps_objects/tilia-europaea_c_02_s4.png",
+          "referenceSize": [
+            109,
+            62
+          ],
+          "origin": [
+            -42,
+            -15
+          ],
+          "formatId": 934
+        }
+      ]
+    },
+    {
+      "id": "tilia-europaea_d_02",
+      "family": "tree",
+      "usageCount": 5,
+      "usageByMap": {
+        "ps_seed_1001": 0,
+        "ps_seed_2026": 0,
+        "ps_seed_3101": 0,
+        "ps_seed_3102": 1,
+        "ps_seed_3103": 0,
+        "ps_seed_3104": 1,
+        "ps_seed_3105": 1,
+        "ps_seed_3106": 0,
+        "ps_seed_3107": 0,
+        "ps_seed_3108": 0,
+        "ps_seed_3109": 0,
+        "ps_seed_3110": 1,
+        "ps_seed_3111": 1,
+        "ps_seed_3112": 0
+      },
+      "composite": false,
+      "slotRoles": {
+        "body": [
+          2
+        ],
+        "shadow": [
+          4
+        ],
+        "stateBody": [],
+        "stateShadow": [],
+        "crushedBody": [],
+        "crushedShadow": []
+      },
+      "bodyVariants": [
+        {
+          "bodySlot": 2,
+          "roles": [
+            "body"
+          ],
+          "pairedShadowSlot": 4
+        }
+      ],
+      "canonicalSlots": [
+        {
+          "slot": 2,
+          "roles": [
+            "body"
+          ],
+          "reference": "../ps_objects/tilia-europaea_d_02_s2.png",
+          "referenceSize": [
+            88,
+            124
+          ],
+          "origin": [
+            -44,
+            -122
+          ],
+          "formatId": 723
+        },
+        {
+          "slot": 4,
+          "roles": [
+            "shadow"
+          ],
+          "reference": "../ps_objects/tilia-europaea_d_02_s4.png",
+          "referenceSize": [
+            93,
+            54
+          ],
+          "origin": [
+            -38,
+            -25
+          ],
+          "formatId": 934
+        }
+      ]
+    },
+    {
+      "id": "ulmus-minor_c_01",
+      "family": "tree",
+      "usageCount": 3,
+      "usageByMap": {
+        "ps_seed_1001": 1,
+        "ps_seed_2026": 0,
+        "ps_seed_3101": 0,
+        "ps_seed_3102": 1,
+        "ps_seed_3103": 0,
+        "ps_seed_3104": 0,
+        "ps_seed_3105": 0,
+        "ps_seed_3106": 0,
+        "ps_seed_3107": 1,
+        "ps_seed_3108": 0,
+        "ps_seed_3109": 0,
+        "ps_seed_3110": 0,
+        "ps_seed_3111": 0,
+        "ps_seed_3112": 0
+      },
+      "composite": false,
+      "slotRoles": {
+        "body": [
+          2
+        ],
+        "shadow": [
+          4
+        ],
+        "stateBody": [],
+        "stateShadow": [],
+        "crushedBody": [],
+        "crushedShadow": []
+      },
+      "bodyVariants": [
+        {
+          "bodySlot": 2,
+          "roles": [
+            "body"
+          ],
+          "pairedShadowSlot": 4
+        }
+      ],
+      "canonicalSlots": [
+        {
+          "slot": 2,
+          "roles": [
+            "body"
+          ],
+          "reference": "../ps_objects/ulmus-minor_c_01_s2.png",
+          "referenceSize": [
+            181,
+            210
+          ],
+          "origin": [
+            -98,
+            -207
+          ],
+          "formatId": 723
+        },
+        {
+          "slot": 4,
+          "roles": [
+            "shadow"
+          ],
+          "reference": "../ps_objects/ulmus-minor_c_01_s4.png",
+          "referenceSize": [
+            188,
+            104
+          ],
+          "origin": [
+            -76,
+            -28
+          ],
+          "formatId": 934
+        }
+      ]
+    }
+  ]
+}

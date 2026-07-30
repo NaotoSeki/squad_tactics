@@ -1,0 +1,155 @@
+{
+  "schema": "raised-hd-job/v1",
+  "jobId": "shrub_carpinus-betulus_a_01_s1",
+  "id": "shrub_carpinus-betulus_a_01",
+  "family": "shrub",
+  "roles": [
+    "stateBody"
+  ],
+  "bodySlot": 1,
+  "pairedShadowSlot": null,
+  "pixelRatio": 2,
+  "lightingContract": "ps-overcast-upper-left-v1",
+  "bodyOrigin": [
+    -22,
+    -10
+  ],
+  "shadowOrigin": null,
+  "references": {
+    "body": "../../../scratch/ps_sprites_canonical_v1/Objects/Plants/shrub_carpinus-betulus_a_01_s1.png",
+    "shadowCalibration": null,
+    "bodyRole": "numeric canvas/bbox/origin/contact/color calibration",
+    "shadowRole": null,
+    "canonicalPixelsCopied": false
+  },
+  "provenance": {
+    "source": "built-in ImageGen selected output",
+    "sourceCopy": "C:\\Projects\\squad_tactics\\tmp\\raised_hd\\shrub_carpinus-betulus_a_01_s1_source.png",
+    "sourceSha256": "a40ceca40217bee18c326862f9b5f5aab0d6bede3f542091d377b63f58c9dc7d",
+    "cutout": "C:\\Projects\\squad_tactics\\tmp\\raised_hd\\shrub_carpinus-betulus_a_01_s1_cutout.png",
+    "cutoutSha256": "01b7e19209eaa60726668e1b30b86903b1ffc18a509329ffdfc561b02906b7f3",
+    "cutoutAlphaSha256": "12842aec4d48a9fbec41f0c24b1f6c4dcc87a57fc8487ff04dae0f56916a85c9",
+    "chromaHelper": "C:\\Users\\aware.梨花のPC\\.codex\\skills\\.system\\imagegen\\scripts\\remove_chroma_key.py"
+  },
+  "outputs": {
+    "body": "body/shrub_carpinus-betulus_a_01_s1_body_hd_v1.png",
+    "shadow": null,
+    "review": "review/shrub_carpinus-betulus_a_01_s1_world_review.png",
+    "metadata": "metadata/shrub_carpinus-betulus_a_01_s1.json"
+  },
+  "body": {
+    "normalization": {
+      "sourceSize": [
+        1790,
+        878
+      ],
+      "sourceBbox": [
+        55,
+        116,
+        1728,
+        756
+      ],
+      "sourceContact": [
+        930.75,
+        471.0
+      ],
+      "canonicalBbox": [
+        0,
+        0,
+        43,
+        19
+      ],
+      "canonicalContact": [
+        22.0,
+        10.0
+      ],
+      "targetSize": [
+        86,
+        38
+      ],
+      "targetBbox": [
+        0,
+        0,
+        86,
+        38
+      ],
+      "targetContact": [
+        44.0,
+        20.0
+      ],
+      "resultBbox": [
+        0,
+        0,
+        83,
+        36
+      ],
+      "resultContact": [
+        44.0,
+        20.0
+      ],
+      "scale": [
+        0.05083732,
+        0.05790297
+      ],
+      "generatedAlphaSha256": "12842aec4d48a9fbec41f0c24b1f6c4dcc87a57fc8487ff04dae0f56916a85c9",
+      "normalizedAlphaSha256": "12438250b4448f79fa842336cb2a9dcb99c61cf9c5e12ea07b32f8a16e2dd678",
+      "canonicalAlphaSha256": "3c7f07b7ab1dc82737f9c30f44485905f130d375fadcacbab850e963ac358143",
+      "alphaAuthority": "accepted generated cutout",
+      "canonicalAlphaRole": "numeric bbox/contact calibration only"
+    },
+    "quality": {
+      "size": [
+        86,
+        38
+      ],
+      "bbox": [
+        0,
+        0,
+        83,
+        36
+      ],
+      "visiblePixels": 1705,
+      "canonicalVisiblePixels": 2212,
+      "coverageRatio": 0.770796,
+      "contact": [
+        44.0,
+        20.0
+      ],
+      "expectedContact": [
+        44.0,
+        20.0
+      ],
+      "contactErrorPx": 0.0,
+      "magentaSpillPixels": 0,
+      "magentaSpillLimit": 2,
+      "canonicalAlphaIdentical": false
+    },
+    "fileSha256": "3908cdb46308eb5bb7bb5df0e0a672e11f81c0ebb4cde258705f0d21ad203821",
+    "alphaSha256": "12438250b4448f79fa842336cb2a9dcb99c61cf9c5e12ea07b32f8a16e2dd678"
+  },
+  "shadow": {
+    "method": "intentionally-shadowless-state",
+    "canonicalShadowPixelsCopied": false
+  },
+  "review": {
+    "file": "C:/Projects/squad_tactics/asset/environment/raised_hd/review/shrub_carpinus-betulus_a_01_s1_world_review.png",
+    "size": [
+      146,
+      136
+    ],
+    "worldOriginMarker": [
+      74,
+      88
+    ],
+    "shadowVector": [
+      0.72,
+      0.69
+    ],
+    "contactMarkers": {
+      "bodyWorld": [
+        0.0,
+        0.0
+      ]
+    }
+  }
+}

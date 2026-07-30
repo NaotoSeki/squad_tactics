@@ -34,3 +34,6 @@ asset/environment/02_max_RCityWW2b_Vray/
 # 一時抽出物
 tmp/
 waveletNoiseTile.bin
+
+# HD生成物(レビュー用の中間出力)。実行時資産は asset/environment/ 側が正。
+output/
