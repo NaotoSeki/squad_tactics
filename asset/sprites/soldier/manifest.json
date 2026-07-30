@@ -130,6 +130,34 @@
       "sheetW": 4928,
       "sheetH": 49
     },
+    "kneel_reload": {
+      "file": "kneel_reload.png",
+      "srcFrames": 26,
+      "stride": 1,
+      "frames": 26,
+      "cols": 73,
+      "rows": 3,
+      "frameW": 109,
+      "frameH": 65,
+      "originX": 0.5179,
+      "originY": 1.6358,
+      "sheetW": 7957,
+      "sheetH": 195
+    },
+    "kneel_run": {
+      "file": "kneel_run.png",
+      "srcFrames": 16,
+      "stride": 1,
+      "frames": 16,
+      "cols": 90,
+      "rows": 2,
+      "frameW": 88,
+      "frameH": 69,
+      "originX": 0.5222,
+      "originY": 1.3396,
+      "sheetW": 7920,
+      "sheetH": 138
+    },
     "kneel_throw_grenade": {
       "file": "kneel_throw_grenade.png",
       "srcFrames": 36,
@@ -395,6 +423,34 @@
       "originY": 0.9882,
       "sheetW": 7979,
       "sheetH": 296
+    },
+    "stand_reload": {
+      "file": "stand_reload.png",
+      "srcFrames": 26,
+      "stride": 1,
+      "frames": 26,
+      "cols": 90,
+      "rows": 3,
+      "frameW": 88,
+      "frameH": 88,
+      "originX": 0.5222,
+      "originY": 1.2167,
+      "sheetW": 7920,
+      "sheetH": 264
+    },
+    "stand_run": {
+      "file": "stand_run.png",
+      "srcFrames": 21,
+      "stride": 1,
+      "frames": 21,
+      "cols": 88,
+      "rows": 2,
+      "frameW": 90,
+      "frameH": 73,
+      "originX": 0.524,
+      "originY": 1.25,
+      "sheetW": 7920,
+      "sheetH": 146
     },
     "stand_throw_grenade": {
       "file": "stand_throw_grenade.png",

@@ -51,12 +51,29 @@ def cleanup_orphan_data():
                 collection.remove(datablock)
 
 
+def animatable_bone_names(armature):
+    """マスター側で「揃っていてほしい」骨名を返す。
+
+    リーフ骨（HeadTop_End / *Toe_End / HandIndex4 など末端）は回転しても見た目に効かず、
+    取込は ignore_leaf_bones=True で落とすため、評価対象から外す。
+    """
+    return {bone.name for bone in armature.data.bones if bone.children}
+
+
 def bone_match_ratio(main_armature, imported_armature):
-    """骨名集合の一致率を返す。"""
-    main_names = {bone.name for bone in main_armature.data.bones}
+    """マスターの可動骨が取込側にどれだけ揃っているかを返す。
+
+    分母は**マスター側の可動骨数**。Mixamo配布FBXはマスターより指骨が多い
+    （Middle/Pinky/Ring/Thumb を持つ）ことがあり、余剰骨を分母へ入れると
+    実際には完全互換なのに一致率が不当に下がる（2026-07-30、Rifle Run/Reloading が
+    50.8%と判定され取込拒否された実例）。余剰骨はマスターのメッシュがウェイトを
+    持たないので無害であり、評価に含めない。
+    """
+    main_names = animatable_bone_names(main_armature)
     imported_names = {bone.name for bone in imported_armature.data.bones}
-    denominator = max(len(main_names), len(imported_names), 1)
-    return len(main_names & imported_names) / denominator
+    if not main_names:
+        return 0.0
+    return len(main_names & imported_names) / len(main_names)
 
 
 def find_imported_armature(new_objects, main_armature):

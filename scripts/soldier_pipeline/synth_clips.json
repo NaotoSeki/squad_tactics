@@ -3,6 +3,8 @@
 
   "_axis_calibration": "2026-07-30 実測。Spine/Spine1/Spine2/Neck/Head のローカル軸は X=前傾ピッチ / Y=捻り / Z=右肩側へのロール。軸間クロストークはほぼ0（X操作時の横変位 <=0.001）。Hips だけは軸が混ざるので lean には使わない。肩・腕は体軸非整列かつ小銃の保持が崩れるので触らない。",
 
+  "_graft_limits": "graft は上体が起きている姿勢にしか効かない。Kneel は成立、**Prone は破綻**（伏せは Hips が約90°倒れており、立ち姿勢用の上半身を移植すると腕の可動面が地面へ潜って小銃が地面を貫通する。2026-07-30 実レンダで確認し Prone.Reload を破棄）。ランタイムは prone_reload が無ければ prone_idle へ落とす。伏せリロードが要るなら伏せ専用クリップをDLすること。",
+
   "_angle_lesson": "重要（2026-07-30、1回目のレンダで実際に外した）: 角度を『頭部の変位量』から見積もると必ず過大になる。脊椎チェーンのピッチは視覚的に複合するため、累積30°の前傾で『壁に隠れる』ではなく『崩れ落ちる』絵になった。実測の落とし所は累積ピッチ: Cover_Idle 約12°(+頭8°) / Cower 約21°(+頭12°) / Cover_Fire 5°まで。乗り出しは**ピッチではなくロール(Z)で作る** — ロールは小銃を肩付けしたまま横へ出るので照準の絵が壊れない。ピッチを足すと構えが解けて劣化する。",
 
   "clips": [
@@ -181,6 +183,38 @@
             "mixamorig:Head": [4, 0, 0]
           }
         }
+      ]
+    },
+
+    {
+      "_note": "走り。Rifle Run は In Place 無しでDLされており local Z が +289 単調増加する実ルートモーションを持つ（2026-07-30実測）。linear で先頭→末尾の直線ドリフトだけ抜き、上下動と左右の振りは残す。末尾が先頭と一致するのでループも閉じる。",
+      "name": "Loop.Stand.Run",
+      "source": { "action": "Stand.Run", "from": "start", "to": "end", "step": 1 },
+      "ops": [
+        { "op": "strip_root_motion", "bone": "mixamorig:Hips", "axes": ["x", "y", "z"], "mode": "linear" }
+      ]
+    },
+    {
+      "_note": "しゃがみ走り。走りの上半身を膝立ちの脚へ移植する。",
+      "name": "Loop.Kneel.Run",
+      "source": { "action": "Kneel.Forward", "from": "start", "to": "end", "step": 2 },
+      "ops": [
+        { "op": "graft", "from": "Loop.Stand.Run", "bones": "upper" }
+      ]
+    },
+    {
+      "_note": "リロード。元100フレームなので間引く。Mixamo版は元々インプレース（全軸ドリフト≈0を実測）。",
+      "name": "Clip.Stand.Reload",
+      "source": { "action": "Stand.Reload", "from": "start", "to": "end", "step": 4 },
+      "ops": []
+    },
+    {
+      "_note": "膝立ち/伏せリロード。立ちリロードの上半身だけを各姿勢の土台へ移植して自給する（Mixamoの追加DL不要）。",
+      "name": "Kneel.Reload",
+      "source": { "action": "Kneel.Idle", "from": "start", "to": "start" },
+      "ops": [
+        { "op": "hold", "frames": 26, "at": "start" },
+        { "op": "graft", "from": "Clip.Stand.Reload", "bones": "upper" }
       ]
     },
 

@@ -141,6 +141,43 @@ class SoldierSynthClipsTest(unittest.TestCase):
                         )
             defined.add(clip["name"])
 
+    def test_run_clips_strip_root_motion(self) -> None:
+        """走りは必ずルートモーションを抜くこと。
+
+        Mixamo を In Place 無しでDLすると実際に前進する（Rifle Run は local Z が
+        +289 単調増加していた）。抜き忘れるとスプライトがセルの外へ歩いて出ていく。
+        """
+        for clip in self.clips:
+            name = clip["name"]
+            if "Run" not in name:
+                continue
+            ops = clip.get("ops", [])
+            op_names = [op.get("op") for op in ops]
+            with self.subTest(clip=name):
+                # 自前で抜くか、既に抜いたクリップを graft で引くかのどちらか
+                self.assertTrue(
+                    "strip_root_motion" in op_names or "graft" in op_names,
+                    f"{name}: strip_root_motion か、抜き済みクリップからの graft が必要",
+                )
+
+    def test_graft_donors_are_defined_before_use(self) -> None:
+        """graft のドナーは、既存アクションか先に定義されたクリップであること。"""
+        defined: set[str] = set()
+        known_sources = {
+            action for clip in self.clips for action in self._source_actions(clip)
+        }
+        for clip in self.clips:
+            for op in clip.get("ops", []):
+                if op.get("op") != "graft":
+                    continue
+                donor = op.get("from")
+                with self.subTest(clip=clip["name"], donor=donor):
+                    self.assertTrue(
+                        donor in defined or donor in known_sources,
+                        f"{clip['name']}: graft ドナー {donor} が未定義（定義順が逆）",
+                    )
+            defined.add(clip["name"])
+
     def _source_actions(self, clip: dict) -> list[str]:
         """clip の入力アクション名を列挙する。"""
         if "source" in clip:

@@ -134,6 +134,67 @@ const TraitPolicy = {
       }
     }
 
+    // ---------------------------------------------------------------------
+    // 自動Cover（反射）: 撃たれて遮蔽の薄い所に居るなら、隣接のより濃い遮蔽へ
+    // 自発的に退避する。射撃より優先する — 撃ち返すより先に身を守る。
+    //
+    // プレイヤー命令とは競合しない。sim_core は currentOrder があれば
+    // policy.decide を呼ばないので、この分岐は「命令が無いときの自己判断」だけ。
+    //
+    // 発火帯は [COVER_SEEK_AT, PINNED_AT)。PINNED 以上は頭を上げていられない状態で、
+    // 開けた地面を走るのは自殺なので伏せたまま動かない（視覚層も prone にする）。
+    // ---------------------------------------------------------------------
+    const coverSeekAt = T.COVER_SEEK_AT != null ? T.COVER_SEEK_AT
+      : (T.SUPPRESSED_AT != null ? T.SUPPRESSED_AT : 50);
+    const pinnedAt = T.PINNED_AT != null ? T.PINNED_AT : 80;
+    const seekMaxCover = T.COVER_SEEK_MAX_COVER != null ? T.COVER_SEEK_MAX_COVER : 0.35;
+    const seekMinGain = T.COVER_SEEK_MIN_GAIN != null ? T.COVER_SEEK_MIN_GAIN : 0.2;
+    const map = worldView.map;
+
+    const maySeekCover = (
+      s.suppression >= coverSeekAt &&
+      s.suppression < pinnedAt &&
+      s.state !== 'move' &&
+      !(s.movePath && s.movePath.length > 0) &&
+      map && typeof map.neighbors === 'function' && typeof map.cover === 'function' &&
+      // timid は自発行動が止まる（SS13）。竦んで動けない方が性格として正しい。
+      !(has('timid') && s.suppression >= TRAIT_MODS.timid.FREEZE_AT_SUPPRESSION)
+    );
+
+    if (maySeekCover) {
+      const here = { q: s.q, r: s.r };
+      const hereCover = map.cover(here);
+      if (typeof hereCover === 'number' && hereCover < seekMaxCover) {
+        // cautious は薄い遮蔽へは動かない。既存の movePath ガードと同じ閾値を使う。
+        const minDest = has('cautious') ? TRAIT_MODS.cautious.MIN_SELF_MOVE_COVER : 0;
+        const cells = map.neighbors(here) || [];
+        let best = null;
+        let bestCover = hereCover + seekMinGain;
+
+        for (let i = 0; i < cells.length; i++) {
+          const cell = cells[i];
+          if (!cell) continue;
+          if (typeof map.moveCost === 'function') {
+            let cost = null;
+            try { cost = map.moveCost(here, cell); } catch (e) { cost = null; }
+            // 進入不可(Infinity/0/負)は除外。moveCost の実装差で不明なら通す。
+            if (typeof cost === 'number' && !(isFinite(cost) && cost > 0)) continue;
+          }
+          const c = map.cover(cell);
+          if (typeof c !== 'number' || c < minDest) continue;
+          if (c > bestCover) { bestCover = c; best = cell; }
+        }
+
+        if (best) {
+          return {
+            type: 'MOVE_TO', soldierIds: [s.id],
+            payload: { path: [{ q: best.q, r: best.r }] },
+            note: has('cautious') ? '慎重: 被制圧、濃い遮蔽へ退避' : '被制圧: 遮蔽へ退避',
+          };
+        }
+      }
+    }
+
     if (bestTarget) {
       // calm: withhold fire until well within range, regardless of trait
       // combos -- if calm's threshold is not yet met, fall through to idle.

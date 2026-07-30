@@ -117,9 +117,10 @@ class SoldierUnitView extends UnitView {
             const tex = 'sold_' + name;
             if (!this.scene.textures.exists(tex)) continue;
             const n = meta.frames;
-            // cower は「制圧下で縮こまり続ける」持続状態なのでループ側。dive_prone / hit は
-            // 一回性なので非ループ（_oneShot と postureTrans が完了検知に isPlaying を使う）
-            const loop = !/^trans_/.test(name) && /(_idle|_forward|_fire|_cower)$/.test(name);
+            // cower は「制圧下で縮こまり続ける」持続状態、run は移動サイクルなのでループ側。
+            // dive_prone / hit / reload は一回性なので非ループ（reload をループさせると
+            // 弾倉を何度も入れ直す絵になる。_oneShot と postureTrans は完了検知に isPlaying を使う）
+            const loop = !/^trans_/.test(name) && /(_idle|_forward|_fire|_cower|_run)$/.test(name);
             const fps = Math.max(1, Math.round((man.srcFps || 24) / (meta.stride || 1)));
             for (let d = 0; d < 8; d++) {
                 const frames = [];
@@ -318,6 +319,7 @@ class SoldierUnitView extends UnitView {
         const posture = POSTURE_NAMES[visual.postureLv] || 'stand';
         let action = 'idle';
         if (isMoving) action = 'forward';
+        else if (s.state === 'reload') action = 'reload';
         else if (s.state === 'engage') action = 'fire';
 
         // ---- L3 文脈変種（アセットが manifest にあれば優先、無ければ基本形に自動フォールバック）----
@@ -332,6 +334,15 @@ class SoldierUnitView extends UnitView {
             // 遮蔽内で撃っていない間は物陰に身を潜める。重制圧(cower)の方が緊急なので
             // 上の分岐を先に評価する。cover_idle が無い環境では基本形へ自動フォールバック。
             next = this._firstAnim([`${posture}_cover_idle`, next], dispDir) || next;
+        } else if (action === 'forward' && this._recentlyUnderFire(s, tick)) {
+            // 撃たれながらの移動＝躍進なので走る。sim には歩/走の速度区分が無いため、
+            // 「被弾中の移動」を唯一の確かな走行トリガとして使う（自動Coverの退避と一致する）。
+            next = this._firstAnim([`${posture}_run`, next], dispDir) || next;
+        } else if (action === 'reload') {
+            // 伏せリロードは graft が破綻（腕が地面に潜る）したため非採用。姿勢を保ったまま
+            // その姿勢の idle へ落とす。下の大域フォールバックは stand_idle なので、
+            // ここで受け止めないと伏せた兵士が立ち上がってしまう。
+            next = this._firstAnim([`${posture}_reload`, `${posture}_idle`], dispDir) || next;
         }
         let key = `sold_${next}_${dispDir}`;
         if (!this.scene.anims.exists(key)) {
@@ -377,7 +388,7 @@ class SoldierUnitView extends UnitView {
     /** ループアニメ開始時だけ、個体ごとの安定位相を与える。 */
     _setLoopPhase(spr) {
         const name = this._actionNameFromKey(spr.anims.currentAnim && spr.anims.currentAnim.key);
-        if (!name || /^trans_/.test(name) || !/(_idle|_forward|_fire|_cower)$/.test(name)) return;
+        if (!name || /^trans_/.test(name) || !/(_idle|_forward|_fire|_cower|_run)$/.test(name)) return;
         const h = spr._soldierAnimHash || 0;
         spr.anims.setProgress(((h >>> 4) % 997) / 997);
     }

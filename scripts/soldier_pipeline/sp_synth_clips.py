@@ -21,6 +21,57 @@ class SynthError(Exception):
     """合成入力エラー。"""
 
 
+# graft 用のボーン群。mixamorig は上下の切れ目が綺麗なので、上半身だけ別クリップから
+# 移植して「膝立ちのままリロード」等を1本のMixamoクリップから導出できる。
+# Hips は下半身側（腰の向きは土台側が持つ）。
+UPPER_BONE_PREFIXES = (
+    "mixamorig:Spine",
+    "mixamorig:Neck",
+    "mixamorig:Head",
+    "mixamorig:LeftShoulder",
+    "mixamorig:LeftArm",
+    "mixamorig:LeftForeArm",
+    "mixamorig:LeftHand",
+    "mixamorig:RightShoulder",
+    "mixamorig:RightArm",
+    "mixamorig:RightForeArm",
+    "mixamorig:RightHand",
+)
+LOWER_BONE_PREFIXES = (
+    "mixamorig:Hips",
+    "mixamorig:LeftUpLeg",
+    "mixamorig:LeftLeg",
+    "mixamorig:LeftFoot",
+    "mixamorig:LeftToe",
+    "mixamorig:RightUpLeg",
+    "mixamorig:RightLeg",
+    "mixamorig:RightFoot",
+    "mixamorig:RightToe",
+)
+BONE_GROUPS = {"upper": UPPER_BONE_PREFIXES, "lower": LOWER_BONE_PREFIXES}
+
+
+def resolve_bone_group(spec, pose_names):
+    """"upper"/"lower" またはボーン名配列を、実ボーン名集合へ解決する。"""
+    if isinstance(spec, str):
+        prefixes = BONE_GROUPS.get(spec)
+        if prefixes is None:
+            raise SynthError(
+                'ボーン群 "{}" は upper / lower / ボーン名配列のいずれかで指定してください。'.format(spec)
+            )
+        return {n for n in pose_names if n.startswith(prefixes)}
+
+    if isinstance(spec, list):
+        names = set()
+        for item in spec:
+            if not isinstance(item, str) or not item:
+                raise SynthError("ボーン名配列の要素は非空文字列で指定してください。")
+            names.add(item)
+        return names
+
+    raise SynthError("ボーン群は upper / lower または配列で指定してください。")
+
+
 def parse_args():
     """-- 以降の引数を読む。"""
     argv = sys.argv
@@ -260,7 +311,42 @@ def validate_hold_op(arm, op, label):
     require_integer(period, "{} の breathe.period".format(label), 1)
 
 
-def validate_ops(arm, ops, clip_name):
+def validate_strip_root_motion_op(arm, op, label):
+    """strip_root_motion 演算を検証する。"""
+    require_bone(arm, op.get("bone", "mixamorig:Hips"), "{} の bone".format(label))
+
+    axes = op.get("axes", ["x", "y", "z"])
+    if not isinstance(axes, list) or not axes:
+        raise SynthError("{} の axes は空でない配列で指定してください。".format(label))
+    for axis in axes:
+        if axis not in ("x", "y", "z"):
+            raise SynthError('{} の axes は x/y/z で指定してください（"{}"）。'.format(label, axis))
+
+    mode = op.get("mode", "linear")
+    if mode not in ("linear", "lock"):
+        raise SynthError("{} の mode は linear または lock で指定してください。".format(label))
+
+
+def validate_graft_op(arm, op, label, defined):
+    """graft 演算を検証する。"""
+    donor = op.get("from")
+    if not isinstance(donor, str) or not donor:
+        raise SynthError("{} の from は非空文字列で指定してください。".format(label))
+    if donor not in defined:
+        try:
+            spb.require_action(donor)
+        except spb.BakeError as exc:
+            raise SynthError(str(exc))
+
+    if "bones" not in op:
+        raise SynthError("{} には bones が必要です。".format(label))
+    resolve_bone_group(op["bones"], {b.name for b in arm.pose.bones})
+
+    step = op.get("step", 1)
+    require_integer(step, "{} の step".format(label), 1)
+
+
+def validate_ops(arm, ops, clip_name, defined=frozenset()):
     """演算列を検証する。"""
     if not isinstance(ops, list):
         raise SynthError(
@@ -285,6 +371,10 @@ def validate_ops(arm, ops, clip_name):
             validate_root_op(arm, op, label)
         elif op_name == "hold":
             validate_hold_op(arm, op, label)
+        elif op_name == "strip_root_motion":
+            validate_strip_root_motion_op(arm, op, label)
+        elif op_name == "graft":
+            validate_graft_op(arm, op, label, defined)
         else:
             raise SynthError(
                 '{} の op "{}" は使用できません。'.format(label, op_name)
@@ -360,7 +450,7 @@ def validate_spec(spec, arm):
                 'クリップ "{}" は自分自身を入力にできません。'.format(name)
             )
 
-        validate_ops(arm, clip.get("ops", []), name)
+        validate_ops(arm, clip.get("ops", []), name, defined_names)
         defined_names.add(name)
 
 
@@ -658,7 +748,70 @@ def apply_hold(sequence, op):
     return apply_breathe(result, op.get("breathe"))
 
 
-def apply_ops(sequence, ops):
+def apply_strip_root_motion(sequence, op):
+    """ルートの移動成分を除去してインプレース化する。
+
+    In Place 無しでDLしたMixamoクリップは実際に前進するため、そのままシート化すると
+    兵士がセルの外へ歩いて出ていく。既定の linear は「先頭→末尾の直線ドリフトだけ」を
+    差し引くので、走りの上下動や左右の振りは残る。末尾が先頭と一致するのでループも閉じる。
+    """
+    bone_name = op.get("bone", "mixamorig:Hips")
+    axes = op.get("axes", ["x", "y", "z"])
+    mode = op.get("mode", "linear")
+    index_of = {"x": 0, "y": 1, "z": 2}
+
+    result = copy_sequence(sequence)
+    count = len(result)
+    if count == 0:
+        return result
+
+    first = result[0][bone_name][0].copy()
+    last = result[-1][bone_name][0].copy()
+
+    for i, pose in enumerate(result):
+        location, rotation = pose[bone_name]
+        new_loc = location.copy()
+        for axis in axes:
+            a = index_of[axis]
+            if mode == "lock":
+                new_loc[a] = first[a]
+            else:
+                t = 0.0 if count == 1 else i / (count - 1)
+                new_loc[a] = location[a] - (last[a] - first[a]) * t
+        pose[bone_name] = (new_loc, rotation)
+
+    return result
+
+
+def apply_graft(arm, sequence, op):
+    """別クリップの一部ボーンを現在のポーズ列へ移植する。
+
+    上半身だけ差し替えることで、立ちリロード1本から膝立ち/伏せ版を導出できる。
+    ドナーは現在の列長へリサンプルしてから重ねる。
+    """
+    donor_act = spb.require_action(op["from"])
+    fs, fe = spb.action_bounds(donor_act)
+    step = op.get("step", 1)
+
+    frames = list(range(fs, fe + 1, step))
+    if not frames or frames[-1] != fe:
+        frames.append(fe)
+    donor = [spb.sample_pose(arm, donor_act, f) for f in frames]
+
+    count = len(sequence)
+    donor = apply_retime(donor, {"frames": count}) if count != len(donor) else donor
+
+    names = resolve_bone_group(op["bones"], set(sequence[0].keys()))
+    result = copy_sequence(sequence)
+    for i, pose in enumerate(result):
+        for bone_name in names:
+            if bone_name in donor[i]:
+                loc, rot = donor[i][bone_name]
+                pose[bone_name] = (loc.copy(), rot.copy())
+    return result
+
+
+def apply_ops(arm, sequence, ops):
     """演算列を記載順に適用する。"""
     result = sequence
 
@@ -673,6 +826,10 @@ def apply_ops(sequence, ops):
             result = apply_root(result, op)
         elif op_name == "hold":
             result = apply_hold(result, op)
+        elif op_name == "strip_root_motion":
+            result = apply_strip_root_motion(result, op)
+        elif op_name == "graft":
+            result = apply_graft(arm, result, op)
         else:
             raise SynthError('演算 "{}" は使用できません。'.format(op_name))
 
@@ -698,7 +855,7 @@ def write_action(arm, name, sequence):
 def synthesize_clip(arm, clip):
     """1 クリップをサンプリング、変換、書き込みする。"""
     sequence = build_sequence(arm, clip)
-    sequence = apply_ops(sequence, clip.get("ops", []))
+    sequence = apply_ops(arm, sequence, clip.get("ops", []))
     write_action(arm, clip["name"], sequence)
     return len(sequence)
 

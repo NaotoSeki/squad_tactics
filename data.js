@@ -409,6 +409,13 @@ const SIM_TUNING = {
     SUPPRESS_DECAY: 6, // /秒（静穏3秒後から）
     SUPPRESSED_AT: 50,
     PINNED_AT: 80,
+    // 自動Cover（反射／2026-07-30）: 制圧 [COVER_SEEK_AT, PINNED_AT) の帯で、
+    // 現在地の遮蔽が COVER_SEEK_MAX_COVER 未満なら隣接のより濃い遮蔽へ自発退避する。
+    // PINNED 以上は伏せたまま動かない。COVER_SEEK_MIN_GAIN 未満の改善では動かない
+    // （わずかな差で右往左往させない）。命令があるときは sim_core が優先するので競合しない。
+    COVER_SEEK_AT: 50,
+    COVER_SEEK_MAX_COVER: 0.35,
+    COVER_SEEK_MIN_GAIN: 0.2,
 
     MORALE_CASUALTY_NEAR: -15, // 3hex内の味方死亡
     MORALE_LEADER_DOWN: -25,

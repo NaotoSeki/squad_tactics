@@ -1,0 +1,9 @@
+{
+  "_readme": "MixamoからDLしたFBXをこのフォルダに置き、ここに『ファイル名→アクション名』を書いて sp_pipeline.py を実行する。アクション名は <姿勢>.<動作> 形式（例 Stand.Run）。'_'始まりのキーは無視される。",
+  "_note_root_motion": "Rifle Run は In Place 無しでDLされているため実ルートモーションを持つ。synth_clips.json の strip_root_motion で水平移動を除去してから Loop.Stand.Run をレンダする（生の Stand.Run を直接ジョブに入れないこと）。",
+
+  "Reloading.fbx": "Stand.Reload",
+  "Rifle Run.fbx": "Stand.Run",
+
+  "_example_Hit Reaction.fbx": "Stand.Hit"
+}
