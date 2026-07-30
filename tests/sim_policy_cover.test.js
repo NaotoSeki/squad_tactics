@@ -266,5 +266,163 @@ function runUnderFire(sim) {
     '無命令でも従来通り退避する（decide 経路の回帰確認）');
 }
 
+// ===========================================================================
+// 経路途中の露出リスク（2026-07-31）
+//
+// 移動中の目標は hex の遮蔽を享受しない（sim_core の射撃解決で遮蔽乗算が
+// PHIT_MOVING_MULT に置き換わる）ため、退避経路の安全性は LOS だけで決まる。
+// §3.2 殺傷ベクトル4「開豁地移動への持続射撃 = MGの存在意義」の policy 側の対。
+//
+// decide() は soldiers:[自分] しか渡さない = 敵が居ないので、既存テストは
+// 露出コスト0のまま回帰しない。敵を置くテストは preserve() を直接叩く。
+// ===========================================================================
+
+function preserve(soldier, map, others) {
+  return TraitPolicy.selfPreserve(
+    soldier,
+    { soldiers: [soldier].concat(others || []), map: map, tuning: SIM_TUNING, tick: 0 },
+    () => 0.5
+  );
+}
+
+function sameHex(a, q, r) {
+  return a && a.q === q && a.r === r;
+}
+
+function mgWeight() {
+  const weights = SIM_TUNING.COVER_SEEK_EXPOSURE_WEIGHT || {};
+  return weights.mg != null ? weights.mg : (weights.default != null ? weights.default : 1);
+}
+
+function exposureCost() {
+  return SIM_TUNING.COVER_SEEK_EXPOSURE_COST != null ? SIM_TUNING.COVER_SEEK_EXPOSURE_COST : 0.05;
+}
+
+function pinnedShooterFactor() {
+  const factors = SIM_TUNING.PHIT_SHOOTER_SUPPRESSED_PINNED || {};
+  return factors.pinned != null ? factors.pinned : 1;
+}
+
+function mg(id, q, r, state) {
+  return {
+    id: id, team: 'B', q: q, r: r, hp: 100,
+    state: state || 'engage', weapon: { class: 'mg' }, suppression: 0,
+  };
+}
+
+const testCoverSeekAt = SIM_TUNING.COVER_SEEK_AT != null ? SIM_TUNING.COVER_SEEK_AT
+  : (SIM_TUNING.SUPPRESSED_AT != null ? SIM_TUNING.SUPPRESSED_AT : 50);
+const testPinnedAt = SIM_TUNING.PINNED_AT != null ? SIM_TUNING.PINNED_AT : 80;
+const testSeekGain = SIM_TUNING.COVER_SEEK_MIN_GAIN != null ? SIM_TUNING.COVER_SEEK_MIN_GAIN : 0.2;
+
+// --- 11. 敵がいなければ露出は常に0で、従来どおり畑(0.15)→林(0.35)へ退避する ---
+{
+  const m = makeMap({ '0,0': 0.15, '1,0': 0.35 }, 0.15);
+  const out = preserve(makeSoldier({ suppression: testCoverSeekAt }), m, []);
+  check(out && out.type === 'MOVE_TO' && sameHex(out.payload.path[0], 1, 0),
+    '敵がいなければ従来どおり退避する（露出評価の回帰）');
+  check(out && out.note.indexOf('死角') === -1,
+    '露出を評価していない時に「死角伝い」を名乗らない');
+}
+
+// --- 12. 1マス退避は「渡る地面」が無いので、見られていても常に成立する ---
+//
+// 実マップで最も自然な退避である 畑(0.15)→森林(0.25) は MIN_GAIN 込みで余裕ゼロ。
+// 到達マスにも露出コストを課していた版では、見られている限りこれが永久に不可能で、
+// 兵士は畑に伏せたまま動けなかった（2026-07-31 実マップで発見）。回帰防止。
+{
+  const here = 0.15, dest = here + testSeekGain;   // 余裕ゼロの最悪ケース
+  const m = makeMap({ '0,0': here, '1,0': dest }, here);
+  m.hasLos = () => true;   // 全方位から丸見え
+  const out = preserve(makeSoldier({ suppression: testCoverSeekAt }), m, [mg('b1', 3, 0)]);
+  check(out && out.type === 'MOVE_TO' && sameHex(out.payload.path[0], 1, 0),
+    '隣接1マスへの退避は露出コストで妨げられない（渡る地面が無い）');
+}
+
+// --- 13. 2マス経路の中継地が見られている側を避け、死角側の同価値の退避先を選ぶ ---
+//
+// (2,0) は (1,0) 経由でしか、(-2,0) は (-1,0) 経由でしか届かない。MGは (1,0) だけ
+// を射界に収めているので、遮蔽が同じなら死角側の (-2,0) が選ばれるはず。
+{
+  const dest = 0.30;
+  const m = makeMap({ '0,0': 0, '2,0': dest, '-2,0': dest }, 0);
+  m.hasLos = (a, b) => {
+    if (sameHex(a, 0, 0) && sameHex(b, 5, 0)) return true;  // 敵が見えている
+    if (sameHex(a, 5, 0) && sameHex(b, 1, 0)) return true;  // 中継地(1,0)が射線上
+    return false;
+  };
+  const out = preserve(makeSoldier({ suppression: testCoverSeekAt }), m, [mg('b1', 5, 0)]);
+  check(out && out.type === 'MOVE_TO' && out.payload.path.length === 2
+    && sameHex(out.payload.path[1], -2, 0),
+    'MGの射界に入る中継地を避け、死角側の経路を選ぶ');
+}
+
+// --- 14. 唯一の2マス経路の中継地へMG3挺の射線が通れば、渡らず伏せたままになる ---
+{
+  const dest = 0.30;
+  const m = makeMap({ '0,0': 0, '2,0': dest }, 0);
+  const enemies = [mg('b1', 5, 0), mg('b2', 5, 1), mg('b3', 4, 1)];
+  m.hasLos = () => true;
+  const risk = 3 * mgWeight();   // 中継地(1,0)を3挺が見ている
+  check(dest - exposureCost() * risk < testSeekGain, '前提: 露出コストで価値が要求を割る');
+  const out = preserve(makeSoldier({ suppression: testCoverSeekAt }), m, enemies);
+  check(out === null, '見られすぎた開豁地は渡らず伏せたままになる');
+}
+
+// --- 15. 経路が全マス死角なら、退避ノートに「死角」が現れる ---
+{
+  const dest = 0.30;
+  const m = makeMap({ '0,0': 0, '2,0': dest }, 0);
+  m.hasLos = (a, b) => sameHex(a, 0, 0) && sameHex(b, 5, 0);   // 敵は見えるが射線は通らない
+  const out = preserve(makeSoldier({ suppression: testCoverSeekAt }), m, [mg('b1', 5, 0)]);
+  check(out && out.type === 'MOVE_TO' && out.note.indexOf('死角') !== -1,
+    '死角を通る退避はノートで区別される');
+}
+
+// --- 16. PINNED は匍匐が遅いぶん、這って入る先の射線も危険として数える ---
+//
+// PINNED は maxSteps=1 なので通過マスが存在しない。到達マスを数えなければ露出評価が
+// まったく効かなくなるため、伏射前進のときだけ到達マスも算入する（includeDest）。
+{
+  const penalty = exposureCost() * mgWeight();
+  const dest = testSeekGain + penalty * 0.5;   // 到達マスを数えなければ通り、数えると落ちる
+  const m = makeMap({ '0,0': 0, '1,0': dest }, 0);
+  m.hasLos = () => true;
+  const normal = preserve(
+    makeSoldier({ suppression: Math.max(testCoverSeekAt, testPinnedAt - 1) }), m, [mg('b1', 3, 0)]);
+  const whenPinned = preserve(
+    makeSoldier({ suppression: testPinnedAt }), m, [mg('b1', 3, 0)]);
+  check(normal && normal.type === 'MOVE_TO', '前提: PINNED未満なら1マス先の遮蔽へ退避する');
+  check(whenPinned === null, 'PINNED では見られている隣のマスへは這わない');
+}
+
+// --- 17. hasLos 未実装のマップでは露出評価を諦め、従来どおり退避する ---
+{
+  const dest = testSeekGain;
+  const m = makeMap({ '0,0': 0, '1,0': dest }, 0);
+  delete m.hasLos;
+  let out = null;
+  let threw = false;
+  try { out = preserve(makeSoldier({ suppression: testCoverSeekAt }), m, [mg('b1', 3, 0)]); }
+  catch (e) { threw = true; }
+  check(!threw && out && out.type === 'MOVE_TO',
+    'hasLos 未実装でも例外を出さず従来動作へ degrade する');
+}
+
+// --- 18. 同じMGでも制圧されていれば脅威が軽くなり、渡れなかった経路が渡れる ---
+{
+  const penalty = exposureCost() * mgWeight();
+  // 等倍の脅威では割に合わず、pinned 係数を掛けた脅威なら通る高さに置く
+  const dest = testSeekGain + (penalty + penalty * pinnedShooterFactor()) / 2;
+  const m = makeMap({ '0,0': 0, '2,0': dest }, 0);
+  m.hasLos = () => true;
+  const s = makeSoldier({ suppression: testCoverSeekAt });
+  const vsEngaging = preserve(s, m, [mg('b1', 5, 0, 'engage')]);
+  const vsPinned = preserve(s, m, [mg('b1', 5, 0, 'pinned')]);
+  check(vsEngaging === null, '前提: 撃ってくるMGの射界は渡らない');
+  check(vsPinned && vsPinned.type === 'MOVE_TO',
+    '制圧されたMGの射界なら渡る（脅威が PHIT_SHOOTER_SUPPRESSED_PINNED 倍に減る）');
+}
+
 console.log('\n' + passCount + ' passed, ' + failCount + ' failed');
 if (failCount) { failures.forEach((f) => console.log('  - ' + f)); process.exit(1); }

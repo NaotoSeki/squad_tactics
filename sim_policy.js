@@ -47,22 +47,134 @@ function isPassable(map, from, to) {
 }
 
 /**
+ * 自分から見えており、退避経路の露出計算に使う敵脅威を集める。
+ *
+ * 「見えている敵だけ」を数えるのは知識モデルの都合でもある — 兵士は見えている
+ * 銃口を恐れるのであって、盤面全体の敵配置を知っているわけではない。
+ *
+ * @returns {Array<{q:number, r:number, weight:number}>}
+ */
+function collectThreats(soldierView, worldView) {
+  const s = soldierView;
+  const map = worldView.map;
+  const T = worldView.tuning || {};
+  const soldiers = worldView.soldiers || [];
+
+  // LOS 実装がない MapApi では露出評価不能なので、従来の遮蔽探索へ degrade する。
+  if (!map || typeof map.hasLos !== 'function') return [];
+
+  const exposureWeights = T.COVER_SEEK_EXPOSURE_WEIGHT || null;
+  const shooterEffectiveness = T.PHIT_SHOOTER_SUPPRESSED_PINNED || null;
+  const here = { q: s.q, r: s.r };
+  const threats = [];
+
+  for (let i = 0; i < soldiers.length; i++) {
+    const o = soldiers[i];
+    if (!o || o.hp <= 0 || o.team === s.team) continue;
+
+    let visible = false;
+    try { visible = map.hasLos(here, { q: o.q, r: o.r }); } catch (e) { visible = false; }
+    if (!visible) continue;
+
+    let classWeight = 1;
+    if (exposureWeights) {
+      if (o.weapon && o.weapon.class && exposureWeights[o.weapon.class] != null) {
+        classWeight = exposureWeights[o.weapon.class];
+      } else if (exposureWeights.default != null) {
+        classWeight = exposureWeights.default;
+      }
+    }
+
+    // 制圧されている敵は撃ってこない。射撃有効度の係数を流用する（新定数を作らない）。
+    let effectiveness = 1;
+    if (shooterEffectiveness) {
+      if (o.state === 'pinned' && shooterEffectiveness.pinned != null) {
+        effectiveness = shooterEffectiveness.pinned;
+      } else if (o.state === 'suppressed' && shooterEffectiveness.suppressed != null) {
+        effectiveness = shooterEffectiveness.suppressed;
+      }
+    }
+
+    threats.push({ q: o.q, r: o.r, weight: classWeight * effectiveness, index: i });
+  }
+
+  if (typeof map.dist === 'function') {
+    threats.sort(function (a, b) {
+      let da = 0;
+      let db = 0;
+      try { da = map.dist(here, a); } catch (e) { da = 0; }
+      try { db = map.dist(here, b); } catch (e) { db = 0; }
+      if (typeof da !== 'number') da = 0;
+      if (typeof db !== 'number') db = 0;
+      if (da !== db) return da - db;
+      return a.index - b.index;
+    });
+  }
+
+  const maxThreats = T.COVER_SEEK_MAX_THREATS != null ? T.COVER_SEEK_MAX_THREATS : 6;
+  const limited = threats.slice(0, maxThreats);
+  for (let i = 0; i < limited.length; i++) delete limited[i].index;
+  return limited;
+}
+
+/**
  * 遮蔽へ向かう短距離経路を幅優先で探す。
  *
  * 隣接1マスしか見ないと、大きな畑の中にいる兵士は隣接6マスすべてが同じ薄い遮蔽で
  * **逃げ場が無く**動けない（2026-07-30 実測: A1/A3 が畑の真ん中で候補0）。
  * 「野原から林へ走る」を成立させるには数マス先を見る必要がある。
  *
- * 距離優先（近いものから）、同距離なら遮蔽の濃い方を選ぶ。
- * v1 は経路途中の露出リスクを評価しない — 最短で入れる遮蔽へ向かうだけ。
+ * v2（2026-07-31）は経路途中の露出も評価する。**移動中の目標は hex の遮蔽を
+ * 享受しない**（sim_core の射撃解決で遮蔽乗算が PHIT_MOVING_MULT に置き換わる）
+ * ため、経路の安全性は遮蔽ではなく「敵から見えているか」だけで決まる。これは
+ * NORTH_STAR §3.2 殺傷ベクトル4「開豁地移動への持続射撃 = MGの存在意義」を
+ * policy 側にも効かせるもので、射線を横切る退避を自ら避けさせるのが狙い。
  *
- * @returns {{path: Array<{q,r}>, cover: number}|null}
+ * 距離優先（近いものから）、同距離なら露出調整後の価値が高い方を選ぶ。深い方が
+ * 高価値でも遡らない — 開豁地では1マスでも早く遮蔽へ入る方が正しく、経路が伸びれば
+ * その分だけ露出時間も伸びる（risk が経路長に比例して積算されるので自動的に効く）。
+ *
+ * **代償は「渡る地面」であって「辿り着く地面」ではない**: risk は到達マスを除いた
+ * 通過マスだけで積算する。到達マスの危険度は遮蔽値 c として既に評価されており、
+ * そこに露出コストも掛けると二重計上になる。実害も出た — 実マップで最も自然な退避
+ * である 畑(0.15)→森林(0.25) は MIN_GAIN 込みで余裕ゼロのため、到達マスに課金すると
+ * 「見られている限り絶対に林へ入れない」という馬鹿げた挙動になった（2026-07-31 実測）。
+ * この定義なら1マス退避は通過マス0＝常に許され、長距離ダッシュだけが罰される。
+ *
+ * 例外は PINNED（exposure.includeDest）。伏射前進は移動が2倍遅い（sim_core の
+ * proneMult）ので、匍匐で入る先の射線もそのまま危険として数える。
+ *
+ * @param {{threats: Array, cost: number, includeDest: boolean}|null} exposure
+ * @returns {{path: Array<{q,r}>, cover: number, value: number, risk: number}|null}
  */
-function findCoverPath(map, start, required, minDest, maxSteps) {
+function findCoverPath(map, start, required, minDest, maxSteps, exposure) {
   const keyOf = (h) => h.q + ',' + h.r;
   const seen = {};
   seen[keyOf(start)] = true;
   let frontier = [{ hex: start, path: [] }];
+
+  // 脅威・コスト未指定時は、候補選択を従来の生遮蔽値比較と完全に同じに保つ。
+  const threats = exposure && exposure.threats;
+  const exposureCost = exposure && exposure.cost;
+  const includeDest = !!(exposure && exposure.includeDest);
+  const useExposure = !!(threats && threats.length > 0 && exposureCost);
+  const exposureMemo = {};
+
+  const exposureOf = function (hex) {
+    if (!useExposure || typeof map.hasLos !== 'function') return 0;
+    const k = keyOf(hex);
+    if (exposureMemo[k] != null) return exposureMemo[k];
+
+    let exposure = 0;
+    for (let i = 0; i < threats.length; i++) {
+      const t = threats[i];
+      let visible = false;
+      try { visible = map.hasLos({ q: t.q, r: t.r }, hex); } catch (e) { visible = false; }
+      if (visible) exposure += t.weight;
+    }
+    exposureMemo[k] = exposure;
+    return exposure;
+  };
 
   for (let depth = 1; depth <= maxSteps; depth++) {
     const next = [];
@@ -83,8 +195,23 @@ function findCoverPath(map, start, required, minDest, maxSteps) {
         if (typeof c !== 'number') continue;
         const path = node.path.concat([{ q: cell.q, r: cell.r }]);
 
+        // 露出コストは非負なので、生遮蔽値での足切りは常に admissible。
         if (c >= minDest && c >= required - 1e-9) {
-          if (!best || c > best.cover) best = { path: path, cover: c };
+          let risk = 0;
+          let value = c;
+
+          if (useExposure) {
+            // 到達マス(path の末尾)は数えない。渡る地面だけが代償。
+            const upto = includeDest ? path.length : path.length - 1;
+            for (let p = 0; p < upto; p++) risk += exposureOf(path[p]);
+            value = c - exposureCost * risk;
+          }
+
+          if (value >= required - 1e-9) {
+            if (!best || (useExposure ? value > best.value : c > best.cover)) {
+              best = { path: path, cover: c, value: value, risk: risk };
+            }
+          }
         }
         next.push({ hex: cell, path: path });
       }
@@ -159,10 +286,25 @@ const TraitPolicy = {
     // 常に落ちて、実質どこへも退避できなかった（2026-07-30 実機で確認）。
     const required = hereCover + seekMinGain;
 
-    const found = findCoverPath(map, here, required, minDest, maxSteps);
+    // 経路途中の露出を遮蔽換算で差し引く（§3.2 殺傷ベクトル4）。
+    // PINNED 時は maxSteps=1 なので通過マスが無く、そのままでは露出評価が効かない。
+    // 匍匐は移動が2倍遅い（sim_core の proneMult）ぶん射線に長く晒されるので、
+    // 這って入る先の射線を数える（includeDest）ことで「見られている隣へは這わない」
+    // を成立させる。走って渡る時と違い、伏せたままなら現状維持も有力な選択肢。
+    const threats = collectThreats(s, worldView);
+    const found = findCoverPath(map, here, required, minDest, maxSteps, {
+      threats: threats,
+      cost: T.COVER_SEEK_EXPOSURE_COST != null ? T.COVER_SEEK_EXPOSURE_COST : 0.05,
+      includeDest: pinned,
+    });
     if (!found) return null;
 
-    const label = pinned ? '匍匐で遮蔽へ' : '遮蔽へ退避';
+    // 「死角伝い」を名乗れるのは**露出を実際に評価した上で** risk 0 だった時だけ。
+    // 敵が1人も見えていない時は評価そのものをしていないので従来の文言に戻す。
+    // 匍匐は死角かどうかより優先して見せる（プレイヤーが姿勢を読み取る手掛かり）。
+    const label = pinned ? '匍匐で遮蔽へ'
+      : (threats.length > 0 && found.risk === 0) ? '死角伝いに遮蔽へ'
+        : '遮蔽へ退避';
     return {
       type: 'MOVE_TO', soldierIds: [s.id],
       payload: { path: found.path },

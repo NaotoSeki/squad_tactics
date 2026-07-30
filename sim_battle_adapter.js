@@ -83,9 +83,114 @@ function toRenderGrid(mapData) {
 }
 
 /**
+ * axial(q,r) の2点を結ぶ hex 直線上のマス列を返す。両端を含む。
+ * cube 座標で線形補間し cubeRound で最寄り hex へ丸める標準実装。
+ *
+ * 補間前に始点へ 1e-6 のオフセットを入れているのは、ちょうど辺をなぞる線で
+ * 丸めが同点になり結果が揺れるのを防ぐため。ただしこの nudge は**始点側だけ**に
+ * 効くので、a→b と b→a で経路が変わり得る。視線判定の対称性が要る箇所では
+ * makeHasLos のように端点を正規化してから呼ぶこと。
+ *
+ * @param {{q: number, r: number}} a
+ * @param {{q: number, r: number}} b
+ * @returns {{q: number, r: number}[]}
+ */
+function hexLine(a, b) {
+  const dq = a.q - b.q, dr = a.r - b.r;
+  const N = (Math.abs(dq) + Math.abs(dq + dr) + Math.abs(dr)) / 2;
+
+  if (N === 0) return [a];
+
+  const epsilon = 1e-6;
+  const ax = a.q + epsilon;
+  const az = a.r - epsilon * 2;
+  const ay = -ax - az;
+  const bx = b.q;
+  const bz = b.r;
+  const by = -bx - bz;
+  const line = [];
+
+  const cubeRound = (x, y, z) => {
+    let rx = Math.round(x);
+    let ry = Math.round(y);
+    let rz = Math.round(z);
+    const xDiff = Math.abs(rx - x);
+    const yDiff = Math.abs(ry - y);
+    const zDiff = Math.abs(rz - z);
+
+    if (xDiff > yDiff && xDiff > zDiff) {
+      rx = -ry - rz;
+    } else if (yDiff > zDiff) {
+      ry = -rx - rz;
+    } else {
+      rz = -rx - ry;
+    }
+    return { x: rx, y: ry, z: rz };
+  };
+
+  for (let i = 0; i <= N; i++) {
+    const t = i / N;
+    const cube = cubeRound(ax + (bx - ax) * t, ay + (by - ay) * t, az + (bz - az) * t);
+    line.push({ q: cube.x, r: cube.z });
+  }
+  return line;
+}
+
+/**
+ * 地形セルにもとづく視線判定関数を作る。
+ *
+ * hex 直線上の**中間マス**の遮光度(SIM_TUNING.TERRAIN_SIGHT_BLOCK)を積算し、
+ * LOS_BLOCK_THRESHOLD 以上で遮る。両端は数えない — 自分の居る林から外は見えるし、
+ * 林の中の敵も林の縁からなら見える。建物(building) と cost>=99 は一枚で完全遮蔽。
+ *
+ * 端点は座標順で正規化してから直線を引く。視線は物理的に対称でなければならず
+ * （見えるなら見られる）、非対称だと「Aからは撃てるがBからは撃ち返せない」という
+ * 一方的な射撃が発生する。hexLine の epsilon nudge は始点側にしか効かないため、
+ * ここで順序を固定して打ち消す。
+ *
+ * @param {function({q: number, r: number}): Object|null} cellAt
+ * @param {function(Object): boolean=} isPlayable 省略時は cell が truthy なら通行圏内
+ * @returns {function({q: number, r: number}, {q: number, r: number}): boolean}
+ */
+function makeHasLos(cellAt, isPlayable) {
+  const playable = isPlayable || ((cell) => !!cell);
+
+  return (a, b) => {
+    if (!a || !b) return true;   // 判定不能なら通す（安全側）
+
+    const dq = a.q - b.q, dr = a.r - b.r;
+    const distance = (Math.abs(dq) + Math.abs(dq + dr) + Math.abs(dr)) / 2;
+    if (distance <= 1) return true;   // 同一マス・隣接は常に見える
+
+    const tuning = typeof SIM_TUNING !== 'undefined' ? SIM_TUNING : null;
+    const sightBlockTable = (tuning && tuning.TERRAIN_SIGHT_BLOCK) || {};
+    const threshold = (tuning && typeof tuning.LOS_BLOCK_THRESHOLD === 'number')
+      ? tuning.LOS_BLOCK_THRESHOLD : 1.0;
+
+    // 対称性の担保: 常に同じ端点から線を引く。遮光度は総和なので順序に依存しない。
+    const swap = (a.q !== b.q) ? (a.q > b.q) : (a.r > b.r);
+    const from = swap ? b : a;
+    const to = swap ? a : b;
+
+    const line = hexLine(from, to);
+    let sightBlock = 0;
+
+    for (let i = 1; i < line.length - 1; i++) {
+      const cell = cellAt(line[i]);
+      if (!cell || !playable(cell)) continue;   // 盤外は遮蔽物ではない
+
+      if (cell.building || (typeof cell.cost === 'number' && cell.cost >= 99)) return false;
+
+      const block = sightBlockTable[cell.id];
+      if (typeof block === 'number') sightBlock += block;
+      if (sightBlock >= threshold) return false;
+    }
+    return true;
+  };
+}
+
+/**
  * sim_core MapApi (SIM_CORE_SPEC.md SS3) over a fixed terrain grid.
- * hasLos is always true in v1 (documented in the spec as an acceptable v1
- * simplification -- see SPEC SS17.1 note on the SimBattleAdapter façade).
  * @param {{grid, W, H}} mapData
  * @returns {Object} MapApi
  */
@@ -93,14 +198,20 @@ function makeBattleMapApi(mapData) {
   const { grid, W, H } = mapData;
   const coverTable = (typeof SIM_TUNING !== 'undefined' && SIM_TUNING.TERRAIN_COVER) || {};
 
+  const cellAt = (hex) => {
+    if (!hex || hex.q < 0 || hex.q >= W || hex.r < 0 || hex.r >= H) return null;
+    const col = grid[hex.q];
+    return col ? col[hex.r] : null;
+  };
+
   return {
     _grid: grid, _W: W, _H: H,
     dist: (a, b) => {
       const dq = a.q - b.q, dr = a.r - b.r;
       return (Math.abs(dq) + Math.abs(dq + dr) + Math.abs(dr)) / 2;
     },
-    // v1: LOS is always true (documented simplification -- SPEC SS17 façade note).
-    hasLos: () => true,
+    // hex直線上の中間マスの遮光度を積算し、閾値以上なら遮る（両端は数えない）。
+    hasLos: makeHasLos(cellAt),
     cover: (hex) => {
       if (hex.q < 0 || hex.q >= W || hex.r < 0 || hex.r >= H) return 0;
       const cell = grid[hex.q][hex.r];
@@ -279,8 +390,8 @@ function makePsBattleMapApi(mapData) {
       const dq = a.q - b.q, dr = a.r - b.r;
       return (Math.abs(dq) + Math.abs(dq + dr) + Math.abs(dr)) / 2;
     },
-    // v1: LOS は常に true（SPEC §17 façade の簡略化に合わせる）
-    hasLos: () => true,
+    // hex直線上の中間マスの遮光度を積算し、閾値以上なら遮る（両端は数えない）。
+    hasLos: makeHasLos(cellAt, isPlayable),
     cover: (hex) => {
       const cell = cellAt(hex);
       if (!isPlayable(cell)) return 0;
@@ -330,6 +441,8 @@ if (typeof module !== 'undefined' && module.exports) {
     buildPsBattleMap,
     makePsBattleMapApi,
     collectPlayableHexes,
+    hexLine,
+    makeHasLos,
     BATTLE_MAP_W,
     BATTLE_MAP_H,
   };
@@ -342,4 +455,6 @@ if (typeof window !== 'undefined') {
   window.buildPsBattleMap = buildPsBattleMap;
   window.makePsBattleMapApi = makePsBattleMapApi;
   window.collectPlayableHexes = collectPlayableHexes;
+  window.hexLine = hexLine;
+  window.makeHasLos = makeHasLos;
 }
