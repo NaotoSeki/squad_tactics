@@ -404,11 +404,11 @@ SimCore.prototype._phaseDecide = function () {
         this._emit('POLICY', { id: s.id, note: intent.note });
       }
     }
-    this._applyIntent(s, intent);
+    this._applyIntent(s, intent, worldView);
   });
 };
 
-SimCore.prototype._applyIntent = function (s, intent) {
+SimCore.prototype._applyIntent = function (s, intent, worldView) {
   if (!intent) return;
   switch (intent.type) {
     case 'TARGET':
@@ -439,6 +439,32 @@ SimCore.prototype._applyIntent = function (s, intent) {
       s.movePath = intent.payload.path ? intent.payload.path.slice() : null;
       this._setState(s, 'move');
       break;
+    case 'TAKE_COVER': {
+      // 「遮蔽へ入れ」。行き先は命令に含まれず、**届いた瞬間に現場で**決める
+      // （NORTH_STAR §3.4 三現主義）。伝達遅延があるので、発令時に解決すると
+      // 届く頃には無意味な地点を指していることになる。
+      if (worldView && this.policy && typeof this.policy.seekCoverForOrder === 'function') {
+        const resolved = this.policy.seekCoverForOrder(
+          this._snapshot(s), worldView, this.rng, intent.payload || {});
+        if (resolved) {
+          if (resolved.type === 'MOVE_TO') {
+            s.movePath = resolved.payload.path ? resolved.payload.path.slice() : null;
+            this._setState(s, 'move');
+          } else if (resolved.type === 'HOLD_POS') {
+            if (s.state === 'engage') this._setState(s, 'idle');
+          }
+          if (resolved.note && resolved.note !== s.lastPolicyNote) {
+            s.lastPolicyNote = resolved.note;
+            this._emit('POLICY', { id: s.id, note: resolved.note });
+          }
+        }
+      }
+      // one-shot: 解決できたか否かに関わらず必ず解除する。TARGET のように永続
+      // させると毎決定tickで再解決され、兵士が以後まったく自己判断しなくなる
+      // （同じ罠を TARGET で踏んでいる。sim_policy.selfPreserve のコメント参照）。
+      if (s.currentOrder === intent) s.currentOrder = null;
+      break;
+    }
     case 'HOLD_POS':
       // intent.payload.prone: suppressed/pinned handling stays with the
       // suppression phase; HOLD_POS here just cancels active engagement intent.

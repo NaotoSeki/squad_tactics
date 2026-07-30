@@ -224,6 +224,46 @@ function findCoverPath(map, start, required, minDest, maxSteps, exposure) {
   return null;
 }
 
+/**
+ * 指定された1マスまでの経路を幅優先で探す（「あの塀まで」の解決）。
+ *
+ * sim_core の移動は movePath の要素へ隣接判定なしで座標を代入する（=1要素につき
+ * 1hex進む前提）。遠くの hex を要素1個の経路として渡すとワープするので、
+ * 命令で場所を指定された時も必ず1マスずつ刻んだ経路を作る必要がある。
+ *
+ * @returns {Array<{q,r}>|null} start を含まない経路。到達不能なら null
+ */
+function findPathTo(map, start, goal, maxSteps) {
+  if (!goal || (goal.q === start.q && goal.r === start.r)) return null;
+  const keyOf = (h) => h.q + ',' + h.r;
+  const goalKey = keyOf(goal);
+  const seen = {};
+  seen[keyOf(start)] = true;
+  let frontier = [{ hex: start, path: [] }];
+
+  for (let depth = 1; depth <= maxSteps; depth++) {
+    const next = [];
+    for (let i = 0; i < frontier.length; i++) {
+      const node = frontier[i];
+      const cells = map.neighbors(node.hex) || [];
+      for (let j = 0; j < cells.length; j++) {
+        const cell = cells[j];
+        if (!cell) continue;
+        const k = keyOf(cell);
+        if (seen[k]) continue;
+        seen[k] = true;
+        if (!isPassable(map, node.hex, cell)) continue;
+        const path = node.path.concat([{ q: cell.q, r: cell.r }]);
+        if (k === goalKey) return path;
+        next.push({ hex: cell, path: path });
+      }
+    }
+    frontier = next;
+    if (!frontier.length) break;
+  }
+  return null;
+}
+
 const TraitPolicy = {
   /**
    * 自衛の反射（自動Cover）。撃たれて露出しているなら隣接のより濃い遮蔽へ退避する。
@@ -309,6 +349,91 @@ const TraitPolicy = {
       type: 'MOVE_TO', soldierIds: [s.id],
       payload: { path: found.path },
       note: (has('cautious') ? '慎重: 被制圧、' : '被制圧: ') + label,
+    };
+  },
+
+  /**
+   * 指示によるCover（NORTH_STAR §3.4 分隊長の采配）。
+   *
+   * `TAKE_COVER` 命令が**届いた瞬間**に呼ばれ、行き先を現場で決める。命令自体は
+   * 行き先を持たない（三現主義: どこへ隠れるかは、そこに居る兵にしか分からない）。
+   * 伝達遅延があるので、届いた頃には状況が変わっている可能性がある — だから
+   * 発令時ではなく到達時に解決する。
+   *
+   * selfPreserve との違いは「なぜ動くか」:
+   *  - selfPreserve = 自分が撃たれているから逃げる（生存本能）
+   *  - seekCoverForOrder = 組織として動けと言われたから動く（命令）
+   * ゆえに発火条件を課さず、露出コストにも ORDERED_COVER_RISK_TOLERANCE を掛けて
+   * より大きな危険を受け入れる。§3.4「命を守る本能と、組織として攻めねばならない
+   * 重圧のせめぎあい」の数値表現がこの係数。
+   *
+   * @param {Object} payload - { hex? } 場所を指す命令なら hex を持つ（「あの塀まで」）
+   * @returns {Object|null} MOVE_TO intent / 竦んで動けない場合は HOLD_POS / 不能なら null
+   */
+  seekCoverForOrder: function (soldierView, worldView, rng, payload) {
+    const s = soldierView;
+    const T = (worldView && worldView.tuning) || {};
+    const map = worldView && worldView.map;
+    payload = payload || {};
+
+    if (!map || typeof map.neighbors !== 'function' || typeof map.cover !== 'function') return null;
+    if (s.state === 'move' || (s.movePath && s.movePath.length > 0)) return null;
+
+    const traits = s.traits || [];
+    const has = function (t) { return traits.indexOf(t) !== -1; };
+
+    // timid は命令でも竦む。命令が通らない兵が居ること自体が §4.1 の狙いなので、
+    // 黙って無視せず HOLD_POS + ノートで「届いたが動けない」を可視化する。
+    if (has('timid') && s.suppression >= TRAIT_MODS.timid.FREEZE_AT_SUPPRESSION) {
+      return {
+        type: 'HOLD_POS', soldierIds: [s.id], payload: {},
+        note: '命令が届かない: 竦んで動けない',
+      };
+    }
+
+    const here = { q: s.q, r: s.r };
+    const pinnedAt = T.PINNED_AT != null ? T.PINNED_AT : 80;
+    const pinned = s.suppression >= pinnedAt;
+    const maxSteps = pinned
+      ? 1
+      : (T.ORDERED_COVER_MAX_STEPS != null ? T.ORDERED_COVER_MAX_STEPS : 6);
+
+    // 場所を指す命令は遮蔽の改善を要求しない（指揮官が明示的に其処を指している）。
+    // 1要素の経路でワープしないよう、必ず1マスずつ刻んだ経路を作る。
+    if (payload.hex) {
+      const path = findPathTo(map, here, payload.hex, maxSteps);
+      if (!path) return null;
+      return {
+        type: 'MOVE_TO', soldierIds: [s.id],
+        payload: { path: path },
+        note: '命令: 指示された地点へ',
+      };
+    }
+
+    const hereCover = map.cover(here);
+    if (typeof hereCover !== 'number') return null;
+
+    const minDest = has('cautious') ? TRAIT_MODS.cautious.MIN_SELF_MOVE_COVER : 0;
+    const seekMinGain = T.COVER_SEEK_MIN_GAIN != null ? T.COVER_SEEK_MIN_GAIN : 0.10;
+    const required = hereCover + seekMinGain;
+
+    const threats = collectThreats(s, worldView);
+    const baseCost = T.COVER_SEEK_EXPOSURE_COST != null ? T.COVER_SEEK_EXPOSURE_COST : 0.05;
+    const tolerance = T.ORDERED_COVER_RISK_TOLERANCE != null ? T.ORDERED_COVER_RISK_TOLERANCE : 0.5;
+    const found = findCoverPath(map, here, required, minDest, maxSteps, {
+      threats: threats,
+      cost: baseCost * tolerance,
+      includeDest: pinned,
+    });
+    if (!found) return null;
+
+    const label = pinned ? '命令: 匍匐で遮蔽へ'
+      : (threats.length > 0 && found.risk === 0) ? '命令: 死角伝いに遮蔽へ'
+        : '命令: 遮蔽へ';
+    return {
+      type: 'MOVE_TO', soldierIds: [s.id],
+      payload: { path: found.path },
+      note: label,
     };
   },
 

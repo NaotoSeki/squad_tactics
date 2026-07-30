@@ -192,7 +192,32 @@ const LeaderPolicy = {
       }
     }
 
-    // 2. FOCUS_FIRE -- an exposed/moving enemy within range of >= FOCUS_MIN_SHOOTERS.
+    // 2. TAKE_COVER -- 開豁地で敵に見られている部下が居るなら、撃ち返すより先に
+    //    遮蔽へ入れる。行き先は指定しない — どこへ隠れるかは現場の兵が決める
+    //    （NORTH_STAR §3.4 三現主義）。FOCUS_FIRE より優先するのは、味方が的に
+    //    なっている状況で好機を狙うのは順序が逆だから。
+    const takeCoverMinExposed = T.TAKE_COVER_MIN_EXPOSED != null ? T.TAKE_COVER_MIN_EXPOSED : 2;
+    const takeCoverCoverMax = T.TAKE_COVER_COVER_MAX != null ? T.TAKE_COVER_COVER_MAX : 0.20;
+    const livingEnemies = worldView.soldiers.filter((s) => s.team !== team && s.hp > 0);
+    const exposedSquad = aliveSquad.filter((s) => {
+      const cover = worldView.map.cover({ q: s.q, r: s.r });
+      if (cover >= takeCoverCoverMax || s.state === 'move') return false;
+      // 見られていない兵を動かす必要はない
+      if (typeof worldView.map.hasLos !== 'function') return true;
+      return livingEnemies.some((e) => worldView.map.hasLos(
+        { q: e.q, r: e.r }, { q: s.q, r: s.r }));
+    });
+    if (exposedSquad.length >= takeCoverMinExposed) {
+      const orders = exposedSquad.map((s) => ({
+        type: 'TAKE_COVER', soldierIds: [s.id], payload: {},
+      }));
+      return {
+        name: 'TAKE_COVER', score: exposedSquad.length,
+        orders: this._withNote(orders, '遮蔽に入れ！'),
+      };
+    }
+
+    // 3. FOCUS_FIRE -- an exposed/moving enemy within range of >= FOCUS_MIN_SHOOTERS.
     const focusMinShooters = T.FOCUS_MIN_SHOOTERS != null ? T.FOCUS_MIN_SHOOTERS : 3;
     const focusCoverMax = T.FOCUS_TARGET_COVER_MAX != null ? T.FOCUS_TARGET_COVER_MAX : 0.3;
     const enemies = worldView.soldiers.filter((s) => s.team !== team && s.hp > 0);
@@ -211,7 +236,7 @@ const LeaderPolicy = {
       }
     }
 
-    // 3. SUPPRESS_FIRE -- >= N squadmates currently suppressed.
+    // 4. SUPPRESS_FIRE -- >= N squadmates currently suppressed.
     const suppressedAt = T.SUPPRESSED_AT != null ? T.SUPPRESSED_AT : 50;
     const suppressMin = T.SUPPRESS_DOCTRINE_MIN_SUPPRESSED != null ? T.SUPPRESS_DOCTRINE_MIN_SUPPRESSED : 2;
     const suppressedCount = aliveSquad.filter((s) => s.suppression >= suppressedAt).length;
@@ -230,7 +255,7 @@ const LeaderPolicy = {
       }
     }
 
-    // 4. HOLD_FIRE -- quiet for HOLDFIRE_QUIET_T and squad ammo fraction is low.
+    // 5. HOLD_FIRE -- quiet for HOLDFIRE_QUIET_T and squad ammo fraction is low.
     const holdfireQuietT = T.HOLDFIRE_QUIET_T != null ? T.HOLDFIRE_QUIET_T : 300;
     const holdfireAmmoBelow = T.HOLDFIRE_AMMO_BELOW != null ? T.HOLDFIRE_AMMO_BELOW : 0.4;
     if (state.quietT >= holdfireQuietT && _squadAmmoFraction(worldView, team) < holdfireAmmoBelow) {
