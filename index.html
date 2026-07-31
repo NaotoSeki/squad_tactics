@@ -554,6 +554,14 @@
     <script src="logic_campaign.js?v=terrain-seam-5"></script>
     <script src="logic_reaction.js"></script>
     <script src="logic_game.js"></script>
+    <!-- RTwP（NORTH_STAR §7 Strangler Fig）。旧ターン制コア(logic_game.js)は
+         書き換えず残置し、?rtwp=1 の時だけ接ぎ木する。外せば元に戻る。 -->
+    <script src="sim_core.js"></script>
+    <script src="sim_policy.js"></script>
+    <script src="sim_orders.js"></script>
+    <script src="sim_leader.js"></script>
+    <script src="sim_battle_adapter.js"></script>
+    <script src="logic_battle_rtwp.js"></script>
 </body>
 </html>
 

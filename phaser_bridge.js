@@ -1205,6 +1205,20 @@ class MainScene extends Phaser.Scene {
         }
         
         if (window.gameLogic.map.length > 0 && !this.mapGenerated) { this.createMap(); this.mapGenerated = true; }
+
+        // RTwP（NORTH_STAR §7 Strangler Fig）。?rtwp=1 の時だけ接ぎ木する。
+        // 接続後は RtwpBattle 側がシムを回して gameLogic.units へ状態を書き戻すので、
+        // 下の unitView.update() がそのまま実時間の動きを描く（描画側の改修は不要）。
+        if (window.RtwpBattle && window.RtwpBattle.enabled
+            && /(?:\?|&)rtwp=1(?:&|$)/.test(window.location.search)) {
+            if (!window.RtwpBattle.instance && window.gameLogic.state === 'PLAY'
+                && window.gameLogic.map.length > 0) {
+                try { window.RtwpBattle.attach(window.gameLogic); } catch (e) { console.error('RTwP attach', e); }
+            }
+            const rt = window.RtwpBattle.instance;
+            if (rt) { try { rt.update(delta); } catch (e) { console.error('RTwP update', e); } }
+        }
+
         if(this.unitView) this.unitView.update(time, delta);
         if (this.battleCloudRenderer) this.battleCloudRenderer.update(time);
         this.overlayGraphics.clear();
