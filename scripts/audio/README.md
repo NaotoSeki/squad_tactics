@@ -234,3 +234,38 @@ pip install numpy scipy soundfile
 
 - 元素材: `asset/audio/GUNRif_RI-M1 Garand Single Shot 50m_B00M_WW2FC_Ambix.wav`
 - ツール: `scripts/audio/wav_chop.py` （プロジェクト内）
+
+---
+
+## 素材の出所と再現性
+
+**重要**: 原素材の長尺WAVはリポジトリにコミットしていない（77MB）。README のコマンドを
+新規チェックアウトでそのまま流しても、素材が無ければ再現できない。素材を入手して
+下記のパスへ置くこと。
+
+| 項目 | 値 |
+|---|---|
+| ファイル | `asset/audio/GUNRif_RI-M1 Garand Single Shot 50m_B00M_WW2FC_Ambix.wav` |
+| 出所 | BOOM Library "WW2 FieldCraft"（`B00M_WW2FC` はこのライブラリの命名規約） |
+| ライセンス | 商用ライブラリ。**再配布不可**。派生物（切り出したショット）の利用可否は購入ライセンスに従う |
+| 形式 | 4ch AmbiX (ACN/SN3D) / 24bit / 96000Hz / 65.92秒 |
+| サイズ | 77,077,052 bytes |
+| SHA-256 | `01b0cb8a0cecc46ccd4c10b85c26d7d7ef1d260cfebfe44f3e17976440c2d52c` |
+
+チェックサム照合:
+
+```bash
+python -c "import hashlib;h=hashlib.sha256();f=open('asset/audio/GUNRif_RI-M1 Garand Single Shot 50m_B00M_WW2FC_Ambix.wav','rb');[h.update(b) for b in iter(lambda:f.read(1<<20),b'')];print(h.hexdigest())"
+```
+
+生成物（`asset/audio/sfx/m1_shot_*.wav` と manifest）はコミット済みなので、
+素材が無くてもゲームは動く。再生成が必要な時だけ素材を用意すればよい。
+
+### ゲーム側への登録
+
+`phaser_sound.js` の `variantGroups` は `{ prefix, count }` 形式で持つ（ファイル名を
+並べると manifest と二重管理になりドリフトするため）。武器コードとの対応は
+`weaponSfx` の**明示的な対応表**で行う — コードをそのまま群名にすると、
+名前が似ているだけの別武器（M1A1 SMG / M1903 / M1918 BAR / M1911）へ誤流用される。
+
+登録内容と実ファイルの一致は `node tests/sfx_and_camera.test.js` が検証する。

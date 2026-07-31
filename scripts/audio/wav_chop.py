@@ -190,14 +190,21 @@ def extract_shot_segments(audio: np.ndarray, sr: int, onset_frames: list[int],
 
     segments = []
 
-    for onset_frame in onset_frames:
+    for idx, onset_frame in enumerate(onset_frames):
         # 開始
         start_frame = max(0, onset_frame - int(pre_samp / hop_samp))
         start_sample = start_frame * hop_samp
 
-        # ピークの位置を探す（オンセット以降、次のオンセットまで or 終わりまで）
+        # ピークの位置を探す（オンセット以降、**次のオンセットまで** or 終わりまで）。
+        # 次のオンセットで打ち切らないと、区間が次のショットを飲み込み、そちらの
+        # ピークを基準にディケイ判定してしまう。結果、隣り合う2区間が同じ音を
+        # 含んで重複する（先行する音が小さいほど起きやすい）。
         search_start_frame = onset_frame
         search_end_frame = min(len(rms_db), onset_frame + int(max_len_samp / hop_samp))
+        if idx + 1 < len(onset_frames):
+            search_end_frame = min(search_end_frame, onset_frames[idx + 1])
+        # 探索窓が潰れないよう最低1フレームは確保する
+        search_end_frame = max(search_end_frame, search_start_frame + 1)
 
         peak_frame = search_start_frame + np.argmax(rms_db[search_start_frame:search_end_frame])
         peak_db = rms_db[peak_frame]

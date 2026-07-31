@@ -414,6 +414,32 @@ function makePsBattleMapApi(mapData) {
 }
 
 /**
+ * 実体のある hex（VOID でない）の座標範囲を返す。
+ *
+ * カメラの可動域を論理グリッド全体(MAP_W x MAP_H)から作ると、PS盤面のように
+ * 30hex しか実体が無い場合に広大な VOID へパンできてしまう。描画・可動域の
+ * 基準は常に「絵がある範囲」でなければならない。
+ *
+ * @param {{grid, W, H}} mapData
+ * @returns {{minQ,maxQ,minR,maxR,count}|null} 実体が無ければ null
+ */
+function validHexExtent(mapData) {
+  let minQ = Infinity, maxQ = -Infinity, minR = Infinity, maxR = -Infinity, count = 0;
+  for (let q = 0; q < mapData.W; q++) {
+    for (let r = 0; r < mapData.H; r++) {
+      const cell = mapData.grid[q] && mapData.grid[q][r];
+      if (!cell || cell.id === -1) continue;
+      count++;
+      if (q < minQ) minQ = q;
+      if (q > maxQ) maxQ = q;
+      if (r < minR) minR = r;
+      if (r > maxR) maxR = r;
+    }
+  }
+  return count ? { minQ: minQ, maxQ: maxQ, minR: minR, maxR: maxR, count: count } : null;
+}
+
+/**
  * 盤面から「配置に使える hex」を集める。開豁地(遮蔽薄)と遮蔽地を分けて返すので、
  * 自動Coverが観察できる初期配置（露出した兵士を混ぜる）を組める。
  * @param {Object} api - makePsBattleMapApi の返り値
@@ -441,6 +467,7 @@ if (typeof module !== 'undefined' && module.exports) {
     buildPsBattleMap,
     makePsBattleMapApi,
     collectPlayableHexes,
+    validHexExtent,
     hexLine,
     makeHasLos,
     BATTLE_MAP_W,
@@ -455,6 +482,7 @@ if (typeof window !== 'undefined') {
   window.buildPsBattleMap = buildPsBattleMap;
   window.makePsBattleMapApi = makePsBattleMapApi;
   window.collectPlayableHexes = collectPlayableHexes;
+  window.validHexExtent = validHexExtent;
   window.hexLine = hexLine;
   window.makeHasLos = makeHasLos;
 }

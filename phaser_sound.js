@@ -19,11 +19,39 @@ const Sfx = {
      * 素材は scripts/audio/wav_chop.py で長尺WAVから切り出したもの。
      */
     variantGroups: {
-        // M1 Garand: 実録音 66秒素材から10テイクを切り出し（相関の中央値0.20＝別テイク）
-        'm1': [
-            'm1_shot_01', 'm1_shot_02', 'm1_shot_03', 'm1_shot_04', 'm1_shot_05',
-            'm1_shot_06', 'm1_shot_07', 'm1_shot_08', 'm1_shot_09', 'm1_shot_10',
-        ],
+        // M1 Garand: 実録音 66秒素材から10テイクを切り出し（相関の中央値0.20＝別テイク）。
+        // 生成元は scripts/audio/wav_chop.py、台帳は asset/audio/sfx/m1_shot_manifest.json。
+        // ここは {prefix, count} で持つ — ファイル名を10個並べると manifest と二重管理に
+        // なってドリフトする（tests/sfx_variants.test.js が実ファイルとの一致を検証）。
+        'm1_garand': { prefix: 'm1_shot', count: 10 },
+    },
+
+    /**
+     * 武器コード -> 音プロファイル。**明示的な対応表**にしてあるのは、武器コードを
+     * そのまま群のキーにすると、名前が似ているだけの別物（M1A1 SMG=thompson,
+     * M1903=k98_scope, M1918 BAR=bar, M1911=拳銃）へ誤って流用される余地が
+     * 残るため。PL版のM1小銃を足す時もここへ1行足すだけでよい。
+     */
+    weaponSfx: {
+        'm1': 'm1_garand',
+    },
+
+    /** 群のキー一覧を実ファイル名へ展開する */
+    variantKeys(group) {
+        const g = this.variantGroups[group];
+        if (!g) return [];
+        if (Array.isArray(g)) return g.slice();
+        const out = [];
+        for (let i = 1; i <= g.count; i++) {
+            out.push(g.prefix + '_' + String(i).padStart(2, '0'));
+        }
+        return out;
+    },
+    /** id（武器コード or プロファイル名）から群名を解決する */
+    groupFor(id) {
+        if (this.variantGroups[id]) return id;
+        const prof = this.weaponSfx[id];
+        return (prof && this.variantGroups[prof]) ? prof : null;
     },
     variantPathOf(key) { return 'asset/audio/sfx/' + key + '.wav'; },
     _bags: {},
@@ -33,9 +61,11 @@ const Sfx = {
      * 群から1つ選ぶ。袋が空になるまで重複せず、袋を作り直す時も直前と同じテイクが
      * 先頭に来ないようにする（"ランダム"だと体感的に同じ音が続いて聞こえるため）。
      */
-    pickVariant(id) {
-        const list = this.variantGroups[id];
-        if (!list || !list.length) return null;
+    pickVariant(idOrGroup) {
+        const id = this.groupFor(idOrGroup);
+        if (!id) return null;
+        const list = this.variantKeys(id);
+        if (!list.length) return null;
         let bag = this._bags[id];
         if (!bag || bag.length === 0) {
             bag = list.slice();
@@ -98,8 +128,8 @@ const Sfx = {
         for (const [key, path] of Object.entries(this.assets)) {
             scene.load.audio(key, path);
         }
-        for (const list of Object.values(this.variantGroups)) {
-            for (const key of list) scene.load.audio(key, this.variantPathOf(key));
+        for (const group of Object.keys(this.variantGroups)) {
+            for (const key of this.variantKeys(group)) scene.load.audio(key, this.variantPathOf(key));
         }
     },
 
@@ -187,7 +217,7 @@ const Sfx = {
         }
 
         // 1a. ラウンドロビン群が登録されていれば、そこから1テイク引いて再生
-        if (this.variantGroups[id]) {
+        if (this.groupFor(id)) {
             const scene = this._soundScene();
             const key = scene && this.pickVariant(id);
             if (key && scene.sound && (!scene.cache || !scene.cache.audio || scene.cache.audio.exists(key))) {
