@@ -63,3 +63,7 @@ asset_src/
 asset/environment/pbr/
 asset/environment/*/review/
 asset/environment/*/*/review/
+
+# ルート直下の一時ファイル（過去に cliff_test.png / temp.json が放置されていた）
+/temp.json
+/cliff_test.png
