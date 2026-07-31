@@ -802,9 +802,17 @@ SimCore.prototype._isFlank = function (shooter, target) {
   if (!target.facing) return false;
   // Dot product of (target -> shooter) with target.facing (target's front direction).
   // Negative = shooter is behind/to the side of target's facing = flank/rear shot.
+  //
+  // hex の axial 基底は 60度 で**直交していない**ので、`aq*bq + ar*br` は幾何的な
+  // 内積にならない。実座標 x=√3(q+r/2), y=1.5r で展開すると交差項が出る:
+  //   dot ∝ aq*bq + ar*br + (aq*br + ar*bq)/2
+  // これが無い版は相対位置の 8.7% で判定を誤り、隣接6方向のうち背面と見なす向きが
+  // 6方位中4方位で 3方向 -> 2方向 に狭まっていた。§3.2 の殺傷ベクトル1
+  // 「機動こそ殺傷力」の判定そのものなので、狭いと機動の価値が丸ごと目減りする。
   const toShooterQ = shooter.q - target.q;
   const toShooterR = shooter.r - target.r;
-  const dot = toShooterQ * target.facing.q + toShooterR * target.facing.r;
+  const fq = target.facing.q, fr = target.facing.r;
+  const dot = toShooterQ * fq + toShooterR * fr + 0.5 * (toShooterQ * fr + toShooterR * fq);
   return dot < 0;
 };
 
