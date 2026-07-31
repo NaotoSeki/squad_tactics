@@ -37,3 +37,29 @@ waveletNoiseTile.bin
 
 # HD生成物(レビュー用の中間出力)。実行時資産は asset/environment/ 側が正。
 output/
+
+# ---- 2026-08-01 整理: 未追跡1.3GBの内訳を実測して分類 ----------------------
+# 方針: **実行時にコードが読むものだけ**を追跡する。素材・中間物・調査資料は追跡しない。
+#       判定は `python scripts/audit_assets.py` で再現できる。
+
+# Blender 元データ(198MB)と自動バックアップ(291MB)。
+# .blend は資産を再生成するための**元データなので消さない**が、git には入れない。
+# .blend1 は Blender が作る自動バックアップなので消してよい。
+*.blend
+*.blend1
+
+# 調査資料(407MB)。ゲームは読まない。
+research/
+
+# 商用音源ライブラリの原素材(184MB)。**再配布不可**につきコミット厳禁。
+# 切り出し済みの asset/audio/sfx/*.wav は追跡する（そちらが実行時資産）。
+# 出所・ライセンス・SHA-256 は scripts/audio/README.md に記録。
+asset/audio/GUN*B00M*.wav
+
+# 素材ソース(Blender出力前の素材)
+asset_src/
+
+# パイプラインの中間出力・目視レビュー用。実行時資産は asset/environment/ 直下が正。
+asset/environment/pbr/
+asset/environment/*/review/
+asset/environment/*/*/review/
