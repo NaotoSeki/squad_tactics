@@ -1,0 +1,1726 @@
+{
+  "meta": {
+    "schema_version": 2,
+    "generated_by": "scripts/hex_ruins/build_catalog.py",
+    "canvas": [
+      288,
+      384
+    ],
+    "px_per_m": 14.222222,
+    "hex_R_m": 9.0,
+    "hex_R_px": 128,
+    "anchor_px": [
+      144,
+      234.5
+    ],
+    "projection": "military: elev 55deg, vertical shear preserves plan shape",
+    "tile_count": 561
+  },
+  "grounds": {
+    "cobble": [
+      "gnd_cobble_v0.png",
+      "gnd_cobble_v1.png",
+      "gnd_cobble_v2.png",
+      "gnd_cobble_v3.png",
+      "gnd_cobble_v4.png",
+      "gnd_cobble_v5.png"
+    ],
+    "street": [
+      "gnd_street_v0.png",
+      "gnd_street_v1.png",
+      "gnd_street_v2.png"
+    ],
+    "grass": [
+      "gnd_grass_v0.png",
+      "gnd_grass_v1.png",
+      "gnd_grass_v2.png",
+      "gnd_grass_v3.png",
+      "gnd_grass_v4.png",
+      "gnd_grass_v5.png"
+    ],
+    "crater": [
+      "gnd_crater_v0.png",
+      "gnd_crater_v1.png",
+      "gnd_crater_v2.png",
+      "gnd_crater_v3.png"
+    ]
+  },
+  "overlays": {
+    "buildings": [
+      {
+        "file": "bldg_s1_d0_rot0.png",
+        "seed": 1,
+        "damage": 0,
+        "rot": 0
+      },
+      {
+        "file": "bldg_s1_d0_rot60.png",
+        "seed": 1,
+        "damage": 0,
+        "rot": 60
+      },
+      {
+        "file": "bldg_s1_d0_rot120.png",
+        "seed": 1,
+        "damage": 0,
+        "rot": 120
+      },
+      {
+        "file": "bldg_s1_d0_rot180.png",
+        "seed": 1,
+        "damage": 0,
+        "rot": 180
+      },
+      {
+        "file": "bldg_s1_d0_rot240.png",
+        "seed": 1,
+        "damage": 0,
+        "rot": 240
+      },
+      {
+        "file": "bldg_s1_d0_rot300.png",
+        "seed": 1,
+        "damage": 0,
+        "rot": 300
+      },
+      {
+        "file": "bldg_s1_d1_rot0.png",
+        "seed": 1,
+        "damage": 1,
+        "rot": 0
+      },
+      {
+        "file": "bldg_s1_d1_rot60.png",
+        "seed": 1,
+        "damage": 1,
+        "rot": 60
+      },
+      {
+        "file": "bldg_s1_d1_rot120.png",
+        "seed": 1,
+        "damage": 1,
+        "rot": 120
+      },
+      {
+        "file": "bldg_s1_d1_rot180.png",
+        "seed": 1,
+        "damage": 1,
+        "rot": 180
+      },
+      {
+        "file": "bldg_s1_d1_rot240.png",
+        "seed": 1,
+        "damage": 1,
+        "rot": 240
+      },
+      {
+        "file": "bldg_s1_d1_rot300.png",
+        "seed": 1,
+        "damage": 1,
+        "rot": 300
+      },
+      {
+        "file": "bldg_s1_d2_rot0.png",
+        "seed": 1,
+        "damage": 2,
+        "rot": 0
+      },
+      {
+        "file": "bldg_s1_d2_rot60.png",
+        "seed": 1,
+        "damage": 2,
+        "rot": 60
+      },
+      {
+        "file": "bldg_s1_d2_rot120.png",
+        "seed": 1,
+        "damage": 2,
+        "rot": 120
+      },
+      {
+        "file": "bldg_s1_d2_rot180.png",
+        "seed": 1,
+        "damage": 2,
+        "rot": 180
+      },
+      {
+        "file": "bldg_s1_d2_rot240.png",
+        "seed": 1,
+        "damage": 2,
+        "rot": 240
+      },
+      {
+        "file": "bldg_s1_d2_rot300.png",
+        "seed": 1,
+        "damage": 2,
+        "rot": 300
+      },
+      {
+        "file": "bldg_s2_d0_rot0.png",
+        "seed": 2,
+        "damage": 0,
+        "rot": 0
+      },
+      {
+        "file": "bldg_s2_d0_rot60.png",
+        "seed": 2,
+        "damage": 0,
+        "rot": 60
+      },
+      {
+        "file": "bldg_s2_d0_rot120.png",
+        "seed": 2,
+        "damage": 0,
+        "rot": 120
+      },
+      {
+        "file": "bldg_s2_d0_rot180.png",
+        "seed": 2,
+        "damage": 0,
+        "rot": 180
+      },
+      {
+        "file": "bldg_s2_d0_rot240.png",
+        "seed": 2,
+        "damage": 0,
+        "rot": 240
+      },
+      {
+        "file": "bldg_s2_d0_rot300.png",
+        "seed": 2,
+        "damage": 0,
+        "rot": 300
+      },
+      {
+        "file": "bldg_s2_d1_rot0.png",
+        "seed": 2,
+        "damage": 1,
+        "rot": 0
+      },
+      {
+        "file": "bldg_s2_d1_rot60.png",
+        "seed": 2,
+        "damage": 1,
+        "rot": 60
+      },
+      {
+        "file": "bldg_s2_d1_rot120.png",
+        "seed": 2,
+        "damage": 1,
+        "rot": 120
+      },
+      {
+        "file": "bldg_s2_d1_rot180.png",
+        "seed": 2,
+        "damage": 1,
+        "rot": 180
+      },
+      {
+        "file": "bldg_s2_d1_rot240.png",
+        "seed": 2,
+        "damage": 1,
+        "rot": 240
+      },
+      {
+        "file": "bldg_s2_d1_rot300.png",
+        "seed": 2,
+        "damage": 1,
+        "rot": 300
+      },
+      {
+        "file": "bldg_s2_d2_rot0.png",
+        "seed": 2,
+        "damage": 2,
+        "rot": 0
+      },
+      {
+        "file": "bldg_s2_d2_rot60.png",
+        "seed": 2,
+        "damage": 2,
+        "rot": 60
+      },
+      {
+        "file": "bldg_s2_d2_rot120.png",
+        "seed": 2,
+        "damage": 2,
+        "rot": 120
+      },
+      {
+        "file": "bldg_s2_d2_rot180.png",
+        "seed": 2,
+        "damage": 2,
+        "rot": 180
+      },
+      {
+        "file": "bldg_s2_d2_rot240.png",
+        "seed": 2,
+        "damage": 2,
+        "rot": 240
+      },
+      {
+        "file": "bldg_s2_d2_rot300.png",
+        "seed": 2,
+        "damage": 2,
+        "rot": 300
+      },
+      {
+        "file": "bldg_s3_d0_rot0.png",
+        "seed": 3,
+        "damage": 0,
+        "rot": 0
+      },
+      {
+        "file": "bldg_s3_d0_rot60.png",
+        "seed": 3,
+        "damage": 0,
+        "rot": 60
+      },
+      {
+        "file": "bldg_s3_d0_rot120.png",
+        "seed": 3,
+        "damage": 0,
+        "rot": 120
+      },
+      {
+        "file": "bldg_s3_d0_rot180.png",
+        "seed": 3,
+        "damage": 0,
+        "rot": 180
+      },
+      {
+        "file": "bldg_s3_d0_rot240.png",
+        "seed": 3,
+        "damage": 0,
+        "rot": 240
+      },
+      {
+        "file": "bldg_s3_d0_rot300.png",
+        "seed": 3,
+        "damage": 0,
+        "rot": 300
+      },
+      {
+        "file": "bldg_s3_d1_rot0.png",
+        "seed": 3,
+        "damage": 1,
+        "rot": 0
+      },
+      {
+        "file": "bldg_s3_d1_rot60.png",
+        "seed": 3,
+        "damage": 1,
+        "rot": 60
+      },
+      {
+        "file": "bldg_s3_d1_rot120.png",
+        "seed": 3,
+        "damage": 1,
+        "rot": 120
+      },
+      {
+        "file": "bldg_s3_d1_rot180.png",
+        "seed": 3,
+        "damage": 1,
+        "rot": 180
+      },
+      {
+        "file": "bldg_s3_d1_rot240.png",
+        "seed": 3,
+        "damage": 1,
+        "rot": 240
+      },
+      {
+        "file": "bldg_s3_d1_rot300.png",
+        "seed": 3,
+        "damage": 1,
+        "rot": 300
+      },
+      {
+        "file": "bldg_s3_d2_rot0.png",
+        "seed": 3,
+        "damage": 2,
+        "rot": 0
+      },
+      {
+        "file": "bldg_s3_d2_rot60.png",
+        "seed": 3,
+        "damage": 2,
+        "rot": 60
+      },
+      {
+        "file": "bldg_s3_d2_rot120.png",
+        "seed": 3,
+        "damage": 2,
+        "rot": 120
+      },
+      {
+        "file": "bldg_s3_d2_rot180.png",
+        "seed": 3,
+        "damage": 2,
+        "rot": 180
+      },
+      {
+        "file": "bldg_s3_d2_rot240.png",
+        "seed": 3,
+        "damage": 2,
+        "rot": 240
+      },
+      {
+        "file": "bldg_s3_d2_rot300.png",
+        "seed": 3,
+        "damage": 2,
+        "rot": 300
+      },
+      {
+        "file": "bldg_s4_d0_rot0.png",
+        "seed": 4,
+        "damage": 0,
+        "rot": 0
+      },
+      {
+        "file": "bldg_s4_d0_rot60.png",
+        "seed": 4,
+        "damage": 0,
+        "rot": 60
+      },
+      {
+        "file": "bldg_s4_d0_rot120.png",
+        "seed": 4,
+        "damage": 0,
+        "rot": 120
+      },
+      {
+        "file": "bldg_s4_d0_rot180.png",
+        "seed": 4,
+        "damage": 0,
+        "rot": 180
+      },
+      {
+        "file": "bldg_s4_d0_rot240.png",
+        "seed": 4,
+        "damage": 0,
+        "rot": 240
+      },
+      {
+        "file": "bldg_s4_d0_rot300.png",
+        "seed": 4,
+        "damage": 0,
+        "rot": 300
+      },
+      {
+        "file": "bldg_s4_d1_rot0.png",
+        "seed": 4,
+        "damage": 1,
+        "rot": 0
+      },
+      {
+        "file": "bldg_s4_d1_rot60.png",
+        "seed": 4,
+        "damage": 1,
+        "rot": 60
+      },
+      {
+        "file": "bldg_s4_d1_rot120.png",
+        "seed": 4,
+        "damage": 1,
+        "rot": 120
+      },
+      {
+        "file": "bldg_s4_d1_rot180.png",
+        "seed": 4,
+        "damage": 1,
+        "rot": 180
+      },
+      {
+        "file": "bldg_s4_d1_rot240.png",
+        "seed": 4,
+        "damage": 1,
+        "rot": 240
+      },
+      {
+        "file": "bldg_s4_d1_rot300.png",
+        "seed": 4,
+        "damage": 1,
+        "rot": 300
+      },
+      {
+        "file": "bldg_s4_d2_rot0.png",
+        "seed": 4,
+        "damage": 2,
+        "rot": 0
+      },
+      {
+        "file": "bldg_s4_d2_rot60.png",
+        "seed": 4,
+        "damage": 2,
+        "rot": 60
+      },
+      {
+        "file": "bldg_s4_d2_rot120.png",
+        "seed": 4,
+        "damage": 2,
+        "rot": 120
+      },
+      {
+        "file": "bldg_s4_d2_rot180.png",
+        "seed": 4,
+        "damage": 2,
+        "rot": 180
+      },
+      {
+        "file": "bldg_s4_d2_rot240.png",
+        "seed": 4,
+        "damage": 2,
+        "rot": 240
+      },
+      {
+        "file": "bldg_s4_d2_rot300.png",
+        "seed": 4,
+        "damage": 2,
+        "rot": 300
+      },
+      {
+        "file": "bldg_s5_d0_rot0.png",
+        "seed": 5,
+        "damage": 0,
+        "rot": 0
+      },
+      {
+        "file": "bldg_s5_d0_rot60.png",
+        "seed": 5,
+        "damage": 0,
+        "rot": 60
+      },
+      {
+        "file": "bldg_s5_d0_rot120.png",
+        "seed": 5,
+        "damage": 0,
+        "rot": 120
+      },
+      {
+        "file": "bldg_s5_d0_rot180.png",
+        "seed": 5,
+        "damage": 0,
+        "rot": 180
+      },
+      {
+        "file": "bldg_s5_d0_rot240.png",
+        "seed": 5,
+        "damage": 0,
+        "rot": 240
+      },
+      {
+        "file": "bldg_s5_d0_rot300.png",
+        "seed": 5,
+        "damage": 0,
+        "rot": 300
+      },
+      {
+        "file": "bldg_s5_d1_rot0.png",
+        "seed": 5,
+        "damage": 1,
+        "rot": 0
+      },
+      {
+        "file": "bldg_s5_d1_rot60.png",
+        "seed": 5,
+        "damage": 1,
+        "rot": 60
+      },
+      {
+        "file": "bldg_s5_d1_rot120.png",
+        "seed": 5,
+        "damage": 1,
+        "rot": 120
+      },
+      {
+        "file": "bldg_s5_d1_rot180.png",
+        "seed": 5,
+        "damage": 1,
+        "rot": 180
+      },
+      {
+        "file": "bldg_s5_d1_rot240.png",
+        "seed": 5,
+        "damage": 1,
+        "rot": 240
+      },
+      {
+        "file": "bldg_s5_d1_rot300.png",
+        "seed": 5,
+        "damage": 1,
+        "rot": 300
+      },
+      {
+        "file": "bldg_s5_d2_rot0.png",
+        "seed": 5,
+        "damage": 2,
+        "rot": 0
+      },
+      {
+        "file": "bldg_s5_d2_rot60.png",
+        "seed": 5,
+        "damage": 2,
+        "rot": 60
+      },
+      {
+        "file": "bldg_s5_d2_rot120.png",
+        "seed": 5,
+        "damage": 2,
+        "rot": 120
+      },
+      {
+        "file": "bldg_s5_d2_rot180.png",
+        "seed": 5,
+        "damage": 2,
+        "rot": 180
+      },
+      {
+        "file": "bldg_s5_d2_rot240.png",
+        "seed": 5,
+        "damage": 2,
+        "rot": 240
+      },
+      {
+        "file": "bldg_s5_d2_rot300.png",
+        "seed": 5,
+        "damage": 2,
+        "rot": 300
+      }
+    ],
+    "rubble": [
+      {
+        "file": "rubble_v0_rot0.png",
+        "variant": 0,
+        "rot": 0
+      },
+      {
+        "file": "rubble_v0_rot60.png",
+        "variant": 0,
+        "rot": 60
+      },
+      {
+        "file": "rubble_v1_rot0.png",
+        "variant": 1,
+        "rot": 0
+      },
+      {
+        "file": "rubble_v1_rot60.png",
+        "variant": 1,
+        "rot": 60
+      },
+      {
+        "file": "rubble_v2_rot0.png",
+        "variant": 2,
+        "rot": 0
+      },
+      {
+        "file": "rubble_v2_rot60.png",
+        "variant": 2,
+        "rot": 60
+      }
+    ]
+  },
+  "extras": {
+    "road": {
+      "straight": {
+        "variants": 4,
+        "variant_ids": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "damages": [
+          0,
+          1,
+          2
+        ],
+        "rots": [
+          0,
+          60,
+          120
+        ],
+        "files": [
+          "road_straight_v0_rot0.png",
+          "road_straight_v0_rot60.png",
+          "road_straight_v0_rot120.png",
+          "road_straight_v0_d1_rot0.png",
+          "road_straight_v0_d1_rot60.png",
+          "road_straight_v0_d1_rot120.png",
+          "road_straight_v0_d2_rot0.png",
+          "road_straight_v0_d2_rot60.png",
+          "road_straight_v0_d2_rot120.png",
+          "road_straight_v1_rot0.png",
+          "road_straight_v1_rot60.png",
+          "road_straight_v1_rot120.png",
+          "road_straight_v1_d1_rot0.png",
+          "road_straight_v1_d1_rot60.png",
+          "road_straight_v1_d1_rot120.png",
+          "road_straight_v1_d2_rot0.png",
+          "road_straight_v1_d2_rot60.png",
+          "road_straight_v1_d2_rot120.png",
+          "road_straight_v2_rot0.png",
+          "road_straight_v2_rot60.png",
+          "road_straight_v2_rot120.png",
+          "road_straight_v2_d1_rot0.png",
+          "road_straight_v2_d1_rot60.png",
+          "road_straight_v2_d1_rot120.png",
+          "road_straight_v2_d2_rot0.png",
+          "road_straight_v2_d2_rot60.png",
+          "road_straight_v2_d2_rot120.png",
+          "road_straight_v3_rot0.png",
+          "road_straight_v3_rot60.png",
+          "road_straight_v3_rot120.png",
+          "road_straight_v3_d1_rot0.png",
+          "road_straight_v3_d1_rot60.png",
+          "road_straight_v3_d1_rot120.png",
+          "road_straight_v3_d2_rot0.png",
+          "road_straight_v3_d2_rot60.png",
+          "road_straight_v3_d2_rot120.png"
+        ]
+      },
+      "corner": {
+        "variants": 3,
+        "variant_ids": [
+          0,
+          1,
+          2
+        ],
+        "damages": [
+          0,
+          1,
+          2
+        ],
+        "rots": [
+          0,
+          60,
+          120,
+          180,
+          240,
+          300
+        ],
+        "files": [
+          "road_corner_v0_rot0.png",
+          "road_corner_v0_rot60.png",
+          "road_corner_v0_rot120.png",
+          "road_corner_v0_rot180.png",
+          "road_corner_v0_rot240.png",
+          "road_corner_v0_rot300.png",
+          "road_corner_v0_d1_rot0.png",
+          "road_corner_v0_d1_rot60.png",
+          "road_corner_v0_d1_rot120.png",
+          "road_corner_v0_d1_rot180.png",
+          "road_corner_v0_d1_rot240.png",
+          "road_corner_v0_d1_rot300.png",
+          "road_corner_v0_d2_rot0.png",
+          "road_corner_v0_d2_rot60.png",
+          "road_corner_v0_d2_rot120.png",
+          "road_corner_v0_d2_rot180.png",
+          "road_corner_v0_d2_rot240.png",
+          "road_corner_v0_d2_rot300.png",
+          "road_corner_v1_rot0.png",
+          "road_corner_v1_rot60.png",
+          "road_corner_v1_rot120.png",
+          "road_corner_v1_rot180.png",
+          "road_corner_v1_rot240.png",
+          "road_corner_v1_rot300.png",
+          "road_corner_v1_d1_rot0.png",
+          "road_corner_v1_d1_rot60.png",
+          "road_corner_v1_d1_rot120.png",
+          "road_corner_v1_d1_rot180.png",
+          "road_corner_v1_d1_rot240.png",
+          "road_corner_v1_d1_rot300.png",
+          "road_corner_v1_d2_rot0.png",
+          "road_corner_v1_d2_rot60.png",
+          "road_corner_v1_d2_rot120.png",
+          "road_corner_v1_d2_rot180.png",
+          "road_corner_v1_d2_rot240.png",
+          "road_corner_v1_d2_rot300.png",
+          "road_corner_v2_rot0.png",
+          "road_corner_v2_rot60.png",
+          "road_corner_v2_rot120.png",
+          "road_corner_v2_rot180.png",
+          "road_corner_v2_rot240.png",
+          "road_corner_v2_rot300.png",
+          "road_corner_v2_d1_rot0.png",
+          "road_corner_v2_d1_rot60.png",
+          "road_corner_v2_d1_rot120.png",
+          "road_corner_v2_d1_rot180.png",
+          "road_corner_v2_d1_rot240.png",
+          "road_corner_v2_d1_rot300.png",
+          "road_corner_v2_d2_rot0.png",
+          "road_corner_v2_d2_rot60.png",
+          "road_corner_v2_d2_rot120.png",
+          "road_corner_v2_d2_rot180.png",
+          "road_corner_v2_d2_rot240.png",
+          "road_corner_v2_d2_rot300.png"
+        ]
+      },
+      "tee": {
+        "variants": 2,
+        "variant_ids": [
+          0,
+          1
+        ],
+        "damages": [
+          0,
+          1,
+          2
+        ],
+        "rots": [
+          0,
+          60,
+          120,
+          180,
+          240,
+          300
+        ],
+        "files": [
+          "road_tee_v0_rot0.png",
+          "road_tee_v0_rot60.png",
+          "road_tee_v0_rot120.png",
+          "road_tee_v0_rot180.png",
+          "road_tee_v0_rot240.png",
+          "road_tee_v0_rot300.png",
+          "road_tee_v0_d1_rot0.png",
+          "road_tee_v0_d1_rot60.png",
+          "road_tee_v0_d1_rot120.png",
+          "road_tee_v0_d1_rot180.png",
+          "road_tee_v0_d1_rot240.png",
+          "road_tee_v0_d1_rot300.png",
+          "road_tee_v0_d2_rot0.png",
+          "road_tee_v0_d2_rot60.png",
+          "road_tee_v0_d2_rot120.png",
+          "road_tee_v0_d2_rot180.png",
+          "road_tee_v0_d2_rot240.png",
+          "road_tee_v0_d2_rot300.png",
+          "road_tee_v1_rot0.png",
+          "road_tee_v1_rot60.png",
+          "road_tee_v1_rot120.png",
+          "road_tee_v1_rot180.png",
+          "road_tee_v1_rot240.png",
+          "road_tee_v1_rot300.png",
+          "road_tee_v1_d1_rot0.png",
+          "road_tee_v1_d1_rot60.png",
+          "road_tee_v1_d1_rot120.png",
+          "road_tee_v1_d1_rot180.png",
+          "road_tee_v1_d1_rot240.png",
+          "road_tee_v1_d1_rot300.png",
+          "road_tee_v1_d2_rot0.png",
+          "road_tee_v1_d2_rot60.png",
+          "road_tee_v1_d2_rot120.png",
+          "road_tee_v1_d2_rot180.png",
+          "road_tee_v1_d2_rot240.png",
+          "road_tee_v1_d2_rot300.png"
+        ]
+      },
+      "cross": {
+        "variants": 2,
+        "variant_ids": [
+          0,
+          1
+        ],
+        "damages": [
+          0,
+          1,
+          2
+        ],
+        "rots": [
+          0,
+          60,
+          120
+        ],
+        "files": [
+          "road_cross_v0_rot0.png",
+          "road_cross_v0_rot60.png",
+          "road_cross_v0_rot120.png",
+          "road_cross_v0_d1_rot0.png",
+          "road_cross_v0_d1_rot60.png",
+          "road_cross_v0_d1_rot120.png",
+          "road_cross_v0_d2_rot0.png",
+          "road_cross_v0_d2_rot60.png",
+          "road_cross_v0_d2_rot120.png",
+          "road_cross_v1_rot0.png",
+          "road_cross_v1_rot60.png",
+          "road_cross_v1_rot120.png",
+          "road_cross_v1_d1_rot0.png",
+          "road_cross_v1_d1_rot60.png",
+          "road_cross_v1_d1_rot120.png",
+          "road_cross_v1_d2_rot0.png",
+          "road_cross_v1_d2_rot60.png",
+          "road_cross_v1_d2_rot120.png"
+        ]
+      }
+    },
+    "trench": {
+      "straight": {
+        "variants": 2,
+        "variant_ids": [
+          0,
+          1
+        ],
+        "rots": [
+          0,
+          60,
+          120
+        ],
+        "files": [
+          "trench_straight_v0_rot0.png",
+          "trench_straight_v0_rot60.png",
+          "trench_straight_v0_rot120.png",
+          "trench_straight_v1_rot0.png",
+          "trench_straight_v1_rot60.png",
+          "trench_straight_v1_rot120.png"
+        ]
+      },
+      "corner": {
+        "variants": 2,
+        "variant_ids": [
+          0,
+          1
+        ],
+        "rots": [
+          0,
+          60,
+          120,
+          180,
+          240,
+          300
+        ],
+        "files": [
+          "trench_corner_v0_rot0.png",
+          "trench_corner_v0_rot60.png",
+          "trench_corner_v0_rot120.png",
+          "trench_corner_v0_rot180.png",
+          "trench_corner_v0_rot240.png",
+          "trench_corner_v0_rot300.png",
+          "trench_corner_v1_rot0.png",
+          "trench_corner_v1_rot60.png",
+          "trench_corner_v1_rot120.png",
+          "trench_corner_v1_rot180.png",
+          "trench_corner_v1_rot240.png",
+          "trench_corner_v1_rot300.png"
+        ]
+      },
+      "end": {
+        "variants": 1,
+        "variant_ids": [
+          0
+        ],
+        "rots": [
+          0,
+          60,
+          120,
+          180,
+          240,
+          300
+        ],
+        "files": [
+          "trench_end_v0_rot0.png",
+          "trench_end_v0_rot60.png",
+          "trench_end_v0_rot120.png",
+          "trench_end_v0_rot180.png",
+          "trench_end_v0_rot240.png",
+          "trench_end_v0_rot300.png"
+        ]
+      }
+    },
+    "foxhole": {
+      "variants": 2,
+      "variant_ids": [
+        0,
+        1
+      ],
+      "rots": [
+        0
+      ],
+      "files": [
+        "foxhole_v0_rot0.png",
+        "foxhole_v1_rot0.png"
+      ]
+    },
+    "bocage": {
+      "straight": {
+        "variants": 2,
+        "variant_ids": [
+          0,
+          1
+        ],
+        "rots": [
+          0,
+          60,
+          120
+        ],
+        "files": [
+          "bocage_straight_v0_rot0.png",
+          "bocage_straight_v0_rot60.png",
+          "bocage_straight_v0_rot120.png",
+          "bocage_straight_v1_rot0.png",
+          "bocage_straight_v1_rot60.png",
+          "bocage_straight_v1_rot120.png"
+        ]
+      },
+      "corner": {
+        "variants": 2,
+        "variant_ids": [
+          0,
+          1
+        ],
+        "rots": [
+          0,
+          60,
+          120,
+          180,
+          240,
+          300
+        ],
+        "files": [
+          "bocage_corner_v0_rot0.png",
+          "bocage_corner_v0_rot60.png",
+          "bocage_corner_v0_rot120.png",
+          "bocage_corner_v0_rot180.png",
+          "bocage_corner_v0_rot240.png",
+          "bocage_corner_v0_rot300.png",
+          "bocage_corner_v1_rot0.png",
+          "bocage_corner_v1_rot60.png",
+          "bocage_corner_v1_rot120.png",
+          "bocage_corner_v1_rot180.png",
+          "bocage_corner_v1_rot240.png",
+          "bocage_corner_v1_rot300.png"
+        ]
+      },
+      "end": {
+        "variants": 1,
+        "variant_ids": [
+          0
+        ],
+        "rots": [
+          0,
+          60,
+          120,
+          180,
+          240,
+          300
+        ],
+        "files": [
+          "bocage_end_v0_rot0.png",
+          "bocage_end_v0_rot60.png",
+          "bocage_end_v0_rot120.png",
+          "bocage_end_v0_rot180.png",
+          "bocage_end_v0_rot240.png",
+          "bocage_end_v0_rot300.png"
+        ]
+      }
+    },
+    "wire": {
+      "variants": 2,
+      "variant_ids": [
+        0,
+        1
+      ],
+      "rots": [
+        0,
+        60,
+        120
+      ],
+      "files": [
+        "wire_v0_rot0.png",
+        "wire_v0_rot60.png",
+        "wire_v0_rot120.png",
+        "wire_v1_rot0.png",
+        "wire_v1_rot60.png",
+        "wire_v1_rot120.png"
+      ]
+    },
+    "prop": {
+      "hedgehog": {
+        "variants": 2,
+        "variant_ids": [
+          0,
+          1
+        ],
+        "rots": [
+          0,
+          60,
+          120
+        ],
+        "files": [
+          "prop_hedgehog_v0_rot0.png",
+          "prop_hedgehog_v0_rot60.png",
+          "prop_hedgehog_v0_rot120.png",
+          "prop_hedgehog_v1_rot0.png",
+          "prop_hedgehog_v1_rot60.png",
+          "prop_hedgehog_v1_rot120.png"
+        ]
+      },
+      "sandbag": {
+        "variants": 2,
+        "variant_ids": [
+          0,
+          1
+        ],
+        "rots": [
+          0
+        ],
+        "files": [
+          "prop_sandbag_v0_rot0.png",
+          "prop_sandbag_v1_rot0.png"
+        ]
+      },
+      "barrels": {
+        "variants": 2,
+        "variant_ids": [
+          0,
+          1
+        ],
+        "rots": [
+          0
+        ],
+        "files": [
+          "prop_barrels_v0_rot0.png",
+          "prop_barrels_v1_rot0.png"
+        ]
+      }
+    },
+    "tree": {
+      "variants": 10,
+      "variant_ids": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "rots": [
+        0
+      ],
+      "files": [
+        "tree_v0_rot0.png",
+        "tree_v1_rot0.png",
+        "tree_v2_rot0.png",
+        "tree_v3_rot0.png",
+        "tree_v4_rot0.png",
+        "tree_v5_rot0.png",
+        "tree_v6_rot0.png",
+        "tree_v7_rot0.png",
+        "tree_v8_rot0.png",
+        "tree_v9_rot0.png"
+      ]
+    },
+    "veg": {
+      "variants": 6,
+      "variant_ids": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "rots": [
+        0
+      ],
+      "files": [
+        "veg_v0_rot0.png",
+        "veg_v1_rot0.png",
+        "veg_v2_rot0.png",
+        "veg_v3_rot0.png",
+        "veg_v4_rot0.png",
+        "veg_v5_rot0.png"
+      ]
+    },
+    "track": {
+      "variants": 4,
+      "variant_ids": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "rots": [
+        0,
+        60,
+        120
+      ],
+      "files": [
+        "track_v0_rot0.png",
+        "track_v0_rot60.png",
+        "track_v0_rot120.png",
+        "track_v1_rot0.png",
+        "track_v1_rot60.png",
+        "track_v1_rot120.png",
+        "track_v2_rot0.png",
+        "track_v2_rot60.png",
+        "track_v2_rot120.png",
+        "track_v3_rot0.png",
+        "track_v3_rot60.png",
+        "track_v3_rot120.png"
+      ]
+    },
+    "fieldrows": {
+      "variants": 4,
+      "variant_ids": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "rots": [
+        0,
+        60,
+        120
+      ],
+      "files": [
+        "fieldrows_v0_rot0.png",
+        "fieldrows_v0_rot60.png",
+        "fieldrows_v0_rot120.png",
+        "fieldrows_v1_rot0.png",
+        "fieldrows_v1_rot60.png",
+        "fieldrows_v1_rot120.png",
+        "fieldrows_v2_rot0.png",
+        "fieldrows_v2_rot60.png",
+        "fieldrows_v2_rot120.png",
+        "fieldrows_v3_rot0.png",
+        "fieldrows_v3_rot60.png",
+        "fieldrows_v3_rot120.png"
+      ]
+    }
+  },
+  "scar": {
+    "patterns": {
+      "e1": {
+        "mask": [
+          0
+        ],
+        "variants": 2,
+        "variant_ids": [
+          0,
+          1
+        ],
+        "rots": [
+          0,
+          60,
+          120,
+          180,
+          240,
+          300
+        ],
+        "files": [
+          "scar_e1_v0_rot0.png",
+          "scar_e1_v0_rot60.png",
+          "scar_e1_v0_rot120.png",
+          "scar_e1_v0_rot180.png",
+          "scar_e1_v0_rot240.png",
+          "scar_e1_v0_rot300.png",
+          "scar_e1_v1_rot0.png",
+          "scar_e1_v1_rot60.png",
+          "scar_e1_v1_rot120.png",
+          "scar_e1_v1_rot180.png",
+          "scar_e1_v1_rot240.png",
+          "scar_e1_v1_rot300.png"
+        ]
+      },
+      "e2a": {
+        "mask": [
+          0,
+          1
+        ],
+        "variants": 2,
+        "variant_ids": [
+          0,
+          1
+        ],
+        "rots": [
+          0,
+          60,
+          120,
+          180,
+          240,
+          300
+        ],
+        "files": [
+          "scar_e2a_v0_rot0.png",
+          "scar_e2a_v0_rot60.png",
+          "scar_e2a_v0_rot120.png",
+          "scar_e2a_v0_rot180.png",
+          "scar_e2a_v0_rot240.png",
+          "scar_e2a_v0_rot300.png",
+          "scar_e2a_v1_rot0.png",
+          "scar_e2a_v1_rot60.png",
+          "scar_e2a_v1_rot120.png",
+          "scar_e2a_v1_rot180.png",
+          "scar_e2a_v1_rot240.png",
+          "scar_e2a_v1_rot300.png"
+        ]
+      },
+      "e2o": {
+        "mask": [
+          0,
+          3
+        ],
+        "variants": 2,
+        "variant_ids": [
+          0,
+          1
+        ],
+        "rots": [
+          0,
+          60,
+          120,
+          180,
+          240,
+          300
+        ],
+        "files": [
+          "scar_e2o_v0_rot0.png",
+          "scar_e2o_v0_rot60.png",
+          "scar_e2o_v0_rot120.png",
+          "scar_e2o_v0_rot180.png",
+          "scar_e2o_v0_rot240.png",
+          "scar_e2o_v0_rot300.png",
+          "scar_e2o_v1_rot0.png",
+          "scar_e2o_v1_rot60.png",
+          "scar_e2o_v1_rot120.png",
+          "scar_e2o_v1_rot180.png",
+          "scar_e2o_v1_rot240.png",
+          "scar_e2o_v1_rot300.png"
+        ]
+      },
+      "e3": {
+        "mask": [
+          0,
+          1,
+          2
+        ],
+        "variants": 2,
+        "variant_ids": [
+          0,
+          1
+        ],
+        "rots": [
+          0,
+          60,
+          120,
+          180,
+          240,
+          300
+        ],
+        "files": [
+          "scar_e3_v0_rot0.png",
+          "scar_e3_v0_rot60.png",
+          "scar_e3_v0_rot120.png",
+          "scar_e3_v0_rot180.png",
+          "scar_e3_v0_rot240.png",
+          "scar_e3_v0_rot300.png",
+          "scar_e3_v1_rot0.png",
+          "scar_e3_v1_rot60.png",
+          "scar_e3_v1_rot120.png",
+          "scar_e3_v1_rot180.png",
+          "scar_e3_v1_rot240.png",
+          "scar_e3_v1_rot300.png"
+        ]
+      },
+      "e4": {
+        "mask": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "variants": 2,
+        "variant_ids": [
+          0,
+          1
+        ],
+        "rots": [
+          0,
+          60,
+          120,
+          180,
+          240,
+          300
+        ],
+        "files": [
+          "scar_e4_v0_rot0.png",
+          "scar_e4_v0_rot60.png",
+          "scar_e4_v0_rot120.png",
+          "scar_e4_v0_rot180.png",
+          "scar_e4_v0_rot240.png",
+          "scar_e4_v0_rot300.png",
+          "scar_e4_v1_rot0.png",
+          "scar_e4_v1_rot60.png",
+          "scar_e4_v1_rot120.png",
+          "scar_e4_v1_rot180.png",
+          "scar_e4_v1_rot240.png",
+          "scar_e4_v1_rot300.png"
+        ]
+      },
+      "full": {
+        "mask": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        "variants": 6,
+        "variant_ids": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        "rots": [
+          0
+        ],
+        "files": [
+          "scar_full_v0_rot0.png",
+          "scar_full_v1_rot0.png",
+          "scar_full_v2_rot0.png",
+          "scar_full_v3_rot0.png",
+          "scar_full_v4_rot0.png",
+          "scar_full_v5_rot0.png"
+        ]
+      }
+    },
+    "crater_pair": {
+      "variants": 4,
+      "variant_ids": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "rots": [
+        0,
+        60,
+        120
+      ],
+      "tiles": [
+        "a",
+        "b"
+      ],
+      "files": [
+        "cpair_v0_a_rot0.png",
+        "cpair_v0_a_rot60.png",
+        "cpair_v0_a_rot120.png",
+        "cpair_v0_b_rot0.png",
+        "cpair_v0_b_rot60.png",
+        "cpair_v0_b_rot120.png",
+        "cpair_v1_a_rot0.png",
+        "cpair_v1_a_rot60.png",
+        "cpair_v1_a_rot120.png",
+        "cpair_v1_b_rot0.png",
+        "cpair_v1_b_rot60.png",
+        "cpair_v1_b_rot120.png",
+        "cpair_v2_a_rot0.png",
+        "cpair_v2_a_rot60.png",
+        "cpair_v2_a_rot120.png",
+        "cpair_v2_b_rot0.png",
+        "cpair_v2_b_rot60.png",
+        "cpair_v2_b_rot120.png",
+        "cpair_v3_a_rot0.png",
+        "cpair_v3_a_rot60.png",
+        "cpair_v3_a_rot120.png",
+        "cpair_v3_b_rot0.png",
+        "cpair_v3_b_rot60.png",
+        "cpair_v3_b_rot120.png"
+      ]
+    }
+  },
+  "green": {
+    "patterns": {
+      "e1": {
+        "mask": [
+          0
+        ],
+        "variants": 2,
+        "variant_ids": [
+          0,
+          1
+        ],
+        "rots": [
+          0,
+          60,
+          120,
+          180,
+          240,
+          300
+        ],
+        "files": [
+          "grn_e1_v0_rot0.png",
+          "grn_e1_v0_rot60.png",
+          "grn_e1_v0_rot120.png",
+          "grn_e1_v0_rot180.png",
+          "grn_e1_v0_rot240.png",
+          "grn_e1_v0_rot300.png",
+          "grn_e1_v1_rot0.png",
+          "grn_e1_v1_rot60.png",
+          "grn_e1_v1_rot120.png",
+          "grn_e1_v1_rot180.png",
+          "grn_e1_v1_rot240.png",
+          "grn_e1_v1_rot300.png"
+        ]
+      },
+      "e2a": {
+        "mask": [
+          0,
+          1
+        ],
+        "variants": 2,
+        "variant_ids": [
+          0,
+          1
+        ],
+        "rots": [
+          0,
+          60,
+          120,
+          180,
+          240,
+          300
+        ],
+        "files": [
+          "grn_e2a_v0_rot0.png",
+          "grn_e2a_v0_rot60.png",
+          "grn_e2a_v0_rot120.png",
+          "grn_e2a_v0_rot180.png",
+          "grn_e2a_v0_rot240.png",
+          "grn_e2a_v0_rot300.png",
+          "grn_e2a_v1_rot0.png",
+          "grn_e2a_v1_rot60.png",
+          "grn_e2a_v1_rot120.png",
+          "grn_e2a_v1_rot180.png",
+          "grn_e2a_v1_rot240.png",
+          "grn_e2a_v1_rot300.png"
+        ]
+      },
+      "e2o": {
+        "mask": [
+          0,
+          3
+        ],
+        "variants": 2,
+        "variant_ids": [
+          0,
+          1
+        ],
+        "rots": [
+          0,
+          60,
+          120,
+          180,
+          240,
+          300
+        ],
+        "files": [
+          "grn_e2o_v0_rot0.png",
+          "grn_e2o_v0_rot60.png",
+          "grn_e2o_v0_rot120.png",
+          "grn_e2o_v0_rot180.png",
+          "grn_e2o_v0_rot240.png",
+          "grn_e2o_v0_rot300.png",
+          "grn_e2o_v1_rot0.png",
+          "grn_e2o_v1_rot60.png",
+          "grn_e2o_v1_rot120.png",
+          "grn_e2o_v1_rot180.png",
+          "grn_e2o_v1_rot240.png",
+          "grn_e2o_v1_rot300.png"
+        ]
+      },
+      "e3": {
+        "mask": [
+          0,
+          1,
+          2
+        ],
+        "variants": 2,
+        "variant_ids": [
+          0,
+          1
+        ],
+        "rots": [
+          0,
+          60,
+          120,
+          180,
+          240,
+          300
+        ],
+        "files": [
+          "grn_e3_v0_rot0.png",
+          "grn_e3_v0_rot60.png",
+          "grn_e3_v0_rot120.png",
+          "grn_e3_v0_rot180.png",
+          "grn_e3_v0_rot240.png",
+          "grn_e3_v0_rot300.png",
+          "grn_e3_v1_rot0.png",
+          "grn_e3_v1_rot60.png",
+          "grn_e3_v1_rot120.png",
+          "grn_e3_v1_rot180.png",
+          "grn_e3_v1_rot240.png",
+          "grn_e3_v1_rot300.png"
+        ]
+      },
+      "e4": {
+        "mask": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "variants": 2,
+        "variant_ids": [
+          0,
+          1
+        ],
+        "rots": [
+          0,
+          60,
+          120,
+          180,
+          240,
+          300
+        ],
+        "files": [
+          "grn_e4_v0_rot0.png",
+          "grn_e4_v0_rot60.png",
+          "grn_e4_v0_rot120.png",
+          "grn_e4_v0_rot180.png",
+          "grn_e4_v0_rot240.png",
+          "grn_e4_v0_rot300.png",
+          "grn_e4_v1_rot0.png",
+          "grn_e4_v1_rot60.png",
+          "grn_e4_v1_rot120.png",
+          "grn_e4_v1_rot180.png",
+          "grn_e4_v1_rot240.png",
+          "grn_e4_v1_rot300.png"
+        ]
+      }
+    }
+  },
+  "decals": {
+    "dirtpatch": {
+      "variants": 4,
+      "variant_ids": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "files": [
+        "dirtpatch_v0.png",
+        "dirtpatch_v1.png",
+        "dirtpatch_v2.png",
+        "dirtpatch_v3.png"
+      ]
+    },
+    "cobble_detail": {
+      "variants": 6,
+      "variant_ids": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "files": [
+        "cobble_detail_v0.png",
+        "cobble_detail_v1.png",
+        "cobble_detail_v2.png",
+        "cobble_detail_v3.png",
+        "cobble_detail_v4.png",
+        "cobble_detail_v5.png"
+      ]
+    }
+  },
+  "specials": {
+    "church": {
+      "damages": [
+        0,
+        1,
+        2
+      ],
+      "rots": [
+        0,
+        60,
+        120,
+        180,
+        240,
+        300
+      ],
+      "files": [
+        "church_d0_rot0.png",
+        "church_d0_rot60.png",
+        "church_d0_rot120.png",
+        "church_d0_rot180.png",
+        "church_d0_rot240.png",
+        "church_d0_rot300.png",
+        "church_d1_rot0.png",
+        "church_d1_rot60.png",
+        "church_d1_rot120.png",
+        "church_d1_rot180.png",
+        "church_d1_rot240.png",
+        "church_d1_rot300.png",
+        "church_d2_rot0.png",
+        "church_d2_rot60.png",
+        "church_d2_rot120.png",
+        "church_d2_rot180.png",
+        "church_d2_rot240.png",
+        "church_d2_rot300.png"
+      ]
+    },
+    "factory": {
+      "damages": [
+        0,
+        1,
+        2
+      ],
+      "rots": [
+        0,
+        60,
+        120,
+        180,
+        240,
+        300
+      ],
+      "files": [
+        "factory_d0_rot0.png",
+        "factory_d0_rot60.png",
+        "factory_d0_rot120.png",
+        "factory_d0_rot180.png",
+        "factory_d0_rot240.png",
+        "factory_d0_rot300.png",
+        "factory_d1_rot0.png",
+        "factory_d1_rot60.png",
+        "factory_d1_rot120.png",
+        "factory_d1_rot180.png",
+        "factory_d1_rot240.png",
+        "factory_d1_rot300.png",
+        "factory_d2_rot0.png",
+        "factory_d2_rot60.png",
+        "factory_d2_rot120.png",
+        "factory_d2_rot180.png",
+        "factory_d2_rot240.png",
+        "factory_d2_rot300.png"
+      ]
+    }
+  },
+  "inventory": {
+    "png_count": 561,
+    "classified_count": 561,
+    "total_bytes": 44411735,
+    "content_sha256": "01041f161ac72604be485e853685d646408e1a10dc6cece0dad7717470bcfcde",
+    "unclassified": []
+  }
+}

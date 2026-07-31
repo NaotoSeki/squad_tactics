@@ -1,0 +1,4099 @@
+{
+  "schemaVersion": 1,
+  "status": "production-complete",
+  "source": "gpt-image built-in plus canonical PS footprint normalization",
+  "pixelRatio": 2,
+  "runtimeRenderScale": 0.5,
+  "lightingContract": {
+    "id": "ps-overcast-upper-left-v1",
+    "spec": "../../../docs/ASSET_LIGHTING_CONTRACT.md",
+    "keyOrigin": "screen upper-left",
+    "shadowDirection": "screen lower-right",
+    "shadowScreenVector": [
+      0.72,
+      0.69
+    ],
+    "elevationDegrees": 55,
+    "ambientFill": 0.72,
+    "colorTemperatureK": 6000
+  },
+  "overrides": [
+    {
+      "id": "field_01_000",
+      "family": "field",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Fields/field_01_000_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/field_01_000_source.png",
+      "file": "field_01_000_hd_v1.png",
+      "referenceSize": [
+        178,
+        79
+      ],
+      "outputSize": [
+        356,
+        158
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "field_01_001",
+      "family": "field",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Fields/field_01_001_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/field_01_001_source.png",
+      "file": "field_01_001_hd_v1.png",
+      "referenceSize": [
+        203,
+        113
+      ],
+      "outputSize": [
+        406,
+        226
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "field_01_002",
+      "family": "field",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Fields/field_01_002_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/field_01_002_source.png",
+      "file": "field_01_002_hd_v1.png",
+      "referenceSize": [
+        193,
+        85
+      ],
+      "outputSize": [
+        386,
+        170
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "field_01_003",
+      "family": "field",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Fields/field_01_003_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/field_01_003_source.png",
+      "file": "field_01_003_hd_v1.png",
+      "referenceSize": [
+        176,
+        76
+      ],
+      "outputSize": [
+        352,
+        152
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "field_01_004",
+      "family": "field",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Fields/field_01_004_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/field_01_004_source.png",
+      "file": "field_01_004_hd_v1.png",
+      "referenceSize": [
+        194,
+        75
+      ],
+      "outputSize": [
+        388,
+        150
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "field_01_005",
+      "family": "field",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Fields/field_01_005_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/field_01_005_source.png",
+      "file": "field_01_005_hd_v1.png",
+      "referenceSize": [
+        207,
+        113
+      ],
+      "outputSize": [
+        414,
+        226
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "flower_phlox-paniculata_b_01",
+      "family": "flower",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Plants/flower_phlox-paniculata_b_01_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/flower_phlox-paniculata_b_01_source.png",
+      "file": "flower_phlox-paniculata_b_01_hd_v1.png",
+      "referenceSize": [
+        14,
+        13
+      ],
+      "outputSize": [
+        28,
+        26
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "flower_phlox-paniculata_b_02",
+      "family": "flower",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Plants/flower_phlox-paniculata_b_02_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/flower_phlox-paniculata_b_02_source.png",
+      "file": "flower_phlox-paniculata_b_02_hd_v1.png",
+      "referenceSize": [
+        16,
+        15
+      ],
+      "outputSize": [
+        32,
+        30
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "flower_phlox-paniculata_c_03",
+      "family": "flower",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Plants/flower_phlox-paniculata_c_03_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/flower_phlox-paniculata_c_03_source.png",
+      "file": "flower_phlox-paniculata_c_03_hd_v1.png",
+      "referenceSize": [
+        15,
+        17
+      ],
+      "outputSize": [
+        30,
+        34
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "flower_phlox-paniculata_d_04",
+      "family": "flower",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Plants/flower_phlox-paniculata_d_04_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/flower_phlox-paniculata_d_04_source.png",
+      "file": "flower_phlox-paniculata_d_04_hd_v1.png",
+      "referenceSize": [
+        14,
+        15
+      ],
+      "outputSize": [
+        28,
+        30
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "flower_phlox-paniculata_e_05",
+      "family": "flower",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Plants/flower_phlox-paniculata_e_05_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/flower_phlox-paniculata_e_05_source.png",
+      "file": "flower_phlox-paniculata_e_05_hd_v1.png",
+      "referenceSize": [
+        13,
+        12
+      ],
+      "outputSize": [
+        26,
+        24
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "flower_phlox-paniculata_e_06",
+      "family": "flower",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Plants/flower_phlox-paniculata_e_06_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/flower_phlox-paniculata_e_06_source.png",
+      "file": "flower_phlox-paniculata_e_06_hd_v1.png",
+      "referenceSize": [
+        13,
+        13
+      ],
+      "outputSize": [
+        26,
+        26
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "flower_primula-veris_a_01",
+      "family": "flower",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Plants/flower_primula-veris_a_01_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/flower_primula-veris_a_01_source.png",
+      "file": "flower_primula-veris_a_01_hd_v1.png",
+      "referenceSize": [
+        17,
+        15
+      ],
+      "outputSize": [
+        34,
+        30
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "flower_primula-veris_a_02",
+      "family": "flower",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Plants/flower_primula-veris_a_02_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/flower_primula-veris_a_02_source.png",
+      "file": "flower_primula-veris_a_02_hd_v1.png",
+      "referenceSize": [
+        17,
+        13
+      ],
+      "outputSize": [
+        34,
+        26
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "flower_primula-veris_b_01",
+      "family": "flower",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Plants/flower_primula-veris_b_01_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/flower_primula-veris_b_01_source.png",
+      "file": "flower_primula-veris_b_01_hd_v1.png",
+      "referenceSize": [
+        15,
+        11
+      ],
+      "outputSize": [
+        30,
+        22
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "flower_primula-veris_c_02",
+      "family": "flower",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Plants/flower_primula-veris_c_02_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/flower_primula-veris_c_02_source.png",
+      "file": "flower_primula-veris_c_02_hd_v1.png",
+      "referenceSize": [
+        16,
+        14
+      ],
+      "outputSize": [
+        32,
+        28
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "flower_primula-veris_d_01",
+      "family": "flower",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Plants/flower_primula-veris_d_01_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/flower_primula-veris_d_01_source.png",
+      "file": "flower_primula-veris_d_01_hd_v1.png",
+      "referenceSize": [
+        12,
+        10
+      ],
+      "outputSize": [
+        24,
+        20
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "flower_primula-veris_d_02",
+      "family": "flower",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Plants/flower_primula-veris_d_02_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/flower_primula-veris_d_02_source.png",
+      "file": "flower_primula-veris_d_02_hd_v1.png",
+      "referenceSize": [
+        14,
+        10
+      ],
+      "outputSize": [
+        28,
+        20
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "flower_primula-veris_d_03",
+      "family": "flower",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Plants/flower_primula-veris_d_03_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/flower_primula-veris_d_03_source.png",
+      "file": "flower_primula-veris_d_03_hd_v1.png",
+      "referenceSize": [
+        12,
+        8
+      ],
+      "outputSize": [
+        24,
+        16
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "flower_zantedeschia-aethiopica_b_01",
+      "family": "flower",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Plants/flower_zantedeschia-aethiopica_b_01_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/flower_zantedeschia-aethiopica_b_01_source.png",
+      "file": "flower_zantedeschia-aethiopica_b_01_hd_v1.png",
+      "referenceSize": [
+        14,
+        17
+      ],
+      "outputSize": [
+        28,
+        34
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "flower_zantedeschia-aethiopica_c_01",
+      "family": "flower",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Plants/flower_zantedeschia-aethiopica_c_01_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/flower_zantedeschia-aethiopica_c_01_source.png",
+      "file": "flower_zantedeschia-aethiopica_c_01_hd_v1.png",
+      "referenceSize": [
+        12,
+        13
+      ],
+      "outputSize": [
+        24,
+        26
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "flower_zantedeschia-aethiopica_c_02",
+      "family": "flower",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Plants/flower_zantedeschia-aethiopica_c_02_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/flower_zantedeschia-aethiopica_c_02_source.png",
+      "file": "flower_zantedeschia-aethiopica_c_02_hd_v1.png",
+      "referenceSize": [
+        12,
+        13
+      ],
+      "outputSize": [
+        24,
+        26
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "flower_zantedeschia-aethiopica_c_03",
+      "family": "flower",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Plants/flower_zantedeschia-aethiopica_c_03_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/flower_zantedeschia-aethiopica_c_03_source.png",
+      "file": "flower_zantedeschia-aethiopica_c_03_hd_v1.png",
+      "referenceSize": [
+        12,
+        12
+      ],
+      "outputSize": [
+        24,
+        24
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "grass_green_flowers_large_001",
+      "family": "grass",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Grass/grass_green_flowers_large_001_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/grass_green_flowers_large_001_source.png",
+      "file": "grass_green_flowers_large_001_hd_v1.png",
+      "referenceSize": [
+        521,
+        369
+      ],
+      "outputSize": [
+        1042,
+        738
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "grass_green_flowers_large_002",
+      "family": "grass",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Grass/grass_green_flowers_large_002_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/grass_green_flowers_large_002_source.png",
+      "file": "grass_green_flowers_large_002_hd_v1.png",
+      "referenceSize": [
+        520,
+        294
+      ],
+      "outputSize": [
+        1040,
+        588
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "grass_green_flowers_medium_001",
+      "family": "grass",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Grass/grass_green_flowers_medium_001_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/grass_green_flowers_medium_001_source.png",
+      "file": "grass_green_flowers_medium_001_hd_v1.png",
+      "referenceSize": [
+        192,
+        97
+      ],
+      "outputSize": [
+        384,
+        194
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "grass_green_flowers_medium_002",
+      "family": "grass",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Grass/grass_green_flowers_medium_002_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/grass_green_flowers_medium_002_source.png",
+      "file": "grass_green_flowers_medium_002_hd_v1.png",
+      "referenceSize": [
+        262,
+        108
+      ],
+      "outputSize": [
+        524,
+        216
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "grass_green_flowers_medium_003",
+      "family": "grass",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Grass/grass_green_flowers_medium_003_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/grass_green_flowers_medium_003_source.png",
+      "file": "grass_green_flowers_medium_003_hd_v1.png",
+      "referenceSize": [
+        212,
+        124
+      ],
+      "outputSize": [
+        424,
+        248
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "grass_green_large_001",
+      "family": "grass",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Grass/old/grass_green_large_001_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/grass_green_large_001_source.png",
+      "file": "grass_green_large_001_hd_v1.png",
+      "referenceSize": [
+        520,
+        273
+      ],
+      "outputSize": [
+        1040,
+        546
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "grass_green_large_002",
+      "family": "grass",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Grass/old/grass_green_large_002_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/grass_green_large_002_source.png",
+      "file": "grass_green_large_002_hd_v1.png",
+      "referenceSize": [
+        485,
+        309
+      ],
+      "outputSize": [
+        970,
+        618
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "grass_green_large_003",
+      "family": "grass",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Grass/old/grass_green_large_003_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/grass_green_large_003_source.png",
+      "file": "grass_green_large_003_hd_v1.png",
+      "referenceSize": [
+        500,
+        344
+      ],
+      "outputSize": [
+        1000,
+        688
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "grass_green_large_004",
+      "family": "grass",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Grass/old/grass_green_large_004_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/grass_green_large_004_source.png",
+      "file": "grass_green_large_004_hd_v1.png",
+      "referenceSize": [
+        495,
+        446
+      ],
+      "outputSize": [
+        990,
+        892
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "grass_green_large_005",
+      "family": "grass",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Grass/old/grass_green_large_005_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/grass_green_large_005_source.png",
+      "file": "grass_green_large_005_hd_v1.png",
+      "referenceSize": [
+        493,
+        250
+      ],
+      "outputSize": [
+        986,
+        500
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "grass_green_large_006",
+      "family": "grass",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Grass/old/grass_green_large_006_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/grass_green_large_006_source.png",
+      "file": "grass_green_large_006_hd_v1.png",
+      "referenceSize": [
+        521,
+        369
+      ],
+      "outputSize": [
+        1042,
+        738
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "grass_green_large_007",
+      "family": "grass",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Grass/grass_green_large_007_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/grass_green_large_007_source.png",
+      "file": "grass_green_large_007_hd_v1.png",
+      "referenceSize": [
+        475,
+        226
+      ],
+      "outputSize": [
+        950,
+        452
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "grass_green_large_008",
+      "family": "grass",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Grass/grass_green_large_008_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/grass_green_large_008_source.png",
+      "file": "grass_green_large_008_hd_v1.png",
+      "referenceSize": [
+        494,
+        252
+      ],
+      "outputSize": [
+        988,
+        504
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "grass_green_medium_001",
+      "family": "grass",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Grass/grass_green_medium_001_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/grass_green_medium_001_source.png",
+      "file": "grass_green_medium_001_hd_v1.png",
+      "referenceSize": [
+        222,
+        104
+      ],
+      "outputSize": [
+        444,
+        208
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "grass_green_medium_002",
+      "family": "grass",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Grass/grass_green_medium_002_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/grass_green_medium_002_source.png",
+      "file": "grass_green_medium_002_hd_v1.png",
+      "referenceSize": [
+        265,
+        150
+      ],
+      "outputSize": [
+        530,
+        300
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "grass_green_medium_003",
+      "family": "grass",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Grass/grass_green_medium_003_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/grass_green_medium_003_source.png",
+      "file": "grass_green_medium_003_hd_v1.png",
+      "referenceSize": [
+        244,
+        160
+      ],
+      "outputSize": [
+        488,
+        320
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "grass_green_medium_004",
+      "family": "grass",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Grass/grass_green_medium_004_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/grass_green_medium_004_source.png",
+      "file": "grass_green_medium_004_hd_v1.png",
+      "referenceSize": [
+        318,
+        176
+      ],
+      "outputSize": [
+        636,
+        352
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "grass_green_medium_005",
+      "family": "grass",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Grass/grass_green_medium_005_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/grass_green_medium_005_source.png",
+      "file": "grass_green_medium_005_hd_v1.png",
+      "referenceSize": [
+        349,
+        183
+      ],
+      "outputSize": [
+        698,
+        366
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "grass_green_medium_006",
+      "family": "grass",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Grass/grass_green_medium_006_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/grass_green_medium_006_source.png",
+      "file": "grass_green_medium_006_hd_v1.png",
+      "referenceSize": [
+        232,
+        110
+      ],
+      "outputSize": [
+        464,
+        220
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "grass_green_medium_007",
+      "family": "grass",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Grass/grass_green_medium_007_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/grass_green_medium_007_source.png",
+      "file": "grass_green_medium_007_hd_v1.png",
+      "referenceSize": [
+        348,
+        180
+      ],
+      "outputSize": [
+        696,
+        360
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "grass_green_medium_008",
+      "family": "grass",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Grass/grass_green_medium_008_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/grass_green_medium_008_source.png",
+      "file": "grass_green_medium_008_hd_v1.png",
+      "referenceSize": [
+        226,
+        88
+      ],
+      "outputSize": [
+        452,
+        176
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "grass_green_medium_009",
+      "family": "grass",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Grass/grass_green_medium_009_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/grass_green_medium_009_source.png",
+      "file": "grass_green_medium_009_hd_v1.png",
+      "referenceSize": [
+        240,
+        123
+      ],
+      "outputSize": [
+        480,
+        246
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "grave_003",
+      "family": "ground_feature",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Decors/grave_003_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/grave_003_source.png",
+      "file": "grave_003_hd_v1.png",
+      "referenceSize": [
+        51,
+        30
+      ],
+      "outputSize": [
+        102,
+        60
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "grave_004",
+      "family": "ground_feature",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Decors/grave_004_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/grave_004_source.png",
+      "file": "grave_004_hd_v1.png",
+      "referenceSize": [
+        40,
+        26
+      ],
+      "outputSize": [
+        80,
+        52
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "grave_005",
+      "family": "ground_feature",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Decors/grave_005_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/grave_005_source.png",
+      "file": "grave_005_hd_v1.png",
+      "referenceSize": [
+        56,
+        28
+      ],
+      "outputSize": [
+        112,
+        56
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "grave_006",
+      "family": "ground_feature",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Decors/grave_006_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/grave_006_source.png",
+      "file": "grave_006_hd_v1.png",
+      "referenceSize": [
+        56,
+        32
+      ],
+      "outputSize": [
+        112,
+        64
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "grave_007",
+      "family": "ground_feature",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Decors/grave_007_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/grave_007_source.png",
+      "file": "grave_007_hd_v1.png",
+      "referenceSize": [
+        58,
+        32
+      ],
+      "outputSize": [
+        116,
+        64
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "grave_008",
+      "family": "ground_feature",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Decors/grave_008_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/grave_008_source.png",
+      "file": "grave_008_hd_v1.png",
+      "referenceSize": [
+        59,
+        30
+      ],
+      "outputSize": [
+        118,
+        60
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "grave_009",
+      "family": "ground_feature",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Decors/grave_009_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/grave_009_source.png",
+      "file": "grave_009_hd_v1.png",
+      "referenceSize": [
+        61,
+        35
+      ],
+      "outputSize": [
+        122,
+        70
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "grave_010",
+      "family": "ground_feature",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Decors/grave_010_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/grave_010_source.png",
+      "file": "grave_010_hd_v1.png",
+      "referenceSize": [
+        60,
+        33
+      ],
+      "outputSize": [
+        120,
+        66
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "grave_011",
+      "family": "ground_feature",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Decors/grave_011_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/grave_011_source.png",
+      "file": "grave_011_hd_v1.png",
+      "referenceSize": [
+        57,
+        38
+      ],
+      "outputSize": [
+        114,
+        76
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "memorial_001_land",
+      "family": "ground_feature",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Decors/memorial_001_land_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/memorial_001_land_source.png",
+      "file": "memorial_001_land_hd_v1.png",
+      "referenceSize": [
+        99,
+        49
+      ],
+      "outputSize": [
+        198,
+        98
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "nature_stick_01_000",
+      "family": "ground_feature",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Sticks/nature_stick_01_000_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/nature_stick_01_000_source.png",
+      "file": "nature_stick_01_000_hd_v1.png",
+      "referenceSize": [
+        20,
+        10
+      ],
+      "outputSize": [
+        40,
+        20
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "nature_stick_01_001",
+      "family": "ground_feature",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Sticks/nature_stick_01_001_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/nature_stick_01_001_source.png",
+      "file": "nature_stick_01_001_hd_v1.png",
+      "referenceSize": [
+        12,
+        12
+      ],
+      "outputSize": [
+        24,
+        24
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "nature_stick_01_002",
+      "family": "ground_feature",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Sticks/nature_stick_01_002_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/nature_stick_01_002_source.png",
+      "file": "nature_stick_01_002_hd_v1.png",
+      "referenceSize": [
+        17,
+        6
+      ],
+      "outputSize": [
+        34,
+        12
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "nature_stick_01_003",
+      "family": "ground_feature",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Sticks/nature_stick_01_003_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/nature_stick_01_003_source.png",
+      "file": "nature_stick_01_003_hd_v1.png",
+      "referenceSize": [
+        26,
+        17
+      ],
+      "outputSize": [
+        52,
+        34
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "nature_stick_01_004",
+      "family": "ground_feature",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Sticks/nature_stick_01_004_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/nature_stick_01_004_source.png",
+      "file": "nature_stick_01_004_hd_v1.png",
+      "referenceSize": [
+        24,
+        12
+      ],
+      "outputSize": [
+        48,
+        24
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "nature_stick_01_005",
+      "family": "ground_feature",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Sticks/nature_stick_01_005_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/nature_stick_01_005_source.png",
+      "file": "nature_stick_01_005_hd_v1.png",
+      "referenceSize": [
+        17,
+        6
+      ],
+      "outputSize": [
+        34,
+        12
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "nature_stick_01_006",
+      "family": "ground_feature",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Sticks/nature_stick_01_006_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/nature_stick_01_006_source.png",
+      "file": "nature_stick_01_006_hd_v1.png",
+      "referenceSize": [
+        19,
+        4
+      ],
+      "outputSize": [
+        38,
+        8
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "nature_stick_01_007",
+      "family": "ground_feature",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Sticks/nature_stick_01_007_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/nature_stick_01_007_source.png",
+      "file": "nature_stick_01_007_hd_v1.png",
+      "referenceSize": [
+        18,
+        10
+      ],
+      "outputSize": [
+        36,
+        20
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "nature_stick_01_008",
+      "family": "ground_feature",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Sticks/nature_stick_01_008_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/nature_stick_01_008_source.png",
+      "file": "nature_stick_01_008_hd_v1.png",
+      "referenceSize": [
+        57,
+        22
+      ],
+      "outputSize": [
+        114,
+        44
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "nature_stick_01_009",
+      "family": "ground_feature",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Sticks/nature_stick_01_009_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/nature_stick_01_009_source.png",
+      "file": "nature_stick_01_009_hd_v1.png",
+      "referenceSize": [
+        99,
+        48
+      ],
+      "outputSize": [
+        198,
+        96
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "nature_stick_01_010",
+      "family": "ground_feature",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Sticks/nature_stick_01_010_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/nature_stick_01_010_source.png",
+      "file": "nature_stick_01_010_hd_v1.png",
+      "referenceSize": [
+        54,
+        31
+      ],
+      "outputSize": [
+        108,
+        62
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "nature_stick_01_011",
+      "family": "ground_feature",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Sticks/nature_stick_01_011_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/nature_stick_01_011_source.png",
+      "file": "nature_stick_01_011_hd_v1.png",
+      "referenceSize": [
+        54,
+        25
+      ],
+      "outputSize": [
+        108,
+        50
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "nature_stick_01_012",
+      "family": "ground_feature",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Sticks/nature_stick_01_012_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/nature_stick_01_012_source.png",
+      "file": "nature_stick_01_012_hd_v1.png",
+      "referenceSize": [
+        38,
+        18
+      ],
+      "outputSize": [
+        76,
+        36
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "nature_stick_01_013",
+      "family": "ground_feature",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Sticks/nature_stick_01_013_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/nature_stick_01_013_source.png",
+      "file": "nature_stick_01_013_hd_v1.png",
+      "referenceSize": [
+        45,
+        22
+      ],
+      "outputSize": [
+        90,
+        44
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "nature_stone_01_000",
+      "family": "ground_feature",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Stones/nature_stone_01_000_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/nature_stone_01_000_source.png",
+      "file": "nature_stone_01_000_hd_v1.png",
+      "referenceSize": [
+        94,
+        32
+      ],
+      "outputSize": [
+        188,
+        64
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "nature_stone_01_001",
+      "family": "ground_feature",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Stones/nature_stone_01_001_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/nature_stone_01_001_source.png",
+      "file": "nature_stone_01_001_hd_v1.png",
+      "referenceSize": [
+        79,
+        51
+      ],
+      "outputSize": [
+        158,
+        102
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "nature_stone_01_002",
+      "family": "ground_feature",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Stones/nature_stone_01_002_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/nature_stone_01_002_source.png",
+      "file": "nature_stone_01_002_hd_v1.png",
+      "referenceSize": [
+        80,
+        53
+      ],
+      "outputSize": [
+        160,
+        106
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "nature_stone_01_003",
+      "family": "ground_feature",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Stones/nature_stone_01_003_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/nature_stone_01_003_source.png",
+      "file": "nature_stone_01_003_hd_v1.png",
+      "referenceSize": [
+        86,
+        46
+      ],
+      "outputSize": [
+        172,
+        92
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "nature_stone_01_004",
+      "family": "ground_feature",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Stones/nature_stone_01_004_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/nature_stone_01_004_source.png",
+      "file": "nature_stone_01_004_hd_v1.png",
+      "referenceSize": [
+        109,
+        28
+      ],
+      "outputSize": [
+        218,
+        56
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "nature_stone_01_005",
+      "family": "ground_feature",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Stones/nature_stone_01_005_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/nature_stone_01_005_source.png",
+      "file": "nature_stone_01_005_hd_v1.png",
+      "referenceSize": [
+        92,
+        26
+      ],
+      "outputSize": [
+        184,
+        52
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "nature_stone_01_006",
+      "family": "ground_feature",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Stones/nature_stone_01_006_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/nature_stone_01_006_source.png",
+      "file": "nature_stone_01_006_hd_v1.png",
+      "referenceSize": [
+        102,
+        35
+      ],
+      "outputSize": [
+        204,
+        70
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "nature_stone_01_007",
+      "family": "ground_feature",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Stones/nature_stone_01_007_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/nature_stone_01_007_source.png",
+      "file": "nature_stone_01_007_hd_v1.png",
+      "referenceSize": [
+        81,
+        37
+      ],
+      "outputSize": [
+        162,
+        74
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "plant_digitalis-purpurea_e_01",
+      "family": "flower",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Plants/plant_digitalis-purpurea_e_01_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/plant_digitalis-purpurea_e_01_source.png",
+      "file": "plant_digitalis-purpurea_e_01_hd_v1.png",
+      "referenceSize": [
+        16,
+        18
+      ],
+      "outputSize": [
+        32,
+        36
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "plant_digitalis-purpurea_e_02",
+      "family": "flower",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Plants/plant_digitalis-purpurea_e_02_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/plant_digitalis-purpurea_e_02_source.png",
+      "file": "plant_digitalis-purpurea_e_02_hd_v1.png",
+      "referenceSize": [
+        19,
+        17
+      ],
+      "outputSize": [
+        38,
+        34
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "plant_digitalis-purpurea_e_03",
+      "family": "flower",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Plants/plant_digitalis-purpurea_e_03_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/plant_digitalis-purpurea_e_03_source.png",
+      "file": "plant_digitalis-purpurea_e_03_hd_v1.png",
+      "referenceSize": [
+        19,
+        17
+      ],
+      "outputSize": [
+        38,
+        34
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "plant_digitalis-purpurea_e_04",
+      "family": "flower",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Plants/plant_digitalis-purpurea_e_04_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/plant_digitalis-purpurea_e_04_source.png",
+      "file": "plant_digitalis-purpurea_e_04_hd_v1.png",
+      "referenceSize": [
+        16,
+        16
+      ],
+      "outputSize": [
+        32,
+        32
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "plant_verbascum-densiflorum_c_01",
+      "family": "flower",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Plants/plant_verbascum-densiflorum_c_01_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/plant_verbascum-densiflorum_c_01_source.png",
+      "file": "plant_verbascum-densiflorum_c_01_hd_v1.png",
+      "referenceSize": [
+        22,
+        15
+      ],
+      "outputSize": [
+        44,
+        30
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "plant_verbascum-densiflorum_c_02",
+      "family": "flower",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Plants/plant_verbascum-densiflorum_c_02_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/plant_verbascum-densiflorum_c_02_source.png",
+      "file": "plant_verbascum-densiflorum_c_02_hd_v1.png",
+      "referenceSize": [
+        23,
+        13
+      ],
+      "outputSize": [
+        46,
+        26
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "road_ground_0000s_0000_01",
+      "family": "road",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Roads/road_ground_0000s_0000_01_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/road_ground_0000s_0000_01_source.png",
+      "file": "road_ground_0000s_0000_01_hd_v1.png",
+      "referenceSize": [
+        139,
+        124
+      ],
+      "outputSize": [
+        278,
+        248
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "road_ground_0000s_0001_08",
+      "family": "road",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Roads/road_ground_0000s_0001_08_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/road_ground_0000s_0001_08_source.png",
+      "file": "road_ground_0000s_0001_08_hd_v1.png",
+      "referenceSize": [
+        136,
+        123
+      ],
+      "outputSize": [
+        272,
+        246
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "road_ground_0000s_0002_07",
+      "family": "road",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Roads/road_ground_0000s_0002_07_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/road_ground_0000s_0002_07_source.png",
+      "file": "road_ground_0000s_0002_07_hd_v1.png",
+      "referenceSize": [
+        202,
+        68
+      ],
+      "outputSize": [
+        404,
+        136
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "road_ground_0000s_0003_06",
+      "family": "road",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Roads/road_ground_0000s_0003_06_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/road_ground_0000s_0003_06_source.png",
+      "file": "road_ground_0000s_0003_06_hd_v1.png",
+      "referenceSize": [
+        216,
+        67
+      ],
+      "outputSize": [
+        432,
+        134
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "road_ground_0000s_0004_05",
+      "family": "road",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Roads/road_ground_0000s_0004_05_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/road_ground_0000s_0004_05_source.png",
+      "file": "road_ground_0000s_0004_05_hd_v1.png",
+      "referenceSize": [
+        156,
+        123
+      ],
+      "outputSize": [
+        312,
+        246
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "road_ground_0000s_0005_04",
+      "family": "road",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Roads/road_ground_0000s_0005_04_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/road_ground_0000s_0005_04_source.png",
+      "file": "road_ground_0000s_0005_04_hd_v1.png",
+      "referenceSize": [
+        159,
+        125
+      ],
+      "outputSize": [
+        318,
+        250
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "road_ground_0000s_0006_03",
+      "family": "road",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Roads/road_ground_0000s_0006_03_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/road_ground_0000s_0006_03_source.png",
+      "file": "road_ground_0000s_0006_03_hd_v1.png",
+      "referenceSize": [
+        212,
+        67
+      ],
+      "outputSize": [
+        424,
+        134
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "road_ground_0000s_0007_02",
+      "family": "road",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Roads/road_ground_0000s_0007_02_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/road_ground_0000s_0007_02_source.png",
+      "file": "road_ground_0000s_0007_02_hd_v1.png",
+      "referenceSize": [
+        205,
+        73
+      ],
+      "outputSize": [
+        410,
+        146
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "road_ground_0001s_0000_straight_08",
+      "family": "road",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Roads/road_ground_0001s_0000_straight_08_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/road_ground_0001s_0000_straight_08_source.png",
+      "file": "road_ground_0001s_0000_straight_08_hd_v1.png",
+      "referenceSize": [
+        203,
+        112
+      ],
+      "outputSize": [
+        406,
+        224
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "road_ground_0001s_0001_straight_07",
+      "family": "road",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Roads/road_ground_0001s_0001_straight_07_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/road_ground_0001s_0001_straight_07_source.png",
+      "file": "road_ground_0001s_0001_straight_07_hd_v1.png",
+      "referenceSize": [
+        203,
+        111
+      ],
+      "outputSize": [
+        406,
+        222
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "road_ground_0001s_0002_straight_06",
+      "family": "road",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Roads/road_ground_0001s_0002_straight_06_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/road_ground_0001s_0002_straight_06_source.png",
+      "file": "road_ground_0001s_0002_straight_06_hd_v1.png",
+      "referenceSize": [
+        202,
+        111
+      ],
+      "outputSize": [
+        404,
+        222
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "road_ground_0001s_0003_straight_05",
+      "family": "road",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Roads/road_ground_0001s_0003_straight_05_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/road_ground_0001s_0003_straight_05_source.png",
+      "file": "road_ground_0001s_0003_straight_05_hd_v1.png",
+      "referenceSize": [
+        175,
+        112
+      ],
+      "outputSize": [
+        350,
+        224
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "road_ground_0001s_0004_straight_04",
+      "family": "road",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Roads/road_ground_0001s_0004_straight_04_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/road_ground_0001s_0004_straight_04_source.png",
+      "file": "road_ground_0001s_0004_straight_04_hd_v1.png",
+      "referenceSize": [
+        204,
+        112
+      ],
+      "outputSize": [
+        408,
+        224
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "road_ground_0001s_0005_straight_03",
+      "family": "road",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Roads/road_ground_0001s_0005_straight_03_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/road_ground_0001s_0005_straight_03_source.png",
+      "file": "road_ground_0001s_0005_straight_03_hd_v1.png",
+      "referenceSize": [
+        203,
+        112
+      ],
+      "outputSize": [
+        406,
+        224
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "road_ground_0001s_0006_straight_02",
+      "family": "road",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Roads/road_ground_0001s_0006_straight_02_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/road_ground_0001s_0006_straight_02_source.png",
+      "file": "road_ground_0001s_0006_straight_02_hd_v1.png",
+      "referenceSize": [
+        203,
+        112
+      ],
+      "outputSize": [
+        406,
+        224
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "road_ground_0001s_0007_straight_01",
+      "family": "road",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Roads/road_ground_0001s_0007_straight_01_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/road_ground_0001s_0007_straight_01_source.png",
+      "file": "road_ground_0001s_0007_straight_01_hd_v1.png",
+      "referenceSize": [
+        203,
+        112
+      ],
+      "outputSize": [
+        406,
+        224
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "road_ground_0002s_0000_08",
+      "family": "road",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Roads/road_ground_0002s_0000_08_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/road_ground_0002s_0000_08_source.png",
+      "file": "road_ground_0002s_0000_08_hd_v1.png",
+      "referenceSize": [
+        195,
+        112
+      ],
+      "outputSize": [
+        390,
+        224
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "road_ground_0002s_0001_07",
+      "family": "road",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Roads/road_ground_0002s_0001_07_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/road_ground_0002s_0001_07_source.png",
+      "file": "road_ground_0002s_0001_07_hd_v1.png",
+      "referenceSize": [
+        196,
+        112
+      ],
+      "outputSize": [
+        392,
+        224
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "road_ground_0002s_0002_06",
+      "family": "road",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Roads/road_ground_0002s_0002_06_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/road_ground_0002s_0002_06_source.png",
+      "file": "road_ground_0002s_0002_06_hd_v1.png",
+      "referenceSize": [
+        165,
+        91
+      ],
+      "outputSize": [
+        330,
+        182
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "road_ground_0002s_0003_05",
+      "family": "road",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Roads/road_ground_0002s_0003_05_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/road_ground_0002s_0003_05_source.png",
+      "file": "road_ground_0002s_0003_05_hd_v1.png",
+      "referenceSize": [
+        168,
+        96
+      ],
+      "outputSize": [
+        336,
+        192
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "road_ground_0002s_0004_04",
+      "family": "road",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Roads/road_ground_0002s_0004_04_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/road_ground_0002s_0004_04_source.png",
+      "file": "road_ground_0002s_0004_04_hd_v1.png",
+      "referenceSize": [
+        195,
+        112
+      ],
+      "outputSize": [
+        390,
+        224
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "road_ground_0002s_0005_03",
+      "family": "road",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Roads/road_ground_0002s_0005_03_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/road_ground_0002s_0005_03_source.png",
+      "file": "road_ground_0002s_0005_03_hd_v1.png",
+      "referenceSize": [
+        196,
+        112
+      ],
+      "outputSize": [
+        392,
+        224
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "road_ground_0002s_0006_02",
+      "family": "road",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Roads/road_ground_0002s_0006_02_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/road_ground_0002s_0006_02_source.png",
+      "file": "road_ground_0002s_0006_02_hd_v1.png",
+      "referenceSize": [
+        165,
+        91
+      ],
+      "outputSize": [
+        330,
+        182
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "road_ground_0002s_0007_01",
+      "family": "road",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Roads/road_ground_0002s_0007_01_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/road_ground_0002s_0007_01_source.png",
+      "file": "road_ground_0002s_0007_01_hd_v1.png",
+      "referenceSize": [
+        168,
+        95
+      ],
+      "outputSize": [
+        336,
+        190
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "road_ground_0003s_0000_curve_8",
+      "family": "road",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Roads/road_ground_0003s_0000_curve_8_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/road_ground_0003s_0000_curve_8_source.png",
+      "file": "road_ground_0003s_0000_curve_8_hd_v1.png",
+      "referenceSize": [
+        138,
+        121
+      ],
+      "outputSize": [
+        276,
+        242
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "road_ground_0003s_0001_curve_7",
+      "family": "road",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Roads/road_ground_0003s_0001_curve_7_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/road_ground_0003s_0001_curve_7_source.png",
+      "file": "road_ground_0003s_0001_curve_7_hd_v1.png",
+      "referenceSize": [
+        201,
+        80
+      ],
+      "outputSize": [
+        402,
+        160
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "road_ground_0003s_0003_curve_5",
+      "family": "road",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Roads/road_ground_0003s_0003_curve_5_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/road_ground_0003s_0003_curve_5_source.png",
+      "file": "road_ground_0003s_0003_curve_5_hd_v1.png",
+      "referenceSize": [
+        131,
+        128
+      ],
+      "outputSize": [
+        262,
+        256
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "road_ground_0003s_0004_curve_4",
+      "family": "road",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Roads/road_ground_0003s_0004_curve_4_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/road_ground_0003s_0004_curve_4_source.png",
+      "file": "road_ground_0003s_0004_curve_4_hd_v1.png",
+      "referenceSize": [
+        145,
+        140
+      ],
+      "outputSize": [
+        290,
+        280
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "road_ground_0003s_0005_curve_3",
+      "family": "road",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Roads/road_ground_0003s_0005_curve_3_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/road_ground_0003s_0005_curve_3_source.png",
+      "file": "road_ground_0003s_0005_curve_3_hd_v1.png",
+      "referenceSize": [
+        212,
+        81
+      ],
+      "outputSize": [
+        424,
+        162
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "road_ground_0003s_0006_curve_2",
+      "family": "road",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Roads/road_ground_0003s_0006_curve_2_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/road_ground_0003s_0006_curve_2_source.png",
+      "file": "road_ground_0003s_0006_curve_2_hd_v1.png",
+      "referenceSize": [
+        191,
+        67
+      ],
+      "outputSize": [
+        382,
+        134
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "road_ground_0003s_0007_curve_1",
+      "family": "road",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Roads/road_ground_0003s_0007_curve_1_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/road_ground_0003s_0007_curve_1_source.png",
+      "file": "road_ground_0003s_0007_curve_1_hd_v1.png",
+      "referenceSize": [
+        135,
+        144
+      ],
+      "outputSize": [
+        270,
+        288
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "road_ground_0004s_0000_curve_08",
+      "family": "road",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Roads/road_ground_0004s_0000_curve_08_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/road_ground_0004s_0000_curve_08_source.png",
+      "file": "road_ground_0004s_0000_curve_08_hd_v1.png",
+      "referenceSize": [
+        52,
+        66
+      ],
+      "outputSize": [
+        104,
+        132
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "road_ground_0004s_0001_curve_07",
+      "family": "road",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Roads/road_ground_0004s_0001_curve_07_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/road_ground_0004s_0001_curve_07_source.png",
+      "file": "road_ground_0004s_0001_curve_07_hd_v1.png",
+      "referenceSize": [
+        109,
+        32
+      ],
+      "outputSize": [
+        218,
+        64
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "road_ground_0004s_0002_curve_06",
+      "family": "road",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Roads/road_ground_0004s_0002_curve_06_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/road_ground_0004s_0002_curve_06_source.png",
+      "file": "road_ground_0004s_0002_curve_06_hd_v1.png",
+      "referenceSize": [
+        124,
+        26
+      ],
+      "outputSize": [
+        248,
+        52
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "road_ground_0004s_0003_curve_05",
+      "family": "road",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Roads/road_ground_0004s_0003_curve_05_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/road_ground_0004s_0003_curve_05_source.png",
+      "file": "road_ground_0004s_0003_curve_05_hd_v1.png",
+      "referenceSize": [
+        62,
+        67
+      ],
+      "outputSize": [
+        124,
+        134
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "road_ground_0004s_0004_curve_04",
+      "family": "road",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Roads/road_ground_0004s_0004_curve_04_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/road_ground_0004s_0004_curve_04_source.png",
+      "file": "road_ground_0004s_0004_curve_04_hd_v1.png",
+      "referenceSize": [
+        57,
+        68
+      ],
+      "outputSize": [
+        114,
+        136
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "road_ground_0004s_0005_curve_03",
+      "family": "road",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Roads/road_ground_0004s_0005_curve_03_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/road_ground_0004s_0005_curve_03_source.png",
+      "file": "road_ground_0004s_0005_curve_03_hd_v1.png",
+      "referenceSize": [
+        113,
+        35
+      ],
+      "outputSize": [
+        226,
+        70
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "road_ground_0004s_0006_curve_02",
+      "family": "road",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Roads/road_ground_0004s_0006_curve_02_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/road_ground_0004s_0006_curve_02_source.png",
+      "file": "road_ground_0004s_0006_curve_02_hd_v1.png",
+      "referenceSize": [
+        91,
+        30
+      ],
+      "outputSize": [
+        182,
+        60
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "road_ground_0004s_0007_curve_01",
+      "family": "road",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Roads/road_ground_0004s_0007_curve_01_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/road_ground_0004s_0007_curve_01_source.png",
+      "file": "road_ground_0004s_0007_curve_01_hd_v1.png",
+      "referenceSize": [
+        57,
+        63
+      ],
+      "outputSize": [
+        114,
+        126
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "road_ground_0005s_0000_06",
+      "family": "road",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Roads/road_ground_0005s_0000_06_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/road_ground_0005s_0000_06_source.png",
+      "file": "road_ground_0005s_0000_06_hd_v1.png",
+      "referenceSize": [
+        112,
+        62
+      ],
+      "outputSize": [
+        224,
+        124
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "road_ground_0005s_0001_05",
+      "family": "road",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Roads/road_ground_0005s_0001_05_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/road_ground_0005s_0001_05_source.png",
+      "file": "road_ground_0005s_0001_05_hd_v1.png",
+      "referenceSize": [
+        111,
+        57
+      ],
+      "outputSize": [
+        222,
+        114
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "road_ground_0005s_0002_04",
+      "family": "road",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Roads/road_ground_0005s_0002_04_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/road_ground_0005s_0002_04_source.png",
+      "file": "road_ground_0005s_0002_04_hd_v1.png",
+      "referenceSize": [
+        111,
+        57
+      ],
+      "outputSize": [
+        222,
+        114
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "road_ground_0005s_0003_03",
+      "family": "road",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Roads/road_ground_0005s_0003_03_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/road_ground_0005s_0003_03_source.png",
+      "file": "road_ground_0005s_0003_03_hd_v1.png",
+      "referenceSize": [
+        112,
+        62
+      ],
+      "outputSize": [
+        224,
+        124
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "road_ground_0005s_0004_02",
+      "family": "road",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Roads/road_ground_0005s_0004_02_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/road_ground_0005s_0004_02_source.png",
+      "file": "road_ground_0005s_0004_02_hd_v1.png",
+      "referenceSize": [
+        112,
+        57
+      ],
+      "outputSize": [
+        224,
+        114
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "road_ground_0005s_0005_01",
+      "family": "road",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Roads/road_ground_0005s_0005_01_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/road_ground_0005s_0005_01_source.png",
+      "file": "road_ground_0005s_0005_01_hd_v1.png",
+      "referenceSize": [
+        110,
+        57
+      ],
+      "outputSize": [
+        220,
+        114
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "spot_01_entrance_000",
+      "family": "ground_spot",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Spots/spot_01_entrance_000_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/spot_01_entrance_000_source.png",
+      "file": "spot_01_entrance_000_hd_v1.png",
+      "referenceSize": [
+        141,
+        74
+      ],
+      "outputSize": [
+        282,
+        148
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "spot_01_entrance_001",
+      "family": "ground_spot",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Spots/spot_01_entrance_001_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/spot_01_entrance_001_source.png",
+      "file": "spot_01_entrance_001_hd_v1.png",
+      "referenceSize": [
+        139,
+        79
+      ],
+      "outputSize": [
+        278,
+        158
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "spot_01_entrance_002",
+      "family": "ground_spot",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Spots/spot_01_entrance_002_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/spot_01_entrance_002_source.png",
+      "file": "spot_01_entrance_002_hd_v1.png",
+      "referenceSize": [
+        145,
+        72
+      ],
+      "outputSize": [
+        290,
+        144
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "spot_01_entrance_003",
+      "family": "ground_spot",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Spots/spot_01_entrance_003_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/spot_01_entrance_003_source.png",
+      "file": "spot_01_entrance_003_hd_v1.png",
+      "referenceSize": [
+        157,
+        77
+      ],
+      "outputSize": [
+        314,
+        154
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "spot_01_entrance_004",
+      "family": "ground_spot",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Spots/spot_01_entrance_004_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/spot_01_entrance_004_source.png",
+      "file": "spot_01_entrance_004_hd_v1.png",
+      "referenceSize": [
+        150,
+        79
+      ],
+      "outputSize": [
+        300,
+        158
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "spot_01_entrance_005",
+      "family": "ground_spot",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Spots/spot_01_entrance_005_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/spot_01_entrance_005_source.png",
+      "file": "spot_01_entrance_005_hd_v1.png",
+      "referenceSize": [
+        145,
+        72
+      ],
+      "outputSize": [
+        290,
+        144
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "spot_01_entrance_006",
+      "family": "ground_spot",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Spots/spot_01_entrance_006_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/spot_01_entrance_006_source.png",
+      "file": "spot_01_entrance_006_hd_v1.png",
+      "referenceSize": [
+        145,
+        74
+      ],
+      "outputSize": [
+        290,
+        148
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "spot_01_entrance_007",
+      "family": "ground_spot",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Spots/spot_01_entrance_007_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/spot_01_entrance_007_source.png",
+      "file": "spot_01_entrance_007_hd_v1.png",
+      "referenceSize": [
+        141,
+        72
+      ],
+      "outputSize": [
+        282,
+        144
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "spot_01_ground_000",
+      "family": "ground_spot",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Spots/spot_01_ground_000_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/spot_01_ground_000_source.png",
+      "file": "spot_01_ground_000_hd_v1.png",
+      "referenceSize": [
+        254,
+        149
+      ],
+      "outputSize": [
+        508,
+        298
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "spot_01_ground_001",
+      "family": "ground_spot",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Spots/spot_01_ground_001_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/spot_01_ground_001_source.png",
+      "file": "spot_01_ground_001_hd_v1.png",
+      "referenceSize": [
+        223,
+        124
+      ],
+      "outputSize": [
+        446,
+        248
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "spot_01_ground_002",
+      "family": "ground_spot",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Spots/spot_01_ground_002_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/spot_01_ground_002_source.png",
+      "file": "spot_01_ground_002_hd_v1.png",
+      "referenceSize": [
+        238,
+        132
+      ],
+      "outputSize": [
+        476,
+        264
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "spot_01_ground_003",
+      "family": "ground_spot",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Spots/spot_01_ground_003_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/spot_01_ground_003_source.png",
+      "file": "spot_01_ground_003_hd_v1.png",
+      "referenceSize": [
+        192,
+        114
+      ],
+      "outputSize": [
+        384,
+        228
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "spot_01_ground_004",
+      "family": "ground_spot",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Spots/spot_01_ground_004_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/spot_01_ground_004_source.png",
+      "file": "spot_01_ground_004_hd_v1.png",
+      "referenceSize": [
+        206,
+        115
+      ],
+      "outputSize": [
+        412,
+        230
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "spot_01_ground_005",
+      "family": "ground_spot",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Spots/spot_01_ground_005_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/spot_01_ground_005_source.png",
+      "file": "spot_01_ground_005_hd_v1.png",
+      "referenceSize": [
+        222,
+        109
+      ],
+      "outputSize": [
+        444,
+        218
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "spot_01_ground_006",
+      "family": "ground_spot",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Spots/spot_01_ground_006_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/spot_01_ground_006_source.png",
+      "file": "spot_01_ground_006_hd_v1.png",
+      "referenceSize": [
+        198,
+        94
+      ],
+      "outputSize": [
+        396,
+        188
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "spot_01_ground_007",
+      "family": "ground_spot",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Spots/spot_01_ground_007_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/spot_01_ground_007_source.png",
+      "file": "spot_01_ground_007_hd_v1.png",
+      "referenceSize": [
+        182,
+        93
+      ],
+      "outputSize": [
+        364,
+        186
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "spot_01_ground_008",
+      "family": "ground_spot",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Spots/spot_01_ground_008_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/spot_01_ground_008_source.png",
+      "file": "spot_01_ground_008_hd_v1.png",
+      "referenceSize": [
+        172,
+        78
+      ],
+      "outputSize": [
+        344,
+        156
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "spot_01_ground_009",
+      "family": "ground_spot",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Spots/spot_01_ground_009_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/spot_01_ground_009_source.png",
+      "file": "spot_01_ground_009_hd_v1.png",
+      "referenceSize": [
+        157,
+        95
+      ],
+      "outputSize": [
+        314,
+        190
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "spot_01_ground_010",
+      "family": "ground_spot",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Spots/spot_01_ground_010_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/spot_01_ground_010_source.png",
+      "file": "spot_01_ground_010_hd_v1.png",
+      "referenceSize": [
+        157,
+        72
+      ],
+      "outputSize": [
+        314,
+        144
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "spot_01_ground_011",
+      "family": "ground_spot",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Spots/spot_01_ground_011_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/spot_01_ground_011_source.png",
+      "file": "spot_01_ground_011_hd_v1.png",
+      "referenceSize": [
+        110,
+        65
+      ],
+      "outputSize": [
+        220,
+        130
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "spot_01_yard_000",
+      "family": "ground_spot",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Spots/spot_01_yard_000_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/spot_01_yard_000_source.png",
+      "file": "spot_01_yard_000_hd_v1.png",
+      "referenceSize": [
+        303,
+        178
+      ],
+      "outputSize": [
+        606,
+        356
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "spot_01_yard_001",
+      "family": "ground_spot",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Spots/spot_01_yard_001_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/spot_01_yard_001_source.png",
+      "file": "spot_01_yard_001_hd_v1.png",
+      "referenceSize": [
+        276,
+        140
+      ],
+      "outputSize": [
+        552,
+        280
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "spot_01_yard_002",
+      "family": "ground_spot",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Spots/spot_01_yard_002_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/spot_01_yard_002_source.png",
+      "file": "spot_01_yard_002_hd_v1.png",
+      "referenceSize": [
+        243,
+        120
+      ],
+      "outputSize": [
+        486,
+        240
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "spot_01_yard_003",
+      "family": "ground_spot",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Spots/spot_01_yard_003_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/spot_01_yard_003_source.png",
+      "file": "spot_01_yard_003_hd_v1.png",
+      "referenceSize": [
+        200,
+        107
+      ],
+      "outputSize": [
+        400,
+        214
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "spot_01_yard_004",
+      "family": "ground_spot",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Spots/spot_01_yard_004_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/spot_01_yard_004_source.png",
+      "file": "spot_01_yard_004_hd_v1.png",
+      "referenceSize": [
+        208,
+        109
+      ],
+      "outputSize": [
+        416,
+        218
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "spot_01_yard_005",
+      "family": "ground_spot",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Spots/spot_01_yard_005_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/spot_01_yard_005_source.png",
+      "file": "spot_01_yard_005_hd_v1.png",
+      "referenceSize": [
+        191,
+        107
+      ],
+      "outputSize": [
+        382,
+        214
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "spot_01_yard_006",
+      "family": "ground_spot",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Spots/spot_01_yard_006_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/spot_01_yard_006_source.png",
+      "file": "spot_01_yard_006_hd_v1.png",
+      "referenceSize": [
+        189,
+        102
+      ],
+      "outputSize": [
+        378,
+        204
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "spot_01_yard_007",
+      "family": "ground_spot",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Spots/spot_01_yard_007_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/spot_01_yard_007_source.png",
+      "file": "spot_01_yard_007_hd_v1.png",
+      "referenceSize": [
+        178,
+        91
+      ],
+      "outputSize": [
+        356,
+        182
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "spot_01_yard_008",
+      "family": "ground_spot",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Spots/spot_01_yard_008_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/spot_01_yard_008_source.png",
+      "file": "spot_01_yard_008_hd_v1.png",
+      "referenceSize": [
+        161,
+        82
+      ],
+      "outputSize": [
+        322,
+        164
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "spot_01_yard_009",
+      "family": "ground_spot",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Spots/spot_01_yard_009_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/spot_01_yard_009_source.png",
+      "file": "spot_01_yard_009_hd_v1.png",
+      "referenceSize": [
+        162,
+        82
+      ],
+      "outputSize": [
+        324,
+        164
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "spot_01_yard_010",
+      "family": "ground_spot",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Spots/spot_01_yard_010_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/spot_01_yard_010_source.png",
+      "file": "spot_01_yard_010_hd_v1.png",
+      "referenceSize": [
+        164,
+        83
+      ],
+      "outputSize": [
+        328,
+        166
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "terrain_forest_01_000",
+      "family": "terrain",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Terrains/terrain_forest_01_000_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/terrain_forest_01_000_source.png",
+      "file": "terrain_forest_01_000_hd_v1.png",
+      "referenceSize": [
+        253,
+        125
+      ],
+      "outputSize": [
+        506,
+        250
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "terrain_forest_01_001",
+      "family": "terrain",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Terrains/terrain_forest_01_001_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/terrain_forest_01_001_source.png",
+      "file": "terrain_forest_01_001_hd_v1.png",
+      "referenceSize": [
+        247,
+        122
+      ],
+      "outputSize": [
+        494,
+        244
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "terrain_forest_01_002",
+      "family": "terrain",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Terrains/terrain_forest_01_002_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/terrain_forest_01_002_source.png",
+      "file": "terrain_forest_01_002_hd_v1.png",
+      "referenceSize": [
+        208,
+        97
+      ],
+      "outputSize": [
+        416,
+        194
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "terrain_forest_01_003",
+      "family": "terrain",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Terrains/terrain_forest_01_003_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/terrain_forest_01_003_source.png",
+      "file": "terrain_forest_01_003_hd_v1.png",
+      "referenceSize": [
+        204,
+        95
+      ],
+      "outputSize": [
+        408,
+        190
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "terrain_forest_01_004",
+      "family": "terrain",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Terrains/terrain_forest_01_004_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/terrain_forest_01_004_source.png",
+      "file": "terrain_forest_01_004_hd_v1.png",
+      "referenceSize": [
+        179,
+        91
+      ],
+      "outputSize": [
+        358,
+        182
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "terrain_forest_01_005",
+      "family": "terrain",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Terrains/terrain_forest_01_005_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/terrain_forest_01_005_source.png",
+      "file": "terrain_forest_01_005_hd_v1.png",
+      "referenceSize": [
+        186,
+        88
+      ],
+      "outputSize": [
+        372,
+        176
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "terrain_forest_01_007",
+      "family": "terrain",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Terrains/terrain_forest_01_007_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/terrain_forest_01_007_source.png",
+      "file": "terrain_forest_01_007_hd_v1.png",
+      "referenceSize": [
+        125,
+        63
+      ],
+      "outputSize": [
+        250,
+        126
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "terrain_forest_01_008",
+      "family": "terrain",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Terrains/terrain_forest_01_008_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/terrain_forest_01_008_source.png",
+      "file": "terrain_forest_01_008_hd_v1.png",
+      "referenceSize": [
+        94,
+        48
+      ],
+      "outputSize": [
+        188,
+        96
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "terrain_forest_01_009",
+      "family": "terrain",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Terrains/terrain_forest_01_009_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/terrain_forest_01_009_source.png",
+      "file": "terrain_forest_01_009_hd_v1.png",
+      "referenceSize": [
+        94,
+        47
+      ],
+      "outputSize": [
+        188,
+        94
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "terrain_forest_01_010",
+      "family": "terrain",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Terrains/terrain_forest_01_010_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/terrain_forest_01_010_source.png",
+      "file": "terrain_forest_01_010_hd_v1.png",
+      "referenceSize": [
+        246,
+        120
+      ],
+      "outputSize": [
+        492,
+        240
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "terrain_forest_01_011",
+      "family": "terrain",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Terrains/terrain_forest_01_011_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/terrain_forest_01_011_source.png",
+      "file": "terrain_forest_01_011_hd_v1.png",
+      "referenceSize": [
+        255,
+        129
+      ],
+      "outputSize": [
+        510,
+        258
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "terrain_forest_01_012",
+      "family": "terrain",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Terrains/terrain_forest_01_012_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/terrain_forest_01_012_source.png",
+      "file": "terrain_forest_01_012_hd_v1.png",
+      "referenceSize": [
+        209,
+        100
+      ],
+      "outputSize": [
+        418,
+        200
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "terrain_forest_01_013",
+      "family": "terrain",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Terrains/terrain_forest_01_013_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/terrain_forest_01_013_source.png",
+      "file": "terrain_forest_01_013_hd_v1.png",
+      "referenceSize": [
+        191,
+        95
+      ],
+      "outputSize": [
+        382,
+        190
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "terrain_forest_01_014",
+      "family": "terrain",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Terrains/terrain_forest_01_014_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/terrain_forest_01_014_source.png",
+      "file": "terrain_forest_01_014_hd_v1.png",
+      "referenceSize": [
+        177,
+        90
+      ],
+      "outputSize": [
+        354,
+        180
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "terrain_forest_01_015",
+      "family": "terrain",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Terrains/terrain_forest_01_015_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/terrain_forest_01_015_source.png",
+      "file": "terrain_forest_01_015_hd_v1.png",
+      "referenceSize": [
+        185,
+        89
+      ],
+      "outputSize": [
+        370,
+        178
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "terrain_forest_01_016",
+      "family": "terrain",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Terrains/terrain_forest_01_016_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/terrain_forest_01_016_source.png",
+      "file": "terrain_forest_01_016_hd_v1.png",
+      "referenceSize": [
+        132,
+        65
+      ],
+      "outputSize": [
+        264,
+        130
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "terrain_forest_01_017",
+      "family": "terrain",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Terrains/terrain_forest_01_017_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/terrain_forest_01_017_source.png",
+      "file": "terrain_forest_01_017_hd_v1.png",
+      "referenceSize": [
+        126,
+        63
+      ],
+      "outputSize": [
+        252,
+        126
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "terrain_forest_01_018",
+      "family": "terrain",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Terrains/terrain_forest_01_018_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/terrain_forest_01_018_source.png",
+      "file": "terrain_forest_01_018_hd_v1.png",
+      "referenceSize": [
+        96,
+        48
+      ],
+      "outputSize": [
+        192,
+        96
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "terrain_forest_01_019",
+      "family": "terrain",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Terrains/terrain_forest_01_019_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/terrain_forest_01_019_source.png",
+      "file": "terrain_forest_01_019_hd_v1.png",
+      "referenceSize": [
+        96,
+        50
+      ],
+      "outputSize": [
+        192,
+        100
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "terrain_sand_01_000",
+      "family": "terrain",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Terrains/terrain_sand_01_000_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/terrain_sand_01_000_source.png",
+      "file": "terrain_sand_01_000_hd_v1.png",
+      "referenceSize": [
+        208,
+        113
+      ],
+      "outputSize": [
+        416,
+        226
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "terrain_sand_01_001",
+      "family": "terrain",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Terrains/terrain_sand_01_001_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/terrain_sand_01_001_source.png",
+      "file": "terrain_sand_01_001_hd_v1.png",
+      "referenceSize": [
+        227,
+        112
+      ],
+      "outputSize": [
+        454,
+        224
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "terrain_sand_01_002",
+      "family": "terrain",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Terrains/terrain_sand_01_002_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/terrain_sand_01_002_source.png",
+      "file": "terrain_sand_01_002_hd_v1.png",
+      "referenceSize": [
+        184,
+        92
+      ],
+      "outputSize": [
+        368,
+        184
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "terrain_sand_01_003",
+      "family": "terrain",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Terrains/terrain_sand_01_003_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/terrain_sand_01_003_source.png",
+      "file": "terrain_sand_01_003_hd_v1.png",
+      "referenceSize": [
+        192,
+        92
+      ],
+      "outputSize": [
+        384,
+        184
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "terrain_sand_01_004",
+      "family": "terrain",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Terrains/terrain_sand_01_004_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/terrain_sand_01_004_source.png",
+      "file": "terrain_sand_01_004_hd_v1.png",
+      "referenceSize": [
+        162,
+        85
+      ],
+      "outputSize": [
+        324,
+        170
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "terrain_sand_01_005",
+      "family": "terrain",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Terrains/terrain_sand_01_005_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/terrain_sand_01_005_source.png",
+      "file": "terrain_sand_01_005_hd_v1.png",
+      "referenceSize": [
+        164,
+        87
+      ],
+      "outputSize": [
+        328,
+        174
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "terrain_sand_01_006",
+      "family": "terrain",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Terrains/terrain_sand_01_006_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/terrain_sand_01_006_source.png",
+      "file": "terrain_sand_01_006_hd_v1.png",
+      "referenceSize": [
+        122,
+        60
+      ],
+      "outputSize": [
+        244,
+        120
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "terrain_sand_01_007",
+      "family": "terrain",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Terrains/terrain_sand_01_007_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/terrain_sand_01_007_source.png",
+      "file": "terrain_sand_01_007_hd_v1.png",
+      "referenceSize": [
+        123,
+        61
+      ],
+      "outputSize": [
+        246,
+        122
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "terrain_sand_01_008",
+      "family": "terrain",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Terrains/terrain_sand_01_008_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/terrain_sand_01_008_source.png",
+      "file": "terrain_sand_01_008_hd_v1.png",
+      "referenceSize": [
+        87,
+        45
+      ],
+      "outputSize": [
+        174,
+        90
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "terrain_sand_01_009",
+      "family": "terrain",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Terrains/terrain_sand_01_009_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/terrain_sand_01_009_source.png",
+      "file": "terrain_sand_01_009_hd_v1.png",
+      "referenceSize": [
+        87,
+        43
+      ],
+      "outputSize": [
+        174,
+        86
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "terrain_sand_02_000",
+      "family": "terrain",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Terrains/terrain_sand_02_000_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/terrain_sand_02_000_source.png",
+      "file": "terrain_sand_02_000_hd_v1.png",
+      "referenceSize": [
+        230,
+        115
+      ],
+      "outputSize": [
+        460,
+        230
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "terrain_sand_02_001",
+      "family": "terrain",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Terrains/terrain_sand_02_001_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/terrain_sand_02_001_source.png",
+      "file": "terrain_sand_02_001_hd_v1.png",
+      "referenceSize": [
+        230,
+        115
+      ],
+      "outputSize": [
+        460,
+        230
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "terrain_sand_02_002",
+      "family": "terrain",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Terrains/terrain_sand_02_002_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/terrain_sand_02_002_source.png",
+      "file": "terrain_sand_02_002_hd_v1.png",
+      "referenceSize": [
+        192,
+        92
+      ],
+      "outputSize": [
+        384,
+        184
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "terrain_sand_02_003",
+      "family": "terrain",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Terrains/terrain_sand_02_003_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/terrain_sand_02_003_source.png",
+      "file": "terrain_sand_02_003_hd_v1.png",
+      "referenceSize": [
+        193,
+        91
+      ],
+      "outputSize": [
+        386,
+        182
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "terrain_sand_02_004",
+      "family": "terrain",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Terrains/terrain_sand_02_004_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/terrain_sand_02_004_source.png",
+      "file": "terrain_sand_02_004_hd_v1.png",
+      "referenceSize": [
+        166,
+        83
+      ],
+      "outputSize": [
+        332,
+        166
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "terrain_sand_02_005",
+      "family": "terrain",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Terrains/terrain_sand_02_005_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/terrain_sand_02_005_source.png",
+      "file": "terrain_sand_02_005_hd_v1.png",
+      "referenceSize": [
+        168,
+        81
+      ],
+      "outputSize": [
+        336,
+        162
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "terrain_sand_02_006",
+      "family": "terrain",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Terrains/terrain_sand_02_006_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/terrain_sand_02_006_source.png",
+      "file": "terrain_sand_02_006_hd_v1.png",
+      "referenceSize": [
+        123,
+        60
+      ],
+      "outputSize": [
+        246,
+        120
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "terrain_sand_02_007",
+      "family": "terrain",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Terrains/terrain_sand_02_007_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/terrain_sand_02_007_source.png",
+      "file": "terrain_sand_02_007_hd_v1.png",
+      "referenceSize": [
+        122,
+        61
+      ],
+      "outputSize": [
+        244,
+        122
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "terrain_sand_02_008",
+      "family": "terrain",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Terrains/terrain_sand_02_008_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/terrain_sand_02_008_source.png",
+      "file": "terrain_sand_02_008_hd_v1.png",
+      "referenceSize": [
+        88,
+        45
+      ],
+      "outputSize": [
+        176,
+        90
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "terrain_sand_02_009",
+      "family": "terrain",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Terrains/terrain_sand_02_009_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/terrain_sand_02_009_source.png",
+      "file": "terrain_sand_02_009_hd_v1.png",
+      "referenceSize": [
+        86,
+        46
+      ],
+      "outputSize": [
+        172,
+        92
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "terrain_sand_03_000",
+      "family": "terrain",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Terrains/terrain_sand_03_000_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/terrain_sand_03_000_source.png",
+      "file": "terrain_sand_03_000_hd_v1.png",
+      "referenceSize": [
+        228,
+        118
+      ],
+      "outputSize": [
+        456,
+        236
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "terrain_sand_03_001",
+      "family": "terrain",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Terrains/terrain_sand_03_001_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/terrain_sand_03_001_source.png",
+      "file": "terrain_sand_03_001_hd_v1.png",
+      "referenceSize": [
+        222,
+        112
+      ],
+      "outputSize": [
+        444,
+        224
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "terrain_sand_03_002",
+      "family": "terrain",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Terrains/terrain_sand_03_002_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/terrain_sand_03_002_source.png",
+      "file": "terrain_sand_03_002_hd_v1.png",
+      "referenceSize": [
+        194,
+        93
+      ],
+      "outputSize": [
+        388,
+        186
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "terrain_sand_03_003",
+      "family": "terrain",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Terrains/terrain_sand_03_003_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/terrain_sand_03_003_source.png",
+      "file": "terrain_sand_03_003_hd_v1.png",
+      "referenceSize": [
+        183,
+        90
+      ],
+      "outputSize": [
+        366,
+        180
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "terrain_sand_03_004",
+      "family": "terrain",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Terrains/terrain_sand_03_004_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/terrain_sand_03_004_source.png",
+      "file": "terrain_sand_03_004_hd_v1.png",
+      "referenceSize": [
+        137,
+        76
+      ],
+      "outputSize": [
+        274,
+        152
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "terrain_sand_03_005",
+      "family": "terrain",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Terrains/terrain_sand_03_005_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/terrain_sand_03_005_source.png",
+      "file": "terrain_sand_03_005_hd_v1.png",
+      "referenceSize": [
+        170,
+        78
+      ],
+      "outputSize": [
+        340,
+        156
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "terrain_sand_03_006",
+      "family": "terrain",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Terrains/terrain_sand_03_006_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/terrain_sand_03_006_source.png",
+      "file": "terrain_sand_03_006_hd_v1.png",
+      "referenceSize": [
+        122,
+        60
+      ],
+      "outputSize": [
+        244,
+        120
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "terrain_sand_03_007",
+      "family": "terrain",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Terrains/terrain_sand_03_007_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/terrain_sand_03_007_source.png",
+      "file": "terrain_sand_03_007_hd_v1.png",
+      "referenceSize": [
+        116,
+        57
+      ],
+      "outputSize": [
+        232,
+        114
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "terrain_sand_03_008",
+      "family": "terrain",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Terrains/terrain_sand_03_008_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/terrain_sand_03_008_source.png",
+      "file": "terrain_sand_03_008_hd_v1.png",
+      "referenceSize": [
+        88,
+        45
+      ],
+      "outputSize": [
+        176,
+        90
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "terrain_sand_03_009",
+      "family": "terrain",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Terrains/terrain_sand_03_009_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/terrain_sand_03_009_source.png",
+      "file": "terrain_sand_03_009_hd_v1.png",
+      "referenceSize": [
+        87,
+        46
+      ],
+      "outputSize": [
+        174,
+        92
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "terrain_soil_01_000",
+      "family": "terrain",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Terrains/terrain_soil_01_000_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/terrain_soil_01_000_source.png",
+      "file": "terrain_soil_01_000_hd_v1.png",
+      "referenceSize": [
+        222,
+        117
+      ],
+      "outputSize": [
+        444,
+        234
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "terrain_soil_01_001",
+      "family": "terrain",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Terrains/terrain_soil_01_001_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/terrain_soil_01_001_source.png",
+      "file": "terrain_soil_01_001_hd_v1.png",
+      "referenceSize": [
+        226,
+        115
+      ],
+      "outputSize": [
+        452,
+        230
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "terrain_soil_01_002",
+      "family": "terrain",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Terrains/terrain_soil_01_002_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/terrain_soil_01_002_source.png",
+      "file": "terrain_soil_01_002_hd_v1.png",
+      "referenceSize": [
+        189,
+        92
+      ],
+      "outputSize": [
+        378,
+        184
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "terrain_soil_01_003",
+      "family": "terrain",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Terrains/terrain_soil_01_003_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/terrain_soil_01_003_source.png",
+      "file": "terrain_soil_01_003_hd_v1.png",
+      "referenceSize": [
+        172,
+        97
+      ],
+      "outputSize": [
+        344,
+        194
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "terrain_soil_01_004",
+      "family": "terrain",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Terrains/terrain_soil_01_004_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/terrain_soil_01_004_source.png",
+      "file": "terrain_soil_01_004_hd_v1.png",
+      "referenceSize": [
+        162,
+        77
+      ],
+      "outputSize": [
+        324,
+        154
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "terrain_soil_01_005",
+      "family": "terrain",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Terrains/terrain_soil_01_005_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/terrain_soil_01_005_source.png",
+      "file": "terrain_soil_01_005_hd_v1.png",
+      "referenceSize": [
+        167,
+        82
+      ],
+      "outputSize": [
+        334,
+        164
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "terrain_soil_01_006",
+      "family": "terrain",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Terrains/terrain_soil_01_006_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/terrain_soil_01_006_source.png",
+      "file": "terrain_soil_01_006_hd_v1.png",
+      "referenceSize": [
+        121,
+        61
+      ],
+      "outputSize": [
+        242,
+        122
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "terrain_soil_01_007",
+      "family": "terrain",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Terrains/terrain_soil_01_007_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/terrain_soil_01_007_source.png",
+      "file": "terrain_soil_01_007_hd_v1.png",
+      "referenceSize": [
+        94,
+        60
+      ],
+      "outputSize": [
+        188,
+        120
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "terrain_soil_01_008",
+      "family": "terrain",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Terrains/terrain_soil_01_008_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/terrain_soil_01_008_source.png",
+      "file": "terrain_soil_01_008_hd_v1.png",
+      "referenceSize": [
+        87,
+        46
+      ],
+      "outputSize": [
+        174,
+        92
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "terrain_soil_01_009",
+      "family": "terrain",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Terrains/terrain_soil_01_009_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/terrain_soil_01_009_source.png",
+      "file": "terrain_soil_01_009_hd_v1.png",
+      "referenceSize": [
+        88,
+        45
+      ],
+      "outputSize": [
+        176,
+        90
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "terrain_soil_02_000",
+      "family": "terrain",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Terrains/terrain_soil_02_000_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/terrain_soil_02_000_source.png",
+      "file": "terrain_soil_02_000_hd_v1.png",
+      "referenceSize": [
+        227,
+        116
+      ],
+      "outputSize": [
+        454,
+        232
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "terrain_soil_02_001",
+      "family": "terrain",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Terrains/terrain_soil_02_001_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/terrain_soil_02_001_source.png",
+      "file": "terrain_soil_02_001_hd_v1.png",
+      "referenceSize": [
+        227,
+        112
+      ],
+      "outputSize": [
+        454,
+        224
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "terrain_soil_02_002",
+      "family": "terrain",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Terrains/terrain_soil_02_002_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/terrain_soil_02_002_source.png",
+      "file": "terrain_soil_02_002_hd_v1.png",
+      "referenceSize": [
+        146,
+        88
+      ],
+      "outputSize": [
+        292,
+        176
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "terrain_soil_02_003",
+      "family": "terrain",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Terrains/terrain_soil_02_003_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/terrain_soil_02_003_source.png",
+      "file": "terrain_soil_02_003_hd_v1.png",
+      "referenceSize": [
+        188,
+        94
+      ],
+      "outputSize": [
+        376,
+        188
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "terrain_soil_02_004",
+      "family": "terrain",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Terrains/terrain_soil_02_004_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/terrain_soil_02_004_source.png",
+      "file": "terrain_soil_02_004_hd_v1.png",
+      "referenceSize": [
+        152,
+        74
+      ],
+      "outputSize": [
+        304,
+        148
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "terrain_soil_02_005",
+      "family": "terrain",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Terrains/terrain_soil_02_005_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/terrain_soil_02_005_source.png",
+      "file": "terrain_soil_02_005_hd_v1.png",
+      "referenceSize": [
+        166,
+        79
+      ],
+      "outputSize": [
+        332,
+        158
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "terrain_soil_02_006",
+      "family": "terrain",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Terrains/terrain_soil_02_006_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/terrain_soil_02_006_source.png",
+      "file": "terrain_soil_02_006_hd_v1.png",
+      "referenceSize": [
+        120,
+        59
+      ],
+      "outputSize": [
+        240,
+        118
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "terrain_soil_02_007",
+      "family": "terrain",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Terrains/terrain_soil_02_007_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/terrain_soil_02_007_source.png",
+      "file": "terrain_soil_02_007_hd_v1.png",
+      "referenceSize": [
+        107,
+        58
+      ],
+      "outputSize": [
+        214,
+        116
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "terrain_soil_02_008",
+      "family": "terrain",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Terrains/terrain_soil_02_008_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/terrain_soil_02_008_source.png",
+      "file": "terrain_soil_02_008_hd_v1.png",
+      "referenceSize": [
+        88,
+        46
+      ],
+      "outputSize": [
+        176,
+        92
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "terrain_soil_02_009",
+      "family": "terrain",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Terrains/terrain_soil_02_009_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/terrain_soil_02_009_source.png",
+      "file": "terrain_soil_02_009_hd_v1.png",
+      "referenceSize": [
+        86,
+        45
+      ],
+      "outputSize": [
+        172,
+        90
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "tomb_001",
+      "family": "ground_feature",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Decors/tomb_001_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/tomb_001_source.png",
+      "file": "tomb_001_hd_v1.png",
+      "referenceSize": [
+        81,
+        44
+      ],
+      "outputSize": [
+        162,
+        88
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "tomb_002",
+      "family": "ground_feature",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Decors/tomb_002_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/tomb_002_source.png",
+      "file": "tomb_002_hd_v1.png",
+      "referenceSize": [
+        82,
+        43
+      ],
+      "outputSize": [
+        164,
+        86
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "tomb_003",
+      "family": "ground_feature",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Decors/tomb_003_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/tomb_003_source.png",
+      "file": "tomb_003_hd_v1.png",
+      "referenceSize": [
+        58,
+        32
+      ],
+      "outputSize": [
+        116,
+        64
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "tomb_004",
+      "family": "ground_feature",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Decors/tomb_004_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/tomb_004_source.png",
+      "file": "tomb_004_hd_v1.png",
+      "referenceSize": [
+        54,
+        29
+      ],
+      "outputSize": [
+        108,
+        58
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "tomb_005",
+      "family": "ground_feature",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Decors/tomb_005_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/tomb_005_source.png",
+      "file": "tomb_005_hd_v1.png",
+      "referenceSize": [
+        55,
+        31
+      ],
+      "outputSize": [
+        110,
+        62
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "tomb_006",
+      "family": "ground_feature",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Decors/tomb_006_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/tomb_006_source.png",
+      "file": "tomb_006_hd_v1.png",
+      "referenceSize": [
+        59,
+        30
+      ],
+      "outputSize": [
+        118,
+        60
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "tomb_007",
+      "family": "ground_feature",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Decors/tomb_007_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/tomb_007_source.png",
+      "file": "tomb_007_hd_v1.png",
+      "referenceSize": [
+        52,
+        31
+      ],
+      "outputSize": [
+        104,
+        62
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "tomb_008",
+      "family": "ground_feature",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Decors/tomb_008_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/tomb_008_source.png",
+      "file": "tomb_008_hd_v1.png",
+      "referenceSize": [
+        39,
+        22
+      ],
+      "outputSize": [
+        78,
+        44
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "tomb_009",
+      "family": "ground_feature",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Decors/tomb_009_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/tomb_009_source.png",
+      "file": "tomb_009_hd_v1.png",
+      "referenceSize": [
+        39,
+        22
+      ],
+      "outputSize": [
+        78,
+        44
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    },
+    {
+      "id": "tomb_010",
+      "family": "ground_feature",
+      "reference": "../../../scratch/ps_sprites_canonical_v1/Objects/Decors/tomb_010_s0.png",
+      "generatedSource": "../../../tmp/ground_hd/tomb_010_source.png",
+      "file": "tomb_010_hd_v1.png",
+      "referenceSize": [
+        39,
+        23
+      ],
+      "outputSize": [
+        78,
+        46
+      ],
+      "canonicalSlot": 0,
+      "lightingContract": "ps-overcast-upper-left-v1"
+    }
+  ],
+  "generationDefinition": {
+    "useCase": "precise-object-edit",
+    "assetType": "production 2D isometric ground decal for a photorealistic WWII tactical game",
+    "referenceRole": "edit target and absolute footprint, orientation, camera, palette, and lighting reference",
+    "promptContract": [
+      "Faithfully reconstruct and upscale exactly the same isolated ground asset at substantially higher photographic detail. This is not a redesign.",
+      "Preserve the exact footprint proportions, long-axis direction, internal mass distribution, elevated 2:1 isometric/top-down viewpoint, muted low-contrast PS-era battlefield palette, and soft overcast upper-left lighting.",
+      "Lighting/mood: use only the shared ps-overcast-upper-left-v1 lighting: one large soft neutral key arriving from screen upper-left, high overcast ambient fill, highlights on upper-left-facing relief, and every micro-shadow or cast shadow toward screen lower-right. No second light, front flash, rim light, hard sun, HDR, or cinematic grading.",
+      "Change only resolution and plausible sub-pixel material detail. Do not add new semantic features, change perspective, enlarge the footprint, or create a raised object.",
+      "Render on a perfectly flat uniform solid #ff00ff chroma-key background with no gradient, texture, lighting variation, floor plane, contact shadow, reflection, text, border, watermark, or extra objects."
+    ],
+    "perFamilyConstraints": {
+      "terrain": "Preserve the irregular edge erosion and tiny embedded stones; no tracks, puddles, grass clumps, or mound.",
+      "road": "Preserve two wheel ruts, central ridge, broken ends, width, and direction; no tread pattern, deep trench, or raised roadbed.",
+      "field": "Preserve row count, gaps, spacing rhythm, tapering ends, and direction; no crops, extra rows, or embankment.",
+      "crater": "Preserve the shallow dark depression, irregular rim, and radial ejecta; no fire, smoke, glow, deep hole, or dramatic high rim."
+    },
+    "postprocess": {
+      "chromaKey": "#ff00ff",
+      "matte": "remove_chroma_key.py with border auto-key, soft matte, thresholds 12/220, and despill",
+      "normalizer": "../../../scripts/normalize_ground_hd.py",
+      "canonicalAlpha": "2x LANCZOS alpha from the PS reference",
+      "detailContrast": 1.08,
+      "colorGrade": "weighted per-channel mean and standard deviation match to the PS reference"
+    }
+  },
+  "inventory": {
+    "file": "inventory.json",
+    "schema": "ground-hd-inventory/v1",
+    "assetCount": 238
+  }
+}
