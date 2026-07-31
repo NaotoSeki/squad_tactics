@@ -26,7 +26,7 @@
       <button id="pause">pause</button>
       <button id="s1">1x</button>
       <button id="s2">2x</button>
-      <span id="fps">-- fps</span> | <span id="result">--</span>
+      <span id="fps">-- fps</span> | <span id="zoom">100%</span> | <span id="result">--</span>
     </div>
   </div>
   <div id="side">
@@ -34,6 +34,10 @@
     <div>左クリック=選択 / 右クリック=移動命令<br>
       敵を選択して <b>F</b> = A隊 全員集中射撃<br>
       <b>S</b> = A隊 制圧射撃（射程内の最寄り敵）</div>
+    <h3>視点</h3>
+    <div>ホイール=拡大縮小（カーソル基準）<br>
+      中ボタンドラッグ / 矢印キー=移動<br>
+      <b>Z</b>/<b>X</b>=拡大/縮小　<b>0</b>=リセット</div>
     <h3>選択兵</h3>
     <div id="sel">none</div>
     <h3>凡例</h3>
@@ -266,7 +270,9 @@ class SimBattleScene extends Phaser.Scene {
     this.cameras.main.centerOn(c.x, c.y);
     // キャンバスを DPR 倍で作っているので、カメラも同じだけ寄せないと
     // 高DPI環境だけ視野が広がってしまう（見える世界の広さは DPR に依らず一定）。
-    this.cameras.main.setZoom((this.psMode ? 0.8 : 1.1) * RENDER_DPR);
+    this.baseZoom = (this.psMode ? 0.8 : 1.1) * RENDER_DPR;
+    this.cameras.main.setZoom(this.baseZoom);
+    this.setupCameraBounds();
 
     this.setupInput();
     this.game.events.emit('sim-ready');
@@ -335,6 +341,62 @@ class SimBattleScene extends Phaser.Scene {
   }
 
   // ---- input (dev_sim-equivalent operations, SPEC SS17.2 #4) ----
+  /**
+   * カメラの可動範囲を盤面の絵に合わせる。これが無いと VOID の海へ流れて
+   * 現在地を見失う。ズームアウト時に盤面より視野が広くなる場合は Phaser が
+   * 自動で中央寄せするので、下限ズームを絞りすぎない限り破綻しない。
+   */
+  setupCameraBounds() {
+    const a = Renderer.hexToPx(0, 0);
+    const b = Renderer.hexToPx(this.mapData.W - 1, this.mapData.H - 1);
+    const minX = Math.min(a.x, b.x), maxX = Math.max(a.x, b.x);
+    const minY = Math.min(a.y, b.y), maxY = Math.max(a.y, b.y);
+    const pad = 200;
+    this.cameras.main.setBounds(minX - pad, minY - pad,
+      (maxX - minX) + pad * 2, (maxY - minY) + pad * 2);
+  }
+
+  /** カーソル位置を固定したままズームする（"グリグリ"の手触りはこれで決まる） */
+  zoomAt(pointer, factor) {
+    const cam = this.cameras.main;
+    const min = this.baseZoom * 0.35;
+    const max = this.baseZoom * 5;
+    const next = Math.max(min, Math.min(max, cam.zoom * factor));
+    if (next === cam.zoom) return;
+
+    // ズーム前後で「カーソルの下にあるワールド座標」を一致させる。
+    // Phaser のカメラは**ビューの中心**を軸に拡大するので、scrollX を差分で
+    // 補正しようとすると原点の扱いを取り違える（実測でステップあたり100px超ズレた）。
+    // 中心から直接求める: 画面中心からカーソルまでのオフセットはワールド換算で
+    // 1/zoom に比例するので、望みの中心 = カーソル下のワールド座標 - offset/zoom'。
+    const wp = cam.getWorldPoint(pointer.x, pointer.y);
+    const dx = pointer.x - cam.width / 2;
+    const dy = pointer.y - cam.height / 2;
+    cam.setZoom(next);
+    cam.centerOn(wp.x - dx / next, wp.y - dy / next);
+    this.updateZoomLabel();
+  }
+
+  updateZoomLabel() {
+    const el = document.getElementById('zoom');
+    if (el) el.textContent = Math.round(100 * this.cameras.main.zoom / this.baseZoom) + '%';
+  }
+
+  resetView() {
+    const all = this.sim ? this.sim.soldiers() : [];
+    let c;
+    if (this.psMode && all.length) {
+      const cq = all.reduce((a, s) => a + s.q, 0) / all.length;
+      const cr = all.reduce((a, s) => a + s.r, 0) / all.length;
+      c = Renderer.hexToPx(cq, cr);
+    } else {
+      c = Renderer.hexToPx(this.mapData.W / 2, this.mapData.H / 2);
+    }
+    this.cameras.main.setZoom(this.baseZoom);
+    this.cameras.main.centerOn(c.x, c.y);
+    this.updateZoomLabel();
+  }
+
   setupInput() {
     this.input.mouse.disableContextMenu();
     this.input.on('pointerdown', (pointer) => {
@@ -345,6 +407,25 @@ class SimBattleScene extends Phaser.Scene {
       // left-click selection is handled by UnitView's own sprite pointerdown
       // (calls gameLogic.onUnitClick) -- see phaser_unit.js createVisual().
     });
+
+    // --- 視点操作 --------------------------------------------------------
+    // 右ドラッグは移動命令、左クリックは選択に使っているので、パンは中ボタン
+    // ドラッグとキーに割り当てる（既存の操作と競合させない）。
+    this.input.on('wheel', (pointer, over, dx, dy) => {
+      this.zoomAt(pointer, dy > 0 ? 1 / 1.12 : 1.12);
+    });
+    this.input.on('pointermove', (pointer) => {
+      if (!pointer.middleButtonDown()) return;
+      const cam = this.cameras.main;
+      cam.scrollX -= (pointer.x - pointer.prevPosition.x) / cam.zoom;
+      cam.scrollY -= (pointer.y - pointer.prevPosition.y) / cam.zoom;
+    });
+    // WASD は使わない: S は制圧射撃、F は集中射撃に既に割り当てられている。
+    this.panKeys = this.input.keyboard.addKeys('UP,LEFT,DOWN,RIGHT');
+    this.input.keyboard.on('keydown-ZERO', () => this.resetView());
+    this.input.keyboard.on('keydown-Z', () => this.zoomAt({ x: this.scale.width / 2, y: this.scale.height / 2 }, 1.25));
+    this.input.keyboard.on('keydown-X', () => this.zoomAt({ x: this.scale.width / 2, y: this.scale.height / 2 }, 1 / 1.25));
+    this.updateZoomLabel();
     this.input.keyboard.on('keydown-F', () => {
       const sel = this.gameLogic.selectedUnit;
       if (!sel) return;
@@ -421,6 +502,19 @@ class SimBattleScene extends Phaser.Scene {
   // ---- the driver (SPEC SS15.2 / SS17: sim never waits for rendering) ----
   update(time, delta) {
     this.fps = Math.round(this.game.loop.actualFps);
+
+    // 矢印キーでのパン。ズーム率で割ることで、拡大していても画面上の移動量が
+    // 一定に見える（拡大時に画面がすっ飛ぶのを防ぐ）。
+    if (this.panKeys) {
+      const cam = this.cameras.main;
+      const step = (delta / 16.7) * 12 / cam.zoom * RENDER_DPR;
+      const k = this.panKeys;
+      if (k.LEFT.isDown) cam.scrollX -= step;
+      if (k.RIGHT.isDown) cam.scrollX += step;
+      if (k.UP.isDown) cam.scrollY -= step;
+      if (k.DOWN.isDown) cam.scrollY += step;
+    }
+
     const TICK = SIM_TUNING.TICK_MS;
     if (this.sim && !this.sim.result()) {
       this.acc += delta * this.speed;

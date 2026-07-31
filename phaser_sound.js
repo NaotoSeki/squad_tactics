@@ -10,6 +10,59 @@ const Sfx = {
         'tank_reload': 'asset/audio/003_tank_gun_reload.wav'
     },
 
+    /**
+     * ラウンドロビン音源群。キーは**武器コード**（logic_game.js が
+     * `Sfx.play(w.code, 'shot')` と武器コードで呼ぶ）。
+     *
+     * 同じ1ファイルを連打すると機械的に聞こえる。実銃の連射は一発ごとに
+     * 微妙に違うので、複数テイクを袋（shuffle bag）から引いて重複を避ける。
+     * 素材は scripts/audio/wav_chop.py で長尺WAVから切り出したもの。
+     */
+    variantGroups: {
+        // M1 Garand: 実録音 66秒素材から10テイクを切り出し（相関の中央値0.20＝別テイク）
+        'm1': [
+            'm1_shot_01', 'm1_shot_02', 'm1_shot_03', 'm1_shot_04', 'm1_shot_05',
+            'm1_shot_06', 'm1_shot_07', 'm1_shot_08', 'm1_shot_09', 'm1_shot_10',
+        ],
+    },
+    variantPathOf(key) { return 'asset/audio/sfx/' + key + '.wav'; },
+    _bags: {},
+    _lastVariant: {},
+
+    /**
+     * 群から1つ選ぶ。袋が空になるまで重複せず、袋を作り直す時も直前と同じテイクが
+     * 先頭に来ないようにする（"ランダム"だと体感的に同じ音が続いて聞こえるため）。
+     */
+    pickVariant(id) {
+        const list = this.variantGroups[id];
+        if (!list || !list.length) return null;
+        let bag = this._bags[id];
+        if (!bag || bag.length === 0) {
+            bag = list.slice();
+            for (let i = bag.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                const t = bag[i]; bag[i] = bag[j]; bag[j] = t;
+            }
+            if (bag.length > 1 && bag[bag.length - 1] === this._lastVariant[id]) {
+                const t = bag[bag.length - 1]; bag[bag.length - 1] = bag[0]; bag[0] = t;
+            }
+            this._bags[id] = bag;
+        }
+        const pick = bag.pop();
+        this._lastVariant[id] = pick;
+        return pick;
+    },
+
+    /** 音を鳴らせるシーンを探す。本編は MainScene、sim_battle は別シーン名。 */
+    _soundScene() {
+        const games = [window.phaserGame, window.simGame].filter(Boolean);
+        for (const g of games) {
+            const scenes = (g.scene && g.scene.getScenes) ? g.scene.getScenes(true) : [];
+            for (const s of scenes) if (s && s.sound) return s;
+        }
+        return null;
+    },
+
     // 再生間隔の制限 (ms)
     throttles: {
         'mg42': 2000, // 1回の攻撃アクションが終わるまで次を鳴らさない
@@ -44,6 +97,9 @@ const Sfx = {
     preload(scene) {
         for (const [key, path] of Object.entries(this.assets)) {
             scene.load.audio(key, path);
+        }
+        for (const list of Object.values(this.variantGroups)) {
+            for (const key of list) scene.load.audio(key, this.variantPathOf(key));
         }
     },
 
@@ -130,15 +186,23 @@ const Sfx = {
             this.lastPlayTime[id] = now;
         }
 
-        // 1. assetsに登録されたIDなら、WAVファイルを再生
+        // 1a. ラウンドロビン群が登録されていれば、そこから1テイク引いて再生
+        if (this.variantGroups[id]) {
+            const scene = this._soundScene();
+            const key = scene && this.pickVariant(id);
+            if (key && scene.sound && (!scene.cache || !scene.cache.audio || scene.cache.audio.exists(key))) {
+                scene.sound.play(key, { volume: 0.45 });
+                return;
+            }
+        }
+
+        // 1b. assetsに登録されたIDなら、WAVファイルを再生
         if (this.assets[id]) {
-            if (window.phaserGame) {
-                const main = window.phaserGame.scene.getScene('MainScene');
-                if (main && main.sound) {
-                    const vol = (id === 'tank_reload') ? 0.28 : 0.4;
-                    main.sound.play(id, { volume: vol });
-                    return; 
-                }
+            const scene = this._soundScene();
+            if (scene && scene.sound) {
+                const vol = (id === 'tank_reload') ? 0.28 : 0.4;
+                scene.sound.play(id, { volume: vol });
+                return;
             }
         }
 
