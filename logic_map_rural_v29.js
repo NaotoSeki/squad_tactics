@@ -29,6 +29,7 @@ window.RuralV29Map = {
    * - key: バリアント識別子
    * - texture: Phaserテクスチャキー
    * - file: アセットファイルパス
+   * - pixelRatio: 背景画像の任意の画素比。省略時1、2なら縦横2倍画像
    * - rot180: 180°回転適用フラグ
    * - ready: ファイルロード完了時 true（初期値はP1のみ）
    */
@@ -215,14 +216,18 @@ window.RuralV29Map = {
       if (known.has(name)) return;
       const bf = registry[name];
       if (!bf || !bf.rows || !bf.image) return;
-      this.VARIANTS.push({
+      const variant = {
         key: name,
         texture: name,
         file: `asset/environment/maps/${bf.image}`,
         rot180: false,
         ready: true,
         psNative: name
-      });
+      };
+      if (Number.isFinite(bf.pixelRatio) && bf.pixelRatio > 0) {
+        variant.pixelRatio = bf.pixelRatio;
+      }
+      this.VARIANTS.push(variant);
     });
   },
 

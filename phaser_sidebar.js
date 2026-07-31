@@ -520,6 +520,18 @@ window.PhaserSidebar = class PhaserSidebar {
                 if (bonusText.setResolution) bonusText.setResolution(2);
                 container.add(bonusText);
             }
+            const malfRate = item.effectiveMalfRate != null
+                ? Number(item.effectiveMalfRate)
+                : Number(item.malfRate != null ? item.malfRate : item.jam);
+            if (Number.isFinite(malfRate)) {
+                const malfMod = Number(item.loadedMalfMod) || 0;
+                const malfLabel = `故障:${malfRate}%` + (malfMod ? ` (+${malfMod})` : '');
+                const malfText = this.scene.add.text(8, rngDmgY + 12, malfLabel,
+                    Object.assign({}, metaStyle, { color: malfMod ? '#ffd45d' : TEXT_DIM }));
+                malfText.setOrigin(0, 0);
+                if (malfText.setResolution) malfText.setResolution(2);
+                container.add(malfText);
+            }
         }
 
         if (isMain && u.def && u.def.isTank) {

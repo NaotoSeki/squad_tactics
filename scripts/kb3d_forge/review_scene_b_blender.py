@@ -2093,16 +2093,18 @@ def camera_light(scene):
     camera.data.clip_end=500
     scene.camera=camera
     sun=bpy.data.objects["RW_ReviewSun"]
-    sun.data.energy=2.8
-    sun.data.use_shadow=False
-    sun.data.angle=math.radians(16.0)
+    sun.data.energy=3.1
+    # 2026-07-21: 影を有効化(旧False=のっぺり主因)。angleを16→6°に絞って
+    # 接地影を読ませ、フィル光を2700→1300に落として影が洗われないようにする。
+    sun.data.use_shadow=True
+    sun.data.angle=math.radians(6.0)
     sun.data.color=(1,.9,.75)
     sun.rotation_euler=(math.radians(38),math.radians(-18),math.radians(-32))
     data=bpy.data.lights.new("RWB_Fill","AREA")
     fill=bpy.data.objects.new("RWB_Fill",data)
     scene.collection.objects.link(fill)
     fill.location=(35,20,75)
-    data.energy=2700
+    data.energy=1300
     data.shape="DISK"
     data.size=65
     data.color=(.63,.67,.55)
@@ -2347,6 +2349,17 @@ def build():
         "hidden_challenge_assets":["ROUND1_CAMP","towered_farmstead_full_recipe"]}
 
 
+# Roguelike kit docking contract (supervisor-fixed numeric constants, see
+# kit_north_*/kit_south_* specs below and verify_kit_docking_contract()).
+# 2026-07-20 correction: the seam between the north piece's last row (r9,
+# wy=40.4) and the south piece's first row (r10, wy=29.6) sits at wy=35.0
+# (the row midpoint), not 45.8 - 45.8 was a stale off-by-one-row value from
+# an earlier r/m mapping draft. X stays 28.6 (unaffected by the fix, verified
+# by hand). Control points around the dock were re-picked to keep a
+# near-vertical (small dx per dy) tangent through the corrected point.
+KIT_DOCK_POINT=(28.6,35.0)
+KIT_DOCK_ROAD_CONTROLS=[(30,3),(30.5,14),(30.2,22),(29.4,28),KIT_DOCK_POINT,(28.4,42),(28.6,54),(29,66)]
+
 LOCATION_SPECS={
  "loc_crossroad":{
   "roads":[
@@ -2420,6 +2433,107 @@ LOCATION_SPECS={
       "FORGE_KB3D_WWT_BldgLgBrokenChurch_A_SandBagsC",
   ],
  },
+
+ # --- Roguelike combination kit (2026-07-20): north/south half-board pairs ---
+ # Docking contract (supervisor-fixed, not to be re-derived/re-explored):
+ #   1) every piece's main road passes through world point KIT_DOCK_POINT,
+ #      near-vertical there (small dx between neighboring control points).
+ #   2) north pieces mark terrain-table r9/q7 ROAD, south pieces r10/q7 ROAD
+ #      (see KIT_LOCATION_TERRAIN_TABLES below + verify_kit_docking_contract()).
+ #   3) seam rows (north r9 / south r10) stay ROAD/GRASS/FOREST only; the
+ #      adjoining safety-margin rows (north r8 / south r11) stay BLDG-free.
+ # kit_north_a/kit_south_a reuse the default rural base (round1_review_candidate_a
+ # .blend, LOCATION_ASSET_MAP). kit_north_b/kit_south_b reuse the round2 urban
+ # base (round2_urban_candidate_a.blend) via base_assets, same mechanism as
+ # loc_church_square.
+ "kit_north_a":{
+  # Rural vignette: farmstead + field own r7-9 (north band, wy>35.0); r10-12
+  # left as plain filler grass/forest since only r7-9 is ever composited from
+  # this piece. 2026-07-20 correction: content was previously parked at
+  # wy~11-20 (the *south* piece's own band) - moved into the north band
+  # (wy 46-66ish) so it actually survives the north-side composite crop.
+  "roads":[{"controls":KIT_DOCK_ROAD_CONTROLS,"main":True}],
+  "buildings":[("farmstead",(18,56),15)],
+  "ruins":[],
+  "fields":[("FieldNorth",(46,58),(14,8),0,6,())],
+  "fences":"auto",
+  "craters":[{"road":0,"near":(30,60),"size":(2.4,1.8),"angle":12}],
+  "tree_seed":81027,"dressing_seed":81127,
+ },
+ "kit_north_b":{
+  # Urban vignette: single residential building + light rubble own r7-9
+  # (north band, wy>35.0). 2026-07-20 correction: see kit_north_a note above -
+  # same wrong-band bug, same fix (content moved from wy~10-20 to wy~55-60).
+  "roads":[{"controls":KIT_DOCK_ROAD_CONTROLS,"main":True}],
+  "buildings":[("residential_a",(18,56),0)],
+  "ruins":[],
+  "fields":[],
+  "fences":"none",
+  "craters":[{"road":0,"near":(30,60),"size":(2.2,1.7),"angle":-10},
+             {"pos":(28,55),"size":(1.8,1.4),"angle":30}],
+  "tree_seed":82027,"dressing_seed":82127,"tree_density":0.55,
+  "road_style":"cobble",
+  # All three round2 collections must be listed even though only residential_a
+  # is used here: the used/unused hide_render loop in build_location_scene only
+  # ever visits collections that are keys of base_assets, so any round2
+  # collection omitted from this dict keeps whatever hide_render state the base
+  # .blend happened to save it in - round2_urban_candidate_a.blend saves all
+  # three visible by default, so residential_b/church_broken would otherwise
+  # silently leak into the render. Found by a black/wrong-content-render
+  # investigation, 2026-07-20.
+  "base_assets":{
+      "residential_a":("ROUND2_RESIDENTIAL_A","RW_ASSET_RESIDENTIAL_A_CURATED"),
+      "residential_b":("ROUND2_RESIDENTIAL_B","RW_ASSET_RESIDENTIAL_B_CURATED"),
+      "church_broken":("ROUND2_CHURCH_BROKEN","RW_ASSET_CHURCH_BROKEN_CURATED"),
+  },
+ },
+ "kit_south_a":{
+  # Rural vignette: barn+cottage own r10-12 (south band, wy<35.0); r7-9 left
+  # as plain filler grass/forest since only r10-12 is ever composited from
+  # this piece. 2026-07-20 correction: content was previously parked at
+  # wy~62-63 (the *north* piece's own band) - moved into the south band
+  # (wy 4-24ish) so it actually survives the south-side composite crop.
+  "roads":[{"controls":KIT_DOCK_ROAD_CONTROLS,"main":True}],
+  "buildings":[("barn",(18,17),-20),("cottage",(46,18),10)],
+  "ruins":[],
+  "fields":[],
+  "fences":"auto",
+  "craters":[{"road":0,"near":(29,12),"size":(2.5,1.9),"angle":-22}],
+  "tree_seed":83027,"dressing_seed":83127,
+ },
+ "kit_south_b":{
+  # Urban vignette, originally briefed with church_broken. Its real curated
+  # footprint is ~32x35m (bbox-probed: hw=15.9/hh=17.3 at angle0 against
+  # ROUND2_CHURCH_BROKEN/RW_ASSET_CHURCH_BROKEN_CURATED) - far larger than the
+  # ~13m-tall BLDG-eligible band left after excluding the r10 seam row and the
+  # r11 safety-margin row, so it cannot be placed without violating the docking
+  # contract's row-exclusion rules. Per the brief's explicit fallback, swapped
+  # for two residential buildings (same family as loc_church_square/kit_north_b)
+  # instead of spending further placement search on the church. Supervisor call,
+  # 2026-07-20.
+  # 2026-07-20 correction: buildings/crater were previously parked at wy~52-55
+  # (the *north* piece's own band) - moved into the south band (wy<35.0,
+  # target 4-24ish) so they actually survive the south-side composite crop.
+  "roads":[{"controls":KIT_DOCK_ROAD_CONTROLS,"main":True}],
+  # 2026-07-21: residential_b was (44,14) but x=44 is an offset-hex column gap -
+  # its wide bbox corners (hw~6.56) fell outside the board at any y (assert:
+  # bbox corner (37.44,6.12) outside board margin 1.0). Moved to (46,13), the
+  # nearest column that keeps all 4 corners inside the south band.
+  "buildings":[("residential_a",(18,17),0),("residential_b",(46,13),0)],
+  "ruins":[],
+  "fields":[],
+  "fences":"none",
+  "craters":[{"road":0,"near":(29,12),"size":(2.3,1.8),"angle":18}],
+  "tree_seed":84027,"dressing_seed":84127,"tree_density":0.55,
+  "road_style":"cobble",
+  # church_broken listed purely so the used/unused hide_render loop actually
+  # hides it - see the identical note on kit_north_b above.
+  "base_assets":{
+      "residential_a":("ROUND2_RESIDENTIAL_A","RW_ASSET_RESIDENTIAL_A_CURATED"),
+      "residential_b":("ROUND2_RESIDENTIAL_B","RW_ASSET_RESIDENTIAL_B_CURATED"),
+      "church_broken":("ROUND2_CHURCH_BROKEN","RW_ASSET_CHURCH_BROKEN_CURATED"),
+  },
+ },
 }
 
 LOCATION_ASSET_MAP={
@@ -2427,6 +2541,91 @@ LOCATION_ASSET_MAP={
     "barn":("ROUND1_BARN","RW_ASSET_BARN_CURATED"),
     "cottage":("ROUND1_COTTAGE","RW_ASSET_COTTAGE_BEAUTY"),
 }
+
+
+# Forward-authored draft terrain tables for the kit_north_*/kit_south_* combo
+# pieces, in the same compact-row format as logic_map_rural_v29.js's
+# _locationRows ([r, start_q, [bases left-to-right]]). This is a design
+# artifact for a future JS-side porting task, not wired into the game here -
+# same as the four frozen loc_* locations, real pixel-accurate terrain-table
+# authoring for those was only ever done afterward by a supervisor visually
+# inspecting the render against a grid overlay (see RENDER_UPGRADE_WORKLOG.md).
+# What IS asserted here (verify_kit_docking_contract(), pure data, no bpy) is
+# the letter of the docking contract: north r9/q7 and south r10/q7 are ROAD,
+# and the seam + safety-margin rows never carry BLDG (or FIELD in the seam
+# row itself).
+KIT_LOCATION_TERRAIN_TABLES={
+ "kit_north_a":[
+   [7,7,['BLDG','ROAD','GRASS','FIELD','FOREST']],
+   [8,6,['FOREST','GRASS','ROAD','FIELD','FIELD']],
+   [9,6,['GRASS','ROAD','GRASS','GRASS','FOREST']],
+   [10,5,['GRASS','FOREST','GRASS','FOREST','GRASS']],
+   [11,5,['FOREST','GRASS','FOREST','GRASS','FOREST']],
+   [12,4,['GRASS','FOREST','GRASS','FOREST','GRASS']],
+ ],
+ "kit_north_b":[
+   [7,7,['BLDG','ROAD','GRASS','GRASS','FOREST']],
+   [8,6,['FOREST','ROAD','GRASS','GRASS','FOREST']],
+   [9,6,['GRASS','ROAD','GRASS','GRASS','FOREST']],
+   [10,5,['GRASS','FOREST','GRASS','FOREST','GRASS']],
+   [11,5,['FOREST','GRASS','FOREST','GRASS','FOREST']],
+   [12,4,['GRASS','FOREST','GRASS','FOREST','GRASS']],
+ ],
+ "kit_south_a":[
+   [7,7,['GRASS','ROAD','FOREST','GRASS','FOREST']],
+   [8,6,['FOREST','GRASS','ROAD','GRASS','FOREST']],
+   [9,6,['GRASS','GRASS','ROAD','FOREST','GRASS']],
+   [10,5,['GRASS','FOREST','ROAD','GRASS','FOREST']],
+   [11,5,['FOREST','FIELD','ROAD','FIELD','GRASS']],
+   [12,4,['BLDG','GRASS','ROAD','GRASS','BLDG']],
+ ],
+ "kit_south_b":[
+   [7,7,['GRASS','ROAD','FOREST','GRASS','FOREST']],
+   [8,6,['FOREST','GRASS','ROAD','GRASS','FOREST']],
+   [9,6,['GRASS','GRASS','ROAD','FOREST','GRASS']],
+   [10,5,['GRASS','FOREST','ROAD','GRASS','FOREST']],
+   [11,5,['FOREST','GRASS','ROAD','GRASS','FOREST']],
+   [12,4,['BLDG','GRASS','ROAD','GRASS','BLDG']],
+ ],
+}
+
+
+def _kit_row_bases(rows,r_target):
+    for r,q0,bases in rows:
+        if r==r_target:
+            return q0,bases
+    raise AssertionError("row r=%d not found in kit terrain table"%r_target)
+
+
+def verify_kit_docking_contract():
+    """Pure-data self-check for the kit_north_*/kit_south_* docking contract
+    (no bpy dependency - safe to run via a plain Python import with bpy/bmesh/
+    mathutils stubbed, see scratchpad geom_probe-style harness). Raises
+    AssertionError on any violation; returns True on full success."""
+    for name,spec in LOCATION_SPECS.items():
+        if not (name.startswith("kit_north_") or name.startswith("kit_south_")):
+            continue
+        controls=spec["roads"][0]["controls"]
+        if KIT_DOCK_POINT not in controls:
+            raise AssertionError("%s: main road controls missing dock point %s"%(
+                name,KIT_DOCK_POINT))
+        rows=KIT_LOCATION_TERRAIN_TABLES[name]
+        seam_r,margin_r=(9,8) if name.startswith("kit_north_") else (10,11)
+        seam_q0,seam_bases=_kit_row_bases(rows,seam_r)
+        seam_index=7-seam_q0
+        if not (0<=seam_index<len(seam_bases)):
+            raise AssertionError("%s: seam row r=%d has no q=7 cell"%(name,seam_r))
+        if seam_bases[seam_index]!="ROAD":
+            raise AssertionError("%s: seam row r=%d q=7 is %s, expected ROAD"%(
+                name,seam_r,seam_bases[seam_index]))
+        if any(b in ("BLDG","FIELD") for b in seam_bases):
+            raise AssertionError("%s: seam row r=%d has BLDG/FIELD: %s"%(
+                name,seam_r,seam_bases))
+        _margin_q0,margin_bases=_kit_row_bases(rows,margin_r)
+        if "BLDG" in margin_bases:
+            raise AssertionError("%s: safety-margin row r=%d has BLDG: %s"%(
+                name,margin_r,margin_bases))
+    return True
 
 
 def _location_asset_map(spec):

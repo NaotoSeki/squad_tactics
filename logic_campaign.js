@@ -21,6 +21,8 @@ class CampaignManager {
         this.isAutoMode = false;
         this.carriedCards = [];
         this.nextPortraitIndex = 0;
+        this._startedMissionSector = null;
+        this._autodeployScheduled = false;
         window.addEventListener('load', () => this.initSetupScreen());
     }
 
@@ -75,6 +77,40 @@ class CampaignManager {
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         labelPositions.forEach((lp, i) => { ctx.fillText(labels[i] || '', cx + lp.x, cy + lp.y); });
+    }
+
+    /** Queue the URL-driven setup once, even if multiple boot paths request it. */
+    scheduleAutodeploy() {
+        if (typeof location === 'undefined' || !new URLSearchParams(location.search).has('autodeploy')) return false;
+        if (this._autodeployScheduled || this._startedMissionSector === this.sector) return false;
+        this._autodeployScheduled = true;
+
+        const run = () => {
+            if (this._startedMissionSector === this.sector) {
+                this._autodeployScheduled = false;
+                return;
+            }
+            const box = document.getElementById('setup-cards');
+            const cards = box ? box.querySelectorAll('.card') : [];
+            if (cards.length < 3) {
+                setTimeout(run, 60);
+                return;
+            }
+            for (let i = 0; i < 3; i++) {
+                if (!cards[i].classList.contains('selected')) cards[i].click();
+            }
+            const btn = document.getElementById('btn-start');
+            if (btn && !btn.disabled && window.gameLogic && window.gameLogic.startCampaign) {
+                const started = window.gameLogic.startCampaign();
+                if (started !== false || this._startedMissionSector === this.sector) {
+                    this._autodeployScheduled = false;
+                    return;
+                }
+            }
+            setTimeout(run, 80);
+        };
+        setTimeout(run, 200);
+        return true;
     }
 
     // --- SETUP SCREEN LOGIC ---
@@ -176,23 +212,27 @@ class CampaignManager {
             box.appendChild(d);
         });
 
-        if (typeof location !== 'undefined' && new URLSearchParams(location.search).has('autodeploy')) {
-            const run = () => {
-                const cards = box.querySelectorAll('.card');
-                for (let i = 0; i < 3 && i < cards.length; i++) cards[i].click();
-                const btn = document.getElementById('btn-start');
-                if (btn && !btn.disabled && window.gameLogic && window.gameLogic.startCampaign) {
-                    window.gameLogic.startCampaign();
-                } else {
-                    setTimeout(run, 80);
-                }
-            };
-            setTimeout(run, 200);
-        }
+        this.scheduleAutodeploy();
     }
 
     // --- DEPLOYMENT (Game Logicへの引き渡し) ---
     startMission() {
+        const missionSector = this.sector;
+        if (this._startedMissionSector === missionSector) return false;
+        this._startedMissionSector = missionSector;
+        try {
+            const started = this._startMission();
+            if (started === false && this._startedMissionSector === missionSector) {
+                this._startedMissionSector = null;
+            }
+            return started;
+        } catch (error) {
+            if (this._startedMissionSector === missionSector) this._startedMissionSector = null;
+            throw error;
+        }
+    }
+
+    _startMission() {
         document.getElementById('setup-screen').style.display = 'none';
         document.getElementById('reward-screen').style.display = 'none';
         
@@ -251,11 +291,12 @@ class CampaignManager {
         // BattleLogic（logic_game.js）をインスタンス化
         if (window.BattleLogic) {
             window.gameLogic = new BattleLogic(this, deployUnits, this.sector);
-            window.gameLogic.init(); 
-        } else {
-            console.error("BattleLogic not found! logic_game.js loaded?");
-            alert("BattleLogic Error: Please check console.");
+            window.gameLogic.init();
+            return true;
         }
+        console.error("BattleLogic not found! logic_game.js loaded?");
+        alert("BattleLogic Error: Please check console.");
+        return false;
     }
 
     /** デッキから増援カード追加時に呼ぶ。ランダムなポートレート番号を返す（存在する画像のみで 404 防止）。 */
@@ -700,22 +741,7 @@ class CampaignManager {
 // キャンペーンマネージャーを起動
 window.campaign = new CampaignManager();
 
-(function scheduleAutodeploy() {
-    if (typeof location === 'undefined' || !new URLSearchParams(location.search).has('autodeploy')) return;
-    const box = document.getElementById('setup-cards');
-    const cards = box ? box.querySelectorAll('.card') : [];
-    if (cards.length < 3) {
-        setTimeout(scheduleAutodeploy, 60);
-        return;
-    }
-    for (let i = 0; i < 3; i++) cards[i].click();
-    const btn = document.getElementById('btn-start');
-    if (btn && !btn.disabled && window.gameLogic && window.gameLogic.startCampaign) {
-        window.gameLogic.startCampaign();
-    } else {
-        setTimeout(scheduleAutodeploy, 80);
-    }
-})();
+window.campaign.scheduleAutodeploy();
 
 // ★重要: 初期化段階での gameLogic のダミー (Phaser側のエラー回避用)
 window.gameLogic = {

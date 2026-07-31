@@ -9,8 +9,8 @@ Phase 1-B: CBE.EXE 全武器レコードデコード
   +04 u32: segment_sel      (far ptr / ignore)
   +08 u16: initial_penetration
   +10 u16: penetration_decay_rate
-  +12 u16: unknown_0c
-  +14 u16: unknown_0e
+  +12 u16: special / shaped-charge effect value
+  +14 u16: explosive / area effect value
   +16 u16: initial_hit_rate
   +18 u16: shots_per_action
   +20 u16: hit_decay_rate
@@ -54,6 +54,14 @@ with open("data/wpns_pl_master_table.csv", encoding="utf-8-sig") as f:
         idx = int(row["cbeNameIndex"])
         csv_weapons[idx] = row.get("name", f"weapon_{idx}")
 
+# The master CSV does not name every AFV gun record. The CBE name chain does.
+cbe_names = {
+    int(idx): name
+    for idx, name in json.loads(
+        Path("data/cbe_name_table.json").read_text(encoding="utf-8")
+    ).items()
+}
+
 def read_record(cbe_name_idx):
     """cbeNameIndex (0-indexed) からレコードを読み込む"""
     dump_idx = cbe_name_idx + 1
@@ -67,23 +75,83 @@ def read_record(cbe_name_idx):
     if u[0] != dump_idx:
         return None  # 想定外のデータ
     
-    ammo_indices = [a for a in [u[22], u[23], u[24], u[25]] if a != 0]
+    # CBE stores linked item references as one-based raw item IDs. Runtime
+    # tables use zero-based cbeNameIndex values, so retain both forms and make
+    # ammo_indices unambiguously zero-based.
+    ammo_raw_item_ids = [a for a in [u[22], u[23], u[24], u[25]] if a != 0]
+    ammo_indices = [raw_item_id - 1 for raw_item_id in ammo_raw_item_ids]
     
+    effective_penetration = u[4]
+    if u[4]:
+        penetration_source = "u4/+08"
+    elif u[1] in (10, 11, 21) and u[6]:
+        effective_penetration = u[6]
+        penetration_source = "u6/+12"
+    elif u[1] == 19 and (u[3] & 0x4000) and u[6]:
+        effective_penetration = u[6]
+        penetration_source = "u6/+12"
+    elif u[1] == 19 and (u[3] & 0x8000) and u[7]:
+        effective_penetration = u[7]
+        penetration_source = "u7/+14"
+    elif u[1] == 22 and u[7]:
+        effective_penetration = u[7]
+        penetration_source = "u7/+14"
+    else:
+        penetration_source = None
+
+    effect_profiles = []
+    if u[4]:
+        effect_profiles.append({
+            "kind": "explosive" if u[1] == 20 else "kinetic",
+            "value": u[4],
+            "decay_per_hex": u[5],
+            "source": "u4/+08",
+        })
+    if u[6]:
+        effect_profiles.append({
+            "kind": "flame_direct" if u[1] == 9 else "special_or_shaped_charge",
+            "value": u[6],
+            "decay_per_hex": 0,
+            "source": "u6/+12",
+        })
+    if u[7]:
+        effect_profiles.append({
+            "kind": "flame_area" if u[1] == 9 else "explosive",
+            "value": u[7],
+            "decay_per_hex": 0,
+            "source": "u7/+14",
+        })
+
     return {
         "cbeNameIndex": cbe_name_idx,
-        "name": csv_weapons.get(cbe_name_idx, f"weapon_{cbe_name_idx}"),
+        "name": csv_weapons.get(
+            cbe_name_idx,
+            cbe_names.get(cbe_name_idx, f"weapon_{cbe_name_idx}"),
+        ),
         "category_code": u[1],
-        "initial_penetration": u[4],
+        "initial_penetration": effective_penetration,
+        "initial_penetration_raw_u4": u[4],
         "penetration_decay_rate": u[5],
+        "penetration_source": penetration_source,
+        "effect_mode_raw": u[3],
+        "special_penetration_u6": u[6],
+        "special_penetration_u7": u[7],
+        "effect_profiles": effect_profiles,
         "initial_hit_rate": u[8],
         "shots_per_action": u[9],
         "hit_decay_rate": u[10],
         "malfunction_rate": u[13],
+        "base_malfunction_rate": 0 if u[1] == 18 else u[13],
+        "malfunction_modifier": u[13] if u[1] == 18 else 0,
         "melee_attack": u[14],
         "purchase_cost": u[18],
         "weight_100g": u[19],
         "magazine_capacity": u[20],
+        "ammo_raw_item_ids": ammo_raw_item_ids,
         "ammo_indices": ammo_indices,
+        "u26_raw_item_id": u[26] or None,
+        "u26_index": (u[26] - 1) if u[26] else None,
+        "record_offset": f"0x{TABLE_START + (dump_idx-1)*STRIDE:06X}",
         # デバッグ用: 未確定フィールド
         "_raw_u16": u,
         "_offset": f"0x{TABLE_START + (dump_idx-1)*STRIDE:06X}",
@@ -92,7 +160,9 @@ def read_record(cbe_name_idx):
 # テーブルの終端を検出: weapon_name_idx が連続していなくなるまで
 print("=== テーブルスキャン ===")
 records = []
-max_scan = 400  # 最大400エントリスキャン
+# Stop at the first invalid one-based header. This CBE build has 455 valid
+# rows (0..454), including the mounted AFV weapons.
+max_scan = (len(data) - TABLE_START) // STRIDE
 
 prev_idx = 0
 for cbe_idx in range(max_scan):

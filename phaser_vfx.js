@@ -28,18 +28,7 @@ class VFXSystem {
             p.x += p.vx; p.y += p.vy;
             
             if (p.type === 'wind') {
-                p.alpha = Math.sin((p.life / p.maxLife) * Math.PI) * 0.03; 
-            } else if (p.type === 'proj') {
-                p.progress += p.speed; let t = p.progress; if (t >= 1) t = 1;
-                const dx = p.ex - p.sx; const dy = p.ey - p.sy;
-                p.x = p.sx + dx * t; p.y = p.sy + dy * t;
-                if (p.arcHeight > 0) p.y -= Math.sin(t * Math.PI) * p.arcHeight;
-                if(t < 1) {
-                    p.prevX = p.sx + dx * (t - p.speed*0.5);
-                    p.prevY = p.sy + dy * (t - p.speed*0.5);
-                    if (p.arcHeight > 0) p.prevY -= Math.sin((t-p.speed*0.5) * Math.PI) * p.arcHeight;
-                }
-                if (t >= 1) { if (typeof p.onHit === 'function') p.onHit(); p.life = 0; }
+                p.alpha = Math.sin((p.life / p.maxLife) * Math.PI) * 0.03;
             } else if (p.type === 'rocket') {
                 p.progress += p.speed;
                 let t = p.progress;
@@ -85,29 +74,8 @@ class VFXSystem {
         this.particles.forEach(p => {
             if (p.delay > 0) return;
             
-            // 弾丸 (Line Tracer)
-            if (p.type === 'proj') {
-                if (p.isTracer) {
-                    const alpha = 0.92;
-                    const color = 0xffffcc;
-                    const dx = p.x - p.prevX;
-                    const dy = p.y - p.prevY;
-                    if (dx * dx + dy * dy < 0.25) {
-                        graphics.fillStyle(color, alpha);
-                        graphics.fillCircle(p.x, p.y, 3);
-                    } else {
-                        graphics.lineStyle(3, color, alpha);
-                        graphics.beginPath(); graphics.moveTo(p.prevX, p.prevY); graphics.lineTo(p.x, p.y); graphics.strokePath();
-                        graphics.lineStyle(1, 0xffffff, Math.min(1, alpha + 0.2));
-                        graphics.beginPath();
-                        graphics.moveTo(p.prevX + dx * 0.55, p.prevY + dy * 0.55);
-                        graphics.lineTo(p.x, p.y);
-                        graphics.strokePath();
-                    }
-                }
-            }
             // ロケット (弧を描く飛翔＋煙の尾)
-            else if (p.type === 'rocket') {
+            if (p.type === 'rocket') {
                 const alpha = 0.95 - p.progress * 0.4;
                 graphics.lineStyle(4, 0xffaa44, alpha);
                 graphics.beginPath(); graphics.moveTo(p.prevX, p.prevY); graphics.lineTo(p.x, p.y); graphics.strokePath();
@@ -248,18 +216,6 @@ class VFXSystem {
             life: 30+Math.random()*20, 
             type:'smoke'
         }); 
-    }
-    
-    addProj(params) {
-        params.type = 'proj';
-        params.life = 999;
-        params.progress = params.progress || 0;
-        params.x = params.sx;
-        params.y = params.sy;
-        params.prevX = params.sx;
-        params.prevY = params.sy;
-        if (!params.color) params.color = '#ffffaa';
-        this.add(params);
     }
     
     addUnitDebris(x, y) { }

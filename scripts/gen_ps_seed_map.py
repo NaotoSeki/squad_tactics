@@ -37,6 +37,7 @@ sys.path.insert(0, str(SCRIPT_DIR))
 
 from render_ps_native_crop import (  # noqa: E402
     SpriteIndex,
+    alpha_stamp,
     resolve_fence_layers,
     stable_variant,
     stamp_entry,
@@ -69,6 +70,83 @@ LOW_FAMILIES: set[str] = {
     "field",
     "flower",
 }
+
+
+class GroundHdCatalog:
+    """Validated, opt-in HD replacements for slot-0 ground sprites."""
+
+    def __init__(self, manifest_path: Path, pixel_ratio: int) -> None:
+        self.manifest_path = manifest_path
+        self.root = manifest_path.parent
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+
+        manifest_ratio = manifest.get("pixelRatio")
+        if not isinstance(manifest_ratio, int) or isinstance(manifest_ratio, bool):
+            raise ValueError("ground HD manifest pixelRatio must be an integer")
+        if manifest_ratio != pixel_ratio:
+            raise ValueError(
+                "ground HD manifest pixelRatio "
+                f"({manifest_ratio}) does not match --pixel-ratio ({pixel_ratio})"
+            )
+
+        self.pixel_ratio = pixel_ratio
+        self.overrides: dict[str, dict[str, Any]] = {}
+        for item in manifest.get("overrides", []):
+            asset = item.get("id")
+            file_name = item.get("file")
+            if not isinstance(asset, str) or not asset:
+                raise ValueError("ground HD override id must be a non-empty string")
+            if not isinstance(file_name, str) or not file_name:
+                raise ValueError(f"ground HD override {asset!r} has no file")
+            key = asset.casefold()
+            if key in self.overrides:
+                raise ValueError(f"duplicate ground HD override id: {asset}")
+
+            path = self.root / file_name
+            if not path.is_file():
+                raise ValueError(f"ground HD override image not found: {path}")
+            declared_size = item.get("outputSize")
+            reference_size = item.get("referenceSize")
+            if (
+                not isinstance(declared_size, list)
+                or len(declared_size) != 2
+                or not all(isinstance(value, int) for value in declared_size)
+            ):
+                raise ValueError(f"ground HD override {asset!r} has invalid outputSize")
+            if (
+                not isinstance(reference_size, list)
+                or len(reference_size) != 2
+                or not all(isinstance(value, int) for value in reference_size)
+            ):
+                raise ValueError(f"ground HD override {asset!r} has invalid referenceSize")
+            expected_size = [value * pixel_ratio for value in reference_size]
+            if declared_size != expected_size:
+                raise ValueError(
+                    f"ground HD override {asset!r} outputSize {declared_size} "
+                    f"is not {pixel_ratio}x referenceSize {reference_size}"
+                )
+
+            record = dict(item)
+            record["_path"] = path
+            self.overrides[key] = record
+
+        self._images: dict[str, Image.Image] = {}
+
+    def image_for(self, asset: str) -> Image.Image | None:
+        key = asset.casefold()
+        item = self.overrides.get(key)
+        if item is None:
+            return None
+        if key not in self._images:
+            with Image.open(item["_path"]) as source:
+                image = source.convert("RGBA")
+            expected = tuple(item["outputSize"])
+            if image.size != expected:
+                raise ValueError(
+                    f"ground HD override {asset!r} is {image.size}, expected {expected}"
+                )
+            self._images[key] = image
+        return self._images[key]
 
 
 def repo_path(path: Path) -> Path:
@@ -453,6 +531,8 @@ class Renderer:
         top_left_x: float,
         top_left_y: float,
         scale: float,
+        pixel_ratio: int = 1,
+        ground_hd: GroundHdCatalog | None = None,
     ) -> None:
         self.canvas = canvas
         self.index = index
@@ -463,11 +543,17 @@ class Renderer:
         self.top_left_x = top_left_x
         self.top_left_y = top_left_y
         self.scale = scale
+        self.pixel_ratio = pixel_ratio
+        self.ground_hd = ground_hd
         self.board_cells = set(cells_from_board_rows())
         self.slot_cache: dict[tuple[str, int], list[ManifestEntry]] = {}
         self.all_slot_cache: dict[str, list[ManifestEntry]] = {}
         self.missing_assets: Counter[str] = Counter()
         self.placements_drawn = 0
+        self.ground_hd_overrides_drawn = 0
+        self.ground_hd_fallbacks_drawn = 0
+        self.ground_hd_assets_used: set[str] = set()
+        self._scaled_ground_cache: dict[str, Image.Image] = {}
         # 立体物は背景PNGへ焼き込まない。台帳へ出して本編で生きたスプライトにする。
         # こうしないと (1)破壊状態の差し替えができず (2)着弾痕デカールが樹冠の上に乗る。
         self.tall: list[dict[str, Any]] = []
@@ -506,8 +592,41 @@ class Renderer:
         if asset is None:
             return
         entry = self.choose_entry(asset, 0, x, y)
-        if entry is not None and stamp_entry(self.canvas, self.index, entry, x, y, 0, 0):
+        if entry is None:
+            return
+
+        # Keep the pre-HD code path byte-for-byte equivalent by calling the
+        # original compositor whenever the opt-in flags are absent.
+        if self.pixel_ratio == 1 and self.ground_hd is None:
+            if stamp_entry(self.canvas, self.index, entry, x, y, 0, 0):
+                self.placements_drawn += 1
+            return
+
+        sprite = self.ground_hd.image_for(asset) if self.ground_hd is not None else None
+        used_override = sprite is not None
+        if sprite is None:
+            cache_key = str(entry.get("png", f"{asset}:{entry_slot_number(entry)}"))
+            sprite = self._scaled_ground_cache.get(cache_key)
+            if sprite is None:
+                canonical = self.index.image(entry)
+                sprite = canonical.resize(
+                    (
+                        canonical.width * self.pixel_ratio,
+                        canonical.height * self.pixel_ratio,
+                    ),
+                    Image.Resampling.LANCZOS,
+                )
+                self._scaled_ground_cache[cache_key] = sprite
+
+        left = (x + int(entry["origin_x"])) * self.pixel_ratio
+        top = (y + int(entry["origin_y"])) * self.pixel_ratio
+        if alpha_stamp(self.canvas, sprite, left, top):
             self.placements_drawn += 1
+            if used_override:
+                self.ground_hd_overrides_drawn += 1
+                self.ground_hd_assets_used.add(asset)
+            else:
+                self.ground_hd_fallbacks_drawn += 1
 
     def _states_for(self, asset: str, family: str) -> dict[str, list[int | None]] | None:
         """そのアセットが持つ破壊状態のスロット列を返す。無ければ None。
@@ -845,9 +964,15 @@ def render_map(
     cluster_radius: int,
     seed: int,
     map_height: int,
+    pixel_ratio: int = 1,
+    ground_hd: GroundHdCatalog | None = None,
 ) -> tuple[Image.Image, Renderer, float, float]:
     """Phase B全体。"""
-    canvas = Image.new("RGBA", (width, height), base_color)
+    canvas = Image.new(
+        "RGBA",
+        (width * pixel_ratio, height * pixel_ratio),
+        base_color,
+    )
     renderer = Renderer(
         canvas=canvas,
         index=index,
@@ -855,6 +980,8 @@ def render_map(
         rng=random.Random(seed),
         cluster_radius=cluster_radius,
         top_left_x=0.0, top_left_y=0.0, scale=scale,
+        pixel_ratio=pixel_ratio,
+        ground_hd=ground_hd,
     )
 
     top_left_x, top_left_y = center_projection(width, height, scale)
@@ -939,6 +1066,7 @@ def write_overlay(
     scale: float,
     top_left_x: float,
     top_left_y: float,
+    pixel_ratio: int = 1,
 ) -> None:
     """導出地形がPS画のどこに乗ったかの目視検収用注釈画像。"""
     layer = Image.new("RGBA", base_image.size, (0, 0, 0, 0))
@@ -949,9 +1077,19 @@ def write_overlay(
         q, r = cell
         terrain = plan[cell]
         color = tuple(TERRAIN_COLORS.get(terrain, (255, 255, 255)))
-        polygon = hex_polygon(q, r, top_left_x, top_left_y, scale)
-        draw.polygon(polygon, fill=color + (48,), outline=color + (220,), width=2)
+        polygon = [
+            (x * pixel_ratio, y * pixel_ratio)
+            for x, y in hex_polygon(q, r, top_left_x, top_left_y, scale)
+        ]
+        draw.polygon(
+            polygon,
+            fill=color + (48,),
+            outline=color + (220,),
+            width=2 * pixel_ratio,
+        )
         center_x, center_y = hex_center_image(q, r, top_left_x, top_left_y, scale)
+        center_x *= pixel_ratio
+        center_y *= pixel_ratio
         draw.text(
             (center_x, center_y),
             f"{terrain}\n{q},{r}",
@@ -984,6 +1122,18 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--cluster-radius", type=int, default=150)
     parser.add_argument("--base-color", type=parse_base_color, default=(120, 126, 88, 255))
     parser.add_argument("--overlay", type=Path, default=None)
+    parser.add_argument(
+        "--ground-hd-manifest",
+        type=Path,
+        default=None,
+        help="opt-in ground HD override manifest; requires matching --pixel-ratio",
+    )
+    parser.add_argument(
+        "--pixel-ratio",
+        type=int,
+        default=1,
+        help="physical pixels per PS logical pixel (default: 1)",
+    )
     return parser.parse_args()
 
 
@@ -997,6 +1147,11 @@ def main() -> None:
     if args.cluster_radius <= 0:
         raise SystemExit("--cluster-radius は正の整数で指定してください")
 
+    if args.pixel_ratio <= 0:
+        raise SystemExit("--pixel-ratio must be a positive integer")
+    if args.ground_hd_manifest is None and args.pixel_ratio != 1:
+        raise SystemExit("--pixel-ratio other than 1 requires --ground-hd-manifest")
+
     grammar_path = repo_path(args.grammar)
     canonical_root = repo_path(args.canonical_root)
     canonical_manifest = (
@@ -1007,6 +1162,19 @@ def main() -> None:
     legacy_catalog = repo_path(args.legacy_catalog)
     out_dir = repo_path(args.out_dir)
     overlay_path = repo_path(args.overlay) if args.overlay is not None else None
+    ground_hd_manifest = (
+        repo_path(args.ground_hd_manifest)
+        if args.ground_hd_manifest is not None
+        else None
+    )
+    try:
+        ground_hd = (
+            GroundHdCatalog(ground_hd_manifest, args.pixel_ratio)
+            if ground_hd_manifest is not None
+            else None
+        )
+    except (OSError, ValueError, json.JSONDecodeError) as exc:
+        raise SystemExit(f"invalid ground HD manifest: {exc}") from exc
 
     plan, connectivity, counts = build_valid_plan(args.seed)
     clusters, vocabulary, _map_data = read_grammar(grammar_path)
@@ -1024,13 +1192,19 @@ def main() -> None:
         cluster_radius=args.cluster_radius,
         seed=args.seed,
         map_height=args.map_height,
+        pixel_ratio=args.pixel_ratio,
+        ground_hd=ground_hd,
     )
 
     flat_fraction = flat_background_fraction(canvas, args.base_color)
     coverage_ok = flat_fraction < 0.03
 
     out_dir.mkdir(parents=True, exist_ok=True)
-    stem = f"ps_seed_{args.seed}"
+    stem = (
+        f"ps_seed_{args.seed}_ground_hd_x{args.pixel_ratio}"
+        if ground_hd is not None
+        else f"ps_seed_{args.seed}"
+    )
     image_name = f"{stem}.png"
     canvas.convert("RGB").save(out_dir / image_name)
 
@@ -1038,10 +1212,10 @@ def main() -> None:
         "schema": "ps_battlefield/v1",
         "name": stem,
         "image": image_name,
-        "image_width": args.width,
-        "image_height": args.height,
+        "image_width": canvas.width,
+        "image_height": canvas.height,
         "projection": {
-            "scale": args.scale,
+            "scale": args.scale / args.pixel_ratio,
             "top_left_x": top_left_x,
             "top_left_y": top_left_y,
             "note": "game_px = top_left + image_px * scale (等方。PS 2:1等角のまま歪ませない)",
@@ -1063,6 +1237,23 @@ def main() -> None:
         },
     }
 
+    if ground_hd is not None:
+        metadata.update({
+            "logical_image_width": args.width,
+            "logical_image_height": args.height,
+            "pixel_ratio": args.pixel_ratio,
+        })
+        metadata["projection"].update({
+            "logical_scale": args.scale,
+            "pixel_ratio": args.pixel_ratio,
+        })
+        metadata["source"]["ground_hd_manifest"] = str(args.ground_hd_manifest)
+        metadata["audit"].update({
+            "ground_hd_overrides_drawn": renderer.ground_hd_overrides_drawn,
+            "ground_hd_fallbacks_drawn": renderer.ground_hd_fallbacks_drawn,
+            "ground_hd_assets_used": sorted(renderer.ground_hd_assets_used),
+        })
+
     (out_dir / f"{stem}.json").write_text(
         json.dumps(metadata, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
     )
@@ -1080,12 +1271,23 @@ def main() -> None:
         "image_height": args.height,
         "objects": renderer.tall,
     }
+    if ground_hd is not None:
+        objects_record["background_pixel_ratio"] = args.pixel_ratio
+
     (out_dir / f"{stem}_objects.json").write_text(
         json.dumps(objects_record, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
     )
 
     if overlay_path is not None:
-        write_overlay(overlay_path, canvas, plan, args.scale, top_left_x, top_left_y)
+        write_overlay(
+            overlay_path,
+            canvas,
+            plan,
+            args.scale,
+            top_left_x,
+            top_left_y,
+            args.pixel_ratio,
+        )
 
     write_registry(out_dir)
 

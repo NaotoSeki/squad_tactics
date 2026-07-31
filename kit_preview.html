@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>kit mode preview (rural v29)</title>
+<style>
+  body{margin:0;background:#222;color:#eee;font-family:sans-serif}
+  #bar{padding:8px 12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  button{padding:6px 12px;cursor:pointer}
+  #hint{font-size:13px;color:#bbb;margin-left:8px}
+  .sw{display:inline-block;width:14px;height:14px;border:1px solid #000;vertical-align:middle;margin:0 3px}
+</style>
+</head>
+<body>
+<div id="bar">
+  <b>KIT合成プレビュー:</b>
+  <button data-n="0" data-s="0">NORTH A + SOUTH A</button>
+  <button data-n="0" data-s="1">NORTH A + SOUTH B</button>
+  <button data-n="1" data-s="0">NORTH B + SOUTH A</button>
+  <button data-n="1" data-s="1">NORTH B + SOUTH B</button>
+  <span id="hint">
+    合格 = 上(青/緑)→下(橙/赤)が継ぎ目(黄線)でピタリ接続、黒い横罫線が段差なく連続。
+    <span class="sw" style="background:#c800c8"></span>マゼンタが見えたら継ぎ目ズレ、上半分が無地なら北欠落。
+  </span>
+</div>
+<div id="game"></div>
+<script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
+<script>
+// --- minimal globals the rural v29 modules expect ---
+const HEX_SIZE = 54;
+const MAP_W = 20, MAP_H = 20;
+const TERRAIN = {
+  VOID:{id:0,name:'void',cost:99,cover:0}, GRASS:{id:1,name:'草地',cost:1,cover:10},
+  FOREST:{id:2,name:'森',cost:2,cover:30}, ROAD:{id:3,name:'道',cost:1,cover:0},
+};
+window.Renderer = { hexToPx(q,r){ return { x: HEX_SIZE*Math.sqrt(3)*(q+r/2), y: HEX_SIZE*1.5*r }; } };
+</script>
+<script src="logic_map_rural_v29.js"></script>
+<script src="phaser_terrain_rural_v29.js"></script>
+<script>
+const R = window.RuralV29Map;
+// mark placeholder pieces ready so buildMap will load their PNGs
+R.KIT_PIECES.north.forEach(p => p.ready = true);
+R.KIT_PIECES.south.forEach(p => p.ready = true);
+
+let currentScene = null;
+
+function showCombo(ni, si) {
+  const scene = currentScene; if (!scene) return;
+  // clear previous background images
+  if (scene.__kitGroup) { scene.__kitGroup.clear(true, true); }
+  scene.__kitGroup = scene.add.group();
+  const north = R.KIT_PIECES.north[ni];
+  const south = R.KIT_PIECES.south[si];
+  // drive the REAL render path: set a kit variant and call buildMap
+  R.lastVariant = { key:`kit:${north.key}+${south.key}`, kit:true, north, south };
+  window.TerrainRenderRuralV29.buildMap(scene, scene.__kitGroup, []);
+  document.title = `kit preview — ${north.key} + ${south.key}`;
+}
+
+const config = {
+  type: Phaser.AUTO,
+  width: window.innerWidth, height: window.innerHeight - 44,
+  parent: 'game', backgroundColor: '#101010',
+  scene: {
+    create() {
+      currentScene = this; window.__scene = this;
+      // frame the composited board: anchor is hexToPx(4,12); board spans a few hundred px
+      const cam = this.cameras.main;
+      cam.setZoom(0.9);
+      // center roughly on the board center (empirical from anchor math)
+      const anchor = Renderer.hexToPx(4,12);
+      cam.centerOn(anchor.x + 150, anchor.y - 120);
+      showCombo(0,0);
+    }
+  }
+};
+new Phaser.Game(config);
+
+document.querySelectorAll('#bar button').forEach(b => {
+  b.onclick = () => showCombo(+b.dataset.n, +b.dataset.s);
+});
+</script>
+</body>
+</html>

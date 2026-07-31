@@ -507,6 +507,41 @@ function testSelectKitPiecesFallback() {
   console.log('✓ testSelectKitPiecesFallback passed');
 }
 
+// PS背景レジストリの任意pixelRatioが自動登録バリアントへ伝播すること。
+// 未指定エントリにはプロパティを足さず、従来の1x契約を保つ。
+function testPsRegistryPixelRatioPropagation() {
+  const startLength = RuralV29Map.VARIANTS.length;
+  const rows = [[7, 7, ['GRASS', 'GRASS', 'GRASS', 'GRASS', 'GRASS']]];
+  sandbox.PS_BATTLEFIELDS.ps_ratio_legacy_probe = {
+    image: 'legacy_probe.png',
+    rows,
+    projection: { scale: 0.84, topLeftX: 0, topLeftY: 0 }
+  };
+  sandbox.PS_BATTLEFIELDS.ps_ratio_hd_probe = {
+    image: 'hd_probe.png',
+    pixelRatio: 2,
+    rows,
+    projection: { scale: 0.84, topLeftX: 0, topLeftY: 0 }
+  };
+
+  RuralV29Map._registerPsBattlefields();
+  const legacy = RuralV29Map.VARIANTS.find(v => v.key === 'ps_ratio_legacy_probe');
+  const hd = RuralV29Map.VARIANTS.find(v => v.key === 'ps_ratio_hd_probe');
+  assert.ok(legacy, 'legacy registry entry should be registered');
+  assert.ok(hd, 'HD registry entry should be registered');
+  assert.strictEqual(
+    Object.prototype.hasOwnProperty.call(legacy, 'pixelRatio'),
+    false,
+    'missing pixelRatio must remain omitted'
+  );
+  assert.strictEqual(hd.pixelRatio, 2, 'pixelRatio 2 should propagate to the background variant');
+
+  RuralV29Map.VARIANTS.splice(startLength);
+  delete sandbox.PS_BATTLEFIELDS.ps_ratio_legacy_probe;
+  delete sandbox.PS_BATTLEFIELDS.ps_ratio_hd_probe;
+  console.log('✓ testPsRegistryPixelRatioPropagation passed');
+}
+
 // メインテスト実行
 testGenerateP1Fixed();
 testRot180Mapping();
@@ -517,5 +552,6 @@ testLocationTables();
 testKitSeamContract();
 testKitAllCombinationsConnectivity();
 testSelectKitPiecesFallback();
+testPsRegistryPixelRatioPropagation();
 
 console.log('✓ All tests passed');

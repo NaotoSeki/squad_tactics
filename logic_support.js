@@ -26,7 +26,7 @@
                 const canHit = game.canAttackHex && game.canAttackHex(hex.q, hex.r);
                 setTimeout(() => {
                     if (window.Sfx) Sfx.play('cannon');
-                    if (typeof Renderer !== 'undefined' && Renderer.playExplosion) Renderer.playExplosion(pos.x, pos.y);
+                    if (typeof Renderer !== 'undefined' && Renderer.playExplosion) Renderer.playExplosion(pos.x, pos.y, 't5_aerialbomb', hex);
                     if (canHit) {
                         const units = game.getUnitsInHex(hex.q, hex.r);
                         units.forEach(u => { game.ui.log(`>> ${logKey}命中`); game.applyDamage(u, damage, logKey); });

@@ -216,18 +216,58 @@ def write_registry(out_dir: Path) -> Path:
             continue
         if rec.get("schema") != "ps_battlefield/v1":
             continue
-        entries[rec["name"]] = {
+        projection = rec["projection"]
+        entry = {
             "name": rec["name"],
             "image": rec["image"],
             "imageWidth": rec["image_width"],
             "imageHeight": rec["image_height"],
             "projection": {
-                "scale": rec["projection"]["scale"],
-                "topLeftX": rec["projection"]["top_left_x"],
-                "topLeftY": rec["projection"]["top_left_y"],
+                "scale": projection["scale"],
+                "topLeftX": projection["top_left_x"],
+                "topLeftY": projection["top_left_y"],
             },
             "rows": rec["rows"],
         }
+        # Optional physical/logical background pixel ratio. Keep imageWidth/
+        # imageHeight in PS logical pixels so decals and object ledgers retain
+        # their original projection.
+        pixel_ratio = rec.get("pixel_ratio")
+        if pixel_ratio is not None:
+            if (
+                isinstance(pixel_ratio, bool)
+                or not isinstance(pixel_ratio, (int, float))
+                or pixel_ratio <= 0
+            ):
+                raise ValueError(
+                    f"{path}: pixel_ratio must be a positive number"
+                )
+            logical_width = rec.get("logical_image_width")
+            logical_height = rec.get("logical_image_height")
+            logical_scale = projection.get("logical_scale")
+            if (
+                not isinstance(logical_width, int)
+                or isinstance(logical_width, bool)
+                or logical_width <= 0
+                or not isinstance(logical_height, int)
+                or isinstance(logical_height, bool)
+                or logical_height <= 0
+                or not isinstance(logical_scale, (int, float))
+                or isinstance(logical_scale, bool)
+                or logical_scale <= 0
+            ):
+                raise ValueError(
+                    f"{path}: pixel_ratio records require positive logical "
+                    "image dimensions and projection.logical_scale"
+                )
+            # The Phaser renderer receives the canonical logical projection and
+            # divides only the background texture scale by pixelRatio. Decals
+            # and object ledgers therefore remain in the original 620px space.
+            entry["imageWidth"] = logical_width
+            entry["imageHeight"] = logical_height
+            entry["projection"]["scale"] = logical_scale
+            entry["pixelRatio"] = pixel_ratio
+        entries[rec["name"]] = entry
 
     registry = out_dir / REGISTRY_NAME
     body = json.dumps(entries, ensure_ascii=False, indent=2)

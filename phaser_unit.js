@@ -311,7 +311,7 @@ class UnitView {
             const pos = Renderer.hexToPx(u.q, u.r);
             // 建物ヘックスへ直接出現(初期配置/増援)する場合、初回から壁際オフセット
             // 込みで置く — updateVisualのクロール移動で毎回にじり寄る見た目を防ぐ
-            const t = window.gameLogic && window.gameLogic.map[u.q] && window.gameLogic.map[u.q][u.r];
+            const t = window.gameLogic && window.gameLogic.map && window.gameLogic.map[u.q] && window.gameLogic.map[u.q][u.r];
             const safe = t && t.building && window.TerrainRenderV7 && window.CityMap && window.CityMap.active
                 ? window.TerrainRenderV7.getBuildingSafeOffset(u.q, u.r) : null;
             if (safe) { pos.x += safe.dx; pos.y += safe.dy; }
@@ -337,7 +337,7 @@ class UnitView {
         // 壁際の物陰に身を隠す(2026-07-13)。複数ユニット共存時のばらけ幅は
         // 壁からはみ出さないよう通常の半分に絞る。
         let inBuilding = false;
-        if (window.gameLogic) {
+        if (window.gameLogic && window.gameLogic.map) {
             const t = window.gameLogic.map[u.q] && window.gameLogic.map[u.q][u.r];
             inBuilding = !!(t && t.building);
         }

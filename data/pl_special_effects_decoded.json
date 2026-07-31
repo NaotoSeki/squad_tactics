@@ -1,0 +1,3330 @@
+{
+  "_meta": {
+    "source": "D:\\PL\\CBE.EXE",
+    "source_sha256": "7EF70D11CF65B30E2FAC90522FFDEE0DA9E5D68DC09AF8E7FBE9F9710D1C652D",
+    "record_count": 94,
+    "rule": "+08=u4 normal/kinetic, +12=u6 special/shaped-charge, +14=u7 explosive/area; preserve all simultaneous profiles"
+  },
+  "records": [
+    {
+      "cbeNameIndex": 4,
+      "name": "AN-M8",
+      "category_code": 3,
+      "category_name": "smoke_grenade",
+      "effect_mode_raw": 0,
+      "effect_mode_hex": "0x0000",
+      "raw_u4_plus08": 0,
+      "raw_u5_plus10_decay": 0,
+      "raw_u6_plus12": 0,
+      "raw_u7_plus14": 0,
+      "resolved_initial_penetration": 0,
+      "resolved_source": null,
+      "hit_rate": 0,
+      "hit_decay_per_hex": 0,
+      "malfunction_rate": 2,
+      "malfunction_modifier": 0,
+      "profiles": [],
+      "linked_raw_item_ids": [
+        229
+      ],
+      "linked_cbe_indices": [
+        228
+      ],
+      "record_offset": "0x1DE000"
+    },
+    {
+      "cbeNameIndex": 25,
+      "name": "M1 RL",
+      "category_code": 10,
+      "category_name": "rocket_launcher",
+      "effect_mode_raw": 0,
+      "effect_mode_hex": "0x0000",
+      "raw_u4_plus08": 0,
+      "raw_u5_plus10_decay": 0,
+      "raw_u6_plus12": 150,
+      "raw_u7_plus14": 120,
+      "resolved_initial_penetration": 150,
+      "resolved_source": "u6/+12",
+      "hit_rate": 60,
+      "hit_decay_per_hex": 20,
+      "malfunction_rate": 5,
+      "malfunction_modifier": 0,
+      "profiles": [
+        {
+          "kind": "special_or_shaped_charge",
+          "value": 150,
+          "decay_per_hex": 0,
+          "source": "u6/+12",
+          "label": "成形炸薬・特殊効果"
+        },
+        {
+          "kind": "explosive",
+          "value": 120,
+          "decay_per_hex": 0,
+          "source": "u7/+14",
+          "label": "榴弾・爆風・炸薬"
+        }
+      ],
+      "linked_raw_item_ids": [
+        243
+      ],
+      "linked_cbe_indices": [
+        242
+      ],
+      "record_offset": "0x1DE540"
+    },
+    {
+      "cbeNameIndex": 26,
+      "name": "M1A1 RL",
+      "category_code": 10,
+      "category_name": "rocket_launcher",
+      "effect_mode_raw": 0,
+      "effect_mode_hex": "0x0000",
+      "raw_u4_plus08": 0,
+      "raw_u5_plus10_decay": 0,
+      "raw_u6_plus12": 150,
+      "raw_u7_plus14": 120,
+      "resolved_initial_penetration": 150,
+      "resolved_source": "u6/+12",
+      "hit_rate": 60,
+      "hit_decay_per_hex": 20,
+      "malfunction_rate": 4,
+      "malfunction_modifier": 0,
+      "profiles": [
+        {
+          "kind": "special_or_shaped_charge",
+          "value": 150,
+          "decay_per_hex": 0,
+          "source": "u6/+12",
+          "label": "成形炸薬・特殊効果"
+        },
+        {
+          "kind": "explosive",
+          "value": 120,
+          "decay_per_hex": 0,
+          "source": "u7/+14",
+          "label": "榴弾・爆風・炸薬"
+        }
+      ],
+      "linked_raw_item_ids": [
+        243
+      ],
+      "linked_cbe_indices": [
+        242
+      ],
+      "record_offset": "0x1DE580"
+    },
+    {
+      "cbeNameIndex": 27,
+      "name": "M9 RL",
+      "category_code": 10,
+      "category_name": "rocket_launcher",
+      "effect_mode_raw": 0,
+      "effect_mode_hex": "0x0000",
+      "raw_u4_plus08": 0,
+      "raw_u5_plus10_decay": 0,
+      "raw_u6_plus12": 150,
+      "raw_u7_plus14": 120,
+      "resolved_initial_penetration": 150,
+      "resolved_source": "u6/+12",
+      "hit_rate": 70,
+      "hit_decay_per_hex": 20,
+      "malfunction_rate": 2,
+      "malfunction_modifier": 0,
+      "profiles": [
+        {
+          "kind": "special_or_shaped_charge",
+          "value": 150,
+          "decay_per_hex": 0,
+          "source": "u6/+12",
+          "label": "成形炸薬・特殊効果"
+        },
+        {
+          "kind": "explosive",
+          "value": 120,
+          "decay_per_hex": 0,
+          "source": "u7/+14",
+          "label": "榴弾・爆風・炸薬"
+        }
+      ],
+      "linked_raw_item_ids": [
+        244,
+        243
+      ],
+      "linked_cbe_indices": [
+        243,
+        242
+      ],
+      "record_offset": "0x1DE5C0"
+    },
+    {
+      "cbeNameIndex": 28,
+      "name": "E1R1 Fl",
+      "category_code": 9,
+      "category_name": "flamethrower",
+      "effect_mode_raw": 16395,
+      "effect_mode_hex": "0x400B",
+      "raw_u4_plus08": 0,
+      "raw_u5_plus10_decay": 0,
+      "raw_u6_plus12": 125,
+      "raw_u7_plus14": 150,
+      "resolved_initial_penetration": 0,
+      "resolved_source": null,
+      "hit_rate": 77,
+      "hit_decay_per_hex": 32,
+      "malfunction_rate": 6,
+      "malfunction_modifier": 0,
+      "profiles": [
+        {
+          "kind": "flame_direct",
+          "value": 125,
+          "decay_per_hex": 0,
+          "source": "u6/+12",
+          "label": "火炎直撃"
+        },
+        {
+          "kind": "flame_area",
+          "value": 150,
+          "decay_per_hex": 0,
+          "source": "u7/+14",
+          "label": "火炎範囲"
+        }
+      ],
+      "linked_raw_item_ids": [],
+      "linked_cbe_indices": [],
+      "record_offset": "0x1DE600"
+    },
+    {
+      "cbeNameIndex": 29,
+      "name": "M1A1 Fl",
+      "category_code": 9,
+      "category_name": "flamethrower",
+      "effect_mode_raw": 16395,
+      "effect_mode_hex": "0x400B",
+      "raw_u4_plus08": 0,
+      "raw_u5_plus10_decay": 0,
+      "raw_u6_plus12": 125,
+      "raw_u7_plus14": 150,
+      "resolved_initial_penetration": 0,
+      "resolved_source": null,
+      "hit_rate": 95,
+      "hit_decay_per_hex": 32,
+      "malfunction_rate": 6,
+      "malfunction_modifier": 0,
+      "profiles": [
+        {
+          "kind": "flame_direct",
+          "value": 125,
+          "decay_per_hex": 0,
+          "source": "u6/+12",
+          "label": "火炎直撃"
+        },
+        {
+          "kind": "flame_area",
+          "value": 150,
+          "decay_per_hex": 0,
+          "source": "u7/+14",
+          "label": "火炎範囲"
+        }
+      ],
+      "linked_raw_item_ids": [],
+      "linked_cbe_indices": [],
+      "record_offset": "0x1DE640"
+    },
+    {
+      "cbeNameIndex": 30,
+      "name": "M2A1-7 Fl",
+      "category_code": 9,
+      "category_name": "flamethrower",
+      "effect_mode_raw": 16395,
+      "effect_mode_hex": "0x400B",
+      "raw_u4_plus08": 0,
+      "raw_u5_plus10_decay": 0,
+      "raw_u6_plus12": 125,
+      "raw_u7_plus14": 150,
+      "resolved_initial_penetration": 0,
+      "resolved_source": null,
+      "hit_rate": 86,
+      "hit_decay_per_hex": 32,
+      "malfunction_rate": 3,
+      "malfunction_modifier": 0,
+      "profiles": [
+        {
+          "kind": "flame_direct",
+          "value": 125,
+          "decay_per_hex": 0,
+          "source": "u6/+12",
+          "label": "火炎直撃"
+        },
+        {
+          "kind": "flame_area",
+          "value": 150,
+          "decay_per_hex": 0,
+          "source": "u7/+14",
+          "label": "火炎範囲"
+        }
+      ],
+      "linked_raw_item_ids": [],
+      "linked_cbe_indices": [],
+      "record_offset": "0x1DE680"
+    },
+    {
+      "cbeNameIndex": 51,
+      "name": "27mmLeuP",
+      "category_code": 3,
+      "category_name": "smoke_grenade",
+      "effect_mode_raw": 0,
+      "effect_mode_hex": "0x0000",
+      "raw_u4_plus08": 0,
+      "raw_u5_plus10_decay": 0,
+      "raw_u6_plus12": 0,
+      "raw_u7_plus14": 0,
+      "resolved_initial_penetration": 0,
+      "resolved_source": null,
+      "hit_rate": 70,
+      "hit_decay_per_hex": 0,
+      "malfunction_rate": 1,
+      "malfunction_modifier": 0,
+      "profiles": [],
+      "linked_raw_item_ids": [
+        267,
+        268,
+        269
+      ],
+      "linked_cbe_indices": [
+        266,
+        267,
+        268
+      ],
+      "record_offset": "0x1DEBC0"
+    },
+    {
+      "cbeNameIndex": 52,
+      "name": "27mmP42",
+      "category_code": 3,
+      "category_name": "smoke_grenade",
+      "effect_mode_raw": 0,
+      "effect_mode_hex": "0x0000",
+      "raw_u4_plus08": 0,
+      "raw_u5_plus10_decay": 0,
+      "raw_u6_plus12": 0,
+      "raw_u7_plus14": 0,
+      "resolved_initial_penetration": 0,
+      "resolved_source": null,
+      "hit_rate": 70,
+      "hit_decay_per_hex": 0,
+      "malfunction_rate": 1,
+      "malfunction_modifier": 0,
+      "profiles": [],
+      "linked_raw_item_ids": [
+        267,
+        268,
+        269
+      ],
+      "linked_cbe_indices": [
+        266,
+        267,
+        268
+      ],
+      "record_offset": "0x1DEC00"
+    },
+    {
+      "cbeNameIndex": 53,
+      "name": "27mmKpfP",
+      "category_code": 2,
+      "category_name": "grenade_launcher_ammo",
+      "effect_mode_raw": 0,
+      "effect_mode_hex": "0x0000",
+      "raw_u4_plus08": 0,
+      "raw_u5_plus10_decay": 0,
+      "raw_u6_plus12": 0,
+      "raw_u7_plus14": 0,
+      "resolved_initial_penetration": 0,
+      "resolved_source": null,
+      "hit_rate": 80,
+      "hit_decay_per_hex": 0,
+      "malfunction_rate": 2,
+      "malfunction_modifier": 0,
+      "profiles": [],
+      "linked_raw_item_ids": [
+        271,
+        270
+      ],
+      "linked_cbe_indices": [
+        270,
+        269
+      ],
+      "record_offset": "0x1DEC40"
+    },
+    {
+      "cbeNameIndex": 54,
+      "name": "27mmStuP",
+      "category_code": 2,
+      "category_name": "grenade_launcher_ammo",
+      "effect_mode_raw": 0,
+      "effect_mode_hex": "0x0000",
+      "raw_u4_plus08": 0,
+      "raw_u5_plus10_decay": 0,
+      "raw_u6_plus12": 0,
+      "raw_u7_plus14": 0,
+      "resolved_initial_penetration": 0,
+      "resolved_source": null,
+      "hit_rate": 85,
+      "hit_decay_per_hex": 0,
+      "malfunction_rate": 3,
+      "malfunction_modifier": 0,
+      "profiles": [],
+      "linked_raw_item_ids": [
+        272,
+        269,
+        268
+      ],
+      "linked_cbe_indices": [
+        271,
+        268,
+        267
+      ],
+      "record_offset": "0x1DEC80"
+    },
+    {
+      "cbeNameIndex": 101,
+      "name": "PF30mK",
+      "category_code": 11,
+      "category_name": "panzerfaust",
+      "effect_mode_raw": 16386,
+      "effect_mode_hex": "0x4002",
+      "raw_u4_plus08": 0,
+      "raw_u5_plus10_decay": 0,
+      "raw_u6_plus12": 195,
+      "raw_u7_plus14": 0,
+      "resolved_initial_penetration": 195,
+      "resolved_source": "u6/+12",
+      "hit_rate": 80,
+      "hit_decay_per_hex": 40,
+      "malfunction_rate": 6,
+      "malfunction_modifier": 0,
+      "profiles": [
+        {
+          "kind": "special_or_shaped_charge",
+          "value": 195,
+          "decay_per_hex": 0,
+          "source": "u6/+12",
+          "label": "成形炸薬・特殊効果"
+        }
+      ],
+      "linked_raw_item_ids": [],
+      "linked_cbe_indices": [],
+      "record_offset": "0x1DF840"
+    },
+    {
+      "cbeNameIndex": 102,
+      "name": "PF30mG",
+      "category_code": 11,
+      "category_name": "panzerfaust",
+      "effect_mode_raw": 16386,
+      "effect_mode_hex": "0x4002",
+      "raw_u4_plus08": 0,
+      "raw_u5_plus10_decay": 0,
+      "raw_u6_plus12": 220,
+      "raw_u7_plus14": 0,
+      "resolved_initial_penetration": 220,
+      "resolved_source": "u6/+12",
+      "hit_rate": 80,
+      "hit_decay_per_hex": 40,
+      "malfunction_rate": 10,
+      "malfunction_modifier": 0,
+      "profiles": [
+        {
+          "kind": "special_or_shaped_charge",
+          "value": 220,
+          "decay_per_hex": 0,
+          "source": "u6/+12",
+          "label": "成形炸薬・特殊効果"
+        }
+      ],
+      "linked_raw_item_ids": [],
+      "linked_cbe_indices": [],
+      "record_offset": "0x1DF880"
+    },
+    {
+      "cbeNameIndex": 103,
+      "name": "PF60m",
+      "category_code": 11,
+      "category_name": "panzerfaust",
+      "effect_mode_raw": 16386,
+      "effect_mode_hex": "0x4002",
+      "raw_u4_plus08": 0,
+      "raw_u5_plus10_decay": 0,
+      "raw_u6_plus12": 220,
+      "raw_u7_plus14": 0,
+      "resolved_initial_penetration": 220,
+      "resolved_source": "u6/+12",
+      "hit_rate": 80,
+      "hit_decay_per_hex": 30,
+      "malfunction_rate": 6,
+      "malfunction_modifier": 0,
+      "profiles": [
+        {
+          "kind": "special_or_shaped_charge",
+          "value": 220,
+          "decay_per_hex": 0,
+          "source": "u6/+12",
+          "label": "成形炸薬・特殊効果"
+        }
+      ],
+      "linked_raw_item_ids": [],
+      "linked_cbe_indices": [],
+      "record_offset": "0x1DF8C0"
+    },
+    {
+      "cbeNameIndex": 104,
+      "name": "PF100m",
+      "category_code": 11,
+      "category_name": "panzerfaust",
+      "effect_mode_raw": 16386,
+      "effect_mode_hex": "0x4002",
+      "raw_u4_plus08": 0,
+      "raw_u5_plus10_decay": 0,
+      "raw_u6_plus12": 220,
+      "raw_u7_plus14": 0,
+      "resolved_initial_penetration": 220,
+      "resolved_source": "u6/+12",
+      "hit_rate": 80,
+      "hit_decay_per_hex": 20,
+      "malfunction_rate": 6,
+      "malfunction_modifier": 0,
+      "profiles": [
+        {
+          "kind": "special_or_shaped_charge",
+          "value": 220,
+          "decay_per_hex": 0,
+          "source": "u6/+12",
+          "label": "成形炸薬・特殊効果"
+        }
+      ],
+      "linked_raw_item_ids": [],
+      "linked_cbe_indices": [],
+      "record_offset": "0x1DF900"
+    },
+    {
+      "cbeNameIndex": 105,
+      "name": "RPzB43",
+      "category_code": 10,
+      "category_name": "rocket_launcher",
+      "effect_mode_raw": 0,
+      "effect_mode_hex": "0x0000",
+      "raw_u4_plus08": 0,
+      "raw_u5_plus10_decay": 0,
+      "raw_u6_plus12": 200,
+      "raw_u7_plus14": 140,
+      "resolved_initial_penetration": 200,
+      "resolved_source": "u6/+12",
+      "hit_rate": 60,
+      "hit_decay_per_hex": 15,
+      "malfunction_rate": 6,
+      "malfunction_modifier": 0,
+      "profiles": [
+        {
+          "kind": "special_or_shaped_charge",
+          "value": 200,
+          "decay_per_hex": 0,
+          "source": "u6/+12",
+          "label": "成形炸薬・特殊効果"
+        },
+        {
+          "kind": "explosive",
+          "value": 140,
+          "decay_per_hex": 0,
+          "source": "u7/+14",
+          "label": "榴弾・爆風・炸薬"
+        }
+      ],
+      "linked_raw_item_ids": [
+        302
+      ],
+      "linked_cbe_indices": [
+        301
+      ],
+      "record_offset": "0x1DF940"
+    },
+    {
+      "cbeNameIndex": 106,
+      "name": "RPzB54",
+      "category_code": 10,
+      "category_name": "rocket_launcher",
+      "effect_mode_raw": 0,
+      "effect_mode_hex": "0x0000",
+      "raw_u4_plus08": 0,
+      "raw_u5_plus10_decay": 0,
+      "raw_u6_plus12": 200,
+      "raw_u7_plus14": 140,
+      "resolved_initial_penetration": 200,
+      "resolved_source": "u6/+12",
+      "hit_rate": 60,
+      "hit_decay_per_hex": 15,
+      "malfunction_rate": 3,
+      "malfunction_modifier": 0,
+      "profiles": [
+        {
+          "kind": "special_or_shaped_charge",
+          "value": 200,
+          "decay_per_hex": 0,
+          "source": "u6/+12",
+          "label": "成形炸薬・特殊効果"
+        },
+        {
+          "kind": "explosive",
+          "value": 140,
+          "decay_per_hex": 0,
+          "source": "u7/+14",
+          "label": "榴弾・爆風・炸薬"
+        }
+      ],
+      "linked_raw_item_ids": [
+        302,
+        303
+      ],
+      "linked_cbe_indices": [
+        301,
+        302
+      ],
+      "record_offset": "0x1DF980"
+    },
+    {
+      "cbeNameIndex": 107,
+      "name": "RPzB54/1",
+      "category_code": 10,
+      "category_name": "rocket_launcher",
+      "effect_mode_raw": 0,
+      "effect_mode_hex": "0x0000",
+      "raw_u4_plus08": 0,
+      "raw_u5_plus10_decay": 0,
+      "raw_u6_plus12": 200,
+      "raw_u7_plus14": 140,
+      "resolved_initial_penetration": 200,
+      "resolved_source": "u6/+12",
+      "hit_rate": 65,
+      "hit_decay_per_hex": 15,
+      "malfunction_rate": 3,
+      "malfunction_modifier": 0,
+      "profiles": [
+        {
+          "kind": "special_or_shaped_charge",
+          "value": 200,
+          "decay_per_hex": 0,
+          "source": "u6/+12",
+          "label": "成形炸薬・特殊効果"
+        },
+        {
+          "kind": "explosive",
+          "value": 140,
+          "decay_per_hex": 0,
+          "source": "u7/+14",
+          "label": "榴弾・爆風・炸薬"
+        }
+      ],
+      "linked_raw_item_ids": [
+        303
+      ],
+      "linked_cbe_indices": [
+        302
+      ],
+      "record_offset": "0x1DF9C0"
+    },
+    {
+      "cbeNameIndex": 108,
+      "name": "FmW35",
+      "category_code": 9,
+      "category_name": "flamethrower",
+      "effect_mode_raw": 16395,
+      "effect_mode_hex": "0x400B",
+      "raw_u4_plus08": 0,
+      "raw_u5_plus10_decay": 0,
+      "raw_u6_plus12": 125,
+      "raw_u7_plus14": 150,
+      "resolved_initial_penetration": 0,
+      "resolved_source": null,
+      "hit_rate": 80,
+      "hit_decay_per_hex": 32,
+      "malfunction_rate": 3,
+      "malfunction_modifier": 0,
+      "profiles": [
+        {
+          "kind": "flame_direct",
+          "value": 125,
+          "decay_per_hex": 0,
+          "source": "u6/+12",
+          "label": "火炎直撃"
+        },
+        {
+          "kind": "flame_area",
+          "value": 150,
+          "decay_per_hex": 0,
+          "source": "u7/+14",
+          "label": "火炎範囲"
+        }
+      ],
+      "linked_raw_item_ids": [],
+      "linked_cbe_indices": [],
+      "record_offset": "0x1DFA00"
+    },
+    {
+      "cbeNameIndex": 109,
+      "name": "FmW40",
+      "category_code": 9,
+      "category_name": "flamethrower",
+      "effect_mode_raw": 16395,
+      "effect_mode_hex": "0x400B",
+      "raw_u4_plus08": 0,
+      "raw_u5_plus10_decay": 0,
+      "raw_u6_plus12": 125,
+      "raw_u7_plus14": 150,
+      "resolved_initial_penetration": 0,
+      "resolved_source": null,
+      "hit_rate": 75,
+      "hit_decay_per_hex": 32,
+      "malfunction_rate": 6,
+      "malfunction_modifier": 0,
+      "profiles": [
+        {
+          "kind": "flame_direct",
+          "value": 125,
+          "decay_per_hex": 0,
+          "source": "u6/+12",
+          "label": "火炎直撃"
+        },
+        {
+          "kind": "flame_area",
+          "value": 150,
+          "decay_per_hex": 0,
+          "source": "u7/+14",
+          "label": "火炎範囲"
+        }
+      ],
+      "linked_raw_item_ids": [],
+      "linked_cbe_indices": [],
+      "record_offset": "0x1DFA40"
+    },
+    {
+      "cbeNameIndex": 110,
+      "name": "FmW41",
+      "category_code": 9,
+      "category_name": "flamethrower",
+      "effect_mode_raw": 16395,
+      "effect_mode_hex": "0x400B",
+      "raw_u4_plus08": 0,
+      "raw_u5_plus10_decay": 0,
+      "raw_u6_plus12": 125,
+      "raw_u7_plus14": 150,
+      "resolved_initial_penetration": 0,
+      "resolved_source": null,
+      "hit_rate": 77,
+      "hit_decay_per_hex": 32,
+      "malfunction_rate": 5,
+      "malfunction_modifier": 0,
+      "profiles": [
+        {
+          "kind": "flame_direct",
+          "value": 125,
+          "decay_per_hex": 0,
+          "source": "u6/+12",
+          "label": "火炎直撃"
+        },
+        {
+          "kind": "flame_area",
+          "value": 150,
+          "decay_per_hex": 0,
+          "source": "u7/+14",
+          "label": "火炎範囲"
+        }
+      ],
+      "linked_raw_item_ids": [],
+      "linked_cbe_indices": [],
+      "record_offset": "0x1DFA80"
+    },
+    {
+      "cbeNameIndex": 111,
+      "name": "FmW42",
+      "category_code": 9,
+      "category_name": "flamethrower",
+      "effect_mode_raw": 16395,
+      "effect_mode_hex": "0x400B",
+      "raw_u4_plus08": 0,
+      "raw_u5_plus10_decay": 0,
+      "raw_u6_plus12": 125,
+      "raw_u7_plus14": 150,
+      "resolved_initial_penetration": 0,
+      "resolved_source": null,
+      "hit_rate": 77,
+      "hit_decay_per_hex": 32,
+      "malfunction_rate": 3,
+      "malfunction_modifier": 0,
+      "profiles": [
+        {
+          "kind": "flame_direct",
+          "value": 125,
+          "decay_per_hex": 0,
+          "source": "u6/+12",
+          "label": "火炎直撃"
+        },
+        {
+          "kind": "flame_area",
+          "value": 150,
+          "decay_per_hex": 0,
+          "source": "u7/+14",
+          "label": "火炎範囲"
+        }
+      ],
+      "linked_raw_item_ids": [],
+      "linked_cbe_indices": [],
+      "record_offset": "0x1DFAC0"
+    },
+    {
+      "cbeNameIndex": 165,
+      "name": "Very",
+      "category_code": 3,
+      "category_name": "smoke_grenade",
+      "effect_mode_raw": 0,
+      "effect_mode_hex": "0x0000",
+      "raw_u4_plus08": 0,
+      "raw_u5_plus10_decay": 0,
+      "raw_u6_plus12": 0,
+      "raw_u7_plus14": 0,
+      "resolved_initial_penetration": 0,
+      "resolved_source": null,
+      "hit_rate": 0,
+      "hit_decay_per_hex": 0,
+      "malfunction_rate": 2,
+      "malfunction_modifier": 0,
+      "profiles": [],
+      "linked_raw_item_ids": [
+        353
+      ],
+      "linked_cbe_indices": [
+        352
+      ],
+      "record_offset": "0x1E0840"
+    },
+    {
+      "cbeNameIndex": 181,
+      "name": "PIAT",
+      "category_code": 10,
+      "category_name": "rocket_launcher",
+      "effect_mode_raw": 0,
+      "effect_mode_hex": "0x0000",
+      "raw_u4_plus08": 0,
+      "raw_u5_plus10_decay": 0,
+      "raw_u6_plus12": 160,
+      "raw_u7_plus14": 120,
+      "resolved_initial_penetration": 160,
+      "resolved_source": "u6/+12",
+      "hit_rate": 60,
+      "hit_decay_per_hex": 25,
+      "malfunction_rate": 3,
+      "malfunction_modifier": 0,
+      "profiles": [
+        {
+          "kind": "special_or_shaped_charge",
+          "value": 160,
+          "decay_per_hex": 0,
+          "source": "u6/+12",
+          "label": "成形炸薬・特殊効果"
+        },
+        {
+          "kind": "explosive",
+          "value": 120,
+          "decay_per_hex": 0,
+          "source": "u7/+14",
+          "label": "榴弾・爆風・炸薬"
+        }
+      ],
+      "linked_raw_item_ids": [
+        361
+      ],
+      "linked_cbe_indices": [
+        360
+      ],
+      "record_offset": "0x1E0C40"
+    },
+    {
+      "cbeNameIndex": 182,
+      "name": "No1 Mk1",
+      "category_code": 9,
+      "category_name": "flamethrower",
+      "effect_mode_raw": 16395,
+      "effect_mode_hex": "0x400B",
+      "raw_u4_plus08": 0,
+      "raw_u5_plus10_decay": 0,
+      "raw_u6_plus12": 125,
+      "raw_u7_plus14": 150,
+      "resolved_initial_penetration": 0,
+      "resolved_source": null,
+      "hit_rate": 69,
+      "hit_decay_per_hex": 32,
+      "malfunction_rate": 3,
+      "malfunction_modifier": 0,
+      "profiles": [
+        {
+          "kind": "flame_direct",
+          "value": 125,
+          "decay_per_hex": 0,
+          "source": "u6/+12",
+          "label": "火炎直撃"
+        },
+        {
+          "kind": "flame_area",
+          "value": 150,
+          "decay_per_hex": 0,
+          "source": "u7/+14",
+          "label": "火炎範囲"
+        }
+      ],
+      "linked_raw_item_ids": [],
+      "linked_cbe_indices": [],
+      "record_offset": "0x1E0C80"
+    },
+    {
+      "cbeNameIndex": 243,
+      "name": "M6A5 HR",
+      "category_code": 18,
+      "category_name": "ammo",
+      "effect_mode_raw": 16387,
+      "effect_mode_hex": "0x4003",
+      "raw_u4_plus08": 0,
+      "raw_u5_plus10_decay": 0,
+      "raw_u6_plus12": 20,
+      "raw_u7_plus14": 0,
+      "resolved_initial_penetration": 0,
+      "resolved_source": null,
+      "hit_rate": 0,
+      "hit_decay_per_hex": 0,
+      "malfunction_rate": 0,
+      "malfunction_modifier": 0,
+      "profiles": [
+        {
+          "kind": "special_or_shaped_charge",
+          "value": 20,
+          "decay_per_hex": 0,
+          "source": "u6/+12",
+          "label": "成形炸薬・特殊効果"
+        }
+      ],
+      "linked_raw_item_ids": [
+        27,
+        28,
+        38
+      ],
+      "linked_cbe_indices": [
+        26,
+        27,
+        37
+      ],
+      "record_offset": "0x1E1BC0"
+    },
+    {
+      "cbeNameIndex": 244,
+      "name": "M9A1 RfG",
+      "category_code": 19,
+      "category_name": "rifle_grenade",
+      "effect_mode_raw": 16386,
+      "effect_mode_hex": "0x4002",
+      "raw_u4_plus08": 0,
+      "raw_u5_plus10_decay": 0,
+      "raw_u6_plus12": 125,
+      "raw_u7_plus14": 0,
+      "resolved_initial_penetration": 125,
+      "resolved_source": "u6/+12",
+      "hit_rate": 0,
+      "hit_decay_per_hex": 10,
+      "malfunction_rate": 2,
+      "malfunction_modifier": 0,
+      "profiles": [
+        {
+          "kind": "special_or_shaped_charge",
+          "value": 125,
+          "decay_per_hex": 0,
+          "source": "u6/+12",
+          "label": "成形炸薬・特殊効果"
+        }
+      ],
+      "linked_raw_item_ids": [
+        9,
+        13,
+        14,
+        38
+      ],
+      "linked_cbe_indices": [
+        8,
+        12,
+        13,
+        37
+      ],
+      "record_offset": "0x1E1C00"
+    },
+    {
+      "cbeNameIndex": 245,
+      "name": "Mk2 GPA",
+      "category_code": 19,
+      "category_name": "rifle_grenade",
+      "effect_mode_raw": 32769,
+      "effect_mode_hex": "0x8001",
+      "raw_u4_plus08": 0,
+      "raw_u5_plus10_decay": 0,
+      "raw_u6_plus12": 0,
+      "raw_u7_plus14": 110,
+      "resolved_initial_penetration": 110,
+      "resolved_source": "u7/+14",
+      "hit_rate": 0,
+      "hit_decay_per_hex": 15,
+      "malfunction_rate": 4,
+      "malfunction_modifier": 0,
+      "profiles": [
+        {
+          "kind": "explosive",
+          "value": 110,
+          "decay_per_hex": 0,
+          "source": "u7/+14",
+          "label": "榴弾・爆風・炸薬"
+        }
+      ],
+      "linked_raw_item_ids": [
+        9,
+        13,
+        14,
+        38
+      ],
+      "linked_cbe_indices": [
+        8,
+        12,
+        13,
+        37
+      ],
+      "record_offset": "0x1E1C40"
+    },
+    {
+      "cbeNameIndex": 246,
+      "name": "Mk2 Grd",
+      "category_code": 20,
+      "category_name": "hand_grenade",
+      "effect_mode_raw": 1,
+      "effect_mode_hex": "0x0001",
+      "raw_u4_plus08": 130,
+      "raw_u5_plus10_decay": 0,
+      "raw_u6_plus12": 0,
+      "raw_u7_plus14": 130,
+      "resolved_initial_penetration": 130,
+      "resolved_source": "u4/+08",
+      "hit_rate": 0,
+      "hit_decay_per_hex": 30,
+      "malfunction_rate": 3,
+      "malfunction_modifier": 0,
+      "profiles": [
+        {
+          "kind": "explosive",
+          "value": 130,
+          "decay_per_hex": 0,
+          "source": "u4/+08",
+          "label": "榴弾・爆風・炸薬"
+        },
+        {
+          "kind": "explosive",
+          "value": 130,
+          "decay_per_hex": 0,
+          "source": "u7/+14",
+          "label": "榴弾・爆風・炸薬"
+        }
+      ],
+      "linked_raw_item_ids": [],
+      "linked_cbe_indices": [],
+      "record_offset": "0x1E1C80"
+    },
+    {
+      "cbeNameIndex": 247,
+      "name": "Mk3A1Grd",
+      "category_code": 20,
+      "category_name": "hand_grenade",
+      "effect_mode_raw": 1,
+      "effect_mode_hex": "0x0001",
+      "raw_u4_plus08": 110,
+      "raw_u5_plus10_decay": 0,
+      "raw_u6_plus12": 0,
+      "raw_u7_plus14": 110,
+      "resolved_initial_penetration": 110,
+      "resolved_source": "u4/+08",
+      "hit_rate": 0,
+      "hit_decay_per_hex": 20,
+      "malfunction_rate": 3,
+      "malfunction_modifier": 0,
+      "profiles": [
+        {
+          "kind": "explosive",
+          "value": 110,
+          "decay_per_hex": 0,
+          "source": "u4/+08",
+          "label": "榴弾・爆風・炸薬"
+        },
+        {
+          "kind": "explosive",
+          "value": 110,
+          "decay_per_hex": 0,
+          "source": "u7/+14",
+          "label": "榴弾・爆風・炸薬"
+        }
+      ],
+      "linked_raw_item_ids": [],
+      "linked_cbe_indices": [],
+      "record_offset": "0x1E1CC0"
+    },
+    {
+      "cbeNameIndex": 248,
+      "name": "M1 CDB",
+      "category_code": 22,
+      "category_name": "demolition",
+      "effect_mode_raw": 1,
+      "effect_mode_hex": "0x0001",
+      "raw_u4_plus08": 0,
+      "raw_u5_plus10_decay": 0,
+      "raw_u6_plus12": 0,
+      "raw_u7_plus14": 200,
+      "resolved_initial_penetration": 200,
+      "resolved_source": "u7/+14",
+      "hit_rate": 0,
+      "hit_decay_per_hex": 30,
+      "malfunction_rate": 5,
+      "malfunction_modifier": 0,
+      "profiles": [
+        {
+          "kind": "explosive",
+          "value": 200,
+          "decay_per_hex": 0,
+          "source": "u7/+14",
+          "label": "榴弾・爆風・炸薬"
+        }
+      ],
+      "linked_raw_item_ids": [],
+      "linked_cbe_indices": [],
+      "record_offset": "0x1E1D00"
+    },
+    {
+      "cbeNameIndex": 249,
+      "name": "WP M15",
+      "category_code": 23,
+      "category_name": "smoke",
+      "effect_mode_raw": 0,
+      "effect_mode_hex": "0x0000",
+      "raw_u4_plus08": 0,
+      "raw_u5_plus10_decay": 0,
+      "raw_u6_plus12": 0,
+      "raw_u7_plus14": 0,
+      "resolved_initial_penetration": 0,
+      "resolved_source": null,
+      "hit_rate": 0,
+      "hit_decay_per_hex": 0,
+      "malfunction_rate": 5,
+      "malfunction_modifier": 0,
+      "profiles": [],
+      "linked_raw_item_ids": [],
+      "linked_cbe_indices": [],
+      "record_offset": "0x1E1D40"
+    },
+    {
+      "cbeNameIndex": 267,
+      "name": "Wkor361",
+      "category_code": 19,
+      "category_name": "rifle_grenade",
+      "effect_mode_raw": 32769,
+      "effect_mode_hex": "0x8001",
+      "raw_u4_plus08": 0,
+      "raw_u5_plus10_decay": 0,
+      "raw_u6_plus12": 0,
+      "raw_u7_plus14": 105,
+      "resolved_initial_penetration": 105,
+      "resolved_source": "u7/+14",
+      "hit_rate": 0,
+      "hit_decay_per_hex": 35,
+      "malfunction_rate": 2,
+      "malfunction_modifier": 0,
+      "profiles": [
+        {
+          "kind": "explosive",
+          "value": 105,
+          "decay_per_hex": 0,
+          "source": "u7/+14",
+          "label": "榴弾・爆風・炸薬"
+        }
+      ],
+      "linked_raw_item_ids": [
+        53,
+        55,
+        33
+      ],
+      "linked_cbe_indices": [
+        52,
+        54,
+        32
+      ],
+      "record_offset": "0x1E21C0"
+    },
+    {
+      "cbeNameIndex": 268,
+      "name": "Wgrp326",
+      "category_code": 19,
+      "category_name": "rifle_grenade",
+      "effect_mode_raw": 32769,
+      "effect_mode_hex": "0x8001",
+      "raw_u4_plus08": 0,
+      "raw_u5_plus10_decay": 0,
+      "raw_u6_plus12": 0,
+      "raw_u7_plus14": 90,
+      "resolved_initial_penetration": 90,
+      "resolved_source": "u7/+14",
+      "hit_rate": 0,
+      "hit_decay_per_hex": 20,
+      "malfunction_rate": 0,
+      "malfunction_modifier": 0,
+      "profiles": [
+        {
+          "kind": "explosive",
+          "value": 90,
+          "decay_per_hex": 0,
+          "source": "u7/+14",
+          "label": "榴弾・爆風・炸薬"
+        }
+      ],
+      "linked_raw_item_ids": [
+        53,
+        55,
+        33
+      ],
+      "linked_cbe_indices": [
+        52,
+        54,
+        32
+      ],
+      "record_offset": "0x1E2200"
+    },
+    {
+      "cbeNameIndex": 270,
+      "name": "SprGr.Z",
+      "category_code": 19,
+      "category_name": "rifle_grenade",
+      "effect_mode_raw": 16387,
+      "effect_mode_hex": "0x4003",
+      "raw_u4_plus08": 0,
+      "raw_u5_plus10_decay": 0,
+      "raw_u6_plus12": 110,
+      "raw_u7_plus14": 110,
+      "resolved_initial_penetration": 110,
+      "resolved_source": "u6/+12",
+      "hit_rate": 0,
+      "hit_decay_per_hex": 30,
+      "malfunction_rate": 0,
+      "malfunction_modifier": 0,
+      "profiles": [
+        {
+          "kind": "special_or_shaped_charge",
+          "value": 110,
+          "decay_per_hex": 0,
+          "source": "u6/+12",
+          "label": "成形炸薬・特殊効果"
+        },
+        {
+          "kind": "explosive",
+          "value": 110,
+          "decay_per_hex": 0,
+          "source": "u7/+14",
+          "label": "榴弾・爆風・炸薬"
+        }
+      ],
+      "linked_raw_item_ids": [
+        33
+      ],
+      "linked_cbe_indices": [
+        32
+      ],
+      "record_offset": "0x1E2280"
+    },
+    {
+      "cbeNameIndex": 271,
+      "name": "Pzwk42",
+      "category_code": 19,
+      "category_name": "rifle_grenade",
+      "effect_mode_raw": 16386,
+      "effect_mode_hex": "0x4002",
+      "raw_u4_plus08": 0,
+      "raw_u5_plus10_decay": 0,
+      "raw_u6_plus12": 130,
+      "raw_u7_plus14": 0,
+      "resolved_initial_penetration": 130,
+      "resolved_source": "u6/+12",
+      "hit_rate": 0,
+      "hit_decay_per_hex": 40,
+      "malfunction_rate": 0,
+      "malfunction_modifier": 0,
+      "profiles": [
+        {
+          "kind": "special_or_shaped_charge",
+          "value": 130,
+          "decay_per_hex": 0,
+          "source": "u6/+12",
+          "label": "成形炸薬・特殊効果"
+        }
+      ],
+      "linked_raw_item_ids": [
+        38
+      ],
+      "linked_cbe_indices": [
+        37
+      ],
+      "record_offset": "0x1E22C0"
+    },
+    {
+      "cbeNameIndex": 303,
+      "name": "GPzgr",
+      "category_code": 19,
+      "category_name": "rifle_grenade",
+      "effect_mode_raw": 16386,
+      "effect_mode_hex": "0x4002",
+      "raw_u4_plus08": 0,
+      "raw_u5_plus10_decay": 0,
+      "raw_u6_plus12": 125,
+      "raw_u7_plus14": 0,
+      "resolved_initial_penetration": 125,
+      "resolved_source": "u6/+12",
+      "hit_rate": 0,
+      "hit_decay_per_hex": 10,
+      "malfunction_rate": 2,
+      "malfunction_modifier": 0,
+      "profiles": [
+        {
+          "kind": "special_or_shaped_charge",
+          "value": 125,
+          "decay_per_hex": 0,
+          "source": "u6/+12",
+          "label": "成形炸薬・特殊効果"
+        }
+      ],
+      "linked_raw_item_ids": [
+        33
+      ],
+      "linked_cbe_indices": [
+        32
+      ],
+      "record_offset": "0x1E2AC0"
+    },
+    {
+      "cbeNameIndex": 304,
+      "name": "GSprgr",
+      "category_code": 19,
+      "category_name": "rifle_grenade",
+      "effect_mode_raw": 32769,
+      "effect_mode_hex": "0x8001",
+      "raw_u4_plus08": 0,
+      "raw_u5_plus10_decay": 0,
+      "raw_u6_plus12": 0,
+      "raw_u7_plus14": 100,
+      "resolved_initial_penetration": 100,
+      "resolved_source": "u7/+14",
+      "hit_rate": 0,
+      "hit_decay_per_hex": 10,
+      "malfunction_rate": 2,
+      "malfunction_modifier": 0,
+      "profiles": [
+        {
+          "kind": "explosive",
+          "value": 100,
+          "decay_per_hex": 0,
+          "source": "u7/+14",
+          "label": "榴弾・爆風・炸薬"
+        }
+      ],
+      "linked_raw_item_ids": [
+        33
+      ],
+      "linked_cbe_indices": [
+        32
+      ],
+      "record_offset": "0x1E2B00"
+    },
+    {
+      "cbeNameIndex": 305,
+      "name": "StiGr24",
+      "category_code": 20,
+      "category_name": "hand_grenade",
+      "effect_mode_raw": 1,
+      "effect_mode_hex": "0x0001",
+      "raw_u4_plus08": 110,
+      "raw_u5_plus10_decay": 0,
+      "raw_u6_plus12": 0,
+      "raw_u7_plus14": 110,
+      "resolved_initial_penetration": 110,
+      "resolved_source": "u4/+08",
+      "hit_rate": 0,
+      "hit_decay_per_hex": 20,
+      "malfunction_rate": 3,
+      "malfunction_modifier": 0,
+      "profiles": [
+        {
+          "kind": "explosive",
+          "value": 110,
+          "decay_per_hex": 0,
+          "source": "u4/+08",
+          "label": "榴弾・爆風・炸薬"
+        },
+        {
+          "kind": "explosive",
+          "value": 110,
+          "decay_per_hex": 0,
+          "source": "u7/+14",
+          "label": "榴弾・爆風・炸薬"
+        }
+      ],
+      "linked_raw_item_ids": [],
+      "linked_cbe_indices": [],
+      "record_offset": "0x1E2B40"
+    },
+    {
+      "cbeNameIndex": 306,
+      "name": "StiGr39",
+      "category_code": 20,
+      "category_name": "hand_grenade",
+      "effect_mode_raw": 1,
+      "effect_mode_hex": "0x0001",
+      "raw_u4_plus08": 120,
+      "raw_u5_plus10_decay": 0,
+      "raw_u6_plus12": 0,
+      "raw_u7_plus14": 120,
+      "resolved_initial_penetration": 120,
+      "resolved_source": "u4/+08",
+      "hit_rate": 0,
+      "hit_decay_per_hex": 20,
+      "malfunction_rate": 3,
+      "malfunction_modifier": 0,
+      "profiles": [
+        {
+          "kind": "explosive",
+          "value": 120,
+          "decay_per_hex": 0,
+          "source": "u4/+08",
+          "label": "榴弾・爆風・炸薬"
+        },
+        {
+          "kind": "explosive",
+          "value": 120,
+          "decay_per_hex": 0,
+          "source": "u7/+14",
+          "label": "榴弾・爆風・炸薬"
+        }
+      ],
+      "linked_raw_item_ids": [],
+      "linked_cbe_indices": [],
+      "record_offset": "0x1E2B80"
+    },
+    {
+      "cbeNameIndex": 307,
+      "name": "StiGr43",
+      "category_code": 20,
+      "category_name": "hand_grenade",
+      "effect_mode_raw": 1,
+      "effect_mode_hex": "0x0001",
+      "raw_u4_plus08": 120,
+      "raw_u5_plus10_decay": 0,
+      "raw_u6_plus12": 0,
+      "raw_u7_plus14": 120,
+      "resolved_initial_penetration": 120,
+      "resolved_source": "u4/+08",
+      "hit_rate": 0,
+      "hit_decay_per_hex": 20,
+      "malfunction_rate": 3,
+      "malfunction_modifier": 0,
+      "profiles": [
+        {
+          "kind": "explosive",
+          "value": 120,
+          "decay_per_hex": 0,
+          "source": "u4/+08",
+          "label": "榴弾・爆風・炸薬"
+        },
+        {
+          "kind": "explosive",
+          "value": 120,
+          "decay_per_hex": 0,
+          "source": "u7/+14",
+          "label": "榴弾・爆風・炸薬"
+        }
+      ],
+      "linked_raw_item_ids": [],
+      "linked_cbe_indices": [],
+      "record_offset": "0x1E2BC0"
+    },
+    {
+      "cbeNameIndex": 308,
+      "name": "EihGr39",
+      "category_code": 20,
+      "category_name": "hand_grenade",
+      "effect_mode_raw": 1,
+      "effect_mode_hex": "0x0001",
+      "raw_u4_plus08": 105,
+      "raw_u5_plus10_decay": 0,
+      "raw_u6_plus12": 0,
+      "raw_u7_plus14": 105,
+      "resolved_initial_penetration": 105,
+      "resolved_source": "u4/+08",
+      "hit_rate": 0,
+      "hit_decay_per_hex": 20,
+      "malfunction_rate": 3,
+      "malfunction_modifier": 0,
+      "profiles": [
+        {
+          "kind": "explosive",
+          "value": 105,
+          "decay_per_hex": 0,
+          "source": "u4/+08",
+          "label": "榴弾・爆風・炸薬"
+        },
+        {
+          "kind": "explosive",
+          "value": 105,
+          "decay_per_hex": 0,
+          "source": "u7/+14",
+          "label": "榴弾・爆風・炸薬"
+        }
+      ],
+      "linked_raw_item_ids": [],
+      "linked_cbe_indices": [],
+      "record_offset": "0x1E2C00"
+    },
+    {
+      "cbeNameIndex": 309,
+      "name": "GebLad",
+      "category_code": 20,
+      "category_name": "hand_grenade",
+      "effect_mode_raw": 1,
+      "effect_mode_hex": "0x0001",
+      "raw_u4_plus08": 180,
+      "raw_u5_plus10_decay": 0,
+      "raw_u6_plus12": 0,
+      "raw_u7_plus14": 180,
+      "resolved_initial_penetration": 180,
+      "resolved_source": "u4/+08",
+      "hit_rate": 0,
+      "hit_decay_per_hex": 50,
+      "malfunction_rate": 3,
+      "malfunction_modifier": 0,
+      "profiles": [
+        {
+          "kind": "explosive",
+          "value": 180,
+          "decay_per_hex": 0,
+          "source": "u4/+08",
+          "label": "榴弾・爆風・炸薬"
+        },
+        {
+          "kind": "explosive",
+          "value": 180,
+          "decay_per_hex": 0,
+          "source": "u7/+14",
+          "label": "榴弾・爆風・炸薬"
+        }
+      ],
+      "linked_raw_item_ids": [],
+      "linked_cbe_indices": [],
+      "record_offset": "0x1E2C40"
+    },
+    {
+      "cbeNameIndex": 310,
+      "name": "Haft-Hl3",
+      "category_code": 21,
+      "category_name": "magnetic_mine",
+      "effect_mode_raw": 16386,
+      "effect_mode_hex": "0x4002",
+      "raw_u4_plus08": 0,
+      "raw_u5_plus10_decay": 0,
+      "raw_u6_plus12": 240,
+      "raw_u7_plus14": 0,
+      "resolved_initial_penetration": 240,
+      "resolved_source": "u6/+12",
+      "hit_rate": 0,
+      "hit_decay_per_hex": 60,
+      "malfunction_rate": 5,
+      "malfunction_modifier": 0,
+      "profiles": [
+        {
+          "kind": "special_or_shaped_charge",
+          "value": 240,
+          "decay_per_hex": 0,
+          "source": "u6/+12",
+          "label": "成形炸薬・特殊効果"
+        }
+      ],
+      "linked_raw_item_ids": [],
+      "linked_cbe_indices": [],
+      "record_offset": "0x1E2C80"
+    },
+    {
+      "cbeNameIndex": 311,
+      "name": "GebLad 3",
+      "category_code": 22,
+      "category_name": "demolition",
+      "effect_mode_raw": 1,
+      "effect_mode_hex": "0x0001",
+      "raw_u4_plus08": 0,
+      "raw_u5_plus10_decay": 0,
+      "raw_u6_plus12": 0,
+      "raw_u7_plus14": 160,
+      "resolved_initial_penetration": 160,
+      "resolved_source": "u7/+14",
+      "hit_rate": 0,
+      "hit_decay_per_hex": 30,
+      "malfunction_rate": 5,
+      "malfunction_modifier": 0,
+      "profiles": [
+        {
+          "kind": "explosive",
+          "value": 160,
+          "decay_per_hex": 0,
+          "source": "u7/+14",
+          "label": "榴弾・爆風・炸薬"
+        }
+      ],
+      "linked_raw_item_ids": [],
+      "linked_cbe_indices": [],
+      "record_offset": "0x1E2CC0"
+    },
+    {
+      "cbeNameIndex": 312,
+      "name": "NbK39",
+      "category_code": 23,
+      "category_name": "smoke",
+      "effect_mode_raw": 0,
+      "effect_mode_hex": "0x0000",
+      "raw_u4_plus08": 0,
+      "raw_u5_plus10_decay": 0,
+      "raw_u6_plus12": 0,
+      "raw_u7_plus14": 0,
+      "resolved_initial_penetration": 0,
+      "resolved_source": null,
+      "hit_rate": 0,
+      "hit_decay_per_hex": 0,
+      "malfunction_rate": 5,
+      "malfunction_modifier": 0,
+      "profiles": [],
+      "linked_raw_item_ids": [],
+      "linked_cbe_indices": [],
+      "record_offset": "0x1E2D00"
+    },
+    {
+      "cbeNameIndex": 328,
+      "name": "SRCM m35",
+      "category_code": 20,
+      "category_name": "hand_grenade",
+      "effect_mode_raw": 1,
+      "effect_mode_hex": "0x0001",
+      "raw_u4_plus08": 98,
+      "raw_u5_plus10_decay": 0,
+      "raw_u6_plus12": 0,
+      "raw_u7_plus14": 98,
+      "resolved_initial_penetration": 98,
+      "resolved_source": "u4/+08",
+      "hit_rate": 0,
+      "hit_decay_per_hex": 15,
+      "malfunction_rate": 8,
+      "malfunction_modifier": 0,
+      "profiles": [
+        {
+          "kind": "explosive",
+          "value": 98,
+          "decay_per_hex": 0,
+          "source": "u4/+08",
+          "label": "榴弾・爆風・炸薬"
+        },
+        {
+          "kind": "explosive",
+          "value": 98,
+          "decay_per_hex": 0,
+          "source": "u7/+14",
+          "label": "榴弾・爆風・炸薬"
+        }
+      ],
+      "linked_raw_item_ids": [],
+      "linked_cbe_indices": [],
+      "record_offset": "0x1E3100"
+    },
+    {
+      "cbeNameIndex": 329,
+      "name": "Breda 35",
+      "category_code": 20,
+      "category_name": "hand_grenade",
+      "effect_mode_raw": 1,
+      "effect_mode_hex": "0x0001",
+      "raw_u4_plus08": 100,
+      "raw_u5_plus10_decay": 0,
+      "raw_u6_plus12": 0,
+      "raw_u7_plus14": 100,
+      "resolved_initial_penetration": 100,
+      "resolved_source": "u4/+08",
+      "hit_rate": 0,
+      "hit_decay_per_hex": 15,
+      "malfunction_rate": 8,
+      "malfunction_modifier": 0,
+      "profiles": [
+        {
+          "kind": "explosive",
+          "value": 100,
+          "decay_per_hex": 0,
+          "source": "u4/+08",
+          "label": "榴弾・爆風・炸薬"
+        },
+        {
+          "kind": "explosive",
+          "value": 100,
+          "decay_per_hex": 0,
+          "source": "u7/+14",
+          "label": "榴弾・爆風・炸薬"
+        }
+      ],
+      "linked_raw_item_ids": [],
+      "linked_cbe_indices": [],
+      "record_offset": "0x1E3140"
+    },
+    {
+      "cbeNameIndex": 330,
+      "name": "OTO m35",
+      "category_code": 20,
+      "category_name": "hand_grenade",
+      "effect_mode_raw": 1,
+      "effect_mode_hex": "0x0001",
+      "raw_u4_plus08": 95,
+      "raw_u5_plus10_decay": 0,
+      "raw_u6_plus12": 0,
+      "raw_u7_plus14": 95,
+      "resolved_initial_penetration": 95,
+      "resolved_source": "u4/+08",
+      "hit_rate": 0,
+      "hit_decay_per_hex": 15,
+      "malfunction_rate": 6,
+      "malfunction_modifier": 0,
+      "profiles": [
+        {
+          "kind": "explosive",
+          "value": 95,
+          "decay_per_hex": 0,
+          "source": "u4/+08",
+          "label": "榴弾・爆風・炸薬"
+        },
+        {
+          "kind": "explosive",
+          "value": 95,
+          "decay_per_hex": 0,
+          "source": "u7/+14",
+          "label": "榴弾・爆風・炸薬"
+        }
+      ],
+      "linked_raw_item_ids": [],
+      "linked_cbe_indices": [],
+      "record_offset": "0x1E3180"
+    },
+    {
+      "cbeNameIndex": 345,
+      "name": "Grd F1",
+      "category_code": 20,
+      "category_name": "hand_grenade",
+      "effect_mode_raw": 1,
+      "effect_mode_hex": "0x0001",
+      "raw_u4_plus08": 130,
+      "raw_u5_plus10_decay": 0,
+      "raw_u6_plus12": 0,
+      "raw_u7_plus14": 130,
+      "resolved_initial_penetration": 130,
+      "resolved_source": "u4/+08",
+      "hit_rate": 0,
+      "hit_decay_per_hex": 30,
+      "malfunction_rate": 3,
+      "malfunction_modifier": 0,
+      "profiles": [
+        {
+          "kind": "explosive",
+          "value": 130,
+          "decay_per_hex": 0,
+          "source": "u4/+08",
+          "label": "榴弾・爆風・炸薬"
+        },
+        {
+          "kind": "explosive",
+          "value": 130,
+          "decay_per_hex": 0,
+          "source": "u7/+14",
+          "label": "榴弾・爆風・炸薬"
+        }
+      ],
+      "linked_raw_item_ids": [],
+      "linked_cbe_indices": [],
+      "record_offset": "0x1E3540"
+    },
+    {
+      "cbeNameIndex": 346,
+      "name": "Grd O.F.",
+      "category_code": 20,
+      "category_name": "hand_grenade",
+      "effect_mode_raw": 1,
+      "effect_mode_hex": "0x0001",
+      "raw_u4_plus08": 105,
+      "raw_u5_plus10_decay": 0,
+      "raw_u6_plus12": 0,
+      "raw_u7_plus14": 105,
+      "resolved_initial_penetration": 105,
+      "resolved_source": "u4/+08",
+      "hit_rate": 0,
+      "hit_decay_per_hex": 20,
+      "malfunction_rate": 3,
+      "malfunction_modifier": 0,
+      "profiles": [
+        {
+          "kind": "explosive",
+          "value": 105,
+          "decay_per_hex": 0,
+          "source": "u4/+08",
+          "label": "榴弾・爆風・炸薬"
+        },
+        {
+          "kind": "explosive",
+          "value": 105,
+          "decay_per_hex": 0,
+          "source": "u7/+14",
+          "label": "榴弾・爆風・炸薬"
+        }
+      ],
+      "linked_raw_item_ids": [],
+      "linked_cbe_indices": [],
+      "record_offset": "0x1E3580"
+    },
+    {
+      "cbeNameIndex": 361,
+      "name": "No36M",
+      "category_code": 20,
+      "category_name": "hand_grenade",
+      "effect_mode_raw": 1,
+      "effect_mode_hex": "0x0001",
+      "raw_u4_plus08": 130,
+      "raw_u5_plus10_decay": 0,
+      "raw_u6_plus12": 0,
+      "raw_u7_plus14": 130,
+      "resolved_initial_penetration": 130,
+      "resolved_source": "u4/+08",
+      "hit_rate": 0,
+      "hit_decay_per_hex": 33,
+      "malfunction_rate": 3,
+      "malfunction_modifier": 0,
+      "profiles": [
+        {
+          "kind": "explosive",
+          "value": 130,
+          "decay_per_hex": 0,
+          "source": "u4/+08",
+          "label": "榴弾・爆風・炸薬"
+        },
+        {
+          "kind": "explosive",
+          "value": 130,
+          "decay_per_hex": 0,
+          "source": "u7/+14",
+          "label": "榴弾・爆風・炸薬"
+        }
+      ],
+      "linked_raw_item_ids": [],
+      "linked_cbe_indices": [],
+      "record_offset": "0x1E3940"
+    },
+    {
+      "cbeNameIndex": 410,
+      "name": "37mmGun M5",
+      "category_code": 27,
+      "category_name": "gun",
+      "effect_mode_raw": 5,
+      "effect_mode_hex": "0x0005",
+      "raw_u4_plus08": 143,
+      "raw_u5_plus10_decay": 1,
+      "raw_u6_plus12": 0,
+      "raw_u7_plus14": 90,
+      "resolved_initial_penetration": 143,
+      "resolved_source": "u4/+08",
+      "hit_rate": 90,
+      "hit_decay_per_hex": 1,
+      "malfunction_rate": 2,
+      "malfunction_modifier": 0,
+      "profiles": [
+        {
+          "kind": "kinetic",
+          "value": 143,
+          "decay_per_hex": 1,
+          "source": "u4/+08",
+          "label": "通常徹甲・直射"
+        },
+        {
+          "kind": "explosive",
+          "value": 90,
+          "decay_per_hex": 0,
+          "source": "u7/+14",
+          "label": "榴弾・爆風・炸薬"
+        }
+      ],
+      "linked_raw_item_ids": [],
+      "linked_cbe_indices": [],
+      "record_offset": "0x1E4580"
+    },
+    {
+      "cbeNameIndex": 411,
+      "name": "37mmGun M5",
+      "category_code": 27,
+      "category_name": "gun",
+      "effect_mode_raw": 4,
+      "effect_mode_hex": "0x0004",
+      "raw_u4_plus08": 143,
+      "raw_u5_plus10_decay": 1,
+      "raw_u6_plus12": 0,
+      "raw_u7_plus14": 0,
+      "resolved_initial_penetration": 143,
+      "resolved_source": "u4/+08",
+      "hit_rate": 90,
+      "hit_decay_per_hex": 1,
+      "malfunction_rate": 2,
+      "malfunction_modifier": 0,
+      "profiles": [
+        {
+          "kind": "kinetic",
+          "value": 143,
+          "decay_per_hex": 1,
+          "source": "u4/+08",
+          "label": "通常徹甲・直射"
+        }
+      ],
+      "linked_raw_item_ids": [],
+      "linked_cbe_indices": [],
+      "record_offset": "0x1E45C0"
+    },
+    {
+      "cbeNameIndex": 412,
+      "name": "37mmGun M6",
+      "category_code": 27,
+      "category_name": "gun",
+      "effect_mode_raw": 5,
+      "effect_mode_hex": "0x0005",
+      "raw_u4_plus08": 145,
+      "raw_u5_plus10_decay": 1,
+      "raw_u6_plus12": 0,
+      "raw_u7_plus14": 90,
+      "resolved_initial_penetration": 145,
+      "resolved_source": "u4/+08",
+      "hit_rate": 90,
+      "hit_decay_per_hex": 1,
+      "malfunction_rate": 2,
+      "malfunction_modifier": 0,
+      "profiles": [
+        {
+          "kind": "kinetic",
+          "value": 145,
+          "decay_per_hex": 1,
+          "source": "u4/+08",
+          "label": "通常徹甲・直射"
+        },
+        {
+          "kind": "explosive",
+          "value": 90,
+          "decay_per_hex": 0,
+          "source": "u7/+14",
+          "label": "榴弾・爆風・炸薬"
+        }
+      ],
+      "linked_raw_item_ids": [],
+      "linked_cbe_indices": [],
+      "record_offset": "0x1E4600"
+    },
+    {
+      "cbeNameIndex": 413,
+      "name": "37mmGun M6",
+      "category_code": 27,
+      "category_name": "gun",
+      "effect_mode_raw": 5,
+      "effect_mode_hex": "0x0005",
+      "raw_u4_plus08": 145,
+      "raw_u5_plus10_decay": 1,
+      "raw_u6_plus12": 0,
+      "raw_u7_plus14": 90,
+      "resolved_initial_penetration": 145,
+      "resolved_source": "u4/+08",
+      "hit_rate": 90,
+      "hit_decay_per_hex": 1,
+      "malfunction_rate": 2,
+      "malfunction_modifier": 0,
+      "profiles": [
+        {
+          "kind": "kinetic",
+          "value": 145,
+          "decay_per_hex": 1,
+          "source": "u4/+08",
+          "label": "通常徹甲・直射"
+        },
+        {
+          "kind": "explosive",
+          "value": 90,
+          "decay_per_hex": 0,
+          "source": "u7/+14",
+          "label": "榴弾・爆風・炸薬"
+        }
+      ],
+      "linked_raw_item_ids": [],
+      "linked_cbe_indices": [],
+      "record_offset": "0x1E4640"
+    },
+    {
+      "cbeNameIndex": 414,
+      "name": "57mmGun M1",
+      "category_code": 27,
+      "category_name": "gun",
+      "effect_mode_raw": 4,
+      "effect_mode_hex": "0x0004",
+      "raw_u4_plus08": 162,
+      "raw_u5_plus10_decay": 1,
+      "raw_u6_plus12": 0,
+      "raw_u7_plus14": 0,
+      "resolved_initial_penetration": 162,
+      "resolved_source": "u4/+08",
+      "hit_rate": 80,
+      "hit_decay_per_hex": 1,
+      "malfunction_rate": 2,
+      "malfunction_modifier": 0,
+      "profiles": [
+        {
+          "kind": "kinetic",
+          "value": 162,
+          "decay_per_hex": 1,
+          "source": "u4/+08",
+          "label": "通常徹甲・直射"
+        }
+      ],
+      "linked_raw_item_ids": [],
+      "linked_cbe_indices": [],
+      "record_offset": "0x1E4680"
+    },
+    {
+      "cbeNameIndex": 415,
+      "name": "75mm M1897",
+      "category_code": 27,
+      "category_name": "gun",
+      "effect_mode_raw": 5,
+      "effect_mode_hex": "0x0005",
+      "raw_u4_plus08": 155,
+      "raw_u5_plus10_decay": 1,
+      "raw_u6_plus12": 0,
+      "raw_u7_plus14": 120,
+      "resolved_initial_penetration": 155,
+      "resolved_source": "u4/+08",
+      "hit_rate": 70,
+      "hit_decay_per_hex": 1,
+      "malfunction_rate": 3,
+      "malfunction_modifier": 0,
+      "profiles": [
+        {
+          "kind": "kinetic",
+          "value": 155,
+          "decay_per_hex": 1,
+          "source": "u4/+08",
+          "label": "通常徹甲・直射"
+        },
+        {
+          "kind": "explosive",
+          "value": 120,
+          "decay_per_hex": 0,
+          "source": "u7/+14",
+          "label": "榴弾・爆風・炸薬"
+        }
+      ],
+      "linked_raw_item_ids": [],
+      "linked_cbe_indices": [],
+      "record_offset": "0x1E46C0"
+    },
+    {
+      "cbeNameIndex": 416,
+      "name": "75mmGun M2",
+      "category_code": 27,
+      "category_name": "gun",
+      "effect_mode_raw": 5,
+      "effect_mode_hex": "0x0005",
+      "raw_u4_plus08": 150,
+      "raw_u5_plus10_decay": 1,
+      "raw_u6_plus12": 0,
+      "raw_u7_plus14": 120,
+      "resolved_initial_penetration": 150,
+      "resolved_source": "u4/+08",
+      "hit_rate": 65,
+      "hit_decay_per_hex": 1,
+      "malfunction_rate": 3,
+      "malfunction_modifier": 0,
+      "profiles": [
+        {
+          "kind": "kinetic",
+          "value": 150,
+          "decay_per_hex": 1,
+          "source": "u4/+08",
+          "label": "通常徹甲・直射"
+        },
+        {
+          "kind": "explosive",
+          "value": 120,
+          "decay_per_hex": 0,
+          "source": "u7/+14",
+          "label": "榴弾・爆風・炸薬"
+        }
+      ],
+      "linked_raw_item_ids": [],
+      "linked_cbe_indices": [],
+      "record_offset": "0x1E4700"
+    },
+    {
+      "cbeNameIndex": 417,
+      "name": "75mmGun M3",
+      "category_code": 27,
+      "category_name": "gun",
+      "effect_mode_raw": 5,
+      "effect_mode_hex": "0x0005",
+      "raw_u4_plus08": 155,
+      "raw_u5_plus10_decay": 1,
+      "raw_u6_plus12": 0,
+      "raw_u7_plus14": 120,
+      "resolved_initial_penetration": 155,
+      "resolved_source": "u4/+08",
+      "hit_rate": 70,
+      "hit_decay_per_hex": 1,
+      "malfunction_rate": 2,
+      "malfunction_modifier": 0,
+      "profiles": [
+        {
+          "kind": "kinetic",
+          "value": 155,
+          "decay_per_hex": 1,
+          "source": "u4/+08",
+          "label": "通常徹甲・直射"
+        },
+        {
+          "kind": "explosive",
+          "value": 120,
+          "decay_per_hex": 0,
+          "source": "u7/+14",
+          "label": "榴弾・爆風・炸薬"
+        }
+      ],
+      "linked_raw_item_ids": [],
+      "linked_cbe_indices": [],
+      "record_offset": "0x1E4740"
+    },
+    {
+      "cbeNameIndex": 418,
+      "name": "75mmGun M5/6",
+      "category_code": 27,
+      "category_name": "gun",
+      "effect_mode_raw": 5,
+      "effect_mode_hex": "0x0005",
+      "raw_u4_plus08": 155,
+      "raw_u5_plus10_decay": 1,
+      "raw_u6_plus12": 0,
+      "raw_u7_plus14": 120,
+      "resolved_initial_penetration": 155,
+      "resolved_source": "u4/+08",
+      "hit_rate": 70,
+      "hit_decay_per_hex": 1,
+      "malfunction_rate": 3,
+      "malfunction_modifier": 0,
+      "profiles": [
+        {
+          "kind": "kinetic",
+          "value": 155,
+          "decay_per_hex": 1,
+          "source": "u4/+08",
+          "label": "通常徹甲・直射"
+        },
+        {
+          "kind": "explosive",
+          "value": 120,
+          "decay_per_hex": 0,
+          "source": "u7/+14",
+          "label": "榴弾・爆風・炸薬"
+        }
+      ],
+      "linked_raw_item_ids": [],
+      "linked_cbe_indices": [],
+      "record_offset": "0x1E4780"
+    },
+    {
+      "cbeNameIndex": 419,
+      "name": "75mmHow M2/3",
+      "category_code": 28,
+      "category_name": "howitzer",
+      "effect_mode_raw": 32769,
+      "effect_mode_hex": "0x8001",
+      "raw_u4_plus08": 0,
+      "raw_u5_plus10_decay": 0,
+      "raw_u6_plus12": 0,
+      "raw_u7_plus14": 120,
+      "resolved_initial_penetration": 0,
+      "resolved_source": null,
+      "hit_rate": 60,
+      "hit_decay_per_hex": 1,
+      "malfunction_rate": 3,
+      "malfunction_modifier": 0,
+      "profiles": [
+        {
+          "kind": "explosive",
+          "value": 120,
+          "decay_per_hex": 0,
+          "source": "u7/+14",
+          "label": "榴弾・爆風・炸薬"
+        }
+      ],
+      "linked_raw_item_ids": [],
+      "linked_cbe_indices": [],
+      "record_offset": "0x1E47C0"
+    },
+    {
+      "cbeNameIndex": 420,
+      "name": "76mmGun M1A1",
+      "category_code": 27,
+      "category_name": "gun",
+      "effect_mode_raw": 5,
+      "effect_mode_hex": "0x0005",
+      "raw_u4_plus08": 175,
+      "raw_u5_plus10_decay": 1,
+      "raw_u6_plus12": 0,
+      "raw_u7_plus14": 95,
+      "resolved_initial_penetration": 175,
+      "resolved_source": "u4/+08",
+      "hit_rate": 80,
+      "hit_decay_per_hex": 1,
+      "malfunction_rate": 2,
+      "malfunction_modifier": 0,
+      "profiles": [
+        {
+          "kind": "kinetic",
+          "value": 175,
+          "decay_per_hex": 1,
+          "source": "u4/+08",
+          "label": "通常徹甲・直射"
+        },
+        {
+          "kind": "explosive",
+          "value": 95,
+          "decay_per_hex": 0,
+          "source": "u7/+14",
+          "label": "榴弾・爆風・炸薬"
+        }
+      ],
+      "linked_raw_item_ids": [],
+      "linked_cbe_indices": [],
+      "record_offset": "0x1E4800"
+    },
+    {
+      "cbeNameIndex": 421,
+      "name": "3inGun M5",
+      "category_code": 27,
+      "category_name": "gun",
+      "effect_mode_raw": 5,
+      "effect_mode_hex": "0x0005",
+      "raw_u4_plus08": 175,
+      "raw_u5_plus10_decay": 1,
+      "raw_u6_plus12": 0,
+      "raw_u7_plus14": 120,
+      "resolved_initial_penetration": 175,
+      "resolved_source": "u4/+08",
+      "hit_rate": 80,
+      "hit_decay_per_hex": 1,
+      "malfunction_rate": 3,
+      "malfunction_modifier": 0,
+      "profiles": [
+        {
+          "kind": "kinetic",
+          "value": 175,
+          "decay_per_hex": 1,
+          "source": "u4/+08",
+          "label": "通常徹甲・直射"
+        },
+        {
+          "kind": "explosive",
+          "value": 120,
+          "decay_per_hex": 0,
+          "source": "u7/+14",
+          "label": "榴弾・爆風・炸薬"
+        }
+      ],
+      "linked_raw_item_ids": [],
+      "linked_cbe_indices": [],
+      "record_offset": "0x1E4840"
+    },
+    {
+      "cbeNameIndex": 422,
+      "name": "3inGun M7",
+      "category_code": 27,
+      "category_name": "gun",
+      "effect_mode_raw": 5,
+      "effect_mode_hex": "0x0005",
+      "raw_u4_plus08": 175,
+      "raw_u5_plus10_decay": 1,
+      "raw_u6_plus12": 0,
+      "raw_u7_plus14": 120,
+      "resolved_initial_penetration": 175,
+      "resolved_source": "u4/+08",
+      "hit_rate": 80,
+      "hit_decay_per_hex": 1,
+      "malfunction_rate": 3,
+      "malfunction_modifier": 0,
+      "profiles": [
+        {
+          "kind": "kinetic",
+          "value": 175,
+          "decay_per_hex": 1,
+          "source": "u4/+08",
+          "label": "通常徹甲・直射"
+        },
+        {
+          "kind": "explosive",
+          "value": 120,
+          "decay_per_hex": 0,
+          "source": "u7/+14",
+          "label": "榴弾・爆風・炸薬"
+        }
+      ],
+      "linked_raw_item_ids": [],
+      "linked_cbe_indices": [],
+      "record_offset": "0x1E4880"
+    },
+    {
+      "cbeNameIndex": 423,
+      "name": "90mmGun M3",
+      "category_code": 27,
+      "category_name": "gun",
+      "effect_mode_raw": 5,
+      "effect_mode_hex": "0x0005",
+      "raw_u4_plus08": 195,
+      "raw_u5_plus10_decay": 1,
+      "raw_u6_plus12": 0,
+      "raw_u7_plus14": 130,
+      "resolved_initial_penetration": 195,
+      "resolved_source": "u4/+08",
+      "hit_rate": 80,
+      "hit_decay_per_hex": 1,
+      "malfunction_rate": 3,
+      "malfunction_modifier": 0,
+      "profiles": [
+        {
+          "kind": "kinetic",
+          "value": 195,
+          "decay_per_hex": 1,
+          "source": "u4/+08",
+          "label": "通常徹甲・直射"
+        },
+        {
+          "kind": "explosive",
+          "value": 130,
+          "decay_per_hex": 0,
+          "source": "u7/+14",
+          "label": "榴弾・爆風・炸薬"
+        }
+      ],
+      "linked_raw_item_ids": [],
+      "linked_cbe_indices": [],
+      "record_offset": "0x1E48C0"
+    },
+    {
+      "cbeNameIndex": 424,
+      "name": "105mmHow T8",
+      "category_code": 28,
+      "category_name": "howitzer",
+      "effect_mode_raw": 32769,
+      "effect_mode_hex": "0x8001",
+      "raw_u4_plus08": 0,
+      "raw_u5_plus10_decay": 0,
+      "raw_u6_plus12": 0,
+      "raw_u7_plus14": 140,
+      "resolved_initial_penetration": 0,
+      "resolved_source": null,
+      "hit_rate": 70,
+      "hit_decay_per_hex": 2,
+      "malfunction_rate": 3,
+      "malfunction_modifier": 0,
+      "profiles": [
+        {
+          "kind": "explosive",
+          "value": 140,
+          "decay_per_hex": 0,
+          "source": "u7/+14",
+          "label": "榴弾・爆風・炸薬"
+        }
+      ],
+      "linked_raw_item_ids": [],
+      "linked_cbe_indices": [],
+      "record_offset": "0x1E4900"
+    },
+    {
+      "cbeNameIndex": 427,
+      "name": "50mm KwK39",
+      "category_code": 27,
+      "category_name": "gun",
+      "effect_mode_raw": 5,
+      "effect_mode_hex": "0x0005",
+      "raw_u4_plus08": 148,
+      "raw_u5_plus10_decay": 1,
+      "raw_u6_plus12": 0,
+      "raw_u7_plus14": 100,
+      "resolved_initial_penetration": 148,
+      "resolved_source": "u4/+08",
+      "hit_rate": 80,
+      "hit_decay_per_hex": 1,
+      "malfunction_rate": 2,
+      "malfunction_modifier": 0,
+      "profiles": [
+        {
+          "kind": "kinetic",
+          "value": 148,
+          "decay_per_hex": 1,
+          "source": "u4/+08",
+          "label": "通常徹甲・直射"
+        },
+        {
+          "kind": "explosive",
+          "value": 100,
+          "decay_per_hex": 0,
+          "source": "u7/+14",
+          "label": "榴弾・爆風・炸薬"
+        }
+      ],
+      "linked_raw_item_ids": [],
+      "linked_cbe_indices": [],
+      "record_offset": "0x1E49C0"
+    },
+    {
+      "cbeNameIndex": 428,
+      "name": "75mm KwK37",
+      "category_code": 27,
+      "category_name": "gun",
+      "effect_mode_raw": 16387,
+      "effect_mode_hex": "0x4003",
+      "raw_u4_plus08": 0,
+      "raw_u5_plus10_decay": 0,
+      "raw_u6_plus12": 150,
+      "raw_u7_plus14": 120,
+      "resolved_initial_penetration": 0,
+      "resolved_source": null,
+      "hit_rate": 60,
+      "hit_decay_per_hex": 2,
+      "malfunction_rate": 2,
+      "malfunction_modifier": 0,
+      "profiles": [
+        {
+          "kind": "special_or_shaped_charge",
+          "value": 150,
+          "decay_per_hex": 0,
+          "source": "u6/+12",
+          "label": "成形炸薬・特殊効果"
+        },
+        {
+          "kind": "explosive",
+          "value": 120,
+          "decay_per_hex": 0,
+          "source": "u7/+14",
+          "label": "榴弾・爆風・炸薬"
+        }
+      ],
+      "linked_raw_item_ids": [],
+      "linked_cbe_indices": [],
+      "record_offset": "0x1E4A00"
+    },
+    {
+      "cbeNameIndex": 429,
+      "name": "75mm StK37",
+      "category_code": 27,
+      "category_name": "gun",
+      "effect_mode_raw": 5,
+      "effect_mode_hex": "0x0005",
+      "raw_u4_plus08": 134,
+      "raw_u5_plus10_decay": 1,
+      "raw_u6_plus12": 0,
+      "raw_u7_plus14": 120,
+      "resolved_initial_penetration": 134,
+      "resolved_source": "u4/+08",
+      "hit_rate": 60,
+      "hit_decay_per_hex": 2,
+      "malfunction_rate": 2,
+      "malfunction_modifier": 0,
+      "profiles": [
+        {
+          "kind": "kinetic",
+          "value": 134,
+          "decay_per_hex": 1,
+          "source": "u4/+08",
+          "label": "通常徹甲・直射"
+        },
+        {
+          "kind": "explosive",
+          "value": 120,
+          "decay_per_hex": 0,
+          "source": "u7/+14",
+          "label": "榴弾・爆風・炸薬"
+        }
+      ],
+      "linked_raw_item_ids": [],
+      "linked_cbe_indices": [],
+      "record_offset": "0x1E4A40"
+    },
+    {
+      "cbeNameIndex": 430,
+      "name": "75mm KwK40",
+      "category_code": 27,
+      "category_name": "gun",
+      "effect_mode_raw": 5,
+      "effect_mode_hex": "0x0005",
+      "raw_u4_plus08": 174,
+      "raw_u5_plus10_decay": 1,
+      "raw_u6_plus12": 0,
+      "raw_u7_plus14": 120,
+      "resolved_initial_penetration": 174,
+      "resolved_source": "u4/+08",
+      "hit_rate": 80,
+      "hit_decay_per_hex": 1,
+      "malfunction_rate": 2,
+      "malfunction_modifier": 0,
+      "profiles": [
+        {
+          "kind": "kinetic",
+          "value": 174,
+          "decay_per_hex": 1,
+          "source": "u4/+08",
+          "label": "通常徹甲・直射"
+        },
+        {
+          "kind": "explosive",
+          "value": 120,
+          "decay_per_hex": 0,
+          "source": "u7/+14",
+          "label": "榴弾・爆風・炸薬"
+        }
+      ],
+      "linked_raw_item_ids": [],
+      "linked_cbe_indices": [],
+      "record_offset": "0x1E4A80"
+    },
+    {
+      "cbeNameIndex": 431,
+      "name": "75mm KwK40",
+      "category_code": 27,
+      "category_name": "gun",
+      "effect_mode_raw": 5,
+      "effect_mode_hex": "0x0005",
+      "raw_u4_plus08": 177,
+      "raw_u5_plus10_decay": 1,
+      "raw_u6_plus12": 0,
+      "raw_u7_plus14": 120,
+      "resolved_initial_penetration": 177,
+      "resolved_source": "u4/+08",
+      "hit_rate": 80,
+      "hit_decay_per_hex": 1,
+      "malfunction_rate": 2,
+      "malfunction_modifier": 0,
+      "profiles": [
+        {
+          "kind": "kinetic",
+          "value": 177,
+          "decay_per_hex": 1,
+          "source": "u4/+08",
+          "label": "通常徹甲・直射"
+        },
+        {
+          "kind": "explosive",
+          "value": 120,
+          "decay_per_hex": 0,
+          "source": "u7/+14",
+          "label": "榴弾・爆風・炸薬"
+        }
+      ],
+      "linked_raw_item_ids": [],
+      "linked_cbe_indices": [],
+      "record_offset": "0x1E4AC0"
+    },
+    {
+      "cbeNameIndex": 432,
+      "name": "75mm PaK39",
+      "category_code": 27,
+      "category_name": "gun",
+      "effect_mode_raw": 5,
+      "effect_mode_hex": "0x0005",
+      "raw_u4_plus08": 177,
+      "raw_u5_plus10_decay": 1,
+      "raw_u6_plus12": 0,
+      "raw_u7_plus14": 120,
+      "resolved_initial_penetration": 177,
+      "resolved_source": "u4/+08",
+      "hit_rate": 80,
+      "hit_decay_per_hex": 1,
+      "malfunction_rate": 3,
+      "malfunction_modifier": 0,
+      "profiles": [
+        {
+          "kind": "kinetic",
+          "value": 177,
+          "decay_per_hex": 1,
+          "source": "u4/+08",
+          "label": "通常徹甲・直射"
+        },
+        {
+          "kind": "explosive",
+          "value": 120,
+          "decay_per_hex": 0,
+          "source": "u7/+14",
+          "label": "榴弾・爆風・炸薬"
+        }
+      ],
+      "linked_raw_item_ids": [],
+      "linked_cbe_indices": [],
+      "record_offset": "0x1E4B00"
+    },
+    {
+      "cbeNameIndex": 433,
+      "name": "75mm PaK40",
+      "category_code": 27,
+      "category_name": "gun",
+      "effect_mode_raw": 5,
+      "effect_mode_hex": "0x0005",
+      "raw_u4_plus08": 177,
+      "raw_u5_plus10_decay": 1,
+      "raw_u6_plus12": 0,
+      "raw_u7_plus14": 120,
+      "resolved_initial_penetration": 177,
+      "resolved_source": "u4/+08",
+      "hit_rate": 80,
+      "hit_decay_per_hex": 1,
+      "malfunction_rate": 3,
+      "malfunction_modifier": 0,
+      "profiles": [
+        {
+          "kind": "kinetic",
+          "value": 177,
+          "decay_per_hex": 1,
+          "source": "u4/+08",
+          "label": "通常徹甲・直射"
+        },
+        {
+          "kind": "explosive",
+          "value": 120,
+          "decay_per_hex": 0,
+          "source": "u7/+14",
+          "label": "榴弾・爆風・炸薬"
+        }
+      ],
+      "linked_raw_item_ids": [],
+      "linked_cbe_indices": [],
+      "record_offset": "0x1E4B40"
+    },
+    {
+      "cbeNameIndex": 434,
+      "name": "75mm StK40",
+      "category_code": 27,
+      "category_name": "gun",
+      "effect_mode_raw": 5,
+      "effect_mode_hex": "0x0005",
+      "raw_u4_plus08": 174,
+      "raw_u5_plus10_decay": 1,
+      "raw_u6_plus12": 0,
+      "raw_u7_plus14": 120,
+      "resolved_initial_penetration": 174,
+      "resolved_source": "u4/+08",
+      "hit_rate": 80,
+      "hit_decay_per_hex": 1,
+      "malfunction_rate": 2,
+      "malfunction_modifier": 0,
+      "profiles": [
+        {
+          "kind": "kinetic",
+          "value": 174,
+          "decay_per_hex": 1,
+          "source": "u4/+08",
+          "label": "通常徹甲・直射"
+        },
+        {
+          "kind": "explosive",
+          "value": 120,
+          "decay_per_hex": 0,
+          "source": "u7/+14",
+          "label": "榴弾・爆風・炸薬"
+        }
+      ],
+      "linked_raw_item_ids": [],
+      "linked_cbe_indices": [],
+      "record_offset": "0x1E4B80"
+    },
+    {
+      "cbeNameIndex": 435,
+      "name": "75mm KwK42",
+      "category_code": 27,
+      "category_name": "gun",
+      "effect_mode_raw": 5,
+      "effect_mode_hex": "0x0005",
+      "raw_u4_plus08": 198,
+      "raw_u5_plus10_decay": 1,
+      "raw_u6_plus12": 0,
+      "raw_u7_plus14": 120,
+      "resolved_initial_penetration": 198,
+      "resolved_source": "u4/+08",
+      "hit_rate": 90,
+      "hit_decay_per_hex": 1,
+      "malfunction_rate": 2,
+      "malfunction_modifier": 0,
+      "profiles": [
+        {
+          "kind": "kinetic",
+          "value": 198,
+          "decay_per_hex": 1,
+          "source": "u4/+08",
+          "label": "通常徹甲・直射"
+        },
+        {
+          "kind": "explosive",
+          "value": 120,
+          "decay_per_hex": 0,
+          "source": "u7/+14",
+          "label": "榴弾・爆風・炸薬"
+        }
+      ],
+      "linked_raw_item_ids": [],
+      "linked_cbe_indices": [],
+      "record_offset": "0x1E4BC0"
+    },
+    {
+      "cbeNameIndex": 436,
+      "name": "75mm PaK42",
+      "category_code": 27,
+      "category_name": "gun",
+      "effect_mode_raw": 5,
+      "effect_mode_hex": "0x0005",
+      "raw_u4_plus08": 198,
+      "raw_u5_plus10_decay": 1,
+      "raw_u6_plus12": 0,
+      "raw_u7_plus14": 120,
+      "resolved_initial_penetration": 198,
+      "resolved_source": "u4/+08",
+      "hit_rate": 90,
+      "hit_decay_per_hex": 1,
+      "malfunction_rate": 2,
+      "malfunction_modifier": 0,
+      "profiles": [
+        {
+          "kind": "kinetic",
+          "value": 198,
+          "decay_per_hex": 1,
+          "source": "u4/+08",
+          "label": "通常徹甲・直射"
+        },
+        {
+          "kind": "explosive",
+          "value": 120,
+          "decay_per_hex": 0,
+          "source": "u7/+14",
+          "label": "榴弾・爆風・炸薬"
+        }
+      ],
+      "linked_raw_item_ids": [],
+      "linked_cbe_indices": [],
+      "record_offset": "0x1E4C00"
+    },
+    {
+      "cbeNameIndex": 437,
+      "name": "80mm GrW34",
+      "category_code": 28,
+      "category_name": "howitzer",
+      "effect_mode_raw": 32769,
+      "effect_mode_hex": "0x8001",
+      "raw_u4_plus08": 0,
+      "raw_u5_plus10_decay": 0,
+      "raw_u6_plus12": 0,
+      "raw_u7_plus14": 130,
+      "resolved_initial_penetration": 0,
+      "resolved_source": null,
+      "hit_rate": 60,
+      "hit_decay_per_hex": 2,
+      "malfunction_rate": 2,
+      "malfunction_modifier": 0,
+      "profiles": [
+        {
+          "kind": "explosive",
+          "value": 130,
+          "decay_per_hex": 0,
+          "source": "u7/+14",
+          "label": "榴弾・爆風・炸薬"
+        }
+      ],
+      "linked_raw_item_ids": [],
+      "linked_cbe_indices": [],
+      "record_offset": "0x1E4C40"
+    },
+    {
+      "cbeNameIndex": 438,
+      "name": "88mm FlaK36",
+      "category_code": 27,
+      "category_name": "gun",
+      "effect_mode_raw": 5,
+      "effect_mode_hex": "0x0005",
+      "raw_u4_plus08": 193,
+      "raw_u5_plus10_decay": 1,
+      "raw_u6_plus12": 0,
+      "raw_u7_plus14": 130,
+      "resolved_initial_penetration": 193,
+      "resolved_source": "u4/+08",
+      "hit_rate": 80,
+      "hit_decay_per_hex": 1,
+      "malfunction_rate": 2,
+      "malfunction_modifier": 0,
+      "profiles": [
+        {
+          "kind": "kinetic",
+          "value": 193,
+          "decay_per_hex": 1,
+          "source": "u4/+08",
+          "label": "通常徹甲・直射"
+        },
+        {
+          "kind": "explosive",
+          "value": 130,
+          "decay_per_hex": 0,
+          "source": "u7/+14",
+          "label": "榴弾・爆風・炸薬"
+        }
+      ],
+      "linked_raw_item_ids": [],
+      "linked_cbe_indices": [],
+      "record_offset": "0x1E4C80"
+    },
+    {
+      "cbeNameIndex": 439,
+      "name": "88mm KwK36",
+      "category_code": 27,
+      "category_name": "gun",
+      "effect_mode_raw": 5,
+      "effect_mode_hex": "0x0005",
+      "raw_u4_plus08": 188,
+      "raw_u5_plus10_decay": 1,
+      "raw_u6_plus12": 0,
+      "raw_u7_plus14": 130,
+      "resolved_initial_penetration": 188,
+      "resolved_source": "u4/+08",
+      "hit_rate": 80,
+      "hit_decay_per_hex": 1,
+      "malfunction_rate": 2,
+      "malfunction_modifier": 0,
+      "profiles": [
+        {
+          "kind": "kinetic",
+          "value": 188,
+          "decay_per_hex": 1,
+          "source": "u4/+08",
+          "label": "通常徹甲・直射"
+        },
+        {
+          "kind": "explosive",
+          "value": 130,
+          "decay_per_hex": 0,
+          "source": "u7/+14",
+          "label": "榴弾・爆風・炸薬"
+        }
+      ],
+      "linked_raw_item_ids": [],
+      "linked_cbe_indices": [],
+      "record_offset": "0x1E4CC0"
+    },
+    {
+      "cbeNameIndex": 440,
+      "name": "88mm KwK43",
+      "category_code": 27,
+      "category_name": "gun",
+      "effect_mode_raw": 5,
+      "effect_mode_hex": "0x0005",
+      "raw_u4_plus08": 244,
+      "raw_u5_plus10_decay": 1,
+      "raw_u6_plus12": 0,
+      "raw_u7_plus14": 130,
+      "resolved_initial_penetration": 244,
+      "resolved_source": "u4/+08",
+      "hit_rate": 90,
+      "hit_decay_per_hex": 1,
+      "malfunction_rate": 2,
+      "malfunction_modifier": 0,
+      "profiles": [
+        {
+          "kind": "kinetic",
+          "value": 244,
+          "decay_per_hex": 1,
+          "source": "u4/+08",
+          "label": "通常徹甲・直射"
+        },
+        {
+          "kind": "explosive",
+          "value": 130,
+          "decay_per_hex": 0,
+          "source": "u7/+14",
+          "label": "榴弾・爆風・炸薬"
+        }
+      ],
+      "linked_raw_item_ids": [],
+      "linked_cbe_indices": [],
+      "record_offset": "0x1E4D00"
+    },
+    {
+      "cbeNameIndex": 441,
+      "name": "88mm PaK43",
+      "category_code": 27,
+      "category_name": "gun",
+      "effect_mode_raw": 5,
+      "effect_mode_hex": "0x0005",
+      "raw_u4_plus08": 244,
+      "raw_u5_plus10_decay": 1,
+      "raw_u6_plus12": 0,
+      "raw_u7_plus14": 130,
+      "resolved_initial_penetration": 244,
+      "resolved_source": "u4/+08",
+      "hit_rate": 90,
+      "hit_decay_per_hex": 1,
+      "malfunction_rate": 2,
+      "malfunction_modifier": 0,
+      "profiles": [
+        {
+          "kind": "kinetic",
+          "value": 244,
+          "decay_per_hex": 1,
+          "source": "u4/+08",
+          "label": "通常徹甲・直射"
+        },
+        {
+          "kind": "explosive",
+          "value": 130,
+          "decay_per_hex": 0,
+          "source": "u7/+14",
+          "label": "榴弾・爆風・炸薬"
+        }
+      ],
+      "linked_raw_item_ids": [],
+      "linked_cbe_indices": [],
+      "record_offset": "0x1E4D40"
+    },
+    {
+      "cbeNameIndex": 442,
+      "name": "105mm StH42",
+      "category_code": 27,
+      "category_name": "gun",
+      "effect_mode_raw": 16387,
+      "effect_mode_hex": "0x4003",
+      "raw_u4_plus08": 0,
+      "raw_u5_plus10_decay": 0,
+      "raw_u6_plus12": 160,
+      "raw_u7_plus14": 140,
+      "resolved_initial_penetration": 0,
+      "resolved_source": null,
+      "hit_rate": 70,
+      "hit_decay_per_hex": 1,
+      "malfunction_rate": 2,
+      "malfunction_modifier": 0,
+      "profiles": [
+        {
+          "kind": "special_or_shaped_charge",
+          "value": 160,
+          "decay_per_hex": 0,
+          "source": "u6/+12",
+          "label": "成形炸薬・特殊効果"
+        },
+        {
+          "kind": "explosive",
+          "value": 140,
+          "decay_per_hex": 0,
+          "source": "u7/+14",
+          "label": "榴弾・爆風・炸薬"
+        }
+      ],
+      "linked_raw_item_ids": [],
+      "linked_cbe_indices": [],
+      "record_offset": "0x1E4D80"
+    },
+    {
+      "cbeNameIndex": 443,
+      "name": "128mm PaK44",
+      "category_code": 27,
+      "category_name": "gun",
+      "effect_mode_raw": 5,
+      "effect_mode_hex": "0x0005",
+      "raw_u4_plus08": 230,
+      "raw_u5_plus10_decay": 1,
+      "raw_u6_plus12": 0,
+      "raw_u7_plus14": 150,
+      "resolved_initial_penetration": 230,
+      "resolved_source": "u4/+08",
+      "hit_rate": 80,
+      "hit_decay_per_hex": 1,
+      "malfunction_rate": 3,
+      "malfunction_modifier": 0,
+      "profiles": [
+        {
+          "kind": "kinetic",
+          "value": 230,
+          "decay_per_hex": 1,
+          "source": "u4/+08",
+          "label": "通常徹甲・直射"
+        },
+        {
+          "kind": "explosive",
+          "value": 150,
+          "decay_per_hex": 0,
+          "source": "u7/+14",
+          "label": "榴弾・爆風・炸薬"
+        }
+      ],
+      "linked_raw_item_ids": [],
+      "linked_cbe_indices": [],
+      "record_offset": "0x1E4DC0"
+    },
+    {
+      "cbeNameIndex": 444,
+      "name": "150mm StH43",
+      "category_code": 28,
+      "category_name": "howitzer",
+      "effect_mode_raw": 32769,
+      "effect_mode_hex": "0x8001",
+      "raw_u4_plus08": 0,
+      "raw_u5_plus10_decay": 0,
+      "raw_u6_plus12": 0,
+      "raw_u7_plus14": 150,
+      "resolved_initial_penetration": 0,
+      "resolved_source": null,
+      "hit_rate": 60,
+      "hit_decay_per_hex": 1,
+      "malfunction_rate": 2,
+      "malfunction_modifier": 0,
+      "profiles": [
+        {
+          "kind": "explosive",
+          "value": 150,
+          "decay_per_hex": 0,
+          "source": "u7/+14",
+          "label": "榴弾・爆風・炸薬"
+        }
+      ],
+      "linked_raw_item_ids": [],
+      "linked_cbe_indices": [],
+      "record_offset": "0x1E4E00"
+    },
+    {
+      "cbeNameIndex": 446,
+      "name": "37/40 Cann.",
+      "category_code": 27,
+      "category_name": "gun",
+      "effect_mode_raw": 5,
+      "effect_mode_hex": "0x0005",
+      "raw_u4_plus08": 125,
+      "raw_u5_plus10_decay": 1,
+      "raw_u6_plus12": 0,
+      "raw_u7_plus14": 90,
+      "resolved_initial_penetration": 125,
+      "resolved_source": "u4/+08",
+      "hit_rate": 70,
+      "hit_decay_per_hex": 1,
+      "malfunction_rate": 3,
+      "malfunction_modifier": 0,
+      "profiles": [
+        {
+          "kind": "kinetic",
+          "value": 125,
+          "decay_per_hex": 1,
+          "source": "u4/+08",
+          "label": "通常徹甲・直射"
+        },
+        {
+          "kind": "explosive",
+          "value": 90,
+          "decay_per_hex": 0,
+          "source": "u7/+14",
+          "label": "榴弾・爆風・炸薬"
+        }
+      ],
+      "linked_raw_item_ids": [],
+      "linked_cbe_indices": [],
+      "record_offset": "0x1E4E80"
+    },
+    {
+      "cbeNameIndex": 447,
+      "name": "47/32 Cann.",
+      "category_code": 27,
+      "category_name": "gun",
+      "effect_mode_raw": 5,
+      "effect_mode_hex": "0x0005",
+      "raw_u4_plus08": 135,
+      "raw_u5_plus10_decay": 1,
+      "raw_u6_plus12": 0,
+      "raw_u7_plus14": 90,
+      "resolved_initial_penetration": 135,
+      "resolved_source": "u4/+08",
+      "hit_rate": 70,
+      "hit_decay_per_hex": 1,
+      "malfunction_rate": 3,
+      "malfunction_modifier": 0,
+      "profiles": [
+        {
+          "kind": "kinetic",
+          "value": 135,
+          "decay_per_hex": 1,
+          "source": "u4/+08",
+          "label": "通常徹甲・直射"
+        },
+        {
+          "kind": "explosive",
+          "value": 90,
+          "decay_per_hex": 0,
+          "source": "u7/+14",
+          "label": "榴弾・爆風・炸薬"
+        }
+      ],
+      "linked_raw_item_ids": [],
+      "linked_cbe_indices": [],
+      "record_offset": "0x1E4EC0"
+    },
+    {
+      "cbeNameIndex": 448,
+      "name": "75/18 Obice",
+      "category_code": 27,
+      "category_name": "gun",
+      "effect_mode_raw": 5,
+      "effect_mode_hex": "0x0005",
+      "raw_u4_plus08": 135,
+      "raw_u5_plus10_decay": 1,
+      "raw_u6_plus12": 0,
+      "raw_u7_plus14": 120,
+      "resolved_initial_penetration": 135,
+      "resolved_source": "u4/+08",
+      "hit_rate": 60,
+      "hit_decay_per_hex": 1,
+      "malfunction_rate": 3,
+      "malfunction_modifier": 0,
+      "profiles": [
+        {
+          "kind": "kinetic",
+          "value": 135,
+          "decay_per_hex": 1,
+          "source": "u4/+08",
+          "label": "通常徹甲・直射"
+        },
+        {
+          "kind": "explosive",
+          "value": 120,
+          "decay_per_hex": 0,
+          "source": "u7/+14",
+          "label": "榴弾・爆風・炸薬"
+        }
+      ],
+      "linked_raw_item_ids": [],
+      "linked_cbe_indices": [],
+      "record_offset": "0x1E4F00"
+    },
+    {
+      "cbeNameIndex": 449,
+      "name": "37mm SA18",
+      "category_code": 27,
+      "category_name": "gun",
+      "effect_mode_raw": 5,
+      "effect_mode_hex": "0x0005",
+      "raw_u4_plus08": 120,
+      "raw_u5_plus10_decay": 1,
+      "raw_u6_plus12": 0,
+      "raw_u7_plus14": 90,
+      "resolved_initial_penetration": 120,
+      "resolved_source": "u4/+08",
+      "hit_rate": 60,
+      "hit_decay_per_hex": 2,
+      "malfunction_rate": 2,
+      "malfunction_modifier": 0,
+      "profiles": [
+        {
+          "kind": "kinetic",
+          "value": 120,
+          "decay_per_hex": 1,
+          "source": "u4/+08",
+          "label": "通常徹甲・直射"
+        },
+        {
+          "kind": "explosive",
+          "value": 90,
+          "decay_per_hex": 0,
+          "source": "u7/+14",
+          "label": "榴弾・爆風・炸薬"
+        }
+      ],
+      "linked_raw_item_ids": [],
+      "linked_cbe_indices": [],
+      "record_offset": "0x1E4F40"
+    },
+    {
+      "cbeNameIndex": 450,
+      "name": "6pdrGun Mk2",
+      "category_code": 27,
+      "category_name": "gun",
+      "effect_mode_raw": 4,
+      "effect_mode_hex": "0x0004",
+      "raw_u4_plus08": 162,
+      "raw_u5_plus10_decay": 1,
+      "raw_u6_plus12": 0,
+      "raw_u7_plus14": 0,
+      "resolved_initial_penetration": 162,
+      "resolved_source": "u4/+08",
+      "hit_rate": 80,
+      "hit_decay_per_hex": 1,
+      "malfunction_rate": 2,
+      "malfunction_modifier": 0,
+      "profiles": [
+        {
+          "kind": "kinetic",
+          "value": 162,
+          "decay_per_hex": 1,
+          "source": "u4/+08",
+          "label": "通常徹甲・直射"
+        }
+      ],
+      "linked_raw_item_ids": [],
+      "linked_cbe_indices": [],
+      "record_offset": "0x1E4F80"
+    },
+    {
+      "cbeNameIndex": 451,
+      "name": "6pdrGun Mk3",
+      "category_code": 27,
+      "category_name": "gun",
+      "effect_mode_raw": 4,
+      "effect_mode_hex": "0x0004",
+      "raw_u4_plus08": 162,
+      "raw_u5_plus10_decay": 1,
+      "raw_u6_plus12": 0,
+      "raw_u7_plus14": 0,
+      "resolved_initial_penetration": 162,
+      "resolved_source": "u4/+08",
+      "hit_rate": 80,
+      "hit_decay_per_hex": 1,
+      "malfunction_rate": 3,
+      "malfunction_modifier": 0,
+      "profiles": [
+        {
+          "kind": "kinetic",
+          "value": 162,
+          "decay_per_hex": 1,
+          "source": "u4/+08",
+          "label": "通常徹甲・直射"
+        }
+      ],
+      "linked_raw_item_ids": [],
+      "linked_cbe_indices": [],
+      "record_offset": "0x1E4FC0"
+    },
+    {
+      "cbeNameIndex": 452,
+      "name": "75mmGun Mk5",
+      "category_code": 27,
+      "category_name": "gun",
+      "effect_mode_raw": 5,
+      "effect_mode_hex": "0x0005",
+      "raw_u4_plus08": 155,
+      "raw_u5_plus10_decay": 1,
+      "raw_u6_plus12": 0,
+      "raw_u7_plus14": 120,
+      "resolved_initial_penetration": 155,
+      "resolved_source": "u4/+08",
+      "hit_rate": 70,
+      "hit_decay_per_hex": 1,
+      "malfunction_rate": 2,
+      "malfunction_modifier": 0,
+      "profiles": [
+        {
+          "kind": "kinetic",
+          "value": 155,
+          "decay_per_hex": 1,
+          "source": "u4/+08",
+          "label": "通常徹甲・直射"
+        },
+        {
+          "kind": "explosive",
+          "value": 120,
+          "decay_per_hex": 0,
+          "source": "u7/+14",
+          "label": "榴弾・爆風・炸薬"
+        }
+      ],
+      "linked_raw_item_ids": [],
+      "linked_cbe_indices": [],
+      "record_offset": "0x1E5000"
+    },
+    {
+      "cbeNameIndex": 453,
+      "name": "3inGun Mk1",
+      "category_code": 27,
+      "category_name": "gun",
+      "effect_mode_raw": 1,
+      "effect_mode_hex": "0x0001",
+      "raw_u4_plus08": 0,
+      "raw_u5_plus10_decay": 0,
+      "raw_u6_plus12": 0,
+      "raw_u7_plus14": 120,
+      "resolved_initial_penetration": 0,
+      "resolved_source": null,
+      "hit_rate": 60,
+      "hit_decay_per_hex": 1,
+      "malfunction_rate": 2,
+      "malfunction_modifier": 0,
+      "profiles": [
+        {
+          "kind": "explosive",
+          "value": 120,
+          "decay_per_hex": 0,
+          "source": "u7/+14",
+          "label": "榴弾・爆風・炸薬"
+        }
+      ],
+      "linked_raw_item_ids": [],
+      "linked_cbe_indices": [],
+      "record_offset": "0x1E5040"
+    },
+    {
+      "cbeNameIndex": 454,
+      "name": "37mmPaK35/36",
+      "category_code": 27,
+      "category_name": "gun",
+      "effect_mode_raw": 5,
+      "effect_mode_hex": "0x0005",
+      "raw_u4_plus08": 127,
+      "raw_u5_plus10_decay": 1,
+      "raw_u6_plus12": 0,
+      "raw_u7_plus14": 90,
+      "resolved_initial_penetration": 127,
+      "resolved_source": "u4/+08",
+      "hit_rate": 80,
+      "hit_decay_per_hex": 1,
+      "malfunction_rate": 2,
+      "malfunction_modifier": 0,
+      "profiles": [
+        {
+          "kind": "kinetic",
+          "value": 127,
+          "decay_per_hex": 1,
+          "source": "u4/+08",
+          "label": "通常徹甲・直射"
+        },
+        {
+          "kind": "explosive",
+          "value": 90,
+          "decay_per_hex": 0,
+          "source": "u7/+14",
+          "label": "榴弾・爆風・炸薬"
+        }
+      ],
+      "linked_raw_item_ids": [],
+      "linked_cbe_indices": [],
+      "record_offset": "0x1E5080"
+    }
+  ]
+}

@@ -7,15 +7,8 @@
     "34": {
         "name": "M1 Ammobox",
         "inner": [
-            240,
-            241
-        ],
-        "usedBy": []
-    },
-    "35": {
-        "name": "M2HB Ammobox",
-        "inner": [
-            242
+            239,
+            240
         ],
         "usedBy": [
             20,
@@ -23,19 +16,20 @@
             23
         ]
     },
+    "35": {
+        "name": "M2HB Ammobox",
+        "inner": [
+            241
+        ],
+        "usedBy": [
+            24
+        ]
+    },
     "115": {
         "name": "PatrK41",
         "inner": [
-            297,
-            296
-        ],
-        "usedBy": []
-    },
-    "116": {
-        "name": "PatrK15",
-        "inner": [
-            290,
-            289
+            296,
+            295
         ],
         "usedBy": [
             91,
@@ -45,168 +39,210 @@
             217
         ]
     },
+    "116": {
+        "name": "PatrK15",
+        "inner": [
+            289,
+            288
+        ],
+        "usedBy": [
+            87,
+            88,
+            95
+        ]
+    },
     "141": {
         "name": "CM. FR 14/35",
         "inner": [
-            328
+            327
         ],
-        "usedBy": []
+        "usedBy": [
+            137
+        ]
     },
     "185": {
         "name": "No8 Mk1",
         "inner": [
-            359
+            358
         ],
-        "usedBy": []
+        "usedBy": [
+            179
+        ]
     },
     "201": {
         "name": "pat.1910",
         "inner": [
-            375
-        ],
-        "usedBy": []
-    },
-    "202": {
-        "name": "pat.DShK",
-        "inner": [
-            376
+            374
         ],
         "usedBy": [
             199
         ]
     },
+    "202": {
+        "name": "pat.DShK",
+        "inner": [
+            375
+        ],
+        "usedBy": [
+            200
+        ]
+    },
     "208": {
         "name": "M07 PatrK",
         "inner": [
-            382
+            381
         ],
-        "usedBy": []
+        "usedBy": [
+            206
+        ]
     }
 };
     window.PL_COMPOSITE_U26 = {
     "20": {
-        "idx": 35,
+        "idx": 34,
         "kind": "ammo_box",
-        "name": "M2HB Ammobox",
+        "name": "M1 Ammobox",
         "inner": [
-            242
+            239,
+            240
         ]
     },
     "22": {
-        "idx": 35,
+        "idx": 34,
         "kind": "ammo_box",
-        "name": "M2HB Ammobox",
+        "name": "M1 Ammobox",
         "inner": [
-            242
+            239,
+            240
         ]
     },
     "23": {
+        "idx": 34,
+        "kind": "ammo_box",
+        "name": "M1 Ammobox",
+        "inner": [
+            239,
+            240
+        ]
+    },
+    "24": {
         "idx": 35,
         "kind": "ammo_box",
         "name": "M2HB Ammobox",
         "inner": [
-            242
+            241
         ]
     },
-    "24": {
-        "idx": 36,
-        "kind": "optic",
-        "name": "M3 Binocular",
-        "inner": []
-    },
     "87": {
-        "idx": 117,
-        "kind": "optic",
-        "name": "Fernglas",
-        "inner": []
-    },
-    "88": {
-        "idx": 117,
-        "kind": "optic",
-        "name": "Fernglas",
-        "inner": []
-    },
-    "91": {
         "idx": 116,
         "kind": "ammo_box",
         "name": "PatrK15",
         "inner": [
-            290,
-            289
+            289,
+            288
+        ]
+    },
+    "88": {
+        "idx": 116,
+        "kind": "ammo_box",
+        "name": "PatrK15",
+        "inner": [
+            289,
+            288
+        ]
+    },
+    "91": {
+        "idx": 115,
+        "kind": "ammo_box",
+        "name": "PatrK41",
+        "inner": [
+            296,
+            295
         ]
     },
     "92": {
-        "idx": 116,
+        "idx": 115,
         "kind": "ammo_box",
-        "name": "PatrK15",
+        "name": "PatrK41",
         "inner": [
-            290,
-            289
+            296,
+            295
         ]
     },
     "93": {
-        "idx": 116,
+        "idx": 115,
         "kind": "ammo_box",
-        "name": "PatrK15",
+        "name": "PatrK41",
         "inner": [
-            290,
-            289
+            296,
+            295
         ]
     },
     "94": {
+        "idx": 115,
+        "kind": "ammo_box",
+        "name": "PatrK41",
+        "inner": [
+            296,
+            295
+        ]
+    },
+    "95": {
         "idx": 116,
         "kind": "ammo_box",
         "name": "PatrK15",
         "inner": [
-            290,
-            289
+            289,
+            288
         ]
     },
-    "95": {
-        "idx": 117,
-        "kind": "optic",
-        "name": "Fernglas",
-        "inner": []
-    },
     "137": {
-        "idx": 142,
-        "kind": "optic",
-        "name": "Binocolo",
-        "inner": []
+        "idx": 141,
+        "kind": "ammo_box",
+        "name": "CM. FR 14/35",
+        "inner": [
+            327
+        ]
     },
     "179": {
-        "idx": 186,
-        "kind": "optic",
-        "name": "Binocular",
-        "inner": []
+        "idx": 185,
+        "kind": "ammo_box",
+        "name": "No8 Mk1",
+        "inner": [
+            358
+        ]
     },
     "199": {
+        "idx": 201,
+        "kind": "ammo_box",
+        "name": "pat.1910",
+        "inner": [
+            374
+        ]
+    },
+    "200": {
         "idx": 202,
         "kind": "ammo_box",
         "name": "pat.DShK",
         "inner": [
-            376
+            375
         ]
     },
-    "200": {
-        "idx": 203,
-        "kind": "other",
-        "name": "SP M12",
-        "inner": []
-    },
     "206": {
-        "idx": 209,
-        "kind": "other",
-        "name": "Mle1903",
-        "inner": []
+        "idx": 208,
+        "kind": "ammo_box",
+        "name": "M07 PatrK",
+        "inner": [
+            381
+        ]
     },
     "217": {
-        "idx": 116,
+        "idx": 115,
         "kind": "ammo_box",
-        "name": "PatrK15",
+        "name": "PatrK41",
         "inner": [
-            290,
-            289
+            296,
+            295
         ]
     }
 };

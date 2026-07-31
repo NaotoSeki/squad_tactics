@@ -13,8 +13,10 @@
 | +2        | [1]            | —               | category_code = 18（弾薬） |
 | +4        | [2]            | —               | 16（固定値、caliber群？） |
 | +6        | [3]            | —               | 4（固定値、45口径グループ？） |
-| +8        | [4]            | initial_penetration | **0（弾薬は貫通力を持たない）** |
-| +10       | [5]            | penetration_decay_rate | **0** |
+| +8        | [4]            | normal / kinetic effect | 通常弾・手榴弾の主効果。特殊弾では0の場合あり |
+| +10       | [5]            | penetration_decay_rate | +8プロファイルの1ヘックス当たり低下 |
+| +12       | [6]            | special / shaped-charge effect | 成形炸薬・ロケット等の主効果 |
+| +14       | [7]            | explosive / area effect | 榴弾・爆風・範囲効果 |
 | +16       | [8]            | initial_hit_rate | **0** |
 | +24       | [12]           | malfunction_rate | **0（weapon側のみ保持）** |
 | +26       | [13]           | —               | **malfunction_modifier（弾薬起因の故障率修正値）★** |

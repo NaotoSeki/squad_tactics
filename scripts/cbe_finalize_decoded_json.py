@@ -31,6 +31,13 @@ with open("data/wpns_pl_master_table.csv", encoding="utf-8-sig") as f:
             "acceptsAmmoPlIndices": row.get("acceptsAmmoPlIndices", ""),
         }
 
+cbe_names = {
+    int(idx): name
+    for idx, name in json.loads(
+        Path("data/cbe_name_table.json").read_text(encoding="utf-8")
+    ).items()
+}
+
 # カテゴリコード → 名称マッピング
 CATEGORY_NAMES = {
     1: "pistol",
@@ -58,6 +65,9 @@ CATEGORY_NAMES = {
     23: "smoke",
     24: "bayonet_knife",
     25: "mounted_weapon",
+    26: "autocannon",
+    27: "gun",
+    28: "howitzer",
 }
 
 def decode_record(cbe_name_idx):
@@ -80,14 +90,70 @@ def decode_record(cbe_name_idx):
     shots_per_action = shots_raw & 0x7FFF
 
     # ammo_indices: 0 は除外
-    ammo_indices = [u[i] for i in [22, 23, 24, 25] if u[i] != 0]
+    # CBE stores linked item references as one-based raw item IDs. Runtime
+    # tables use zero-based cbeNameIndex values, so retain both forms and make
+    # ammo_indices unambiguously zero-based.
+    ammo_raw_item_ids = [u[i] for i in [22, 23, 24, 25] if u[i] != 0]
+    ammo_indices = [raw_item_id - 1 for raw_item_id in ammo_raw_item_ids]
 
     # unknown_22 も同様に 0x8000 フラグが立つ場合があるので記録
     unk_0x16_raw = u[11]
 
+    # Most firearms keep penetration at +08 (u[4]). Explosive / special
+    # payload records instead store their active penetration in +12 or +14.
+    # Confirmed PL examples: PF30mK=195 at u[6], GPzgr=125 at u[6],
+    # and GSprgr=100 at u[7]. Preserve all raw fields and expose the
+    # active value so downstream data does not turn those rows into zero.
+    # The alternate slots are category-specific; e.g. flamethrowers use
+    # u[6] for their own effect strength, not armor penetration.
+    effective_penetration = u[4]
+    if u[4]:
+        penetration_source = "u4/+08"
+    elif cat_code in (10, 11, 21) and u[6]:
+        effective_penetration = u[6]
+        penetration_source = "u6/+12"
+    elif cat_code == 19 and (u[3] & 0x4000) and u[6]:
+        effective_penetration = u[6]
+        penetration_source = "u6/+12"
+    elif cat_code == 19 and (u[3] & 0x8000) and u[7]:
+        effective_penetration = u[7]
+        penetration_source = "u7/+14"
+    elif cat_code == 22 and u[7]:
+        effective_penetration = u[7]
+        penetration_source = "u7/+14"
+    else:
+        penetration_source = None
+
+    effect_profiles = []
+    if u[4]:
+        effect_profiles.append({
+            "kind": "explosive" if cat_code == 20 else "kinetic",
+            "value": u[4],
+            "decay_per_hex": u[5],
+            "source": "u4/+08",
+        })
+    if u[6]:
+        effect_profiles.append({
+            "kind": "flame_direct" if cat_code == 9 else "special_or_shaped_charge",
+            "value": u[6],
+            "decay_per_hex": 0,
+            "source": "u6/+12",
+        })
+    if u[7]:
+        effect_profiles.append({
+            "kind": "flame_area" if cat_code == 9 else "explosive",
+            "value": u[7],
+            "decay_per_hex": 0,
+            "source": "u7/+14",
+        })
+
     entry = {
         "cbeNameIndex": cbe_name_idx,
-        "name": csv_info.get("name") or f"weapon_{cbe_name_idx}",
+        "name": (
+            csv_info.get("name")
+            or cbe_names.get(cbe_name_idx)
+            or f"weapon_{cbe_name_idx}"
+        ),
         "wpns_code": csv_info.get("wpns_code", ""),
         "plCategory": csv_info.get("plCategory", ""),
         "category_code": cat_code,
@@ -97,13 +163,25 @@ def decode_record(cbe_name_idx):
         "auto_fire": auto_fire,
         "hit_decay_rate": u[10],
         "malfunction_rate": u[13],
+        "base_malfunction_rate": 0 if cat_code == 18 else u[13],
+        "malfunction_modifier": u[13] if cat_code == 18 else 0,
         "melee_attack": u[14],
-        "initial_penetration": u[4],
+        "initial_penetration": effective_penetration,
+        "initial_penetration_raw_u4": u[4],
         "penetration_decay_rate": u[5],
+        "penetration_source": penetration_source,
+        "effect_mode_raw": u[3],
+        "special_penetration_u6": u[6],
+        "special_penetration_u7": u[7],
+        "effect_profiles": effect_profiles,
         "purchase_cost": u[18],
         "weight_100g": u[19],
         "magazine_capacity": u[20],
+        "ammo_raw_item_ids": ammo_raw_item_ids,
         "ammo_indices": ammo_indices,
+        "u26_raw_item_id": u[26] or None,
+        "u26_index": (u[26] - 1) if u[26] else None,
+        "record_offset": f"0x{TABLE_START + (dump_idx-1)*STRIDE:06X}",
         # 未確定フィールド（将来の参照用）
         "_unknown_02": u[1],  # category_code と同じ
         "_unknown_0e": u[7],  # 常に 0?
@@ -120,7 +198,7 @@ def decode_record(cbe_name_idx):
 # 全400レコードをデコード
 print("=== フルデコード ===")
 all_records = []
-for cbe_idx in range(400):
+for cbe_idx in range((len(data) - TABLE_START) // STRIDE):
     dump_idx = cbe_idx + 1
     off = TABLE_START + cbe_idx * STRIDE
     if off + STRIDE > len(data):
