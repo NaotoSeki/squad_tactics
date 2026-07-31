@@ -119,6 +119,12 @@ window.HIGH_RES_SCALE = window.HIGH_RES_SCALE || 1;
 // ---------------------------------------------------------------------------
 // SimBattleScene -- SS15.2 fixed-timestep driver, UnitView + TerrainRender + VFX
 // ---------------------------------------------------------------------------
+/**
+ * キャンバスの実描画解像度 / CSS表示サイズ の比。bootGame で devicePixelRatio から決まる。
+ * 描画解像度を上げるぶんカメラも同じだけ寄せる必要があるので、シーンからも参照する。
+ */
+let RENDER_DPR = 1;
+
 class SimBattleScene extends Phaser.Scene {
   constructor() {
     super({ key: 'SimBattleScene' });
@@ -258,7 +264,9 @@ class SimBattleScene extends Phaser.Scene {
       c = Renderer.hexToPx(this.mapData.W / 2, this.mapData.H / 2);
     }
     this.cameras.main.centerOn(c.x, c.y);
-    this.cameras.main.setZoom(this.psMode ? 0.8 : 1.1);
+    // キャンバスを DPR 倍で作っているので、カメラも同じだけ寄せないと
+    // 高DPI環境だけ視野が広がってしまう（見える世界の広さは DPR に依らず一定）。
+    this.cameras.main.setZoom((this.psMode ? 0.8 : 1.1) * RENDER_DPR);
 
     this.setupInput();
     this.game.events.emit('sim-ready');
@@ -584,11 +592,20 @@ if (new URLSearchParams(location.search).get('bare') === '1') {
 function scene() { return window.simGame ? window.simGame.scene.getScene('SimBattleScene') : null; }
 
 function bootGame() {
+  // 高DPI対応: キャンバスの実描画解像度を CSS サイズ × devicePixelRatio にして、
+  // zoom で表示だけ CSS サイズへ戻す。これが無いと Windows の表示スケーリング
+  // (125%/150%) や 4K 環境で、CSSピクセルで描いた絵をブラウザが引き伸ばすため
+  // 一律にボケる。地面は pixelRatio:2 の HD 素材なので、描画解像度さえ上げれば
+  // 素の情報量がそのまま出る。上限2は VRAM とフィルレートの安全弁。
+  RENDER_DPR = Math.min(window.devicePixelRatio || 1, 2);
+  // レイアウト確定前に clientWidth が 0 付近になることがあるので下限を設ける
+  const cssW = Math.max(320, gv.clientWidth || window.innerWidth);
+  const cssH = Math.max(240, gv.clientHeight || window.innerHeight);
   const config = {
     type: Phaser.AUTO, parent: 'game-view',
-    // レイアウト確定前に clientWidth が 0 付近になることがあるので下限を設ける
-    width: Math.max(320, gv.clientWidth || window.innerWidth),
-    height: Math.max(240, gv.clientHeight || window.innerHeight),
+    width: Math.round(cssW * RENDER_DPR),
+    height: Math.round(cssH * RENDER_DPR),
+    zoom: 1 / RENDER_DPR,
     backgroundColor: '#16140f', pixelArt: false,
     fps: { target: 60 },
     scene: [SimBattleScene],
@@ -599,7 +616,13 @@ function bootGame() {
   game.events.on('sim-result', (ev) => {
     document.getElementById('result').textContent = (ev.winner || 'draw') + ' ' + (ev.reason || '');
   });
-  window.addEventListener('resize', () => { game.scale.resize(gv.clientWidth, gv.clientHeight); });
+  // window の resize だけだと、サイドバーの開閉やペイン幅の変更に追従できない。
+  const applySize = () => {
+    const w = Math.max(320, gv.clientWidth), h = Math.max(240, gv.clientHeight);
+    game.scale.resize(Math.round(w * RENDER_DPR), Math.round(h * RENDER_DPR));
+  };
+  window.addEventListener('resize', applySize);
+  if (window.ResizeObserver) new ResizeObserver(applySize).observe(gv);
 }
 
 // 19モーション manifest を Phaser 起動前に取得（preload で寸法が要るため）。
