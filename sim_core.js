@@ -390,11 +390,13 @@ SimCore.prototype._phaseDecide = function () {
       const targetId = s.currentOrder.payload && s.currentOrder.payload.targetId;
       const target = targetId ? this._soldiers.get(targetId) : null;
       const targetGone = !target || target.hp <= 0;
-      // 遂行中(engage)には切れない。射撃の途中で「やっぱり自分で考えます」と
-      // 抜けるのは兵の振る舞いとして不自然だし、制圧射撃のような**持続する任務**が
-      // 途中で崩れる（弾薬経済の前提も壊れる: tests/sim_core.test.js T4）。
-      // 手が空いた時に自分の判断へ戻る、が正しい単位。
-      const timedOut = expireT != null && s.state !== 'engage'
+      // 制圧射撃(suppress)には寿命を課さない。制圧は定義上**持続させる**任務で、
+      // 途中で「やっぱり自分で考えます」と抜けたら頭が上がってしまう
+      // （§3.3 の弾薬経済の前提もここに乗る: tests/sim_core.test.js T4）。
+      // 照準射撃は区切りのある行為なので、時間が経てば自分の判断へ戻ってよい。
+      // ※「engage 状態でないこと」を条件にしていた版は、観測休止(FIRE_OBSERVE_T)の
+      //   間も engage のままなので実質いつまでも失効せず、無命令時間が消えた。
+      const timedOut = expireT != null && s.fireMode !== 'suppress'
         && (this._tick - (s.currentOrderT || 0)) >= expireT;
       if (targetGone || timedOut) {
         s.currentOrder = null;
@@ -605,11 +607,41 @@ SimCore.prototype._actEngage = function (s, T) {
   }
   if (!s._burstIntervalRemaining || s._burstIntervalRemaining <= 0) {
     this._resolveBurst(s, target, T);
-    const base = (s.fireMode === 'suppress')
+    let base = (s.fireMode === 'suppress')
       ? Math.round(s.weapon.burstIntervalT / 2)
       : s.weapon.burstIntervalT;
+
+    // 制圧は命中率だけでなく**手数**も奪う。pHit だけを罰していた版では、
+    // 制圧されても発砲リズムが変わらないため「撃ち合いの潮目」が生まれず、
+    // 両軍が一定間隔で撃ち続ける定常ノイズになっていた。
+    if (s.state === 'pinned' || s.suppression >= T.PINNED_AT) {
+      base *= (T.FIRE_INTERVAL_PINNED_MULT || 1);
+    } else if (s.state === 'suppressed' || s.suppression >= T.SUPPRESSED_AT) {
+      base *= (T.FIRE_INTERVAL_SUPPRESSED_MULT || 1);
+    }
+
     const J = (T.BURST_JITTER != null) ? T.BURST_JITTER : 0;
-    const interval = Math.max(1, Math.round(base * (1 - J + this.rng() * 2 * J)));
+    let interval = Math.max(1, Math.round(base * (1 - J + this.rng() * 2 * J)));
+
+    // ひと区切り撃ったら効果を観測する休止を入れる。等間隔の連射だけだと、
+    // 独立した射手が重なって「止まらない定常ノイズ」になる（実測 Fano係数 0.79 =
+    // ポアソンより規則的、最長の沈黙2.0秒）。数発撃って様子を見る、が銃撃戦の形。
+    // ただし制圧射撃には掛けない。制圧は定義上**持続させる**もので、様子を見て
+    // 止めたら頭が上がってしまい意味が無い（§3.3「suppress は約1弾倉/40秒を
+    // 燃やす」という弾薬経済の前提もここに乗っている）。結果として、制圧を
+    // 命じると撃ち合いの音そのものが変わる — 散発的な応射が持続射撃に変わる。
+    const V = T.FIRE_VOLLEY_BURSTS;
+    const O = T.FIRE_OBSERVE_T;
+    if (V && O && s.fireMode !== 'suppress') {
+      const pick = (r) => r.min + Math.floor(this.rng() * (r.max - r.min + 1));
+      if (!s._volleySize) s._volleySize = pick(V);
+      s._burstsInVolley = (s._burstsInVolley || 0) + 1;
+      if (s._burstsInVolley >= s._volleySize) {
+        s._burstsInVolley = 0;
+        s._volleySize = pick(V);
+        interval += pick(O);
+      }
+    }
     s._burstIntervalRemaining = interval;
   } else {
     s._burstIntervalRemaining--;
