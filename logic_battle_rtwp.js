@@ -253,10 +253,108 @@
     return true;
   };
 
+  // -------------------------------------------------------------------------
+  // UI 配線
+  //
+  // logic_game.js / logic_ui.js は書き換えず、**インスタンスのメソッドを包む**。
+  // 元の実装はそのまま残り、detach() で元に戻る。クラスではなくインスタンスを
+  // 差し替えるので、旧ターン制の挙動は一切壊れない。
+  // -------------------------------------------------------------------------
+
+  RtwpInstance.prototype.installUi = function () {
+    const g = this.gameLogic;
+    const self = this;
+    if (!g || this._uiInstalled) return;
+    this._orig = {
+      handleRightClick: g.handleRightClick,
+      endTurn: g.endTurn,
+    };
+
+    // 右クリック = 移動命令。RTwP では経路も AP も無いので、選択兵へ直接命令する。
+    g.handleRightClick = function (px, py, hex) {
+      const sel = g.selectedUnit;
+      if (sel && hex && self.orderMove(sel, hex.q, hex.r)) {
+        self._log(sel.name + ' へ移動命令');
+        return;
+      }
+      if (self._orig.handleRightClick) return self._orig.handleRightClick.call(g, px, py, hex);
+    };
+
+    // END TURN は RTwP に存在しない。押されたら一時停止のトグルにする
+    // （ボタンを消すには logic_ui.js の書き換えが要るので、意味を差し替える）。
+    g.endTurn = function () {
+      self.setPaused(!self.paused);
+      self._log(self.paused ? '一時停止' : '再開');
+      self.updateHud();
+    };
+
+    this._keyHandler = function (e) {
+      const el = document.activeElement;
+      const tag = el && (el.tagName || '').toLowerCase();
+      if (tag === 'input' || tag === 'textarea' || tag === 'select') return;
+      const sel = g.selectedUnit;
+      switch (e.key) {
+        case ' ':
+          e.preventDefault();
+          self.setPaused(!self.paused); self._log(self.paused ? '一時停止' : '再開');
+          break;
+        case 'f': case 'F':
+          if (sel && sel.team === 'enemy' && self.orderFocusFire(sel)) self._log('命令: ' + sel.name + 'へ集中射撃');
+          break;
+        case 's': case 'S':
+          if (self.orderSuppress()) self._log('命令: 制圧射撃');
+          break;
+        case 'c': case 'C':
+          if (self.orderTakeCover()) self._log('命令: 遮蔽に入れ');
+          break;
+        case '1': self.setSpeed(1); break;
+        case '2': self.setSpeed(2); break;
+        case '3': self.setSpeed(4); break;
+        default: return;
+      }
+      self.updateHud();
+    };
+    document.addEventListener('keydown', this._keyHandler);
+
+    // 操作の手引きと状態を出す小さなHUD（既存DOMを壊さないよう独立要素で足す）
+    const hud = document.createElement('div');
+    hud.id = 'rtwp-hud';
+    hud.style.cssText = 'position:fixed;left:8px;bottom:8px;z-index:60;background:rgba(0,0,0,.66);'
+      + 'color:#dfe;font:11px/1.5 monospace;padding:6px 9px;border:1px solid #465;border-radius:4px;pointer-events:none';
+    document.body.appendChild(hud);
+    this._hud = hud;
+    this.updateHud();
+    this._uiInstalled = true;
+  };
+
+  RtwpInstance.prototype.updateHud = function () {
+    if (!this._hud) return;
+    const sp = this.paused ? '停止中' : (this.speed + 'x');
+    this._hud.innerHTML = '<b>REAL TIME</b> [' + sp + ']<br>'
+      + '右クリック=移動命令 / Space=一時停止 / 1,2,3=速度<br>'
+      + '敵を選択して F=集中射撃 / S=制圧射撃 / C=遮蔽に入れ';
+  };
+
+  RtwpInstance.prototype.uninstallUi = function () {
+    const g = this.gameLogic;
+    if (!this._uiInstalled) return;
+    if (g && this._orig) {
+      if (this._orig.handleRightClick) g.handleRightClick = this._orig.handleRightClick;
+      else delete g.handleRightClick;
+      if (this._orig.endTurn) g.endTurn = this._orig.endTurn;
+      else delete g.endTurn;
+    }
+    if (this._keyHandler) document.removeEventListener('keydown', this._keyHandler);
+    if (this._hud && this._hud.parentNode) this._hud.parentNode.removeChild(this._hud);
+    this._hud = null;
+    this._uiInstalled = false;
+  };
+
   RtwpInstance.prototype.setPaused = function (v) { this.paused = !!v; };
   RtwpInstance.prototype.setSpeed = function (v) { if (typeof v === 'number' && v >= 0) this.speed = v; };
 
   RtwpInstance.prototype.detach = function () {
+    this.uninstallUi();
     const units = (this.gameLogic && this.gameLogic.units) || [];
     units.forEach((u) => {
       delete u._rtwpSkipped; delete u._rtwpHpScale;
@@ -358,6 +456,10 @@
 
       this.instance = inst;
       this.active = true;
+      // ヘッドレス(node)には document が無いので、その時はUI配線を飛ばす
+      if (typeof document !== 'undefined' && document.body) {
+        try { inst.installUi(); } catch (e) { console.error('RTwP installUi', e); }
+      }
       if (gameLogic.ui && typeof gameLogic.ui.log === 'function') gameLogic.ui.log('-- REAL TIME --');
       return inst;
     },
