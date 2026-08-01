@@ -139,6 +139,9 @@ window.TerrainRenderRuralV29 = {
   _buildPsObjects(scene, name, projection) {
     const L = window.PsObjectLayer;
     if (!L || !L.manifest) return;
+    // The production battlefield is deliberately HD-only. A canonical 1x
+    // fallback is more conspicuous than omitting the rare unresolved prop.
+    L.HD_ONLY = true;
 
     const jsonKey = 'psobj_' + name;
     const spawn = () => {

@@ -145,6 +145,24 @@ function attach(g) {
 
 // --- 5. update で units が sim に追従する（接ぎ木の要） ----------------------
 {
+  const g = makeGameLogic({ players: 2, enemies: 2 });
+  const inst = attach(g);
+  const h = { q: g.units[0].q, r: g.units[0].r };
+  const cardUnit = mkUnit('CARD-REINFORCEMENT', 'player', h, ['Veteran']);
+  g.units.push(cardUnit);
+  inst.paused = true;
+  inst.update(T.TICK_MS);
+  const registered = inst.sim.getSoldier('CARD-REINFORCEMENT');
+  check(!!registered && registered.team === 'A',
+    'ポーズ中にカード配置した兵士もRTwPへ即時登録される');
+  check(inst.unitById.get('CARD-REINFORCEMENT') === cardUnit,
+    'カード配置兵が本編描画ユニットとRTwP兵で対応付く');
+  check(inst.sim.soldiers().filter((s) => s.team === 'A' && s.isLeader).length === 1,
+    'カード配置兵の追加で分隊長が重複しない');
+}
+
+// --- 6. update で units が sim に追従する（接ぎ木の要） ----------------------
+{
   const g = makeGameLogic({ players: 4, enemies: 4 });
   const inst = attach(g);
   const before = g.units.map((u) => u.q + ',' + u.r + ':' + u.hp);
@@ -221,6 +239,19 @@ function attach(g) {
     'orderFocusFire が TARGET(aimed) を全員へ出す');
 
   seen.length = 0;
+  inst.orderAttack(me, foe, 'aimed');
+  const manual = seen.find((o) => o.type === 'TARGET');
+  check(!!manual && manual.soldierIds.length === 1 && manual.soldierIds[0] === String(me.id)
+    && manual.payload.targetId === String(foe.id) && manual.payload.mode === 'aimed',
+    '手動射撃Actionは選択兵1名のTARGET(aimed)命令へ変換される');
+
+  seen.length = 0;
+  inst.orderAttack(me, foe, 'suppress');
+  const manualSuppress = seen.find((o) => o.type === 'TARGET');
+  check(!!manualSuppress && manualSuppress.payload.mode === 'suppress',
+    '手動制圧ActionもRTwPのTARGET(suppress)命令へ変換される');
+
+  seen.length = 0;
   inst.orderSuppress();
   const sup = seen.filter((o) => o.type === 'TARGET' && o.payload.mode === 'suppress');
   check(sup.length >= 0, 'orderSuppress が例外を出さない');
@@ -241,13 +272,149 @@ function attach(g) {
   check(!threw, 'VFX/Sfx/Renderer が未定義でも update が例外を出さない');
 }
 
-// --- 10. detach で後片付けされる ---------------------------------------------
+// --- 10. イベントログは sim_battle.html と同じ文言 ---------------------------
+{
+  const g = makeGameLogic({ players: 2, enemies: 2 });
+  const inst = attach(g);
+  g.logs.length = 0;
+  inst.dispatch([
+    { tick: 12, type: 'SHOT', shooterId: 'P0', targetId: 'E0', hit: false, killed: false },
+    { tick: 13, type: 'POLICY', id: 'P1', note: '攻撃的: 独断で射撃開始' },
+    { tick: 14, type: 'ORDER_DELIVERED', id: 'P0', order: { type: 'MOVE_TO' } },
+  ]);
+  check(g.logs.includes('t12 SHOT P0->E0 miss'), '射撃ログが tick・射手・標的・命中結果を保持する');
+  check(g.logs.includes('t13 POLICY P1 「攻撃的: 独断で射撃開始」'), 'POLICY文言がsim_battleと一致する');
+  check(g.logs.includes('t14 ORDER_DELIVERED P0 MOVE_TO'), '命令到達ログがsim_battleと一致する');
+}
+
+// --- 11. 非アクティブ中と復帰直後の巨大deltaを捨てる --------------------------
+{
+  const g = makeGameLogic({ players: 2, enemies: 2 });
+  const inst = attach(g);
+  const t0 = inst.sim._tick;
+  SB.document = { hidden: true };
+  inst.update(T.TICK_MS * 100);
+  check(inst.sim._tick === t0 && inst.acc === 0, 'hidden中はsimを進めずdeltaを蓄積しない');
+  SB.document.hidden = false;
+  inst.update(T.TICK_MS * 100);
+  check(inst.sim._tick === t0 && inst.acc === 0, '復帰直後の巨大deltaを1回捨てる');
+  delete SB.document;
+}
+
+// --- 12. 実際の手動Action入口も旧攻撃ではなくRTwP命令へ接続される ------------
+{
+  const g = makeGameLogic({ players: 2, enemies: 2 });
+  let legacyAttackCalls = 0;
+  g.actionAttack = () => { legacyAttackCalls++; };
+  g.onUnitClick = (unit) => { g.selectedUnit = unit; };
+  g.setMode = (mode) => { g.interactionMode = mode; };
+  g.ui.hideActionMenu = () => {};
+  const inst = attach(g);
+  const issued = [];
+  const origIssue = inst.sim.issueOrder.bind(inst.sim);
+  inst.sim.issueOrder = (o) => { issued.push(o); return origIssue(o); };
+
+  const fakeBody = {
+    appendChild(el) { el.parentNode = this; },
+    removeChild(el) { if (el) el.parentNode = null; },
+  };
+  SB.document = {
+    body: fakeBody,
+    activeElement: null,
+    hidden: false,
+    addEventListener() {}, removeEventListener() {},
+    getElementById() { return null; },
+    createElement() { return { style: {}, parentNode: null, innerHTML: '' }; },
+  };
+  inst.installUi();
+  const me = g.units.find((u) => u.team === 'player');
+  const foe = g.units.find((u) => u.team === 'enemy');
+  inst.setPaused(true);
+  g.selectedUnit = me;
+  g.onUnitClick(foe);
+  check(g.selectedUnit === me,
+    '戦術ポーズ中の敵クリックは味方選択を維持する');
+  check(issued.some((o) => o.type === 'TARGET' && o.soldierIds[0] === String(me.id)
+    && o.payload.targetId === String(foe.id)),
+    '戦術ポーズ中の敵クリックが個別射撃命令を発行する');
+  g.actionAttack(me, foe);
+  const manual = issued.find((o) => o.type === 'TARGET');
+  check(legacyAttackCalls === 0, '手動Actionから旧ターン制actionAttackを呼ばない');
+  check(!!manual && manual.soldierIds[0] === String(me.id)
+    && manual.payload.targetId === String(foe.id) && manual.payload.mode === 'aimed',
+    '手動Action入口が選択兵のRTwP TARGET命令を発行する');
+  check(me._rtwpPendingTargetId === String(foe.id),
+    '手動Actionは伝達中から射撃対象を向きへ反映する');
+  inst.setPaused(false);
+  for (let i = 0; i < 30; i++) inst.update(T.TICK_MS);
+  check(me._sim && me._sim.engageTargetId === String(foe.id),
+    '手動Actionがsimへ配達され配置兵へ同期される');
+  inst.uninstallUi();
+  delete SB.document;
+}
+
+// --- 13. RTwP Action menu ignores legacy AP/ammo and uses sim ammo ------------
+{
+  const uiSource = fs.readFileSync(path.join(__dirname, '..', 'logic_ui.js'), 'utf8')
+    + '\n;this.__UIManager = UIManager;';
+  const makeButton = () => ({
+    style: {},
+    classList: {
+      values: new Set(['disabled']),
+      add(v) { this.values.add(v); },
+      remove(v) { this.values.delete(v); },
+      contains(v) { return this.values.has(v); },
+    },
+    querySelector() { return null; },
+  });
+  const buttons = {
+    'btn-move': makeButton(), 'btn-attack': makeButton(),
+    'btn-repair': makeButton(), 'btn-melee': makeButton(), 'btn-heal': makeButton(),
+  };
+  const group = { style: {} };
+  const menu = { style: {}, querySelector: () => group };
+  const uiBox = {
+    console, setTimeout: () => 0,
+    document: { getElementById: (id) => id === 'command-menu' ? menu : buttons[id] },
+    getCurrentWeapon: () => ({ ap: 2, current: 0, reserve: 0 }),
+    gameLogic: { getUnitsInHex: () => [] },
+    RtwpBattle: {
+      active: true,
+      instance: { sim: { getSoldier: () => ({ hp: 100, weapon: {}, magRemaining: 7, magsLeft: 0 }) } },
+    },
+  };
+  uiBox.window = uiBox;
+  vm.createContext(uiBox);
+  vm.runInContext(uiSource, uiBox, { filename: 'logic_ui.js' });
+  uiBox.__UIManager.prototype.showActionMenu.call({ menuSafeLock: false }, {
+    id: 'player-1', ap: 0, q: 0, r: 0, hands: [], def: { isTank: false },
+  }, 10, 10);
+  check(!buttons['btn-attack'].classList.contains('disabled'),
+    'RTwP手動射撃ボタンは旧AP=0でもsim弾薬があれば有効');
+}
+
+// --- 14. detach で後片付けされる ---------------------------------------------
 {
   const g = makeGameLogic({ players: 2, enemies: 2 });
   attach(g);
   SB.RtwpBattle.detach();
   check(SB.RtwpBattle.active === false && SB.RtwpBattle.instance === null, 'detach で切り離される');
   check(g.units.every((u) => u._rtwpHpScale === undefined), '一時プロパティが消える');
+  check(g.units.every((u) => u._sim === undefined && u._rtwpPendingTargetId === undefined),
+    'detach でsim同期と伝達中ターゲットも消える');
+}
+
+{
+  const g = makeGameLogic({ players: 2, enemies: 2 });
+  const inst = attach(g);
+  const t0 = inst.sim._tick;
+  SB.Sfx = { isPageActive() { return false; } };
+  SB.document = { hidden: false, visibilityState: 'visible' };
+  inst.update(T.TICK_MS * 100);
+  check(inst.sim._tick === t0 && inst.acc === 0,
+    'window blur state stops RTwP simulation and event-log progress');
+  delete SB.Sfx;
+  delete SB.document;
 }
 
 console.log('\n' + passCount + ' passed, ' + failCount + ' failed');

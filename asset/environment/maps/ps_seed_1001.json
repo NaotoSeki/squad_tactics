@@ -2,12 +2,12 @@
   "schema": "ps_battlefield/v1",
   "name": "ps_seed_1001",
   "image": "ps_seed_1001.png",
-  "image_width": 620,
-  "image_height": 620,
+  "image_width": 1600,
+  "image_height": 1000,
   "projection": {
     "scale": 0.84,
-    "top_left_x": 885.3516092068122,
-    "top_left_y": 509.1,
+    "top_left_x": 614.0477246198911,
+    "top_left_y": 349.5,
     "note": "game_px = top_left + image_px * scale (等方。PS 2:1等角のまま歪ませない)"
   },
   "source": {
@@ -17,129 +17,230 @@
   },
   "rows": [
     [
-      7,
-      7,
+      5,
+      6,
       [
-        "FOREST",
-        "BLDG",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS"
+      ]
+    ],
+    [
+      6,
+      5,
+      [
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS"
+      ]
+    ],
+    [
+      7,
+      5,
+      [
         "ROAD",
-        "BLDG",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "FOREST",
+        "GRASS",
+        "GRASS",
+        "GRASS",
         "GRASS"
       ]
     ],
     [
       8,
-      6,
+      4,
       [
-        "FOREST",
         "GRASS",
         "ROAD",
-        "FIELD",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
         "GRASS"
       ]
     ],
     [
       9,
-      6,
+      4,
       [
-        "FOREST",
+        "GRASS",
         "ROAD",
         "BLDG",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
         "FIELD",
-        "FIELD"
+        "GRASS",
+        "GRASS",
+        "GRASS"
       ]
     ],
     [
       10,
-      5,
+      3,
       [
         "GRASS",
         "ROAD",
         "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
         "FIELD",
-        "FIELD"
+        "GRASS",
+        "GRASS"
       ]
     ],
     [
       11,
-      5,
+      3,
       [
-        "BLDG",
+        "GRASS",
         "ROAD",
         "GRASS",
         "GRASS",
-        "FIELD"
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "FIELD",
+        "GRASS",
+        "GRASS",
+        "FOREST"
       ]
     ],
     [
       12,
-      4,
+      2,
       [
         "GRASS",
-        "FOREST",
         "ROAD",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
         "FOREST",
-        "FIELD"
+        "FIELD",
+        "GRASS",
+        "GRASS",
+        "GRASS"
+      ]
+    ],
+    [
+      13,
+      2,
+      [
+        "FOREST",
+        "BLDG",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "FOREST"
+      ]
+    ],
+    [
+      14,
+      1,
+      [
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS"
       ]
     ]
   ],
   "audit": {
     "coverage_ok": true,
     "terrain_counts": {
-      "BLDG": 4,
-      "FIELD": 7,
+      "BLDG": 2,
+      "FIELD": 4,
       "FOREST": 5,
-      "GRASS": 8,
+      "GRASS": 103,
       "ROAD": 6
     },
     "connectivity": {
       "ok": true,
-      "passable": 26,
+      "passable": 118,
       "component_sizes": [
-        26
+        118
       ]
     },
-    "placements_drawn": 1191,
-    "tall_objects": 142,
+    "placements_drawn": 3577,
+    "tall_objects": 118,
     "missing_assets": {
-      "board_002_00": 4,
-      "board_002_02": 2,
-      "board_003_00": 2,
-      "board_003_02": 4,
-      "board_003_03": 2,
-      "board_003_04": 2,
-      "board_004_02": 4,
-      "board_004_03": 6,
-      "bush_001": 2,
-      "bush_003": 2,
-      "bush_small_02": 2,
-      "compose_001_00": 2,
-      "compose_001_01": 6,
-      "compose_001_03": 6,
-      "compose_002_01": 2,
-      "compose_002_02": 6,
-      "compose_002_04": 2,
-      "flower_phlox-paniculata_a_01": 3,
-      "flower_phlox-paniculata_a_02": 2,
-      "flower_rhododendron-ponticum_a_01": 2,
+      "board_001_03": 2,
+      "board_003_01": 2,
+      "bush_002": 4,
+      "bush_medium_02": 2,
+      "bush_small_01": 2,
+      "bush_small_02": 4,
+      "bush_small_03": 2,
+      "bush_small_04": 2,
+      "compose_001_03": 2,
+      "flower_phlox-paniculata_a_01": 2,
       "flower_rhododendron-ponticum_b_02": 2,
-      "flower_rhododendron-ponticum_c_03": 4,
-      "flower_rudbeckia-hirta_a_01": 1,
-      "flower_rudbeckia-hirta_a_02": 2,
-      "flower_rudbeckia-hirta_b_01": 2,
-      "flower_rudbeckia-hirta_c_02": 1,
+      "flower_rhododendron-ponticum_c_03": 5,
+      "flower_rudbeckia-hirta_a_01": 3,
+      "flower_rudbeckia-hirta_a_02": 1,
+      "flower_rudbeckia-hirta_b_01": 1,
+      "flower_rudbeckia-hirta_c_02": 2,
       "flower_rudbeckia-hirta_d_01": 3,
-      "flower_rudbeckia-hirta_e_01": 3,
-      "flower_zantedeschia-aethiopica_a_01": 4,
-      "ladder_002_03": 2,
-      "ladder_002_04": 2,
-      "plant_coriandrum-sativum_b_01": 10,
-      "plant_coriandrum-sativum_c_02": 6,
-      "plant_coriandrum-sativum_c_03": 2,
-      "plant_dryopteris-carthusiana_c_01": 1,
-      "plant_dryopteris-carthusiana_d_01": 1,
-      "plant_dryopteris-carthusiana_e_01": 1
+      "flower_rudbeckia-hirta_e_01": 1,
+      "flower_zantedeschia-aethiopica_a_01": 5,
+      "plant_coriandrum-sativum_b_01": 9,
+      "plant_coriandrum-sativum_c_02": 19,
+      "plant_coriandrum-sativum_c_03": 12,
+      "plant_dryopteris-carthusiana_b_01": 3,
+      "plant_dryopteris-carthusiana_d_01": 2
     },
-    "flat_background_fraction": 0.0
+    "flat_background_fraction": 6.25e-07
   }
 }

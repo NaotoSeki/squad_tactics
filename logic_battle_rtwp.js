@@ -77,7 +77,71 @@
     this.acc = 0;
     this.speed = 1;
     this.paused = false;
+    this._skipNextDelta = false;
   }
+
+  /**
+   * 本編側で新しく生成された兵士を、進行中のRTwPへ参加させる。
+   * 初期配置だけでなく、手札カード・増援など戦闘開始後の追加にも使う。
+   */
+  RtwpInstance.prototype.registerUnit = function (unit) {
+    if (!unit || unit.hp <= 0 || !this.sim) return null;
+    const id = String(unit.id);
+    const existing = this.sim.getSoldier(id);
+    if (existing) {
+      this.unitById.set(id, unit);
+      return existing;
+    }
+    if (unit._rtwpSkipped) return null;
+
+    const D = resolveDeps();
+    const T = D.SIM_TUNING;
+    const team = (unit.team === 'player') ? 'A' : 'B';
+    let weapon = null;
+    try { weapon = this.gameLogic.getVirtualWeapon(unit); } catch (e) { weapon = null; }
+    const code = weapon && weapon.code;
+    if (!code || !D.WPNS || !D.WPNS[code]) {
+      unit._rtwpSkipped = true;
+      return null;
+    }
+
+    let simWeapon = null;
+    try { simWeapon = D.toSimWeapon(code, D.WPNS[code], T); } catch (e) { simWeapon = null; }
+    if (!simWeapon) {
+      unit._rtwpSkipped = true;
+      return null;
+    }
+
+    const traits = [];
+    (unit.skills || []).forEach((skill) => {
+      if (SKILL_TRAITS[skill]) traits.push(SKILL_TRAITS[skill]);
+    });
+    const hasLeader = this.sim.soldiers().some((soldier) => soldier.team === team && soldier.isLeader && soldier.hp > 0);
+    const mags = (T.DEFAULT_MAGS && T.DEFAULT_MAGS[simWeapon.class] != null)
+      ? T.DEFAULT_MAGS[simWeapon.class] : 4;
+    this.sim.addSoldier({
+      id: id, team: team, q: unit.q, r: unit.r,
+      weapon: simWeapon, ammo: { mags: mags }, skill: 1.0,
+      isLeader: !hasLeader, traits: traits,
+      facing: (team === 'A') ? { q: 1, r: 0 } : { q: -1, r: 0 },
+    });
+
+    const soldier = this.sim.getSoldier(id);
+    if (!soldier) return null;
+    const maxHp = Number(unit.maxHp) || Number(unit.hp) || 100;
+    unit._rtwpHpScale = maxHp / Math.max(1, soldier.hp || 100);
+    delete unit._rtwpSkipped;
+    this.unitById.set(id, unit);
+    return soldier;
+  };
+
+  RtwpInstance.prototype.registerMissingUnits = function () {
+    const units = (this.gameLogic && this.gameLogic.units) || [];
+    for (let i = 0; i < units.length; i++) {
+      const unit = units[i];
+      if (unit && unit.hp > 0 && !this.unitById.has(String(unit.id))) this.registerUnit(unit);
+    }
+  };
 
   /**
    * **接ぎ木の要。** sim の状態を既存ユニットへ書き戻す。UnitView はここで書いた
@@ -103,6 +167,16 @@
       unit.suppression = s.suppression;
       unit.simState = s.state;
       unit.facing = s.facing;
+      unit._rtwpTargetId = s.engageTargetId || null;
+      if (s.engageTargetId) delete unit._rtwpPendingTargetId;
+      // SoldierUnitView はこの完全なsnapshotから engage/reload/suppression/facingを
+      // 選ぶ。本番側で渡していなかったため、見た目だけ常時idleになっていた。
+      unit._sim = s;
+      unit._rtwpAmmo = {
+        rounds: s.magRemaining,
+        magazines: s.magsLeft,
+        capacity: s.weapon ? s.weapon.magCap : 0,
+      };
 
       if (s.state === 'pinned' || s.state === 'suppressed') unit.stance = 'prone';
       else if (s.state === 'move') unit.stance = 'stand';
@@ -139,6 +213,46 @@
     if (ui && typeof ui.log === 'function') ui.log(msg);
   };
 
+  /** sim_battle.html と同一のイベント文言。製品側だけ日本語へ要約しない。 */
+  RtwpInstance.prototype.formatEvent = function (ev) {
+    const parts = ['t' + ev.tick, ev.type];
+    if (ev.id) parts.push(this._name(ev.id));
+    if (ev.shooterId) parts.push(this._name(ev.shooterId) + '->' + this._name(ev.targetId)
+      + (ev.hit ? ' HIT' : ' miss') + (ev.killed ? ' KILL' : ''));
+    if (ev.type === 'SHOT' && ev.roundsFired) parts.push('x' + ev.roundsFired);
+    if (ev.note) parts.push('「' + ev.note + '」');
+    if (ev.type === 'ORDER_DELIVERED' && ev.order) parts.push(ev.order.type);
+    return parts.join(' ');
+  };
+
+  /**
+   * ブラウザでは既存Battle Log窓を sim_battle のイベントログとして使う。
+   * UIManager.log は先頭へ `> ` を加えるため、ここだけ直接追加して文言を一致させる。
+   * headless では既存 ui.log へ落とし、同じ文字列をテストできるようにする。
+   */
+  RtwpInstance.prototype.pushEventLog = function (text) {
+    if (typeof document !== 'undefined') {
+      const body = document.getElementById('battle-log-body');
+      if (body) {
+        const d = document.createElement('div');
+        d.className = 'log-entry';
+        d.textContent = text;
+        body.appendChild(d);
+        while (body.children.length > 300) body.removeChild(body.firstChild);
+        body.scrollTop = body.scrollHeight;
+        return;
+      }
+    }
+    // installUi後は ui.log 自体が pushEventLog を指す。ログDOMが無い環境で _logへ
+    // 戻すと再帰するため、保存してある元の実装を直接呼ぶ。
+    const ui = this.gameLogic && this.gameLogic.ui;
+    if (ui && this._orig && typeof this._orig.uiLog === 'function') {
+      this._orig.uiLog.call(ui, text);
+      return;
+    }
+    this._log(text);
+  };
+
   /** シムのイベントを既存の演出とログへ流す。演出の失敗はシムを止めない。 */
   RtwpInstance.prototype.dispatch = function (events) {
     for (let i = 0; i < events.length; i++) {
@@ -151,26 +265,38 @@
             const R = window.Renderer;
             if (R && typeof R.hexToPx === 'function' && sh && window.VFX) {
               const a = R.hexToPx(sh.q, sh.r);
-              if (window.VFX.addSmoke) window.VFX.addSmoke(a.x, a.y - 20);
-              if (ev.hit && tg && window.VFX.addBulletImpact) {
-                const b = R.hexToPx(tg.q, tg.r);
-                window.VFX.addBulletImpact(b.x, b.y - 16, 2);
+              const b = tg ? R.hexToPx(tg.q, tg.r) : null;
+              if (b && R.playMuzzleFlash) {
+                const muzzle = R.getMuzzlePoint ? R.getMuzzlePoint(sh, tg) : null;
+                const mx = muzzle ? muzzle.x : a.x;
+                const my = muzzle ? muzzle.y : a.y - 14;
+                const angle = muzzle ? muzzle.angle : Math.atan2((b.y - 16) - my, b.x - mx);
+                if (R.playMuzzleBurst) {
+                  R.playMuzzleBurst(mx, my, angle, sh.weapon, ev.roundsFired || 1);
+                } else {
+                  R.playMuzzleFlash(mx, my, angle, sh.weapon);
+                }
+              }
+              if (R.playAttackAnim && tg) R.playAttackAnim(sh, tg);
+              // 1 burst = 1煙ではなく、発射された実弾ごとに小さな着弾を出す。
+              // 命中弾以外も標的周辺の地面へ落ちるので、missでも表示する。
+              if (b && window.VFX.addBulletImpact) {
+                window.VFX.addBulletImpact(b.x, b.y - 16, ev.roundsFired || 1, sh.weapon, ev.hit);
               }
             }
             // 武器コードで鳴らす（'shot' 固定だと実録音のラウンドロビンが使われない）
-            if (window.Sfx && sh && sh.weapon) window.Sfx.play(sh.weapon.code, 'shot');
+            if (window.Sfx && sh && sh.weapon) {
+              if (window.Sfx.playWeapon) window.Sfx.playWeapon(sh.weapon, sh.fireMode);
+              else window.Sfx.play(sh.weapon.code, 'shot');
+            }
             break;
           }
           case 'DOWN':
             if (window.Sfx) window.Sfx.play('death');
-            this._log(this._name(ev.id) + ' 戦死');
             break;
-          case 'PINNED': this._log(this._name(ev.id) + ' 釘付け'); break;
-          case 'POLICY': this._log(this._name(ev.id) + ': ' + ev.note); break;
-          case 'ORDER_DELIVERED': this._log(this._name(ev.id) + ' ← 命令到達'); break;
-          case 'AMMO_OUT': this._log(this._name(ev.id) + ' 弾切れ'); break;
           default: break;
         }
+        this.pushEventLog(this.formatEvent(ev));
       } catch (e) { /* 演出の失敗でシムを止めない */ }
     }
   };
@@ -178,7 +304,25 @@
   /** 描画ループから毎フレーム呼ぶ。 */
   RtwpInstance.prototype.update = function (delta) {
     const T = resolveDeps().SIM_TUNING;
+    // カード配置や後着増援は戦闘開始後に gameLogic.units へ増える。
+    // ポーズ中でも即座にRTwPへ登録し、見た目だけの兵士にしない。
+    this.registerMissingUnits();
     if (this.paused || !this.sim || this.sim.result()) return;
+    // 非アクティブ中の巨大deltaを復帰後に消化すると、古いSHOTイベントが連続再生される。
+    const pageInactive = window.Sfx && window.Sfx.isPageActive
+      ? !window.Sfx.isPageActive()
+      : (typeof document !== 'undefined'
+        && (document.hidden || document.visibilityState === 'hidden'));
+    if (pageInactive) {
+      this.acc = 0;
+      this._skipNextDelta = true;
+      return;
+    }
+    if (this._skipNextDelta) {
+      this.acc = 0;
+      this._skipNextDelta = false;
+      return;
+    }
     this.acc += delta * this.speed;
     let n = 0;
     // 1フレームで進めるのは最大5tick。フレーム落ち後に取り戻そうとして
@@ -219,6 +363,41 @@
     this.sim.issueOrder({ type: 'TARGET', soldierIds: ids, payload: { targetId: tg.id, mode: 'aimed' } });
     this._lockLeader();
     return true;
+  };
+
+  /** 手動の射撃Actionを、旧ターン制の即時攻撃ではなくRTwPの命令へ変換する。 */
+  RtwpInstance.prototype.orderAttack = function (shooterUnit, targetUnit, mode) {
+    if (!shooterUnit || !targetUnit || !this.sim) return false;
+    const sh = this.sim.getSoldier(String(shooterUnit.id));
+    const tg = this.sim.getSoldier(String(targetUnit.id));
+    if (!sh || !tg || sh.hp <= 0 || tg.hp <= 0 || sh.team !== 'A' || tg.team !== 'B') return false;
+    this.sim.issueOrder({
+      type: 'TARGET',
+      soldierIds: [sh.id],
+      payload: { targetId: tg.id, mode: mode === 'suppress' ? 'suppress' : 'aimed' },
+    });
+    // 伝達遅延中も「誰を狙う命令を受けたか」は見た目へ即時反映する。
+    // 実際の発砲はORDER_DELIVERED後なので、弾薬・命中処理は先走らない。
+    shooterUnit._rtwpPendingTargetId = tg.id;
+    this._lockLeader();
+    return true;
+  };
+
+  /** 空hexへの手動射撃は、その地点に最も近い射程内の敵への制圧命令として扱う。 */
+  RtwpInstance.prototype.targetNearHex = function (shooterUnit, hex) {
+    if (!shooterUnit || !hex || !this.sim) return null;
+    const sh = this.sim.getSoldier(String(shooterUnit.id));
+    if (!sh || !sh.weapon) return null;
+    let best = null, bestScore = Infinity;
+    this.sim.soldiers().forEach((tg) => {
+      if (tg.team !== 'B' || tg.hp <= 0) return;
+      const fromShooter = this.map.dist({ q: sh.q, r: sh.r }, { q: tg.q, r: tg.r });
+      if (fromShooter > sh.weapon.rngMax) return;
+      if (this.map.hasLos && !this.map.hasLos({ q: sh.q, r: sh.r }, { q: tg.q, r: tg.r })) return;
+      const score = this.map.dist({ q: hex.q, r: hex.r }, { q: tg.q, r: tg.r });
+      if (score < bestScore) { bestScore = score; best = tg; }
+    });
+    return best && this.unitById.get(String(best.id));
   };
 
   RtwpInstance.prototype.orderSuppress = function () {
@@ -267,8 +446,16 @@
     if (!g || this._uiInstalled) return;
     this._orig = {
       handleRightClick: g.handleRightClick,
+      actionAttack: g.actionAttack,
+      onUnitClick: g.onUnitClick,
       endTurn: g.endTurn,
+      uiLog: g.ui && g.ui.log,
     };
+
+    // 戦闘中のログはフローティング窓を再表示せず、RTwPドックへ集約する。
+    if (g.ui && typeof g.ui.log === 'function') {
+      g.ui.log = function (msg) { self.pushEventLog(String(msg)); };
+    }
 
     // 右クリック = 移動命令。RTwP では経路も AP も無いので、選択兵へ直接命令する。
     g.handleRightClick = function (px, py, hex) {
@@ -278,6 +465,38 @@
         return;
       }
       if (self._orig.handleRightClick) return self._orig.handleRightClick.call(g, px, py, hex);
+    };
+
+    // コンテキストメニューの「射撃」もRTwPへ流す。旧 actionAttack を呼ぶとAP制・
+    // 即時命中判定・旧音源が混ざるため、RT中は必ずTARGET命令に変換する。
+    g.actionAttack = function (shooter, destination) {
+      const direct = destination && destination.hp !== undefined ? destination : null;
+      const target = direct || self.targetNearHex(shooter, destination);
+      const mode = direct ? 'aimed' : 'suppress';
+      if (target && self.orderAttack(shooter, target, mode)) {
+        self._log('命令: ' + shooter.name + ' → ' + target.name
+          + (mode === 'suppress' ? ' 制圧射撃' : ' 射撃'));
+        if (g.setMode) g.setMode('SELECT');
+        if (g.ui && g.ui.hideActionMenu) g.ui.hideActionMenu();
+        return Promise.resolve(true);
+      }
+      self._log('射撃可能な対象がいない');
+      if (g.setMode) g.setMode('SELECT');
+      return Promise.resolve(false);
+    };
+
+    // Tactical pause: keep the selected friendly soldier and turn an enemy
+    // click into an aimed TARGET order instead of replacing the selection.
+    g.onUnitClick = function (unit) {
+      const shooter = g.selectedUnit;
+      if (self.paused && shooter && shooter.team === 'player'
+          && unit && unit.team === 'enemy') {
+        if (self.orderAttack(shooter, unit, 'aimed')) {
+          self._log('命令: ' + shooter.name + ' → ' + unit.name + ' を射撃');
+          return;
+        }
+      }
+      if (self._orig.onUnitClick) return self._orig.onUnitClick.call(g, unit);
     };
 
     // END TURN は RTwP に存在しない。押されたら一時停止のトグルにする
@@ -315,6 +534,16 @@
       self.updateHud();
     };
     document.addEventListener('keydown', this._keyHandler);
+    this._visibilityHandler = function () {
+      self.acc = 0;
+      self._skipNextDelta = true;
+    };
+    document.addEventListener('visibilitychange', this._visibilityHandler);
+    if (window.addEventListener) {
+      window.addEventListener('blur', this._visibilityHandler);
+      window.addEventListener('focus', this._visibilityHandler);
+      window.addEventListener('pagehide', this._visibilityHandler);
+    }
 
     // 操作の手引きと状態を出す小さなHUD（既存DOMを壊さないよう独立要素で足す）
     const hud = document.createElement('div');
@@ -323,6 +552,43 @@
       + 'color:#dfe;font:11px/1.5 monospace;padding:6px 9px;border:1px solid #465;border-radius:4px;pointer-events:none';
     document.body.appendChild(hud);
     this._hud = hud;
+    const dock = document.getElementById('rtwp-dock');
+    const eventsPane = document.getElementById('rtwp-events-pane');
+    const debugPane = document.getElementById('rtwp-debug-pane');
+    const logBody = document.getElementById('battle-log-body');
+    const logWindow = document.getElementById('battle-log-window');
+    const debugWindow = document.getElementById('debug-window');
+    const remember = function (el) {
+      return el ? { el: el, parent: el.parentNode, next: el.nextSibling, style: el.getAttribute('style') } : null;
+    };
+    this._dockState = {
+      dock: dock,
+      logBody: remember(logBody),
+      debugWindow: remember(debugWindow),
+      logWindow: logWindow,
+      logWindowDisplay: logWindow ? logWindow.style.display : '',
+    };
+    if (dock && eventsPane && debugPane && logBody && debugWindow) {
+      eventsPane.appendChild(logBody);
+      debugPane.appendChild(debugWindow);
+      debugWindow.style.display = 'flex';
+      if (logWindow) logWindow.style.display = 'none';
+      dock.classList.add('active');
+      dock.classList.remove('collapsed');
+
+      const paneButtons = dock.querySelectorAll('[data-rtwp-pane]');
+      const panes = dock.querySelectorAll('.rtwp-pane');
+      paneButtons.forEach(function (button) {
+        button.onclick = function () {
+          const name = button.getAttribute('data-rtwp-pane');
+          paneButtons.forEach(function (b) { b.classList.toggle('active', b === button); });
+          panes.forEach(function (pane) { pane.classList.toggle('active', pane.id === 'rtwp-' + name + '-pane'); });
+          dock.classList.remove('collapsed');
+        };
+      });
+      const collapse = dock.querySelector('.rtwp-collapse');
+      if (collapse) collapse.onclick = function () { dock.classList.toggle('collapsed'); };
+    }
     this.updateHud();
     this._uiInstalled = true;
   };
@@ -341,12 +607,39 @@
     if (g && this._orig) {
       if (this._orig.handleRightClick) g.handleRightClick = this._orig.handleRightClick;
       else delete g.handleRightClick;
+      if (this._orig.actionAttack) g.actionAttack = this._orig.actionAttack;
+      else delete g.actionAttack;
+      if (this._orig.onUnitClick) g.onUnitClick = this._orig.onUnitClick;
+      else delete g.onUnitClick;
       if (this._orig.endTurn) g.endTurn = this._orig.endTurn;
       else delete g.endTurn;
+      if (g.ui && this._orig.uiLog) g.ui.log = this._orig.uiLog;
     }
     if (this._keyHandler) document.removeEventListener('keydown', this._keyHandler);
+    if (this._visibilityHandler) document.removeEventListener('visibilitychange', this._visibilityHandler);
+    if (this._visibilityHandler && window.removeEventListener) {
+      window.removeEventListener('blur', this._visibilityHandler);
+      window.removeEventListener('focus', this._visibilityHandler);
+      window.removeEventListener('pagehide', this._visibilityHandler);
+    }
     if (this._hud && this._hud.parentNode) this._hud.parentNode.removeChild(this._hud);
+    if (this._dockState) {
+      const restore = function (state) {
+        if (!state || !state.el || !state.parent) return;
+        if (state.next && state.next.parentNode === state.parent) state.parent.insertBefore(state.el, state.next);
+        else state.parent.appendChild(state.el);
+        if (state.style == null) state.el.removeAttribute('style');
+        else state.el.setAttribute('style', state.style);
+      };
+      restore(this._dockState.logBody);
+      restore(this._dockState.debugWindow);
+      if (this._dockState.logWindow) this._dockState.logWindow.style.display = this._dockState.logWindowDisplay;
+      if (this._dockState.dock) {
+        this._dockState.dock.classList.remove('active', 'collapsed');
+      }
+    }
     this._hud = null;
+    this._dockState = null;
     this._uiInstalled = false;
   };
 
@@ -358,6 +651,8 @@
     const units = (this.gameLogic && this.gameLogic.units) || [];
     units.forEach((u) => {
       delete u._rtwpSkipped; delete u._rtwpHpScale;
+      delete u._rtwpTargetId; delete u._rtwpPendingTargetId;
+      delete u._rtwpAmmo; delete u._sim;
     });
     this.sim = null;
     this.gameLogic = null;

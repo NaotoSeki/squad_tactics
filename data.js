@@ -482,9 +482,9 @@ const SIM_TUNING = {
         // suppress: 半分（sim_core側で aimed値の半分として算出）
     },
 
-    // 弾薬経済（critic検収 2026-07-03）: magCap=実弾数の直流しを廃し、
-    // 「1マガジンで撃てるバースト数」をクラス別に定義。MG（分隊火力の主柱）が
-    // 8〜10分で先に沈黙し、小銃はリロード頻度で締まる配分。
+    // 弾薬経済: cap が無い互換武器だけ、旧「1マガジンで撃てるバースト数」から
+    // 実弾数を復元する。本編武器は WPNS.cap を実弾数として使い、DEFAULT_MAGS は
+    // 予備弾倉数（したがって総弾数は cap * (1 + DEFAULT_MAGS)）。
     BURSTS_PER_MAG: { rifle: 12, smg: 12, mg: 28, sniper: 10 },
     DEFAULT_MAGS: { rifle: 6, smg: 4, mg: 4, sniper: 6 },
 

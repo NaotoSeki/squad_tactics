@@ -150,7 +150,10 @@ const Renderer = {
             const ui = this.game.scene.getScene('UIScene');
             if (ui && ui.onResize) ui.onResize({ width: w, height: h });
             const main = this.game.scene.getScene('MainScene');
-            if (main && main.updateSidebarViewport) main.updateSidebarViewport();
+            if (main && main.updateSidebarViewport) {
+                main.updateSidebarViewport();
+                if (main.mapGenerated && main.centerMap) main.centerMap();
+            }
             if (window.phaserSidebar && window.phaserSidebar.onResize) window.phaserSidebar.onResize(w, h);
             if (window.gameLogic && window.gameLogic.updateSidebar) window.gameLogic.updateSidebar();
         };
@@ -215,8 +218,11 @@ const Renderer = {
         return false; 
     },
     playAttackAnim(attacker, target) { const main = this.game.scene.getScene('MainScene'); if (main && main.unitView) main.unitView.triggerAttack(attacker, target); },
+    getMuzzlePoint(attacker, target) { const main = this.game.scene.getScene('MainScene'); return main && main.unitView && main.unitView.getMuzzlePoint ? main.unitView.getMuzzlePoint(attacker, target) : null; },
     playExplosion(x, y, tier, hex, opts) { const main = this.game.scene.getScene('MainScene'); if (main) main.triggerExplosion(x, y, tier, hex, opts); },
-    playMuzzleFlash(x, y, angle) { const main = this.game.scene.getScene('MainScene'); if (main && main.triggerMuzzleFlash) main.triggerMuzzleFlash(x, y, angle); },
+    playMuzzleFlash(x, y, angle, weapon) { const main = this.game.scene.getScene('MainScene'); if (main && main.triggerMuzzleFlash) main.triggerMuzzleFlash(x, y, angle, weapon); },
+    playMuzzleBurst(x, y, angle, weapon, rounds) { if (window.VFX && window.VFX.playMuzzleBurst) window.VFX.playMuzzleBurst(x, y, angle, weapon, rounds); else this.playMuzzleFlash(x, y, angle, weapon); },
+    playImpactSmoke(x, y, scale) { if (window.VFX && window.VFX.playImpactSmoke) window.VFX.playImpactSmoke(x, y, scale); },
     generateFaceIcon(seed) { const c = document.createElement('canvas'); c.width = 64; c.height = 64; const ctx = c.getContext('2d'); const rnd = function() { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; }; ctx.fillStyle = "#334"; ctx.fillRect(0,0,64,64); const skinTones = ["#ffdbac", "#f1c27d", "#e0ac69", "#8d5524"]; ctx.fillStyle = skinTones[Math.floor(rnd() * skinTones.length)]; ctx.beginPath(); ctx.arc(32, 36, 18, 0, Math.PI*2); ctx.fill(); ctx.fillStyle = "#343"; ctx.beginPath(); ctx.arc(32, 28, 20, Math.PI, 0); ctx.lineTo(54, 30); ctx.lineTo(10, 30); ctx.fill(); ctx.strokeStyle = "#121"; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(10,28); ctx.lineTo(54,28); ctx.stroke(); ctx.fillStyle = "#000"; const eyeY = 36; const eyeOff = 6 + rnd()*2; ctx.fillRect(32-eyeOff-2, eyeY, 4, 2); ctx.fillRect(32+eyeOff-2, eyeY, 4, 2); ctx.strokeStyle = "#a76"; ctx.lineWidth = 1; ctx.beginPath(); const mouthW = 4 + rnd()*6; ctx.moveTo(32-mouthW/2, 48); ctx.lineTo(32+mouthW/2, 48); ctx.stroke(); if (rnd() < 0.5) { ctx.fillStyle = "rgba(0,0,0,0.2)"; ctx.fillRect(20 + rnd()*20, 30 + rnd()*20, 4, 2); } return c.toDataURL(); }
 };
 window.Renderer = Renderer;
@@ -611,6 +617,7 @@ class UIScene extends Phaser.Scene {
         this.cards.forEach(card => { if (card.active) card.updatePhysics(); });
         if (this.sidebar) {
             const ptr = this.input.activePointer;
+            this.sidebar.updateLiveStats();
             this.sidebar.updateDropHighlight(ptr.x, ptr.y);
             if (this.sidebar.dragGhost) this.sidebar.updateDragGhost(time, delta);
         }
@@ -804,7 +811,7 @@ class UIScene extends Phaser.Scene {
 }
 
 class MainScene extends Phaser.Scene {
-    constructor() { super({ key: 'MainScene' }); this.hexGroup=null; this.decorGroup=null; this.unitGroup=null; this.treeGroup=null; this.hpGroup=null; this.vfxGraphics=null; this.overlayGraphics=null; this.mapGenerated=false; this.dragHighlightHex=null; this.crosshairGroup=null; this.unitView = null; }
+    constructor() { super({ key: 'MainScene' }); this.hexGroup=null; this.decorGroup=null; this.unitGroup=null; this.treeGroup=null; this.hpGroup=null; this.vfxGraphics=null; this.overlayGraphics=null; this.mapGenerated=false; this.dragHighlightHex=null; this.crosshairGroup=null; this.unitView = null; this.tacticalPause = null; }
     preload() { 
         if (window.TerrainRender) window.TerrainRender.preload(this);
         if(window.EnvSystem) window.EnvSystem.preload(this);
@@ -833,6 +840,13 @@ class MainScene extends Phaser.Scene {
             this.load.spritesheet('muzzle_flash', 'asset/muzzle_flash_128.png',
                 { frameWidth: 128, frameHeight: 128, endFrame: 7 });
         }
+        // 小銃弾着は高解像度3変種を小さく縮小して使う。64px版は輪郭が粗く、
+        // 兵士の滑らかなスプライトと粒度が合わなかった。
+        ['', '_v2', '_v3'].forEach((suffix, index) => {
+            this.load.spritesheet('impact_rifle_' + index,
+                `asset/explosion_khaos_t1_12mm${suffix}_384.png`,
+                { frameWidth: 384, frameHeight: 384, endFrame: 7 });
+        });
         // KHAOS爆発 5ティア×3バリアント（384pxシネマティック版）
         if (window.KHAOS_FX) {
             Object.entries(KHAOS_FX.TIERS).forEach(([tier, m]) => {
@@ -905,9 +919,12 @@ class MainScene extends Phaser.Scene {
         this.load.image('aerial_spt', 'asset/portraits/aerial_spt.jpg');
     }
     create() {
-        window.createHexTexture(this); this.cameras.main.setBackgroundColor('#141210'); 
+        window.createHexTexture(this); this.cameras.main.setBackgroundColor('#303322');
         this.updateSidebarViewport();
-        this.scale.on('resize', () => this.updateSidebarViewport());
+        this.scale.on('resize', () => {
+            this.updateSidebarViewport();
+            if (this.mapGenerated) this.centerMap();
+        });
         this.hexGroup = this.add.layer(); this.hexGroup.setDepth(0);
         this.roadGraphics = this.add.graphics().setDepth(1.6);
         this.decorGroup = this.add.container(0, 0); this.decorGroup.setDepth(8);
@@ -920,10 +937,41 @@ class MainScene extends Phaser.Scene {
         this.vfxGraphics = this.add.graphics().setDepth(2000).setScrollFactor(1);
         this.overlayGraphics = this.add.graphics().setDepth(1500).setScrollFactor(1); 
         if(window.EnvSystem) window.EnvSystem.clear();
+        if(window.VFX && window.VFX.bindScene) window.VFX.bindScene(this);
         this.scene.launch('UIScene'); 
         const UnitViewClass = (window.SoldierUnitView && window.SOLDIER_MANIFEST && this.textures.exists('sold_stand_idle'))
             ? window.SoldierUnitView : UnitView;
         this.unitView = new UnitViewClass(this, this.unitGroup, this.hpGroup);
+        this.tacticalMinimap = window.TacticalMinimap ? new TacticalMinimap(this) : null;
+        if (window.TacticalPauseOverlay) {
+            this.tacticalPause = new TacticalPauseOverlay(this, {
+                getSoldiers: () => {
+                    const rtwp = window.RtwpBattle && window.RtwpBattle.instance;
+                    return rtwp && rtwp.sim ? rtwp.sim.soldiers() : [];
+                },
+                getSelectedId: () => window.gameLogic && window.gameLogic.selectedUnit
+                    ? String(window.gameLogic.selectedUnit.id) : null,
+                getPosition: (id) => {
+                    let v = this.unitView && this.unitView.visuals.get(id);
+                    if (!v && this.unitView && this.unitView.visuals) {
+                        for (const [key, value] of this.unitView.visuals) {
+                            if (String(key) === String(id)) { v = value; break; }
+                        }
+                    }
+                    return v && v.container ? { x: v.container.x, y: v.container.y } : null;
+                },
+                getDisplayName: (id) => {
+                    const rtwp = window.RtwpBattle && window.RtwpBattle.instance;
+                    const unit = rtwp && rtwp.unitById && rtwp.unitById.get(String(id));
+                    return unit && unit.name ? unit.name : String(id);
+                },
+                getPendingTargetId: (id) => {
+                    const rtwp = window.RtwpBattle && window.RtwpBattle.instance;
+                    const unit = rtwp && rtwp.unitById && rtwp.unitById.get(String(id));
+                    return unit && unit._rtwpPendingTargetId;
+                },
+            });
+        }
         // 戦雲一時廃止中(window.BATTLE_CLOUD_ENABLED=false)はレンダラ自体を作らない。
         this.battleCloudRenderer = window.BATTLE_CLOUD_ENABLED ? new BattleCloudRenderer(this) : null;
         // カーソル位置を固定したままのズーム。"グリグリ"の手触りはここで決まる。
@@ -940,7 +988,8 @@ class MainScene extends Phaser.Scene {
             const cam = this.cameras.main;
             const dpr = (typeof Renderer !== 'undefined' && Renderer.RENDER_DPR) || 1;
             const factor = deltaY > 0 ? 1 / 1.12 : 1.12;
-            const next = Phaser.Math.Clamp(cam.zoom * factor, 0.25 * dpr, 4 * dpr);
+            const range = this._mapZoomRange || { min: 0.28 * dpr, max: 4 * dpr };
+            const next = Phaser.Math.Clamp(cam.zoom * factor, range.min, range.max);
             if (next === cam.zoom) return;
             const wp = cam.getWorldPoint(pointer.x, pointer.y);
             const dx = pointer.x - cam.width / 2;
@@ -1088,7 +1137,11 @@ class MainScene extends Phaser.Scene {
      * にならない(2026-07-13 ユーザー要望)。+X向きレンダーを射線方向へ回転。
      * アセット未納品(テクスチャなし)なら静かに何もしない。
      */
-    triggerMuzzleFlash(x, y, angle) {
+    triggerMuzzleFlash(x, y, angle, weapon) {
+        if (window.VFX && window.VFX.playMuzzleFlash) {
+            window.VFX.playMuzzleFlash(x, y, angle, weapon);
+            return;
+        }
         if (!this.textures.exists('muzzle_flash')) return;
         const meta = window.KHAOS_FX;
         const variant = meta._muzzleRR = ((meta._muzzleRR || 0) + 1) % 4;
@@ -1154,15 +1207,39 @@ class MainScene extends Phaser.Scene {
         }
         if (!Number.isFinite(minX)) return;
 
+        // PS正本マップは実体hexの島より背景キャンバスが広い。正本背景がある場合は
+        // 画像そのものをカメラ範囲にして、画面端の黒い余白をなくす。
+        const variant = window.RuralV29Map && window.RuralV29Map.lastVariant;
+        const battlefield = variant && variant.psNative && window.PS_BATTLEFIELDS
+            ? window.PS_BATTLEFIELDS[variant.psNative] : null;
+        if (battlefield && battlefield.projection
+            && Number.isFinite(battlefield.imageWidth) && Number.isFinite(battlefield.imageHeight)) {
+            const projection = battlefield.projection;
+            minX = projection.topLeftX;
+            minY = projection.topLeftY;
+            maxX = minX + battlefield.imageWidth * projection.scale;
+            maxY = minY + battlefield.imageHeight * projection.scale;
+        }
+
         const camera = this.cameras.main;
         const mapW = maxX - minX;
         const mapH = maxY - minY;
         camera.centerOn((minX + maxX) / 2, (minY + maxY) / 2);
-        const zoomFit = Math.min(camera.width / mapW, camera.height / mapH) * 0.92;
+        // containではなくcover。最小ズームでも上下左右に背景色を露出させない。
+        const zoomFit = Math.max(camera.width / mapW, camera.height / mapH) * 1.01;
         // zoomFit は camera.width から出るので DPR に自動追従するが、クランプの上下限は
         // 実寸基準の値なので DPR 倍しないと高DPI環境だけ range が狭まる。
         const dpr = (typeof Renderer !== 'undefined' && Renderer.RENDER_DPR) || 1;
-        camera.zoom = Phaser.Math.Clamp(zoomFit, 0.25 * dpr, 4 * dpr);
+        // 広域背景を画面いっぱいに敷く。全容はミニマップで保証し、主画面には
+        // 地面の無い帯を出さない。
+        const minZoom = Phaser.Math.Clamp(zoomFit, 0.24 * dpr, 4 * dpr);
+        const maxZoom = Math.max(minZoom, Math.min(5 * dpr, minZoom * 2.75));
+        this._mapZoomRange = { min: minZoom, max: maxZoom };
+        camera.zoom = minZoom;
+        if (camera.setBounds) camera.setBounds(minX, minY, mapW, mapH, true);
+        if (this.tacticalMinimap) {
+            this.tacticalMinimap.fit({ x: minX, y: minY, w: mapW, h: mapH });
+        }
     }
     createMap() {
         if(!window.gameLogic || !window.gameLogic.map) return;
@@ -1257,6 +1334,12 @@ class MainScene extends Phaser.Scene {
         }
 
         if(this.unitView) this.unitView.update(time, delta);
+        if (this.tacticalMinimap) this.tacticalMinimap.update();
+        if (this.tacticalPause) {
+            const rtwp = window.RtwpBattle && window.RtwpBattle.instance;
+            this.tacticalPause.setActive(!!(rtwp && rtwp.paused));
+            this.tacticalPause.update();
+        }
         if (this.battleCloudRenderer) this.battleCloudRenderer.update(time);
         this.overlayGraphics.clear();
         

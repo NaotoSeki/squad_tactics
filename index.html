@@ -264,6 +264,37 @@
         #debug-window label:hover { color: #fff; }
         #debug-window input[type="checkbox"] { cursor: pointer; }
         #debug-window .debug-label { color: var(--accent); font-weight: bold; font-family: 'Orbitron', sans-serif; font-size: 10px; }
+
+        /* RTwPではログ/デバッグをPhaserサイドバー幅の中へ収め、戦場を覆わない。 */
+        #rtwp-dock {
+            position: fixed;
+            top: 8px;
+            right: 8px;
+            width: calc(var(--sidebar-width, 340px) - 16px);
+            max-width: calc(100vw - 16px);
+            max-height: 48vh;
+            background: rgba(8, 12, 8, 0.94);
+            border: 1px solid var(--border);
+            border-radius: 5px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.65);
+            z-index: 1200;
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            pointer-events: auto;
+        }
+        #rtwp-dock.active { display: flex; }
+        #rtwp-dock.collapsed .rtwp-dock-body { display: none; }
+        .rtwp-dock-tabs { display: flex; min-height: 34px; background: rgba(15,22,15,0.98); border-bottom: 1px solid var(--border); }
+        .rtwp-dock-tabs button { flex: 1; border: 0; border-right: 1px solid rgba(255,255,255,.08); background: transparent; color: #788; font: bold 10px 'Orbitron', sans-serif; letter-spacing: 1px; cursor: pointer; }
+        .rtwp-dock-tabs button.active { color: var(--accent); background: rgba(221,136,68,.1); }
+        .rtwp-dock-tabs .rtwp-collapse { flex: 0 0 34px; color: #aaa; border-right: 0; }
+        .rtwp-dock-body { min-height: 0; overflow: hidden; }
+        .rtwp-pane { display: none; min-height: 0; }
+        .rtwp-pane.active { display: block; }
+        #rtwp-dock #battle-log-body { display: block; height: min(300px, calc(48vh - 35px)); overflow-y: auto; padding: 9px 10px; font: 10px/1.35 'Share Tech Mono', monospace; color: #9f9; background: rgba(0,5,0,.35); }
+        #rtwp-dock #battle-log-body .log-entry { margin-bottom: 2px; padding-bottom: 2px; border-bottom: 1px solid rgba(255,255,255,.035); white-space: pre-wrap; word-break: break-all; }
+        #rtwp-dock #debug-window { position: static !important; width: auto !important; min-width: 0; max-height: calc(48vh - 35px); overflow-y: auto; padding: 10px; border: 0; border-radius: 0; box-shadow: none; background: rgba(0,5,0,.35); flex-wrap: wrap; align-items: flex-start; }
     </style>
 </head>
 <body>
@@ -326,6 +357,18 @@
             <span id="debug-fusion-label" style="min-width:64px;">1枚</span>
         </div>
         <label><input type="checkbox" id="debug-m8-all-fusion"> 2融合戦車全員M8装備</label>
+    </div>
+
+    <div id="rtwp-dock" aria-label="RTwP tools">
+        <div class="rtwp-dock-tabs">
+            <button type="button" data-rtwp-pane="events" class="active">EVENT LOG</button>
+            <button type="button" data-rtwp-pane="debug">DEBUG</button>
+            <button type="button" class="rtwp-collapse" title="折りたたむ">−</button>
+        </div>
+        <div class="rtwp-dock-body">
+            <div id="rtwp-events-pane" class="rtwp-pane active"></div>
+            <div id="rtwp-debug-pane" class="rtwp-pane"></div>
+        </div>
     </div>
 
     <div id="context-menu"></div>
@@ -450,7 +493,7 @@
             const resizer = document.getElementById('resizer');
             if (!app || !resizer) return;
             document.documentElement.style.setProperty('--sidebar-width', (window.getSidebarWidth ? window.getSidebarWidth() : 340) + 'px');
-            const MIN = 240, MAX = 560;
+            const MIN = 200, MAX = 560;
             const ELASTIC_FACTOR = 0.22;
             const ELASTIC_CAP = 50;
             resizer.addEventListener('mousedown', function(e) {
@@ -461,13 +504,14 @@
                 const startW = window.getSidebarWidth ? window.getSidebarWidth() : 340;
                 const move = function(ev) {
                     let rawW = startW + (startX - ev.clientX);
+                    const responsiveMax = Math.max(MIN, Math.min(MAX, window.innerWidth - 320));
                     let w;
                     if (rawW < MIN) {
                         const over = MIN - rawW;
                         w = MIN - Math.min(over * ELASTIC_FACTOR, ELASTIC_CAP);
-                    } else if (rawW > MAX) {
-                        const over = rawW - MAX;
-                        w = MAX + Math.min(over * ELASTIC_FACTOR, ELASTIC_CAP);
+                    } else if (rawW > responsiveMax) {
+                        const over = rawW - responsiveMax;
+                        w = responsiveMax + Math.min(over * ELASTIC_FACTOR, ELASTIC_CAP);
                     } else {
                         w = rawW;
                     }
@@ -479,7 +523,8 @@
                     document.removeEventListener('mousemove', move);
                     document.removeEventListener('mouseup', up);
                     var w = window.getSidebarWidth ? window.getSidebarWidth() : 340;
-                    w = Math.max(MIN, Math.min(MAX, w));
+                    const responsiveMax = Math.max(MIN, Math.min(MAX, window.innerWidth - 320));
+                    w = Math.max(MIN, Math.min(responsiveMax, w));
                     window.__sidebarWidth = w;
                     document.documentElement.style.setProperty('--sidebar-width', w + 'px');
                     if (window.notifySidebarResize) window.notifySidebarResize();
@@ -524,47 +569,48 @@
     <script src="data/pl_mg_tripod.js"></script>
     <script src="loadout_weight.js"></script>
     <script src="pl_weapon_icon.js"></script>
-    <script src="phaser_sidebar.js"></script>
-    <script src="phaser_sound.js"></script> 
-    <script src="phaser_vfx.js?v=terrain-v1-6"></script> 
+    <script src="phaser_sidebar.js?v=rtwp-combat-9"></script>
+<script src="phaser_sound.js?v=rtwp-combat-7"></script>
+<script src="phaser_alpha_light.js?v=rtwp-light-3"></script>
+<script src="phaser_tactical_pause.js?v=rtwp-pause-2"></script>
+<script src="phaser_vfx.js?v=rtwp-light-3"></script>
     <script src="phaser_terrain_v1_bake.js?v=terrain-v1-6"></script>
     <script src="phaser_terrain.js?v=terrain-v1-6"></script>
     <script src="phaser_terrain_v7.js"></script>
-    <script src="phaser_terrain_rural_v29.js"></script>
+    <script src="phaser_terrain_rural_v29.js?v=rtwp-combat-9"></script>
     <!-- 着弾痕の焼き込みレイヤー。terrain より後、bridge より前に読む -->
     <script src="phaser_decals.js"></script>
     <!-- 立体物(建物/木/柵/低木)を生きたスプライトで持つ層。破壊状態の差し替えを担う -->
-    <script src="phaser_ps_objects.js"></script>
+<script src="phaser_ps_objects.js?v=rtwp-light-3"></script>
     <script src="phaser_scene_composition.js"></script>
     <script src="phaser_vegetation_layer.js"></script>
-    <script src="phaser_unit.js"></script>
-    <script src="phaser_soldier_view.js"></script>
+<script src="phaser_unit.js?v=rtwp-light-3"></script>
+    <script src="phaser_soldier_view.js?v=rtwp-light-3"></script>
+    <script src="phaser_minimap.js?v=rtwp-combat-9"></script>
     <script src="battle_cloud.js"></script>
     <script src="battle_cloud_tactics.js"></script>
     <script src="phaser_battle_cloud.js"></script>
-    <script src="phaser_bridge.js?v=terrain-v1-6"></script>
-    <script src="logic_ui.js"></script>
+<script src="phaser_bridge.js?v=rtwp-pause-1"></script>
+    <script src="logic_ui.js?v=rtwp-combat-7"></script>
     <script src="logic_ai.js"></script>
     <script src="logic_map_city.js"></script>
     <!-- PS正本キャンバスのレジストリ(生成物)。RuralV29Map.generate() は同期なので
          fetch ではなく素のグローバルとして先に読ませる。 -->
-    <script src="asset/environment/maps/ps_battlefields.js"></script>
-    <script src="logic_map_rural_v29.js"></script>
+    <script src="asset/environment/maps/ps_battlefields.js?v=rtwp-combat-9"></script>
+    <script src="logic_map_rural_v29.js?v=rtwp-combat-9"></script>
     <script src="logic_map.js?v=terrain-seam-5"></script>
     <script src="logic_campaign.js?v=terrain-seam-5"></script>
     <script src="logic_reaction.js"></script>
     <!-- logic_game.js から切り出した規則。logic_game.js より前に読む -->
     <script src="logic_combat_rules.js"></script>
-    <script src="logic_game.js"></script>
+<script src="logic_game.js?v=rtwp-combat-7"></script>
     <!-- RTwP（NORTH_STAR §7 Strangler Fig）。旧ターン制コア(logic_game.js)は
          書き換えず残置し、?rtwp=1 の時だけ接ぎ木する。外せば元に戻る。 -->
-    <script src="sim_core.js"></script>
+    <script src="sim_core.js?v=rtwp-combat-9"></script>
     <script src="sim_policy.js"></script>
     <script src="sim_orders.js"></script>
     <script src="sim_leader.js"></script>
-    <script src="sim_battle_adapter.js"></script>
-    <script src="logic_battle_rtwp.js"></script>
+    <script src="sim_battle_adapter.js?v=rtwp-pause-1"></script>
+<script src="logic_battle_rtwp.js?v=rtwp-pause-1"></script>
 </body>
 </html>
-
-

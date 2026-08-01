@@ -87,7 +87,7 @@ def build_review(
         )
         draw.text(
             (left + margin, top + 13),
-            f"seed {seed}  |  logical view 620×620",
+            f"seed {seed}  |  logical view 1600×1000",
             font=title_font,
             fill=(229, 232, 214),
         )

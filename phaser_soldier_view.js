@@ -52,15 +52,14 @@ const SOLDIER_VIEW_H = 20;
 
 /**
  * 画面座標デルタ → シートの方向行。y は下向き正。
- * シートの行順はラベル(S,SE,E,...)と逆回転で、実際の見た目は
- * row: 0=S, 1=SW, 2=W, 3=NW, 4=N, 5=NE, 6=E, 7=SE（実測: stand_fire 検分）。
- * よって S,SE,E,... 系の方位インデックス k に対し使用行 = (8-k)%8。
+ * manifest.dirOrder が正本: row 0..7 = S,SE,E,NE,N,NW,W,SW。
+ * 以前は古い検分メモを優先して左右反転しており、射撃時に反対方向を向いていた。
  */
 function soldierDirFromDelta(dx, dy) {
     if (!dx && !dy) return 0;
     let k = Math.round(Math.atan2(-dy, dx) / (Math.PI / 4)) + 2; // E=2 基準（S,SE,E,...順）
     k %= 8; if (k < 0) k += 8;
-    return (8 - k) % 8;
+    return k;
 }
 
 /** sim の facing {q,r}（軸座標ベクトル）→ 方向行。hexToPx と同じ射影。 */
@@ -148,13 +147,6 @@ class SoldierUnitView extends UnitView {
         // 原点＝接地点なので、コンテナ内オフセットはわずかに沈める程度でよい
         // 影は v7 タイルの太陽（南西上空 → 影は東〜南東落ち）に合わせ右へオフセット。
         // 真下影だと建物影とベクトルが食い違い、兵士が浮いて見える
-        const shadow = this.scene.add.sprite(8, 2, 'sold_stand_idle', 0);
-        shadow.setTint(0x000000);
-        shadow.setAlpha(0.3);
-        shadow.setOrigin(meta.originX, meta.originY);
-        shadow.setScale(scale * 1.15, scale * 0.3);
-        shadow._soldMeta = meta;
-
         const sprite = this.scene.add.sprite(0, 0, 'sold_stand_idle', 0);
         sprite.setOrigin(meta.originX, meta.originY);
         sprite.setScale(scale);
@@ -166,6 +158,22 @@ class SoldierUnitView extends UnitView {
         // 全員が敵色紫になる）。味方=無着色、敵=薄赤で識別。
         if (u.team === 'player' || u.team === 'A') sprite.clearTint();
         else sprite.setTint(0xffb0a0);
+        let shadow;
+        if (window.AlphaLightSpace && window.AlphaLightSpace.createSunShadow) {
+            shadow = window.AlphaLightSpace.createSunShadow(this.scene, sprite, {
+                castScale: 0.34,
+                flatten: 0.30,
+                widthScale: 1.05,
+                alpha: 0.37,
+            });
+        } else {
+            shadow = this.scene.add.sprite(8, 2, 'sold_stand_idle', 0);
+            shadow.setTint(0x000000);
+            shadow.setAlpha(0.3);
+            shadow.setOrigin(meta.originX, meta.originY);
+            shadow.setScale(scale * 1.15, scale * 0.3);
+        }
+        if (shadow) shadow._soldMeta = meta;
         return { shadow, sprite };
     }
 
@@ -184,14 +192,27 @@ class SoldierUnitView extends UnitView {
 
         // ---- 方向 ----
         let dir;
+        const targetId = s.engageTargetId || u._rtwpPendingTargetId || u._rtwpTargetId;
+        let targetVisual = targetId != null
+            ? (this.visuals.get(targetId) || this.visuals.get(String(targetId)))
+            : null;
+        if (!targetVisual && typeof targetId === 'string' && /^\d+$/.test(targetId)) {
+            targetVisual = this.visuals.get(Number(targetId));
+        }
         if (isMoving) {
             dir = soldierDirFromDelta(visual.lastDx || 0, visual.lastDy || 0);
-        } else if (s.state === 'engage' && this._faceDir.has(u.id)) {
+        } else if (targetVisual && targetVisual.container && visual.container) {
+            // SHOTが発生した瞬間だけでなく、照準・観測・再装填中も現在の対敵方向を保持。
+            dir = soldierDirFromDelta(
+                targetVisual.container.x - visual.container.x,
+                targetVisual.container.y - visual.container.y
+            );
+        } else if (this._faceDir.has(u.id)) {
             dir = this._faceDir.get(u.id);
-        } else if (visual.soldierDir != null) {
-            dir = visual.soldierDir;
-        } else {
+        } else if (s.facing) {
             dir = soldierDirFromFacing(s.facing);
+        } else {
+            dir = visual.soldierDir != null ? visual.soldierDir : 0;
         }
         visual.soldierDir = dir;
 
@@ -441,6 +462,14 @@ class SoldierUnitView extends UnitView {
         if (sh && sh.texture) {
             if (sh.texture.key !== spr.texture.key) sh.setTexture(spr.texture.key);
             this._applyActionOrigin(sh);
+            if (window.AlphaLightSpace && window.AlphaLightSpace.syncSunShadow) {
+                window.AlphaLightSpace.syncSunShadow(sh, spr, {
+                    castScale: 0.34,
+                    flatten: 0.30,
+                    widthScale: 1.05,
+                    alpha: 0.37,
+                });
+            }
         }
         // 遮蔽射撃の「身乗り出し」オフセットをイージング適用（本体スプライトのみ。
         // 影は接地させたままにして浮きを防ぐ）。leanTarget は毎フレーム上流が設定する。
@@ -486,10 +515,8 @@ class SoldierUnitView extends UnitView {
 
     /** シート方向行 → 画面上の単位ベクトル（soldierDirFromDelta の逆写像）。 */
     _dirToScreenVec(row) {
-        const k = (8 - (row % 8) + 8) % 8;
-        const angleIndex = (k - 2 + 8) % 8;
-        const th = angleIndex * (Math.PI / 4);
-        return { x: Math.cos(th), y: -Math.sin(th) };
+        const th = Math.PI / 2 - (row % 8) * (Math.PI / 4);
+        return { x: Math.cos(th), y: Math.sin(th) };
     }
 
     /**
@@ -520,7 +547,11 @@ class SoldierUnitView extends UnitView {
 
     /** scene の SHOT イベントから: 射手を射線方向へ向け、被弾側を「被射撃中」として記録 */
     noteShot(shooterId, fromPx, toPx, targetId) {
-        this._faceDir.set(shooterId, soldierDirFromDelta(toPx.x - fromPx.x, toPx.y - fromPx.y));
+        const shooterVisual = this.visuals.get(shooterId);
+        const targetVisual = targetId != null ? this.visuals.get(targetId) : null;
+        const a = shooterVisual && shooterVisual.container ? shooterVisual.container : fromPx;
+        const b = targetVisual && targetVisual.container ? targetVisual.container : toPx;
+        this._faceDir.set(shooterId, soldierDirFromDelta(b.x - a.x, b.y - a.y));
         if (targetId != null) this._underFire.set(targetId, this._now());
     }
 
@@ -538,8 +569,10 @@ class SoldierUnitView extends UnitView {
             return super.triggerAttack(attacker, target);
         }
         if (typeof Renderer === 'undefined') return;
-        const a = Renderer.hexToPx(attacker.q, attacker.r);
-        const b = Renderer.hexToPx(target.q, target.r);
+        const targetVisual = target && this.visuals.get(target.id);
+        const a = visual.container || Renderer.hexToPx(attacker.q, attacker.r);
+        const b = targetVisual && targetVisual.container
+            ? targetVisual.container : Renderer.hexToPx(target.q, target.r);
         const dir = soldierDirFromDelta(b.x - a.x, b.y - a.y);
         this._faceDir.set(attacker.id, dir);
         visual.soldierDir = dir;

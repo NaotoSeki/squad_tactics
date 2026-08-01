@@ -146,11 +146,23 @@ function loadLayer(
 
 function makeScene(keys) {
   const images = [];
+  const layers = [];
   const scene = {
     textures: {
       exists(key) { return keys.has(key); }
     },
     add: {
+      layer() {
+        const layer = {
+          children: [],
+          destroyed: false,
+          setDepth(depth) { this.depth = depth; return this; },
+          add(item) { this.children.push(item); item.parentLayer = this; return this; },
+          destroy() { this.destroyed = true; }
+        };
+        layers.push(layer);
+        return layer;
+      },
       image(x, y, key) {
         const image = {
           x,
@@ -178,7 +190,7 @@ function makeScene(keys) {
       }
     }
   };
-  return { scene, images };
+  return { scene, images, layers };
 }
 
 function textureKeys(layer, ledger) {
@@ -313,6 +325,11 @@ function testDamageBodyAndShadowCanIndependentlySwitchToHd() {
   assert.strictEqual(inst.bodies[0].scale, 0.84);
   assert.strictEqual(inst.shadows[0].key, 'pso_house_s4');
   assert.strictEqual(inst.shadows[0].scale, 0.84);
+  assert.strictEqual(harness.layers.length, 1);
+  assert.strictEqual(harness.layers[0].depth, layer.SHADOW_LAYER_DEPTH,
+    'ground shadows must sit in a visible layer above hexGroup');
+  assert.ok(harness.layers[0].children.includes(inst.shadows[0]));
+  assert.ok(!harness.layers[0].children.includes(inst.bodies[0]));
 
   assert.strictEqual(layer.damageObject(inst), true);
   assert.strictEqual(inst.bodies[0].key, 'pso_hd_house_s3');

@@ -256,6 +256,7 @@ function SimBattleAdapter(sim) {
   this.selectedUnit = null;
   this.interactionMode = 'NONE';
   this._onSelect = null; // optional external hook (scene wires this to update HUD)
+  this._onUnitCommand = null; // tactical-pause click may consume the selection click
 }
 
 /** def stand-ins per weapon class -- only the fields UnitView reads. */
@@ -287,6 +288,8 @@ SimBattleAdapter.prototype._toUnit = function (s) {
     hands: null,       // sim_core has no broken-hands concept; UnitView treats falsy as "ok"
     skills: [],        // sim_core has no equipment-skill badges (product-only concept)
     fusionCount: 0,    // sim_core has no card-fusion concept
+    weapon: s.weapon,
+    _rtwpTargetId: s.engageTargetId || null,
     // passthrough fields UnitView does not read but callers (HUD overlay) want:
     _sim: s,
   };
@@ -311,6 +314,7 @@ Object.defineProperty(SimBattleAdapter.prototype, 'units', {
  * @param {Object} unit - the unit object UnitView had in hand (from `units`)
  */
 SimBattleAdapter.prototype.onUnitClick = function (unit) {
+  if (this._onUnitCommand && this._onUnitCommand(unit) === true) return;
   this.selectedUnit = unit;
   if (this._onSelect) this._onSelect(unit ? unit.id : null);
 };

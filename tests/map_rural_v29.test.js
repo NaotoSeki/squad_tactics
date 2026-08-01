@@ -304,24 +304,32 @@ function testLocationTables() {
     RuralV29Map.generate(game);
     assert.strictEqual(RuralV29Map.lastVariant.key, key, `lastVariant should be ${key}`);
 
+    const psBattlefield = sandbox.PS_BATTLEFIELDS && sandbox.PS_BATTLEFIELDS[key];
+    const expectedCoords = psBattlefield ? new Set(
+      psBattlefield.rows.flatMap(row => row[2].map((_, i) => `${row[1] + i},${row[0]}`))
+    ) : boardCoords;
+
     let nonVoid = 0, roads = 0, blocked = 0, playerZone = 0, enemyZone = 0;
     for (let q = 0; q < MAP_W; q++) {
       for (let r = 0; r < MAP_H; r++) {
         const t = game.map[q][r];
         if (t.id === -1) continue;
         nonVoid++;
-        assert.ok(boardCoords.has(`${q},${r}`),
-          `${key}: cell (${q},${r}) must be within the 30hex board footprint`);
+        assert.ok(expectedCoords.has(`${q},${r}`),
+          `${key}: cell (${q},${r}) must be within its declared board footprint`);
         if (t.id === 3) roads++;
         if (t.cost >= 99) blocked++;
         if (t.cost < 99 && r >= 10) playerZone++;
         if (t.cost < 99 && r < 10) enemyZone++;
       }
     }
-    assert.strictEqual(nonVoid, 30, `${key}: should have exactly 30 cells, got ${nonVoid}`);
+    assert.strictEqual(nonVoid, expectedCoords.size,
+      `${key}: should have exactly ${expectedCoords.size} cells, got ${nonVoid}`);
     assert.ok(roads >= 3, `${key}: should have at least 3 road hexes`);
     // loc_church_squareは密な市街ブロック(教会+住宅2棟)につきBLDGが多め。他ロケーションは1-2。
-    assert.ok(blocked >= 1 && blocked <= 10, `${key}: blocked(BLDG) hexes should be 1..10, got ${blocked}`);
+    const blockedMax = Math.max(10, Math.ceil(expectedCoords.size * 0.35));
+    assert.ok(blocked >= 1 && blocked <= blockedMax,
+      `${key}: blocked(BLDG) hexes should be 1..${blockedMax}, got ${blocked}`);
     assert.ok(playerZone >= 5, `${key}: player spawn zone (r>=10) needs walkable hexes`);
     assert.ok(enemyZone >= 5, `${key}: enemy spawn zone (r<10) needs walkable hexes`);
 

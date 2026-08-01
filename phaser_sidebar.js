@@ -1,9 +1,25 @@
 /** PHASER SIDEBAR: Right panel rendered in Phaser (unit info, loadout, log) */
 const SIDEBAR_WIDTH_DEFAULT = 340;
-const SIDEBAR_WIDTH_MIN = 240;
+const SIDEBAR_WIDTH_MIN = 200;
 const SIDEBAR_WIDTH_MAX = 560;
-window.__sidebarWidth = window.__sidebarWidth != null ? window.__sidebarWidth : SIDEBAR_WIDTH_DEFAULT;
+const initialSidebarMax = Math.max(SIDEBAR_WIDTH_MIN,
+    Math.min(SIDEBAR_WIDTH_MAX, window.innerWidth - 320));
+const responsiveSidebarDefault = Math.max(SIDEBAR_WIDTH_MIN,
+    Math.min(SIDEBAR_WIDTH_DEFAULT, window.innerWidth * 0.30));
+window.__sidebarWidth = window.__sidebarWidth != null
+    ? Math.max(SIDEBAR_WIDTH_MIN, Math.min(initialSidebarMax, window.__sidebarWidth))
+    : Math.min(initialSidebarMax, responsiveSidebarDefault);
 window.getSidebarWidth = function() { return (typeof window.__sidebarWidth === 'number' ? window.__sidebarWidth : SIDEBAR_WIDTH_DEFAULT); };
+document.documentElement.style.setProperty('--sidebar-width', window.__sidebarWidth + 'px');
+window.syncSidebarWidthToViewport = function() {
+    const max = Math.max(SIDEBAR_WIDTH_MIN, Math.min(SIDEBAR_WIDTH_MAX, window.innerWidth - 320));
+    const next = Math.max(SIDEBAR_WIDTH_MIN, Math.min(max, window.getSidebarWidth()));
+    if (next === window.__sidebarWidth) return;
+    window.__sidebarWidth = next;
+    document.documentElement.style.setProperty('--sidebar-width', next + 'px');
+    if (window.notifySidebarResize) window.notifySidebarResize();
+};
+window.addEventListener('resize', window.syncSidebarWidthToViewport);
 const PANEL_BG = 0x1a1a1a;
 const HEADER_BG = 0x111111;
 const SLOT_BG = 0x111111;
@@ -43,6 +59,7 @@ window.PhaserSidebar = class PhaserSidebar {
         this.dragGhost = null;
         this.currentUnit = null;
         this.squadChips = [];
+        this.rtwpAmmoText = null;
     }
 
     init() {
@@ -73,6 +90,7 @@ window.PhaserSidebar = class PhaserSidebar {
         this.unitContent.removeAll(true);
         this.currentUnit = u;
         this.squadChips = [];
+        this.rtwpAmmoText = null;
 
         if (!u || u.hp <= 0) {
             this.noSignalText.setVisible(true);
@@ -256,6 +274,17 @@ window.PhaserSidebar = class PhaserSidebar {
         const virtualWpn = window.getCurrentWeapon(u);
         const isMortarActive = virtualWpn && virtualWpn.code === 'm2_mortar';
 
+        // RTwPの正本弾薬。旧ターン制のitem.current表示とは別勘定なので、
+        // 発射のたびに減る実弾倉＋予備弾倉を明示する。
+        if (u._rtwpAmmo && window.RtwpBattle && window.RtwpBattle.active) {
+            this.rtwpAmmoText = this.scene.add.text(left, y, '', {
+                fontSize: '10px', color: '#d9bc72', fontFamily: 'monospace'
+            });
+            this.unitContent.add(this.rtwpAmmoText);
+            this.updateLiveStats();
+            y += 18;
+        }
+
         this.slots = [];
         for (let i = 0; i < 3; i++) {
             const slot = this.createSlot(u, u.hands[i], 'main', i, left, y, true, isMortarActive);
@@ -282,6 +311,17 @@ window.PhaserSidebar = class PhaserSidebar {
             this.unitContent.add(reloadBtn.container);
             y += 38;
         }
+    }
+
+    updateLiveStats() {
+        if (!this.rtwpAmmoText || !this.currentUnit || !this.currentUnit._rtwpAmmo) return;
+        const ammo = this.currentUnit._rtwpAmmo;
+        const rounds = Math.max(0, Number(ammo.rounds) || 0);
+        const mags = Math.max(0, Number(ammo.magazines) || 0);
+        const capacity = Math.max(0, Number(ammo.capacity) || 0);
+        const reserve = mags * capacity;
+        this.rtwpAmmoText.setText(`RTWP AMMO  ${rounds}/${capacity}  +${reserve} (${mags} mags)`);
+        this.rtwpAmmoText.setColor(rounds + reserve > 0 ? '#d9bc72' : '#ff6655');
     }
 
     renderSameHexSquadRow(u, left, y, sw) {

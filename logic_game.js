@@ -613,6 +613,8 @@ window.BattleLogic = class BattleLogic {
       const lastFlightTime = isMortarWpn ? 1000 : (isShellWpn ? 300 : (isMg42 ? dist * 50 : dist * 30));
       const animEndMs = Math.max(500, shots * fireRate + lastFlightTime);
       const tankGunCount = (w.tankMg42Slots && w.tankMg42Slots.length) || 1;
+      // 非アクティブ化をまたいだActionは、復帰後にタイマーだけ続行しても音を鳴らさない。
+      const audioEpoch = window.Sfx && Sfx.captureEpoch ? Sfx.captureEpoch() : null;
 
       for (let i = 0; i < shots; i++) {
         const shotInfo = tankMg42ShotList[i];
@@ -641,13 +643,22 @@ window.BattleLogic = class BattleLogic {
         const tx = ePos.x + (Math.random() - 0.5) * spread * (isMg42 ? 2 : 1);
         const ty = ePos.y + (Math.random() - 0.5) * spread * (isMg42 ? 2 : 1);
 
-        if (window.Sfx) Sfx.play(w.code, isShell ? 'cannon' : (isMg42 ? 'mg' : 'shot'));
+        if (window.Sfx) {
+          if (isShell || !Sfx.playWeapon) {
+            Sfx.play(w.code, isShell ? 'cannon' : (isMg42 ? 'mg' : 'shot'), audioEpoch);
+          } else {
+            // `?rtwp=0` の手動ActionでもRTwPと同じ武器別実録音を使う。
+            // WPNSのburstではなく、このActionで実際に選んだ弾数を渡す。
+            Sfx.playWeapon({ ...w, burstSize: shots }, isAreaAttack ? 'suppress' : 'aimed', audioEpoch);
+          }
+        }
 
         // 銃口炎(迫撃砲以外)。射線方向へ回転、銃口の高さぶんyを上げる
         if (!isMortar && typeof Renderer !== 'undefined' && Renderer.playMuzzleFlash) {
           const my = sy - 14;
           const mAng = Math.atan2(ty - my, tx - sx);
-          Renderer.playMuzzleFlash(sx + Math.cos(mAng) * 10, my + Math.sin(mAng) * 10, mAng);
+          Renderer.playMuzzleFlash(sx + Math.cos(mAng) * 10, my + Math.sin(mAng) * 10, mAng,
+            { ...w, burstSize: shots });
         }
 
         const flightTime = isMortar ? 1000 : (isShell ? 300 : (isMg42 ? dist * 50 : dist * 30));
@@ -661,8 +672,8 @@ window.BattleLogic = class BattleLogic {
               if (isMortar) Renderer.playExplosion(tx, ty, 't2_grenade', targetHex, { sizeScale: 1.3 });
               else Renderer.playExplosion(tx, ty, 't4_shell120', targetHex);
             } else if (window.VFX) window.VFX.addExplosion(tx, ty, "#f55", 5);
-            if (window.Sfx) Sfx.play('death');
-            if (isShell && window.Sfx) setTimeout(() => Sfx.play('tank_reload'), 200);
+            if (window.Sfx) Sfx.play('death', null, audioEpoch);
+            if (isShell && window.Sfx) setTimeout(() => Sfx.play('tank_reload', null, audioEpoch), 200);
           }
 
           if (w.indirect) {
@@ -699,7 +710,7 @@ window.BattleLogic = class BattleLogic {
                 if (a.skills && a.skills.includes('HighPower')) dmg = Math.floor(dmg * 1.2);
                 if (v.def.isTank && w.type === 'bullet') dmg = 0;
                 if (dmg > 0) {
-                  if (window.Sfx) Sfx.play('soft_hit');
+                  if (window.Sfx) Sfx.play('soft_hit', null, audioEpoch);
                   game.applyDamage(v, dmg, "制圧射撃", { isFire: true, attacker: a });
                 }
               }
@@ -718,11 +729,11 @@ window.BattleLogic = class BattleLogic {
                   dmg = Math.max(1, Math.floor(dmg * window.BattleCloud.getOutgoingDamageMultiplier(a)));
                 }
                 if (dmg > 0) {
-                  if (window.Sfx) Sfx.play('soft_hit');
+                  if (window.Sfx) Sfx.play('soft_hit', null, audioEpoch);
                   if (!isShell && window.VFX) window.VFX.add({ x: tx, y: ty, vx: 0, vy: -5, life: 10, maxLife: 10, color: "#fff", size: 2, type: 'spark' });
                   game.applyDamage(targetUnit, dmg, w.name, { isFire: true, attacker: a });
                 } else {
-                  if (window.Sfx) Sfx.play('hard_hit');
+                  if (window.Sfx) Sfx.play('hard_hit', null, audioEpoch);
                   if (i === 0) game.ui.log(">> 装甲により無効化！");
                 }
               } else {
@@ -2077,6 +2088,7 @@ window.BattleLogic = class BattleLogic {
     }
     const tankPos = typeof Renderer !== 'undefined' ? Renderer.hexToPx(attacker.q, attacker.r) : { x: 0, y: 0 };
     const dmg = 45;
+    const audioEpoch = window.Sfx && Sfx.captureEpoch ? Sfx.captureEpoch() : null;
     this.ui.log(`>> M8 Rocket 斉射`);
     for (let i = 0; i < hitHexes.length; i++) {
       const hex = hitHexes[i];
@@ -2088,9 +2100,9 @@ window.BattleLogic = class BattleLogic {
         game.updateSidebar();
         if (window.VFX) {
           window.VFX.addRocket(tankPos.x, tankPos.y, targetPos.x, targetPos.y, () => {
-            if (window.Sfx) Sfx.play('cannon');
+            if (window.Sfx) Sfx.play('cannon', null, audioEpoch);
             if (typeof Renderer !== 'undefined') Renderer.playExplosion(targetPos.x, targetPos.y, 't2_grenade', hex, { sizeScale: 1.15 }); // T3薄煙ワークアラウンド
-            if (window.VFX) { window.VFX.addSmoke(targetPos.x, targetPos.y); window.VFX.shakeRequest = 3; }
+            if (window.VFX) window.VFX.shakeRequest = 3;
             if (canHit) {
               const units = game.getUnitsInHex(hex.q, hex.r);
               units.forEach(u => { game.ui.log(`>> ロケット命中`); game.applyDamage(u, dmg, "M8 Rocket"); });
@@ -2112,18 +2124,18 @@ window.BattleLogic = class BattleLogic {
     // 海域・null も含む全ヘックスから抽選し、1ヘックスあたりの命中率を一定にする
     const hits = [];
     for (let i = 0; i < 3; i++) hits.push(fullPool[Math.floor(Math.random() * fullPool.length)]);
+    const audioEpoch = window.Sfx && Sfx.captureEpoch ? Sfx.captureEpoch() : null;
     for (const hex of hits) {
       const pos = Renderer.hexToPx(hex.q, hex.r);
       const canHit = this.canAttackHex(hex.q, hex.r);
       setTimeout(() => {
-        if (window.Sfx) { Sfx.play('cannon'); }
+        if (window.Sfx) { Sfx.play('cannon', null, audioEpoch); }
         if (typeof Renderer !== 'undefined') { Renderer.playExplosion(pos.x, pos.y, 't5_aerialbomb', hex); }
         if (canHit) {
           const units = this.getUnitsInHex(hex.q, hex.r);
           units.forEach(u => { this.ui.log(`>> 爆撃命中`); this.applyDamage(u, 350, "爆撃"); });
         }
         this.updateSidebar();
-        if (window.VFX) { window.VFX.addSmoke(pos.x, pos.y); }
       }, Math.random() * 800);
     }
   }

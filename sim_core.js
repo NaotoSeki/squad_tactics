@@ -89,9 +89,12 @@ function toSimWeapon(code, wpnsEntry, tuning) {
     burstSize: Math.max(1, w.burst || 1),
     burstIntervalT: burstIntervalT,
     aimT: T.AIM_T.aimed,
-    // BURSTS_PER_MAG があればそれを正とする（実弾数 w.cap の直流しは意味論が壊れる）
-    magCap: (T.BURSTS_PER_MAG && T.BURSTS_PER_MAG[cls] != null)
-      ? T.BURSTS_PER_MAG[cls] : Math.max(1, w.cap || 1),
+    // Store real rounds. PL compatibility entries with no cap receive a safe
+    // fallback derived from the former burst-based capacity.
+    magCap: (w.cap != null && w.cap > 0)
+      ? w.cap
+      : Math.max(1, ((T.BURSTS_PER_MAG && T.BURSTS_PER_MAG[cls]) || 1)
+        * Math.max(1, w.burst || 1)),
     reloadT: reloadT,
     switchT: T.SWITCH_T,
     rngMax: Math.max(1, w.rng || 1),
@@ -305,7 +308,8 @@ SimCore.prototype._snapshot = function (s) {
     hp: s.hp, state: s.state, stateT: s.stateT,
     suppression: s.suppression, morale: s.morale, underFireT: s.underFireT,
     magRemaining: s.magRemaining, magsLeft: s.magsLeft, fireMode: s.fireMode,
-    facing: s.facing, currentOrder: s.currentOrder, movePath: s.movePath ? s.movePath.slice() : null,
+    facing: s.facing, engageTargetId: s.engageTargetId,
+    currentOrder: s.currentOrder, movePath: s.movePath ? s.movePath.slice() : null,
     aimT: s.aimT, reloadT: s.reloadT,
   };
 };
@@ -688,13 +692,19 @@ SimCore.prototype._resolveBurst = function (shooter, target, T) {
   const cover = this.map.cover({ q: target.q, r: target.r });
   const hasLos = this.map.hasLos({ q: shooter.q, r: shooter.r }, { q: target.q, r: target.r });
 
-  shooter.magRemaining--;
+  // A blocked shot is not fired, so it must not spend rounds or create a
+  // flash/tracer that has no matching projectile event.
+  if (!hasLos) return;
+
+  // One resolution is one burst; consume the actual projectiles in it. A
+  // nearly empty magazine naturally produces a shorter final burst.
+  const roundsFired = Math.max(1, Math.min(
+    shooter.magRemaining,
+    (shooter.weapon && shooter.weapon.burstSize) || 1
+  ));
+  shooter.magRemaining -= roundsFired;
   shooter.quietT = 0;
   target.quietT = 0;
-
-  if (!hasLos) {
-    return; // no line of sight: ammo consumed, no resolution
-  }
 
   let pHit = shooter.weapon.accBase;
 
@@ -756,7 +766,14 @@ SimCore.prototype._resolveBurst = function (shooter, target, T) {
     killed = this._applyDamage(target, dmg, shooter);
   }
 
-  this._emit('SHOT', { shooterId: shooter.id, targetId: target.id, hit: hit, killed: killed, crit: crit });
+  this._emit('SHOT', {
+    shooterId: shooter.id,
+    targetId: target.id,
+    roundsFired: roundsFired,
+    hit: hit,
+    killed: killed,
+    crit: crit
+  });
 
   // suppression (applied on hit or miss -- near-misses suppress too)
   this._addSuppression(target, shooter.weapon.suppressPerBurst, T);

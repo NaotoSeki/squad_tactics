@@ -269,3 +269,19 @@ python -c "import hashlib;h=hashlib.sha256();f=open('asset/audio/GUNRif_RI-M1 Ga
 名前が似ているだけの別武器（M1A1 SMG / M1903 / M1918 BAR / M1911）へ誤流用される。
 
 登録内容と実ファイルの一致は `node tests/sfx_and_camera.test.js` が検証する。
+
+### 2026-08-01追加素材（MG42 / Kar98K）
+
+M1と同じ既定のオンセット／ディケイ設定で、AmbiXのch0から48kHz monoへ切り出した。
+商用ライブラリの原素材WAVはリポジトリへコミットせず、生成済みの短尺WAVとmanifestだけを管理する。
+
+| 用途 | 原素材 | SHA-256 | 生成物 |
+|---|---|---|---:|
+| MG42 Auto | `asset/audio/GUNAuto_LMG-MG 42 Auto 50m_B00M_WW2FC_Ambix.wav` | `3749cad462de728ec8c04294d6f51f74ca282e4d87c2eb342c7d6b63d6b79307` | `mg42_auto_*.wav` 1件 |
+| MG42 Burst | `asset/audio/GUNAuto_LMG-MG 42 Burst 50m_B00M_WW2FC_Ambix.wav` | `6dced0eef1cad456562b4e9d1bfbbbc1f2b81ee04c5e5b5d7d6613a56d6c7f3eb` | `mg42_burst_*.wav` 4件 |
+| MG42 Single | `asset/audio/GUNAuto_LMG-MG 42 Single Shot 50m_B00M_WW2FC_Ambix.wav` | `b33d0ab529f7ca3040b6ac0e0290388af59fd32e660f49b61f070c7dd7491c31` | `mg42_single_*.wav` 10件 |
+| Kar98K Single | `asset/audio/GUNRif_SR-Kar98K Single Shot 50m_B00M_WW2FC_Ambix.wav` | `e6ed0049e06b7db37a4551b2aabe1d3ee4b629182a52f2d03390b8dc7be9a796` | `kar98k_shot_*.wav` 10件 |
+
+再生成は各素材に対して基本コマンドの `--input` と `--prefix` を上表の値へ替えて実行する。
+ゲーム内ではMG42の通常射撃をBurst、制圧射撃をAuto、単発設定をSingleへ割り当て、
+`k98_scope`（現在のM1903 Scope枠）をKar98K録音へ割り当てる。

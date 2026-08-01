@@ -1,0 +1,152 @@
+{
+  "input_file": "asset\\audio\\GUNAuto_LMG-MG 42 Single Shot 50m_B00M_WW2FC_Ambix.wav",
+  "input_channel": 0,
+  "input_mono_mode": "channel",
+  "input_sr": 96000,
+  "input_duration_sec": 64.94627083333333,
+  "output_sr": 48000,
+  "parameters": {
+    "frame_ms": 5.0,
+    "hop_ms": 1.0,
+    "floor_pct": 20.0,
+    "onset_db": 18.0,
+    "min_gap_ms": 300.0,
+    "pre_ms": 5.0,
+    "decay_db": -45.0,
+    "decay_hold_ms": 30.0,
+    "max_len_ms": 2500.0,
+    "fade_in_ms": 1.0,
+    "fade_out_ms": 15.0,
+    "peak_db": -1.0,
+    "rate_out": 48000,
+    "min_len_ms": 120.0,
+    "min_peak_db": -30.0
+  },
+  "num_detected": 18,
+  "num_accepted": 10,
+  "rejected": {
+    "short_or_low_peak": 8
+  },
+  "shots": [
+    {
+      "file": "mg42_single_01.wav",
+      "start_sec": 0.229,
+      "duration_sec": 2.0480104166666666,
+      "duration_sec_resampled": 2.048020833333333,
+      "peak_dbfs_before_norm": -2.337704658508301,
+      "rms_dbfs_before_norm": -31.035030364990234,
+      "peak_dbfs_after_norm": -1.0,
+      "sample_rate_input": 96000,
+      "sample_rate_output": 48000,
+      "num_samples_output": 98305
+    },
+    {
+      "file": "mg42_single_02.wav",
+      "start_sec": 6.979,
+      "duration_sec": 2.1220104166666665,
+      "duration_sec_resampled": 2.1220208333333335,
+      "peak_dbfs_before_norm": -3.0751256942749023,
+      "rms_dbfs_before_norm": -30.995691299438477,
+      "peak_dbfs_after_norm": -1.0,
+      "sample_rate_input": 96000,
+      "sample_rate_output": 48000,
+      "num_samples_output": 101857
+    },
+    {
+      "file": "mg42_single_03.wav",
+      "start_sec": 13.729,
+      "duration_sec": 2.143010416666667,
+      "duration_sec_resampled": 2.1430208333333334,
+      "peak_dbfs_before_norm": -2.2974660396575928,
+      "rms_dbfs_before_norm": -31.064735412597656,
+      "peak_dbfs_after_norm": -1.0,
+      "sample_rate_input": 96000,
+      "sample_rate_output": 48000,
+      "num_samples_output": 102865
+    },
+    {
+      "file": "mg42_single_04.wav",
+      "start_sec": 20.48,
+      "duration_sec": 2.1210104166666666,
+      "duration_sec_resampled": 2.121020833333333,
+      "peak_dbfs_before_norm": -2.897789478302002,
+      "rms_dbfs_before_norm": -30.901721954345703,
+      "peak_dbfs_after_norm": -1.0,
+      "sample_rate_input": 96000,
+      "sample_rate_output": 48000,
+      "num_samples_output": 101809
+    },
+    {
+      "file": "mg42_single_05.wav",
+      "start_sec": 27.23,
+      "duration_sec": 2.1420104166666665,
+      "duration_sec_resampled": 2.1420208333333335,
+      "peak_dbfs_before_norm": -3.1930713653564453,
+      "rms_dbfs_before_norm": -30.75669288635254,
+      "peak_dbfs_after_norm": -1.0,
+      "sample_rate_input": 96000,
+      "sample_rate_output": 48000,
+      "num_samples_output": 102817
+    },
+    {
+      "file": "mg42_single_06.wav",
+      "start_sec": 33.979,
+      "duration_sec": 2.0000104166666666,
+      "duration_sec_resampled": 2.000020833333333,
+      "peak_dbfs_before_norm": -2.056220293045044,
+      "rms_dbfs_before_norm": -30.74958038330078,
+      "peak_dbfs_after_norm": -1.0,
+      "sample_rate_input": 96000,
+      "sample_rate_output": 48000,
+      "num_samples_output": 96001
+    },
+    {
+      "file": "mg42_single_07.wav",
+      "start_sec": 40.729,
+      "duration_sec": 1.8530104166666668,
+      "duration_sec_resampled": 1.8530208333333333,
+      "peak_dbfs_before_norm": -2.665131092071533,
+      "rms_dbfs_before_norm": -30.087507247924805,
+      "peak_dbfs_after_norm": -1.0,
+      "sample_rate_input": 96000,
+      "sample_rate_output": 48000,
+      "num_samples_output": 88945
+    },
+    {
+      "file": "mg42_single_08.wav",
+      "start_sec": 47.479,
+      "duration_sec": 1.9730104166666667,
+      "duration_sec_resampled": 1.9730208333333332,
+      "peak_dbfs_before_norm": -2.9260504245758057,
+      "rms_dbfs_before_norm": -30.537384033203125,
+      "peak_dbfs_after_norm": -1.0,
+      "sample_rate_input": 96000,
+      "sample_rate_output": 48000,
+      "num_samples_output": 94705
+    },
+    {
+      "file": "mg42_single_09.wav",
+      "start_sec": 54.229,
+      "duration_sec": 1.9800104166666668,
+      "duration_sec_resampled": 1.9800208333333333,
+      "peak_dbfs_before_norm": -2.37227725982666,
+      "rms_dbfs_before_norm": -30.927791595458984,
+      "peak_dbfs_after_norm": -1.0,
+      "sample_rate_input": 96000,
+      "sample_rate_output": 48000,
+      "num_samples_output": 95041
+    },
+    {
+      "file": "mg42_single_10.wav",
+      "start_sec": 60.979,
+      "duration_sec": 2.123010416666667,
+      "duration_sec_resampled": 2.1230208333333334,
+      "peak_dbfs_before_norm": -3.143003225326538,
+      "rms_dbfs_before_norm": -30.843975067138672,
+      "peak_dbfs_after_norm": -1.0,
+      "sample_rate_input": 96000,
+      "sample_rate_output": 48000,
+      "num_samples_output": 101905
+    }
+  ]
+}

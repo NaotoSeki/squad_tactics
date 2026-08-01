@@ -101,9 +101,8 @@ def action_name_from_filename(filename):
     return name
 
 def get_stride(action_name):
-    """Determine stride: 2 for idle, dying, throw_grenade (low fps OK); 1 otherwise"""
+    """Keep every loop frame; sample only long one-shot clips."""
     stride2_actions = {
-        "stand_idle", "kneel_idle", "prone_idle",
         "stand_dying", "kneel_dying", "prone_dying",
         "stand_throw_grenade", "kneel_throw_grenade", "prone_throw_grenade"
     }

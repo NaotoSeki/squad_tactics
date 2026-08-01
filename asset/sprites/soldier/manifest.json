@@ -119,16 +119,16 @@
     "kneel_idle": {
       "file": "kneel_idle.png",
       "srcFrames": 13,
-      "stride": 2,
-      "frames": 7,
-      "cols": 56,
-      "rows": 1,
+      "stride": 1,
+      "frames": 13,
+      "cols": 90,
+      "rows": 2,
       "frameW": 88,
       "frameH": 49,
       "originX": 0.5222,
       "originY": 1.4513,
-      "sheetW": 4928,
-      "sheetH": 49
+      "sheetW": 7920,
+      "sheetH": 98
     },
     "kneel_reload": {
       "file": "kneel_reload.png",
@@ -259,16 +259,16 @@
     "prone_idle": {
       "file": "prone_idle.png",
       "srcFrames": 22,
-      "stride": 2,
-      "frames": 11,
+      "stride": 1,
+      "frames": 22,
       "cols": 62,
-      "rows": 2,
+      "rows": 3,
       "frameW": 127,
       "frameH": 36,
       "originX": 0.5154,
       "originY": 1.7262,
       "sheetW": 7874,
-      "sheetH": 72
+      "sheetH": 108
     },
     "prone_reload": {
       "file": "prone_reload.png",
@@ -427,16 +427,16 @@
     "stand_idle": {
       "file": "stand_idle.png",
       "srcFrames": 86,
-      "stride": 2,
-      "frames": 43,
+      "stride": 1,
+      "frames": 86,
       "cols": 101,
-      "rows": 4,
+      "rows": 7,
       "frameW": 79,
       "frameH": 74,
       "originX": 0.5249,
       "originY": 0.9882,
       "sheetW": 7979,
-      "sheetH": 296
+      "sheetH": 518
     },
     "stand_reload": {
       "file": "stand_reload.png",

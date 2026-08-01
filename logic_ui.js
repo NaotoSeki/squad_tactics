@@ -207,7 +207,14 @@ class UIManager {
 
         const setEnabled = (btn, enabled) => { if(enabled) btn.classList.remove('disabled'); else btn.classList.add('disabled'); };
         
-        setEnabled(btnMove, u.ap >= 1);
+        const rtwp = window.RtwpBattle && window.RtwpBattle.active
+            && window.RtwpBattle.instance;
+        const rtSoldier = rtwp && rtwp.sim
+            ? rtwp.sim.getSoldier(String(u.id)) : null;
+
+        // RTwP does not consume the legacy turn AP. The old AP check made the
+        // attack command unreachable even though actionAttack was adapted.
+        setEnabled(btnMove, rtSoldier ? rtSoldier.hp > 0 : u.ap >= 1);
         
         // 射撃可能条件: ①AP足りる ②InHandsにWeaponry(or仮想迫撃砲) ③残弾あり（戦車は予備弾があれば可）
         const w = window.getCurrentWeapon(u);
@@ -217,7 +224,11 @@ class UIManager {
             || (w.reserve !== undefined && (w.reserve || 0) > 0)
             || (u.def && u.def.isTank && (w.reserve || 0) > 0)
         );
-        setEnabled(btnAttack, !!w && u.ap >= weaponCost && hasAmmo);
+        const rtHasAmmo = rtSoldier && rtSoldier.weapon
+            && ((rtSoldier.magRemaining || 0) > 0 || (rtSoldier.magsLeft || 0) > 0);
+        setEnabled(btnAttack, rtSoldier
+            ? !!rtHasAmmo
+            : (!!w && u.ap >= weaponCost && hasAmmo));
 
         const anyBroken = Array.isArray(u.hands) ? u.hands.some(h => h && h.isBroken) : (u.hands && u.hands.isBroken);
         setEnabled(btnRepair, anyBroken);

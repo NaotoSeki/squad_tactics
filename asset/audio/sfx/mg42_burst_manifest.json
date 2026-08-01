@@ -1,0 +1,78 @@
+{
+  "input_file": "asset\\audio\\GUNAuto_LMG-MG 42 Burst 50m_B00M_WW2FC_Ambix.wav",
+  "input_channel": 0,
+  "input_mono_mode": "channel",
+  "input_sr": 96000,
+  "input_duration_sec": 24.410708333333332,
+  "output_sr": 48000,
+  "parameters": {
+    "frame_ms": 5.0,
+    "hop_ms": 1.0,
+    "floor_pct": 20.0,
+    "onset_db": 18.0,
+    "min_gap_ms": 300.0,
+    "pre_ms": 5.0,
+    "decay_db": -45.0,
+    "decay_hold_ms": 30.0,
+    "max_len_ms": 2500.0,
+    "fade_in_ms": 1.0,
+    "fade_out_ms": 15.0,
+    "peak_db": -1.0,
+    "rate_out": 48000,
+    "min_len_ms": 120.0,
+    "min_peak_db": -30.0
+  },
+  "num_detected": 4,
+  "num_accepted": 4,
+  "rejected": {},
+  "shots": [
+    {
+      "file": "mg42_burst_01.wav",
+      "start_sec": 0.185,
+      "duration_sec": 2.199010416666667,
+      "duration_sec_resampled": 2.1990208333333334,
+      "peak_dbfs_before_norm": -1.2714478969573975,
+      "rms_dbfs_before_norm": -25.81877899169922,
+      "peak_dbfs_after_norm": -1.0,
+      "sample_rate_input": 96000,
+      "sample_rate_output": 48000,
+      "num_samples_output": 105553
+    },
+    {
+      "file": "mg42_burst_02.wav",
+      "start_sec": 6.935,
+      "duration_sec": 2.3210104166666667,
+      "duration_sec_resampled": 2.3210208333333333,
+      "peak_dbfs_before_norm": -1.3221062421798706,
+      "rms_dbfs_before_norm": -25.17083740234375,
+      "peak_dbfs_after_norm": -1.0,
+      "sample_rate_input": 96000,
+      "sample_rate_output": 48000,
+      "num_samples_output": 111409
+    },
+    {
+      "file": "mg42_burst_03.wav",
+      "start_sec": 13.685,
+      "duration_sec": 1.9710104166666667,
+      "duration_sec_resampled": 1.9710208333333334,
+      "peak_dbfs_before_norm": -0.5647597312927246,
+      "rms_dbfs_before_norm": -25.32637596130371,
+      "peak_dbfs_after_norm": -1.0,
+      "sample_rate_input": 96000,
+      "sample_rate_output": 48000,
+      "num_samples_output": 94609
+    },
+    {
+      "file": "mg42_burst_04.wav",
+      "start_sec": 20.435,
+      "duration_sec": 2.0930104166666665,
+      "duration_sec_resampled": 2.0930208333333336,
+      "peak_dbfs_before_norm": -1.1129114627838135,
+      "rms_dbfs_before_norm": -26.385671615600586,
+      "peak_dbfs_after_norm": -1.0,
+      "sample_rate_input": 96000,
+      "sample_rate_output": 48000,
+      "num_samples_output": 100465
+    }
+  ]
+}

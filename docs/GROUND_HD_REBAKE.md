@@ -12,7 +12,7 @@ With no HD options, generation is unchanged:
 python scripts/gen_ps_seed_map.py --seed 3101
 ```
 
-The output remains `ps_seed_3101.*` at 620 × 620. The regression test compares
+The output remains `ps_seed_3101.*` at 1600 × 1000. The regression test compares
 the regenerated PNG, battlefield JSON, and object ledger byte-for-byte with the
 existing seed.
 
@@ -30,9 +30,9 @@ python scripts/gen_ps_seed_map.py `
 
 This writes a separate artifact set:
 
-- `ps_seed_3101_ground_hd_x2.png` — 1240 × 1240 physical pixels
+- `ps_seed_3101_ground_hd_x2.png` — 3200 × 2000 physical pixels
 - `ps_seed_3101_ground_hd_x2.json` — background projection scale `0.42`
-- `ps_seed_3101_ground_hd_x2_objects.json` — original 620 × 620 logical
+- `ps_seed_3101_ground_hd_x2_objects.json` — original 1600 × 1000 logical
   coordinates and projection scale `0.84`
 
 The `_ground_hd_x2` suffix prevents the existing PS backgrounds from being
@@ -66,5 +66,5 @@ python -m unittest tests.test_ps_seed_ground_hd
 ```
 
 The tests cover exact legacy output preservation, isolated HD filenames,
-1240 × 1240 output, background/object projection separation, unchanged tall
+3200 × 2000 output, background/object projection separation, unchanged tall
 object placements, fallback coverage, and manifest ratio validation.

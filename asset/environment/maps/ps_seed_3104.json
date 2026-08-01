@@ -2,12 +2,12 @@
   "schema": "ps_battlefield/v1",
   "name": "ps_seed_3104",
   "image": "ps_seed_3104.png",
-  "image_width": 620,
-  "image_height": 620,
+  "image_width": 1600,
+  "image_height": 1000,
   "projection": {
     "scale": 0.84,
-    "top_left_x": 885.3516092068122,
-    "top_left_y": 509.1,
+    "top_left_x": 614.0477246198911,
+    "top_left_y": 349.5,
     "note": "game_px = top_left + image_px * scale (等方。PS 2:1等角のまま歪ませない)"
   },
   "source": {
@@ -17,66 +17,180 @@
   },
   "rows": [
     [
-      7,
-      7,
+      5,
+      6,
       [
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS"
+      ]
+    ],
+    [
+      6,
+      5,
+      [
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS"
+      ]
+    ],
+    [
+      7,
+      5,
+      [
+        "FOREST",
         "ROAD",
+        "BLDG",
         "GRASS",
         "FOREST",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
         "GRASS",
         "GRASS"
       ]
     ],
     [
       8,
-      6,
+      4,
       [
-        "ROAD",
         "BLDG",
-        "FIELD",
-        "GRASS",
-        "FIELD"
-      ]
-    ],
-    [
-      9,
-      6,
-      [
         "ROAD",
         "GRASS",
-        "FIELD",
-        "FIELD",
-        "FOREST"
-      ]
-    ],
-    [
-      10,
-      5,
-      [
-        "ROAD",
         "GRASS",
-        "FIELD",
-        "FIELD",
-        "FOREST"
-      ]
-    ],
-    [
-      11,
-      5,
-      [
-        "ROAD",
-        "FIELD",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
         "GRASS",
         "GRASS",
         "GRASS"
       ]
     ],
     [
-      12,
+      9,
       4,
       [
         "ROAD",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS"
+      ]
+    ],
+    [
+      10,
+      3,
+      [
+        "ROAD",
+        "GRASS",
+        "GRASS",
+        "FIELD",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "FOREST"
+      ]
+    ],
+    [
+      11,
+      3,
+      [
+        "ROAD",
+        "GRASS",
+        "FIELD",
+        "FIELD",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "FOREST"
+      ]
+    ],
+    [
+      12,
+      2,
+      [
+        "ROAD",
+        "FIELD",
+        "FIELD",
+        "FOREST",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "FOREST"
+      ]
+    ],
+    [
+      13,
+      2,
+      [
         "BLDG",
+        "FIELD",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS"
+      ]
+    ],
+    [
+      14,
+      1,
+      [
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
         "GRASS",
         "GRASS",
         "GRASS"
@@ -86,35 +200,46 @@
   "audit": {
     "coverage_ok": true,
     "terrain_counts": {
-      "BLDG": 2,
-      "FIELD": 7,
-      "FOREST": 3,
-      "GRASS": 12,
+      "BLDG": 3,
+      "FIELD": 6,
+      "FOREST": 6,
+      "GRASS": 99,
       "ROAD": 6
     },
     "connectivity": {
       "ok": true,
-      "passable": 28,
+      "passable": 117,
       "component_sizes": [
-        28
+        117
       ]
     },
-    "placements_drawn": 1068,
-    "tall_objects": 79,
+    "placements_drawn": 3665,
+    "tall_objects": 178,
     "missing_assets": {
-      "bush_001": 8,
-      "bush_002": 6,
-      "bush_003": 8,
-      "compose_001_03": 2,
-      "flower_phlox-paniculata_a_01": 1,
+      "board_003_04": 2,
+      "board_004_04": 2,
+      "bush_002": 2,
+      "bush_small_02": 4,
+      "bush_small_03": 4,
+      "bush_small_04": 6,
+      "bush_small_05": 6,
+      "flower_phlox-paniculata_a_02": 1,
       "flower_rhododendron-ponticum_a_01": 1,
-      "flower_rhododendron-ponticum_b_02": 1,
-      "flower_rudbeckia-hirta_b_01": 1,
+      "flower_rhododendron-ponticum_b_02": 2,
+      "flower_rhododendron-ponticum_c_03": 2,
+      "flower_rudbeckia-hirta_a_01": 2,
+      "flower_rudbeckia-hirta_a_02": 2,
+      "flower_rudbeckia-hirta_c_02": 2,
       "flower_rudbeckia-hirta_d_01": 1,
-      "plant_coriandrum-sativum_b_01": 1,
-      "plant_coriandrum-sativum_c_02": 4,
-      "plant_coriandrum-sativum_c_03": 1,
-      "plant_dryopteris-carthusiana_c_01": 1
+      "flower_rudbeckia-hirta_e_01": 4,
+      "ladder_001_00": 2,
+      "plant_coriandrum-sativum_b_01": 12,
+      "plant_coriandrum-sativum_c_02": 6,
+      "plant_coriandrum-sativum_c_03": 7,
+      "plant_dryopteris-carthusiana_b_01": 1,
+      "plant_dryopteris-carthusiana_c_01": 2,
+      "plant_dryopteris-carthusiana_d_01": 1,
+      "plant_dryopteris-carthusiana_e_01": 1
     },
     "flat_background_fraction": 0.0
   }

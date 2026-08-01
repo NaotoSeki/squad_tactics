@@ -219,7 +219,11 @@ window.RuralV29Map = {
       const variant = {
         key: name,
         texture: name,
-        file: `asset/environment/maps/${bf.image}`,
+        // Generated maps keep stable filenames, so include their logical shape
+        // in the URL. Otherwise a browser can reuse the previous 1120x860 PNG
+        // after the registry has moved to 1600x1000, leaving a dark uncovered
+        // band inside the new camera bounds.
+        file: `asset/environment/maps/${bf.image}?v=${bf.imageWidth}x${bf.imageHeight}-p${bf.pixelRatio || 1}`,
         rot180: false,
         ready: true,
         psNative: name

@@ -37,6 +37,9 @@ window.PsObjectLayer = {
   HD_BASE_PATH: 'asset/environment/raised_hd/',
   TREE_HD_BASE_PATH: 'asset/environment/trees_hd/production/',
   HD_PIXEL_RATIO: 2,
+  // Production PS battlefields opt into this so a lone low-resolution source
+  // can never break the smooth HD art direction. Missing HD pieces are skipped.
+  HD_ONLY: false,
   TREE_SWAY: {
     angleDeg: 0.42,
     scaleX: 0.0035,
@@ -44,11 +47,17 @@ window.PsObjectLayer = {
   },
 
   SHADOW_DEPTH: -9980,
+  // The ground image lives inside hexGroup(depth 0). A root-level object with
+  // depth -9980 is therefore still behind the whole layer and cannot be seen.
+  // Keep every ground shadow in one root layer above map/decor, below bodies.
+  SHADOW_LAYER_DEPTH: 8.5,
 
   _scene: null,
   _proj: null,
+  _shadowLayer: null,
   _objects: [],
   _byHex: null,
+  _linearFilteredKeys: null,
 
   /** 台帳のキャンバス座標 -> ワールド座標 */
   _toWorld(px, py) {
@@ -166,6 +175,7 @@ window.PsObjectLayer = {
         hd: true
       };
     }
+    if (this.HD_ONLY) return null;
     return {
       key: this._spriteKey(asset, slot),
       file: canonical.file,
@@ -241,6 +251,18 @@ window.PsObjectLayer = {
     if (!sprite) return null;
     if (!this._scene.textures.exists(sprite.key)) return null;
 
+    // HD cut-outs are commonly displayed below their source resolution. Force
+    // linear filtering once per texture so their edges match the smooth soldier
+    // sheets instead of acquiring nearest-neighbour stair steps while zooming.
+    if (!this._linearFilteredKeys) this._linearFilteredKeys = new Set();
+    if (!this._linearFilteredKeys.has(sprite.key) && this._scene.textures.get) {
+      const texture = this._scene.textures.get(sprite.key);
+      if (texture && texture.setFilter && window.Phaser && Phaser.Textures) {
+        texture.setFilter(Phaser.Textures.FilterMode.LINEAR);
+      }
+      this._linearFilteredKeys.add(sprite.key);
+    }
+
     const baseScale = this._proj.scale / sprite.pixelRatio;
     const canonical = this._meta(asset, slot);
     const shouldSway = !!(
@@ -270,7 +292,59 @@ window.PsObjectLayer = {
         .setScale(baseScale)
         .setDepth(depth);
     }
+    if (this._shadowLayer && depth <= this.SHADOW_DEPTH + 1 && this._shadowLayer.add) {
+      this._shadowLayer.add(img);
+    }
     return img;
+  },
+
+  /** Add the shared alpha-space sun projection for every live body sprite. */
+  _ensureAlphaShadow(inst) {
+    if (!inst || !inst.bodies.length || !this._scene) return;
+    inst.bodies.forEach(body => {
+      if (!body || (body.depth != null && body.depth <= this.SHADOW_DEPTH + 1)) return;
+      if (window.AlphaLightSpace && window.AlphaLightSpace.createSunShadow) {
+        const family = inst.spec && inst.spec.family;
+        const isBuilding = family === 'building';
+        const isTree = family === 'tree';
+        const shadow = window.AlphaLightSpace.createSunShadow(this._scene, body, {
+          depth: this.SHADOW_DEPTH + 0.2,
+          castScale: isBuilding ? 0.40 : (isTree ? 0.36 : 0.27),
+          flatten: isBuilding ? 0.25 : (isTree ? 0.27 : 0.31),
+          widthScale: isBuilding ? 1.08 : 1.04,
+          alpha: isBuilding ? 0.44 : (isTree ? 0.39 : 0.34),
+        });
+        if (shadow) {
+          shadow._generatedAlphaShadow = true;
+          if (this._shadowLayer && this._shadowLayer.add) this._shadowLayer.add(shadow);
+          inst.shadows.push(shadow);
+        }
+        return;
+      }
+      // Compatibility fallback when the shared lighting module is not loaded.
+      if (inst.shadows.length) return;
+      const key = body.texture && body.texture.key ? body.texture.key : body.key;
+      if (!key) return;
+      const frame = body.frame && body.frame.name != null ? body.frame.name : undefined;
+      const height = Math.abs(body.displayHeight || 0);
+      const originX = body.originX != null ? body.originX : 0;
+      const originY = body.originY != null ? body.originY : 0;
+      const sx = body.scaleX != null ? body.scaleX : (body.scale != null ? body.scale : 1);
+      const sy = body.scaleY != null ? body.scaleY : (body.scale != null ? body.scale : 1);
+      const shadowH = height * 0.24;
+      const baseY = body.y + height * (1 - originY);
+      const shadowY = height ? baseY - shadowH * (1 - originY) : body.y + 6 * this._proj.scale;
+      const shadow = this._scene.add.image(body.x + 8 * this._proj.scale, shadowY, key, frame);
+      if (shadow.setOrigin) shadow.setOrigin(originX, originY);
+      if (shadow.setScale) shadow.setScale(sx * 1.08, sy * 0.24);
+      if (shadow.setFlip) shadow.setFlip(body.flipX, body.flipY);
+      if (shadow.setTint) shadow.setTint(0x11120e);
+      if (shadow.setAlpha) shadow.setAlpha(0.32);
+      if (shadow.setDepth) shadow.setDepth(this.SHADOW_DEPTH);
+      shadow._generatedAlphaShadow = true;
+      if (this._shadowLayer && this._shadowLayer.add) this._shadowLayer.add(shadow);
+      inst.shadows.push(shadow);
+    });
   },
 
   /**
@@ -286,6 +360,11 @@ window.PsObjectLayer = {
     this._scene = scene;
     this._proj = projection;
     this._byHex = new Map();
+    if (scene.add && scene.add.layer) {
+      this._shadowLayer = scene.add.layer();
+      if (this._shadowLayer.setDepth) this._shadowLayer.setDepth(this.SHADOW_LAYER_DEPTH);
+      this._shadowLayer._psGroundShadowLayer = true;
+    }
 
     (ledger.objects || []).forEach(spec => {
       const world = this._toWorld(spec.x, spec.y);
@@ -332,6 +411,7 @@ window.PsObjectLayer = {
       }
 
       if (!inst.bodies.length) return; // 描けなかったものは登録しない
+      this._ensureAlphaShadow(inst);
       this._objects.push(inst);
 
       if (spec.hex) {
@@ -344,13 +424,78 @@ window.PsObjectLayer = {
     return this._objects.length;
   },
 
+  _lightOccluded(lightX, lightY, target) {
+    const tx = target.worldX, ty = target.worldY;
+    const vx = tx - lightX, vy = ty - lightY;
+    const len2 = vx * vx + vy * vy;
+    if (len2 < 1) return false;
+    return this._objects.some(blocker => {
+      if (blocker === target || !blocker.bodies.length) return false;
+      const family = blocker.spec && blocker.spec.family;
+      if (family !== 'building' && family !== 'fence' && family !== 'large_prop') return false;
+      const wx = blocker.worldX - lightX, wy = blocker.worldY - lightY;
+      const t = (wx * vx + wy * vy) / len2;
+      if (t <= 0.08 || t >= 0.92) return false;
+      const px = lightX + vx * t, py = lightY + vy * t;
+      return Math.hypot(blocker.worldX - px, blocker.worldY - py) < 24;
+    });
+  },
+
+  /** 物体PNGのアルファを2pxずらし、発砲点側だけに短い暖色の縁を作る。 */
+  flashMuzzleLight(lightX, lightY, radius) {
+    if (!this._scene || !this._scene.tweens) return;
+    this._objects.forEach(inst => {
+      const dist = Math.hypot(lightX - inst.worldX, lightY - inst.worldY);
+      if (dist > radius || this._lightOccluded(lightX, lightY, inst)) return;
+      if (window.AlphaLightSpace && window.AlphaLightSpace.flashAlpha) {
+        inst.bodies.forEach(body => {
+          window.AlphaLightSpace.flashAlpha(
+            this._scene, body, lightX, lightY, radius,
+            {
+              worldX: inst.worldX,
+              worldY: inst.worldY,
+              shadowDepth: this.SHADOW_DEPTH + 0.3,
+              shadowLayer: this._shadowLayer,
+              rimDepth: body.depth + 0.02,
+            }
+          );
+        });
+        return;
+      }
+      const gain = 1 - dist / Math.max(1, radius);
+      const inv = dist > 1 ? 1 / dist : 0;
+      const offX = (lightX - inst.worldX) * inv * 2.4;
+      const offY = (lightY - inst.worldY) * inv * 2.4;
+      inst.bodies.forEach(body => {
+        if (!body || !body.texture || !body.frame) return;
+        const rim = this._scene.add.image(body.x + offX, body.y + offY, body.texture.key, body.frame.name);
+        rim.setOrigin(body.originX, body.originY);
+        rim.setScale(body.scaleX, body.scaleY);
+        rim.setFlip(body.flipX, body.flipY);
+        rim.setRotation(body.rotation);
+        rim.setTint(0xffa65a);
+        rim.setAlpha(0.08 + gain * 0.20);
+        rim.setDepth(body.depth - 0.01);
+        if (typeof Phaser !== 'undefined' && Phaser.BlendModes) rim.setBlendMode(Phaser.BlendModes.ADD);
+        this._scene.tweens.add({
+          targets: rim, alpha: 0, duration: 82, ease: 'Cubic.out',
+          onComplete: () => { if (rim.active) rim.destroy(); }
+        });
+      });
+    });
+  },
+
   clear() {
     this._objects.forEach(inst => {
       inst.bodies.forEach(i => i.destroy());
       inst.shadows.forEach(i => i.destroy());
     });
+    if (this._shadowLayer) {
+      try { this._shadowLayer.destroy(); } catch (e) { }
+    }
     this._objects = [];
     this._byHex = null;
+    this._shadowLayer = null;
     this._scene = null;
     this._proj = null;
   },
@@ -417,6 +562,7 @@ window.PsObjectLayer = {
       );
       if (img) inst.bodies.push(img);
     }
+    this._ensureAlphaShadow(inst);
     return true;
   },
 

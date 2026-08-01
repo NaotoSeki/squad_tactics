@@ -101,15 +101,19 @@ const expectedCenter = {
   x: (minX + maxX) / 2,
   y: (minY + maxY) / 2,
 };
-const expectedZoom = Math.min(
+const expectedZoom = Math.max(
   viewport.width / (maxX - minX),
   viewport.height / (maxY - minY),
-) * 0.92;
+) * 1.01;
 
 assert.strictEqual(full.centers.length, 1, 'camera should center exactly once');
 almostEqual(full.centers[0].x, expectedCenter.x, 'axial X center');
 almostEqual(full.centers[0].y, expectedCenter.y, 'asymmetric tall-tile Y center');
-almostEqual(full.camera.zoom, expectedZoom, 'viewport fit zoom');
+almostEqual(full.camera.zoom, expectedZoom, 'edge-to-edge ground zoom');
+assert.ok(full.camera.zoom * (maxX - minX) >= viewport.width,
+  'ground should cover the viewport width');
+assert.ok(full.camera.zoom * (maxY - minY) >= viewport.height,
+  'ground should cover the viewport height');
 
 const oldCenter = {
   x: MAP_W * HEX_SIZE * Math.sqrt(3) / 2,
@@ -138,7 +142,7 @@ almostEqual(city.centers[0].y, cityAnchor.y - 27.5, 'single-city-tile Y center')
 assert.strictEqual(city.camera.zoom, 4, 'zoom should clamp to upper limit');
 
 const tinyViewport = runCenterMap(runtime, fullMap, 20, 20);
-assert.strictEqual(tinyViewport.camera.zoom, 0.25, 'zoom should clamp to lower limit');
+assert.strictEqual(tinyViewport.camera.zoom, 0.24, 'zoom should clamp to lower limit');
 
 const voidMap = [[{ id: -1 }]];
 const untouched = runCenterMap(runtime, voidMap, 800, 600, 1.5);

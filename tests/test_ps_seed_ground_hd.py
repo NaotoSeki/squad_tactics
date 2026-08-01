@@ -69,15 +69,15 @@ class PsSeedGroundHdTest(unittest.TestCase):
             )
 
             with Image.open(image_path) as image:
-                self.assertEqual((1240, 1240), image.size)
+                self.assertEqual((3200, 2000), image.size)
             self.assertFalse((output / "ps_seed_3101.png").exists())
 
             self.assertEqual(2, metadata["pixel_ratio"])
-            self.assertEqual((1240, 1240), (
+            self.assertEqual((3200, 2000), (
                 metadata["image_width"],
                 metadata["image_height"],
             ))
-            self.assertEqual((620, 620), (
+            self.assertEqual((1600, 1000), (
                 metadata["logical_image_width"],
                 metadata["logical_image_height"],
             ))
@@ -87,7 +87,7 @@ class PsSeedGroundHdTest(unittest.TestCase):
             self.assertEqual(0, metadata["audit"]["ground_hd_fallbacks_drawn"])
 
             self.assertAlmostEqual(0.84, objects["projection"]["scale"])
-            self.assertEqual((620, 620), (
+            self.assertEqual((1600, 1000), (
                 objects["image_width"],
                 objects["image_height"],
             ))
@@ -107,7 +107,7 @@ class PsSeedGroundHdTest(unittest.TestCase):
             registry = json.loads(registry_json)
             entry = registry[stem]
             self.assertEqual(2, entry["pixelRatio"])
-            self.assertEqual((620, 620), (
+            self.assertEqual((1600, 1000), (
                 entry["imageWidth"],
                 entry["imageHeight"],
             ))

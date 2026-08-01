@@ -1,0 +1,152 @@
+{
+  "input_file": "asset\\audio\\GUNRif_SR-Kar98K Single Shot 50m_B00M_WW2FC_Ambix.wav",
+  "input_channel": 0,
+  "input_mono_mode": "channel",
+  "input_sr": 96000,
+  "input_duration_sec": 65.95364583333334,
+  "output_sr": 48000,
+  "parameters": {
+    "frame_ms": 5.0,
+    "hop_ms": 1.0,
+    "floor_pct": 20.0,
+    "onset_db": 18.0,
+    "min_gap_ms": 300.0,
+    "pre_ms": 5.0,
+    "decay_db": -45.0,
+    "decay_hold_ms": 30.0,
+    "max_len_ms": 2500.0,
+    "fade_in_ms": 1.0,
+    "fade_out_ms": 15.0,
+    "peak_db": -1.0,
+    "rate_out": 48000,
+    "min_len_ms": 120.0,
+    "min_peak_db": -30.0
+  },
+  "num_detected": 11,
+  "num_accepted": 10,
+  "rejected": {
+    "short_or_low_peak": 1
+  },
+  "shots": [
+    {
+      "file": "kar98k_shot_01.wav",
+      "start_sec": 0.207,
+      "duration_sec": 1.7930104166666667,
+      "duration_sec_resampled": 1.7930208333333333,
+      "peak_dbfs_before_norm": -2.6645803451538086,
+      "rms_dbfs_before_norm": -28.91974639892578,
+      "peak_dbfs_after_norm": -1.0,
+      "sample_rate_input": 96000,
+      "sample_rate_output": 48000,
+      "num_samples_output": 86065
+    },
+    {
+      "file": "kar98k_shot_02.wav",
+      "start_sec": 6.957,
+      "duration_sec": 1.7090104166666666,
+      "duration_sec_resampled": 1.7090208333333334,
+      "peak_dbfs_before_norm": -3.413728713989258,
+      "rms_dbfs_before_norm": -28.717132568359375,
+      "peak_dbfs_after_norm": -1.0,
+      "sample_rate_input": 96000,
+      "sample_rate_output": 48000,
+      "num_samples_output": 82033
+    },
+    {
+      "file": "kar98k_shot_03.wav",
+      "start_sec": 13.707,
+      "duration_sec": 1.7930104166666667,
+      "duration_sec_resampled": 1.7930208333333333,
+      "peak_dbfs_before_norm": -3.0372061729431152,
+      "rms_dbfs_before_norm": -29.37854766845703,
+      "peak_dbfs_after_norm": -1.0,
+      "sample_rate_input": 96000,
+      "sample_rate_output": 48000,
+      "num_samples_output": 86065
+    },
+    {
+      "file": "kar98k_shot_04.wav",
+      "start_sec": 20.457,
+      "duration_sec": 1.6910104166666666,
+      "duration_sec_resampled": 1.6910208333333334,
+      "peak_dbfs_before_norm": -3.4809467792510986,
+      "rms_dbfs_before_norm": -28.629777908325195,
+      "peak_dbfs_after_norm": -1.0,
+      "sample_rate_input": 96000,
+      "sample_rate_output": 48000,
+      "num_samples_output": 81169
+    },
+    {
+      "file": "kar98k_shot_05.wav",
+      "start_sec": 27.207,
+      "duration_sec": 1.7490104166666667,
+      "duration_sec_resampled": 1.7490208333333332,
+      "peak_dbfs_before_norm": -3.263853073120117,
+      "rms_dbfs_before_norm": -28.77556610107422,
+      "peak_dbfs_after_norm": -1.0,
+      "sample_rate_input": 96000,
+      "sample_rate_output": 48000,
+      "num_samples_output": 83953
+    },
+    {
+      "file": "kar98k_shot_06.wav",
+      "start_sec": 33.956,
+      "duration_sec": 1.6520104166666667,
+      "duration_sec_resampled": 1.6520208333333333,
+      "peak_dbfs_before_norm": -3.0717670917510986,
+      "rms_dbfs_before_norm": -28.733116149902344,
+      "peak_dbfs_after_norm": -1.0,
+      "sample_rate_input": 96000,
+      "sample_rate_output": 48000,
+      "num_samples_output": 79297
+    },
+    {
+      "file": "kar98k_shot_07.wav",
+      "start_sec": 40.707,
+      "duration_sec": 1.6530104166666666,
+      "duration_sec_resampled": 1.6530208333333334,
+      "peak_dbfs_before_norm": -3.4020962715148926,
+      "rms_dbfs_before_norm": -29.00777816772461,
+      "peak_dbfs_after_norm": -1.0,
+      "sample_rate_input": 96000,
+      "sample_rate_output": 48000,
+      "num_samples_output": 79345
+    },
+    {
+      "file": "kar98k_shot_08.wav",
+      "start_sec": 47.458,
+      "duration_sec": 1.7050104166666666,
+      "duration_sec_resampled": 1.7050208333333334,
+      "peak_dbfs_before_norm": -3.736117362976074,
+      "rms_dbfs_before_norm": -28.892208099365234,
+      "peak_dbfs_after_norm": -1.0,
+      "sample_rate_input": 96000,
+      "sample_rate_output": 48000,
+      "num_samples_output": 81841
+    },
+    {
+      "file": "kar98k_shot_09.wav",
+      "start_sec": 54.207,
+      "duration_sec": 1.6540104166666667,
+      "duration_sec_resampled": 1.6540208333333333,
+      "peak_dbfs_before_norm": -2.651045322418213,
+      "rms_dbfs_before_norm": -28.731548309326172,
+      "peak_dbfs_after_norm": -1.0,
+      "sample_rate_input": 96000,
+      "sample_rate_output": 48000,
+      "num_samples_output": 79393
+    },
+    {
+      "file": "kar98k_shot_10.wav",
+      "start_sec": 60.956,
+      "duration_sec": 1.7070104166666666,
+      "duration_sec_resampled": 1.7070208333333334,
+      "peak_dbfs_before_norm": -2.7535617351531982,
+      "rms_dbfs_before_norm": -28.905427932739258,
+      "peak_dbfs_after_norm": -1.0,
+      "sample_rate_input": 96000,
+      "sample_rate_output": 48000,
+      "num_samples_output": 81937
+    }
+  ]
+}

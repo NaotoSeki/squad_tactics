@@ -6,7 +6,7 @@ content量がクラスタ5個分に固定されるためキャンバスを盤面
 残り、かつ盤としての妥当性（連結性・スポーン地帯・道の連続）を保証していなかった。
 
 本実装はフローを反転する:
-  Phase A  先に30hexの盤面計画を立てる（ゲーム契約を構成的に保証、シード決定的）
+  Phase A  先に広域盤面の計画を立てる（ゲーム契約を構成的に保証、シード決定的）
   Phase B  その計画に従ってPSの絵を合成する（実測クラスタは"部品ライブラリ"として使う）
   Phase C  ps_battlefield/v1 スキーマで出力（ゲーム側は無改造で読める）
 
@@ -168,7 +168,7 @@ def parse_base_color(value: str) -> tuple[int, int, int, int]:
 
 
 def cells_from_board_rows() -> list[tuple[int, int]]:
-    """build_ps_battlefield と同じ BOARD_ROWS からセル列を得る。"""
+    """build_ps_battlefield と同じ広域 BOARD_ROWS からセル列を得る。"""
     return [(q, r) for r, start_q in BOARD_ROWS for q in range(start_q, start_q + ROW_LEN)]
 
 
@@ -348,7 +348,7 @@ def build_plan_once(
     rng: random.Random,
     cells: set[tuple[int, int]],
 ) -> dict[tuple[int, int], Terrain] | None:
-    """仕様の順序で30hexの地形計画を構成する。"""
+    """仕様の順序で広域地形計画を構成する。"""
     plan: dict[tuple[int, int], Terrain] = {cell: "GRASS" for cell in cells}
 
     road_path = make_road_spine(rng, cells)
@@ -1115,8 +1115,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--canonical-manifest", type=Path, default=None)
     parser.add_argument("--legacy-catalog", type=Path, default=Path("scratch/ps_sprites_v2/catalog.json"))
     parser.add_argument("--out-dir", type=Path, default=Path("asset/environment/maps"))
-    parser.add_argument("--width", type=int, default=620)
-    parser.add_argument("--height", type=int, default=620)
+    parser.add_argument("--width", type=int, default=1600)
+    parser.add_argument("--height", type=int, default=1000)
     parser.add_argument("--scale", type=float, default=0.84)
     parser.add_argument("--map-height", type=int, default=12)
     parser.add_argument("--cluster-radius", type=int, default=150)
