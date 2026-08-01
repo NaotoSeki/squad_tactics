@@ -115,6 +115,10 @@ class CampaignManager {
 
     // --- SETUP SCREEN LOGIC ---
     initSetupScreen() {
+        // 募集画面へ戻る間はフローティングのログ/DEBUGを再び伏せる
+        if (typeof document !== 'undefined' && document.body && document.body.classList) {
+            document.body.classList.remove('mission-active');
+        }
         // ★修正: 起動直後はUIManagerがまだ存在しないため、直接DOMを操作してサイドバー一式を隠す
         const idsToHide = ['sidebar', 'resizer', 'sidebar-toggle'];
         idsToHide.forEach(id => {
@@ -235,7 +239,11 @@ class CampaignManager {
     _startMission() {
         document.getElementById('setup-screen').style.display = 'none';
         document.getElementById('reward-screen').style.display = 'none';
-        
+        // フローティングのログ/DEBUGは旧ターン制でだけ解禁する。RTwPは右ペインが受け持つので、
+        // ここで一瞬でも出すと左上に出て消える瞬きになる（出撃直後の1〜数フレーム）。
+        const rtwp = window.RtwpBattle && window.RtwpBattle.isEnabled && window.RtwpBattle.isEnabled();
+        if (!rtwp && document.body && document.body.classList) document.body.classList.add('mission-active');
+
         // ★修正: ゲーム開始時にサイドバー一式を直接表示に戻す
         const sb = document.getElementById('sidebar');
         if(sb) sb.style.display = 'flex'; // CSSのflexレイアウトを維持

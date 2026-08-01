@@ -309,11 +309,7 @@
     this.registerMissingUnits();
     if (this.paused || !this.sim || this.sim.result()) return;
     // 非アクティブ中の巨大deltaを復帰後に消化すると、古いSHOTイベントが連続再生される。
-    const pageInactive = window.Sfx && window.Sfx.isPageActive
-      ? !window.Sfx.isPageActive()
-      : (typeof document !== 'undefined'
-        && (document.hidden || document.visibilityState === 'hidden'));
-    if (pageInactive) {
+    if (isPageInactive()) {
       this.acc = 0;
       this._skipNextDelta = true;
       return;
@@ -499,12 +495,11 @@
       if (self._orig.onUnitClick) return self._orig.onUnitClick.call(g, unit);
     };
 
-    // END TURN は RTwP に存在しない。押されたら一時停止のトグルにする
-    // （ボタンを消すには logic_ui.js の書き換えが要るので、意味を差し替える）。
+    // END TURN は RTwP に存在しない。Phaserサイドバーのボタンは伏せてあるが、
+    // 他経路から呼ばれても壊れないよう一時停止のトグルにしておく。
     g.endTurn = function () {
       self.setPaused(!self.paused);
       self._log(self.paused ? '一時停止' : '再開');
-      self.updateHud();
     };
 
     this._keyHandler = function (e) {
@@ -531,13 +526,9 @@
         case '3': self.setSpeed(4); break;
         default: return;
       }
-      self.updateHud();
     };
     document.addEventListener('keydown', this._keyHandler);
-    this._visibilityHandler = function () {
-      self.acc = 0;
-      self._skipNextDelta = true;
-    };
+    this._visibilityHandler = function (e) { self.onWindowActivity(e && e.type); };
     document.addEventListener('visibilitychange', this._visibilityHandler);
     if (window.addEventListener) {
       window.addEventListener('blur', this._visibilityHandler);
@@ -545,13 +536,9 @@
       window.addEventListener('pagehide', this._visibilityHandler);
     }
 
-    // 操作の手引きと状態を出す小さなHUD（既存DOMを壊さないよう独立要素で足す）
-    const hud = document.createElement('div');
-    hud.id = 'rtwp-hud';
-    hud.style.cssText = 'position:fixed;left:8px;bottom:8px;z-index:60;background:rgba(0,0,0,.66);'
-      + 'color:#dfe;font:11px/1.5 monospace;padding:6px 9px;border:1px solid #465;border-radius:4px;pointer-events:none';
-    document.body.appendChild(hud);
-    this._hud = hud;
+    // 左下の常設HUDは置かない。操作の手引きは手が止まる一時停止中にだけ要るもので、
+    // それは戦術判断モード(phaser_tactical_pause.js)の上部バナーが同じ文言で出す。
+    // 実時間中にここへ何か置くと下部カード列を覆う。
     const dock = document.getElementById('rtwp-dock');
     const eventsPane = document.getElementById('rtwp-events-pane');
     const debugPane = document.getElementById('rtwp-debug-pane');
@@ -574,7 +561,8 @@
       debugWindow.style.display = 'flex';
       if (logWindow) logWindow.style.display = 'none';
       dock.classList.add('active');
-      dock.classList.remove('collapsed');
+      // 既定は畳んだ状態。最下部のタブ列だけが出て、押したときに開く。
+      dock.classList.add('collapsed');
 
       const paneButtons = dock.querySelectorAll('[data-rtwp-pane]');
       const panes = dock.querySelectorAll('.rtwp-pane');
@@ -589,16 +577,7 @@
       const collapse = dock.querySelector('.rtwp-collapse');
       if (collapse) collapse.onclick = function () { dock.classList.toggle('collapsed'); };
     }
-    this.updateHud();
     this._uiInstalled = true;
-  };
-
-  RtwpInstance.prototype.updateHud = function () {
-    if (!this._hud) return;
-    const sp = this.paused ? '停止中' : (this.speed + 'x');
-    this._hud.innerHTML = '<b>REAL TIME</b> [' + sp + ']<br>'
-      + '右クリック=移動命令 / Space=一時停止 / 1,2,3=速度<br>'
-      + '敵を選択して F=集中射撃 / S=制圧射撃 / C=遮蔽に入れ';
   };
 
   RtwpInstance.prototype.uninstallUi = function () {
@@ -622,7 +601,6 @@
       window.removeEventListener('focus', this._visibilityHandler);
       window.removeEventListener('pagehide', this._visibilityHandler);
     }
-    if (this._hud && this._hud.parentNode) this._hud.parentNode.removeChild(this._hud);
     if (this._dockState) {
       const restore = function (state) {
         if (!state || !state.el || !state.parent) return;
@@ -638,9 +616,20 @@
         this._dockState.dock.classList.remove('active', 'collapsed');
       }
     }
-    this._hud = null;
     this._dockState = null;
     this._uiInstalled = false;
+  };
+
+  /**
+   * ウィンドウの可視/フォーカス変化。離れたら PAUSE へ入れる。
+   * **戻ってきても自動再開はしない**（復帰直後は盤面を読み直す前なので、Spaceを待つ）。
+   * リスナから切り離してあるのは、DOMなしのテストから直接叩けるようにするため。
+   */
+  RtwpInstance.prototype.onWindowActivity = function (type) {
+    this.acc = 0;
+    this._skipNextDelta = true;
+    if (type === 'focus') return;
+    if (type === 'blur' || type === 'pagehide' || isPageInactive()) this.setPaused(true);
   };
 
   RtwpInstance.prototype.setPaused = function (v) { this.paused = !!v; };
@@ -669,6 +658,19 @@
    * 必ず undefined になり、RTwP が黙って起動しない（node の vm テストでは明示的に
    * 露出させていたため通ってしまい、実機で初めて露見した）。
    */
+  /**
+   * ページが「見えていない or ウィンドウが非アクティブ」か。
+   * Sfx.isPageActive() は visibilitychange だけでなく window blur も見ているので、
+   * 別ウィンドウへ切り替えただけ（タブは可視）の場合もここで拾える。
+   */
+  function isPageInactive() {
+    if (typeof window !== 'undefined' && window.Sfx && window.Sfx.isPageActive) {
+      return !window.Sfx.isPageActive();
+    }
+    return typeof document !== 'undefined'
+      && (document.hidden || document.visibilityState === 'hidden');
+  }
+
   function resolveDeps() {
     const d = {};
     d.SimCore = (typeof SimCore !== 'undefined') ? SimCore : window.SimCore;
@@ -694,6 +696,17 @@
     active: false,
     instance: null,
     fixedSeed: null,
+
+    /**
+     * この起動でRTwPが走る見込みか。`active` は初回 MainScene.update の attach まで
+     * false なので、それより前に描くUI（配置カードの文言など）はこちらで判定する。
+     * 実際に attach するかの判断は phaser_bridge.js の update 側が正本。
+     */
+    isEnabled() {
+      if (!this.enabled) return false;
+      if (typeof location === 'undefined' || !location.search) return true;
+      return !/(?:\?|&)rtwp=0(?:&|$)/.test(location.search);
+    },
 
     attach(gameLogic) {
       if (!this.enabled || !gameLogic || !gameLogic.map) return null;

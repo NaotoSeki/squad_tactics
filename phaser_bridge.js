@@ -80,7 +80,9 @@ window.getCardTextureKey = function(scene, type, portraitIndex, unitName) {
     ctx.fillText(isInfantry ? template.name : (template.role ? template.role.toUpperCase() : "UNIT"), 70, 155);
     let wpnName = template.main || "-"; if (typeof WPNS !== 'undefined' && WPNS[template.main]) { wpnName = WPNS[template.main].name; }
     ctx.fillStyle = "#ccc"; ctx.font = "11px monospace";
-    ctx.fillText(`HP:${template.hp||100} AP:${template.ap||4}`, 70, 175);
+    // AP は旧ターン制の資源。RTwP ではHPだけ出す（カード生成は attach より前に走るので isEnabled で見る）
+    const rtwpMode = window.RtwpBattle && window.RtwpBattle.isEnabled && window.RtwpBattle.isEnabled();
+    ctx.fillText(rtwpMode ? `HP:${template.hp||100}` : `HP:${template.hp||100} AP:${template.ap||4}`, 70, 175);
     ctx.fillStyle = "#d84"; ctx.font = "10px sans-serif";
     ctx.fillText(wpnName, 70, 190);
     scene.textures.addCanvas(key, canvas); return key;

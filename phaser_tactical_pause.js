@@ -53,7 +53,7 @@
       this.shade = scene.add.rectangle(0, 0, 1, 1, 0x555c5b, 0.58)
         .setOrigin(0, 0).setScrollFactor(0).setDepth(DEPTH).setVisible(false);
       this.lines = scene.add.graphics().setDepth(DEPTH + 10).setVisible(false);
-      this.banner = scene.add.text(0, 12, 'TACTICAL PAUSE  —  戦術判断', {
+      this.banner = scene.add.text(0, 12, 'PAUSE', {
         fontFamily: 'Share Tech Mono, monospace', fontSize: '17px',
         color: '#f2ead0', backgroundColor: 'rgba(15,20,19,0.90)',
         padding: { x: 14, y: 7 },
@@ -77,7 +77,7 @@
           root.setAttribute('data-tactical-pause-ui', '1');
           root.style.cssText = 'display:none;position:absolute;inset:0;z-index:25;pointer-events:none;font-family:"Share Tech Mono",monospace;color:#eef6f3';
           const banner = document.createElement('div');
-          banner.textContent = 'TACTICAL PAUSE  —  戦術判断';
+          banner.textContent = 'PAUSE';
           banner.style.cssText = 'position:absolute;left:50%;top:48px;transform:translateX(-50%);padding:7px 15px;background:rgba(15,20,19,.92);border:1px solid rgba(220,232,223,.65);font-size:16px;font-weight:bold;letter-spacing:1px;white-space:nowrap';
           const help = document.createElement('div');
           help.textContent = '味方を選択 → 敵をクリック: 射撃命令\n右クリック: 移動命令 / F: 集中射撃 / S: 制圧射撃 / C: 遮蔽';

@@ -396,13 +396,18 @@ class UIManager {
 
         const u = window.gameLogic.getUnitInHex(hex.q, hex.r);
         const t = window.gameLogic.isValidHex(hex.q, hex.r) ? window.gameLogic.map[hex.q][hex.r] : null;
+        // RTwP では AP もターン終了も無い（ターン制へ戻したときだけ従来通り出す）
+        const rtwp = !!(window.RtwpBattle && window.RtwpBattle.active);
         let h = "";
         if (u) {
-            h += `<div style="color:#0af;font-weight:bold">${u.name}</div>HP:${u.hp}/${u.maxHp} AP:${u.ap}/${u.maxAp}<br>Stance: ${u.stance}`;
+            const ap = rtwp ? '' : ` AP:${u.ap}/${u.maxAp}`;
+            h += `<div style="color:#0af;font-weight:bold">${u.name}</div>HP:${u.hp}/${u.maxHp}${ap}<br>Stance: ${u.stance}`;
         } else if (t) {
             h += `<div style="color:#da4;font-weight:bold">${t.name}</div>Cost:${t.cost} Cover:${t.cover}%`;
         }
-        h += `<hr style="border:0;border-top:1px solid #444;margin:5px 0;"><button onclick="gameLogic.endTurn();document.getElementById('context-menu').style.display='none';" style="width:100%;cursor:pointer;background:#522;color:#fcc;border:1px solid #d44;padding:3px;">TURN END</button>`;
+        if (!rtwp) {
+            h += `<hr style="border:0;border-top:1px solid #444;margin:5px 0;"><button onclick="gameLogic.endTurn();document.getElementById('context-menu').style.display='none';" style="width:100%;cursor:pointer;background:#522;color:#fcc;border:1px solid #d44;padding:3px;">TURN END</button>`;
+        }
         if (h !== "") { m.innerHTML = h; m.style.display = 'block'; m.style.left = (mx + 10) + 'px'; m.style.top = (my + 10) + 'px'; }
     }
 

@@ -258,6 +258,12 @@
         #battle-log-window .log-resize-handle { position: absolute; right: 0; bottom: 0; width: 16px; height: 16px; cursor: nwse-resize; background: linear-gradient(135deg, transparent 50%, var(--accent) 50%, var(--accent) 60%, transparent 60%); border-radius: 0 0 4px 0; z-index: 10; opacity: 0.5; }
         #battle-log-window.minimized .log-resize-handle { display: none; }
 
+        /* フローティングのログ/DEBUGは RTwP では一度も出さない（兵士カードを覆うため）。
+           body.mission-active は旧ターン制(?rtwp=0)で出撃した時だけ付く。
+           RTwP のログ/デバッグは右ペイン(#rtwp-dock)が受け持つ。 */
+        body:not(.mission-active) #battle-log-window,
+        body:not(.mission-active) #debug-window { display: none !important; }
+
         #debug-window { position: fixed; left: 20px; width: 320px; min-width: 200px; background: rgba(8, 12, 8, 0.85); backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); z-index: 999; padding: 8px 12px; font-size: 11px; color: #888; pointer-events: auto; display: flex; align-items: center; gap: 8px; font-family: 'Share Tech Mono', monospace; }
         #debug-window * { pointer-events: auto; }
         #debug-window label { cursor: pointer; display: flex; align-items: center; gap: 6px; color: #aaa; }
@@ -268,7 +274,7 @@
         /* RTwPではログ/デバッグをPhaserサイドバー幅の中へ収め、戦場を覆わない。 */
         #rtwp-dock {
             position: fixed;
-            top: 8px;
+            bottom: 8px;
             right: 8px;
             width: calc(var(--sidebar-width, 340px) - 16px);
             max-width: calc(100vw - 16px);
@@ -279,13 +285,14 @@
             box-shadow: 0 8px 24px rgba(0,0,0,0.65);
             z-index: 1200;
             display: none;
-            flex-direction: column;
+            /* タブ列を右ペインの最下部へ置く（既定は畳んだ状態＝タブだけが見える） */
+            flex-direction: column-reverse;
             overflow: hidden;
             pointer-events: auto;
         }
         #rtwp-dock.active { display: flex; }
         #rtwp-dock.collapsed .rtwp-dock-body { display: none; }
-        .rtwp-dock-tabs { display: flex; min-height: 34px; background: rgba(15,22,15,0.98); border-bottom: 1px solid var(--border); }
+        .rtwp-dock-tabs { display: flex; min-height: 34px; background: rgba(15,22,15,0.98); border-top: 1px solid var(--border); }
         .rtwp-dock-tabs button { flex: 1; border: 0; border-right: 1px solid rgba(255,255,255,.08); background: transparent; color: #788; font: bold 10px 'Orbitron', sans-serif; letter-spacing: 1px; cursor: pointer; }
         .rtwp-dock-tabs button.active { color: var(--accent); background: rgba(221,136,68,.1); }
         .rtwp-dock-tabs .rtwp-collapse { flex: 0 0 34px; color: #aaa; border-right: 0; }
@@ -569,10 +576,10 @@
     <script src="data/pl_mg_tripod.js"></script>
     <script src="loadout_weight.js"></script>
     <script src="pl_weapon_icon.js"></script>
-    <script src="phaser_sidebar.js?v=rtwp-combat-9"></script>
+    <script src="phaser_sidebar.js?v=rtwp-polish-1"></script>
 <script src="phaser_sound.js?v=rtwp-combat-7"></script>
 <script src="phaser_alpha_light.js?v=rtwp-light-3"></script>
-<script src="phaser_tactical_pause.js?v=rtwp-pause-2"></script>
+<script src="phaser_tactical_pause.js?v=rtwp-polish-1"></script>
 <script src="phaser_vfx.js?v=rtwp-light-3"></script>
     <script src="phaser_terrain_v1_bake.js?v=terrain-v1-6"></script>
     <script src="phaser_terrain.js?v=terrain-v1-6"></script>
@@ -590,8 +597,8 @@
     <script src="battle_cloud.js"></script>
     <script src="battle_cloud_tactics.js"></script>
     <script src="phaser_battle_cloud.js"></script>
-<script src="phaser_bridge.js?v=rtwp-pause-1"></script>
-    <script src="logic_ui.js?v=rtwp-combat-7"></script>
+<script src="phaser_bridge.js?v=rtwp-polish-1"></script>
+    <script src="logic_ui.js?v=rtwp-polish-1"></script>
     <script src="logic_ai.js"></script>
     <script src="logic_map_city.js"></script>
     <!-- PS正本キャンバスのレジストリ(生成物)。RuralV29Map.generate() は同期なので
@@ -599,7 +606,7 @@
     <script src="asset/environment/maps/ps_battlefields.js?v=rtwp-combat-9"></script>
     <script src="logic_map_rural_v29.js?v=rtwp-combat-9"></script>
     <script src="logic_map.js?v=terrain-seam-5"></script>
-    <script src="logic_campaign.js?v=terrain-seam-5"></script>
+    <script src="logic_campaign.js?v=rtwp-polish-1"></script>
     <script src="logic_reaction.js"></script>
     <!-- logic_game.js から切り出した規則。logic_game.js より前に読む -->
     <script src="logic_combat_rules.js"></script>
@@ -611,6 +618,6 @@
     <script src="sim_orders.js"></script>
     <script src="sim_leader.js"></script>
     <script src="sim_battle_adapter.js?v=rtwp-pause-1"></script>
-<script src="logic_battle_rtwp.js?v=rtwp-pause-1"></script>
+<script src="logic_battle_rtwp.js?v=rtwp-polish-1"></script>
 </body>
 </html>

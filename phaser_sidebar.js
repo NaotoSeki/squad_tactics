@@ -259,9 +259,14 @@ window.PhaserSidebar = class PhaserSidebar {
         const hpText = this.scene.add.text(textLeft, y, hpLabel, { fontSize: '11px', color: u.wounded ? '#ffdd33' : TEXT_COLOR, fontFamily: 'sans-serif' });
         this.unitContent.add(hpText);
         y += 22;
-        const apText = this.scene.add.text(textLeft, y, `AP  ${u.ap}/${u.maxAp}`, { fontSize: '11px', color: TEXT_COLOR, fontFamily: 'sans-serif' });
-        this.unitContent.add(apText);
-        y += 36;
+        // AP は旧ターン制の資源。RTwP では消費も回復もしないので出さない。
+        if (window.RtwpBattle && window.RtwpBattle.active) {
+            y += 14;
+        } else {
+            const apText = this.scene.add.text(textLeft, y, `AP  ${u.ap}/${u.maxAp}`, { fontSize: '11px', color: TEXT_COLOR, fontFamily: 'sans-serif' });
+            this.unitContent.add(apText);
+            y += 36;
+        }
 
         y = this.renderSameHexSquadRow(u, left, y, sw);
 
@@ -314,6 +319,12 @@ window.PhaserSidebar = class PhaserSidebar {
     }
 
     updateLiveStats() {
+        // End Turn は旧ターン制の操作。RTwP では押せても意味が無いので伏せる。
+        // （毎フレーム呼ばれる。attach は初回 MainScene.update なので生成時ではここで見る）
+        if (this.endTurnBtnContainer) {
+            const rtwp = !!(window.RtwpBattle && window.RtwpBattle.active);
+            if (this.endTurnBtnContainer.visible === rtwp) this.endTurnBtnContainer.setVisible(!rtwp);
+        }
         if (!this.rtwpAmmoText || !this.currentUnit || !this.currentUnit._rtwpAmmo) return;
         const ammo = this.currentUnit._rtwpAmmo;
         const rounds = Math.max(0, Number(ammo.rounds) || 0);

@@ -417,5 +417,41 @@ function attach(g) {
   delete SB.document;
 }
 
+// --- 15. 非アクティブは PAUSE に入り、復帰しても自動再開しない ----------------
+{
+  const g = makeGameLogic({ players: 2, enemies: 2 });
+  const inst = attach(g);
+  check(inst.paused === false, '開始直後は動いている');
+
+  inst.onWindowActivity('blur');
+  check(inst.paused === true, 'ウィンドウ非アクティブで PAUSE に入る');
+
+  const t0 = inst.sim._tick;
+  inst.update(T.TICK_MS * 100);
+  check(inst.sim._tick === t0, 'PAUSE 中はシムが進まない');
+
+  inst.onWindowActivity('focus');
+  check(inst.paused === true, 'フォーカスが戻っても自動再開しない（Spaceを待つ）');
+  inst.update(T.TICK_MS * 100);
+  check(inst.sim._tick === t0, '復帰フレームでもシムは止まったまま');
+
+  inst.setPaused(false);
+  // 復帰直後の1フレームは溜まった巨大deltaを捨てるため進まない（_skipNextDelta）
+  inst.update(T.TICK_MS * 100);
+  check(inst.sim._tick === t0, '再開した最初のフレームは溜まったdeltaを消化しない');
+  inst.update(T.TICK_MS * 3);
+  check(inst.sim._tick > t0, '次のフレームからシムが進む');
+}
+
+// --- 16. タブ可視のまま document.hidden になった場合も PAUSE ------------------
+{
+  const g = makeGameLogic({ players: 2, enemies: 2 });
+  const inst = attach(g);
+  SB.document = { hidden: true, visibilityState: 'hidden' };
+  inst.onWindowActivity('visibilitychange');
+  check(inst.paused === true, 'visibilitychange(hidden) でも PAUSE に入る');
+  delete SB.document;
+}
+
 console.log('\n' + passCount + ' passed, ' + failCount + ' failed');
 if (failCount) { failures.forEach((f) => console.log('  - ' + f)); process.exit(1); }
