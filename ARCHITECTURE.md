@@ -71,7 +71,8 @@ index.html ──> logic_campaign.js  (キャンペーン/ラン構造・ユニ�
 |---|---:|---|
 | `index.html` | 566 | 本編エントリ。全スクリプトの読み込み順を持つ（**順序に依存**） |
 | `data.js` | 601 | 武器 `WPNS` / 地形 `TERRAIN` / 盤面 `MAP_W,MAP_H` / `BATTLE_SCALE` / **`SIM_TUNING`（RTwPの全数値）** |
-| `logic_math.js` | 62 | 純粋な座標・距離・命中率。`hexDist` はここ |
+| `logic_math.js` | 62 | 純粋な座標・距離・**命中率** (`computeHitChance`)。`hexDist` もここ |
+| `logic_combat_rules.js` | 94 | logic_game.js から切り出した弾薬・移動の規則。headless テスト可 |
 | `data_buildings.js` | 28 | Panzer Strike 抽出建物のカタログ |
 | `mission_config.js` / `mission_loader.js` | 30 | ミッション埋め込みの既定値と読み込み |
 | `tactics_morph.js` | 174 | 知略ダイヤル（classic/chaos プリセット間の lerp） |
@@ -200,8 +201,12 @@ UI は `gameLogic` の**インスタンスメソッドを包む**方式（クラ
 「呼び出しを移す」→「旧を消す」の3段で、各段でテストを通す。
 **着手前に作業ツリーの未コミット分を整理すること**（衝突事故の実績あり）。
 
-1. `logic_game.js` から**純粋計算**（命中率・射線・移動コスト）を `logic_combat_math.js` へ抽出。
-   `logic_math.js` の隣に置き、headless テスト可能にするのが目的
+1. ~~`logic_game.js` から純粋計算を抽出~~ → **第1段 完了（2026-08-01）**。
+   `logic_combat_rules.js`（弾倉充填率・弾薬余剰消費・移動予算）。
+   命中率は既に `logic_math.js` にあった（着手前に実測して判明）。
+   委譲後と移設元を91ケースで突合し不一致0件。`tests/combat_rules.test.js` 27件。
+   **次に測るべき塊**: `consumeAmmo`(87行/this参照3) — 弾種ごとの消費規則。
+   `logic_game.js` のメソッド別行数は `python scripts/profile_methods.py` で出せる
 2. `phaser_bridge.js` から**入力**を `phaser_input.js` へ分離（RTwP/ターン制の分岐が入り組む）
 3. マップ3系統の**選択ロジックを1箇所へ**（現状は各所で `CityMap.active` 等を個別に見ている）
 4. `logic_game.js` のターン処理は **RTwP が §7.4 を通ってから**退役（NORTH_STAR §7 の順序）

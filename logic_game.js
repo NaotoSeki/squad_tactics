@@ -347,6 +347,13 @@ window.BattleLogic = class BattleLogic {
 
   /** 弾倉残量比率（0〜1） */
   getMagazineRatio(u, w) {
+    // 規則本体は logic_combat_rules.js へ切り出した（headless テスト可能にするため）。
+    // 未ロード時は下のフォールバック（移設元と同一のコード）へ落ちる。
+    if (typeof CombatRules !== 'undefined') {
+      return CombatRules.magazineRatio(u, w, {
+        findMortarShellTotal: (w && w.code === 'm2_mortar') ? this._ammoCtx().findMortarShellTotal : undefined,
+      });
+    }
     if (!w) return 0;
     if (w.code === 'm2_mortar') {
       const fn = this._ammoCtx().findMortarShellTotal;
@@ -952,6 +959,7 @@ window.BattleLogic = class BattleLogic {
    * ターン制/RT問わず適用（getRtTacticsCfg() のRT限定ゲートを介さない）。
    */
   _extraAmmoBurnRoll() {
+    if (typeof CombatRules !== 'undefined') return CombatRules.extraAmmoBurnRoll();
     const mult = (typeof BATTLE_SCALE !== 'undefined' && BATTLE_SCALE.ammoBurnMult) || 1;
     const extra = mult - 1;
     if (extra <= 0) return 0;
@@ -1659,6 +1667,7 @@ window.BattleLogic = class BattleLogic {
   }
 
   getMovementBudget(u, apOverride) {
+    if (typeof CombatRules !== 'undefined') return CombatRules.movementBudget(u, apOverride);
     if (typeof LoadoutWeight !== 'undefined') {
       return LoadoutWeight.getMovementBudget(u, apOverride != null ? apOverride : u.ap);
     }
