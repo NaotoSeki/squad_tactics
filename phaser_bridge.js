@@ -127,6 +127,17 @@ const Renderer = {
         this._boot(canvasElement);
     },
 
+    /**
+     * 高DPI対応の受け皿。**現状は常に 1（無効）。**
+     *
+     * sim_battle.html では実効（dpr=1.5 で画素数2.25倍・61fps維持）だが、本編は
+     * 起動時に #game-view の clientWidth が 0 で、Renderer.resize() を呼んでも
+     * キャンバスが追従しない既存の挙動がある（この変更の前から同じ）。正しい寸法に
+     * 到達できないため実機で検証できず、未検証のまま本編の描画解像度を変えるのは
+     * 避けている。キャンバスのリサイズが直った後に 1 以外を入れれば効く。
+     */
+    RENDER_DPR: 1,
+
     _boot(canvasElement) {
         const config = { type: Phaser.AUTO, parent: 'game-view', width: document.getElementById('game-view').clientWidth, height: document.getElementById('game-view').clientHeight, backgroundColor: '#2a2824', pixelArt: false, render: { mipmapFilter: 'LINEAR_MIPMAP_LINEAR' }, scene: [MainScene, UIScene], fps: { target: 30 }, physics: { default: 'arcade', arcade: { debug: false } }, input: { activePointers: 1 } };
         this.game = new Phaser.Game(config); 
@@ -915,7 +926,28 @@ class MainScene extends Phaser.Scene {
         this.unitView = new UnitViewClass(this, this.unitGroup, this.hpGroup);
         // 戦雲一時廃止中(window.BATTLE_CLOUD_ENABLED=false)はレンダラ自体を作らない。
         this.battleCloudRenderer = window.BATTLE_CLOUD_ENABLED ? new BattleCloudRenderer(this) : null;
-        this.input.on('wheel', (pointer, gameObjects, deltaX, deltaY, deltaZ) => { let newZoom = this.cameras.main.zoom; if (deltaY > 0) newZoom -= 0.5; else if (deltaY < 0) newZoom += 0.5; newZoom = Phaser.Math.Clamp(newZoom, 0.25, 4.0); this.tweens.add({ targets: this.cameras.main, zoom: newZoom, duration: 150, ease: 'Cubic.out' }); });
+        // カーソル位置を固定したままのズーム。"グリグリ"の手触りはここで決まる。
+        //
+        // 旧実装は ±0.5 の固定ステップ＋tween だったので、拡大するほど1ステップが
+        // 相対的に小さくなり、しかも画面中心へ寄っていくのでカーソルの先が逃げた。
+        // 乗算ステップにして、ズーム前後で「カーソルの下にあるワールド座標」を一致させる。
+        //
+        // Phaser のカメラは**ビューの中心**を軸に拡大するので、scrollX を差分で補正すると
+        // 原点の扱いを取り違える（sim_battle.html で実測: 1ステップあたり144pxズレた）。
+        // 画面中心からカーソルまでのオフセットがワールド換算で 1/zoom に比例することを使い、
+        // 望みの中心を直接 centerOn する。
+        this.input.on('wheel', (pointer, gameObjects, deltaX, deltaY) => {
+            const cam = this.cameras.main;
+            const dpr = (typeof Renderer !== 'undefined' && Renderer.RENDER_DPR) || 1;
+            const factor = deltaY > 0 ? 1 / 1.12 : 1.12;
+            const next = Phaser.Math.Clamp(cam.zoom * factor, 0.25 * dpr, 4 * dpr);
+            if (next === cam.zoom) return;
+            const wp = cam.getWorldPoint(pointer.x, pointer.y);
+            const dx = pointer.x - cam.width / 2;
+            const dy = pointer.y - cam.height / 2;
+            cam.setZoom(next);
+            cam.centerOn(wp.x - dx / next, wp.y - dy / next);
+        });
         
         this.getUnitAtScreenPosition = (screenX, screenY) => {
             if (!window.gameLogic || !this.unitView) return null;
@@ -1127,7 +1159,10 @@ class MainScene extends Phaser.Scene {
         const mapH = maxY - minY;
         camera.centerOn((minX + maxX) / 2, (minY + maxY) / 2);
         const zoomFit = Math.min(camera.width / mapW, camera.height / mapH) * 0.92;
-        camera.zoom = Phaser.Math.Clamp(zoomFit, 0.25, 4);
+        // zoomFit は camera.width から出るので DPR に自動追従するが、クランプの上下限は
+        // 実寸基準の値なので DPR 倍しないと高DPI環境だけ range が狭まる。
+        const dpr = (typeof Renderer !== 'undefined' && Renderer.RENDER_DPR) || 1;
+        camera.zoom = Phaser.Math.Clamp(zoomFit, 0.25 * dpr, 4 * dpr);
     }
     createMap() {
         if(!window.gameLogic || !window.gameLogic.map) return;
