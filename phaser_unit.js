@@ -12,6 +12,9 @@ class UnitView {
     defineAnimations() {
         const anims = this.scene.anims;
         if (anims.exists('anim_crawl_0')) return;
+        // 19モーションが揃う起動では soldier_crawl を読まない（フォールバック専用の
+        // 8.3MBシート）。無い時にアニメを組むと空フレームで例外になるので飛ばす。
+        if (!this.scene.textures.exists('soldier_crawl')) return;
         // soldier_crawl: 8方向×30フレーム。移動中は30fpsで蠢く、待機は止める
         for (let d = 0; d < 8; d++) {
             const frames = [];
@@ -84,6 +87,15 @@ class UnitView {
     buildInfantrySprite(u) {
         // SoldierUnitView(v2 manifest)未使用時のフォールバックのみ。
         // SOLDIER_VIEW_H=20px(2026-07-13実測改訂)に合わせて比例縮小。
+        // 19モーションが揃っている起動では soldier_crawl を読み込まない（8.3MB削減）
+        // ので、ここへ来て texture が無い＝想定外。緑箱を出すより素の板を出す。
+        if (!this.scene.textures.exists('soldier_crawl')) {
+            console.warn('soldier_crawl 未ロードのままフォールバック描画が呼ばれた');
+            const shadow = this.scene.add.rectangle(5, -9, 10, 4, 0x000000, 0.3);
+            const sprite = this.scene.add.rectangle(0, -10, 8, 16,
+                u.team === 'player' ? 0xeeeeff : 0x9955ff);
+            return { shadow, sprite };
+        }
         const shadow = this.scene.add.sprite(5, -9, 'soldier_crawl', 0);
         shadow.setTint(0x000000);
         shadow.setAlpha(0.3);

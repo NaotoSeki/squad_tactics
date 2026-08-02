@@ -17,7 +17,30 @@
  *   base = Renderer.hexToPx(4, 12) = ゲーム座標(4,12)へ対応
  */
 window.TerrainRenderRuralV29 = {
+  /**
+   * 地形の非同期ロードが片付いたか。
+   *
+   * 地面・立体物は「読めたものから描く」連鎖ロードなので、待たずに戦闘を始めると
+   * 地面だけの盤面で兵が撃ち始め、あとから木や建物が湧いて見える。戦闘開始側
+   * (phaser_bridge.js の RTwP attach) がこれを見て待つ。
+   */
+  _pending: 0,
+  _started: false,
+  isReady() { return this._started && this._pending === 0; },
+
+  /** ロード1件を「待つべき仕事」として数え、完了時に done を呼ぶ */
+  _await(scene, done) {
+    this._pending++;
+    const self = this;
+    scene.load.once('complete', function () {
+      try { done(); } finally { self._pending = Math.max(0, self._pending - 1); }
+    });
+    scene.load.start();
+  },
+
   buildMap(scene, hexGroup, map) {
+    this._started = true;
+    this._pending = 0;
     // RuralV29Map から選択されたバリアント情報を取得
     if (!window.RuralV29Map || !window.RuralV29Map.lastVariant) {
       console.warn('RuralV29Map.lastVariant not set, skipping terrain render');
@@ -68,8 +91,7 @@ window.TerrainRenderRuralV29 = {
         this._drawImage(scene, hexGroup, topLeftX, topLeftY, sx, sy, textureKey);
       };
       scene.load.image(textureKey, textureFile);
-      scene.load.once('complete', loadAndDraw);
-      scene.load.start();
+      this._await(scene, loadAndDraw);
     } else {
       // 既にロード済み
       this._drawImage(scene, hexGroup, topLeftX, topLeftY, sx, sy, textureKey);
@@ -116,14 +138,13 @@ window.TerrainRenderRuralV29 = {
 
     if (!scene.textures.exists(textureKey)) {
       scene.load.image(textureKey, textureFile);
-      scene.load.once('complete', () => {
+      this._await(scene, () => {
         if (!scene.textures.exists(textureKey)) {
           console.warn(`failed to load texture '${textureKey}' from ${textureFile}`);
           return;
         }
         this._drawImage(scene, hexGroup, topLeftX, topLeftY, backgroundScale, backgroundScale, textureKey);
       });
-      scene.load.start();
     } else {
       this._drawImage(scene, hexGroup, topLeftX, topLeftY, backgroundScale, backgroundScale, textureKey);
     }
@@ -157,18 +178,16 @@ window.TerrainRenderRuralV29 = {
         const canonicalBase = L.CANONICAL_BASE_PATH || 'asset/environment/ps_objects/';
         scene.load.image(s.key, s.path || (canonicalBase + s.file));
       });
-      scene.load.once('complete', () => {
+      this._await(scene, () => {
         L.build(scene, ledger, this._ledgerProjection(ledger) || projection);
       });
-      scene.load.start();
     };
 
     if (scene.cache.json.exists(jsonKey)) {
       spawn();
     } else {
       scene.load.json(jsonKey, `asset/environment/maps/${name}_objects.json`);
-      scene.load.once('complete', spawn);
-      scene.load.start();
+      this._await(scene, spawn);
     }
   },
 
@@ -230,10 +249,17 @@ window.TerrainRenderRuralV29 = {
     // if/elseパターンを2系統に拡張。二重描画を避けるため drawn フラグで一度だけ実行)。
     let pending = 0;
     let drawn = false;
+    // kitモードは2枚の完了を自前で数えるので、「待つべき仕事」は1件だけ立てて
+    // 描画したところで降ろす（isReady() が2枚揃う前に true にならないように）。
+    let waitHeld = false;
     const tryDraw = () => {
       if (drawn) return;
       drawn = true;
       this._drawKitImages(scene, hexGroup, topLeftX, topLeftY, sx, sy, northKey, southKey, seamPx);
+      if (waitHeld) {
+        waitHeld = false;
+        this._pending = Math.max(0, this._pending - 1);
+      }
     };
     const onOneLoaded = () => {
       pending--;
@@ -262,6 +288,8 @@ window.TerrainRenderRuralV29 = {
     }
 
     if (pending > 0) {
+      waitHeld = true;
+      this._pending++;
       scene.load.start();
     } else {
       // 両方とも既にロード済み

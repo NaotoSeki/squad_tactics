@@ -117,8 +117,21 @@
       if (SKILL_TRAITS[skill]) traits.push(SKILL_TRAITS[skill]);
     });
     const hasLeader = this.sim.soldiers().some((soldier) => soldier.team === team && soldier.isLeader && soldier.hp > 0);
-    const mags = (T.DEFAULT_MAGS && T.DEFAULT_MAGS[simWeapon.class] != null)
+
+    // 予備弾倉は「実際に背負っている弾」から数える。DEFAULT_MAGS を使うと、
+    // 右ペインに見えている予備弾アイテムとシムの弾数が別勘定になり、
+    // 撃ってもリロードしても背嚢が減らない（オーナー指摘 2026-08-02）。
+    // 携行弾を持たないユニット（敵の既定装備など）だけ従来の既定値へ落とす。
+    const found = this._collectSpareAmmo(unit, weapon);
+    const magCap = Number(simWeapon.magCap) || 0;
+    const defaultMags = (T.DEFAULT_MAGS && T.DEFAULT_MAGS[simWeapon.class] != null)
       ? T.DEFAULT_MAGS[simWeapon.class] : 4;
+    const spares = (found.length && magCap > 0)
+      ? this._splitIntoMagazines(unit, found, magCap)
+      : [];
+    const mags = spares.length ? spares.length : (found.length ? 0 : defaultMags);
+    unit._rtwpSpareAmmo = spares;
+
     this.sim.addSoldier({
       id: id, team: team, q: unit.q, r: unit.r,
       weapon: simWeapon, ammo: { mags: mags }, skill: 1.0,
@@ -130,6 +143,9 @@
     if (!soldier) return null;
     const maxHp = Number(unit.maxHp) || Number(unit.hp) || 100;
     unit._rtwpHpScale = maxHp / Math.max(1, soldier.hp || 100);
+    // 弾薬の書き戻し先。sim は code から作った simWeapon で撃つので、
+    // 同じ code を持つ手持ちスロットが「その銃」の実体になる。
+    unit._rtwpWeaponCode = code;
     delete unit._rtwpSkipped;
     this.unitById.set(id, unit);
     return soldier;
@@ -177,10 +193,109 @@
         magazines: s.magsLeft,
         capacity: s.weapon ? s.weapon.magCap : 0,
       };
+      // 弾薬もq/r/hpと同じ接ぎ木で書き戻す。旧ターン制の item.current は RTwP では
+      // 誰も減らさないため、既存の弾ゲージが常に満タンのままだった（正本は sim）。
+      this._writeBackAmmo(unit, s);
 
       if (s.state === 'pinned' || s.state === 'suppressed') unit.stance = 'prone';
       else if (s.state === 'move') unit.stance = 'stand';
     }
+  };
+
+  /**
+   * sim の実弾倉を、本編が持つ武器アイテムへ書き戻す。
+   *
+   * 既存の弾ゲージ（LOADOUTスロットの弾ピップ）は `item.current` を読む。RTwP の
+   * 発射は sim 側で `magRemaining` を減らすだけなので、書き戻さないとゲージが
+   * 一発も減らない。予備弾倉は本数×装弾数を `reserve` へ入れて総弾数を合わせる。
+   */
+  RtwpInstance.prototype._writeBackAmmo = function (unit, s) {
+    const code = unit._rtwpWeaponCode;
+    if (!code || !unit.hands || !s.weapon) return;
+    const magCap = Number(s.weapon.magCap) || 0;
+
+    for (let i = 0; i < unit.hands.length; i++) {
+      const item = unit.hands[i];
+      if (!item || item.code !== code) continue;
+      const cap = Number(item.cap) || magCap;
+      item.current = Math.max(0, Math.min(cap, Number(s.magRemaining) || 0));
+      // ベルト給弾(MG)は元から reserve を持つ。持たない銃にも予備弾数を載せると
+      // 旧ターン制の再装填判定が誤作動しうるので、既にある時だけ更新する。
+      if (item.reserve !== undefined) {
+        item.reserve = Math.max(0, (Number(s.magsLeft) || 0) * magCap);
+      }
+      break;
+    }
+
+    // 予備弾倉は**アイテムとして**消える。装填のたびに背嚢から1個ずつ取り除く
+    // ので、右ペインを見れば残り何本かが一目で分かる（残量バーではなく物の数）。
+    const spares = unit._rtwpSpareAmmo;
+    if (!spares || !spares.length) return;
+    const want = Math.max(0, Number(s.magsLeft) || 0);
+    while (spares.length > want) {
+      const gone = spares.pop();
+      this._removeItem(unit, gone);
+    }
+  };
+
+  /** 背嚢/LOADOUT から実体を取り除く（同じ参照だけを消す） */
+  RtwpInstance.prototype._removeItem = function (unit, item) {
+    if (!item) return;
+    if (unit.bag) {
+      const i = unit.bag.indexOf(item);
+      if (i >= 0) { unit.bag.splice(i, 1); return; }
+    }
+    if (unit.hands) {
+      for (let i = 1; i < unit.hands.length; i++) {
+        if (unit.hands[i] === item) { unit.hands[i] = null; return; }
+      }
+    }
+  };
+
+  /**
+   * 予備弾のプール（例: 250発の弾帯1個）を、弾倉1本ぶんずつのアイテムへ割り直す。
+   *
+   * こうしないと「弾倉を1本使った」ことが背嚢の見た目に出ない — 250/250 が
+   * 200/250 になっても、アイテムの個数が変わらないので減った実感が無い。
+   * 1個=1弾倉にしておけば、装填のたびに背嚢から1個消える。
+   * 端数（弾倉に満たない残り）は装填できないので捨てる。
+   */
+  RtwpInstance.prototype._splitIntoMagazines = function (unit, items, magCap) {
+    const mags = [];
+    items.forEach((item) => {
+      const rounds = Number(item.current) || 0;
+      const n = Math.floor(rounds / magCap);
+      this._removeItem(unit, item);
+      for (let i = 0; i < n; i++) {
+        const mag = Object.assign({}, item, {
+          current: magCap, cap: magCap, id: Math.random(),
+        });
+        mags.push(mag);
+        if (unit.bag) unit.bag.push(mag);
+      }
+    });
+    return mags;
+  };
+
+  /**
+   * その銃に装填できる予備弾アイテムを LOADOUT(hands[1-2]) → 背嚢 の順に集める。
+   * 適合判定は旧ターン制の再装填と同じ `isSpareAmmoCompatible` を使う（別基準を
+   * 作ると「手動リロードでは装填できるのにRTwPでは数えない弾」が生まれる）。
+   */
+  RtwpInstance.prototype._collectSpareAmmo = function (unit, weapon) {
+    const out = [];
+    const fits = function (item) {
+      if (!item || item.type !== 'ammo') return false;
+      if (typeof window.isSpareAmmoCompatible === 'function') {
+        try { return !!window.isSpareAmmoCompatible(weapon, item); } catch (e) { /* 落ちない */ }
+      }
+      return item.ammoFor === weapon.code;
+    };
+    for (let i = 1; i < 3; i++) {
+      if (unit.hands && fits(unit.hands[i])) out.push(unit.hands[i]);
+    }
+    (unit.bag || []).forEach(function (item) { if (fits(item)) out.push(item); });
+    return out;
   };
 
   /** 分隊長AI（三現主義: 現場の下士官が采配する）。命令は CommsOrders 経由で遅延配達。 */
@@ -729,38 +844,11 @@
       });
 
       const inst = new RtwpInstance(gameLogic, sim, map, rng);
-      const hasLeader = { A: false, B: false };
 
-      (gameLogic.units || []).forEach((unit) => {
-        if (!unit || unit.hp <= 0) return;
-        const team = (unit.team === 'player') ? 'A' : 'B';
-        let w = null;
-        try { w = gameLogic.getVirtualWeapon(unit); } catch (e) { w = null; }
-        const code = w && w.code;
-        if (!code || !D.WPNS[code]) { unit._rtwpSkipped = true; return; }
-
-        let sw = null;
-        try { sw = D.toSimWeapon(code, D.WPNS[code], T); } catch (e) { sw = null; }
-        if (!sw) { unit._rtwpSkipped = true; return; }
-
-        const traits = [];
-        (unit.skills || []).forEach((sk) => { if (SKILL_TRAITS[sk]) traits.push(SKILL_TRAITS[sk]); });
-
-        const mags = (T.DEFAULT_MAGS && T.DEFAULT_MAGS[sw.class] != null) ? T.DEFAULT_MAGS[sw.class] : 4;
-        sim.addSoldier({
-          id: String(unit.id), team: team, q: unit.q, r: unit.r,
-          weapon: sw, ammo: { mags: mags }, skill: 1.0,
-          isLeader: !hasLeader[team], traits: traits,
-          facing: (team === 'A') ? { q: 1, r: 0 } : { q: -1, r: 0 },
-        });
-        hasLeader[team] = true;
-
-        // sim の hp(0..100) と本編の maxHp の縮尺を橋渡しする比率
-        const s0 = sim.getSoldier(String(unit.id));
-        const simHp0 = (s0 && s0.hp > 0) ? s0.hp : 100;
-        unit._rtwpHpScale = unit.maxHp / simHp0;
-        inst.unitById.set(String(unit.id), unit);
-      });
+      // 初期配置も戦闘中の増援(registerUnit)と同じ経路で登録する。以前はここに
+      // 同じ処理が複製されていて、片方だけ直すと初期配置兵にだけ効かない不具合に
+      // なった（2026-08-02: 弾薬の書き戻し先 `_rtwpWeaponCode` で実際に踏んだ）。
+      (gameLogic.units || []).forEach((unit) => { inst.registerUnit(unit); });
 
       this.instance = inst;
       this.active = true;

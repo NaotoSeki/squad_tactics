@@ -602,6 +602,9 @@ class SoldierUnitView extends UnitView {
     /** scene の DOWN イベントから: dying を一回再生し、最終フレームで死体として残す */
     spawnCorpse(simSoldier) {
         if (!SoldierUnitView.manifestReady()) return;
+        if (!this._corpseSpawned) this._corpseSpawned = new Set();
+        if (this._corpseSpawned.has(simSoldier.id)) return;
+        this._corpseSpawned.add(simSoldier.id);
         const man = window.SOLDIER_MANIFEST;
         const v = this.visuals.get(simSoldier.id); // dispatch は視覚破棄より先に走る
         const p = (v && v.container)
@@ -627,6 +630,8 @@ class SoldierUnitView extends UnitView {
     _postureLevelOf(s, tick) {
         const T = (typeof SIM_TUNING !== 'undefined') ? SIM_TUNING : {};
         let lv = 0;
+        // 姿勢フラグ(sim の prone)が正本。行動不能は倒れているので必ず伏せ姿勢。
+        if (s.prone === true || s.state === 'incap') return 2;
         if (s.state === 'pinned' || s.state === 'down' || s.suppression >= (T.PINNED_AT || 999)) lv = 2;
         else if (s.state === 'suppressed' || s.suppression >= (T.SUPPRESSED_AT || 999)) lv = 1;
         const uf = this._underFire.get(s.id);
@@ -640,10 +645,16 @@ class SoldierUnitView extends UnitView {
 
     /** UnitView フック: 死亡時（hp<=0 で視覚破棄される直前）— ターン制本編の死体化 */
     onUnitDead(u, visual) {
-        if (u && u._sim) return; // RTwP(sim_battle)は DOWN イベント→spawnCorpse が担当（二重生成防止）
+        // 以前は `u._sim` があれば「DOWNイベント側が死体を作る」前提で抜けていたが、
+        // その担当は sim_battle.html の sim_scene にしか無く、本編(RTwP)では
+        // 誰も作らないまま視覚だけ破棄されていた＝死体が消えた。経路で分けるのを
+        // やめ、id で二重生成だけ防ぐ（どちらの経路が先に来ても1体だけ残る）。
         if (!SoldierUnitView.manifestReady() || !visual || !visual.container) return;
         if (u.def && u.def.isTank) return;
         if (visual.sprite && visual.sprite.texture.key.indexOf('sold_') !== 0) return;
+        if (!this._corpseSpawned) this._corpseSpawned = new Set();
+        if (this._corpseSpawned.has(u.id)) return;
+        this._corpseSpawned.add(u.id);
         const dir = this._faceDir.get(u.id) ?? visual.dispDir ?? visual.soldierDir ?? 0;
         const posture = POSTURE_NAMES[visual.postureLv || 0] || 'stand';
         this._spawnCorpseAt(visual.container.x, visual.container.y, dir, posture);

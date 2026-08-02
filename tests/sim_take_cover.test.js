@@ -149,7 +149,10 @@ const tolerance = SIM_TUNING.ORDERED_COVER_RISK_TOLERANCE;
   m.hasLos = () => true;
   const enemies = [mg('b1', 5, 0)];
   const s = makeSoldier({ suppression: seekAt });
-  check(reflex(s, m, enemies) === null, '前提: 自衛の反射はこの射線を渡らない');
+  // 渡らない結論は2通り — 動かない(null)か、その場で伏せる(GO_PRONE)。
+  const reflexOut = reflex(s, m, enemies);
+  check(reflexOut === null || reflexOut.type === 'GO_PRONE',
+    '前提: 自衛の反射はこの射線を渡らない');
   const out = order(s, m, enemies);
   check(out && out.type === 'MOVE_TO' && out.payload.path.length === 2,
     '命令されれば同じ射線を渡って遮蔽へ向かう');

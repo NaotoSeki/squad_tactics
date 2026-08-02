@@ -505,9 +505,10 @@ class UIManager {
             mainSlotsHtml += makeSlot(u.hands[i], 'main', i);
         }
         
-        let subSlotsHtml = ""; 
-        for (let i = 0; i < 4; i++) { 
-            subSlotsHtml += makeSlot(u.bag[i], 'bag', i); 
+        let subSlotsHtml = "";
+        // 背嚢は8枠（Phaser版サイドバーの BAG_SLOTS と揃える）
+        for (let i = 0; i < 8; i++) {
+            subSlotsHtml += makeSlot(u.bag[i], 'bag', i);
         }
         
         let reloadBtn = "";

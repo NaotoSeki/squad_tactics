@@ -819,12 +819,18 @@ class MainScene extends Phaser.Scene {
         if(window.EnvSystem) window.EnvSystem.preload(this);
         if (window.Sfx && window.Sfx.preload) { window.Sfx.preload(this); }
         this.load.spritesheet('us_soldier', 'asset/us-soldier-back-sheet.png', { frameWidth: 128, frameHeight: 128 });
-        // 匍匐前進: Blender 出力 2048×7680（8列×30行・256pxセル）をそのままスプライトシートで使用
-        this.load.spritesheet('soldier_crawl', 'asset/soldier_crawl.png', { frameWidth: 256, frameHeight: 256, endFrame: 239 });
         // 19モーション実スプライト（asset/sprites/soldier, manifest 駆動）。manifest は
         // phaser_soldier_view.js がスクリプト読込時に先行フェッチ済み。未解決なら
         // 旧 soldier_crawl のまま劣化動作（SoldierUnitView 側でフォールバック）。
         const solMan = window.SOLDIER_MANIFEST;
+        // 匍匐前進シート(8.3MB)は**そのフォールバック専用**。19モーションが揃うなら
+        // 一度も描画に使われないので落とさない。起動時の転送量が約3割減る。
+        // 判定は SoldierUnitView.manifestReady() と同じ条件にしてある。
+        const solReady = !!(solMan && solMan.actions && solMan.version >= 2 && solMan.charH > 0);
+        if (!solReady) {
+            // Blender 出力 2048×7680（8列×30行・256pxセル）をそのままシートで使う
+            this.load.spritesheet('soldier_crawl', 'asset/soldier_crawl.png', { frameWidth: 256, frameHeight: 256, endFrame: 239 });
+        }
         if (solMan && solMan.actions && solMan.version >= 2) {
             for (const name of (window.SOLDIER_LOAD_ACTIONS || [])) {
                 const meta = solMan.actions[name];
@@ -1301,6 +1307,32 @@ class MainScene extends Phaser.Scene {
             } 
         }
     }
+    /**
+     * 盤面が「揃った」か。地面・立体物は読めたものから描く連鎖ロードなので、
+     * 待たずに始めると地面だけの盤面で撃ち合いが始まり、あとから木や建物が
+     * 湧いて見える。地形レンダラが別方式なら従来どおり待たない。
+     */
+    battlefieldReady() {
+        const t = window.TerrainRenderRuralV29;
+        if (!t || typeof t.isReady !== 'function' || !t._started) return true;
+        if (!t.isReady()) return false;
+        // 立体物スプライトの追加ロードが走っている間も「揃っていない」
+        return !(this.load && this.load.isLoading && this.load.isLoading());
+    }
+
+    /** 揃うまで戦場を伏せておく幕。準備が終わったら update 側で消える。 */
+    updateBattlefieldGate() {
+        if (this.battlefieldGate || this.battlefieldReady()) return;
+        const w = this.scale.width, h = this.scale.height;
+        const veil = this.add.rectangle(0, 0, w, h, 0x05070a, 0.92).setOrigin(0, 0);
+        const label = this.add.text(w / 2, h / 2, '戦場を準備中…', {
+            fontFamily: 'Share Tech Mono, monospace', fontSize: '18px', color: '#d8e9e5',
+        }).setOrigin(0.5, 0.5);
+        const gate = this.add.container(0, 0, [veil, label]);
+        gate.setScrollFactor(0).setDepth(100000);
+        this.battlefieldGate = gate;
+    }
+
     update(time, delta) {
         // ★修正: gameLogicが準備できていない、またはマップデータが無い場合は何もしない
         if (!window.gameLogic || !window.gameLogic.map) return;
@@ -1319,6 +1351,7 @@ class MainScene extends Phaser.Scene {
         }
         
         if (window.gameLogic.map.length > 0 && !this.mapGenerated) { this.createMap(); this.mapGenerated = true; }
+        this.updateBattlefieldGate();
 
         // RTwP（NORTH_STAR §7 Strangler Fig）。**既定で有効**。
         // 旧ターン制へ戻すには URL へ ?rtwp=0 を付ける（logic_game.js は無改造で
@@ -1328,13 +1361,14 @@ class MainScene extends Phaser.Scene {
         if (window.RtwpBattle && window.RtwpBattle.enabled
             && !/(?:\?|&)rtwp=0(?:&|$)/.test(window.location.search)) {
             if (!window.RtwpBattle.instance && window.gameLogic.state === 'PLAY'
-                && window.gameLogic.map.length > 0) {
+                && window.gameLogic.map.length > 0 && this.battlefieldReady()) {
                 try { window.RtwpBattle.attach(window.gameLogic); } catch (e) { console.error('RTwP attach', e); }
             }
             const rt = window.RtwpBattle.instance;
             if (rt) { try { rt.update(delta); } catch (e) { console.error('RTwP update', e); } }
         }
 
+        if (this.battlefieldGate) this.battlefieldGate.setVisible(!this.battlefieldReady());
         if(this.unitView) this.unitView.update(time, delta);
         if (this.tacticalMinimap) this.tacticalMinimap.update();
         if (this.tacticalPause) {

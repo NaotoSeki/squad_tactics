@@ -285,6 +285,14 @@ function preserve(soldier, map, others) {
   );
 }
 
+/**
+ * 「その射線を渡らない」の判定。退避しない結論は2通りある — 動かない(null)か、
+ * その場で伏せる(GO_PRONE)か。どちらも「渡らない」なので同じ意味として扱う。
+ */
+function staysPut(out) {
+  return out === null || (!!out && out.type === 'GO_PRONE');
+}
+
 function sameHex(a, q, r) {
   return a && a.q === q && a.r === r;
 }
@@ -366,7 +374,7 @@ const testSeekGain = SIM_TUNING.COVER_SEEK_MIN_GAIN != null ? SIM_TUNING.COVER_S
   const risk = 3 * mgWeight();   // 中継地(1,0)を3挺が見ている
   check(dest - exposureCost() * risk < testSeekGain, '前提: 露出コストで価値が要求を割る');
   const out = preserve(makeSoldier({ suppression: testCoverSeekAt }), m, enemies);
-  check(out === null, '見られすぎた開豁地は渡らず伏せたままになる');
+  check(staysPut(out), '見られすぎた開豁地は渡らず、その場で伏せる');
 }
 
 // --- 15. 経路が全マス死角なら、退避ノートに「死角」が現れる ---
@@ -393,7 +401,7 @@ const testSeekGain = SIM_TUNING.COVER_SEEK_MIN_GAIN != null ? SIM_TUNING.COVER_S
   const whenPinned = preserve(
     makeSoldier({ suppression: testPinnedAt }), m, [mg('b1', 3, 0)]);
   check(normal && normal.type === 'MOVE_TO', '前提: PINNED未満なら1マス先の遮蔽へ退避する');
-  check(whenPinned === null, 'PINNED では見られている隣のマスへは這わない');
+  check(staysPut(whenPinned), 'PINNED では見られている隣のマスへは這わない');
 }
 
 // --- 17. hasLos 未実装のマップでは露出評価を諦め、従来どおり退避する ---
@@ -419,7 +427,7 @@ const testSeekGain = SIM_TUNING.COVER_SEEK_MIN_GAIN != null ? SIM_TUNING.COVER_S
   const s = makeSoldier({ suppression: testCoverSeekAt });
   const vsEngaging = preserve(s, m, [mg('b1', 5, 0, 'engage')]);
   const vsPinned = preserve(s, m, [mg('b1', 5, 0, 'pinned')]);
-  check(vsEngaging === null, '前提: 撃ってくるMGの射界は渡らない');
+  check(staysPut(vsEngaging), '前提: 撃ってくるMGの射界は渡らない');
   check(vsPinned && vsPinned.type === 'MOVE_TO',
     '制圧されたMGの射界なら渡る（脅威が PHIT_SHOOTER_SUPPRESSED_PINNED 倍に減る）');
 }

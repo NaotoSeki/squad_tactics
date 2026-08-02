@@ -201,7 +201,7 @@ const DefaultPolicy = {
 // SimCore
 // ---------------------------------------------------------------------------
 
-const STATES = ['idle', 'move', 'engage', 'suppressed', 'pinned', 'reload', 'switch', 'assault', 'rout'];
+const STATES = ['idle', 'move', 'engage', 'suppressed', 'pinned', 'reload', 'switch', 'assault', 'rout', 'incap'];
 
 /**
  * @param {Object} opts - { map, tuning, rng, policy, orders }
@@ -263,6 +263,8 @@ SimCore.prototype.addSoldier = function (spec) {
     switchT: 0,
     engageTargetId: null,
     engageT: 0,
+    // 姿勢。state とは独立したフラグなので、伏せたまま engage できる
+    prone: false,
     quietT: 0, // ticks since last shot/hit (drives SUPPRESS_DECAY)
     routCheckT: 0,
     lastMoveHexOpen: false,
@@ -305,7 +307,7 @@ SimCore.prototype._snapshot = function (s) {
     id: s.id, team: s.team, q: s.q, r: s.r, name: s.name,
     weapon: s.weapon, ammo: { mags: s.magsLeft }, grenades: s.grenades, skill: s.skill,
     isLeader: s.isLeader, traits: s.traits.slice(),
-    hp: s.hp, state: s.state, stateT: s.stateT,
+    hp: s.hp, state: s.state, stateT: s.stateT, prone: s.prone,
     suppression: s.suppression, morale: s.morale, underFireT: s.underFireT,
     magRemaining: s.magRemaining, magsLeft: s.magsLeft, fireMode: s.fireMode,
     facing: s.facing, engageTargetId: s.engageTargetId,
@@ -379,7 +381,8 @@ SimCore.prototype._phaseDecide = function () {
 
   this._soldiers.forEach((s) => {
     if (s.hp <= 0) return;
-    if (s.state === 'rout' || s.state === 'assault') return;
+    // 行動不能兵は自己判断も命令適用もしない（撃てず動けず、命令も受け付けない）
+    if (s.state === 'rout' || s.state === 'assault' || s.state === 'incap') return;
     if ((this._tick + s.decisionPhase) % interval !== 0) return;
 
     // 命令の失効。TARGET は他の命令型と違い誰も消費しないため、放置すると
@@ -419,7 +422,10 @@ SimCore.prototype._phaseDecide = function () {
       if ((intent.type === 'TARGET' || intent.type === 'FIRE_MODE')
         && typeof this.policy.selfPreserve === 'function') {
         const preserve = this.policy.selfPreserve(this._snapshot(s), worldView, this.rng);
-        if (preserve && preserve.type === 'MOVE_TO') {
+        // 退避(MOVE_TO)だけでなく「その場で伏せる(GO_PRONE)」も命令へ割り込ませる。
+        // MOVE_TO しか通さないと、逃げ場の無い開豁地で射撃命令を受けた兵が
+        // 棒立ちのまま撃ち合い続ける（自衛が一切効かない）ことになる。
+        if (preserve && (preserve.type === 'MOVE_TO' || preserve.type === 'GO_PRONE')) {
           intent = preserve;
           if (preserve.note && preserve.note !== s.lastPolicyNote) {
             s.lastPolicyNote = preserve.note;
@@ -509,6 +515,13 @@ SimCore.prototype._applyIntent = function (s, intent, worldView) {
       // Simplified beyond v2.0 slice scope; handled in the action phase.
       s.pendingGrenadeTarget = intent.payload.target;
       break;
+    case 'GO_PRONE':
+      // 逃げ場が無い時の自衛。状態は変えない（伏せたまま撃ち返せる）。
+      if (!s.prone) {
+        s.prone = true;
+        this._emit('PRONE', { id: s.id, prone: true });
+      }
+      break;
     default:
       break;
   }
@@ -551,6 +564,9 @@ SimCore.prototype._phaseAct = function () {
         // self-defense only: a suppressed shooter may still engage (pHit penalty applies)
         if (s.engageTargetId) this._actEngage(s, T);
         break;
+      case 'incap':
+        // 赤ゲージ。撃たない・動かない・突撃しない
+        break;
       default:
         break;
     }
@@ -558,6 +574,20 @@ SimCore.prototype._phaseAct = function () {
 };
 
 SimCore.prototype._actMove = function (s, T) {
+  // 伏せている兵の移動は2通りある。弾雨の下(pinned)では立ち上がらずに這う
+  // ——「匍匐で遮蔽へ」は sim_policy が既に前提にしている挙動で、立たせると
+  // 逃げる途中で必ず撃たれる。落ち着いている時だけ、立ち上がる時間を払う。
+  if (s.prone) {
+    const crawling = s.state === 'pinned' || s.suppression >= T.PINNED_AT;
+    if (!crawling) {
+      if (s._standupT == null || s._standupT <= 0) s._standupT = T.PRONE_STANDUP_T;
+      s._standupT--;
+      if (s._standupT > 0) return;
+      s.prone = false;
+      s._standupT = 0;
+      this._emit('PRONE', { id: s.id, prone: false });
+    }
+  }
   if (!s.movePath || s.movePath.length === 0) {
     // path fulfilled: a MOVE_TO order is one-shot, so consume it here --
     // otherwise the persisting currentOrder re-applies the same path every
@@ -569,7 +599,9 @@ SimCore.prototype._actMove = function (s, T) {
   s._moveAccum = (s._moveAccum || 0) + 1;
   const next = s.movePath[0];
   const cost = this.map.moveCost(next) || 1;
-  const proneMult = (s.state === 'pinned' || s.suppression >= T.PINNED_AT) ? 2 : 1;
+  const proneMult = s.prone
+    ? T.PRONE_MOVE_MULT
+    : ((s.state === 'pinned' || s.suppression >= T.PINNED_AT) ? 2 : 1);
   const needed = T.MOVE_T_PER_HEX * cost * proneMult;
   if (s._moveAccum >= needed) {
     const from = { q: s.q, r: s.r };
@@ -728,6 +760,8 @@ SimCore.prototype._resolveBurst = function (shooter, target, T) {
   } else {
     pHit *= (1 - cover);
   }
+  // 伏せた目標は的が小さい。ただし動いている間は伏せていないので効かない。
+  if (target.prone && target.state !== 'move') pHit *= T.PHIT_VS_PRONE;
 
   // overlapping aim: 3+ shooters on one target pin it fast but do not kill fast
   if (T.FOCUS_PHIT_PENALTY_PER_EXTRA) {
@@ -844,6 +878,7 @@ SimCore.prototype._rollDamage = function (T) {
  * @private
  */
 SimCore.prototype._applyDamage = function (target, dmg, source) {
+  const T = this.tuning;
   if (target.hp <= 0) return false;
   target.hp = Math.max(0, target.hp - dmg);
   this._emit('HIT', { id: target.id, hp: target.hp });
@@ -853,6 +888,21 @@ SimCore.prototype._applyDamage = function (target, dmg, source) {
     target.stateT = 0;
     this._applyMoraleOnDeath(target);
     return true;
+  }
+  // 赤ゲージまで削られたら戦闘継続できない。撃てず動けず、命令も受け付けない。
+  // 死亡と違って盤上に残るので、プレイヤーは救うか見捨てるかを選ぶことになる。
+  if (target.hp <= T.INCAP_AT_HP && target.state !== 'incap') {
+    this._setState(target, 'incap');
+    this._emit('INCAP', { id: target.id, hp: target.hp });
+    // 倒れる。立ったまま行動不能というのは有り得ないし、描画も姿勢フラグを見る。
+    if (!target.prone) {
+      target.prone = true;
+      this._emit('PRONE', { id: target.id, prone: true });
+    }
+    target.engageTargetId = null;
+    target.movePath = null;
+    target.currentOrder = null;
+    target.fireMode = 'hold';
   }
   return false;
 };
@@ -937,7 +987,8 @@ SimCore.prototype._phaseCheckResult = function () {
     const t = teams.get(s.team);
     if (s.hp > 0) {
       t.alive++;
-      if (s.state !== 'rout') t.active++;
+      // 行動不能だけが残ったチームは戦闘力を失っている（生存者数には数える）
+      if (s.state !== 'rout' && s.state !== 'incap') t.active++;
     }
   });
 

@@ -395,13 +395,22 @@ const SIM_TUNING = {
     // 「命令→遂行→やがて自分の判断へ」の周期が観察できる長さにしてある。
     ORDER_TARGET_EXPIRE_T: 200,
 
-    PHIT_BASE: { rifle: 0.04, smg: 0.05, mg: 0.05, sniper: 0.08 },
+    // 2026-08-02: 実プレイでmissが多すぎたため、命中率を約45%底上げする
+    PHIT_BASE: { rifle: 0.058, smg: 0.072, mg: 0.070, sniper: 0.115 },
     PHIT_RANGE_FALLOFF: { near: 1.5, mid: 1.0, far: 0.5 },
     PHIT_EXPOSED_MULT: 3.0,
     // 移動中の目標はhexの遮蔽を享受しない。持続射撃できるMGだけが移動を強く罰する
     // （殺傷ベクトル4「開豁地移動へのMGの持続射撃」— critic検収 2026-07-03）
     PHIT_MOVING_MULT: { mg: 4.0, default: 1.5 },
     PHIT_FLANK_MULT: 6.0,
+    // 赤ゲージ（HP25%以下）で行動不能。撃てず動けず、命令も受け付けない
+    INCAP_AT_HP: 25,
+    INCAP_DRAG_ALLOWED: false, // 将来の担送用。今は未使用
+    // 姿勢。伏せは state ではなくフラグで、engage しながら伏せていられる
+    PHIT_VS_PRONE: 0.55,   // 伏せた目標は当たりにくい
+    PRONE_MOVE_MULT: 2.5,  // 匍匐前進の遅さ（立ち上がらずに動く時だけ効く）
+    PRONE_STANDUP_T: 8,    // 立ち上がりに要するtick
+    PRONE_DROP_UNDER_FIRE: true,
     // 集中射撃は「速くpinする道具」であって「殺す道具」ではない:
     // 同一目標を3人以上が同時射撃すると狙いが重複しpHitが逓減（制圧蓄積はフル）
     FOCUS_PHIT_PENALTY_PER_EXTRA: 0.15,

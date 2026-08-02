@@ -337,7 +337,18 @@ const TraitPolicy = {
       cost: T.COVER_SEEK_EXPOSURE_COST != null ? T.COVER_SEEK_EXPOSURE_COST : 0.05,
       includeDest: pinned,
     });
-    if (!found) return null;
+    if (!found) {
+      // 逃げ場が無い＝開豁地で撃たれている。棒立ちで撃ち合うより、その場で
+      // 伏せて的を小さくする方が正しい。これが無いと平地の撃ち合いが立ち姿の
+      // まま延々続く（移動できる時は従来どおり遮蔽への退避を優先する）。
+      if (!s.prone && T.PRONE_DROP_UNDER_FIRE) {
+        return {
+          type: 'GO_PRONE', soldierIds: [s.id], payload: {},
+          note: '自衛: その場で伏せる',
+        };
+      }
+      return null;
+    }
 
     // 「死角伝い」を名乗れるのは**露出を実際に評価した上で** risk 0 だった時だけ。
     // 敵が1人も見えていない時は評価そのものをしていないので従来の文言に戻す。
@@ -512,6 +523,9 @@ const TraitPolicy = {
     let bestDist = Infinity;
     let sawEnemy = false;
     for (const other of worldView.soldiers) {
+      // 行動不能の敵も候補に残す。倒れた敵を撃つかどうかは戦場の判断であって、
+      // AIが勝手に「安全な相手」と決めて無視してよいものではない。
+      // （fire discipline 側で「頭を下げている敵は後回し」は既に効いている）
       if (other.team === s.team || other.hp <= 0) continue;
       if (!worldView.map.hasLos({ q: s.q, r: s.r }, { q: other.q, r: other.r })) continue;
       const d = worldView.map.dist({ q: s.q, r: s.r }, { q: other.q, r: other.r });
