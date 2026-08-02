@@ -63,8 +63,9 @@ function extractCenterMap() {
   return { centerMap, sandbox };
 }
 
-function runCenterMap(runtime, map, width, height, initialZoom) {
+function runCenterMap(runtime, map, width, height, initialZoom, sidebarWidth) {
   const centers = [];
+  const bounds = [];
   const camera = {
     width,
     height,
@@ -72,10 +73,15 @@ function runCenterMap(runtime, map, width, height, initialZoom) {
     centerOn(x, y) {
       centers.push({ x, y });
     },
+    setBounds(x, y, w, h, centerOn) {
+      bounds.push({ x, y, w, h, centerOn });
+    },
   };
   runtime.sandbox.window.gameLogic = { map };
-  runtime.centerMap.call({ cameras: { main: camera } });
-  return { camera, centers };
+  const scene = { cameras: { main: camera } };
+  if (Number.isFinite(sidebarWidth)) scene._battlefieldSidebarWidth = () => sidebarWidth;
+  runtime.centerMap.call(scene);
+  return { camera, centers, bounds };
 }
 
 function almostEqual(actual, expected, message) {
@@ -129,6 +135,32 @@ const newError = Math.hypot(
 );
 assert.ok(oldError > 300, 'regression fixture must expose the old axial-center error');
 almostEqual(newError, 0, 'new center error');
+
+// The WebGL camera stays full-canvas to avoid stale scissor state, while map
+// fitting and centering reserve the opaque Phaser sidebar logically.
+const sidebarWidth = 340;
+const sidebarViewport = { width: 1400, height: 600 };
+const withSidebar = runCenterMap(
+  runtime, fullMap, sidebarViewport.width, sidebarViewport.height, 1, sidebarWidth,
+);
+const expectedSidebarZoom = Math.max(
+  (sidebarViewport.width - sidebarWidth) / (maxX - minX),
+  sidebarViewport.height / (maxY - minY),
+) * 1.01;
+almostEqual(withSidebar.camera.zoom, expectedSidebarZoom, 'sidebar-aware zoom');
+almostEqual(
+  withSidebar.centers[0].x,
+  expectedCenter.x + sidebarWidth / (2 * expectedSidebarZoom),
+  'map center shifts into the visible battlefield area',
+);
+almostEqual(withSidebar.centers[0].y, expectedCenter.y, 'sidebar keeps Y center');
+almostEqual(
+  withSidebar.bounds[0].w,
+  (maxX - minX) + sidebarWidth / expectedSidebarZoom,
+  'camera bounds reserve covered sidebar world width',
+);
+assert.strictEqual(withSidebar.bounds[0].centerOn, false,
+  'bounds must not override the sidebar-aware center');
 
 // City metadata marks a rendered tile even if its legacy terrain id is VOID.
 const cityMap = Array.from({ length: 8 }, () => []);

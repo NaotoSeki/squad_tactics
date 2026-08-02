@@ -40,4 +40,37 @@ assert.strictEqual(Overlay.describeSoldier({ hp: 100, state: 'reload' }).action,
 assert.strictEqual(Overlay.describeSoldier({ hp: 100, state: 'pinned' }).action, '釘付け');
 assert.strictEqual(Overlay.describeSoldier({ hp: 0 }).action, '戦闘不能');
 
+// The pause shade must follow the camera world view. A screen-space rectangle
+// is still transformed by camera zoom and becomes detached strips after a
+// monitor-driven viewport change.
+const shadeCalls = [];
+const fakeOverlay = {
+  active: true,
+  scene: {
+    cameras: {
+      main: {
+        x: 0, y: 0, width: 1000, height: 500, zoom: 2,
+        getWorldPoint(x, y) { return { x: 100 + x / 2, y: 200 + y / 2 }; },
+      },
+    },
+    scale: { width: 1000, height: 500 },
+  },
+  options: { getSoldiers: () => [], getSelectedId: () => null },
+  shade: {
+    setPosition(x, y) { shadeCalls.push(['position', x, y]); return this; },
+    setSize(w, h) { shadeCalls.push(['size', w, h]); return this; },
+  },
+  banner: { setScale() { return this; }, setPosition() { return this; } },
+  help: { setScale() { return this; }, setPosition() { return this; } },
+  detail: { setScale() { return this; }, setPosition() { return this; }, setText() {} },
+  lines: { clear() {} },
+  labels: new Map(),
+  domUi: null,
+};
+Overlay.prototype.update.call(fakeOverlay);
+assert.deepStrictEqual(shadeCalls, [
+  ['position', 100, 200],
+  ['size', 500, 250],
+]);
+
 console.log('tactical_pause.test.js: passed');

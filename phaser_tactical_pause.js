@@ -51,7 +51,7 @@
       this.labels = new Map();
 
       this.shade = scene.add.rectangle(0, 0, 1, 1, 0x555c5b, 0.58)
-        .setOrigin(0, 0).setScrollFactor(0).setDepth(DEPTH).setVisible(false);
+        .setOrigin(0, 0).setScrollFactor(1).setDepth(DEPTH).setVisible(false);
       this.lines = scene.add.graphics().setDepth(DEPTH + 10).setVisible(false);
       this.banner = scene.add.text(0, 12, 'PAUSE', {
         fontFamily: 'Share Tech Mono, monospace', fontSize: '17px',
@@ -170,8 +170,17 @@
       const zoom = Math.max(0.05, cam.zoom || 1);
       const width = cam.width || scene.scale.width;
       const height = cam.height || scene.scale.height;
-      const zoomCover = Math.min(zoom, 1);
-      this.shade.setSize(width / zoomCover, height / zoomCover);
+      // The shade belongs to the world scene, so derive its rectangle from
+      // the current world view. A scrollFactor(0) screen-sized rectangle is
+      // still affected by camera zoom in Phaser 3 and turns into detached
+      // horizontal / vertical blocks after a viewport change.
+      const topLeft = cam.getWorldPoint(cam.x, cam.y);
+      const bottomRight = cam.getWorldPoint(cam.x + width, cam.y + height);
+      this.shade.setPosition(topLeft.x, topLeft.y);
+      this.shade.setSize(
+        Math.max(1, bottomRight.x - topLeft.x),
+        Math.max(1, bottomRight.y - topLeft.y)
+      );
       this.banner.setScale(1 / zoom).setPosition(width / (2 * zoom), 84 / zoom);
       this.help.setScale(1 / zoom).setPosition((width - 12) / zoom, 136 / zoom);
       this.detail.setScale(1 / zoom).setPosition(12 / zoom, (height - 12) / zoom);

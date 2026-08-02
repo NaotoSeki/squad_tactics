@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <title>Display resize regression harness</title>
+  <style>
+    html, body { margin: 0; min-width: 1400px; min-height: 900px; background: #111; }
+    iframe { display: block; border: 0; }
+    #status { position: fixed; right: 8px; top: 8px; z-index: 2; color: #fff; background: #222; padding: 6px; font: 12px monospace; }
+  </style>
+</head>
+<body data-complete="false">
+  <div id="status">loading</div>
+  <iframe id="game" width="1280" height="720"></iframe>
+  <script>
+    const outbound = [[1280, 740], [1280, 770], [1280, 800]];
+    const inbound = [[1280, 780], [1280, 750], [1280, 720]];
+    const frame = document.getElementById('game');
+    const status = document.getElementById('status');
+    frame.addEventListener('load', () => {
+      setTimeout(() => {
+        const canvasSize = () => {
+          const canvas = frame.contentDocument.querySelector('#game-view > canvas');
+          return canvas ? `${canvas.width}x${canvas.height}` : 'missing';
+        };
+        const run = (sizes, done) => {
+          let index = 0;
+          const next = () => {
+            const size = sizes[index++];
+            frame.width = size[0];
+            frame.height = size[1];
+            status.textContent = size.join('x');
+            if (index < sizes.length) setTimeout(next, 45);
+            else done();
+          };
+          next();
+        };
+        run(outbound, () => setTimeout(() => {
+          document.body.dataset.outboundCanvas = canvasSize();
+          run(inbound, () => setTimeout(() => {
+            const child = frame.contentWindow;
+            const ownDpr = Object.getOwnPropertyDescriptor(child, 'devicePixelRatio');
+            const originalDpr = child.devicePixelRatio;
+            try {
+              Object.defineProperty(child, 'devicePixelRatio', {
+                value: originalDpr * 1.25, configurable: true
+              });
+              child.dispatchEvent(new child.Event('resize'));
+            } catch (error) {
+              document.body.dataset.dprMock = 'unsupported';
+            }
+            setTimeout(() => {
+              try {
+                if (ownDpr) Object.defineProperty(child, 'devicePixelRatio', ownDpr);
+                else delete child.devicePixelRatio;
+                child.dispatchEvent(new child.Event('resize'));
+                document.body.dataset.dprMock ||= 'restored';
+              } catch (error) {
+                document.body.dataset.dprMock = 'restore-failed';
+              }
+              setTimeout(() => {
+                const game = child.phaserGame;
+                const logic = child.gameLogic;
+                const main = game && game.scene && game.scene.getScene('MainScene');
+                const cam = main && main.cameras.main;
+                const friendlyCandidates = logic && logic.units && main && main.unitView
+                  ? logic.units.filter((u) => u.team === 'player' && u.hp > 0).map((unit) => {
+                    const candidateVisual = main.unitView.visuals.get(unit.id);
+                    if (!candidateVisual || !candidateVisual.container) return null;
+                    const gameX = (candidateVisual.container.x - cam.worldView.x) * cam.zoom + cam.x;
+                    const gameY = (candidateVisual.container.y - 10 - cam.worldView.y) * cam.zoom + cam.y;
+                    return { unit, visual: candidateVisual, gameX, gameY };
+                  }).filter((candidate) => candidate
+                    && candidate.gameX > 30 && candidate.gameX < cam.width - 360
+                    && candidate.gameY > 40 && candidate.gameY < cam.height - 140)
+                  : [];
+                const clickTarget = friendlyCandidates && friendlyCandidates[0];
+                const friendly = clickTarget && clickTarget.unit;
+                const visual = clickTarget && clickTarget.visual;
+                if (!game || !logic || !main || !friendly || !visual || !visual.sprite) {
+                  document.body.dataset.unitClick = 'not-ready';
+                } else {
+                  const rtwp = child.RtwpBattle && child.RtwpBattle.instance;
+                  if (rtwp) rtwp.setPaused(true);
+                  if (main.tacticalPause) {
+                    main.tacticalPause.setActive(true);
+                    main.tacticalPause.update();
+                  }
+                  const topLeft = cam.getWorldPoint(cam.x, cam.y);
+                  const bottomRight = cam.getWorldPoint(cam.x + cam.width, cam.y + cam.height);
+                  const shade = main.tacticalPause && main.tacticalPause.shade;
+                  document.body.dataset.shade = shade
+                    && Math.abs(shade.x - topLeft.x) < 1
+                    && Math.abs(shade.y - topLeft.y) < 1
+                    && Math.abs(shade.width - (bottomRight.x - topLeft.x)) < 1
+                    && Math.abs(shade.height - (bottomRight.y - topLeft.y)) < 1
+                    ? 'full' : 'mismatch';
+
+                  logic.selectedUnit = null;
+                  logic.interactionMode = 'SELECT';
+                  const gameX = clickTarget.gameX;
+                  const gameY = clickTarget.gameY;
+                  const canvas = game.canvas;
+                  const rect = canvas.getBoundingClientRect();
+                  const scaleX = game.scale.displayScale.x || 1;
+                  const scaleY = game.scale.displayScale.y || 1;
+                  const clientX = rect.left + gameX / scaleX;
+                  const clientY = rect.top + gameY / scaleY;
+                  const eventInit = {
+                    bubbles: true, cancelable: true, composed: true,
+                    pointerId: 1, pointerType: 'mouse', isPrimary: true,
+                    button: 0, buttons: 1, clientX, clientY
+                  };
+                  canvas.dispatchEvent(new child.PointerEvent('pointermove', { ...eventInit, buttons: 0 }));
+                  canvas.dispatchEvent(new child.PointerEvent('pointerdown', eventInit));
+                  canvas.dispatchEvent(new child.PointerEvent('pointerup', { ...eventInit, buttons: 0 }));
+                  const mappedX = (clientX - rect.left) * game.scale.displayScale.x;
+                  const mappedY = (clientY - rect.top) * game.scale.displayScale.y;
+                  document.body.dataset.inputMapping = Math.hypot(mappedX - gameX, mappedY - gameY) < 1
+                    ? 'aligned' : 'mismatch';
+                  const pointer = game.input && game.input.activePointer;
+                  document.body.dataset.clickTarget = `${Math.round(gameX)},${Math.round(gameY)}`;
+                  document.body.dataset.pointer = pointer
+                    ? `${Math.round(pointer.x)},${Math.round(pointer.y)}` : 'missing';
+                  document.body.dataset.pointerError = pointer
+                    ? String(Math.round(Math.hypot(pointer.x - gameX, pointer.y - gameY))) : 'missing';
+                }
+                document.body.dataset.complete = 'true';
+                document.body.dataset.canvas = canvasSize();
+                document.body.dataset.dpr = String(child.devicePixelRatio);
+                document.body.dataset.phaser = child.Phaser && child.Phaser.VERSION || 'missing';
+                status.textContent = `complete ${document.body.dataset.canvas}`;
+              }, 650);
+            }, 45);
+          }, 650));
+        }, 650));
+      }, 3500);
+    }, { once: true });
+    frame.src = '/index.html?autodeploy=1';
+  </script>
+</body>
+</html>

@@ -115,6 +115,16 @@ const Renderer = {
     draggedCardType: null,
     draggedCardFusionData: null,
     draggedCard: null,
+    _resizeFrame: 0,
+    _resizeTimer: 0,
+    _resizeForce: false,
+    _resizeRecoveryTimers: [],
+    _resizeObserver: null,
+    _resizeWatchInstalled: false,
+    _inputBoundsWatchInstalled: false,
+    _dprMedia: null,
+    _dprMediaListener: null,
+    _lastAppliedViewport: null,
 
     init(canvasElement) {
         // 19モーション manifest（phaser_soldier_view.js が先行フェッチ）の解決を待って
@@ -141,7 +151,8 @@ const Renderer = {
     RENDER_DPR: 1,
 
     _boot(canvasElement) {
-        const config = { type: Phaser.AUTO, parent: 'game-view', width: document.getElementById('game-view').clientWidth, height: document.getElementById('game-view').clientHeight, backgroundColor: '#2a2824', pixelArt: false, render: { mipmapFilter: 'LINEAR_MIPMAP_LINEAR' }, scene: [MainScene, UIScene], fps: { target: 30 }, physics: { default: 'arcade', arcade: { debug: false } }, input: { activePointers: 1 } };
+        const initialSize = this._measureGameView() || { width: 1280, height: 720 };
+        const config = { type: Phaser.AUTO, parent: 'game-view', width: initialSize.width, height: initialSize.height, scale: { parent: 'game-view', mode: Phaser.Scale.NONE, width: initialSize.width, height: initialSize.height, autoRound: true }, backgroundColor: '#2a2824', pixelArt: false, render: { roundPixels: false, mipmapFilter: 'LINEAR_MIPMAP_LINEAR' }, scene: [MainScene, UIScene], fps: { target: 30 }, physics: { default: 'arcade', arcade: { debug: false } }, input: { activePointers: 1 } };
         this.game = new Phaser.Game(config); 
         phaserGame = this.game;
         window.phaserGame = this.game;
@@ -172,11 +183,188 @@ const Renderer = {
                 if (card.sparklerParticles) card.sparklerParticles.length = 0;
             });
         };
-        window.addEventListener('resize', () => this.resize());
+        this._installResizeWatch();
+        this._installInputBoundsWatch();
+        this.scheduleResize(true);
         const startAudio = () => { if(window.Sfx && window.Sfx.ctx && window.Sfx.ctx.state === 'suspended') { window.Sfx.ctx.resume(); } };
         document.addEventListener('click', startAudio); document.addEventListener('keydown', startAudio);
     },
-    resize() { if(this.game) this.game.scale.resize(document.getElementById('game-view').clientWidth, document.getElementById('game-view').clientHeight); },
+    _measureGameView() {
+        const view = document.getElementById('game-view');
+        if (!view) return null;
+        const rect = view.getBoundingClientRect ? view.getBoundingClientRect() : null;
+        const width = Math.round((rect && rect.width) || view.clientWidth || 0);
+        const height = Math.round((rect && rect.height) || view.clientHeight || 0);
+        if (!Number.isFinite(width) || !Number.isFinite(height) || width < 2 || height < 2) return null;
+        return { width, height };
+    },
+    scheduleResize(force = false) {
+        if (!this.game) return;
+        this._resizeForce = this._resizeForce || force;
+        if (this._resizeFrame) cancelAnimationFrame(this._resizeFrame);
+        if (this._resizeTimer) clearTimeout(this._resizeTimer);
+        this._resizeRecoveryTimers.forEach(clearTimeout);
+        this._resizeRecoveryTimers = [];
+        // A Windows monitor transition emits several viewport and DPR changes.
+        // Applying each intermediate size makes Phaser resize the WebGL buffer
+        // repeatedly and can leave a Scene camera on an obsolete scissor rect.
+        this._resizeTimer = setTimeout(() => {
+            this._resizeTimer = 0;
+            const first = this._measureGameView();
+            const firstDpr = Number(window.devicePixelRatio) || 1;
+            if (!first) return;
+            this._resizeFrame = requestAnimationFrame(() => {
+                this._resizeFrame = 0;
+                const settled = this._measureGameView();
+                const settledDpr = Number(window.devicePixelRatio) || 1;
+                if (!settled) return;
+                if (first.width !== settled.width || first.height !== settled.height || firstDpr !== settledDpr) {
+                    this.scheduleResize();
+                    return;
+                }
+                const applyForce = this._resizeForce;
+                this._resizeForce = false;
+                this.resize(applyForce);
+                // Chrome can replace the GPU drawing surface after the CSS
+                // viewport has already settled during a monitor transition.
+                // Re-assert cached camera, GL and input state without changing
+                // the canvas backing size again.
+                [450, 1100].forEach((delay) => {
+                    this._resizeRecoveryTimers.push(setTimeout(() => this.recoverViewport(), delay));
+                });
+            });
+        }, 160);
+    },
+    _watchDevicePixelRatio() {
+        if (!window.matchMedia) return;
+        if (this._dprMedia && this._dprMediaListener) {
+            if (this._dprMedia.removeEventListener) this._dprMedia.removeEventListener('change', this._dprMediaListener);
+            else if (this._dprMedia.removeListener) this._dprMedia.removeListener(this._dprMediaListener);
+        }
+        const dpr = Number(window.devicePixelRatio) || 1;
+        this._dprMedia = window.matchMedia(`(resolution: ${dpr}dppx)`);
+        this._dprMediaListener = () => {
+            this._watchDevicePixelRatio();
+            this.scheduleResize();
+        };
+        if (this._dprMedia.addEventListener) this._dprMedia.addEventListener('change', this._dprMediaListener);
+        else if (this._dprMedia.addListener) this._dprMedia.addListener(this._dprMediaListener);
+    },
+    _installResizeWatch() {
+        if (this._resizeWatchInstalled) return;
+        this._resizeWatchInstalled = true;
+        const queue = () => this.scheduleResize();
+        window.addEventListener('resize', queue);
+        window.addEventListener('pageshow', () => this.scheduleResize(true));
+        if (window.visualViewport) window.visualViewport.addEventListener('resize', queue);
+        const view = document.getElementById('game-view');
+        if (view && typeof ResizeObserver !== 'undefined') {
+            this._resizeObserver = new ResizeObserver(queue);
+            this._resizeObserver.observe(view);
+        }
+        this._watchDevicePixelRatio();
+    },
+    _installInputBoundsWatch() {
+        if (this._inputBoundsWatchInstalled || !this.game || !this.game.canvas) return;
+        this._inputBoundsWatchInstalled = true;
+        const refresh = () => this._refreshInputBounds();
+        // Capture runs before Phaser's own bubbling listeners, so a first
+        // click immediately after crossing monitors uses the new coordinates.
+        ['pointerdown', 'pointermove', 'wheel'].forEach((type) => {
+            this.game.canvas.addEventListener(type, refresh, { capture: true, passive: true });
+        });
+    },
+    _refreshInputBounds() {
+        const scale = this.game && this.game.scale;
+        if (!scale) return false;
+        if (scale.updateBounds) scale.updateBounds();
+        const bounds = scale.canvasBounds;
+        const base = scale.baseSize;
+        if (scale.displayScale && bounds && base && bounds.width > 0 && bounds.height > 0) {
+            scale.displayScale.set(base.width / bounds.width, base.height / bounds.height);
+        }
+        return true;
+    },
+    resize(force = false) {
+        if (!this.game || !this.game.scale) return false;
+        const size = this._measureGameView();
+        if (!size) return false;
+        const dpr = Number(window.devicePixelRatio) || 1;
+        const canvas = this.game.canvas || (this.game.renderer && this.game.renderer.canvas);
+        const resolution = (this.game.renderer && Number(this.game.renderer.resolution)) || 1;
+        const expectedBufferWidth = Math.round(size.width * resolution);
+        const expectedBufferHeight = Math.round(size.height * resolution);
+        const canvasRect = canvas && canvas.getBoundingClientRect ? canvas.getBoundingClientRect() : null;
+        const canvasMatches = !canvas || (
+            canvas.width === expectedBufferWidth
+            && canvas.height === expectedBufferHeight
+            && (!canvasRect || (
+                Math.round(canvasRect.width) === size.width
+                && Math.round(canvasRect.height) === size.height
+            ))
+        );
+        const last = this._lastAppliedViewport;
+        const scaleMatches = Math.round(this.game.scale.width) === size.width
+            && Math.round(this.game.scale.height) === size.height;
+        if (!force && last && last.width === size.width && last.height === size.height
+            && last.dpr === dpr && scaleMatches && canvasMatches) return false;
+        this._lastAppliedViewport = { width: size.width, height: size.height, dpr };
+        this.game.scale.resize(size.width, size.height);
+        this._synchronizeSceneCameras(size.width, size.height);
+        this._resetWebGLViewport(size.width, size.height);
+        this._refreshInputBounds();
+        return true;
+    },
+    recoverViewport() {
+        if (!this.game || !this.game.scale) return false;
+        const size = this._measureGameView();
+        if (!size) return false;
+        const canvas = this.game.canvas;
+        const scaleMismatch = Math.round(this.game.scale.width) !== size.width
+            || Math.round(this.game.scale.height) !== size.height;
+        const canvasMismatch = canvas && (canvas.width !== size.width || canvas.height !== size.height);
+        if (scaleMismatch || canvasMismatch) return this.resize(true);
+        this._synchronizeSceneCameras(size.width, size.height);
+        this._resetWebGLViewport(size.width, size.height);
+        this._refreshInputBounds();
+        return true;
+    },
+    _synchronizeSceneCameras(width, height) {
+        const scenes = this.game && this.game.scene && this.game.scene.scenes;
+        if (!Array.isArray(scenes)) return;
+        scenes.forEach((scene) => {
+            const camera = scene && scene.cameras && scene.cameras.main;
+            if (!camera) return;
+            camera.setPosition(0, 0);
+            camera.setSize(width, height);
+        });
+        const main = this.game.scene.getScene && this.game.scene.getScene('MainScene');
+        if (main && main.mapGenerated && main.centerMap) main.centerMap();
+        if (main && main.tacticalMinimap && main.tacticalMinimap.layout) main.tacticalMinimap.layout();
+    },
+    _resetWebGLViewport(width, height) {
+        const renderer = this.game && this.game.renderer;
+        const gl = renderer && renderer.gl;
+        if (!gl) return;
+        // Phaser 3.60 clears before it resets the frame scissor. Replace both
+        // its cached state and the actual WebGL state so an obsolete UI-camera
+        // scissor cannot preserve strips from the previous monitor.
+        if (renderer.resize) renderer.resize(width, height);
+        const full = renderer.defaultScissor || [0, 0, width, height];
+        full[0] = 0;
+        full[1] = 0;
+        full[2] = width;
+        full[3] = height;
+        renderer.currentScissor = full;
+        if (renderer.scissorStack) {
+            renderer.scissorStack.length = 0;
+            renderer.scissorStack.push(full);
+        }
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+        gl.viewport(0, 0, width, height);
+        gl.enable(gl.SCISSOR_TEST);
+        gl.scissor(0, Math.max(0, gl.drawingBufferHeight - height), width, height);
+    },
     hexToPx(q, r) { return { x: HEX_SIZE * Math.sqrt(3) * (q + r/2), y: HEX_SIZE * (3/2) * r }; },
     pxToHex(mx, my) { const main = phaserGame.scene.getScene('MainScene'); if(!main) return {q:0, r:0}; const w = main.cameras.main.getWorldPoint(mx, my); return this.roundHex((Math.sqrt(3)/3*w.x - w.y/3)/HEX_SIZE, (2/3*w.y)/HEX_SIZE); },
     roundHex(q,r) { let rq=Math.round(q), rr=Math.round(r), rs=Math.round(-q-r); const dq=Math.abs(rq-q), dr=Math.abs(rr-r), ds=Math.abs(rs-(-q-r)); if(dq>dr&&dq>ds) rq=-rr-rs; else if(dr>ds) rr=-rq-rs; return {q:rq, r:rr}; },
@@ -1003,6 +1191,16 @@ class MainScene extends Phaser.Scene {
             const dx = pointer.x - cam.width / 2;
             const dy = pointer.y - cam.height / 2;
             cam.setZoom(next);
+            if (this._mapBounds && cam.setBounds) {
+                const sidebarW = this._battlefieldSidebarWidth();
+                cam.setBounds(
+                    this._mapBounds.x,
+                    this._mapBounds.y,
+                    this._mapBounds.width + sidebarW / next,
+                    this._mapBounds.height,
+                    false
+                );
+            }
             cam.centerOn(wp.x - dx / next, wp.y - dy / next);
         });
         
@@ -1078,14 +1276,17 @@ class MainScene extends Phaser.Scene {
         });
     }
     updateSidebarViewport() {
-        const app = document.getElementById('app');
-        if (app && app.classList.contains('phaser-sidebar')) {
-            const w = this.scale.width; const h = this.scale.height;
-            const sidebarW = window.getSidebarWidth ? window.getSidebarWidth() : 340;
-            this.cameras.main.setViewport(0, 0, Math.max(1, w - sidebarW), h);
-        } else {
-            this.cameras.main.setViewport(0, 0, this.scale.width, this.scale.height);
-        }
+        // Keep the main camera on Phaser's standard full-canvas path. The
+        // opaque sidebar scene blocks map input, so drawing below it is safe.
+        // setPosition + setSize also clears a stale custom-viewport flag.
+        this.cameras.main.setPosition(0, 0);
+        this.cameras.main.setSize(this.scale.width, this.scale.height);
+    }
+    _battlefieldSidebarWidth() {
+        const app = typeof document !== 'undefined' ? document.getElementById('app') : null;
+        return app && app.classList.contains('phaser-sidebar') && window.getSidebarWidth
+            ? window.getSidebarWidth()
+            : 0;
     }
     triggerExplosion(x, y, tier, hex, opts) {
         const meta = tier && window.KHAOS_FX && KHAOS_FX.TIERS[tier];
@@ -1232,9 +1433,10 @@ class MainScene extends Phaser.Scene {
         const camera = this.cameras.main;
         const mapW = maxX - minX;
         const mapH = maxY - minY;
-        camera.centerOn((minX + maxX) / 2, (minY + maxY) / 2);
+        const sidebarW = this._battlefieldSidebarWidth ? this._battlefieldSidebarWidth() : 0;
+        const battlefieldW = Math.max(1, camera.width - sidebarW);
         // containではなくcover。最小ズームでも上下左右に背景色を露出させない。
-        const zoomFit = Math.max(camera.width / mapW, camera.height / mapH) * 1.01;
+        const zoomFit = Math.max(battlefieldW / mapW, camera.height / mapH) * 1.01;
         // zoomFit は camera.width から出るので DPR に自動追従するが、クランプの上下限は
         // 実寸基準の値なので DPR 倍しないと高DPI環境だけ range が狭まる。
         const dpr = (typeof Renderer !== 'undefined' && Renderer.RENDER_DPR) || 1;
@@ -1244,7 +1446,10 @@ class MainScene extends Phaser.Scene {
         const maxZoom = Math.max(minZoom, Math.min(5 * dpr, minZoom * 2.75));
         this._mapZoomRange = { min: minZoom, max: maxZoom };
         camera.zoom = minZoom;
-        if (camera.setBounds) camera.setBounds(minX, minY, mapW, mapH, true);
+        const sidebarWorldW = sidebarW / minZoom;
+        this._mapBounds = { x: minX, y: minY, width: mapW, height: mapH };
+        if (camera.setBounds) camera.setBounds(minX, minY, mapW + sidebarWorldW, mapH, false);
+        camera.centerOn((minX + maxX) / 2 + sidebarWorldW / 2, (minY + maxY) / 2);
         if (this.tacticalMinimap) {
             this.tacticalMinimap.fit({ x: minX, y: minY, w: mapW, h: mapH });
         }
