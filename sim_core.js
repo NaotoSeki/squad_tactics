@@ -1517,8 +1517,9 @@ SimCore.prototype._resolveBurst = function (shooter, target, T) {
     pHit *= (1 - cover);
   }
   // 伏せた目標は的が小さい。立って動いている間は効かないが、匍匐中は伏せている。
-  // 側背からは伏せていても隠れる先が無い。
-  if (!isFlank && target.prone && (target.state !== 'move' || crawling)) pHit *= T.PHIT_VS_PRONE;
+  // **側背でも伏せの補正は残す** — 伏せは「隠れる」ではなく「シルエットが小さい」
+  // 話なので、背後へ回っても的の大きさは変わらない。側背が無効化するのは遮蔽だけ。
+  if (target.prone && (target.state !== 'move' || crawling)) pHit *= T.PHIT_VS_PRONE;
 
   // overlapping aim: 3+ shooters on one target pin it fast but do not kill fast
   if (T.FOCUS_PHIT_PENALTY_PER_EXTRA) {
@@ -1787,9 +1788,13 @@ SimCore.prototype._phaseCommand = function () {
   this._soldiers.forEach((s) => {
     if (s.isLeader) this._hadLeader.add(s.team);
     if (s.hp <= 0) return;
-    if (!teams.has(s.team)) teams.set(s.team, { leader: null, candidates: [] });
+    if (!teams.has(s.team)) teams.set(s.team, { leader: null, candidates: [], fallen: null });
     const t = teams.get(s.team);
-    if (s.isLeader) t.leader = s;
+    // 赤ゲージ(incap)の分隊長は指揮を執れない。ここで leader として数え続けると
+    // 昇格タイマーが**永久に始まらず**、倒した後もその兵が指揮官のまま残る
+    // （2026-08-04 ディレクター報告「指揮官の円がしばらく残る」の正体）。
+    // incap は回復経路の無い終端状態なので、抜けたものとして扱ってよい。
+    if (s.isLeader) { if (s.state === 'incap') t.fallen = s; else t.leader = s; }
     else if (s.state !== 'rout' && s.state !== 'incap') t.candidates.push(s);
   });
 
@@ -1805,6 +1810,8 @@ SimCore.prototype._phaseCommand = function () {
       if (t.candidates[i].morale > next.morale) next = t.candidates[i];
     }
     next.isLeader = true;
+    // 昇格したら前任の印を落とす。2人が isLeader のままだと、表示も命令伝達も割れる
+    if (t.fallen) t.fallen.isLeader = false;
     this._leaderGoneAt.delete(team);
     this._emit('LEADER_CHANGED', { id: next.id, team: team });
   });

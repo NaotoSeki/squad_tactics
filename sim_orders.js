@@ -51,7 +51,8 @@ function CommsOrders(opts) {
 CommsOrders.prototype._findLeader = function (team) {
   const all = this.soldiers();
   for (const s of all) {
-    if (s.team === team && s.isLeader && s.hp > 0) {
+    // incap の分隊長からは声が出ない（sim_core の昇格待ちと同じ扱い）
+    if (s.team === team && s.isLeader && s.hp > 0 && s.state !== 'incap') {
       this._lastLeaderPos.set(team, { q: s.q, r: s.r });
       return s;
     }

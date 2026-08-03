@@ -250,16 +250,14 @@ class UIManager {
             this.setupAttackBurstHover(u);
         }
 
-        // 画面端対策: メニューが見切れないように調整
-        let menuLeft = px + 20;
-        let menuTop = py - 50;
-        
-        // 簡易的な画面端チェック (もし必要なら)
-        // if (menuLeft + 120 > window.innerWidth) menuLeft = px - 140;
-        
-        menu.style.left = menuLeft + 'px'; 
-        menu.style.top = menuTop + 'px';
+        // 画面端対策。寸法を測るため先に表示してから置く（実装は RtwpBattle.placeMenu 一本）
         menu.style.display = 'block';
+        if (window.RtwpBattle && window.RtwpBattle.placeMenu) {
+            window.RtwpBattle.placeMenu(menu, px, py);
+        } else {
+            menu.style.left = (px + 20) + 'px';
+            menu.style.top = (py - 50) + 'px';
+        }
     }
 
     hideActionMenu() { const menu = document.getElementById('command-menu'); if (menu) menu.style.display = 'none'; }
@@ -408,7 +406,14 @@ class UIManager {
         if (!rtwp) {
             h += `<hr style="border:0;border-top:1px solid #444;margin:5px 0;"><button onclick="gameLogic.endTurn();document.getElementById('context-menu').style.display='none';" style="width:100%;cursor:pointer;background:#522;color:#fcc;border:1px solid #d44;padding:3px;">TURN END</button>`;
         }
-        if (h !== "") { m.innerHTML = h; m.style.display = 'block'; m.style.left = (mx + 10) + 'px'; m.style.top = (my + 10) + 'px'; }
+        if (h !== "") {
+            m.innerHTML = h; m.style.display = 'block';
+            if (window.RtwpBattle && window.RtwpBattle.placeMenu) {
+                window.RtwpBattle.placeMenu(m, mx, my, { dx: 10, dy: 10 });
+            } else {
+                m.style.left = (mx + 10) + 'px'; m.style.top = (my + 10) + 'px';
+            }
+        }
     }
 
     updateSidebar(u, state, tankAutoReload) {

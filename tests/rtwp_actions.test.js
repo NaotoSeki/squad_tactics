@@ -91,6 +91,7 @@ function makeDom() {
   const mkEl = () => ({
     style: {}, className: '', textContent: '', title: '', innerHTML: '',
     children: [], onclick: null, parentNode: null,
+    offsetWidth: 0, offsetHeight: 0,   // placeMenu の画面端判定用（既定は「測れない」）
     appendChild(el) { this.children.push(el); el.parentNode = this; return el; },
     removeChild(el) {
       const i = this.children.indexOf(el);
@@ -477,6 +478,172 @@ function attach(g) {
   check(calls.checkLose > 0, '自軍全滅で敗北判定が呼ばれる', 'checkLose=' + calls.checkLose);
   check(calls.gameOver === 1, 'ゲームオーバーがキャンペーンへ届く', 'gameOver=' + calls.gameOver);
   SB.RtwpBattle.detach();
+}
+
+// ===========================================================================
+// 矩形選択（左ドラッグ）-> 単一選択と同じメニューを、選んだ全員へ適用する
+// ===========================================================================
+{
+  const g = makeGameLogic();
+  const dom = makeDom();
+  SB.document = dom;
+  const inst = attach(g);
+  inst.installUi();
+  const players = g.units.filter((u) => u.team === 'player');
+  check(players.length >= 2, '前提: 自軍が2名以上いる');
+  const menu = dom.getElementById('command-menu');
+
+  // DOMスタブの innerHTML='' は children を消さないので、毎回手で空にする
+  const reset = () => { menu.children.length = 0; };
+  // 見出し(cmd-head)を除いた**命令ボタンだけ**を比べる。要点は語彙が増えないこと。
+  const labels = () => menu.children
+    .filter((c) => c.className.indexOf('cmd-btn') >= 0).map((c) => c.textContent);
+  reset();
+  inst.showSoldierMenu(players[0], 10, 10);
+  const single = labels();
+  check(g.selectedUnits === null, '単一選択で開くと矩形の集合が解ける');
+  reset();
+  inst.showSquadSelectionMenu(players, 10, 10);
+  const multi = labels();
+  check(JSON.stringify(single) === JSON.stringify(multi),
+    '複数選択でも命令の並びは単一選択とまったく同じ',
+    JSON.stringify(single) + ' vs ' + JSON.stringify(multi));
+
+  const head = menu.children.filter((c) => c.className === 'cmd-head');
+  check(head.length === 1 && menu.children[0] === head[0]
+    && head[0].textContent === players.length + '人を選択',
+    '先頭の見出しに選択人数が出る',
+    JSON.stringify(menu.children.map((c) => c.textContent)));
+  check(head.length === 1 && !head[0].onclick, '見出しは押せない（命令ではない）');
+  check(!!g.selectedUnits && g.selectedUnits.length === players.length,
+    '選択表示用の集合が gameLogic 側にも入る', JSON.stringify(g.selectedUnits));
+
+  reset();
+  inst.showSquadSelectionMenu(players, 10, 10);
+  const moveBtn = menu.children.find((c) => c.onclick && /移動/.test(c.textContent));
+  check(!!moveBtn, '移動が選べる');
+  moveBtn.onclick();
+  check(inst.pendingAction && inst.pendingAction.unitIds
+    && inst.pendingAction.unitIds.length === players.length,
+    '複数選択の対象待ちが全員ぶん積まれる', JSON.stringify(inst.pendingAction));
+
+  players.forEach((u) => { u._startQ = u.q; u._startR = u.r; });
+  // 到達可能なマスを選ぶ（島の外や建物だと runAction が経路を作れず false を返す）
+  const s0 = inst.sim.getSoldier(String(players[0].id));
+  const cands = [{ q: s0.q + 2, r: s0.r }, { q: s0.q - 2, r: s0.r },
+                 { q: s0.q, r: s0.r + 2 }, { q: s0.q, r: s0.r - 2 }];
+  const dest = cands.find((h) => isFinite(inst.map.moveCost(h, h))) || cands[0];
+  inst.consumePendingAction(players[0], null, dest);
+  // 検証したいのは「1回のクリックが全員へ配られたか」。実際に何マス進めるかは
+  // 各自の経路次第（塞がっていて動けない兵も居る）なので、配布の方を見る。
+  const ordered = players.filter((u) => u._rtwpOrderedPath && u._rtwpOrderedPath.length);
+  check(ordered.length === players.length,
+    '1回のクリックで選択した全員へ移動命令が配られる',
+    ordered.length + '/' + players.length);
+  // 伝達遅延ぶん回して、実際に動き出すことも確かめる
+  for (let i = 0; i < 300; i++) inst.sim.tick();
+  const moving = players.filter((u) => {
+    const s = inst.sim.getSoldier(String(u.id));
+    return s && (s.state === 'move' || (s.movePath && s.movePath.length)
+      || u.q !== u._startQ || u.r !== u._startR);
+  });
+  check(moving.length > 0, '配られた命令が実際に実行される',
+    moving.length + '/' + players.length);
+  check(inst.pendingAction === null, '消費後は対象待ちが解除される');
+
+  reset();
+  g.handleMarqueeSelect(players, 10, 10);
+  check(!!g.selectedUnits && g.selectedUnits.length === players.length
+    && players.indexOf(g.selectedUnit) >= 0,
+    '矩形選択の経路でも選択集合が gameLogic に載る');
+
+  // hp が残っているのに何も押せない兵が居る、という実プレイ報告（2026-08-04）。
+  // 原因は state='incap'/'rout' で、可否は**代表1名**の文脈で決まるため、矩形の
+  // 先頭がそれだと分隊ごと灰色になっていた。
+  //
+  // getSoldier() はスナップショットを返すので、状態は実体側へ入れる。
+  // ここまでで sim を300tick進めてあるため、全員の状態を明示的に置き直す。
+  const live = (u) => inst.sim._soldiers.get(String(u.id));
+  const prevStates = players.map((u) => live(u).state);
+  const cmdBtns = () => menu.children.filter(
+    (c) => c.className.indexOf('cmd-btn') >= 0 && c.textContent !== 'CANCEL');
+  const armed = () => cmdBtns().filter((c) => !!c.onclick);
+
+  // 300tick の間に撃たれて hp が落ちている兵が居るので、そこも戻す
+  players.forEach((u) => { u.hp = 100; live(u).hp = 100; live(u).state = 'idle'; });
+  live(players[0]).state = 'incap';
+  reset();
+  inst.showSquadSelectionMenu(players, 10, 10);
+  check(armed().length > 0, '先頭が行動不能でも分隊メニューは押せる',
+    JSON.stringify(cmdBtns().map((c) => c.className + ':' + c.textContent)));
+  check(inst._firstActionable(players) !== players[0],
+    '可否の代表には動ける兵が立つ', String(inst._firstActionable(players).id));
+
+  // 全員が行動不能なら、押せない理由そのものを見出しに出す
+  players.forEach((u) => { live(u).state = 'incap'; });
+  reset();
+  inst.showSoldierMenu(players[0], 10, 10);
+  const why = menu.children.find((c) => c.className === 'cmd-head');
+  check(!!why && /行動不能/.test(why.textContent),
+    '押せない時は理由が見出しに出る', why ? why.textContent : '(見出しなし)');
+  check(armed().length === 0, '理由が出ている時は実際にどの行動も押せない',
+    JSON.stringify(cmdBtns().map((c) => c.className + ':' + c.textContent)));
+  check(menu.children.some((c) => c.textContent === 'CANCEL' && c.onclick),
+    'CANCEL だけは常に押せる');
+  players.forEach((u, i) => { live(u).state = prevStates[i]; });
+
+  reset();
+  inst.showSquadSelectionMenu([players[0]], 10, 10);
+  check(!menu.children.some((c) => c.className === 'cmd-head'),
+    '1名なら見出しは出ない');
+  const one = menu.children.find((c) => c.onclick && /移動/.test(c.textContent));
+  one.onclick();
+  check(inst.pendingAction && !inst.pendingAction.unitIds,
+    '1名だけの矩形選択は従来どおり単体として扱う');
+  inst.pendingAction = null;
+  SB.RtwpBattle.detach();
+}
+
+// ===========================================================================
+// メニューが画面外へ埋もれない（画面下端・右端でクリックした時）
+// ===========================================================================
+{
+  const P = SB.RtwpBattle.placeMenu;
+  const el = () => ({ style: {}, offsetWidth: 140, offsetHeight: 180 });
+  const VW = 1280, VH = 720, M = 8;
+  const prevW = SB.innerWidth, prevH = SB.innerHeight;
+  SB.innerWidth = VW; SB.innerHeight = VH;
+
+  const mid = P(el(), 400, 300);
+  check(mid.left === 420 && mid.top === 250,
+    '画面中央では従来どおりカーソルの右上に出る', JSON.stringify(mid));
+
+  const bottom = P(el(), 400, VH - 10);
+  check(bottom.top + 180 <= VH - M && bottom.top >= M,
+    '画面下端でも下辺が画面内に収まる',
+    'top=' + bottom.top + ' 下辺=' + (bottom.top + 180) + ' 画面高=' + VH);
+
+  const right = P(el(), VW - 10, 300);
+  check(right.left + 140 <= VW - M && right.left >= M,
+    '画面右端でも右辺が画面内に収まる',
+    'left=' + right.left + ' 右辺=' + (right.left + 140) + ' 画面幅=' + VW);
+  check(right.left < VW - 10, '右端では カーソルの左側へ返す', 'left=' + right.left);
+
+  const corner = P(el(), VW - 2, VH - 2);
+  check(corner.left >= M && corner.left + 140 <= VW - M
+    && corner.top >= M && corner.top + 180 <= VH - M,
+    '右下の角でも全体が画面内に収まる', JSON.stringify(corner));
+
+  const topLeft = P(el(), 4, 4);
+  check(topLeft.left >= M && topLeft.top >= M,
+    '左上でも画面外へ出ない', JSON.stringify(topLeft));
+
+  // 寸法が測れない時（display:none のまま等）は従来位置を壊さない
+  const unmeasured = P({ style: {}, offsetWidth: 0, offsetHeight: 0 }, 400, 300);
+  check(unmeasured.left === 420 && unmeasured.top === 250,
+    '寸法が測れない時は従来位置のまま', JSON.stringify(unmeasured));
+
+  SB.innerWidth = prevW; SB.innerHeight = prevH;
 }
 
 console.log(`\n${passCount} passed, ${failCount} failed`);

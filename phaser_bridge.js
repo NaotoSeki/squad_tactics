@@ -1147,6 +1147,16 @@ class MainScene extends Phaser.Scene {
                 },
                 getSelectedId: () => window.gameLogic && window.gameLogic.selectedUnit
                     ? String(window.gameLogic.selectedUnit.id) : null,
+                // 矩形選択した全員。ポーズ中も〇が1個しか付かないと、何人へ命じて
+                // いるのか分からない（2026-08-04 ディレクター指摘）
+                getSelectedIds: () => {
+                    const gl = window.gameLogic;
+                    if (!gl) return null;
+                    if (gl.selectedUnits && gl.selectedUnits.length) {
+                        return gl.selectedUnits.map((u) => String(u.id));
+                    }
+                    return gl.selectedUnit ? [String(gl.selectedUnit.id)] : null;
+                },
                 // 分隊長AIの采配（LeaderPolicy が leaderState へ残す計画）
                 getPlan: () => {
                     const rtwp = window.RtwpBattle && window.RtwpBattle.instance;
@@ -1258,19 +1268,61 @@ class MainScene extends Phaser.Scene {
                         }
                     }
                 }
-                Renderer.isMapDragging = true; 
-                if(window.gameLogic && window.gameLogic.handleClick) window.gameLogic.handleClick(hex, p.x, p.y); 
-            } else if(p.button === 2) { 
-                if(window.gameLogic && window.gameLogic.handleRightClick) window.gameLogic.handleRightClick(p.x, p.y, hex); 
-            } 
+                // 左ドラッグは**矩形選択**へ割り当てた（2026-08-03 ディレクター指示）。
+                // 地図の平行移動はホイールクリックへ移動。ドラッグで地図が動くと、
+                // 画面端まで引いた時にPAUSEのスモークの外側（本来の色）が覗いてしまう。
+                // クリック確定は pointerup で行う — ここで handleClick すると、
+                // 矩形を引き始めた最初の1マスが毎回選択されてしまう。
+                //
+                // 座標は**画面とワールドの両方**を持つ。ワールド側が枠の描画と当たり
+                // 判定の正、画面側はドラッグ判定の閾値（6px）とクリック時の座標用。
+                // 閾値だけは画面px でないと、ズームを引いた時に指がやたら動く。
+                const wp0 = this.cameras.main.getWorldPoint(p.x, p.y);
+                Renderer.marquee = {
+                    x0: p.x, y0: p.y, x1: p.x, y1: p.y,
+                    wx0: wp0.x, wy0: wp0.y, wx1: wp0.x, wy1: wp0.y,
+                    active: false, hex: hex,
+                };
+            } else if(p.button === 1) {
+                // ホイールクリックドラッグ = 地図の平行移動
+                Renderer.isMapDragging = true;
+            } else if(p.button === 2) {
+                if(window.gameLogic && window.gameLogic.handleRightClick) window.gameLogic.handleRightClick(p.x, p.y, hex);
+            }
         });
-        
-        this.input.on('pointerup', () => { Renderer.isMapDragging = false; });
-        this.input.on('pointermove', (p) => { 
-            if (Renderer.isCardDragging) return; 
-            if (p.isDown && Renderer.isMapDragging) { const zoom = this.cameras.main.zoom; this.cameras.main.scrollX -= (p.x - p.prevPosition.x) / zoom; this.cameras.main.scrollY -= (p.y - p.prevPosition.y) / zoom; } 
-            if(!Renderer.isMapDragging && window.gameLogic && window.gameLogic.handleHover) window.gameLogic.handleHover(Renderer.pxToHex(p.x, p.y)); 
-        }); 
+
+        this.input.on('pointerup', (p) => {
+            Renderer.isMapDragging = false;
+            const m = Renderer.marquee;
+            Renderer.marquee = null;
+            this.drawMarquee(null);
+            if (!m || p.button !== 0) return;
+            if (m.active) {
+                const units = this.unitsInWorldRect(m.wx0, m.wy0, m.wx1, m.wy1);
+                if (window.gameLogic && window.gameLogic.handleMarqueeSelect) {
+                    window.gameLogic.handleMarqueeSelect(units, p.x, p.y);
+                }
+                return;
+            }
+            // ドラッグしなかった＝ただのクリック。従来どおりの単発処理へ流す
+            if (window.gameLogic && window.gameLogic.handleClick) {
+                window.gameLogic.handleClick(m.hex, m.x0, m.y0);
+            }
+        });
+        this.input.on('pointermove', (p) => {
+            if (Renderer.isCardDragging) return;
+            if (p.isDown && Renderer.isMapDragging) { const zoom = this.cameras.main.zoom; this.cameras.main.scrollX -= (p.x - p.prevPosition.x) / zoom; this.cameras.main.scrollY -= (p.y - p.prevPosition.y) / zoom; }
+            const m = Renderer.marquee;
+            if (m && p.isDown) {
+                m.x1 = p.x; m.y1 = p.y;
+                const wp = this.cameras.main.getWorldPoint(p.x, p.y);
+                m.wx1 = wp.x; m.wy1 = wp.y;
+                // 手ぶれをドラッグと誤認しない閾値。これ未満はクリック扱いのまま
+                if (!m.active && (Math.abs(m.x1 - m.x0) > 6 || Math.abs(m.y1 - m.y0) > 6)) m.active = true;
+                if (m.active) { this.drawMarquee(m); return; }
+            }
+            if(!Renderer.isMapDragging && window.gameLogic && window.gameLogic.handleHover) window.gameLogic.handleHover(Renderer.pxToHex(p.x, p.y));
+        });
         this.input.mouse.disableContextMenu();
         this.input.keyboard.on('keydown-ESC', () => { if(window.gameLogic && window.gameLogic.clearSelection) { window.gameLogic.clearSelection(); } });
         this.input.keyboard.on('keydown-TAB', (event) => {
@@ -1280,6 +1332,60 @@ class MainScene extends Phaser.Scene {
             }
         });
     }
+    /**
+     * 矩形選択の枠を描く（**ワールド座標**）。null で消す。
+     *
+     * 以前は画面座標 + setScrollFactor(0) で描いていたが、scrollFactor 0 が無視するのは
+     * スクロールだけで、**ズームはカメラ中心を軸に効いたまま**。そのため枠は
+     *     描画位置 = (指定x - 画面中心) * zoom + 画面中心
+     * へ飛び、ズームが 1 でない時ほど、また画面端ほどポインタから離れて出ていた。
+     * ワールド座標で描けばこの変換自体が消え、必ずポインタの先から出る。
+     */
+    drawMarquee(m) {
+        if (!this._marqueeGfx) {
+            this._marqueeGfx = this.add.graphics();
+            this._marqueeGfx.setDepth(999999);
+        }
+        const g = this._marqueeGfx;
+        g.clear();
+        if (!m) return;
+        const x = Math.min(m.wx0, m.wx1), y = Math.min(m.wy0, m.wy1);
+        const w = Math.abs(m.wx1 - m.wx0), h = Math.abs(m.wy1 - m.wy0);
+        g.fillStyle(0x88ccff, 0.10);
+        g.fillRect(x, y, w, h);
+        // 線幅もワールド単位なので、ズームで割って画面上は常に細い1本にする
+        g.lineStyle(1 / (this.cameras.main.zoom || 1), 0xaaddff, 0.9);
+        g.strokeRect(x, y, w, h);
+    }
+
+    /**
+     * ワールド座標の矩形に触れている**自軍の生存兵**を返す。
+     *
+     * 判定は見えている姿（コンテナの外接矩形＝影とスプライトだけ。HPバーは別レイヤ）
+     * との重なりで行う。ヘックス単位だと同ヘックスの散布位置とズレるし、足元の1点
+     * だけを見ると、体を囲ったのに掴めないという操作になる。
+     */
+    unitsInWorldRect(x0, y0, x1, y1) {
+        const out = [];
+        const gl = window.gameLogic;
+        const view = this.unitView;
+        if (!gl || !view || !view.visuals) return out;
+        const lo = { x: Math.min(x0, x1), y: Math.min(y0, y1) };
+        const hi = { x: Math.max(x0, x1), y: Math.max(y0, y1) };
+        for (const u of gl.units) {
+            if (u.hp <= 0 || u.team !== 'player') continue;
+            const vis = view.visuals.get(u.id);
+            if (!vis || !vis.container) continue;
+            const c = vis.container;
+            const b = (typeof c.getBounds === 'function') ? c.getBounds() : null;
+            const hit = b
+                ? (b.x <= hi.x && b.x + b.width >= lo.x && b.y <= hi.y && b.y + b.height >= lo.y)
+                : (c.x >= lo.x && c.x <= hi.x && c.y >= lo.y && c.y <= hi.y);
+            if (hit) out.push(u);
+        }
+        return out;
+    }
+
     updateSidebarViewport() {
         // Keep the main camera on Phaser's standard full-canvas path. The
         // opaque sidebar scene blocks map input, so drawing below it is safe.

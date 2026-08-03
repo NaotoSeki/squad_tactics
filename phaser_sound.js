@@ -42,6 +42,15 @@ const Sfx = {
         'mg42_single': { prefix: 'mg42_single', count: 10 },
         // Kar98K / M1903系ボルトアクション用。
         'kar98k': { prefix: 'kar98k_shot', count: 10 },
+        // Thompson (SMG)。MG42 と同じく射撃任務で連射・短連射・単発を使い分ける。
+        'thompson_auto': { prefix: 'thompson_auto', count: 1 },
+        'thompson_burst': { prefix: 'thompson_burst', count: 8 },
+        'thompson_single': { prefix: 'thompson_single', count: 10 },
+        // StG 44。StG44系そのものに加え、**個別音源をまだ持たない小火器の既定**でもある
+        // （合成音より実録の方が良い、というディレクター判断。2026-08-03）。
+        'stg44_auto': { prefix: 'stg44_auto', count: 1 },
+        'stg44_burst': { prefix: 'stg44_burst', count: 8 },
+        'stg44_single': { prefix: 'stg44_single', count: 10 },
     },
 
     /**
@@ -53,6 +62,16 @@ const Sfx = {
     weaponSfx: {
         'm1': 'm1_garand',
         'k98_scope': 'kar98k',
+    },
+
+    /**
+     * 実録を持つ銃の**同一実銃**コード。PL版は statTemplate を持たないので、
+     * これが無いと `pl_94`(MG42) が「音の無い銃」扱いになって StG44 で鳴る。
+     * 名前が似ているだけの別物を拾わないよう、表で明示する。
+     */
+    sameGunCodes: {
+        mg42: { mg42: 1, pl_94: 1, pl_402: 1 },
+        thompson: { thompson: 1, pl_16: 1, pl_17: 1 },
     },
 
     /** 群のキー一覧を実ファイル名へ展開する */
@@ -85,17 +104,43 @@ const Sfx = {
         if (code && typeof WPNS !== 'undefined') master = WPNS[code] || null;
         const family = master && master.statTemplate;
 
-        if (weapon && (code === 'mg42' || family === 'mg42')) {
-            // SimWeapon は burstSize、旧Action側の WPNS は burst を持つ。
-            // 共通入口で両方を受けないと手動射撃だけSingle音へ落ちる。
-            const burstSize = weapon.burstSize != null ? weapon.burstSize : (weapon.burst || 1);
-            if (burstSize <= 1) return 'mg42_single';
-            return fireMode === 'suppress' ? 'mg42_auto' : 'mg42_burst';
+        if (!weapon) return 'shot';
+
+        // 実録の銃声を当てるのは**実弾を撃つ小火器だけ**。砲・ロケット・擲弾は弾種が
+        // 違うので嘘になるし、装備部品(type:'part')はそもそも発砲しない。
+        // クラス判定より先に置くこと — 後ろに置くと、sim の class が smg に解決される
+        // 部品が Thompson の音で鳴る（2026-08-03 実測で踏んだ）。
+        const isSmallArm = (!master || master.type === 'bullet') && weapon.class !== 'at';
+
+        if (isSmallArm) {
+            const same = this.sameGunCodes;
+            if ((code && same.mg42[code]) || family === 'mg42') {
+                return this._burstVariant('mg42', weapon, fireMode);
+            }
+            if ((code && same.thompson[code]) || family === 'thompson' || weapon.class === 'smg') {
+                return this._burstVariant('thompson', weapon, fireMode);
+            }
         }
         if (code && (this.groupFor(code) || this.assets[code])) return code;
-        if (family === 'm1' || (weapon && weapon.class === 'rifle'
-            && (!master || master.plCategory === 'rifle'))) return 'm1';
+        if (isSmallArm) {
+            if (family === 'm1' || (weapon.class === 'rifle'
+                && (!master || master.plCategory === 'rifle'))) return 'm1';
+            // 個別音源をまだ割り当てていない小火器は、一旦すべて StG 44 の実録で鳴らす
+            // （2026-08-03 ディレクター指示。合成音より実録の方が良い）。
+            return this._burstVariant('stg44', weapon, fireMode);
+        }
         return code || 'shot';
+    },
+
+    /**
+     * 連射段数と射撃任務から auto / burst / single を選ぶ。
+     * SimWeapon は burstSize、旧Action側の WPNS は burst を持つので両方受ける
+     * （片方だけだと手動射撃が常に single 音へ落ちる）。
+     */
+    _burstVariant(prefix, weapon, fireMode) {
+        const burstSize = weapon.burstSize != null ? weapon.burstSize : (weapon.burst || 1);
+        if (burstSize <= 1) return prefix + '_single';
+        return fireMode === 'suppress' ? prefix + '_auto' : prefix + '_burst';
     },
     /** sim_battle / 本編の共通射撃音入口 */
     playWeapon(weapon, fireMode, visibilityEpoch) {
@@ -147,6 +192,12 @@ const Sfx = {
         'mg42_auto': 1800,
         'mg42_burst': 1100,
         'mg42_single': 180,
+        'thompson_auto': 1500,
+        'thompson_burst': 900,
+        'thompson_single': 150,
+        'stg44_auto': 1500,
+        'stg44_burst': 900,
+        'stg44_single': 150,
         'tank_reload': 1500  // 敵戦車の連続射撃で2回鳴るのを防止
     },
     lastPlayTime: {},

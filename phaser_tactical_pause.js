@@ -17,6 +17,17 @@
   const LEAD = 0xa8ffd8;       // 指揮リンク
   const FLASH_FRAMES = 48;     // ターゲットカーソルの表示フレーム数（約0.8秒）
 
+  /**
+   * 実際に指揮を執れる分隊長か。
+   *
+   * isLeader だけを見ると、赤ゲージ(incap)で倒れた分隊長にも指揮官の二重丸と
+   * 指揮リンクが出続ける（2026-08-04 ディレクター報告）。sim_core 側も incap を
+   * 「抜けた」扱いにして後任を立てるので、表示の条件もそれに合わせる。
+   */
+  function isActingLeader(s) {
+    return !!(s && s.isLeader && s.hp > 0 && s.state !== 'incap');
+  }
+
   function targetIdOf(s) {
     const order = s && s.currentOrder;
     if (order && order.type === 'TARGET' && order.payload) return order.payload.targetId || null;
@@ -320,7 +331,7 @@
       const steady = Math.max(0.2, 1 - (s.suppression || 0) / pinnedAt);
 
       let command = 0.55;   // 指揮から切れている兵の既定
-      if (s.isLeader) command = 1.2;
+      if (isActingLeader(s)) command = 1.2;
       else if (leader) {
         const d = Math.max(Math.abs(s.q - leader.q), Math.abs(s.r - leader.r),
           Math.abs((s.q + s.r) - (leader.q + leader.r)));
@@ -418,11 +429,14 @@
       const alive = soldiers.filter((s) => s && s.hp > 0);
       const byId = new Map(alive.map((s) => [String(s.id), s]));
       const selectedId = this.options.getSelectedId ? this.options.getSelectedId() : null;
+      // 矩形選択は複数。主兵(selectedId)だけ太く、残りも選択中と分かる太さで描く
+      const selectedIds = this.options.getSelectedIds
+        ? new Set(this.options.getSelectedIds() || []) : null;
       const visible = new Set();
 
       // 指揮官（各軍1名）。戦雲の統率係数と指揮リンクの描画に使う
       const leaders = {};
-      alive.forEach((s) => { if (s.isLeader) leaders[s.team] = s; });
+      alive.forEach((s) => { if (isActingLeader(s)) leaders[s.team] = s; });
 
       // 戦雲は毎フレーム組み直す必要がない。ポーズ中は盤面が動かないので間引く
       if (this.cloud && (this._cloudAt !== alive.length || this.frame % 30 === 1)) {
@@ -477,8 +491,8 @@
         }
 
         const label = this._label(id, s.team);
-        const leader = s.isLeader ? '◈ 指揮官 ' : '';
-        if (s.isLeader) {
+        const leader = isActingLeader(s) ? '◈ 指揮官 ' : '';
+        if (isActingLeader(s)) {
           // 指揮官は輪を二重にして、盤面のどこに居るか一目で分かるようにする
           this.lines.lineStyle(2 / zoom, LEAD, 0.9);
           this.lines.strokeCircle(pos.x, pos.y - 8 / zoom, 17 / zoom);
@@ -492,8 +506,11 @@
         ).setVisible(true);
 
         const color = s.team === 'A' ? FRIEND : ENEMY;
-        this.lines.lineStyle((id === String(selectedId) ? 3 : 1.5) / zoom, color, 0.95);
-        this.lines.strokeCircle(pos.x, pos.y - 8 / zoom, (id === String(selectedId) ? 14 : 9) / zoom);
+        const isPrimary = (id === String(selectedId));
+        const isSel = isPrimary || (selectedIds ? selectedIds.has(id) : false);
+        this.lines.lineStyle((isPrimary ? 3 : isSel ? 2.2 : 1.5) / zoom, color, 0.95);
+        this.lines.strokeCircle(pos.x, pos.y - 8 / zoom,
+          (isPrimary ? 14 : isSel ? 12 : 9) / zoom);
 
         if (info.targetId) {
           const target = byId.get(String(info.targetId));
@@ -542,7 +559,7 @@
         const ammo = Number.isFinite(selected.magRemaining)
           ? `${selected.magRemaining}発 + 予備${selected.magsLeft}` : '不明';
         const target = info.targetId ? this._name(info.targetId) : 'なし';
-        const detailText = `選択: ${this._name(selected.id)}${selected.isLeader ? ' ◈ 指揮官' : ''}\n`
+        const detailText = `選択: ${this._name(selected.id)}${isActingLeader(selected) ? ' ◈ 指揮官' : ''}\n`
           + `行動: ${info.action}   対象: ${target}\n`
           + `HP ${Math.round(selected.hp)}   制圧 ${Math.round(selected.suppression || 0)}   弾薬 ${ammo}`
           + (planLine ? `\n${planLine}` : '');

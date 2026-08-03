@@ -1,0 +1,44 @@
+{
+  "input_file": "asset\\audio\\GUNAuto_SMG-Thompson M1928A1 Auto 50m_B00M_WW2FC_Ambix.wav",
+  "input_channel": 0,
+  "input_mono_mode": "channel",
+  "input_sr": 96000,
+  "input_duration_sec": 8.116145833333333,
+  "output_sr": 48000,
+  "parameters": {
+    "frame_ms": 5.0,
+    "hop_ms": 1.0,
+    "floor_pct": 20.0,
+    "onset_db": 18.0,
+    "min_gap_ms": 300.0,
+    "pre_ms": 5.0,
+    "decay_db": -45.0,
+    "decay_hold_ms": 30.0,
+    "max_len_ms": 2500.0,
+    "fade_in_ms": 1.0,
+    "fade_out_ms": 15.0,
+    "peak_db": -1.0,
+    "rate_out": 48000,
+    "min_len_ms": 120.0,
+    "min_peak_db": -30.0
+  },
+  "num_detected": 2,
+  "num_accepted": 1,
+  "rejected": {
+    "short_or_low_peak": 1
+  },
+  "shots": [
+    {
+      "file": "thompson_auto_01.wav",
+      "start_sec": 0.172,
+      "duration_sec": 2.5040104166666666,
+      "duration_sec_resampled": 2.504020833333333,
+      "peak_dbfs_before_norm": -2.179783821105957,
+      "rms_dbfs_before_norm": -22.820396423339844,
+      "peak_dbfs_after_norm": -1.0,
+      "sample_rate_input": 96000,
+      "sample_rate_output": 48000,
+      "num_samples_output": 120193
+    }
+  ]
+}
