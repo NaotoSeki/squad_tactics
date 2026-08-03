@@ -118,8 +118,8 @@ map = {
 | MORALE_PINNED_DRAIN | -1/秒 | |
 | ROUT_CHECK_BELOW | 30（5秒ごとに morale/100 判定） | |
 | RELOAD_T | rifle 30 / mg 80 | tick |
-| BURSTS_PER_MAG | rifle 12 / smg 12 / mg 28 / sniper 10 | 1マガジンのバースト数（実弾数w.capの直流しを廃止 — §14 B裁定） |
-| DEFAULT_MAGS | rifle 6 / smg 4 / mg 4 / sniper 6 | 予備弾倉。MGが8〜10分で先に沈黙する配分 |
+| BURSTS_PER_MAG | rifle 12 / smg 12 / mg 28 / sniper 10 | `cap` を持たない互換武器だけに使う実弾数フォールバック |
+| DEFAULT_MAGS | rifle 6 / smg 4 / mg 4 / sniper 6 | 予備弾倉数。総弾数は `WPNS.cap × (1 + DEFAULT_MAGS)` |
 | SWITCH_T | 30 | 持ち替え |
 | AIM_T | aimed 20 / suppress 8 | |
 | BURST_INTERVAL_T | aimed: rifle 30 smg 25 mg 20 / suppress: 半分 | |
@@ -226,7 +226,7 @@ class CommsOrders {            // §8 OrdersApi を実装
 外部調査（Gemini産・弾薬タイムライン）を critic が検収した裁定の要約。詳細な数値根拠は本節の値が反映済み。
 
 - **A 史実性**: 「長時間戦闘の実態は膠着＋断続突撃」（主張5）は膠着設計の裏付けとして採用。弾薬数は**桁のみ採用**（一次裏取りなし。レンジを仕様に直書きしない）
-- **B 弾薬経済**: magCap=実弾数の直流しは意味論崩壊 → BURSTS_PER_MAG 新設。MG=分隊火力の主柱が先に沈黙し「制圧が消えた瞬間に膠着が動く」締め付け構造
+- **B 弾薬経済（2026-08-01更新）**: 発射弾数・銃口光・消費弾数を一致させるため、`WPNS.cap` を実弾数として採用。`BURSTS_PER_MAG` は `cap` のない互換武器専用。MG=50発×（装填済み1+予備4）、M1=8発×（装填済み1+予備6）を基準にする
 - **C 移動致死**: 「移動中は遮蔽を失う」を採用しつつ、MGのみ×4・他×1.5（全武器×4は側面機動を自殺行為化し §7.4 基準2 と矛盾するため却下）
 - **D 集中射撃**: 史実妥当だが膠着設計の最大の破壊者 → pHit重複ペナルティで「集中=速くpin、殺すのは機動/手榴弾/突撃」を維持
 

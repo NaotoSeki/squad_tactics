@@ -1,0 +1,354 @@
+{
+  "schema": "raised-hd-job/v1",
+  "jobId": "german_village_barn_016_ver_01_s4",
+  "id": "german_village_barn_016_ver_01",
+  "family": "building",
+  "roles": [
+    "body",
+    "stateBody"
+  ],
+  "bodySlot": 4,
+  "pairedShadowSlot": 8,
+  "pixelRatio": 2,
+  "lightingContract": "ps-overcast-upper-left-v1",
+  "bodyOrigin": [
+    -53,
+    -101
+  ],
+  "shadowOrigin": [
+    -53,
+    -18
+  ],
+  "references": {
+    "body": "../../../scratch/ps_sprites_canonical_v1/Objects/Buildings/german_village_barn_016_ver_01_s4.png",
+    "shadowCalibration": "../../../scratch/ps_sprites_canonical_v1/Objects/Buildings/german_village_barn_016_ver_01_s8.png",
+    "bodyRole": "numeric canvas/bbox/origin/contact/color calibration",
+    "shadowRole": "numeric world-origin/contact/bbox/extent/penumbra/density calibration only",
+    "canonicalPixelsCopied": false
+  },
+  "provenance": {
+    "source": "built-in ImageGen selected output",
+    "sourceCopy": "C:\\Projects\\squad_tactics\\tmp\\raised_hd\\german_village_barn_016_ver_01_s4_source.png",
+    "sourceSha256": "b9998a841e78cc36e097f027f98c458eafdd086469408b7418d6e9ba244b9782",
+    "cutout": "C:\\Projects\\squad_tactics\\tmp\\raised_hd\\german_village_barn_016_ver_01_s4_cutout.png",
+    "cutoutSha256": "db95cbd08c21c97d5c8a8d789b3a8aa7efd3276e18b7da7ed3727cbcc1f4e3fe",
+    "cutoutAlphaSha256": "3b8ebcccf8e7deb6357513aae91055a1f961759ba6eb98c475c60d459e6e4245",
+    "chromaHelper": "C:\\Users\\aware.梨花のPC\\.codex\\skills\\.system\\imagegen\\scripts\\remove_chroma_key.py"
+  },
+  "outputs": {
+    "body": "body/german_village_barn_016_ver_01_s4_body_hd_v1.png",
+    "shadow": "shadow/german_village_barn_016_ver_01_s8_shadow_hd_v1.png",
+    "review": "review/german_village_barn_016_ver_01_s4_world_review.png",
+    "metadata": "metadata/german_village_barn_016_ver_01_s4.json"
+  },
+  "body": {
+    "normalization": {
+      "sourceSize": [
+        1414,
+        1113
+      ],
+      "sourceBbox": [
+        10,
+        12,
+        1414,
+        1079
+      ],
+      "sourceContact": [
+        371.0,
+        702.25
+      ],
+      "canonicalBbox": [
+        0,
+        0,
+        207,
+        157
+      ],
+      "canonicalContact": [
+        53.0,
+        101.0
+      ],
+      "targetSize": [
+        414,
+        314
+      ],
+      "targetBbox": [
+        0,
+        0,
+        414,
+        314
+      ],
+      "targetContact": [
+        106.0,
+        202.0
+      ],
+      "resultBbox": [
+        0,
+        0,
+        413,
+        313
+      ],
+      "resultContact": [
+        106.0,
+        202.0
+      ],
+      "scale": [
+        0.29436921,
+        0.29362101
+      ],
+      "generatedAlphaSha256": "3b8ebcccf8e7deb6357513aae91055a1f961759ba6eb98c475c60d459e6e4245",
+      "normalizedAlphaSha256": "b75d5f0f71612979f5172b43403f2a4f4e72bcf8d635b4640bcdaf503095c751",
+      "canonicalAlphaSha256": "a7cafead397348cf9ffb5ee9d5c89f52edf111c70f4c161f110084421553bac9",
+      "alphaAuthority": "accepted generated cutout",
+      "canonicalAlphaRole": "numeric bbox/contact calibration only"
+    },
+    "quality": {
+      "size": [
+        414,
+        314
+      ],
+      "bbox": [
+        0,
+        0,
+        413,
+        313
+      ],
+      "visiblePixels": 67791,
+      "canonicalVisiblePixels": 65980,
+      "coverageRatio": 1.027448,
+      "contact": [
+        106.0,
+        202.0
+      ],
+      "expectedContact": [
+        106.0,
+        202.0
+      ],
+      "contactErrorPx": 0.0,
+      "magentaSpillPixels": 0,
+      "magentaSpillLimit": 7,
+      "canonicalAlphaIdentical": false
+    },
+    "fileSha256": "089d92faa9f49c51cb0b7b437d5dd11ea63f23af5bb9407a9873b172817cbb45",
+    "alphaSha256": "b75d5f0f71612979f5172b43403f2a4f4e72bcf8d635b4640bcdaf503095c751"
+  },
+  "shadow": {
+    "method": "paired-canonical-body-transform-v4-light-only",
+    "bodyAlphaAuthority": "b75d5f0f71612979f5172b43403f2a4f4e72bcf8d635b4640bcdaf503095c751",
+    "calibration": {
+      "referenceSize": [
+        216,
+        88
+      ],
+      "targetSize": [
+        432,
+        176
+      ],
+      "referenceOrigin": [
+        -53,
+        -18
+      ],
+      "worldOriginLocal": [
+        106.0,
+        36.0
+      ],
+      "referenceBbox": [
+        0,
+        0,
+        216,
+        88
+      ],
+      "targetBbox": [
+        0,
+        0,
+        432,
+        176
+      ],
+      "referenceContact": [
+        53.0059,
+        28.0
+      ],
+      "referenceCentroid": [
+        131.7124,
+        55.57
+      ],
+      "referenceCovariance": [
+        [
+          2816.399997,
+          701.64363
+        ],
+        [
+          701.64363,
+          315.765978
+        ]
+      ],
+      "referenceMajorAxisAngleDeg": -165.350027,
+      "referenceFillRatio": 0.22017,
+      "referenceAspectRatio": 4.760899,
+      "referenceBboxAspectRatio": 2.454545,
+      "targetMeanVisibleAlpha": 139.86882,
+      "targetMaxAlpha": 176,
+      "alphaFloor": 8,
+      "visiblePixels": 4185,
+      "targetVisiblePixels": 16740,
+      "partialAlphaFraction": 0.238949,
+      "blurRadiusPx": 1.951374,
+      "referenceRole": "numeric world-origin/contact/bbox/extent/penumbra/density calibration only",
+      "forbiddenPixelReuse": true
+    },
+    "derivation": {
+      "method": "family-specific projection from accepted generated BODY alpha; paired canonical BODY/SHADOW supplies transform calibration only",
+      "version": "shadow-v4-paired-transform",
+      "family": "building",
+      "bodyAlphaSha256": "b75d5f0f71612979f5172b43403f2a4f4e72bcf8d635b4640bcdaf503095c751",
+      "canonicalShadowRole": "numeric world-origin/contact/bbox/extent/penumbra/density calibration only",
+      "canonicalShadowPixelsCopied": false,
+      "lightingContract": "ps-overcast-upper-left-v1",
+      "shadowScreenVector": [
+        0.72,
+        0.69
+      ],
+      "projectionMatrix": [
+        0.92104045,
+        -0.08554874,
+        0.04743909,
+        0.76070481
+      ],
+      "layers": {
+        "sourceLayer": "generated lower-envelope contact alpha",
+        "shapeFit": {
+          "matrix": [
+            0.9210404539580633,
+            -0.08554873865241357,
+            0.047439091600129414,
+            0.7607048129487429
+          ],
+          "offset": [
+            0.0,
+            0.0
+          ],
+          "objective": 0.1032760648043792,
+          "converged": true,
+          "iterations": 10,
+          "rawProjectedBbox": [
+            10.52023034675561,
+            -28.902549069231725,
+            387.1192084669006,
+            150.45166164133505
+          ],
+          "rawProjectedCentroid": [
+            193.92339848183806,
+            93.8003764231021
+          ],
+          "projectedCovariance": [
+            [
+              11450.70942612918,
+              3163.043067750647
+            ],
+            [
+              3163.043067750648,
+              1095.9835622880532
+            ]
+          ]
+        },
+        "fillKernel": 13
+      },
+      "bodyContact": [
+        106.0,
+        202.0
+      ],
+      "bodyWorldContact": [
+        0.0,
+        0.0
+      ],
+      "shadowContact": [
+        106.0118,
+        56.0
+      ],
+      "shadowContactWorld": [
+        0.0118,
+        20.0
+      ],
+      "contactWorldDelta": [
+        0.0118,
+        20.0
+      ],
+      "resultContact": [
+        105.0,
+        56.0
+      ],
+      "contactErrorPx": 1.0118,
+      "resultBbox": [
+        4,
+        13,
+        394,
+        156
+      ],
+      "targetMeanVisibleAlpha": 139.86882,
+      "meanVisibleAlpha": 64.069379,
+      "targetMaxAlpha": 176,
+      "maxAlpha": 76,
+      "darkCoreRemoved": true,
+      "lightOnlyKneeAlpha": 52.0,
+      "lightOnlyCapAlpha": 76.0,
+      "blurRadiusPx": 0.429302,
+      "outputAlphaSha256": "2a0843f65cd242c4e5fd7d3e2874066f47b5c5a73fa01a792f110af371abcf58"
+    },
+    "quality": {
+      "contract": "shadow-v4-light-only",
+      "size": [
+        432,
+        176
+      ],
+      "bbox": [
+        4,
+        13,
+        394,
+        156
+      ],
+      "visiblePixels": 12756,
+      "meanVisibleAlpha": 64.069379,
+      "maxAlpha": 76,
+      "darkCoreRemoved": true,
+      "contact": [
+        105.0,
+        56.0
+      ],
+      "expectedContact": [
+        106.0118,
+        56.0
+      ],
+      "contactErrorPx": 1.0118,
+      "parityBias": 0.00284946,
+      "lowerRightTrunkCastPerHeightPx": null,
+      "canonicalPixelIdentical": false
+    },
+    "fileSha256": "955e8a5ebc3d944b9970fe49336ca325b19fd407759ec8638ceade1c548bf719",
+    "alphaSha256": "2a0843f65cd242c4e5fd7d3e2874066f47b5c5a73fa01a792f110af371abcf58",
+    "canonicalShadowPixelsCopied": false
+  },
+  "review": {
+    "file": "C:/Projects/squad_tactics/output/shadow_v4_light_staging/raised/review/german_village_barn_016_ver_01_s4_world_review.png",
+    "size": [
+      492,
+      440
+    ],
+    "worldOriginMarker": [
+      136,
+      270
+    ],
+    "shadowVector": [
+      0.72,
+      0.69
+    ],
+    "contactMarkers": {
+      "bodyWorld": [
+        0.0,
+        0.0
+      ],
+      "shadowWorld": [
+        0.0118,
+        20.0
+      ]
+    }
+  }
+}

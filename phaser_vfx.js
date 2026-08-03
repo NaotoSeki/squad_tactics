@@ -10,6 +10,169 @@ class VFXSystem {
     constructor() {
         this.particles = [];
         this.windTimer = 0;
+        this.scene = null;
+    }
+
+    bindScene(scene) { this.scene = scene; }
+
+    _muzzleProfile(weapon) {
+        const code = String((weapon && weapon.code) || '').toLowerCase();
+        const cls = String((weapon && weapon.class) || '').toLowerCase();
+        const burst = Number((weapon && (weapon.burstSize ?? weapon.burst)) || 1);
+        if (code.includes('mg42') || cls === 'mg' || burst >= 5) {
+            return { flash: 0.08, coreAlpha: 0.58, length: 52, width: 20, alpha: 0.10, rim: 72 };
+        }
+        if (cls === 'pistol' || code.includes('m1911')) {
+            return { flash: 0.04, coreAlpha: 0.50, length: 26, width: 11, alpha: 0.06, rim: 38 };
+        }
+        if (code.includes('suppressor') || code.includes('silenced')) {
+            return { flash: 0.035, coreAlpha: 0.42, length: 22, width: 9, alpha: 0.04, rim: 30, tint: 0xff6a30 };
+        }
+        return { flash: 0.055, coreAlpha: 0.55, length: 38, width: 15, alpha: 0.075, rim: 52 };
+    }
+
+    _roundSpacing(weapon) {
+        const cls = String((weapon && weapon.class) || '').toLowerCase();
+        return cls === 'mg' ? 34 : (cls === 'smg' ? 46 : 72);
+    }
+
+    _ensureMuzzleGlowTexture(scene) {
+        const key = 'muzzle_ground_glow';
+        if (scene.textures.exists(key)) return key;
+        const canvas = document.createElement('canvas');
+        canvas.width = 256; canvas.height = 128;
+        const ctx = canvas.getContext('2d');
+        // 楕円の上下左右が必ずキャンバス端でalpha=0になる寸法。以前は半径112を
+        // 高さ128へ描いていたため、透明になる前に上下端で切れて四角く見えていた。
+        ctx.save();
+        ctx.translate(64, 64);
+        ctx.scale(3, 1);
+        const grad = ctx.createRadialGradient(0, 0, 2, 0, 0, 64);
+        grad.addColorStop(0, 'rgba(255,255,245,0.98)');
+        grad.addColorStop(0.16, 'rgba(255,224,120,0.78)');
+        grad.addColorStop(0.48, 'rgba(255,126,38,0.34)');
+        grad.addColorStop(1, 'rgba(255,72,16,0)');
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.arc(0, 0, 64, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+        // 後方側はキャンバスでクリップされるため、横方向にも透明マスクを掛けて
+        // 左端の直線を消す。右端・上下端と合わせ、四辺すべてalpha=0になる。
+        ctx.globalCompositeOperation = 'destination-in';
+        const edgeMask = ctx.createLinearGradient(0, 0, canvas.width, 0);
+        edgeMask.addColorStop(0, 'rgba(0,0,0,0)');
+        edgeMask.addColorStop(0.12, 'rgba(0,0,0,1)');
+        edgeMask.addColorStop(0.82, 'rgba(0,0,0,1)');
+        edgeMask.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.fillStyle = edgeMask;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.globalCompositeOperation = 'source-over';
+        scene.textures.addCanvas(key, canvas);
+        return key;
+    }
+
+    /** 0-110msの発砲光。地面反射→アルファ輪郭の縁光→白芯の順で重ねる。 */
+    /** One visible flash per projectile while keeping one audio event per burst. */
+    playMuzzleBurst(x, y, angle, weapon, rounds) {
+        const scene = this.scene;
+        if (!scene) return;
+        const count = Math.max(1, Math.round(rounds || 1));
+        const spacing = this._roundSpacing(weapon);
+        for (let i = 0; i < count; i++) {
+            const fire = () => this.playMuzzleFlash(x, y, angle, weapon);
+            if (i === 0) fire();
+            else if (scene.time && scene.time.delayedCall) scene.time.delayedCall(i * spacing, fire);
+            else setTimeout(fire, i * spacing);
+        }
+    }
+
+    playMuzzleFlash(x, y, angle, weapon) {
+        const scene = this.scene;
+        if (!scene) return;
+        const profile = this._muzzleProfile(weapon);
+        const blend = (typeof Phaser !== 'undefined' && Phaser.BlendModes) ? Phaser.BlendModes.ADD : 1;
+        const glowKey = this._ensureMuzzleGlowTexture(scene);
+        const glow = scene.add.image(x, y + 3, glowKey)
+            .setOrigin(0.20, 0.5).setRotation(angle)
+            .setDisplaySize(profile.length, profile.width)
+            .setAlpha(profile.alpha).setBlendMode(blend).setDepth(7.5);
+        scene.tweens.add({
+            targets: glow, alpha: 0, delay: 10, duration: 70, ease: 'Cubic.out',
+            onComplete: () => glow.destroy()
+        });
+        if (scene.unitView && scene.unitView.flashMuzzleLight) {
+            scene.unitView.flashMuzzleLight(x, y, profile.rim);
+        }
+        if (window.PsObjectLayer && window.PsObjectLayer.flashMuzzleLight) {
+            window.PsObjectLayer.flashMuzzleLight(x, y, profile.rim);
+        }
+
+        if (!scene.textures.exists('muzzle_flash')) return;
+        const variant = this._muzzleRR = ((this._muzzleRR || 0) + 1) % 4;
+        const animKey = 'muzzle_flash_anim_' + variant;
+        if (!scene.anims.exists(animKey)) {
+            scene.anims.create({
+                key: animKey,
+                frames: scene.anims.generateFrameNumbers('muzzle_flash', { start: variant * 2, end: variant * 2 + 1 }),
+                frameRate: 40, repeat: 0
+            });
+        }
+        const spr = scene.add.sprite(x, y, 'muzzle_flash', variant * 2);
+        spr.setOrigin(0.34, 0.5).setRotation(angle).setScale(profile.flash)
+            .setAlpha(profile.coreAlpha).setTint(profile.tint || 0xffffff)
+            .setBlendMode(blend).setDepth(1998);
+        spr.play(animKey);
+        spr.once('animationcomplete', () => spr.destroy());
+    }
+
+    /** 高解像度の小口径着弾3変種。必ず8フレーム完走して破棄する。 */
+    playImpactSmoke(x, y, scale, variant) {
+        const scene = this.scene;
+        if (!scene || (typeof document !== 'undefined' && document.hidden)) return;
+        const index = variant == null
+            ? (this._impactRR = ((this._impactRR || 0) + 1) % 3)
+            : Math.abs(Math.round(variant)) % 3;
+        const texture = 'impact_rifle_' + index;
+        if (!scene.textures.exists(texture)) return;
+        const key = texture + '_anim';
+        if (!scene.anims.exists(key)) {
+            scene.anims.create({
+                key: key,
+                frames: scene.anims.generateFrameNumbers(texture, { start: 0, end: 7 }),
+                frameRate: 30, repeat: 0
+            });
+        }
+        const spr = scene.add.sprite(x, y, texture, 0)
+            .setOrigin(0.5, 0.68).setScale(scale || 0.052).setDepth(1997);
+        spr.play(key);
+        spr.once('animationcomplete', () => spr.destroy());
+    }
+
+    /**
+     * 実弾1発につき小さな着弾を1つ。命中弾は標的直近、残りは周辺地面へ散らす。
+     * 銃口光と同じ発射間隔を使うため、flashとimpactの個数・時間列が対応する。
+     */
+    playBulletImpactBurst(x, y, rounds, weapon, hit) {
+        const scene = this.scene;
+        if (!scene) return;
+        const count = Math.max(1, Math.round(rounds || 1));
+        const spacing = this._roundSpacing(weapon);
+        const cls = String((weapon && weapon.class) || '').toLowerCase();
+        const spread = cls === 'mg' ? 18 : (cls === 'smg' ? 14 : 9);
+        for (let i = 0; i < count; i++) {
+            const decisive = !!hit && i === 0;
+            const radius = decisive ? 2.5 : spread * (0.55 + Math.random() * 0.65);
+            const theta = Math.random() * Math.PI * 2;
+            const ix = x + Math.cos(theta) * radius;
+            const iy = y + Math.sin(theta) * radius * 0.55;
+            const size = (cls === 'mg' ? 0.050 : 0.044) * (0.88 + Math.random() * 0.22);
+            const fire = () => this.playImpactSmoke(ix, iy, size, i + (this._impactRR || 0));
+            if (i === 0) fire();
+            else if (scene.time && scene.time.delayedCall) scene.time.delayedCall(i * spacing, fire);
+            else setTimeout(fire, i * spacing);
+        }
+        this._impactRR = ((this._impactRR || 0) + count) % 3;
     }
 
     update() {
@@ -28,18 +191,7 @@ class VFXSystem {
             p.x += p.vx; p.y += p.vy;
             
             if (p.type === 'wind') {
-                p.alpha = Math.sin((p.life / p.maxLife) * Math.PI) * 0.03; 
-            } else if (p.type === 'proj') {
-                p.progress += p.speed; let t = p.progress; if (t >= 1) t = 1;
-                const dx = p.ex - p.sx; const dy = p.ey - p.sy;
-                p.x = p.sx + dx * t; p.y = p.sy + dy * t;
-                if (p.arcHeight > 0) p.y -= Math.sin(t * Math.PI) * p.arcHeight;
-                if(t < 1) {
-                    p.prevX = p.sx + dx * (t - p.speed*0.5);
-                    p.prevY = p.sy + dy * (t - p.speed*0.5);
-                    if (p.arcHeight > 0) p.prevY -= Math.sin((t-p.speed*0.5) * Math.PI) * p.arcHeight;
-                }
-                if (t >= 1) { if (typeof p.onHit === 'function') p.onHit(); p.life = 0; }
+                p.alpha = Math.sin((p.life / p.maxLife) * Math.PI) * 0.03;
             } else if (p.type === 'rocket') {
                 p.progress += p.speed;
                 let t = p.progress;
@@ -85,29 +237,8 @@ class VFXSystem {
         this.particles.forEach(p => {
             if (p.delay > 0) return;
             
-            // 弾丸 (Line Tracer)
-            if (p.type === 'proj') {
-                if (p.isTracer) {
-                    const alpha = 0.92;
-                    const color = 0xffffcc;
-                    const dx = p.x - p.prevX;
-                    const dy = p.y - p.prevY;
-                    if (dx * dx + dy * dy < 0.25) {
-                        graphics.fillStyle(color, alpha);
-                        graphics.fillCircle(p.x, p.y, 3);
-                    } else {
-                        graphics.lineStyle(3, color, alpha);
-                        graphics.beginPath(); graphics.moveTo(p.prevX, p.prevY); graphics.lineTo(p.x, p.y); graphics.strokePath();
-                        graphics.lineStyle(1, 0xffffff, Math.min(1, alpha + 0.2));
-                        graphics.beginPath();
-                        graphics.moveTo(p.prevX + dx * 0.55, p.prevY + dy * 0.55);
-                        graphics.lineTo(p.x, p.y);
-                        graphics.strokePath();
-                    }
-                }
-            }
             // ロケット (弧を描く飛翔＋煙の尾)
-            else if (p.type === 'rocket') {
+            if (p.type === 'rocket') {
                 const alpha = 0.95 - p.progress * 0.4;
                 graphics.lineStyle(4, 0xffaa44, alpha);
                 graphics.beginPath(); graphics.moveTo(p.prevX, p.prevY); graphics.lineTo(p.x, p.y); graphics.strokePath();
@@ -139,7 +270,7 @@ class VFXSystem {
             else {
                 const alpha = (p.alpha !== undefined) ? p.alpha : (p.life / p.maxLife);
                 graphics.fillStyle(this.hexToInt(p.color), alpha);
-                graphics.fillRect(p.x - p.size/2, p.y - p.size/2, p.size, p.size);
+                graphics.fillCircle(p.x, p.y, p.size * 0.5);
             }
         });
     }
@@ -171,15 +302,7 @@ class VFXSystem {
     }
     
     addSmoke(x, y) { 
-        this.add({ 
-            x:x, y:y, 
-            vx:(Math.random()-0.5)*0.8, 
-            vy:-0.5-Math.random()*1.0, 
-            color: (Math.random()>0.5) ? "#666666" : "#444444", 
-            size: 6 + Math.random()*4, 
-            life: 60+Math.random()*30, 
-            type:'smoke'
-        }); 
+        this.playImpactSmoke(x, y, 0.052);
     }
 
     /** ロケットの煙の尾: 始点から終点へ複数煙を並べる（レガシー・一括煙） */
@@ -219,23 +342,8 @@ class VFXSystem {
         });
     }
 
-    addBulletImpact(x, y, burst) {
-        const count = (burst && burst > 1) ? Math.min(6 + burst, 24) : 4;
-        const radius = (burst && burst > 1) ? 10 + burst * 1.5 : 12;
-        const lifeBase = (burst && burst > 1) ? 12 : 15;
-        for (let i = 0; i < count; i++) {
-            const angle = Math.random() * Math.PI * 2;
-            this.add({
-                x: x + (Math.random() - 0.5) * radius * 2,
-                y: y + (Math.random() - 0.5) * radius * 1.2,
-                vx: Math.cos(angle) * (0.5 + Math.random() * 1.2),
-                vy: -0.2 - Math.random() * 0.8,
-                color: (Math.random() > 0.5) ? "#8a7355" : "#6b5a45",
-                size: (burst && burst > 1) ? 2 + Math.random() * 4 : 2 + Math.random() * 3,
-                life: lifeBase + Math.random() * 18,
-                type: 'smoke'
-            });
-        }
+    addBulletImpact(x, y, rounds, weapon, hit) {
+        this.playBulletImpactBurst(x, y, rounds, weapon, hit);
     }
     
     addFire(x, y) { 
@@ -248,18 +356,6 @@ class VFXSystem {
             life: 30+Math.random()*20, 
             type:'smoke'
         }); 
-    }
-    
-    addProj(params) {
-        params.type = 'proj';
-        params.life = 999;
-        params.progress = params.progress || 0;
-        params.x = params.sx;
-        params.y = params.sy;
-        params.prevX = params.sx;
-        params.prevY = params.sy;
-        if (!params.color) params.color = '#ffffaa';
-        this.add(params);
     }
     
     addUnitDebris(x, y) { }

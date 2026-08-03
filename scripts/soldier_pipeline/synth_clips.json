@@ -1,0 +1,288 @@
+{
+  "_readme": "既存アクションからアーマチュアを直接操作して新規クリップを合成する定義。sp_synth_clips.py が読む。先に定義したクリップは後続クリップの入力に使える（遮蔽ポーズ→その遷移）。",
+
+  "_axis_calibration": "2026-07-30 実測。Spine/Spine1/Spine2/Neck/Head のローカル軸は X=前傾ピッチ / Y=捻り / Z=右肩側へのロール。軸間クロストークはほぼ0（X操作時の横変位 <=0.001）。Hips だけは軸が混ざるので lean には使わない。肩・腕は体軸非整列かつ小銃の保持が崩れるので触らない。",
+
+  "_graft_limits": "graft は上体が起きている姿勢にしか効かない。Kneel は成立、**Prone は破綻**（伏せは Hips が約90°倒れており、立ち姿勢用の上半身を移植すると腕の可動面が地面へ潜って小銃が地面を貫通する。2026-07-30 実レンダで確認し Prone.Reload を破棄）。ランタイムは prone_reload が無ければ prone_idle へ落とす。伏せリロードが要るなら伏せ専用クリップをDLすること。",
+
+  "_angle_lesson": "重要（2026-07-30、1回目のレンダで実際に外した）: 角度を『頭部の変位量』から見積もると必ず過大になる。脊椎チェーンのピッチは視覚的に複合するため、累積30°の前傾で『壁に隠れる』ではなく『崩れ落ちる』絵になった。実測の落とし所は累積ピッチ: Cover_Idle 約12°(+頭8°) / Cower 約21°(+頭12°) / Cover_Fire 5°まで。乗り出しは**ピッチではなくロール(Z)で作る** — ロールは小銃を肩付けしたまま横へ出るので照準の絵が壊れない。ピッチを足すと構えが解けて劣化する。",
+
+  "clips": [
+    {
+      "_note": "遮蔽で身を潜める（壁貼り付き）。前傾で縮こまり頭を下げ、遮蔽側へわずかに引く。呼吸で完全静止を避ける。",
+      "name": "Kneel.Cover_Idle",
+      "source": { "action": "Kneel.Idle", "from": "start", "to": "start" },
+      "ops": [
+        {
+          "op": "hold",
+          "frames": 10,
+          "at": "start",
+          "breathe": { "bones": { "mixamorig:Spine1": [1.4, 0, 0] }, "period": 10 }
+        },
+        {
+          "op": "offset",
+          "space": "local",
+          "bones": {
+            "mixamorig:Spine": [6, 0, -3],
+            "mixamorig:Spine1": [4, 0, -2],
+            "mixamorig:Spine2": [2, 0, 0],
+            "mixamorig:Neck": [5, 0, 0],
+            "mixamorig:Head": [3, 0, 0]
+          }
+        }
+      ]
+    },
+    {
+      "_note": "遮蔽から身を乗り出して射撃。前傾+右肩側ロールで射線側へ出る。ランタイムの COVER_LEAN_PX 2.5px と同方向に効かせる。",
+      "name": "Kneel.Cover_Fire",
+      "source": { "action": "Kneel.Fire", "from": "start", "to": "end", "step": 3 },
+      "ops": [
+        {
+          "op": "offset",
+          "space": "local",
+          "bones": {
+            "mixamorig:Spine": [3, 0, 7],
+            "mixamorig:Spine1": [2, 0, 6],
+            "mixamorig:Spine2": [0, 0, 4],
+            "mixamorig:Neck": [0, 0, -3]
+          }
+        }
+      ]
+    },
+    {
+      "_note": "身を乗り出す（潜む→射撃）。",
+      "name": "Trans.Kneel.Cover_Idle__Kneel.Cover_Fire",
+      "splice": [
+        { "action": "Kneel.Cover_Idle", "from": "end", "to": "end" },
+        { "action": "Kneel.Cover_Fire", "from": "start", "to": "start" }
+      ],
+      "bridge": 5
+    },
+    {
+      "_note": "また隠れる（射撃→潜む）。ユーザー要望の中核。",
+      "name": "Trans.Kneel.Cover_Fire__Kneel.Cover_Idle",
+      "splice": [
+        { "action": "Kneel.Cover_Fire", "from": "end", "to": "end" },
+        { "action": "Kneel.Cover_Idle", "from": "start", "to": "start" }
+      ],
+      "bridge": 5
+    },
+
+    {
+      "_note": "立ち姿勢の壁貼り付き。膝立ちより浅い屈曲にする。",
+      "name": "Stand.Cover_Idle",
+      "source": { "action": "Stand.Idle", "from": "start", "to": "start" },
+      "ops": [
+        {
+          "op": "hold",
+          "frames": 10,
+          "at": "start",
+          "breathe": { "bones": { "mixamorig:Spine1": [1.4, 0, 0] }, "period": 10 }
+        },
+        {
+          "op": "offset",
+          "space": "local",
+          "bones": {
+            "mixamorig:Spine": [6, 0, -4],
+            "mixamorig:Spine1": [4, 0, -3],
+            "mixamorig:Spine2": [2, 0, 0],
+            "mixamorig:Neck": [5, 0, 0],
+            "mixamorig:Head": [3, 0, 0]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Stand.Cover_Fire",
+      "source": { "action": "Stand.Fire", "from": "start", "to": "end", "step": 3 },
+      "ops": [
+        {
+          "op": "offset",
+          "space": "local",
+          "bones": {
+            "mixamorig:Spine": [3, 0, 7],
+            "mixamorig:Spine1": [2, 0, 6],
+            "mixamorig:Spine2": [0, 0, 4],
+            "mixamorig:Neck": [0, 0, -3]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Trans.Stand.Cover_Idle__Stand.Cover_Fire",
+      "splice": [
+        { "action": "Stand.Cover_Idle", "from": "end", "to": "end" },
+        { "action": "Stand.Cover_Fire", "from": "start", "to": "start" }
+      ],
+      "bridge": 5
+    },
+    {
+      "name": "Trans.Stand.Cover_Fire__Stand.Cover_Idle",
+      "splice": [
+        { "action": "Stand.Cover_Fire", "from": "end", "to": "end" },
+        { "action": "Stand.Cover_Idle", "from": "start", "to": "start" }
+      ],
+      "bridge": 5
+    },
+
+    {
+      "_note": "飛び込み伏せ（回避行動）。既存の姿勢遷移2本を連結し 49→14フレームへ圧縮して緊急動作にする。",
+      "name": "Stand.Dive_Prone",
+      "splice": [
+        { "action": "Stand_To_Kneel", "from": "start", "to": "end", "step": 2 },
+        { "action": "Kneel_To_Prone", "from": "start", "to": "end", "step": 2 }
+      ],
+      "bridge": 3,
+      "ops": [
+        { "op": "retime", "frames": 14 }
+      ]
+    },
+
+    {
+      "_note": "重制圧下で縮こまる。Cover_Idle より強い屈曲。",
+      "name": "Kneel.Cower",
+      "source": { "action": "Kneel.Idle", "from": "start", "to": "start" },
+      "ops": [
+        {
+          "op": "hold",
+          "frames": 8,
+          "at": "start",
+          "breathe": { "bones": { "mixamorig:Spine1": [1.0, 0, 0] }, "period": 8 }
+        },
+        {
+          "op": "offset",
+          "space": "local",
+          "bones": {
+            "mixamorig:Spine": [10, 0, 0],
+            "mixamorig:Spine1": [7, 0, 0],
+            "mixamorig:Spine2": [4, 0, 0],
+            "mixamorig:Neck": [9, 0, 0],
+            "mixamorig:Head": [4, 0, 0]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Stand.Cower",
+      "source": { "action": "Stand.Idle", "from": "start", "to": "start" },
+      "ops": [
+        {
+          "op": "hold",
+          "frames": 8,
+          "at": "start",
+          "breathe": { "bones": { "mixamorig:Spine1": [1.0, 0, 0] }, "period": 8 }
+        },
+        {
+          "op": "offset",
+          "space": "local",
+          "bones": {
+            "mixamorig:Spine": [9, 0, 0],
+            "mixamorig:Spine1": [6, 0, 0],
+            "mixamorig:Spine2": [4, 0, 0],
+            "mixamorig:Neck": [8, 0, 0],
+            "mixamorig:Head": [4, 0, 0]
+          }
+        }
+      ]
+    },
+
+    {
+      "_note": "走り。Rifle Run は In Place 無しでDLされており local Z が +289 単調増加する実ルートモーションを持つ（2026-07-30実測）。linear で先頭→末尾の直線ドリフトだけ抜き、上下動と左右の振りは残す。末尾が先頭と一致するのでループも閉じる。",
+      "name": "Loop.Stand.Run",
+      "source": { "action": "Stand.Run", "from": "start", "to": "end", "step": 1 },
+      "ops": [
+        { "op": "strip_root_motion", "bone": "mixamorig:Hips", "axes": ["x", "y", "z"], "mode": "linear" }
+      ]
+    },
+    {
+      "_note": "しゃがみ走り。走りの上半身を膝立ちの脚へ移植する。",
+      "name": "Loop.Kneel.Run",
+      "source": { "action": "Kneel.Forward", "from": "start", "to": "end", "step": 2 },
+      "ops": [
+        { "op": "graft", "from": "Loop.Stand.Run", "bones": "upper" }
+      ]
+    },
+    {
+      "_note": "リロード。元100フレームなので間引く。Mixamo版は元々インプレース（全軸ドリフト≈0を実測）。",
+      "name": "Clip.Stand.Reload",
+      "source": { "action": "Stand.Reload", "from": "start", "to": "end", "step": 4 },
+      "ops": []
+    },
+    {
+      "_note": "膝立ち/伏せリロード。立ちリロードの上半身だけを各姿勢の土台へ移植して自給する（Mixamoの追加DL不要）。",
+      "name": "Kneel.Reload",
+      "source": { "action": "Kneel.Idle", "from": "start", "to": "start" },
+      "ops": [
+        { "op": "hold", "frames": 26, "at": "start" },
+        { "op": "graft", "from": "Clip.Stand.Reload", "bones": "upper" }
+      ]
+    },
+    {
+      "_note": "伏せリロードは専用クリップをDLした（2026-07-30）。graft では腕が地面に潜って破綻したため、伏せだけは実クリップが必要だった。元193フレーム・ドリフト0（インプレース）なので間引いて他姿勢と同尺(26F)に揃える。",
+      "name": "Prone.Reload",
+      "source": { "action": "Prone.Reload_src", "from": "start", "to": "end", "step": 7 },
+      "ops": [
+        { "op": "retime", "frames": 26 }
+      ]
+    },
+
+    {
+      "_note": "被弾フリンチ。**Dying からの切り出しは禁止**（2026-07-30 実レンダで確認: Dying は初動で小銃を手放すため、掠っただけで銃を投げ捨てる絵になる）。代わりに Idle へ pulse エンベロープで後方インパルスを与える。手のボーンを触らないので小銃は握ったまま。",
+      "name": "Stand.Hit",
+      "source": { "action": "Stand.Idle", "from": "start", "to": "start" },
+      "ops": [
+        { "op": "hold", "frames": 9, "at": "start" },
+        {
+          "op": "offset",
+          "space": "local",
+          "bones": {
+            "mixamorig:Spine": [-7, 0, 5],
+            "mixamorig:Spine1": [-5, 0, 4],
+            "mixamorig:Spine2": [-3, 0, 3],
+            "mixamorig:Neck": [-9, 0, 4],
+            "mixamorig:Head": [-5, 0, 3]
+          },
+          "envelope": { "type": "pulse", "rise": 2, "fall": 6 }
+        }
+      ]
+    },
+    {
+      "name": "Kneel.Hit",
+      "source": { "action": "Kneel.Idle", "from": "start", "to": "start" },
+      "ops": [
+        { "op": "hold", "frames": 9, "at": "start" },
+        {
+          "op": "offset",
+          "space": "local",
+          "bones": {
+            "mixamorig:Spine": [-6, 0, 5],
+            "mixamorig:Spine1": [-4, 0, 4],
+            "mixamorig:Spine2": [-3, 0, 3],
+            "mixamorig:Neck": [-8, 0, 4],
+            "mixamorig:Head": [-4, 0, 3]
+          },
+          "envelope": { "type": "pulse", "rise": 2, "fall": 6 }
+        }
+      ]
+    },
+    {
+      "_note": "伏せ姿勢は後方へ反れないので、横方向の捻りを主にした小さめのジョルトにする。",
+      "name": "Prone.Hit",
+      "source": { "action": "Prone.Idle", "from": "start", "to": "start" },
+      "ops": [
+        { "op": "hold", "frames": 8, "at": "start" },
+        {
+          "op": "offset",
+          "space": "local",
+          "bones": {
+            "mixamorig:Spine": [-4, 0, 5],
+            "mixamorig:Spine1": [-3, 0, 4],
+            "mixamorig:Neck": [-5, 0, 4],
+            "mixamorig:Head": [-3, 0, 3]
+          },
+          "envelope": { "type": "pulse", "rise": 2, "fall": 5 }
+        }
+      ]
+    }
+  ]
+}

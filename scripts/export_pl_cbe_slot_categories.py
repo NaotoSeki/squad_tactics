@@ -36,6 +36,7 @@ CAT_NAMES = {
     14: "binoculars", 15: "radio", 16: "medical", 17: "document", 18: "ammo",
     19: "rifle_grenade", 20: "hand_grenade", 21: "magnetic_mine", 22: "demolition",
     23: "smoke", 24: "bayonet_knife", 25: "mounted_weapon",
+    26: "autocannon", 27: "gun", 28: "howitzer",
 }
 
 # 主装填判定: category 18 のみ（第2フィルタ正本）

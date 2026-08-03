@@ -28,7 +28,6 @@ class SimScene extends Phaser.Scene {
     this.speed = 1;        // 0 = paused, 1, 2
     this.selectedId = null;
     this.sprites = new Map();   // soldierId -> { container, sprite, ring, hpBar, supBar, label, note, x, y }
-    this.tracers = [];          // { sx, sy, ex, ey, life, hit }
     this.gridW = 12;
     this.gridH = 9;
     this.fps = 0;
@@ -74,7 +73,6 @@ class SimScene extends Phaser.Scene {
   create() {
     // reset per-run state (scene.restart re-runs create() on the same instance)
     this.sprites = new Map();
-    this.tracers = [];
     this.acc = 0;
     this.selectedId = null;
     this.map = this.makeMap();
@@ -94,7 +92,6 @@ class SimScene extends Phaser.Scene {
     this.drawTerrain();
     this.spriteLayer = this.add.container(0, 0).setDepth(100);
     this.vfxGraphics = this.add.graphics().setDepth(2000);
-    this.tracerGraphics = this.add.graphics().setDepth(1900);
 
     this.buildSprites();
 
@@ -260,7 +257,6 @@ class SimScene extends Phaser.Scene {
       }
     }
     this.renderSprites(delta);
-    this.renderTracers(delta);
     if (window.VFX) {
       if (window.VFX.shakeRequest > 0) { this.cameras.main.shake(90, window.VFX.shakeRequest * 0.001); window.VFX.shakeRequest = 0; }
       window.VFX.update();
@@ -276,7 +272,6 @@ class SimScene extends Phaser.Scene {
           const sh = this.sim.getSoldier(ev.shooterId), tg = this.sim.getSoldier(ev.targetId);
           if (!sh || !tg) break;
           const a = this.hexToPx(sh.q, sh.r), b = this.hexToPx(tg.q, tg.r);
-          this.tracers.push({ sx: a.x, sy: a.y - 6, ex: b.x, ey: b.y - 6, life: 4, hit: ev.hit });
           if (window.VFX) { window.VFX.addSmoke(a.x, a.y - 8); if (ev.hit) window.VFX.addBulletImpact(b.x, b.y - 4, 2); }
           if (window.Sfx) try { window.Sfx.play('shot'); } catch (e) {}
           break;
@@ -337,18 +332,6 @@ class SimScene extends Phaser.Scene {
         v.note.setAlpha(Math.max(0, (v.noteUntil - this.sim._tick) / 60));
       } else if (v.note.text) { v.note.setText(''); }
     }
-  }
-
-  renderTracers(delta) {
-    const g = this.tracerGraphics;
-    g.clear();
-    for (const t of this.tracers) {
-      const a = Math.max(0, t.life / 4);
-      g.lineStyle(t.hit ? 2 : 1, t.hit ? 0xffee88 : 0xffcc66, a * 0.9);
-      g.beginPath(); g.moveTo(t.sx, t.sy); g.lineTo(t.ex, t.ey); g.strokePath();
-      t.life -= delta / 16;
-    }
-    this.tracers = this.tracers.filter(t => t.life > 0);
   }
 
   restart(seed) {

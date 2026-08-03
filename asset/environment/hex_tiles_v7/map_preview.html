@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>WW2 Ruined City — hex_tiles_v7 preview (v5)</title>
+<style>
+  body { background:#141416; color:#ccc; font-family: system-ui, sans-serif; margin:0; }
+  #bar { padding:8px 12px; background:#1e1e22; display:flex; gap:10px; align-items:center; position:sticky; top:0; z-index:5; }
+  #bar input { width:80px; background:#0f0f12; color:#eee; border:1px solid #444; padding:4px 6px; }
+  #bar button { background:#3a4a3a; color:#eee; border:1px solid #666; padding:5px 14px; cursor:pointer; }
+  #bar button:hover { background:#4a5f4a; }
+  canvas { display:block; margin:0 auto; }
+  .hint { color:#777; font-size:12px; }
+</style>
+</head>
+<body>
+<div id="bar">
+  seed <input id="seed" type="number" value="7">
+  <button onclick="regen()">生成</button>
+  <button onclick="document.getElementById('seed').value=Math.floor(Math.random()*99999);regen()">ランダム</button>
+  <span class="hint">v5: 荒地スカー遷移・2hexクレーター・掘削塹壕・ボカージュ・教会/工場・ひび割れ道路</span>
+</div>
+<canvas id="cv"></canvas>
+<script>
+const CANVAS_W = 576, CANVAS_H = 768;
+const HEX_R_PX = 256;
+const ANCHOR_X = 288, ANCHOR_Y = 469;
+const SCALE = 0.35;
+const COLS = 12, ROWS = 9;
+const NG = { cobble: 6, street: 3 };
+
+const DIRS = [[1,0],[1,-1],[0,-1],[-1,0],[-1,1],[0,1]];   // index = edge k
+const SCAR_BASES = { e1:[0], e2a:[0,1], e2o:[0,3], e3:[0,1,2], e4:[0,1,2,3], full:[0,1,2,3,4,5] };
+
+function h32(...args) {
+  let s = args.join('|'), h = 2166136261 >>> 0;
+  for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619) >>> 0; }
+  h ^= h >>> 13; h = Math.imul(h, 0x5bd1e995) >>> 0; h ^= h >>> 15;
+  return h >>> 0;
+}
+const rnd = (...a) => h32(...a) / 4294967295;
+const setEq = (a, b) => a.size === b.length && b.every(x => a.has(x));
+
+function scarResolve(mask) {
+  if (!mask.size) return null;
+  for (const [pat, base] of Object.entries(SCAR_BASES))
+    for (let r = 0; r < 6; r++)
+      if (setEq(new Set([...mask].map(k => ((k - r) % 6 + 6) % 6)), base))
+        return [pat, r * 60];
+  return null;
+}
+
+function roadTile(dirs, seed, q, r) {
+  const nvar = { straight: 4, corner: 3, tee: 2, cross: 2 };
+  const ds = [...new Set(dirs)].sort((a, b) => a - b);
+  const f = (pat, rot) => `road_${pat}_v${h32(seed, q, r, 'rv') % nvar[pat]}_rot${rot}.png`;
+  if (ds.length === 2) {
+    const [a, b] = ds;
+    if ((b - a) % 6 === 3) return f('straight', (a % 3) * 60);
+    if ((b - a) % 6 === 2) return f('corner', a * 60);
+    if (((a - b) % 6 + 6) % 6 === 2) return f('corner', b * 60);
+  }
+  if (ds.length === 3)
+    for (let k = 0; k < 6; k++)
+      if (setEq(new Set(ds.map(d => ((d - k) % 6 + 6) % 6)), [0, 2, 3]))
+        return f('tee', k * 60);
+  if (ds.length === 4)
+    for (const k of [0, 1, 2])
+      if (setEq(new Set(ds.map(d => ((d - k) % 6 + 6) % 6)), [0, 2, 3, 5]))
+        return f('cross', k * 60);
+  return null;
+}
+
+function genCity(seed) {
+  const grid = new Map();
+  const key = (q, r) => q + ',' + r;
+  const at = (q, r) => grid.get(key(q, r));
+  const streets = new Set();
+  const avR = 2 + h32(seed, 'avr') % (ROWS - 4);
+  for (let q = 0; q < COLS; q++) streets.add(key(q, avR));
+  let bq = 2 + h32(seed, 'avq') % (COLS - 4);
+  for (let r = 0; r < ROWS; r++) { streets.add(key(bq, r)); if (r % 2 === 1) bq -= 1; }
+
+  const cx = COLS / 2, cy = ROWS / 2;
+  for (let r = 0; r < ROWS; r++) for (let q = 0; q < COLS; q++) {
+    const dist = Math.hypot(q - cx, r - cy) / Math.max(cx, cy);
+    const wreck = Math.max(0, 1 - dist) + (rnd(seed, q, r, 'n') - 0.5) * 0.55;
+    const cell = { q, r, ground: 'cobble', gfile: null, flat: [], over: [],
+                   wreck, dist, open: true, scar: false };
+    if (streets.has(key(q, r))) { cell.open = false; cell.ground = 'street'; }
+    grid.set(key(q, r), cell);
+  }
+
+  // wasteland blobs + crater pairs
+  const scarCells = new Set();
+  const pairCells = new Map();
+  const nBlob = 1 + h32(seed, 'nblob') % 2;
+  for (let i = 0; i < nBlob; i++) {
+    for (let t = 0; t < 20; t++) {
+      const bq_ = 1 + h32(seed, 'blq', i, t) % (COLS - 3);
+      const br_ = 1 + h32(seed, 'blr', i, t) % (ROWS - 2);
+      const k = h32(seed, 'blk', i, t) % 3;
+      const nb = [bq_ + DIRS[k][0], br_ + DIRS[k][1]];
+      const c0 = at(bq_, br_), c1 = at(nb[0], nb[1]);
+      if (!c0 || !c0.open || !c1 || !c1.open) continue;
+      const v = h32(seed, 'blv', i) % 2;
+      pairCells.set(key(bq_, br_), `cpair_v${v}_a_rot${k * 60}.png`);
+      pairCells.set(key(nb[0], nb[1]), `cpair_v${v}_b_rot${k * 60}.png`);
+      scarCells.add(key(bq_, br_)); scarCells.add(key(nb[0], nb[1]));
+      for (const cc of [[bq_, br_], nb])
+        for (const [dq, dr] of DIRS) {
+          const n2 = at(cc[0] + dq, cc[1] + dr);
+          if (n2 && n2.open) scarCells.add(key(n2.q, n2.r));
+        }
+      break;
+    }
+  }
+  const frontier = [...scarCells].filter(c => !pairCells.has(c));
+  const extra = 2 + h32(seed, 'blx') % 4;
+  for (let j = 0; j < extra && frontier.length; j++) {
+    const c = frontier[h32(seed, 'blf', j) % frontier.length].split(',').map(Number);
+    for (const [dq, dr] of DIRS) {
+      const n2 = at(c[0] + dq, c[1] + dr);
+      if (n2 && n2.open && !scarCells.has(key(n2.q, n2.r)) &&
+          rnd(seed, 'blg', j, n2.q, n2.r) < 0.5) {
+        scarCells.add(key(n2.q, n2.r)); frontier.push(key(n2.q, n2.r));
+      }
+    }
+  }
+  const maskOf = (q, r) => new Set(DIRS.map((d, k) =>
+    scarCells.has(key(q + d[0], r + d[1])) ? k : -1).filter(k => k >= 0));
+  for (let it = 0; it < 6; it++) {
+    const bad = [];
+    for (const c of scarCells) {
+      if (pairCells.has(c)) continue;
+      const [q, r] = c.split(',').map(Number);
+      if (!scarResolve(maskOf(q, r))) bad.push([q, r]);
+    }
+    if (!bad.length) break;
+    for (const [q, r] of bad) {
+      const mask = maskOf(q, r);
+      for (let k = 0; k < 6; k++) {
+        if (mask.has(k)) continue;
+        const n2 = at(q + DIRS[k][0], r + DIRS[k][1]);
+        if (n2 && n2.open && !scarCells.has(key(n2.q, n2.r))) {
+          scarCells.add(key(n2.q, n2.r)); break;
+        }
+      }
+    }
+  }
+  for (const c of scarCells) {
+    const [q, r] = c.split(',').map(Number);
+    const cell = at(q, r);
+    if (!cell) continue;
+    cell.scar = true; cell.open = false;
+    if (pairCells.has(c)) { cell.ground = 'pair'; cell.gfile = pairCells.get(c); }
+    else {
+      const res = scarResolve(maskOf(q, r)) || ['full', 0];
+      const [pat, rot] = res;
+      const nv = pat === 'full' ? 3 : 2;
+      cell.ground = 'scar';
+      cell.gfile = `scar_${pat}_v${h32(seed, q, r, 'sv') % nv}_rot${pat === 'full' ? 0 : rot}.png`;
+    }
+  }
+
+  // roads
+  for (const s of streets) {
+    const [q, r] = s.split(',').map(Number);
+    if (!at(q, r)) continue;   // diagonal avenue may leave the grid
+    const dirs = DIRS.map((d, k) => streets.has(key(q + d[0], r + d[1])) ? k : -1)
+                     .filter(k => k >= 0);
+    const t = roadTile(dirs, seed, q, r);
+    if (t) { at(q, r).ground = 'road'; at(q, r).gfile = t; }
+  }
+
+  // buildings / rubble / specials
+  let churchDone = false, factoryDone = false;
+  for (let r = 0; r < ROWS; r++) for (let q = 0; q < COLS; q++) {
+    const cell = at(q, r);
+    if (!cell.open) continue;
+    const roll = rnd(seed, q, r, 'b');
+    const dmgOf = w => w < 0.25 ? 0 : (w < 0.6 ? 1 : 2);
+    if (!churchDone && rnd(seed, 'chp') < 0.75 && cell.dist > 0.3 && cell.dist < 0.75 && roll < 0.2) {
+      cell.over.push(`church_d${cell.wreck < 0.3 ? 0 : (cell.wreck < 0.65 ? 1 : 2)}_rot${60 * (h32(seed, q, r, 'cr') % 6)}.png`);
+      cell.open = false; churchDone = true; continue;
+    }
+    if (!factoryDone && rnd(seed, 'fap') < 0.65 && cell.dist > 0.5 && roll < 0.25) {
+      cell.over.push(`factory_d${cell.wreck < 0.3 ? 0 : (cell.wreck < 0.65 ? 1 : 2)}_rot${60 * (h32(seed, q, r, 'fr') % 6)}.png`);
+      cell.open = false; factoryDone = true; continue;
+    }
+    if (roll < 0.62) {
+      cell.over.push(`bldg_s${1 + h32(seed, q, r, 'bs') % 5}_d${dmgOf(cell.wreck)}_rot${60 * (h32(seed, q, r, 'rot') % 6)}.png`);
+      cell.open = false;
+    } else if (roll < 0.76) {
+      cell.over.push(`rubble_v${h32(seed, q, r, 'rv') % 3}_rot${60 * (h32(seed, q, r, 'rr') % 2)}.png`);
+    }
+  }
+
+  // trench + wire + foxholes
+  const trR = (h32(seed, 'trs') % 2) ? (ROWS - 2) : 1;
+  const tq0 = 1 + h32(seed, 'tq0') % Math.max(1, COLS >> 1);
+  const tlen = 3 + h32(seed, 'tql') % 4;
+  const run = [];
+  for (let q = tq0; q < Math.min(COLS - 1, tq0 + tlen); q++) {
+    const c = at(q, trR);
+    if (!c || !c.open) break;
+    run.push(q);
+  }
+  if (run.length >= 2) {
+    run.forEach((q, i) => {
+      const c = at(q, trR);
+      if (i === 0) c.flat.push('trench_end_v0_rot0.png');
+      else if (i === run.length - 1) c.flat.push('trench_end_v0_rot180.png');
+      else c.flat.push(`trench_straight_v${h32(seed, q, trR, 'tv') % 2}_rot0.png`);
+      c.open = false;
+    });
+    const wr = trR + (trR < ROWS / 2 ? 1 : -1);
+    for (const q of run) {
+      const c = at(q, wr);
+      if (c && c.open && rnd(seed, q, wr, 'w') < 0.8)
+        c.over.push(`wire_v${h32(seed, q, wr, 'wv') % 2}_rot0.png`);
+    }
+    const fr = trR + (trR < ROWS / 2 ? 2 : -2);
+    for (const q of run) {
+      const c = at(q, fr);
+      if (c && c.open && rnd(seed, q, trR, 'fx') < 0.25) {
+        c.flat.push(`foxhole_v${h32(seed, q, trR, 'fv') % 2}_rot0.png`);
+        c.open = false;
+      }
+    }
+  }
+
+  // bocage line
+  const bgR = trR !== 1 ? 1 : ROWS - 2;
+  const bq0 = 1 + h32(seed, 'bg0') % Math.max(1, COLS >> 1);
+  const blen = 3 + h32(seed, 'bgl') % 4;
+  const brun = [];
+  for (let q = bq0; q < Math.min(COLS - 1, bq0 + blen); q++) {
+    const c = at(q, bgR);
+    if (!c || !c.open) break;
+    brun.push(q);
+  }
+  if (brun.length >= 2) {
+    brun.forEach((q, i) => {
+      const c = at(q, bgR);
+      if (i === 0) c.over.push('bocage_end_v0_rot0.png');
+      else if (i === brun.length - 1) c.over.push('bocage_end_v0_rot180.png');
+      else c.over.push(`bocage_straight_v${h32(seed, q, bgR, 'bv') % 2}_rot0.png`);
+      c.open = false;
+    });
+  }
+
+  // props / nature
+  for (let r = 0; r < ROWS; r++) for (let q = 0; q < COLS; q++) {
+    const cell = at(q, r);
+    if (cell.ground === 'road') {
+      if (rnd(seed, q, r, 'hh') < 0.08)
+        cell.over.push(`prop_hedgehog_v${h32(seed, q, r, 'hv') % 2}_rot${(h32(seed, q, r, 'hr') % 3) * 60}.png`);
+      continue;
+    }
+    if (!cell.open && !cell.scar) continue;
+    const p = rnd(seed, q, r, 'px');
+    if (cell.scar) {
+      if (p < 0.15)
+        cell.over.push(`tree_v${[0,1,2,3,3,4][h32(seed, q, r, 'tw') % 6]}_rot0.png`);
+      continue;
+    }
+    if (p < 0.05) {
+      const k = (h32(seed, q, r, 'pk') % 2) ? 'sandbag' : 'barrels';
+      cell.over.push(`prop_${k}_v${h32(seed, q, r, 'pv') % 2}_rot0.png`);
+    } else if (cell.dist > 0.6 && p < 0.25) {
+      if (rnd(seed, q, r, 'tv2') < 0.5)
+        cell.over.push(`tree_v${[0,1,2,0,3,4][h32(seed, q, r, 'tvv') % 6]}_rot0.png`);
+      else cell.over.push(`veg_v${h32(seed, q, r, 'vv') % 3}_rot0.png`);
+    } else if (p > 0.93) {
+      cell.over.push(`veg_v${h32(seed, q, r, 'vv2') % 3}_rot0.png`);
+    }
+  }
+  return grid;
+}
+
+const imgCache = new Map();
+function loadImg(name) {
+  if (!imgCache.has(name)) {
+    imgCache.set(name, new Promise((res) => {
+      const im = new Image();
+      im.onload = () => res(im);
+      im.onerror = () => res(null);
+      im.src = name;
+    }));
+  }
+  return imgCache.get(name);
+}
+
+async function regen() {
+  const seed = document.getElementById('seed').value | 0;
+  const cv = document.getElementById('cv');
+  const R = HEX_R_PX * SCALE;
+  const pad = 30;
+  cv.width = Math.ceil(Math.sqrt(3) * R * (COLS + ROWS / 2) + pad * 2);
+  cv.height = Math.ceil(1.5 * R * ROWS + R + pad * 5);
+  const ctx = cv.getContext('2d');
+  ctx.fillStyle = '#18181a';
+  ctx.fillRect(0, 0, cv.width, cv.height);
+  const grid = genCity(seed);
+  const center = (q, r) => [Math.sqrt(3) * R * (q + r / 2), 1.5 * R * r];
+  const draw = async (name, q, r) => {
+    const im = await loadImg(name);
+    if (!im) return;
+    const [cx, cy] = center(q, r);
+    ctx.drawImage(im, cx - ANCHOR_X * SCALE + pad, cy - ANCHOR_Y * SCALE + pad * 4,
+                  CANVAS_W * SCALE, CANVAS_H * SCALE);
+  };
+  const groundFile = (cell, q, r) => cell.gfile ? cell.gfile
+    : `gnd_${cell.ground}_v${h32(seed, q, r, 'gv') % NG[cell.ground]}.png`;
+  for (let r = 0; r < ROWS; r++) for (let q = 0; q < COLS; q++)
+    await draw(groundFile(grid.get(q + ',' + r), q, r), q, r);
+  for (let r = 0; r < ROWS; r++) for (let q = 0; q < COLS; q++)
+    for (const n of grid.get(q + ',' + r).flat) await draw(n, q, r);
+  for (let r = 0; r < ROWS; r++) for (let q = 0; q < COLS; q++)
+    for (const n of grid.get(q + ',' + r).over) await draw(n, q, r);
+}
+regen();
+</script>
+</body>
+</html>

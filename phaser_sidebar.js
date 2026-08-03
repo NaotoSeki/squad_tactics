@@ -1,14 +1,39 @@
 /** PHASER SIDEBAR: Right panel rendered in Phaser (unit info, loadout, log) */
 const SIDEBAR_WIDTH_DEFAULT = 340;
-const SIDEBAR_WIDTH_MIN = 240;
+const SIDEBAR_WIDTH_MIN = 200;
 const SIDEBAR_WIDTH_MAX = 560;
-window.__sidebarWidth = window.__sidebarWidth != null ? window.__sidebarWidth : SIDEBAR_WIDTH_DEFAULT;
+const initialSidebarMax = Math.max(SIDEBAR_WIDTH_MIN,
+    Math.min(SIDEBAR_WIDTH_MAX, window.innerWidth - 320));
+const responsiveSidebarDefault = Math.max(SIDEBAR_WIDTH_MIN,
+    Math.min(SIDEBAR_WIDTH_DEFAULT, window.innerWidth * 0.30));
+window.__sidebarWidth = window.__sidebarWidth != null
+    ? Math.max(SIDEBAR_WIDTH_MIN, Math.min(initialSidebarMax, window.__sidebarWidth))
+    : Math.min(initialSidebarMax, responsiveSidebarDefault);
 window.getSidebarWidth = function() { return (typeof window.__sidebarWidth === 'number' ? window.__sidebarWidth : SIDEBAR_WIDTH_DEFAULT); };
+document.documentElement.style.setProperty('--sidebar-width', window.__sidebarWidth + 'px');
+window.syncSidebarWidthToViewport = function() {
+    const max = Math.max(SIDEBAR_WIDTH_MIN, Math.min(SIDEBAR_WIDTH_MAX, window.innerWidth - 320));
+    const next = Math.max(SIDEBAR_WIDTH_MIN, Math.min(max, window.getSidebarWidth()));
+    if (next === window.__sidebarWidth) return;
+    window.__sidebarWidth = next;
+    document.documentElement.style.setProperty('--sidebar-width', next + 'px');
+    if (window.notifySidebarResize) window.notifySidebarResize();
+};
+window.addEventListener('resize', window.syncSidebarWidthToViewport);
 const PANEL_BG = 0x1a1a1a;
 const HEADER_BG = 0x111111;
 const SLOT_BG = 0x111111;
 const SLOT_BORDER = 0x444444;
 const ACCENT = 0xddaa44;
+/** 残弾ゲージを1発ずつ落とす間隔(ms)。表示だけの演出で、実弾数は sim が持つ */
+const AMMO_PIP_STEP_MS = 55;
+/** 背嚢の中身の個数。予備弾倉が消えたことを検出してスロットを組み直すのに使う */
+function bagItemCount(u) {
+    if (!u) return -1;
+    let n = (u.bag || []).length;
+    for (let i = 1; i < 3; i++) if (u.hands && u.hands[i]) n++;
+    return n;
+}
 const TEXT_COLOR = '#bbbbbb';
 const TEXT_DIM = '#888888';
 
@@ -30,6 +55,8 @@ const RADAR_BOTTOM_MARGIN = 16;
 const GAUGE_TOP = 38;
 const GAUGE_BOTTOM_PAD = 6;
 const BAG_SLOT_H = 54;
+/** 背嚢の枠数。2列×4段（logic_ui.js のDOM版サイドバーと必ず揃える） */
+const BAG_SLOTS = 8;
 const END_TURN_BUTTON_BOTTOM_OFFSET = 48;
 
 window.PhaserSidebar = class PhaserSidebar {
@@ -43,6 +70,12 @@ window.PhaserSidebar = class PhaserSidebar {
         this.dragGhost = null;
         this.currentUnit = null;
         this.squadChips = [];
+        this.rtwpAmmoText = null;
+        this.ammoPips = [];
+        this.ammoPipItem = null;
+        this._ammoPipsDrawn = -1;
+        this._ammoPipsShown = null;
+        this._bagCount = -1;
     }
 
     init() {
@@ -73,6 +106,12 @@ window.PhaserSidebar = class PhaserSidebar {
         this.unitContent.removeAll(true);
         this.currentUnit = u;
         this.squadChips = [];
+        this.rtwpAmmoText = null;
+        this.ammoPips = [];
+        this.ammoPipItem = null;
+        this._ammoPipsDrawn = -1;
+        this._ammoPipsShown = null;
+        this._bagCount = bagItemCount(u);
 
         if (!u || u.hp <= 0) {
             this.noSignalText.setVisible(true);
@@ -241,9 +280,14 @@ window.PhaserSidebar = class PhaserSidebar {
         const hpText = this.scene.add.text(textLeft, y, hpLabel, { fontSize: '11px', color: u.wounded ? '#ffdd33' : TEXT_COLOR, fontFamily: 'sans-serif' });
         this.unitContent.add(hpText);
         y += 22;
-        const apText = this.scene.add.text(textLeft, y, `AP  ${u.ap}/${u.maxAp}`, { fontSize: '11px', color: TEXT_COLOR, fontFamily: 'sans-serif' });
-        this.unitContent.add(apText);
-        y += 36;
+        // AP は旧ターン制の資源。RTwP では消費も回復もしないので出さない。
+        if (window.RtwpBattle && window.RtwpBattle.active) {
+            y += 14;
+        } else {
+            const apText = this.scene.add.text(textLeft, y, `AP  ${u.ap}/${u.maxAp}`, { fontSize: '11px', color: TEXT_COLOR, fontFamily: 'sans-serif' });
+            this.unitContent.add(apText);
+            y += 36;
+        }
 
         y = this.renderSameHexSquadRow(u, left, y, sw);
 
@@ -255,6 +299,17 @@ window.PhaserSidebar = class PhaserSidebar {
 
         const virtualWpn = window.getCurrentWeapon(u);
         const isMortarActive = virtualWpn && virtualWpn.code === 'm2_mortar';
+
+        // RTwPの正本弾薬。旧ターン制のitem.current表示とは別勘定なので、
+        // 発射のたびに減る実弾倉＋予備弾倉を明示する。
+        if (u._rtwpAmmo && window.RtwpBattle && window.RtwpBattle.active) {
+            this.rtwpAmmoText = this.scene.add.text(left, y, '', {
+                fontSize: '10px', color: '#d9bc72', fontFamily: 'monospace'
+            });
+            this.unitContent.add(this.rtwpAmmoText);
+            this.updateLiveStats();
+            y += 18;
+        }
 
         this.slots = [];
         for (let i = 0; i < 3; i++) {
@@ -269,19 +324,79 @@ window.PhaserSidebar = class PhaserSidebar {
         this.unitContent.add(bagLabel);
         y += 20;
 
-        for (let i = 0; i < 4; i++) {
-            const slot = this.createSlot(u, u.bag[i], 'bag', i, left, y, false, false);
+        // 背嚢は2列×4段の8枠。1列4枠では「予備弾倉4本＋手榴弾2＋拳銃＋その予備弾倉」
+        // という当たり前の携行すら組めなかった。縦は従来と同じ高さに収まる。
+        const bagCols = 2;
+        const bagGap = 6;
+        const bagW = Math.floor((sw - 36 - bagGap * (bagCols - 1)) / bagCols);
+        for (let i = 0; i < BAG_SLOTS; i++) {
+            const col = i % bagCols;
+            const row = Math.floor(i / bagCols);
+            const slot = this.createSlot(u, u.bag[i], 'bag', i,
+                left + col * (bagW + bagGap), y + row * (BAG_SLOT_H + 4), false, false, bagW);
             this.unitContent.add(slot.container);
             this.slots.push(slot);
-            y += slot.height + 4;
         }
+        y += Math.ceil(BAG_SLOTS / bagCols) * (BAG_SLOT_H + 4);
 
-        if (virtualWpn && !u.def.isTank && !virtualWpn.partType && virtualWpn.code !== 'm2_mortar' && virtualWpn.current < virtualWpn.cap) {
+        // RTwP の再装填は sim が自分でやる（RELOADイベントが出る）。旧ターン制の
+        // 手動リロードを押せると AP を消費して弾数だけ食い違うので出さない。
+        const rtwpActive = !!(window.RtwpBattle && window.RtwpBattle.active);
+        if (!rtwpActive && virtualWpn && !u.def.isTank && !virtualWpn.partType && virtualWpn.code !== 'm2_mortar' && virtualWpn.current < virtualWpn.cap) {
             y += 10;
             const reloadBtn = this.createButton(left, y, sw - 36, 28, 'RELOAD', () => { if (window.gameLogic) window.gameLogic.reloadWeapon(true); });
             this.unitContent.add(reloadBtn.container);
             y += 38;
         }
+    }
+
+    updateLiveStats() {
+        // End Turn は旧ターン制の操作。RTwP では押せても意味が無いので伏せる。
+        // （毎フレーム呼ばれる。attach は初回 MainScene.update なので生成時ではここで見る）
+        if (this.endTurnBtnContainer) {
+            const rtwp = !!(window.RtwpBattle && window.RtwpBattle.active);
+            if (this.endTurnBtnContainer.visible === rtwp) this.endTurnBtnContainer.setVisible(!rtwp);
+        }
+        // 弾ピップを実弾倉へ追従させる（スロットを組み直さずに色だけ塗り替える）。
+        // 減る時だけは1発ずつ落とす — バーストは3発まとめて消費されるが、ゲージが
+        // ごそっと飛ぶと発砲の手応えが消える。装填や兵士の切替は即座に合わせる。
+        // 選択中の1名しか pips を持たないので、演出はここだけで完結する。
+        if (this.ammoPips && this.ammoPips.length && this.ammoPipItem) {
+            const loaded = Math.max(0, Number(this.ammoPipItem.current) || 0);
+            if (this._ammoPipsShown == null || loaded > this._ammoPipsShown) {
+                this._ammoPipsShown = loaded;
+            } else if (loaded < this._ammoPipsShown) {
+                const now = this.scene.time.now;
+                if (now - (this._ammoPipsStepAt || 0) >= AMMO_PIP_STEP_MS) {
+                    this._ammoPipsShown--;
+                    this._ammoPipsStepAt = now;
+                }
+            }
+            const shown = this._ammoPipsShown;
+            if (shown !== this._ammoPipsDrawn) {
+                for (let i = 0; i < this.ammoPips.length; i++) {
+                    const pip = this.ammoPips[i];
+                    const col = pip.index < shown ? ACCENT : 0x333333;
+                    pip.tip.setFillStyle(col);
+                    pip.body.setFillStyle(col);
+                }
+                this._ammoPipsDrawn = shown;
+            }
+        }
+        // 予備弾倉は「アイテムが背嚢から消える」ことで減りが見える（RTwP側が
+        // 装填のたびに1個ずつ取り除く）。スロット構成が変わるので組み直す。
+        if (this.currentUnit && this._bagCount !== bagItemCount(this.currentUnit)) {
+            this.updateSidebar(this.currentUnit, window.gameLogic && window.gameLogic.state);
+            return;
+        }
+        if (!this.rtwpAmmoText || !this.currentUnit || !this.currentUnit._rtwpAmmo) return;
+        const ammo = this.currentUnit._rtwpAmmo;
+        const rounds = Math.max(0, Number(ammo.rounds) || 0);
+        const mags = Math.max(0, Number(ammo.magazines) || 0);
+        const capacity = Math.max(0, Number(ammo.capacity) || 0);
+        const reserve = mags * capacity;
+        this.rtwpAmmoText.setText(`RTWP AMMO  ${rounds}/${capacity}  +${reserve} (${mags} mags)`);
+        this.rtwpAmmoText.setColor(rounds + reserve > 0 ? '#d9bc72' : '#ff6655');
     }
 
     renderSameHexSquadRow(u, left, y, sw) {
@@ -355,8 +470,9 @@ window.PhaserSidebar = class PhaserSidebar {
         }
     }
 
-    createSlot(u, item, type, index, x, y, isMain, isMortarActive) {
-        const slotW = window.getSidebarWidth() - 36;
+    createSlot(u, item, type, index, x, y, isMain, isMortarActive, slotWOverride) {
+        // 背嚢は2列に割るので幅を外から渡せる。既定は従来どおりの全幅。
+        const slotW = slotWOverride || (window.getSidebarWidth() - 36);
         const needsBeltGauge = item && isMain && item.reserve !== undefined
             && typeof PlMgTripod !== 'undefined' && PlMgTripod.usesBeltReserve(item.code);
         const needsM8Gauge = item && item.code === 'm8_rocket' && isMain;
@@ -489,7 +605,10 @@ window.PhaserSidebar = class PhaserSidebar {
                     const body = this.scene.add.rectangle(x, bodyY, bulletW, bulletH, col);
                     body.setOrigin(0, 0);
                     container.add(body);
+                    // RTwPは実時間で撃つので、スロットを組み直さずに毎フレーム塗り替える。
+                    if (isMain) this.ammoPips.push({ tip: tip, body: body, index: i });
                 }
+                if (isMain) this.ammoPipItem = item;
             } else if (item.code === 'mortar_shell_box') {
                 const boxY = isMain ? slotH - 12 : GAUGE_TOP;
                 for (let i = 0; i < (item.current || 0); i++) {
@@ -519,6 +638,18 @@ window.PhaserSidebar = class PhaserSidebar {
                 bonusText.setOrigin(0, 0);
                 if (bonusText.setResolution) bonusText.setResolution(2);
                 container.add(bonusText);
+            }
+            const malfRate = item.effectiveMalfRate != null
+                ? Number(item.effectiveMalfRate)
+                : Number(item.malfRate != null ? item.malfRate : item.jam);
+            if (Number.isFinite(malfRate)) {
+                const malfMod = Number(item.loadedMalfMod) || 0;
+                const malfLabel = `故障:${malfRate}%` + (malfMod ? ` (+${malfMod})` : '');
+                const malfText = this.scene.add.text(8, rngDmgY + 12, malfLabel,
+                    Object.assign({}, metaStyle, { color: malfMod ? '#ffd45d' : TEXT_DIM }));
+                malfText.setOrigin(0, 0);
+                if (malfText.setResolution) malfText.setResolution(2);
+                container.add(malfText);
             }
         }
 

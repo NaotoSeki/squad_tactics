@@ -1,0 +1,155 @@
+{
+  "schema": "raised-hd-job/v1",
+  "jobId": "bush_big_04_s1",
+  "id": "bush_big_04",
+  "family": "shrub",
+  "roles": [
+    "stateBody"
+  ],
+  "bodySlot": 1,
+  "pairedShadowSlot": null,
+  "pixelRatio": 2,
+  "lightingContract": "ps-overcast-upper-left-v1",
+  "bodyOrigin": [
+    -11,
+    -11
+  ],
+  "shadowOrigin": null,
+  "references": {
+    "body": "../../../scratch/ps_sprites_canonical_v1/Objects/Plants/bush_big_04_s1.png",
+    "shadowCalibration": null,
+    "bodyRole": "numeric canvas/bbox/origin/contact/color calibration",
+    "shadowRole": null,
+    "canonicalPixelsCopied": false
+  },
+  "provenance": {
+    "source": "built-in ImageGen selected output",
+    "sourceCopy": "C:\\Projects\\squad_tactics\\tmp\\raised_hd\\bush_big_04_s1_source.png",
+    "sourceSha256": "a0741695c56e8a1ceba1d4f84ad6632f5b97e95b14a4d0f38b47e60fc87a270e",
+    "cutout": "C:\\Projects\\squad_tactics\\tmp\\raised_hd\\bush_big_04_s1_cutout.png",
+    "cutoutSha256": "e3c6a56bb2f0df357e690d41576e90149dae46483f9aeec9052a7a035d5622f6",
+    "cutoutAlphaSha256": "50306fbf38106deaf53c5245080b161417591f182a8af57dca8c154571210bc0",
+    "chromaHelper": "C:\\Users\\aware.梨花のPC\\.codex\\skills\\.system\\imagegen\\scripts\\remove_chroma_key.py"
+  },
+  "outputs": {
+    "body": "body/bush_big_04_s1_body_hd_v1.png",
+    "shadow": null,
+    "review": "review/bush_big_04_s1_world_review.png",
+    "metadata": "metadata/bush_big_04_s1.json"
+  },
+  "body": {
+    "normalization": {
+      "sourceSize": [
+        1254,
+        1254
+      ],
+      "sourceBbox": [
+        100,
+        163,
+        1154,
+        1089
+      ],
+      "sourceContact": [
+        709.5,
+        698.5
+      ],
+      "canonicalBbox": [
+        0,
+        0,
+        20,
+        20
+      ],
+      "canonicalContact": [
+        11.0,
+        11.0
+      ],
+      "targetSize": [
+        40,
+        40
+      ],
+      "targetBbox": [
+        0,
+        0,
+        40,
+        40
+      ],
+      "targetContact": [
+        22.0,
+        22.0
+      ],
+      "resultBbox": [
+        0,
+        0,
+        38,
+        38
+      ],
+      "resultContact": [
+        21.893,
+        22.0026
+      ],
+      "scale": [
+        0.03703704,
+        0.04216216
+      ],
+      "generatedAlphaSha256": "50306fbf38106deaf53c5245080b161417591f182a8af57dca8c154571210bc0",
+      "normalizedAlphaSha256": "aeae637b4463bf56e4878c8f25fab35dfa45f387fde878b6a5cdfcaec17fd3e8",
+      "canonicalAlphaSha256": "e76bd1714d2690b30b0d7e27ac8478a2b77785bad05337f675144c18120a90f9",
+      "alphaAuthority": "accepted generated cutout",
+      "canonicalAlphaRole": "numeric bbox/contact calibration only"
+    },
+    "quality": {
+      "size": [
+        40,
+        40
+      ],
+      "bbox": [
+        0,
+        0,
+        38,
+        38
+      ],
+      "visiblePixels": 684,
+      "canonicalVisiblePixels": 1000,
+      "coverageRatio": 0.684,
+      "contact": [
+        21.893,
+        22.0026
+      ],
+      "expectedContact": [
+        22.0,
+        22.0
+      ],
+      "contactErrorPx": 0.107081,
+      "magentaSpillPixels": 0,
+      "magentaSpillLimit": 2,
+      "canonicalAlphaIdentical": false
+    },
+    "fileSha256": "44ce1fc4dac924f818a06b8d6bd191b0470b297071634a86a48658b4e0eb2bd0",
+    "alphaSha256": "aeae637b4463bf56e4878c8f25fab35dfa45f387fde878b6a5cdfcaec17fd3e8"
+  },
+  "shadow": {
+    "method": "intentionally-shadowless-state",
+    "canonicalShadowPixelsCopied": false
+  },
+  "review": {
+    "file": "C:/Projects/squad_tactics/asset/environment/raised_hd/review/bush_big_04_s1_world_review.png",
+    "size": [
+      100,
+      138
+    ],
+    "worldOriginMarker": [
+      52,
+      90
+    ],
+    "shadowVector": [
+      0.72,
+      0.69
+    ],
+    "contactMarkers": {
+      "bodyWorld": [
+        -0.107,
+        0.0026
+      ]
+    }
+  }
+}

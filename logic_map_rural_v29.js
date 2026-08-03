@@ -29,23 +29,93 @@ window.RuralV29Map = {
    * - key: バリアント識別子
    * - texture: Phaserテクスチャキー
    * - file: アセットファイルパス
+   * - pixelRatio: 背景画像の任意の画素比。省略時1、2なら縦横2倍画像
    * - rot180: 180°回転適用フラグ
    * - ready: ファイルロード完了時 true（初期値はP1のみ）
    */
   VARIANTS: [
-    { key: 'p1', texture: 'rural_v29',    file: 'asset/environment/maps/rural_v29.png',    rot180: false, ready: true },
-    // p2〜p4(回転/建物スワップ実験)はオーナー評価「場所が同じで意味薄い」により
-    // ランダムプールから除外。fixedVariant 指定でのみ選択可。
+    // --- Blenderレンダー由来の固定マップ(2026-07-25 退役) ---
+    // 「セクタを進めると以前のレンダ済み5枚が出てくる」ため全て ready:false にした。
+    // 戦場は毎回PS実アセットからの生成物(psNative)を使う。
+    // 削除はせず fixedVariant 指定でのみ参照可能なまま残す(比較・回帰用)。
+    { key: 'p1', texture: 'rural_v29',    file: 'asset/environment/maps/rural_v29.png',    rot180: false, ready: false },
     { key: 'p2', texture: 'rural_v29_p2', file: 'asset/environment/maps/rural_v29_p2.png', rot180: true,  ready: false },
     { key: 'p3', texture: 'rural_v29_p3', file: 'asset/environment/maps/rural_v29_p3.png', rot180: false, ready: false },
     { key: 'p4', texture: 'rural_v29_p4', file: 'asset/environment/maps/rural_v29_p4.png', rot180: true,  ready: false },
     // 別ロケーション3種(2026-07-19): 道路網・建物・破壊度が異なる独立構図。
     // table キーで _locationRows の専用地形テーブルを参照する。
-    { key: 'loc_crossroad',   texture: 'rural_loc_crossroad',   file: 'asset/environment/maps/rural_loc_crossroad.png',   rot180: false, ready: true, table: 'loc_crossroad' },
-    { key: 'loc_forest_farm', texture: 'rural_loc_forest_farm', file: 'asset/environment/maps/rural_loc_forest_farm.png', rot180: false, ready: true, table: 'loc_forest_farm' },
-    { key: 'loc_shelled',     texture: 'rural_loc_shelled',     file: 'asset/environment/maps/rural_loc_shelled.png',     rot180: false, ready: true, table: 'loc_shelled' },
-    { key: 'loc_church_square', texture: 'rural_loc_church_square', file: 'asset/environment/maps/rural_loc_church_square.png', rot180: false, ready: true, table: 'loc_church_square' },
+    { key: 'loc_crossroad',   texture: 'rural_loc_crossroad',   file: 'asset/environment/maps/rural_loc_crossroad.png',   rot180: false, ready: false, table: 'loc_crossroad' },
+    { key: 'loc_forest_farm', texture: 'rural_loc_forest_farm', file: 'asset/environment/maps/rural_loc_forest_farm.png', rot180: false, ready: false, table: 'loc_forest_farm' },
+    { key: 'loc_shelled',     texture: 'rural_loc_shelled',     file: 'asset/environment/maps/rural_loc_shelled.png',     rot180: false, ready: false, table: 'loc_shelled' },
+    { key: 'loc_church_square', texture: 'rural_loc_church_square', file: 'asset/environment/maps/rural_loc_church_square.png', rot180: false, ready: false, table: 'loc_church_square' },
+    // PS正本キャンバス(2026-07-25)。Blenderレンダーではなく Panzer Strike の実マップ
+    // 配置をSSC原寸で再構成したもの。地形テーブルは手描きではなく配置台帳から機械導出
+    // (scripts/build_ps_battlefield.py)。psNative キーで window.PS_BATTLEFIELDS を引き、
+    // 背景の投影値もそこから取る(Blenderの55°投影定数は使わない)。
+    // 正本クロップ(実マップの一角)。構図が固定なので通常プールからは外し、
+    // 比較・回帰用に fixedVariant でのみ参照する。通常戦闘はシード生成物を使う。
+    { key: 'ps_village_north', texture: 'ps_village_north', file: 'asset/environment/maps/ps_village_north.png', rot180: false, ready: false, psNative: 'ps_village_north' },
   ],
+
+  /**
+   * KIT_PIECES: 北ピース(r7-9) × 南ピース(r10-12) の 2×2 = 4 パターン
+   * 実行時にランダム/固定選択で組み合わせ、継ぎ目で結合する。
+   * ファイル未存在でも ready:false のまま動作(監督官がPNG到着時に ready:true に変更)。
+   * 継ぎ目契約: r9のq=7=ROAD, r10のq=7=ROAD (本ピース完成時も維持すること)。
+   */
+  KIT_PIECES: {
+    north: [
+      {
+        key: 'kit_north_a', texture: 'kit_north_a', file: 'asset/environment/maps/kit_north_a.png', ready: false,
+        rows: [
+          [7, 7, ['FOREST', 'ROAD', 'GRASS', 'FIELD', 'FOREST']],
+          [8, 6, ['FOREST', 'ROAD', 'ROAD', 'GRASS', 'FIELD']],
+          [9, 6, ['RUIN', 'ROAD', 'ROAD', 'GRASS', 'FOREST']]
+        ]
+      },
+      {
+        key: 'kit_north_b', texture: 'kit_north_b', file: 'asset/environment/maps/kit_north_b.png', ready: false,
+        rows: [
+          [7, 7, ['FOREST', 'ROAD', 'BLDG', 'FIELD', 'FOREST']],
+          [8, 6, ['GRASS', 'ROAD', 'FIELD', 'GRASS', 'FOREST']],
+          [9, 6, ['GRASS', 'ROAD', 'FIELD', 'GRASS', 'FOREST']]
+        ]
+      }
+    ],
+    south: [
+      {
+        key: 'kit_south_a', texture: 'kit_south_a', file: 'asset/environment/maps/kit_south_a.png', ready: false,
+        rows: [
+          [10, 5, ['GRASS', 'GRASS', 'ROAD', 'FIELD', 'FIELD']],
+          [11, 5, ['GRASS', 'ROAD', 'FIELD', 'FIELD', 'FOREST']],
+          [12, 4, ['ROAD', 'GRASS', 'FOREST', 'FIELD', 'FIELD']]
+        ]
+      },
+      {
+        key: 'kit_south_b', texture: 'kit_south_b', file: 'asset/environment/maps/kit_south_b.png', ready: false,
+        rows: [
+          [10, 5, ['FOREST', 'BLDG', 'ROAD', 'FOREST', 'GRASS']],
+          [11, 5, ['ROAD', 'ROAD', 'GRASS', 'FIELD', 'GRASS']],
+          [12, 4, ['GRASS', 'ROAD', 'GRASS', 'GRASS', 'FOREST']]
+        ]
+      }
+    ]
+  },
+
+  /**
+   * kit モード制御
+   * - enabled: kit 生成を試みるかどうか
+   * - fixedNorth/fixedSouth: null = ランダム選択、'kit_north_a' 等で固定
+   * - lastNorth/lastSouth: 最後に生成されたピース（デバッグ用）
+   */
+  kitMode: {
+    // 2026-07-25 停止: kitピースもBlenderレンダー。PS生成物へ一本化した。
+    enabled: false,
+    fixedNorth: null,
+    fixedSouth: null,
+    lastNorth: null,
+    lastSouth: null
+  },
 
   /**
    * 別ロケーションの地形テーブル(コンパクト行形式)。
@@ -96,6 +166,73 @@ window.RuralV29Map = {
       bases.forEach((base, i) => out.push({ q: q0 + i, r, base }));
     }
     return out;
+  },
+
+  /**
+   * KIT_PIECES から north/south を選択
+   * - fixedNorth/fixedSouth があれば優先
+   * - 無ければ ready=true のものからランダム選択
+   * - ready な north/south が両方1つ以上あれば { north, south } を返す
+   * - 不足なら null を返す
+   */
+  _selectKitPieces() {
+    const readyNorth = this.KIT_PIECES.north.filter(p => p.ready);
+    const readySouth = this.KIT_PIECES.south.filter(p => p.ready);
+
+    if (readyNorth.length === 0 || readySouth.length === 0) {
+      // 不足、フォールバック
+      return null;
+    }
+
+    let north = this.kitMode.fixedNorth
+      ? this.KIT_PIECES.north.find(p => p.key === this.kitMode.fixedNorth)
+      : readyNorth[Math.floor(Math.random() * readyNorth.length)];
+
+    let south = this.kitMode.fixedSouth
+      ? this.KIT_PIECES.south.find(p => p.key === this.kitMode.fixedSouth)
+      : readySouth[Math.floor(Math.random() * readySouth.length)];
+
+    if (!north || !south) {
+      return null;
+    }
+
+    this.kitMode.lastNorth = north;
+    this.kitMode.lastSouth = south;
+    return { north, south };
+  },
+
+  /**
+   * window.PS_BATTLEFIELDS の全エントリを VARIANTS へ自動登録する。
+   *
+   * シード生成(scripts/gen_ps_seed_map.py)で新しいマップを作るたびにJSを編集
+   * しなくて済むようにするための機構。レジストリ(生成物)に載っていれば、
+   * それだけでマップ候補になる。VARIANTS に手書きしたキーは上書きしない。
+   */
+  _registerPsBattlefields() {
+    const registry = window.PS_BATTLEFIELDS;
+    if (!registry) return;
+    const known = new Set(this.VARIANTS.map(v => v.key));
+    Object.keys(registry).forEach(name => {
+      if (known.has(name)) return;
+      const bf = registry[name];
+      if (!bf || !bf.rows || !bf.image) return;
+      const variant = {
+        key: name,
+        texture: name,
+        // Generated maps keep stable filenames, so include their logical shape
+        // in the URL. Otherwise a browser can reuse the previous 1120x860 PNG
+        // after the registry has moved to 1600x1000, leaving a dark uncovered
+        // band inside the new camera bounds.
+        file: `asset/environment/maps/${bf.image}?v=${bf.imageWidth}x${bf.imageHeight}-p${bf.pixelRatio || 1}`,
+        rot180: false,
+        ready: true,
+        psNative: name
+      };
+      if (Number.isFinite(bf.pixelRatio) && bf.pixelRatio > 0) {
+        variant.pixelRatio = bf.pixelRatio;
+      }
+      this.VARIANTS.push(variant);
+    });
   },
 
   /**
@@ -153,10 +290,37 @@ window.RuralV29Map = {
   /**
    * ゲームマップ game.map を初期化して、30hexのテーブルを配置する
    * 冒頭でバリアント選択を行い、rot180が必要な場合は座標を変換
+   * kitMode が有効で、ready な north/south が両方1つ以上あれば、一定確率で kit 生成を試みる
    */
   generate(game) {
-    // バリアント選択（fixedVariant=null ならランダム、さもなくば固定）
-    this._selectVariant();
+    // 生成済みPSキャンバス(レジストリ)を毎回取り込む。冪等。
+    this._registerPsBattlefields();
+
+    // Kit モード試行（30%確率で、かつ条件満たしていれば）
+    let terrainTable = null;
+    if (this.kitMode.enabled && Math.random() < 0.30) {
+      const kitPieces = this._selectKitPieces();
+      if (kitPieces) {
+        // kit 生成成功
+        const { north, south } = kitPieces;
+        const northRows = north.rows;
+        const southRows = south.rows;
+        // 北3行 + 南3行を連結
+        const allRows = [...northRows, ...southRows];
+        terrainTable = this._rowsToTable(allRows);
+        this.lastVariant = {
+          key: `kit:${north.key}+${south.key}`,
+          kit: true,
+          north,
+          south
+        };
+      }
+    }
+
+    // kit 不成立またはスキップ時は従来のバリアント選択へ
+    if (!terrainTable) {
+      this._selectVariant();
+    }
 
     game.map = [];
     for (let q = 0; q < MAP_W; q++) {
@@ -166,8 +330,19 @@ window.RuralV29Map = {
       }
     }
 
-    // 選択されたバリアントに応じた地形テーブルを取得
-    const terrainTable = this._getTerrainTable();
+    // 選択されたバリアントに応じた地形テーブルを取得（kit未生成なら通常選択から）
+    if (!terrainTable) {
+      terrainTable = this._getTerrainTable();
+    }
+
+    // 立体物台帳から導出した per-hex の加算修正（低木・柵・薪など）。
+    // 地形テーブルは1ヘックス＝1種別の単値なので、台帳が持つ低木や柵の情報が
+    // そこには乗らない。描画が使っている座標そのものから導いた mod を重ねることで、
+    // **絵に見えている茂みや柵が実際に射線を遮り遮蔽になる**。
+    // 生成は scripts/derive_terrain_mods.py（psNative バリアントは rot180 と排他なので
+    // 座標変換は不要）。
+    const modKey = this.lastVariant && this.lastVariant.psNative;
+    const mods = (modKey && window.PS_TERRAIN_MODS && window.PS_TERRAIN_MODS[modKey]) || null;
 
     // 30hexテーブルを配置（各セルは TERRAIN またはローカル地形定義のシャローコピー）
     for (const entry of terrainTable) {
@@ -181,7 +356,19 @@ window.RuralV29Map = {
       else terrainDef = TERRAIN[base];
 
       // シャローコピーで独立オブジェクト化
-      game.map[q][r] = { ...terrainDef };
+      const cell = { ...terrainDef };
+      const mod = mods && mods[q + ',' + r];
+      if (mod && !cell.building) {
+        // 建物は既に単独で完全遮蔽・不可侵なので上書きしない
+        const [addBlock, addCover] = mod;
+        if (addBlock > 0) {
+          const baseBlock = (window.SIM_TUNING
+            && window.SIM_TUNING.TERRAIN_SIGHT_BLOCK[cell.id]) || 0;
+          cell.sightBlock = Math.min(1, baseBlock + addBlock);
+        }
+        if (addCover > 0) cell.cover = Math.min(45, (cell.cover || 0) + addCover);
+      }
+      game.map[q][r] = cell;
     }
 
     this.active = true;
@@ -224,6 +411,14 @@ window.RuralV29Map = {
   _getTerrainTable() {
     if (!this.lastVariant) {
       console.error('lastVariant is not set, using base table');
+      return this._terrain_table_base;
+    }
+
+    // PS正本キャンバスは生成済みレジストリから行を取る(rot180と排他)
+    if (this.lastVariant.psNative) {
+      const bf = window.PS_BATTLEFIELDS && window.PS_BATTLEFIELDS[this.lastVariant.psNative];
+      if (bf && bf.rows) return this._rowsToTable(bf.rows);
+      console.error(`PS battlefield '${this.lastVariant.psNative}' not in window.PS_BATTLEFIELDS, using base table`);
       return this._terrain_table_base;
     }
 

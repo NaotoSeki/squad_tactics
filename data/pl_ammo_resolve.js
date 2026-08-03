@@ -54,7 +54,10 @@ function applyWeaponAmmoOverrides(weapon, indices) {
     const wi = getWeaponCbeIndex(weapon);
     const ov = (typeof window !== 'undefined' && window.PL_AMMO_WEAPON_OVERRIDES)
         ? window.PL_AMMO_WEAPON_OVERRIDES[wi] : null;
-    if (ov && Array.isArray(ov.acceptsAmmoPlIndices) && ov.acceptsAmmoPlIndices.length) {
+    // An explicit empty array is authoritative too: it prevents an item with
+    // no decoded feed (or an unresolved AFV alias) from falling back to the
+    // old caliber-family heuristics.
+    if (ov && Array.isArray(ov.acceptsAmmoPlIndices)) {
         return ov.acceptsAmmoPlIndices.slice();
     }
     return indices;
@@ -565,17 +568,20 @@ function resolveSpareAmmoSpec(weapon, ammoIdx) {
 
 function buildSpareAmmoItem(weapon, ammoIdx) {
     const spec = resolveSpareAmmoSpec(weapon, ammoIdx);
+    const baseMalfRate = Number(weapon && (weapon.malfRate != null ? weapon.malfRate : weapon.jam)) || 0;
+    const malfMod = Number(spec.malfMod) || 0;
     const mag = {
         type: 'ammo',
         name: spec.name,
         ammoFor: weapon.code,
         cap: spec.cap,
         current: spec.cap,
-        jam: weapon.jam,
+        malfMod: malfMod,
+        malfRate: baseMalfRate + malfMod,
+        jam: baseMalfRate + malfMod,
         code: 'mag'
     };
     if (spec.ammoIdx != null) mag.cbeNameIndex = spec.ammoIdx;
-    if (spec.malfMod != null && weapon.jam != null) mag.jam = (weapon.jam || 0) + spec.malfMod;
     return mag;
 }
 
@@ -667,6 +673,11 @@ function countCompatibleSpareMags(unit, weapon) {
 function applySpareMagToPrimary(primary, weapon, mag) {
     if (!primary || !mag) return;
     const w = syncWeaponAcceptsAmmo(weapon || primary);
+    const baseMalfRate = Number(w && (w.malfRate != null ? w.malfRate : w.jam)) || 0;
+    const malfMod = Number(mag.malfMod) || 0;
+    primary.loadedAmmoCbeNameIndex = mag.cbeNameIndex != null ? Number(mag.cbeNameIndex) : null;
+    primary.loadedMalfMod = malfMod;
+    primary.effectiveMalfRate = baseMalfRate + malfMod;
     if (typeof PlMgTripod !== 'undefined' && PlMgTripod.usesBeltReserve(w.code) && primary.reserve !== undefined) {
         const beltRounds = mag.cap || mag.current || 50;
         primary.reserve = (primary.reserve || 0) + beltRounds;

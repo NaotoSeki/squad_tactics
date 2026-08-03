@@ -1,0 +1,155 @@
+{
+  "schema": "raised-hd-job/v1",
+  "jobId": "shrub_syringa-vulgaris_a_01_s1",
+  "id": "shrub_syringa-vulgaris_a_01",
+  "family": "shrub",
+  "roles": [
+    "stateBody"
+  ],
+  "bodySlot": 1,
+  "pairedShadowSlot": null,
+  "pixelRatio": 2,
+  "lightingContract": "ps-overcast-upper-left-v1",
+  "bodyOrigin": [
+    -42,
+    -26
+  ],
+  "shadowOrigin": null,
+  "references": {
+    "body": "../../../scratch/ps_sprites_canonical_v1/Objects/Plants/shrub_syringa-vulgaris_a_01_s1.png",
+    "shadowCalibration": null,
+    "bodyRole": "numeric canvas/bbox/origin/contact/color calibration",
+    "shadowRole": null,
+    "canonicalPixelsCopied": false
+  },
+  "provenance": {
+    "source": "built-in ImageGen selected output",
+    "sourceCopy": "C:\\Projects\\squad_tactics\\tmp\\raised_hd\\shrub_syringa-vulgaris_a_01_s1_source.png",
+    "sourceSha256": "18c3ce8b7689d2d9dc6feb6f158f4ee750d93cf104c9b98562a4bbcef4f09d6a",
+    "cutout": "C:\\Projects\\squad_tactics\\tmp\\raised_hd\\shrub_syringa-vulgaris_a_01_s1_cutout.png",
+    "cutoutSha256": "df51578f620e5bfcd48b2ab3f23f6932e59a15bdbe2c9e31a100454628bad2ca",
+    "cutoutAlphaSha256": "a0b7ae6b54ec53b36aaade646857f7b2264cdd390facf13a8d6a9df5867bc623",
+    "chromaHelper": "C:\\Users\\aware.梨花のPC\\.codex\\skills\\.system\\imagegen\\scripts\\remove_chroma_key.py"
+  },
+  "outputs": {
+    "body": "body/shrub_syringa-vulgaris_a_01_s1_body_hd_v1.png",
+    "shadow": null,
+    "review": "review/shrub_syringa-vulgaris_a_01_s1_world_review.png",
+    "metadata": "metadata/shrub_syringa-vulgaris_a_01_s1.json"
+  },
+  "body": {
+    "normalization": {
+      "sourceSize": [
+        1511,
+        1041
+      ],
+      "sourceBbox": [
+        32,
+        27,
+        1477,
+        966
+      ],
+      "sourceContact": [
+        809.0,
+        507.0
+      ],
+      "canonicalBbox": [
+        0,
+        0,
+        78,
+        52
+      ],
+      "canonicalContact": [
+        41.4346,
+        26.0989
+      ],
+      "targetSize": [
+        156,
+        104
+      ],
+      "targetBbox": [
+        0,
+        0,
+        156,
+        104
+      ],
+      "targetContact": [
+        82.8693,
+        52.1979
+      ],
+      "resultBbox": [
+        0,
+        0,
+        154,
+        103
+      ],
+      "resultContact": [
+        82.6667,
+        52.3333
+      ],
+      "scale": [
+        0.10734072,
+        0.1098081
+      ],
+      "generatedAlphaSha256": "a0b7ae6b54ec53b36aaade646857f7b2264cdd390facf13a8d6a9df5867bc623",
+      "normalizedAlphaSha256": "eb741614ffb424a8fa57d00688a3786675ac9a056bfa8f77601b90d59e6a541b",
+      "canonicalAlphaSha256": "d81ac29e0f53fd6b714a590f31d20d3ce6158f252609c52e83c6557a73aad7c5",
+      "alphaAuthority": "accepted generated cutout",
+      "canonicalAlphaRole": "numeric bbox/contact calibration only"
+    },
+    "quality": {
+      "size": [
+        156,
+        104
+      ],
+      "bbox": [
+        0,
+        0,
+        154,
+        103
+      ],
+      "visiblePixels": 7176,
+      "canonicalVisiblePixels": 7628,
+      "coverageRatio": 0.940745,
+      "contact": [
+        82.6667,
+        52.3333
+      ],
+      "expectedContact": [
+        82.8693,
+        52.1979
+      ],
+      "contactErrorPx": 0.243702,
+      "magentaSpillPixels": 0,
+      "magentaSpillLimit": 2,
+      "canonicalAlphaIdentical": false
+    },
+    "fileSha256": "3015d28d79ff3ab13bb9c31b7ed7d65d4f37bbf57223b40b81277e965685c599",
+    "alphaSha256": "eb741614ffb424a8fa57d00688a3786675ac9a056bfa8f77601b90d59e6a541b"
+  },
+  "shadow": {
+    "method": "intentionally-shadowless-state",
+    "canonicalShadowPixelsCopied": false
+  },
+  "review": {
+    "file": "C:/Projects/squad_tactics/asset/environment/raised_hd/review/shrub_syringa-vulgaris_a_01_s1_world_review.png",
+    "size": [
+      216,
+      202
+    ],
+    "worldOriginMarker": [
+      114,
+      120
+    ],
+    "shadowVector": [
+      0.72,
+      0.69
+    ],
+    "contactMarkers": {
+      "bodyWorld": [
+        -1.3333,
+        0.3333
+      ]
+    }
+  }
+}

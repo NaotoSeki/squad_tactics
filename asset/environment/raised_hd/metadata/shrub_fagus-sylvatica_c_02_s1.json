@@ -1,0 +1,155 @@
+{
+  "schema": "raised-hd-job/v1",
+  "jobId": "shrub_fagus-sylvatica_c_02_s1",
+  "id": "shrub_fagus-sylvatica_c_02",
+  "family": "shrub",
+  "roles": [
+    "stateBody"
+  ],
+  "bodySlot": 1,
+  "pairedShadowSlot": null,
+  "pixelRatio": 2,
+  "lightingContract": "ps-overcast-upper-left-v1",
+  "bodyOrigin": [
+    -35,
+    -23
+  ],
+  "shadowOrigin": null,
+  "references": {
+    "body": "../../../scratch/ps_sprites_canonical_v1/Objects/Plants/shrub_fagus-sylvatica_c_02_s1.png",
+    "shadowCalibration": null,
+    "bodyRole": "numeric canvas/bbox/origin/contact/color calibration",
+    "shadowRole": null,
+    "canonicalPixelsCopied": false
+  },
+  "provenance": {
+    "source": "built-in ImageGen selected output",
+    "sourceCopy": "C:\\Projects\\squad_tactics\\tmp\\raised_hd\\shrub_fagus-sylvatica_c_02_s1_source.png",
+    "sourceSha256": "7ad87d0a013504e4295582709bffbbf0d3746bdde7c1323c09f23088270ae073",
+    "cutout": "C:\\Projects\\squad_tactics\\tmp\\raised_hd\\shrub_fagus-sylvatica_c_02_s1_cutout.png",
+    "cutoutSha256": "a7d5930a3cfcffafe32b956e9bf3da8edd6e0377c7b70cc274d603e667bf676e",
+    "cutoutAlphaSha256": "f7f7713c0a3e65124e7f088eeb70645c1e40fa876ca591dfec29da05caa4c9dc",
+    "chromaHelper": "C:\\Users\\aware.梨花のPC\\.codex\\skills\\.system\\imagegen\\scripts\\remove_chroma_key.py"
+  },
+  "outputs": {
+    "body": "body/shrub_fagus-sylvatica_c_02_s1_body_hd_v1.png",
+    "shadow": null,
+    "review": "review/shrub_fagus-sylvatica_c_02_s1_world_review.png",
+    "metadata": "metadata/shrub_fagus-sylvatica_c_02_s1.json"
+  },
+  "body": {
+    "normalization": {
+      "sourceSize": [
+        1413,
+        1113
+      ],
+      "sourceBbox": [
+        70,
+        73,
+        1279,
+        1032
+      ],
+      "sourceContact": [
+        728.0,
+        517.135
+      ],
+      "canonicalBbox": [
+        0,
+        0,
+        65,
+        50
+      ],
+      "canonicalContact": [
+        34.9079,
+        22.7656
+      ],
+      "targetSize": [
+        130,
+        100
+      ],
+      "targetBbox": [
+        0,
+        0,
+        130,
+        100
+      ],
+      "targetContact": [
+        69.8157,
+        45.5312
+      ],
+      "resultBbox": [
+        0,
+        0,
+        129,
+        99
+      ],
+      "resultContact": [
+        69.0,
+        45.0
+      ],
+      "scale": [
+        0.10678808,
+        0.10334029
+      ],
+      "generatedAlphaSha256": "f7f7713c0a3e65124e7f088eeb70645c1e40fa876ca591dfec29da05caa4c9dc",
+      "normalizedAlphaSha256": "1a38d34f4dbc6f21d4e9b63394afe60ea1358f9f1888a3b6567820bd9887cc70",
+      "canonicalAlphaSha256": "3c48a909eb7dcc4318e906885b3f5f2420d38561e96507c778b6259c16bdc9f2",
+      "alphaAuthority": "accepted generated cutout",
+      "canonicalAlphaRole": "numeric bbox/contact calibration only"
+    },
+    "quality": {
+      "size": [
+        130,
+        100
+      ],
+      "bbox": [
+        0,
+        0,
+        129,
+        99
+      ],
+      "visiblePixels": 4614,
+      "canonicalVisiblePixels": 5220,
+      "coverageRatio": 0.883908,
+      "contact": [
+        69.0,
+        45.0
+      ],
+      "expectedContact": [
+        69.8157,
+        45.5312
+      ],
+      "contactErrorPx": 0.973413,
+      "magentaSpillPixels": 0,
+      "magentaSpillLimit": 2,
+      "canonicalAlphaIdentical": false
+    },
+    "fileSha256": "1471f6f5e3e9e1a82f761e72f95067973922e2c62b4390035158fe7805762cde",
+    "alphaSha256": "1a38d34f4dbc6f21d4e9b63394afe60ea1358f9f1888a3b6567820bd9887cc70"
+  },
+  "shadow": {
+    "method": "intentionally-shadowless-state",
+    "canonicalShadowPixelsCopied": false
+  },
+  "review": {
+    "file": "C:/Projects/squad_tactics/asset/environment/raised_hd/review/shrub_fagus-sylvatica_c_02_s1_world_review.png",
+    "size": [
+      190,
+      198
+    ],
+    "worldOriginMarker": [
+      100,
+      114
+    ],
+    "shadowVector": [
+      0.72,
+      0.69
+    ],
+    "contactMarkers": {
+      "bodyWorld": [
+        -1.0,
+        -1.0
+      ]
+    }
+  }
+}

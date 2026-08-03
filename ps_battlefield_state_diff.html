@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PS 戦場キャンバス：正規マップ → 戦闘セーブ</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      font-family: "Segoe UI", "Yu Gothic UI", sans-serif;
+      background: #121510;
+      color: #edf0e8;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; }
+    header {
+      display: flex;
+      gap: 18px;
+      align-items: center;
+      padding: 13px 18px;
+      background: #1b2018;
+      border-bottom: 1px solid #3c4637;
+    }
+    h1 { margin: 0; font-size: 18px; }
+    header p { margin: 0; color: #acb7a5; font-size: 13px; }
+    main {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 330px;
+      min-height: calc(100vh - 64px);
+    }
+    .viewer { padding: 16px; }
+    .toolbar {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    button {
+      color: #eef1e9;
+      background: #293126;
+      border: 1px solid #4a5844;
+      border-radius: 4px;
+      padding: 8px 12px;
+      cursor: pointer;
+    }
+    button.active, button:hover { background: #536246; }
+    .stage {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 3 / 2;
+      overflow: hidden;
+      background: #252b22;
+      border: 1px solid #4a5544;
+    }
+    .stage img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+    #after { clip-path: inset(0 0 0 50%); }
+    .divider {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 50%;
+      width: 2px;
+      background: #f2d56d;
+      transform: translateX(-1px);
+      pointer-events: none;
+    }
+    input[type=range] { flex: 1; min-width: 130px; }
+    aside {
+      padding: 16px;
+      background: #191e17;
+      border-left: 1px solid #3c4637;
+    }
+    aside h2 { margin: 0 0 10px; font-size: 16px; }
+    .metric {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      padding: 8px 0;
+      border-bottom: 1px solid #333b30;
+    }
+    .metric span:last-child { color: #f0d56f; font-variant-numeric: tabular-nums; }
+    .note {
+      margin-top: 16px;
+      padding: 11px;
+      border: 1px solid #424c3d;
+      background: #11150f;
+      color: #c3ccb9;
+      line-height: 1.65;
+      font-size: 13px;
+    }
+    .legend { color: #aab5a3; font-size: 12px; }
+    @media (max-width: 900px) {
+      main { grid-template-columns: 1fr; }
+      aside { border-left: 0; border-top: 1px solid #3c4637; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>戦場キャンバス：Before / Save</h1>
+    <p>同じPSマップ、同じ座標。戦闘セーブの不可逆差分だけを比較。</p>
+  </header>
+  <main>
+    <section class="viewer">
+      <div class="toolbar">
+        <button id="beforeOnly">Before</button>
+        <button id="split" class="active">境界比較</button>
+        <button id="afterOnly">Save</button>
+        <button id="blink">点滅</button>
+        <input id="slider" type="range" min="0" max="100" value="50" aria-label="比較境界">
+      </div>
+      <div class="stage">
+        <img id="before" src="scratch/ps_native_state_compare/demo_campaign_battle_01_iso_x12800_y3000_native.png" alt="正規マップ">
+        <img id="after" src="scratch/ps_native_state_compare/e0001784766970313[demo_campaign_battle_01]_iso_x12800_y3000_native.png" alt="戦闘セーブ">
+        <div class="divider" id="divider"></div>
+      </div>
+      <p class="legend">左が正規マップ、右が戦闘セーブ。上部の畑・柵・植生周辺が特に読みやすい差分です。</p>
+    </section>
+    <aside>
+      <h2>セーブ全体で確認できた変化</h2>
+      <div class="metric"><span>立体物 → 地表レイヤー</span><span>2,048</span></div>
+      <div class="metric"><span>地表化せず消滅</span><span>765</span></div>
+      <div class="metric"><span>損傷状態1の建物</span><span>23</span></div>
+      <div class="metric"><span>損傷状態2の建物</span><span>4</span></div>
+      <div class="metric"><span>追加された轍アセット</span><span>62</span></div>
+      <div class="metric"><span>追加された弾痕アセット</span><span>9</span></div>
+      <div class="metric"><span>MISSION_CORPSES先頭値</span><span>64</span></div>
+      <div class="note">
+        壊れた草・作物・柵・小物は、同じアセット名と座標を保ったまま
+        <code>MAP_OBJECTS</code> から <code>MAP_DECORS</code> へ移ります。
+        つまり「消して別画像を貼る」のではなく、同じ戦場要素を立体レイヤーから
+        潰れた地表状態へ降ろしています。建物は座標と個体を保持し、
+        状態ビットで同一SSC内の損傷スロットへ進みます。
+      </div>
+    </aside>
+  </main>
+  <script>
+    const setSplit = value => {
+      after.style.clipPath = `inset(0 0 0 ${value}%)`;
+      divider.style.left = `${value}%`;
+      divider.hidden = value === 0 || value === 100;
+      slider.value = value;
+    };
+    const activate = button => {
+      [beforeOnly, split, afterOnly].forEach(item => item.classList.remove("active"));
+      button.classList.add("active");
+    };
+    slider.oninput = () => {
+      setSplit(Number(slider.value));
+      activate(split);
+    };
+    beforeOnly.onclick = () => { setSplit(100); activate(beforeOnly); };
+    split.onclick = () => { setSplit(50); activate(split); };
+    afterOnly.onclick = () => { setSplit(0); activate(afterOnly); };
+    let timer = null;
+    blink.onclick = () => {
+      if (timer) {
+        clearInterval(timer);
+        timer = null;
+        blink.classList.remove("active");
+        setSplit(50);
+        activate(split);
+        return;
+      }
+      blink.classList.add("active");
+      let showAfter = false;
+      timer = setInterval(() => {
+        showAfter = !showAfter;
+        setSplit(showAfter ? 0 : 100);
+      }, 650);
+    };
+  </script>
+</body>
+</html>

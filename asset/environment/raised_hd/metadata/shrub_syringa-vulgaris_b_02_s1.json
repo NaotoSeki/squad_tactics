@@ -1,0 +1,155 @@
+{
+  "schema": "raised-hd-job/v1",
+  "jobId": "shrub_syringa-vulgaris_b_02_s1",
+  "id": "shrub_syringa-vulgaris_b_02",
+  "family": "shrub",
+  "roles": [
+    "stateBody"
+  ],
+  "bodySlot": 1,
+  "pairedShadowSlot": null,
+  "pixelRatio": 2,
+  "lightingContract": "ps-overcast-upper-left-v1",
+  "bodyOrigin": [
+    -41,
+    -24
+  ],
+  "shadowOrigin": null,
+  "references": {
+    "body": "../../../scratch/ps_sprites_canonical_v1/Objects/Plants/shrub_syringa-vulgaris_b_02_s1.png",
+    "shadowCalibration": null,
+    "bodyRole": "numeric canvas/bbox/origin/contact/color calibration",
+    "shadowRole": null,
+    "canonicalPixelsCopied": false
+  },
+  "provenance": {
+    "source": "built-in ImageGen selected output",
+    "sourceCopy": "C:\\Projects\\squad_tactics\\tmp\\raised_hd\\shrub_syringa-vulgaris_b_02_s1_source.png",
+    "sourceSha256": "4dfefcf97a56adf3b6cb0f9759869e54976a9d5790d655aae289b402017d04ec",
+    "cutout": "C:\\Projects\\squad_tactics\\tmp\\raised_hd\\shrub_syringa-vulgaris_b_02_s1_cutout.png",
+    "cutoutSha256": "34bf3498f40a7c1c71db65398823253c15ee319b0628682c1dd3450aaa51d6ee",
+    "cutoutAlphaSha256": "c91c2512c7c0fcf3ac555ea08d94dee16564f51b7bf155f6662ce78e92ba21a9",
+    "chromaHelper": "C:\\Users\\aware.梨花のPC\\.codex\\skills\\.system\\imagegen\\scripts\\remove_chroma_key.py"
+  },
+  "outputs": {
+    "body": "body/shrub_syringa-vulgaris_b_02_s1_body_hd_v1.png",
+    "shadow": null,
+    "review": "review/shrub_syringa-vulgaris_b_02_s1_world_review.png",
+    "metadata": "metadata/shrub_syringa-vulgaris_b_02_s1.json"
+  },
+  "body": {
+    "normalization": {
+      "sourceSize": [
+        1529,
+        1029
+      ],
+      "sourceBbox": [
+        116,
+        43,
+        1365,
+        881
+      ],
+      "sourceContact": [
+        780.5,
+        444.5
+      ],
+      "canonicalBbox": [
+        0,
+        0,
+        78,
+        51
+      ],
+      "canonicalContact": [
+        41.0,
+        24.0048
+      ],
+      "targetSize": [
+        156,
+        102
+      ],
+      "targetBbox": [
+        0,
+        0,
+        156,
+        102
+      ],
+      "targetContact": [
+        82.0,
+        48.0096
+      ],
+      "resultBbox": [
+        0,
+        0,
+        154,
+        101
+      ],
+      "resultContact": [
+        82.0,
+        48.0
+      ],
+      "scale": [
+        0.12419872,
+        0.12066906
+      ],
+      "generatedAlphaSha256": "c91c2512c7c0fcf3ac555ea08d94dee16564f51b7bf155f6662ce78e92ba21a9",
+      "normalizedAlphaSha256": "535e3b9a3809549997b9d55fa515bc4a7c346ec0b14949c16486eb15555c1bd2",
+      "canonicalAlphaSha256": "31c40de6335e61a9dac911be4fd90d5a18f501bed2cfd4f87f935b3b9b85154d",
+      "alphaAuthority": "accepted generated cutout",
+      "canonicalAlphaRole": "numeric bbox/contact calibration only"
+    },
+    "quality": {
+      "size": [
+        156,
+        102
+      ],
+      "bbox": [
+        0,
+        0,
+        154,
+        101
+      ],
+      "visiblePixels": 8249,
+      "canonicalVisiblePixels": 8216,
+      "coverageRatio": 1.004017,
+      "contact": [
+        82.0,
+        48.0
+      ],
+      "expectedContact": [
+        82.0,
+        48.0096
+      ],
+      "contactErrorPx": 0.009592,
+      "magentaSpillPixels": 0,
+      "magentaSpillLimit": 2,
+      "canonicalAlphaIdentical": false
+    },
+    "fileSha256": "d6f077f7ba30118bc2403d5aa25a0f7733546fa37a76acbb030fa5e676d15091",
+    "alphaSha256": "535e3b9a3809549997b9d55fa515bc4a7c346ec0b14949c16486eb15555c1bd2"
+  },
+  "shadow": {
+    "method": "intentionally-shadowless-state",
+    "canonicalShadowPixelsCopied": false
+  },
+  "review": {
+    "file": "C:/Projects/squad_tactics/asset/environment/raised_hd/review/shrub_syringa-vulgaris_b_02_s1_world_review.png",
+    "size": [
+      216,
+      200
+    ],
+    "worldOriginMarker": [
+      112,
+      116
+    ],
+    "shadowVector": [
+      0.72,
+      0.69
+    ],
+    "contactMarkers": {
+      "bodyWorld": [
+        0.0,
+        0.0
+      ]
+    }
+  }
+}

@@ -21,6 +21,8 @@ class CampaignManager {
         this.isAutoMode = false;
         this.carriedCards = [];
         this.nextPortraitIndex = 0;
+        this._startedMissionSector = null;
+        this._autodeployScheduled = false;
         window.addEventListener('load', () => this.initSetupScreen());
     }
 
@@ -77,8 +79,46 @@ class CampaignManager {
         labelPositions.forEach((lp, i) => { ctx.fillText(labels[i] || '', cx + lp.x, cy + lp.y); });
     }
 
+    /** Queue the URL-driven setup once, even if multiple boot paths request it. */
+    scheduleAutodeploy() {
+        if (typeof location === 'undefined' || !new URLSearchParams(location.search).has('autodeploy')) return false;
+        if (this._autodeployScheduled || this._startedMissionSector === this.sector) return false;
+        this._autodeployScheduled = true;
+
+        const run = () => {
+            if (this._startedMissionSector === this.sector) {
+                this._autodeployScheduled = false;
+                return;
+            }
+            const box = document.getElementById('setup-cards');
+            const cards = box ? box.querySelectorAll('.card') : [];
+            if (cards.length < 3) {
+                setTimeout(run, 60);
+                return;
+            }
+            for (let i = 0; i < 3; i++) {
+                if (!cards[i].classList.contains('selected')) cards[i].click();
+            }
+            const btn = document.getElementById('btn-start');
+            if (btn && !btn.disabled && window.gameLogic && window.gameLogic.startCampaign) {
+                const started = window.gameLogic.startCampaign();
+                if (started !== false || this._startedMissionSector === this.sector) {
+                    this._autodeployScheduled = false;
+                    return;
+                }
+            }
+            setTimeout(run, 80);
+        };
+        setTimeout(run, 200);
+        return true;
+    }
+
     // --- SETUP SCREEN LOGIC ---
     initSetupScreen() {
+        // 募集画面へ戻る間はフローティングのログ/DEBUGを再び伏せる
+        if (typeof document !== 'undefined' && document.body && document.body.classList) {
+            document.body.classList.remove('mission-active');
+        }
         // ★修正: 起動直後はUIManagerがまだ存在しないため、直接DOMを操作してサイドバー一式を隠す
         const idsToHide = ['sidebar', 'resizer', 'sidebar-toggle'];
         idsToHide.forEach(id => {
@@ -176,26 +216,34 @@ class CampaignManager {
             box.appendChild(d);
         });
 
-        if (typeof location !== 'undefined' && new URLSearchParams(location.search).has('autodeploy')) {
-            const run = () => {
-                const cards = box.querySelectorAll('.card');
-                for (let i = 0; i < 3 && i < cards.length; i++) cards[i].click();
-                const btn = document.getElementById('btn-start');
-                if (btn && !btn.disabled && window.gameLogic && window.gameLogic.startCampaign) {
-                    window.gameLogic.startCampaign();
-                } else {
-                    setTimeout(run, 80);
-                }
-            };
-            setTimeout(run, 200);
-        }
+        this.scheduleAutodeploy();
     }
 
     // --- DEPLOYMENT (Game Logicへの引き渡し) ---
     startMission() {
+        const missionSector = this.sector;
+        if (this._startedMissionSector === missionSector) return false;
+        this._startedMissionSector = missionSector;
+        try {
+            const started = this._startMission();
+            if (started === false && this._startedMissionSector === missionSector) {
+                this._startedMissionSector = null;
+            }
+            return started;
+        } catch (error) {
+            if (this._startedMissionSector === missionSector) this._startedMissionSector = null;
+            throw error;
+        }
+    }
+
+    _startMission() {
         document.getElementById('setup-screen').style.display = 'none';
         document.getElementById('reward-screen').style.display = 'none';
-        
+        // フローティングのログ/DEBUGは旧ターン制でだけ解禁する。RTwPは右ペインが受け持つので、
+        // ここで一瞬でも出すと左上に出て消える瞬きになる（出撃直後の1〜数フレーム）。
+        const rtwp = window.RtwpBattle && window.RtwpBattle.isEnabled && window.RtwpBattle.isEnabled();
+        if (!rtwp && document.body && document.body.classList) document.body.classList.add('mission-active');
+
         // ★修正: ゲーム開始時にサイドバー一式を直接表示に戻す
         const sb = document.getElementById('sidebar');
         if(sb) sb.style.display = 'flex'; // CSSのflexレイアウトを維持
@@ -251,11 +299,12 @@ class CampaignManager {
         // BattleLogic（logic_game.js）をインスタンス化
         if (window.BattleLogic) {
             window.gameLogic = new BattleLogic(this, deployUnits, this.sector);
-            window.gameLogic.init(); 
-        } else {
-            console.error("BattleLogic not found! logic_game.js loaded?");
-            alert("BattleLogic Error: Please check console.");
+            window.gameLogic.init();
+            return true;
         }
+        console.error("BattleLogic not found! logic_game.js loaded?");
+        alert("BattleLogic Error: Please check console.");
+        return false;
     }
 
     /** デッキから増援カード追加時に呼ぶ。ランダムなポートレート番号を返す（存在する画像のみで 404 防止）。 */
@@ -444,6 +493,18 @@ class CampaignManager {
                 const count = optBase.mag || 1;
                 for (let i = 0; i < count; i++) { bag.push(createItem(t.opt)); }
             }
+            // 銃擲弾。**今そいつが持っている小銃に適合するものだけ**を配る
+            // （RIFLE_GRENADE_FOR_MAIN は PL 実データ由来）。適合品が無い銃なら
+            // 何も持たない — 持てるはずのない装備を生やさないための分岐。
+            const rgTable = (typeof RIFLE_GRENADE_FOR_MAIN !== 'undefined')
+                ? RIFLE_GRENADE_FOR_MAIN : (window.RIFLE_GRENADE_FOR_MAIN || {});
+            const mainCode = hands[0] && hands[0].code;
+            const rgCodes = (t.rifleGrenade && mainCode) ? rgTable[mainCode] : null;
+            if (rgCodes && rgCodes.length && WPNS[rgCodes[0]]) {
+                const rgCode = rgCodes[0];
+                const rgCount = WPNS[rgCode].mag || 1;
+                for (let i = 0; i < rgCount; i++) { bag.push(createItem(rgCode)); }
+            }
         }
         
         if (isPlayer && !t.isTank && hands[0] && hands[0].code) {
@@ -595,11 +656,39 @@ class CampaignManager {
             };
             b.appendChild(d);
         });
-        if (window.Sfx) Sfx.play('win');
+        if (window.Sfx) Sfx.play('sector_clear');
     }
 
-    onGameOver() {
-        document.getElementById('gameover-screen').style.display = 'flex';
+    /**
+     * 敗北画面。**負け方を取り違えて伝えない。**
+     *
+     * sim は「行動不能だけが残った＝戦闘継続不能」を rout として、全員戦死の
+     * annihilation と区別している（sim_core._phaseCheckResult）。文言が
+     * 「全滅しました」固定だったため、負傷兵が盤上に生きているのに全滅と
+     * 表示されていた（2026-08-03 実プレイ報告）。命中モデルをPL正本へ替えて
+     * 負傷で止まる兵が増え、rout 経路の頻度が上がって露見した。
+     * @param {string=} reason sim_core の決着理由（'annihilation' | 'rout' | 'mutual'）
+     * @param {number=} survivors 生存している自軍兵数（戦闘不能を含む）
+     */
+    onGameOver(reason, survivors) {
+        const screen = document.getElementById('gameover-screen');
+        if (!screen) return;
+        const title = screen.querySelector('h1');
+        const body = screen.querySelector('p');
+        const alive = Number(survivors) || 0;
+        if (reason === 'rout' || (reason !== 'annihilation' && alive > 0)) {
+            if (title) title.textContent = 'COMBAT INEFFECTIVE';
+            if (body) {
+                body.textContent = alive > 0
+                    ? `分隊は戦闘継続不能（生存 ${alive} 名 — 全員が行動不能）`
+                    : '分隊は戦闘継続不能';
+            }
+        } else {
+            if (title) title.textContent = 'M.I.A.';
+            if (body) body.textContent = '全滅しました';
+        }
+        screen.style.display = 'flex';
+        if (window.Sfx) Sfx.play('sector_fail');
     }
 
     promoteSurvivors() {
@@ -700,22 +789,7 @@ class CampaignManager {
 // キャンペーンマネージャーを起動
 window.campaign = new CampaignManager();
 
-(function scheduleAutodeploy() {
-    if (typeof location === 'undefined' || !new URLSearchParams(location.search).has('autodeploy')) return;
-    const box = document.getElementById('setup-cards');
-    const cards = box ? box.querySelectorAll('.card') : [];
-    if (cards.length < 3) {
-        setTimeout(scheduleAutodeploy, 60);
-        return;
-    }
-    for (let i = 0; i < 3; i++) cards[i].click();
-    const btn = document.getElementById('btn-start');
-    if (btn && !btn.disabled && window.gameLogic && window.gameLogic.startCampaign) {
-        window.gameLogic.startCampaign();
-    } else {
-        setTimeout(scheduleAutodeploy, 80);
-    }
-})();
+window.campaign.scheduleAutodeploy();
 
 // ★重要: 初期化段階での gameLogic のダミー (Phaser側のエラー回避用)
 window.gameLogic = {

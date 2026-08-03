@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Squad Tactics - 8-Bit Animation Preview</title>
+    <style>
+        :root {
+            --bg-main: #0f172a;
+            --card-bg: #1e293b;
+            --card-border: #334155;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent: #3b82f6;
+            --accent-glow: rgba(59, 130, 246, 0.5);
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 800px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .header {
+            text-align: center;
+        }
+
+        .controls-row {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            align-items: center;
+        }
+
+        select {
+            background-color: var(--card-bg);
+            color: var(--text-main);
+            border: 1px solid var(--card-border);
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-size: 1rem;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .viewer-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 40px;
+            position: relative;
+            box-shadow: inset 0 2px 10px rgba(0,0,0,0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #sprite-viewer {
+            width: {FRAME_WIDTH}px;
+            height: {FRAME_HEIGHT}px;
+            background-repeat: no-repeat;
+            background-position: 0px 0px;
+            image-rendering: pixelated;
+            filter: drop-shadow(0 10px 10px rgba(0,0,0,0.5));
+            transition: opacity 0.3s ease;
+        }
+
+        .hud {
+            position: absolute;
+            bottom: 12px;
+            right: 16px;
+            font-size: 0.75rem;
+            color: var(--accent);
+            font-family: monospace;
+        }
+
+        .angle-controls {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .angle-btn {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--card-border);
+            color: var(--text-muted);
+            padding: 10px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .angle-btn.active {
+            background: var(--accent);
+            color: #fff;
+        }
+
+        .fps-control {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+        }
+
+        #error-msg {
+            display: none;
+            position: absolute;
+            color: #ef4444;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="header">
+            <h1>Sprite Inspector</h1>
+        </div>
+
+        <div class="controls-row">
+            <select id="action-select">
+                <option value="Stand.Idle">Stand.Idle</option>
+                <option value="Stand.Forward">Stand.Forward</option>
+                <option value="Stand.Fire">Stand.Fire</option>
+                <option value="Stand.Dying">Stand.Dying</option>
+                <option value="Stand.Throw_Grenade">Stand.Throw_Grenade</option>
+                <option value="Stand_To_Kneel">Stand_To_Kneel</option>
+                <option value="Kneel.Idle">Kneel.Idle</option>
+                <option value="Kneel.Forward">Kneel.Forward</option>
+                <option value="Kneel.Fire">Kneel.Fire</option>
+                <option value="Kneel.Dying">Kneel.Dying</option>
+                <option value="Kneel.Throw_Grenade">Kneel.Throw_Grenade</option>
+                <option value="Kneel_To_Stand">Kneel_To_Stand</option>
+                <option value="Kneel_To_Prone">Kneel_To_Prone</option>
+                <option value="Prone.Idle">Prone.Idle</option>
+                <option value="Prone.Forward">Prone.Forward</option>
+                <option value="Prone.Fire">Prone.Fire</option>
+                <option value="Prone.Dying">Prone.Dying</option>
+                <option value="Prone.Throw_Grenade">Prone.Throw_Grenade</option>
+                <option value="Prone_To_Kneel">Prone_To_Kneel</option>
+            </select>
+        </div>
+
+        <div class="viewer-card">
+            <div id="error-msg">Failed to load sprite. Make sure this HTML is in the spritesheets folder!</div>
+            <div id="sprite-viewer"></div>
+            <div class="hud" id="hud-text">Frame: 0 / 0 | Angle: 0</div>
+        </div>
+
+        <div class="angle-controls" id="angle-buttons"></div>
+
+        <div class="fps-control">
+            <label for="fps-slider">Speed:</label>
+            <input type="range" id="fps-slider" min="1" max="30" value="10">
+            <span id="fps-display">10 FPS</span>
+        </div>
+    </div>
+
+    <script>
+        const FRAME_WIDTH = {FRAME_WIDTH};
+        const FRAME_HEIGHT = {FRAME_HEIGHT};
+        const ANGLES = 8;
+        
+        const angleNames = ["S", "SE", "E", "NE", "N", "NW", "W", "SW"];
+
+        let currentAction = 'Stand.Idle';
+        let currentAngle = 0;
+        let currentFrame = 0;
+        let totalFrames = 1;
+        let fps = 10;
+        let lastTimestamp = 0;
+        let animationId = null;
+
+        const viewer = document.getElementById('sprite-viewer');
+        const hudText = document.getElementById('hud-text');
+        const errorMsg = document.getElementById('error-msg');
+        
+        const imageCache = {};
+
+        function initAngleButtons() {
+            const container = document.getElementById('angle-buttons');
+            for(let i=0; i<ANGLES; i++) {
+                const btn = document.createElement('button');
+                btn.className = 'angle-btn' + (i === 0 ? ' active' : '');
+                btn.textContent = angleNames[i];
+                btn.onclick = () => setAngle(i);
+                container.appendChild(btn);
+            }
+        }
+
+        function setAngle(angleIdx) {
+            currentAngle = angleIdx;
+            document.querySelectorAll('.angle-btn').forEach((btn, idx) => {
+                if(idx === angleIdx) btn.classList.add('active');
+                else btn.classList.remove('active');
+            });
+            updateFrameDisplay();
+        }
+
+        function loadSpriteSheet(actionName) {
+            currentAction = actionName;
+            currentFrame = 0;
+            
+            const imagePath = `${actionName}_spritesheet.png`;
+            
+            if(imageCache[imagePath]) {
+                applySpriteSheet(imageCache[imagePath]);
+                return;
+            }
+
+            const img = new Image();
+            viewer.style.opacity = '0';
+            errorMsg.style.display = 'none';
+
+            img.onload = () => {
+                imageCache[imagePath] = img;
+                applySpriteSheet(img);
+                viewer.style.opacity = '1';
+            };
+            img.onerror = () => {
+                viewer.style.opacity = '0';
+                errorMsg.style.display = 'block';
+            };
+            img.src = imagePath;
+        }
+
+        function applySpriteSheet(img) {
+            totalFrames = Math.max(1, Math.floor(img.width / FRAME_WIDTH));
+            viewer.style.backgroundImage = `url('${img.src}')`;
+            updateFrameDisplay();
+        }
+
+        function updateFrameDisplay() {
+            const posX = -(currentFrame * FRAME_WIDTH);
+            const posY = -(currentAngle * FRAME_HEIGHT);
+            viewer.style.backgroundPosition = `${posX}px ${posY}px`;
+            hudText.textContent = `Frame: ${currentFrame + 1} / ${totalFrames} | Angle: ${currentAngle} (${angleNames[currentAngle]})`;
+        }
+
+        function animate(timestamp) {
+            if (!lastTimestamp) lastTimestamp = timestamp;
+            const elapsed = timestamp - lastTimestamp;
+            const frameDuration = 1000 / fps;
+
+            if (elapsed >= frameDuration) {
+                lastTimestamp = timestamp - (elapsed % frameDuration);
+                currentFrame = (currentFrame + 1) % totalFrames;
+                updateFrameDisplay();
+            }
+            animationId = requestAnimationFrame(animate);
+        }
+
+        document.getElementById('action-select').addEventListener('change', (e) => {
+            loadSpriteSheet(e.target.value);
+        });
+
+        document.getElementById('fps-slider').addEventListener('input', (e) => {
+            fps = parseInt(e.target.value);
+            document.getElementById('fps-display').textContent = `${fps} FPS`;
+        });
+
+        initAngleButtons();
+        loadSpriteSheet(currentAction);
+        animationId = requestAnimationFrame(animate);
+    </script>
+</body>
+</html>

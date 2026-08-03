@@ -12,6 +12,9 @@ class UnitView {
     defineAnimations() {
         const anims = this.scene.anims;
         if (anims.exists('anim_crawl_0')) return;
+        // 19モーションが揃う起動では soldier_crawl を読まない（フォールバック専用の
+        // 8.3MBシート）。無い時にアニメを組むと空フレームで例外になるので飛ばす。
+        if (!this.scene.textures.exists('soldier_crawl')) return;
         // soldier_crawl: 8方向×30フレーム。移動中は30fpsで蠢く、待機は止める
         for (let d = 0; d < 8; d++) {
             const frames = [];
@@ -84,6 +87,15 @@ class UnitView {
     buildInfantrySprite(u) {
         // SoldierUnitView(v2 manifest)未使用時のフォールバックのみ。
         // SOLDIER_VIEW_H=20px(2026-07-13実測改訂)に合わせて比例縮小。
+        // 19モーションが揃っている起動では soldier_crawl を読み込まない（8.3MB削減）
+        // ので、ここへ来て texture が無い＝想定外。緑箱を出すより素の板を出す。
+        if (!this.scene.textures.exists('soldier_crawl')) {
+            console.warn('soldier_crawl 未ロードのままフォールバック描画が呼ばれた');
+            const shadow = this.scene.add.rectangle(5, -9, 10, 4, 0x000000, 0.3);
+            const sprite = this.scene.add.rectangle(0, -10, 8, 16,
+                u.team === 'player' ? 0xeeeeff : 0x9955ff);
+            return { shadow, sprite };
+        }
         const shadow = this.scene.add.sprite(5, -9, 'soldier_crawl', 0);
         shadow.setTint(0x000000);
         shadow.setAlpha(0.3);
@@ -97,15 +109,130 @@ class UnitView {
     }
 
     // 歩兵アニメ選択（updateVisual から純粋抽出。サブクラスの差し替えフック）
+    /** 現在フレームのアルファ形状を使った、発砲点側の短い暖色リム。 */
+    _directionIndex(dx, dy) {
+        // soldier_crawl columns: 0=S, 1=SW, 2=W, 3=NW, 4=N, 5=NE,
+        // 6=E, 7=SE. Screen Y grows downward, so rotate zero from E to S.
+        let d = Math.round((Math.atan2(dy, dx) - Math.PI / 2) / (Math.PI / 4)) % 8;
+        if (d < 0) d += 8;
+        return d;
+    }
+
+    /** Keep the actual rendered soldier facing the current firing target. */
+    noteShot(shooterId, from, to) {
+        const visual = this.visuals.get(shooterId);
+        if (!visual || !visual.sprite || !to) return;
+        const sx = visual.container ? visual.container.x : from.x;
+        const sy = visual.container ? visual.container.y : from.y;
+        visual.lastDx = to.x - sx;
+        visual.lastDy = to.y - sy;
+        visual.aimFacingFrames = 14;
+        visual.sprite.anims.stop();
+        visual.sprite.setFrame(this._directionIndex(visual.lastDx, visual.lastDy));
+    }
+
+    /** World-space muzzle point based on the rendered per-soldier offset. */
+    getMuzzlePoint(unit, target) {
+        const id = unit && unit.id != null ? unit.id : unit;
+        const visual = this.visuals.get(id);
+        if (!visual || !visual.container || !visual.sprite) return null;
+        let tx, ty;
+        const targetVisual = target && this.visuals.get(target.id);
+        if (targetVisual && targetVisual.container) {
+            tx = targetVisual.container.x;
+            ty = targetVisual.container.y - 8;
+        } else if (target && typeof Renderer !== 'undefined' && Renderer.hexToPx) {
+            const p = Renderer.hexToPx(target.q, target.r);
+            tx = p.x; ty = p.y - 8;
+        } else {
+            tx = visual.container.x + (visual.lastDx || 1);
+            ty = visual.container.y + (visual.lastDy || 0);
+        }
+        let ox = visual.container.x + visual.sprite.x;
+        let oy = visual.container.y + visual.sprite.y;
+        // v2写実兵スプライトの原点は「足元」。ここをそのまま銃口の起点にすると
+        // 足から発光して見えるため、姿勢ごとの肩・銃床位置まで持ち上げる。
+        const isV2Soldier = visual.sprite.texture && visual.sprite.texture.key
+            && visual.sprite.texture.key.indexOf('sold_') === 0;
+        if (isV2Soldier) {
+            const posture = visual.postureLv == null ? 0 : visual.postureLv;
+            const lift = posture >= 2 ? 4.5 : (posture === 1 ? 8.5 : 13);
+            oy -= lift;
+        }
+        const dx = tx - ox, dy = ty - oy;
+        const len = Math.max(1, Math.hypot(dx, dy));
+        const nx = dx / len, ny = dy / len;
+        const cls = unit && unit.weapon && unit.weapon.class;
+        const barrel = isV2Soldier ? (cls === 'mg' ? 10 : 8) : (cls === 'mg' ? 13 : 11);
+        return { x: ox + nx * barrel, y: oy + ny * barrel, angle: Math.atan2(dy, dx) };
+    }
+
+    flashMuzzleLight(lightX, lightY, radius) {
+        if (!this.scene || !this.scene.tweens) return;
+        this.visuals.forEach((visual) => {
+            const spr = visual && visual.sprite;
+            const container = visual && visual.container;
+            if (!spr || !container || !spr.texture || !spr.frame) return;
+            const dist = Math.hypot(lightX - container.x, lightY - container.y);
+            if (dist > radius) return;
+            if (window.AlphaLightSpace && window.AlphaLightSpace.flashAlpha) {
+                window.AlphaLightSpace.flashAlpha(
+                    this.scene, spr, lightX, lightY, radius,
+                    {
+                        worldX: container.x + spr.x,
+                        worldY: container.y + spr.y,
+                        parent: container,
+                    }
+                );
+                return;
+            }
+            const gain = 1 - dist / Math.max(1, radius);
+            const inv = dist > 1 ? 1 / dist : 0;
+            const rim = this.scene.add.sprite(
+                spr.x + (lightX - container.x) * inv * 2.2,
+                spr.y + (lightY - container.y) * inv * 2.2,
+                spr.texture.key, spr.frame.name
+            );
+            rim.setOrigin(spr.originX, spr.originY);
+            rim.setScale(spr.scaleX, spr.scaleY);
+            rim.setFlip(spr.flipX, spr.flipY);
+            rim.setRotation(spr.rotation);
+            rim.setTint(0xffad62);
+            rim.setAlpha(0.10 + gain * 0.24);
+            if (typeof Phaser !== 'undefined' && Phaser.BlendModes) rim.setBlendMode(Phaser.BlendModes.ADD);
+            const index = container.getIndex(spr);
+            container.addAt(rim, index >= 0 ? index : 0);
+            this.scene.tweens.add({
+                targets: rim, alpha: 0, duration: 82, ease: 'Cubic.out',
+                onComplete: () => { if (rim.active) rim.destroy(); }
+            });
+        });
+    }
+
     updateInfantryAnim(visual, u, isMoving) {
+        if (!isMoving && u._rtwpTargetId && window.gameLogic) {
+            const target = window.gameLogic.units.find(t => String(t.id) === String(u._rtwpTargetId) && t.hp > 0);
+            if (target && typeof Renderer !== 'undefined' && Renderer.hexToPx) {
+                const targetVisual = this.visuals.get(target.id);
+                const a = visual.container || Renderer.hexToPx(u.q, u.r);
+                const b = targetVisual && targetVisual.container
+                    ? targetVisual.container : Renderer.hexToPx(target.q, target.r);
+                visual.lastDx = b.x - a.x;
+                visual.lastDy = b.y - a.y;
+                visual.aimFacingFrames = Math.max(visual.aimFacingFrames || 0, 2);
+            }
+        }
         const dx_ = visual.lastDx || 0;
         const dy_ = visual.lastDy || 0;
-        let d = Math.round((Math.atan2(-dy_, dx_) + 5 * Math.PI / 4) / (2 * Math.PI) * 8) % 8;
-        if (d < 0) d += 8;
+        const d = this._directionIndex(dx_, dy_);
         const crawlAnim = 'anim_crawl_' + d;
         if (isMoving) {
             visual.crawlStopDelay = 4; // 移動終了後 4 フレームだけ再生してから止める
             visual.sprite.play(crawlAnim, true); // 毎フレーム play でアニメ抜けを防ぐ
+        } else if (visual.aimFacingFrames > 0) {
+            visual.aimFacingFrames--;
+            visual.sprite.anims.stop();
+            visual.sprite.setFrame(d);
         } else {
             if (visual.crawlStopDelay > 0) {
                 visual.crawlStopDelay--;
@@ -311,7 +438,7 @@ class UnitView {
             const pos = Renderer.hexToPx(u.q, u.r);
             // 建物ヘックスへ直接出現(初期配置/増援)する場合、初回から壁際オフセット
             // 込みで置く — updateVisualのクロール移動で毎回にじり寄る見た目を防ぐ
-            const t = window.gameLogic && window.gameLogic.map[u.q] && window.gameLogic.map[u.q][u.r];
+            const t = window.gameLogic && window.gameLogic.map && window.gameLogic.map[u.q] && window.gameLogic.map[u.q][u.r];
             const safe = t && t.building && window.TerrainRenderV7 && window.CityMap && window.CityMap.active
                 ? window.TerrainRenderV7.getBuildingSafeOffset(u.q, u.r) : null;
             if (safe) { pos.x += safe.dx; pos.y += safe.dy; }
@@ -328,6 +455,38 @@ class UnitView {
         return visual;
     }
 
+    /**
+     * 歩兵スプライトが1フレームで進む距離(px)。走る兵は実際に速く滑る。
+     *
+     * 以前は 0.9px/frame 固定だった。ヘックス間隔は √3·HEX_SIZE ≈ 93.5px で、sim の
+     * 歩きは 8tick(0.8秒)/hex なので必要なのは約1.95px/frame — 固定値では**歩きにすら
+     * 追いつけず**、走り(0.4秒/hex)では4倍の遅れが溜まって論理位置から千切れていた。
+     * 歩/走の差が画面に出ず、匍匐(2.0秒/hex)だけが唯一まともに見えていた正体はここ。
+     * 実効モードの所要時間から逆算する。sim を持たないターン制本編は従来のまま。
+     */
+    _infantryStepPx(u, delta, dist) {
+        const s = u && u._sim;
+        if (!s) return 0.9; // ターン制本編（sim 無し）は従来の一定速度
+        const T = window.SIM_TUNING || {};
+        const pitch = Math.sqrt(3) * (typeof HEX_SIZE !== 'undefined' ? HEX_SIZE : 54);
+        // sim が publish する実所要tick（地形コスト・脚の速さ込み）が最優先。無い時だけ
+        // モードから概算する — 概算のままだと重い地形や鈍足の兵で先に着いて待ってしまう。
+        let ticks = s.stepTicks;
+        if (!(ticks > 0)) {
+            const mode = s.stepMode || ((s.moveMode && s.moveMode !== 'auto') ? s.moveMode : 'walk');
+            const mult = (T.MOVE_MODE_MULT && T.MOVE_MODE_MULT[mode] != null) ? T.MOVE_MODE_MULT[mode] : 1;
+            ticks = (T.MOVE_T_PER_HEX || 8) * mult;
+        }
+        const secPerHex = Math.max(0.05, ticks * ((T.TICK_MS || 100) / 1000));
+        // delta は稀に跳ねる（タブ復帰・重いフレーム）。3フレーム分で頭打ちにする
+        const dt = Math.min(50, Math.max(1, delta || 16.7)) / 1000;
+        let px = (pitch / secPerHex) * dt;
+        // 地形コスト・脚の速さ・様子見の停止で遅れる分がある。1ヘックス以上離れたら
+        // 追走を速めて千切れを防ぐ（上限つき。ワープはさせない）
+        if (dist > pitch) px *= Math.min(3, dist / pitch);
+        return px;
+    }
+
     updateVisual(visual, u, delta, index, count) {
         if(typeof Renderer === 'undefined' || !Renderer.hexToPx) return;
         const basePos = Renderer.hexToPx(u.q, u.r);
@@ -337,7 +496,7 @@ class UnitView {
         // 壁際の物陰に身を隠す(2026-07-13)。複数ユニット共存時のばらけ幅は
         // 壁からはみ出さないよう通常の半分に絞る。
         let inBuilding = false;
-        if (window.gameLogic) {
+        if (window.gameLogic && window.gameLogic.map) {
             const t = window.gameLogic.map[u.q] && window.gameLogic.map[u.q][u.r];
             inBuilding = !!(t && t.building);
         }
@@ -359,8 +518,7 @@ class UnitView {
         let isMoving = false;
         if (dist > arriveThreshold) {
             if (isInfantry) {
-                const crawlPxPerFrame = 0.9; // 一定速度でじわじわ（加速しない）
-                const step = Math.min(crawlPxPerFrame, dist);
+                const step = Math.min(this._infantryStepPx(u, delta, dist), dist);
                 visual.container.x += (dx / dist) * step;
                 visual.container.y += (dy / dist) * step;
             } else {
@@ -388,12 +546,21 @@ class UnitView {
             // 伏せは体の直下にほぼ重ねる（潰して離すと浮いて見える）
             if (!u.def.isTank) {
                 const lv = visual.postureLv || 0; // 0=stand 1=kneel 2=prone
-                const conf = lv === 2 ? { sx: 1.02, sy: 0.85, ox: 3,  oy: 1, a: 0.32 }
-                           : lv === 1 ? { sx: 1.1,  sy: 0.45, ox: 6,  oy: 1, a: 0.4 }
-                                      : { sx: 1.2,  sy: 0.32, ox: 10, oy: 1, a: 0.42 };
-                sh.setScale(spr.scaleX * conf.sx, spr.scaleY * conf.sy);
-                sh.setPosition(spr.x + conf.ox, spr.y + conf.oy);
-                sh.setAlpha(conf.a);
+                if (window.AlphaLightSpace && window.AlphaLightSpace.syncSunShadow) {
+                    const conf = lv === 2
+                        ? { castScale: 0.10, flatten: 0.76, widthScale: 1.01, alpha: 0.32 }
+                        : lv === 1
+                            ? { castScale: 0.24, flatten: 0.43, widthScale: 1.04, alpha: 0.35 }
+                            : { castScale: 0.34, flatten: 0.30, widthScale: 1.05, alpha: 0.37 };
+                    window.AlphaLightSpace.syncSunShadow(sh, spr, conf);
+                } else {
+                    const conf = lv === 2 ? { sx: 1.02, sy: 0.85, ox: 3,  oy: 1, a: 0.32 }
+                               : lv === 1 ? { sx: 1.1,  sy: 0.45, ox: 6,  oy: 1, a: 0.4 }
+                                          : { sx: 1.2,  sy: 0.32, ox: 10, oy: 1, a: 0.42 };
+                    sh.setScale(spr.scaleX * conf.sx, spr.scaleY * conf.sy);
+                    sh.setPosition(spr.x + conf.ox, spr.y + conf.oy);
+                    sh.setAlpha(conf.a);
+                }
             } else if (u.def.isTank) {
                 sh.setScale(spr.scaleX * 1.04, spr.scaleY * 0.34);
                 sh.setPosition(spr.x + 9, spr.y + 2);
@@ -492,12 +659,11 @@ class UnitView {
         const end = Renderer.hexToPx(target.q, target.r);
         const dx = end.x - start.x;
         const dy = end.y - start.y;
-        let d = Math.round(Math.atan2(-dy, dx) / (2 * Math.PI) * 8) % 8;
-        if (d < 0) d += 8;
+        const d = this._directionIndex(dx, dy);
         visual.lastDx = dx;
         visual.lastDy = dy;
-
-        const crawlAnim = 'anim_crawl_' + d;
-        visual.sprite.play(crawlAnim, true);
+        visual.aimFacingFrames = 14;
+        visual.sprite.anims.stop();
+        visual.sprite.setFrame(d);
     }
 }

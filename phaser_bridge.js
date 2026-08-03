@@ -80,7 +80,9 @@ window.getCardTextureKey = function(scene, type, portraitIndex, unitName) {
     ctx.fillText(isInfantry ? template.name : (template.role ? template.role.toUpperCase() : "UNIT"), 70, 155);
     let wpnName = template.main || "-"; if (typeof WPNS !== 'undefined' && WPNS[template.main]) { wpnName = WPNS[template.main].name; }
     ctx.fillStyle = "#ccc"; ctx.font = "11px monospace";
-    ctx.fillText(`HP:${template.hp||100} AP:${template.ap||4}`, 70, 175);
+    // AP は旧ターン制の資源。RTwP ではHPだけ出す（カード生成は attach より前に走るので isEnabled で見る）
+    const rtwpMode = window.RtwpBattle && window.RtwpBattle.isEnabled && window.RtwpBattle.isEnabled();
+    ctx.fillText(rtwpMode ? `HP:${template.hp||100}` : `HP:${template.hp||100} AP:${template.ap||4}`, 70, 175);
     ctx.fillStyle = "#d84"; ctx.font = "10px sans-serif";
     ctx.fillText(wpnName, 70, 190);
     scene.textures.addCanvas(key, canvas); return key;
@@ -113,6 +115,16 @@ const Renderer = {
     draggedCardType: null,
     draggedCardFusionData: null,
     draggedCard: null,
+    _resizeFrame: 0,
+    _resizeTimer: 0,
+    _resizeForce: false,
+    _resizeRecoveryTimers: [],
+    _resizeObserver: null,
+    _resizeWatchInstalled: false,
+    _inputBoundsWatchInstalled: false,
+    _dprMedia: null,
+    _dprMediaListener: null,
+    _lastAppliedViewport: null,
 
     init(canvasElement) {
         // 19モーション manifest（phaser_soldier_view.js が先行フェッチ）の解決を待って
@@ -127,8 +139,20 @@ const Renderer = {
         this._boot(canvasElement);
     },
 
+    /**
+     * 高DPI対応の受け皿。**現状は常に 1（無効）。**
+     *
+     * sim_battle.html では実効（dpr=1.5 で画素数2.25倍・61fps維持）だが、本編は
+     * 起動時に #game-view の clientWidth が 0 で、Renderer.resize() を呼んでも
+     * キャンバスが追従しない既存の挙動がある（この変更の前から同じ）。正しい寸法に
+     * 到達できないため実機で検証できず、未検証のまま本編の描画解像度を変えるのは
+     * 避けている。キャンバスのリサイズが直った後に 1 以外を入れれば効く。
+     */
+    RENDER_DPR: 1,
+
     _boot(canvasElement) {
-        const config = { type: Phaser.AUTO, parent: 'game-view', width: document.getElementById('game-view').clientWidth, height: document.getElementById('game-view').clientHeight, backgroundColor: '#2a2824', pixelArt: false, scene: [MainScene, UIScene], fps: { target: 30 }, physics: { default: 'arcade', arcade: { debug: false } }, input: { activePointers: 1 } };
+        const initialSize = this._measureGameView() || { width: 1280, height: 720 };
+        const config = { type: Phaser.AUTO, parent: 'game-view', width: initialSize.width, height: initialSize.height, scale: { parent: 'game-view', mode: Phaser.Scale.NONE, width: initialSize.width, height: initialSize.height, autoRound: true }, backgroundColor: '#2a2824', pixelArt: false, render: { roundPixels: false, mipmapFilter: 'LINEAR_MIPMAP_LINEAR' }, scene: [MainScene, UIScene], fps: { target: 30 }, physics: { default: 'arcade', arcade: { debug: false } }, input: { activePointers: 1 } };
         this.game = new Phaser.Game(config); 
         phaserGame = this.game;
         window.phaserGame = this.game;
@@ -139,7 +163,10 @@ const Renderer = {
             const ui = this.game.scene.getScene('UIScene');
             if (ui && ui.onResize) ui.onResize({ width: w, height: h });
             const main = this.game.scene.getScene('MainScene');
-            if (main && main.updateSidebarViewport) main.updateSidebarViewport();
+            if (main && main.updateSidebarViewport) {
+                main.updateSidebarViewport();
+                if (main.mapGenerated && main.centerMap) main.centerMap();
+            }
             if (window.phaserSidebar && window.phaserSidebar.onResize) window.phaserSidebar.onResize(w, h);
             if (window.gameLogic && window.gameLogic.updateSidebar) window.gameLogic.updateSidebar();
         };
@@ -156,11 +183,188 @@ const Renderer = {
                 if (card.sparklerParticles) card.sparklerParticles.length = 0;
             });
         };
-        window.addEventListener('resize', () => this.resize());
+        this._installResizeWatch();
+        this._installInputBoundsWatch();
+        this.scheduleResize(true);
         const startAudio = () => { if(window.Sfx && window.Sfx.ctx && window.Sfx.ctx.state === 'suspended') { window.Sfx.ctx.resume(); } };
         document.addEventListener('click', startAudio); document.addEventListener('keydown', startAudio);
     },
-    resize() { if(this.game) this.game.scale.resize(document.getElementById('game-view').clientWidth, document.getElementById('game-view').clientHeight); },
+    _measureGameView() {
+        const view = document.getElementById('game-view');
+        if (!view) return null;
+        const rect = view.getBoundingClientRect ? view.getBoundingClientRect() : null;
+        const width = Math.round((rect && rect.width) || view.clientWidth || 0);
+        const height = Math.round((rect && rect.height) || view.clientHeight || 0);
+        if (!Number.isFinite(width) || !Number.isFinite(height) || width < 2 || height < 2) return null;
+        return { width, height };
+    },
+    scheduleResize(force = false) {
+        if (!this.game) return;
+        this._resizeForce = this._resizeForce || force;
+        if (this._resizeFrame) cancelAnimationFrame(this._resizeFrame);
+        if (this._resizeTimer) clearTimeout(this._resizeTimer);
+        this._resizeRecoveryTimers.forEach(clearTimeout);
+        this._resizeRecoveryTimers = [];
+        // A Windows monitor transition emits several viewport and DPR changes.
+        // Applying each intermediate size makes Phaser resize the WebGL buffer
+        // repeatedly and can leave a Scene camera on an obsolete scissor rect.
+        this._resizeTimer = setTimeout(() => {
+            this._resizeTimer = 0;
+            const first = this._measureGameView();
+            const firstDpr = Number(window.devicePixelRatio) || 1;
+            if (!first) return;
+            this._resizeFrame = requestAnimationFrame(() => {
+                this._resizeFrame = 0;
+                const settled = this._measureGameView();
+                const settledDpr = Number(window.devicePixelRatio) || 1;
+                if (!settled) return;
+                if (first.width !== settled.width || first.height !== settled.height || firstDpr !== settledDpr) {
+                    this.scheduleResize();
+                    return;
+                }
+                const applyForce = this._resizeForce;
+                this._resizeForce = false;
+                this.resize(applyForce);
+                // Chrome can replace the GPU drawing surface after the CSS
+                // viewport has already settled during a monitor transition.
+                // Re-assert cached camera, GL and input state without changing
+                // the canvas backing size again.
+                [450, 1100].forEach((delay) => {
+                    this._resizeRecoveryTimers.push(setTimeout(() => this.recoverViewport(), delay));
+                });
+            });
+        }, 160);
+    },
+    _watchDevicePixelRatio() {
+        if (!window.matchMedia) return;
+        if (this._dprMedia && this._dprMediaListener) {
+            if (this._dprMedia.removeEventListener) this._dprMedia.removeEventListener('change', this._dprMediaListener);
+            else if (this._dprMedia.removeListener) this._dprMedia.removeListener(this._dprMediaListener);
+        }
+        const dpr = Number(window.devicePixelRatio) || 1;
+        this._dprMedia = window.matchMedia(`(resolution: ${dpr}dppx)`);
+        this._dprMediaListener = () => {
+            this._watchDevicePixelRatio();
+            this.scheduleResize();
+        };
+        if (this._dprMedia.addEventListener) this._dprMedia.addEventListener('change', this._dprMediaListener);
+        else if (this._dprMedia.addListener) this._dprMedia.addListener(this._dprMediaListener);
+    },
+    _installResizeWatch() {
+        if (this._resizeWatchInstalled) return;
+        this._resizeWatchInstalled = true;
+        const queue = () => this.scheduleResize();
+        window.addEventListener('resize', queue);
+        window.addEventListener('pageshow', () => this.scheduleResize(true));
+        if (window.visualViewport) window.visualViewport.addEventListener('resize', queue);
+        const view = document.getElementById('game-view');
+        if (view && typeof ResizeObserver !== 'undefined') {
+            this._resizeObserver = new ResizeObserver(queue);
+            this._resizeObserver.observe(view);
+        }
+        this._watchDevicePixelRatio();
+    },
+    _installInputBoundsWatch() {
+        if (this._inputBoundsWatchInstalled || !this.game || !this.game.canvas) return;
+        this._inputBoundsWatchInstalled = true;
+        const refresh = () => this._refreshInputBounds();
+        // Capture runs before Phaser's own bubbling listeners, so a first
+        // click immediately after crossing monitors uses the new coordinates.
+        ['pointerdown', 'pointermove', 'wheel'].forEach((type) => {
+            this.game.canvas.addEventListener(type, refresh, { capture: true, passive: true });
+        });
+    },
+    _refreshInputBounds() {
+        const scale = this.game && this.game.scale;
+        if (!scale) return false;
+        if (scale.updateBounds) scale.updateBounds();
+        const bounds = scale.canvasBounds;
+        const base = scale.baseSize;
+        if (scale.displayScale && bounds && base && bounds.width > 0 && bounds.height > 0) {
+            scale.displayScale.set(base.width / bounds.width, base.height / bounds.height);
+        }
+        return true;
+    },
+    resize(force = false) {
+        if (!this.game || !this.game.scale) return false;
+        const size = this._measureGameView();
+        if (!size) return false;
+        const dpr = Number(window.devicePixelRatio) || 1;
+        const canvas = this.game.canvas || (this.game.renderer && this.game.renderer.canvas);
+        const resolution = (this.game.renderer && Number(this.game.renderer.resolution)) || 1;
+        const expectedBufferWidth = Math.round(size.width * resolution);
+        const expectedBufferHeight = Math.round(size.height * resolution);
+        const canvasRect = canvas && canvas.getBoundingClientRect ? canvas.getBoundingClientRect() : null;
+        const canvasMatches = !canvas || (
+            canvas.width === expectedBufferWidth
+            && canvas.height === expectedBufferHeight
+            && (!canvasRect || (
+                Math.round(canvasRect.width) === size.width
+                && Math.round(canvasRect.height) === size.height
+            ))
+        );
+        const last = this._lastAppliedViewport;
+        const scaleMatches = Math.round(this.game.scale.width) === size.width
+            && Math.round(this.game.scale.height) === size.height;
+        if (!force && last && last.width === size.width && last.height === size.height
+            && last.dpr === dpr && scaleMatches && canvasMatches) return false;
+        this._lastAppliedViewport = { width: size.width, height: size.height, dpr };
+        this.game.scale.resize(size.width, size.height);
+        this._synchronizeSceneCameras(size.width, size.height);
+        this._resetWebGLViewport(size.width, size.height);
+        this._refreshInputBounds();
+        return true;
+    },
+    recoverViewport() {
+        if (!this.game || !this.game.scale) return false;
+        const size = this._measureGameView();
+        if (!size) return false;
+        const canvas = this.game.canvas;
+        const scaleMismatch = Math.round(this.game.scale.width) !== size.width
+            || Math.round(this.game.scale.height) !== size.height;
+        const canvasMismatch = canvas && (canvas.width !== size.width || canvas.height !== size.height);
+        if (scaleMismatch || canvasMismatch) return this.resize(true);
+        this._synchronizeSceneCameras(size.width, size.height);
+        this._resetWebGLViewport(size.width, size.height);
+        this._refreshInputBounds();
+        return true;
+    },
+    _synchronizeSceneCameras(width, height) {
+        const scenes = this.game && this.game.scene && this.game.scene.scenes;
+        if (!Array.isArray(scenes)) return;
+        scenes.forEach((scene) => {
+            const camera = scene && scene.cameras && scene.cameras.main;
+            if (!camera) return;
+            camera.setPosition(0, 0);
+            camera.setSize(width, height);
+        });
+        const main = this.game.scene.getScene && this.game.scene.getScene('MainScene');
+        if (main && main.mapGenerated && main.centerMap) main.centerMap();
+        if (main && main.tacticalMinimap && main.tacticalMinimap.layout) main.tacticalMinimap.layout();
+    },
+    _resetWebGLViewport(width, height) {
+        const renderer = this.game && this.game.renderer;
+        const gl = renderer && renderer.gl;
+        if (!gl) return;
+        // Phaser 3.60 clears before it resets the frame scissor. Replace both
+        // its cached state and the actual WebGL state so an obsolete UI-camera
+        // scissor cannot preserve strips from the previous monitor.
+        if (renderer.resize) renderer.resize(width, height);
+        const full = renderer.defaultScissor || [0, 0, width, height];
+        full[0] = 0;
+        full[1] = 0;
+        full[2] = width;
+        full[3] = height;
+        renderer.currentScissor = full;
+        if (renderer.scissorStack) {
+            renderer.scissorStack.length = 0;
+            renderer.scissorStack.push(full);
+        }
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+        gl.viewport(0, 0, width, height);
+        gl.enable(gl.SCISSOR_TEST);
+        gl.scissor(0, Math.max(0, gl.drawingBufferHeight - height), width, height);
+    },
     hexToPx(q, r) { return { x: HEX_SIZE * Math.sqrt(3) * (q + r/2), y: HEX_SIZE * (3/2) * r }; },
     pxToHex(mx, my) { const main = phaserGame.scene.getScene('MainScene'); if(!main) return {q:0, r:0}; const w = main.cameras.main.getWorldPoint(mx, my); return this.roundHex((Math.sqrt(3)/3*w.x - w.y/3)/HEX_SIZE, (2/3*w.y)/HEX_SIZE); },
     roundHex(q,r) { let rq=Math.round(q), rr=Math.round(r), rs=Math.round(-q-r); const dq=Math.abs(rq-q), dr=Math.abs(rr-r), ds=Math.abs(rs-(-q-r)); if(dq>dr&&dq>ds) rq=-rr-rs; else if(dr>ds) rr=-rq-rs; return {q:rq, r:rr}; },
@@ -204,8 +408,11 @@ const Renderer = {
         return false; 
     },
     playAttackAnim(attacker, target) { const main = this.game.scene.getScene('MainScene'); if (main && main.unitView) main.unitView.triggerAttack(attacker, target); },
+    getMuzzlePoint(attacker, target) { const main = this.game.scene.getScene('MainScene'); return main && main.unitView && main.unitView.getMuzzlePoint ? main.unitView.getMuzzlePoint(attacker, target) : null; },
     playExplosion(x, y, tier, hex, opts) { const main = this.game.scene.getScene('MainScene'); if (main) main.triggerExplosion(x, y, tier, hex, opts); },
-    playMuzzleFlash(x, y, angle) { const main = this.game.scene.getScene('MainScene'); if (main && main.triggerMuzzleFlash) main.triggerMuzzleFlash(x, y, angle); },
+    playMuzzleFlash(x, y, angle, weapon) { const main = this.game.scene.getScene('MainScene'); if (main && main.triggerMuzzleFlash) main.triggerMuzzleFlash(x, y, angle, weapon); },
+    playMuzzleBurst(x, y, angle, weapon, rounds) { if (window.VFX && window.VFX.playMuzzleBurst) window.VFX.playMuzzleBurst(x, y, angle, weapon, rounds); else this.playMuzzleFlash(x, y, angle, weapon); },
+    playImpactSmoke(x, y, scale) { if (window.VFX && window.VFX.playImpactSmoke) window.VFX.playImpactSmoke(x, y, scale); },
     generateFaceIcon(seed) { const c = document.createElement('canvas'); c.width = 64; c.height = 64; const ctx = c.getContext('2d'); const rnd = function() { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; }; ctx.fillStyle = "#334"; ctx.fillRect(0,0,64,64); const skinTones = ["#ffdbac", "#f1c27d", "#e0ac69", "#8d5524"]; ctx.fillStyle = skinTones[Math.floor(rnd() * skinTones.length)]; ctx.beginPath(); ctx.arc(32, 36, 18, 0, Math.PI*2); ctx.fill(); ctx.fillStyle = "#343"; ctx.beginPath(); ctx.arc(32, 28, 20, Math.PI, 0); ctx.lineTo(54, 30); ctx.lineTo(10, 30); ctx.fill(); ctx.strokeStyle = "#121"; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(10,28); ctx.lineTo(54,28); ctx.stroke(); ctx.fillStyle = "#000"; const eyeY = 36; const eyeOff = 6 + rnd()*2; ctx.fillRect(32-eyeOff-2, eyeY, 4, 2); ctx.fillRect(32+eyeOff-2, eyeY, 4, 2); ctx.strokeStyle = "#a76"; ctx.lineWidth = 1; ctx.beginPath(); const mouthW = 4 + rnd()*6; ctx.moveTo(32-mouthW/2, 48); ctx.lineTo(32+mouthW/2, 48); ctx.stroke(); if (rnd() < 0.5) { ctx.fillStyle = "rgba(0,0,0,0.2)"; ctx.fillRect(20 + rnd()*20, 30 + rnd()*20, 4, 2); } return c.toDataURL(); }
 };
 window.Renderer = Renderer;
@@ -223,6 +430,19 @@ window.KHAOS_FX = {
         t3_mortar60:   { frames: 18, fps: 20, sizeMul: 1.7 },
         t4_shell120:   { frames: 32, fps: 24, sizeMul: 2.3, shake: { dur: 320, int: 0.006 }, damageBuilding: true },
         t5_aerialbomb: { frames: 40, fps: 24, sizeMul: 3.0, shake: { dur: 600, int: 0.014 }, damageBuilding: true },
+    },
+    /**
+     * 立体物(建物/柵/低木)への破壊半径と段階数。半径はワールドpx。
+     * ヘックス幅(√3*HEX_SIZE≈93.5)を基準にティアの sizeMul と揃えてある。
+     * severity = 一度の着弾で進む破壊段階。建物は4〜6段階あるので、
+     * 小口径では崩れきらず、大口径は一撃で複数段階進む。
+     */
+    BLAST: {
+        t1_12mm:       { radius: 26,  severity: 0 },  // 銃弾。痕は残るが構造は壊さない
+        t2_grenade:    { radius: 45,  severity: 1 },
+        t3_mortar60:   { radius: 70,  severity: 1 },
+        t4_shell120:   { radius: 105, severity: 2 },
+        t5_aerialbomb: { radius: 150, severity: 3 },
     },
     VARIANTS: ['', '_v2', '_v3'],
     FRAME: 384,
@@ -587,6 +807,7 @@ class UIScene extends Phaser.Scene {
         this.cards.forEach(card => { if (card.active) card.updatePhysics(); });
         if (this.sidebar) {
             const ptr = this.input.activePointer;
+            this.sidebar.updateLiveStats();
             this.sidebar.updateDropHighlight(ptr.x, ptr.y);
             if (this.sidebar.dragGhost) this.sidebar.updateDragGhost(time, delta);
         }
@@ -780,18 +1001,24 @@ class UIScene extends Phaser.Scene {
 }
 
 class MainScene extends Phaser.Scene {
-    constructor() { super({ key: 'MainScene' }); this.hexGroup=null; this.decorGroup=null; this.unitGroup=null; this.treeGroup=null; this.hpGroup=null; this.vfxGraphics=null; this.overlayGraphics=null; this.mapGenerated=false; this.dragHighlightHex=null; this.crosshairGroup=null; this.unitView = null; }
+    constructor() { super({ key: 'MainScene' }); this.hexGroup=null; this.decorGroup=null; this.unitGroup=null; this.treeGroup=null; this.hpGroup=null; this.vfxGraphics=null; this.overlayGraphics=null; this.mapGenerated=false; this.dragHighlightHex=null; this.crosshairGroup=null; this.unitView = null; this.tacticalPause = null; }
     preload() { 
         if (window.TerrainRender) window.TerrainRender.preload(this);
         if(window.EnvSystem) window.EnvSystem.preload(this);
         if (window.Sfx && window.Sfx.preload) { window.Sfx.preload(this); }
         this.load.spritesheet('us_soldier', 'asset/us-soldier-back-sheet.png', { frameWidth: 128, frameHeight: 128 });
-        // 匍匐前進: Blender 出力 2048×7680（8列×30行・256pxセル）をそのままスプライトシートで使用
-        this.load.spritesheet('soldier_crawl', 'asset/soldier_crawl.png', { frameWidth: 256, frameHeight: 256, endFrame: 239 });
         // 19モーション実スプライト（asset/sprites/soldier, manifest 駆動）。manifest は
         // phaser_soldier_view.js がスクリプト読込時に先行フェッチ済み。未解決なら
         // 旧 soldier_crawl のまま劣化動作（SoldierUnitView 側でフォールバック）。
         const solMan = window.SOLDIER_MANIFEST;
+        // 匍匐前進シート(8.3MB)は**そのフォールバック専用**。19モーションが揃うなら
+        // 一度も描画に使われないので落とさない。起動時の転送量が約3割減る。
+        // 判定は SoldierUnitView.manifestReady() と同じ条件にしてある。
+        const solReady = !!(solMan && solMan.actions && solMan.version >= 2 && solMan.charH > 0);
+        if (!solReady) {
+            // Blender 出力 2048×7680（8列×30行・256pxセル）をそのままシートで使う
+            this.load.spritesheet('soldier_crawl', 'asset/soldier_crawl.png', { frameWidth: 256, frameHeight: 256, endFrame: 239 });
+        }
         if (solMan && solMan.actions && solMan.version >= 2) {
             for (const name of (window.SOLDIER_LOAD_ACTIONS || [])) {
                 const meta = solMan.actions[name];
@@ -809,6 +1036,13 @@ class MainScene extends Phaser.Scene {
             this.load.spritesheet('muzzle_flash', 'asset/muzzle_flash_128.png',
                 { frameWidth: 128, frameHeight: 128, endFrame: 7 });
         }
+        // 小銃弾着は高解像度3変種を小さく縮小して使う。64px版は輪郭が粗く、
+        // 兵士の滑らかなスプライトと粒度が合わなかった。
+        ['', '_v2', '_v3'].forEach((suffix, index) => {
+            this.load.spritesheet('impact_rifle_' + index,
+                `asset/explosion_khaos_t1_12mm${suffix}_384.png`,
+                { frameWidth: 384, frameHeight: 384, endFrame: 7 });
+        });
         // KHAOS爆発 5ティア×3バリアント（384pxシネマティック版）
         if (window.KHAOS_FX) {
             Object.entries(KHAOS_FX.TIERS).forEach(([tier, m]) => {
@@ -818,6 +1052,61 @@ class MainScene extends Phaser.Scene {
                 });
             });
         }
+        // 立体物スプライトの台帳。PNG本体はマップ確定後に必要な分だけ遅延ロードする
+        // (全655枚=7MiBを常時読むのは無駄。1マップが使うのは一部)。
+        this.load.json('ps_object_manifest', 'asset/environment/ps_objects/manifest.json');
+        this.load.once('filecomplete-json-ps_object_manifest', (key, type, data) => {
+            if (window.PsObjectLayer) window.PsObjectLayer.manifest = data;
+        });
+        // Raised 2x overrides are optional and resolved per asset+slot.
+        // A manifest.js can set window.RAISED_HD_MANIFEST before this scene;
+        // otherwise try the JSON form. A missing JSON leaves canonical PS
+        // loading and rendering unchanged.
+        const inlineRaisedHdManifest = window.RAISED_HD_MANIFEST
+            || (window.PsObjectLayer && window.PsObjectLayer.hdManifest);
+        if (inlineRaisedHdManifest) {
+            if (window.PsObjectLayer) {
+                window.PsObjectLayer.hdManifest = inlineRaisedHdManifest;
+            }
+        } else {
+            this.load.json(
+                'raised_hd_manifest',
+                'asset/environment/raised_hd/manifest.json'
+            );
+            this.load.once('filecomplete-json-raised_hd_manifest', (key, type, data) => {
+                if (window.PsObjectLayer) window.PsObjectLayer.hdManifest = data;
+            });
+        }
+        // Map-priority trees use the exact-2x PS slot contract. Their catalog
+        // stays separate from the padded vegetation textures.
+        const inlineTreeHdManifest = window.TREE_HD_PS_MANIFEST
+            || (window.PsObjectLayer && window.PsObjectLayer.treeHdManifest);
+        if (inlineTreeHdManifest) {
+            if (window.PsObjectLayer) {
+                window.PsObjectLayer.treeHdManifest = inlineTreeHdManifest;
+            }
+        } else {
+            this.load.json(
+                'tree_hd_ps_manifest',
+                'asset/environment/trees_hd/production/runtime_ps_manifest.json'
+            );
+            this.load.once('filecomplete-json-tree_hd_ps_manifest', (key, type, data) => {
+                if (window.PsObjectLayer) {
+                    window.PsObjectLayer.treeHdManifest = data;
+                }
+            });
+        }
+        // PSクレーターのデカール素材。manifest を先に読み、完了時に各PNGを追加投入する。
+        // 焼き込み用(window.DecalLayer)なので生きたスプライトにはならない。
+        this.load.json('decal_manifest', 'asset/environment/decals/manifest.json');
+        this.load.once('filecomplete-json-decal_manifest', (key, type, data) => {
+            if (!window.DecalLayer || !data || !data.tiers) return;
+            window.DecalLayer.manifest = data;
+            Object.values(data.tiers).forEach(list => {
+                list.forEach(d => this.load.image('decal_' + d.id, 'asset/environment/decals/' + d.file));
+            });
+            this.load.start(); // preload中の追加投入を確実に走らせる
+        });
         // fir_tree: 128x128 x32コマ。レイアウト 16列x2行（0-15=弱い揺れ、16-31=強風）
         this.load.spritesheet('fir_tree', 'asset/environment/fir_tree.png', { frameWidth: 128, frameHeight: 128, endFrame: 31 });
         for (let i = 1; i <= (typeof PORTRAIT_AVAILABLE !== 'undefined' ? PORTRAIT_AVAILABLE : 7); i++) {
@@ -826,9 +1115,12 @@ class MainScene extends Phaser.Scene {
         this.load.image('aerial_spt', 'asset/portraits/aerial_spt.jpg');
     }
     create() {
-        window.createHexTexture(this); this.cameras.main.setBackgroundColor('#141210'); 
+        window.createHexTexture(this); this.cameras.main.setBackgroundColor('#303322');
         this.updateSidebarViewport();
-        this.scale.on('resize', () => this.updateSidebarViewport());
+        this.scale.on('resize', () => {
+            this.updateSidebarViewport();
+            if (this.mapGenerated) this.centerMap();
+        });
         this.hexGroup = this.add.layer(); this.hexGroup.setDepth(0);
         this.roadGraphics = this.add.graphics().setDepth(1.6);
         this.decorGroup = this.add.container(0, 0); this.decorGroup.setDepth(8);
@@ -841,12 +1133,81 @@ class MainScene extends Phaser.Scene {
         this.vfxGraphics = this.add.graphics().setDepth(2000).setScrollFactor(1);
         this.overlayGraphics = this.add.graphics().setDepth(1500).setScrollFactor(1); 
         if(window.EnvSystem) window.EnvSystem.clear();
+        if(window.VFX && window.VFX.bindScene) window.VFX.bindScene(this);
         this.scene.launch('UIScene'); 
         const UnitViewClass = (window.SoldierUnitView && window.SOLDIER_MANIFEST && this.textures.exists('sold_stand_idle'))
             ? window.SoldierUnitView : UnitView;
         this.unitView = new UnitViewClass(this, this.unitGroup, this.hpGroup);
-        this.battleCloudRenderer = new BattleCloudRenderer(this);
-        this.input.on('wheel', (pointer, gameObjects, deltaX, deltaY, deltaZ) => { let newZoom = this.cameras.main.zoom; if (deltaY > 0) newZoom -= 0.5; else if (deltaY < 0) newZoom += 0.5; newZoom = Phaser.Math.Clamp(newZoom, 0.25, 4.0); this.tweens.add({ targets: this.cameras.main, zoom: newZoom, duration: 150, ease: 'Cubic.out' }); });
+        this.tacticalMinimap = window.TacticalMinimap ? new TacticalMinimap(this) : null;
+        if (window.TacticalPauseOverlay) {
+            this.tacticalPause = new TacticalPauseOverlay(this, {
+                getSoldiers: () => {
+                    const rtwp = window.RtwpBattle && window.RtwpBattle.instance;
+                    return rtwp && rtwp.sim ? rtwp.sim.soldiers() : [];
+                },
+                getSelectedId: () => window.gameLogic && window.gameLogic.selectedUnit
+                    ? String(window.gameLogic.selectedUnit.id) : null,
+                // 分隊長AIの采配（LeaderPolicy が leaderState へ残す計画）
+                getPlan: () => {
+                    const rtwp = window.RtwpBattle && window.RtwpBattle.instance;
+                    return rtwp && rtwp.leaderState ? rtwp.leaderState.A.plan || null : null;
+                },
+                getPosition: (id) => {
+                    let v = this.unitView && this.unitView.visuals.get(id);
+                    if (!v && this.unitView && this.unitView.visuals) {
+                        for (const [key, value] of this.unitView.visuals) {
+                            if (String(key) === String(id)) { v = value; break; }
+                        }
+                    }
+                    return v && v.container ? { x: v.container.x, y: v.container.y } : null;
+                },
+                getDisplayName: (id) => {
+                    const rtwp = window.RtwpBattle && window.RtwpBattle.instance;
+                    const unit = rtwp && rtwp.unitById && rtwp.unitById.get(String(id));
+                    return unit && unit.name ? unit.name : String(id);
+                },
+                getPendingTargetId: (id) => {
+                    const rtwp = window.RtwpBattle && window.RtwpBattle.instance;
+                    const unit = rtwp && rtwp.unitById && rtwp.unitById.get(String(id));
+                    return unit && unit._rtwpPendingTargetId;
+                },
+            });
+        }
+        // 戦雲一時廃止中(window.BATTLE_CLOUD_ENABLED=false)はレンダラ自体を作らない。
+        this.battleCloudRenderer = window.BATTLE_CLOUD_ENABLED ? new BattleCloudRenderer(this) : null;
+        // カーソル位置を固定したままのズーム。"グリグリ"の手触りはここで決まる。
+        //
+        // 旧実装は ±0.5 の固定ステップ＋tween だったので、拡大するほど1ステップが
+        // 相対的に小さくなり、しかも画面中心へ寄っていくのでカーソルの先が逃げた。
+        // 乗算ステップにして、ズーム前後で「カーソルの下にあるワールド座標」を一致させる。
+        //
+        // Phaser のカメラは**ビューの中心**を軸に拡大するので、scrollX を差分で補正すると
+        // 原点の扱いを取り違える（sim_battle.html で実測: 1ステップあたり144pxズレた）。
+        // 画面中心からカーソルまでのオフセットがワールド換算で 1/zoom に比例することを使い、
+        // 望みの中心を直接 centerOn する。
+        this.input.on('wheel', (pointer, gameObjects, deltaX, deltaY) => {
+            const cam = this.cameras.main;
+            const dpr = (typeof Renderer !== 'undefined' && Renderer.RENDER_DPR) || 1;
+            const factor = deltaY > 0 ? 1 / 1.12 : 1.12;
+            const range = this._mapZoomRange || { min: 0.28 * dpr, max: 4 * dpr };
+            const next = Phaser.Math.Clamp(cam.zoom * factor, range.min, range.max);
+            if (next === cam.zoom) return;
+            const wp = cam.getWorldPoint(pointer.x, pointer.y);
+            const dx = pointer.x - cam.width / 2;
+            const dy = pointer.y - cam.height / 2;
+            cam.setZoom(next);
+            if (this._mapBounds && cam.setBounds) {
+                const sidebarW = this._battlefieldSidebarWidth();
+                cam.setBounds(
+                    this._mapBounds.x,
+                    this._mapBounds.y,
+                    this._mapBounds.width + sidebarW / next,
+                    this._mapBounds.height,
+                    false
+                );
+            }
+            cam.centerOn(wp.x - dx / next, wp.y - dy / next);
+        });
         
         this.getUnitAtScreenPosition = (screenX, screenY) => {
             if (!window.gameLogic || !this.unitView) return null;
@@ -920,14 +1281,17 @@ class MainScene extends Phaser.Scene {
         });
     }
     updateSidebarViewport() {
-        const app = document.getElementById('app');
-        if (app && app.classList.contains('phaser-sidebar')) {
-            const w = this.scale.width; const h = this.scale.height;
-            const sidebarW = window.getSidebarWidth ? window.getSidebarWidth() : 340;
-            this.cameras.main.setViewport(0, 0, Math.max(1, w - sidebarW), h);
-        } else {
-            this.cameras.main.setViewport(0, 0, this.scale.width, this.scale.height);
-        }
+        // Keep the main camera on Phaser's standard full-canvas path. The
+        // opaque sidebar scene blocks map input, so drawing below it is safe.
+        // setPosition + setSize also clears a stale custom-viewport flag.
+        this.cameras.main.setPosition(0, 0);
+        this.cameras.main.setSize(this.scale.width, this.scale.height);
+    }
+    _battlefieldSidebarWidth() {
+        const app = typeof document !== 'undefined' ? document.getElementById('app') : null;
+        return app && app.classList.contains('phaser-sidebar') && window.getSidebarWidth
+            ? window.getSidebarWidth()
+            : 0;
     }
     triggerExplosion(x, y, tier, hex, opts) {
         const meta = tier && window.KHAOS_FX && KHAOS_FX.TIERS[tier];
@@ -954,6 +1318,21 @@ class MainScene extends Phaser.Scene {
         spr.once('animationcomplete', () => { spr.destroy(); });
 
         if (meta.shake) this.cameras.main.shake(meta.shake.dur, meta.shake.int);
+
+        // 着弾痕を地表へ焼き込み、周囲の立体物を段階破壊する(いずれも不可逆)。
+        // 煙がタイルを覆った頃に差し込むと、晴れたときには既に痕が残り
+        // 建物が崩れている、というPS的な見え方になる。
+        const burnDelay = (meta.frames / meta.fps) * 1000 * 0.45;
+        const blast = window.KHAOS_FX && KHAOS_FX.BLAST[tier];
+        if ((window.DecalLayer && window.DecalLayer.ready()) || window.PsObjectLayer) {
+            setTimeout(() => {
+                if (window.DecalLayer && window.DecalLayer.ready()) window.DecalLayer.stamp(x, y, tier);
+                // severity 0 (銃弾) は痕だけ残し構造は壊さない
+                if (blast && blast.severity > 0 && window.PsObjectLayer && window.PsObjectLayer.count()) {
+                    window.PsObjectLayer.damageAt(x, y, blast.radius, blast.severity);
+                }
+            }, burnDelay);
+        }
         // 直撃地点の段階破壊: 煙がタイルを覆った頃に差し替える。
         // 建物があれば建物を、なければ地面（道路寸断・石畳クレーター化）を損傷
         if (meta.damageBuilding && hex && window.TerrainRenderV7 && window.CityMap && window.CityMap.active) {
@@ -972,7 +1351,11 @@ class MainScene extends Phaser.Scene {
      * にならない(2026-07-13 ユーザー要望)。+X向きレンダーを射線方向へ回転。
      * アセット未納品(テクスチャなし)なら静かに何もしない。
      */
-    triggerMuzzleFlash(x, y, angle) {
+    triggerMuzzleFlash(x, y, angle, weapon) {
+        if (window.VFX && window.VFX.playMuzzleFlash) {
+            window.VFX.playMuzzleFlash(x, y, angle, weapon);
+            return;
+        }
         if (!this.textures.exists('muzzle_flash')) return;
         const meta = window.KHAOS_FX;
         const variant = meta._muzzleRR = ((meta._muzzleRR || 0) + 1) % 4;
@@ -1038,12 +1421,43 @@ class MainScene extends Phaser.Scene {
         }
         if (!Number.isFinite(minX)) return;
 
+        // PS正本マップは実体hexの島より背景キャンバスが広い。正本背景がある場合は
+        // 画像そのものをカメラ範囲にして、画面端の黒い余白をなくす。
+        const variant = window.RuralV29Map && window.RuralV29Map.lastVariant;
+        const battlefield = variant && variant.psNative && window.PS_BATTLEFIELDS
+            ? window.PS_BATTLEFIELDS[variant.psNative] : null;
+        if (battlefield && battlefield.projection
+            && Number.isFinite(battlefield.imageWidth) && Number.isFinite(battlefield.imageHeight)) {
+            const projection = battlefield.projection;
+            minX = projection.topLeftX;
+            minY = projection.topLeftY;
+            maxX = minX + battlefield.imageWidth * projection.scale;
+            maxY = minY + battlefield.imageHeight * projection.scale;
+        }
+
         const camera = this.cameras.main;
         const mapW = maxX - minX;
         const mapH = maxY - minY;
-        camera.centerOn((minX + maxX) / 2, (minY + maxY) / 2);
-        const zoomFit = Math.min(camera.width / mapW, camera.height / mapH) * 0.92;
-        camera.zoom = Phaser.Math.Clamp(zoomFit, 0.25, 4);
+        const sidebarW = this._battlefieldSidebarWidth ? this._battlefieldSidebarWidth() : 0;
+        const battlefieldW = Math.max(1, camera.width - sidebarW);
+        // containではなくcover。最小ズームでも上下左右に背景色を露出させない。
+        const zoomFit = Math.max(battlefieldW / mapW, camera.height / mapH) * 1.01;
+        // zoomFit は camera.width から出るので DPR に自動追従するが、クランプの上下限は
+        // 実寸基準の値なので DPR 倍しないと高DPI環境だけ range が狭まる。
+        const dpr = (typeof Renderer !== 'undefined' && Renderer.RENDER_DPR) || 1;
+        // 広域背景を画面いっぱいに敷く。全容はミニマップで保証し、主画面には
+        // 地面の無い帯を出さない。
+        const minZoom = Phaser.Math.Clamp(zoomFit, 0.24 * dpr, 4 * dpr);
+        const maxZoom = Math.max(minZoom, Math.min(5 * dpr, minZoom * 2.75));
+        this._mapZoomRange = { min: minZoom, max: maxZoom };
+        camera.zoom = minZoom;
+        const sidebarWorldW = sidebarW / minZoom;
+        this._mapBounds = { x: minX, y: minY, width: mapW, height: mapH };
+        if (camera.setBounds) camera.setBounds(minX, minY, mapW + sidebarWorldW, mapH, false);
+        camera.centerOn((minX + maxX) / 2 + sidebarWorldW / 2, (minY + maxY) / 2);
+        if (this.tacticalMinimap) {
+            this.tacticalMinimap.fit({ x: minX, y: minY, w: mapW, h: mapH });
+        }
     }
     createMap() {
         if(!window.gameLogic || !window.gameLogic.map) return;
@@ -1054,7 +1468,9 @@ class MainScene extends Phaser.Scene {
         if (ruralMode) {
             if (this.roadGraphics) this.roadGraphics.clear();
             window.TerrainRenderRuralV29.buildMap(this, this.hexGroup, map);
-            if (window.VegetationLayer) window.VegetationLayer.build(this, map);
+            // PS正本キャンバスは木・低木まで背景に焼き込み済み。上から散布すると二重になる。
+            const psNativeBg = !!(window.RuralV29Map.lastVariant && window.RuralV29Map.lastVariant.psNative);
+            if (window.VegetationLayer && !psNativeBg) window.VegetationLayer.build(this, map);
             if (window.SceneComposition) window.SceneComposition.applyGrade(this);
             this.centerMap();
             return;
@@ -1101,6 +1517,32 @@ class MainScene extends Phaser.Scene {
             } 
         }
     }
+    /**
+     * 盤面が「揃った」か。地面・立体物は読めたものから描く連鎖ロードなので、
+     * 待たずに始めると地面だけの盤面で撃ち合いが始まり、あとから木や建物が
+     * 湧いて見える。地形レンダラが別方式なら従来どおり待たない。
+     */
+    battlefieldReady() {
+        const t = window.TerrainRenderRuralV29;
+        if (!t || typeof t.isReady !== 'function' || !t._started) return true;
+        if (!t.isReady()) return false;
+        // 立体物スプライトの追加ロードが走っている間も「揃っていない」
+        return !(this.load && this.load.isLoading && this.load.isLoading());
+    }
+
+    /** 揃うまで戦場を伏せておく幕。準備が終わったら update 側で消える。 */
+    updateBattlefieldGate() {
+        if (this.battlefieldGate || this.battlefieldReady()) return;
+        const w = this.scale.width, h = this.scale.height;
+        const veil = this.add.rectangle(0, 0, w, h, 0x05070a, 0.92).setOrigin(0, 0);
+        const label = this.add.text(w / 2, h / 2, '戦場を準備中…', {
+            fontFamily: 'Share Tech Mono, monospace', fontSize: '18px', color: '#d8e9e5',
+        }).setOrigin(0.5, 0.5);
+        const gate = this.add.container(0, 0, [veil, label]);
+        gate.setScrollFactor(0).setDepth(100000);
+        this.battlefieldGate = gate;
+    }
+
     update(time, delta) {
         // ★修正: gameLogicが準備できていない、またはマップデータが無い場合は何もしない
         if (!window.gameLogic || !window.gameLogic.map) return;
@@ -1119,7 +1561,37 @@ class MainScene extends Phaser.Scene {
         }
         
         if (window.gameLogic.map.length > 0 && !this.mapGenerated) { this.createMap(); this.mapGenerated = true; }
+        this.updateBattlefieldGate();
+
+        // RTwP（NORTH_STAR §7 Strangler Fig）。**既定で有効**。
+        // 旧ターン制へ戻すには URL へ ?rtwp=0 を付ける（logic_game.js は無改造で
+        // 残してあるので、これだけで完全に元の挙動になる）。
+        // 接続後は RtwpBattle 側がシムを回して gameLogic.units へ状態を書き戻すので、
+        // 下の unitView.update() がそのまま実時間の動きを描く（描画側の改修は不要）。
+        if (window.RtwpBattle && window.RtwpBattle.enabled
+            && !/(?:\?|&)rtwp=0(?:&|$)/.test(window.location.search)) {
+            // セクターごとに BattleLogic は作り直される（logic_campaign.js:301）。
+            // 「instance が無い時だけ接続」だと、前のセクターのインスタンスが残って
+            // いる限り新しい盤面へ繋がらず、面が一切動かなくなる。別の gameLogic を
+            // 掴んでいたら繋ぎ直す（決着時の detach と二重の安全弁）。
+            const bound = window.RtwpBattle.instance;
+            const stale = bound && bound.gameLogic !== window.gameLogic;
+            if ((!bound || stale) && window.gameLogic.state === 'PLAY'
+                && window.gameLogic.map.length > 0 && this.battlefieldReady()) {
+                try { window.RtwpBattle.attach(window.gameLogic); } catch (e) { console.error('RTwP attach', e); }
+            }
+            const rt = window.RtwpBattle.instance;
+            if (rt) { try { rt.update(delta); } catch (e) { console.error('RTwP update', e); } }
+        }
+
+        if (this.battlefieldGate) this.battlefieldGate.setVisible(!this.battlefieldReady());
         if(this.unitView) this.unitView.update(time, delta);
+        if (this.tacticalMinimap) this.tacticalMinimap.update();
+        if (this.tacticalPause) {
+            const rtwp = window.RtwpBattle && window.RtwpBattle.instance;
+            this.tacticalPause.setActive(!!(rtwp && rtwp.paused));
+            this.tacticalPause.update();
+        }
         if (this.battleCloudRenderer) this.battleCloudRenderer.update(time);
         this.overlayGraphics.clear();
         

@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KHAOS Explosion Tier Preview</title>
+    <style>
+        body {
+            background: linear-gradient(45deg, #444 25%, transparent 25%, transparent 75%, #444 75%, #444),
+                        linear-gradient(45deg, #444 25%, transparent 25%, transparent 75%, #444 75%, #444);
+            background-size: 20px 20px;
+            background-position: 0 0, 10px 10px;
+            background-color: #333;
+            margin: 0;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+            color: #fff;
+            transition: background-color 0.15s, color 0.15s;
+        }
+        body.theme-light {
+            background: none;
+            background-color: #f4f4f2;
+            color: #222;
+        }
+        body.theme-light .subtitle { color: #666; }
+        body.theme-light .tier-tabs button {
+            background: #e4e4e0;
+            color: #444;
+            border-color: #ccc;
+        }
+        body.theme-light .tier-tabs button:hover { background: #d8d8d2; }
+        body.theme-light .tier-tabs button.active {
+            background: #c9713f;
+            border-color: #a85a2e;
+            color: #fff;
+        }
+        body.theme-light .preview-section {
+            background: rgba(255, 255, 255, 0.75);
+            border-color: #ccc;
+        }
+        body.theme-light .animation-container {
+            background: linear-gradient(45deg, #ececec 25%, transparent 25%, transparent 75%, #ececec 75%, #ececec),
+                        linear-gradient(45deg, #ececec 25%, transparent 25%, transparent 75%, #ececec 75%, #ececec);
+            background-size: 10px 10px;
+            background-position: 0 0, 5px 5px;
+            background-color: #ffffff;
+        }
+        body.theme-light .controls button {
+            background: #e4e4e0;
+            color: #222;
+            border-color: #bbb;
+        }
+        body.theme-light .controls button:hover { background: #d8d8d2; }
+        body.theme-light .frame-label,
+        body.theme-light .speed-label,
+        body.theme-light .info { color: #555; }
+        .theme-toggle {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 14px;
+        }
+        .theme-toggle button {
+            background: #444;
+            color: #ccc;
+            border: 1px solid #666;
+            border-radius: 6px;
+            padding: 6px 14px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+        .theme-toggle button.active {
+            background: #3a6ea5;
+            border-color: #5a8fc7;
+            color: #fff;
+            font-weight: bold;
+        }
+        body.theme-light .theme-toggle button {
+            background: #e4e4e0;
+            color: #444;
+            border-color: #ccc;
+        }
+        body.theme-light .theme-toggle button.active {
+            background: #3a6ea5;
+            border-color: #5a8fc7;
+            color: #fff;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 4px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #aaa;
+            font-size: 13px;
+            margin-bottom: 20px;
+        }
+        .tier-tabs {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+        .tier-tabs button {
+            background: #444;
+            color: #ccc;
+            border: 1px solid #666;
+            border-radius: 6px;
+            padding: 8px 16px;
+            font-size: 13px;
+            cursor: pointer;
+        }
+        .tier-tabs button:hover {
+            background: #555;
+        }
+        .tier-tabs button.active {
+            background: #7a4a2a;
+            border-color: #c07840;
+            color: #fff;
+            font-weight: bold;
+        }
+        .preview-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-top: 20px;
+        }
+        .preview-section {
+            border: 1px solid #666;
+            padding: 15px;
+            border-radius: 8px;
+            background: rgba(0, 0, 0, 0.5);
+        }
+        .preview-section h2 {
+            margin: 0 0 10px 0;
+            font-size: 18px;
+        }
+        .animation-container {
+            background: linear-gradient(45deg, #222 25%, transparent 25%, transparent 75%, #222 75%, #222),
+                        linear-gradient(45deg, #222 25%, transparent 25%, transparent 75%, #222 75%, #222);
+            background-size: 10px 10px;
+            background-position: 0 0, 5px 5px;
+            background-color: #111;
+            padding: 10px;
+            border-radius: 4px;
+            display: inline-block;
+        }
+        .sprite {
+            background-repeat: no-repeat;
+        }
+        .controls {
+            margin-top: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .controls button {
+            background: #555;
+            color: #fff;
+            border: 1px solid #777;
+            border-radius: 4px;
+            padding: 6px 14px;
+            font-size: 13px;
+            cursor: pointer;
+        }
+        .controls button:hover {
+            background: #666;
+        }
+        .controls input[type="range"] {
+            flex: 1;
+        }
+        .frame-label, .speed-label {
+            font-size: 12px;
+            color: #ccc;
+            min-width: 60px;
+            text-align: right;
+            font-variant-numeric: tabular-nums;
+        }
+        .speed-row {
+            margin-top: 8px;
+        }
+        .info {
+            margin-top: 10px;
+            font-size: 12px;
+            color: #aaa;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>KHAOS Explosion Tier Preview</h1>
+        <div class="subtitle">口径別5段階 — タブで切り替え</div>
+        <div class="theme-toggle" id="theme-toggle">
+            <button data-theme="dark" class="active">ダーク背景</button>
+            <button data-theme="light">白基調</button>
+        </div>
+        <div class="tier-tabs" id="tier-tabs"></div>
+        <div class="theme-toggle" id="variant-toggle">
+            <button data-variant="1" class="active">Variant 1</button>
+            <button data-variant="2">Variant 2</button>
+            <button data-variant="3">Variant 3</button>
+        </div>
+        <div class="preview-grid">
+            <div class="preview-section">
+                <h2 id="title-hi">High Resolution</h2>
+                <p id="meta-hi"></p>
+                <div class="animation-container">
+                    <div class="sprite" id="sprite-hi"></div>
+                </div>
+                <div class="controls">
+                    <button id="play-hi">Pause</button>
+                    <input type="range" id="slider-hi" min="0" max="0" value="0" step="1">
+                    <span class="frame-label" id="label-hi">1 / 1</span>
+                </div>
+                <div class="controls speed-row">
+                    <input type="range" id="speed-hi" min="0.25" max="4" value="1" step="0.25">
+                    <span class="speed-label" id="speed-label-hi">1.00x</span>
+                </div>
+            </div>
+            <div class="preview-section">
+                <h2 id="title-lo">Drop-in Compatible</h2>
+                <p id="meta-lo"></p>
+                <div class="animation-container">
+                    <div class="sprite" id="sprite-lo"></div>
+                </div>
+                <div class="controls">
+                    <button id="play-lo">Pause</button>
+                    <input type="range" id="slider-lo" min="0" max="0" value="0" step="1">
+                    <span class="frame-label" id="label-lo">1 / 1</span>
+                </div>
+                <div class="controls speed-row">
+                    <input type="range" id="speed-lo" min="0.25" max="4" value="1" step="0.25">
+                    <span class="speed-label" id="speed-label-lo">1.00x</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Metadata mirrors the *.json sidecars written by pack_sheets/build_tier.py.
+        // Inlined (not fetched) so this page works over file:// without CORS issues.
+        // Bust browser image cache on every page load — the tier PNGs get
+        // regenerated in place (same filename) as the recipe is tuned, and
+        // browsers otherwise keep serving the stale bitmap indefinitely.
+        const CACHE_BUST = Date.now();
+
+        // File paths are built from key + variant + size at display time:
+        //   explosion_khaos_<key>[_v2|_v3]_<256|64>.png
+        // Each tier has 3 seed variants (v1 = base filename, no suffix).
+        // 2026-07-11: hi sheet bumped 128->256 (native render resolution,
+        // packed without a destructive downscale -- see build_tier.py note).
+        // 2026-07-12: settled at 256 final + Unsharp Mask sourced from the
+        // 512 native render (see build_tier.py's UNSHARP note) -- the actual
+        // complaint was a style mismatch (soft volumetric smoke vs crisp
+        // modeled hex tiles), not raw pixel count, confirmed via
+        // style_compare.html's side-by-side A/B test.
+        const HI_SIZE = 256;
+        const TIERS = [
+            { key: 't1_12mm', label: '① 12.7mm着弾', fps128: 20, fps64: 10,
+              hi: { frames: 8, cols: 8, rows: 1, frameSize: HI_SIZE },
+              lo: { frames: 6, cols: 4, rows: 2, frameSize: 64 } },
+            { key: 't2_grenade', label: '② 手榴弾', fps128: 20, fps64: 10,
+              hi: { frames: 12, cols: 8, rows: 2, frameSize: HI_SIZE },
+              lo: { frames: 8, cols: 4, rows: 2, frameSize: 64 } },
+            { key: 't3_mortar60', label: '③ 60mm迫撃砲', fps128: 20, fps64: 10,
+              hi: { frames: 18, cols: 8, rows: 3, frameSize: HI_SIZE },
+              lo: { frames: 10, cols: 4, rows: 3, frameSize: 64 } },
+            { key: 't4_shell120', label: '④ 120mm榴弾', fps128: 24, fps64: 12,
+              hi: { frames: 32, cols: 8, rows: 4, frameSize: HI_SIZE },
+              lo: { frames: 16, cols: 4, rows: 4, frameSize: 64 } },
+            { key: 't5_aerialbomb', label: '⑤ 航空爆弾', fps128: 24, fps64: 12,
+              hi: { frames: 40, cols: 8, rows: 5, frameSize: HI_SIZE },
+              lo: { frames: 20, cols: 4, rows: 5, frameSize: 64 } },
+        ];
+
+        let currentTier = TIERS[0];
+        let currentVariant = 1;
+
+        function sheetFile(key, variant, size) {
+            const vsuf = variant <= 1 ? '' : `_v${variant}`;
+            return `explosion_khaos_${key}${vsuf}_${size}.png`;
+        }
+
+        function makePlayer(idSuffix) {
+            const el = document.getElementById('sprite-' + idSuffix);
+            const slider = document.getElementById('slider-' + idSuffix);
+            const label = document.getElementById('label-' + idSuffix);
+            const playBtn = document.getElementById('play-' + idSuffix);
+            const speedSlider = document.getElementById('speed-' + idSuffix);
+            const speedLabel = document.getElementById('speed-label-' + idSuffix);
+
+            let cfg = null;
+            let frame = 0;
+            let playing = true;
+            let speed = parseFloat(speedSlider.value);
+            let lastTick = performance.now();
+
+            function draw() {
+                if (!cfg) return;
+                const col = frame % cfg.cols;
+                const row = Math.floor(frame / cfg.cols);
+                el.style.backgroundPosition = `-${col * cfg.frameSize}px -${row * cfg.frameSize}px`;
+                slider.value = frame;
+                label.textContent = `${frame + 1} / ${cfg.frames}`;
+            }
+
+            function tick(now) {
+                if (playing && cfg) {
+                    const frameDurationMs = 1000 / (cfg.fps * speed);
+                    if (now - lastTick >= frameDurationMs) {
+                        frame = (frame + 1) % cfg.frames;
+                        lastTick = now;
+                        draw();
+                    }
+                }
+                requestAnimationFrame(tick);
+            }
+
+            playBtn.addEventListener('click', () => {
+                playing = !playing;
+                playBtn.textContent = playing ? 'Pause' : 'Play';
+                lastTick = performance.now();
+            });
+
+            slider.addEventListener('input', () => {
+                playing = false;
+                playBtn.textContent = 'Play';
+                frame = parseInt(slider.value, 10);
+                draw();
+            });
+
+            speedSlider.addEventListener('input', () => {
+                speed = parseFloat(speedSlider.value);
+                speedLabel.textContent = `${speed.toFixed(2)}x`;
+            });
+
+            requestAnimationFrame(tick);
+
+            return {
+                setTier(sheetCfg, fps, w, h) {
+                    cfg = { cols: sheetCfg.cols, rows: sheetCfg.rows, frameSize: sheetCfg.frameSize, frames: sheetCfg.frames, fps };
+                    el.style.width = sheetCfg.frameSize + 'px';
+                    el.style.height = sheetCfg.frameSize + 'px';
+                    el.style.backgroundImage = `url('${sheetCfg.file}?v=${CACHE_BUST}')`;
+                    el.style.backgroundSize = `${w}px ${h}px`;
+                    slider.max = sheetCfg.frames - 1;
+                    frame = 0;
+                    lastTick = performance.now();
+                    draw();
+                }
+            };
+        }
+
+        const playerHi = makePlayer('hi');
+        const playerLo = makePlayer('lo');
+
+        function applyState() {
+            const tier = currentTier;
+            document.querySelectorAll('.tier-tabs button').forEach(b => {
+                b.classList.toggle('active', b.dataset.key === tier.key);
+            });
+            const hi = Object.assign({ file: sheetFile(tier.key, currentVariant, HI_SIZE) }, tier.hi);
+            const lo = Object.assign({ file: sheetFile(tier.key, currentVariant, 64) }, tier.lo);
+            document.getElementById('title-hi').textContent = `${tier.label} — High Res (${hi.frameSize}px) · v${currentVariant}`;
+            document.getElementById('meta-hi').textContent = `${hi.frames} frames • ${hi.cols * hi.frameSize}×${hi.rows * hi.frameSize} spritesheet`;
+            document.getElementById('title-lo').textContent = `${tier.label} — Drop-in (${lo.frameSize}px) · v${currentVariant}`;
+            document.getElementById('meta-lo').textContent = `${lo.frames} frames • ${lo.cols * lo.frameSize}×${lo.rows * lo.frameSize} spritesheet`;
+
+            playerHi.setTier(hi, tier.fps128, hi.cols * hi.frameSize, hi.rows * hi.frameSize);
+            playerLo.setTier(lo, tier.fps64, lo.cols * lo.frameSize, lo.rows * lo.frameSize);
+        }
+
+        function selectTier(tier) {
+            currentTier = tier;
+            applyState();
+        }
+
+        const tabContainer = document.getElementById('tier-tabs');
+        TIERS.forEach((tier, i) => {
+            const btn = document.createElement('button');
+            btn.textContent = tier.label;
+            btn.dataset.key = tier.key;
+            btn.addEventListener('click', () => selectTier(tier));
+            tabContainer.appendChild(btn);
+        });
+
+        selectTier(TIERS[0]);
+
+        document.getElementById('variant-toggle').addEventListener('click', (e) => {
+            const btn = e.target.closest('button');
+            if (!btn) return;
+            currentVariant = parseInt(btn.dataset.variant, 10);
+            document.querySelectorAll('#variant-toggle button').forEach(b => b.classList.toggle('active', b === btn));
+            applyState();
+        });
+
+        document.getElementById('theme-toggle').addEventListener('click', (e) => {
+            const btn = e.target.closest('button');
+            if (!btn) return;
+            document.querySelectorAll('#theme-toggle button').forEach(b => b.classList.toggle('active', b === btn));
+            document.body.classList.toggle('theme-light', btn.dataset.theme === 'light');
+        });
+    </script>
+</body>
+</html>

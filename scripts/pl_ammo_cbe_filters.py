@@ -3,7 +3,7 @@
 CBE 装填フィルタ — audit / build_wpns_pl_master / export で共用。
 
 パイプライン:
-  raw ammo_indices（CBE +44..+50）
+  ammo_indices（CBE +44..+50 の one-based ID を cbeNameIndex に正規化済み）
     → category==18（銃剣・擲弾除外）
     → u16[27] 形状一致
     → magazine_capacity 照合（武器 +0x28 vs 弾 +0x28 — u27 クラスタ内置換）

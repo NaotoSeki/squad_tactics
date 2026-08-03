@@ -1,0 +1,152 @@
+{
+  "input_file": "asset\\audio\\GUNRif_RI-M1 Garand Single Shot 50m_B00M_WW2FC_Ambix.wav",
+  "input_channel": 0,
+  "input_mono_mode": "channel",
+  "input_sr": 96000,
+  "input_duration_sec": 65.92239583333334,
+  "output_sr": 48000,
+  "parameters": {
+    "frame_ms": 5.0,
+    "hop_ms": 1.0,
+    "floor_pct": 20.0,
+    "onset_db": 18.0,
+    "min_gap_ms": 300.0,
+    "pre_ms": 5.0,
+    "decay_db": -45.0,
+    "decay_hold_ms": 30.0,
+    "max_len_ms": 2500.0,
+    "fade_in_ms": 1.0,
+    "fade_out_ms": 15.0,
+    "peak_db": -1.0,
+    "rate_out": 48000,
+    "min_len_ms": 120.0,
+    "min_peak_db": -30.0
+  },
+  "num_detected": 17,
+  "num_accepted": 10,
+  "rejected": {
+    "short_or_low_peak": 7
+  },
+  "shots": [
+    {
+      "file": "m1_shot_01.wav",
+      "start_sec": 0.177,
+      "duration_sec": 1.3800104166666667,
+      "duration_sec_resampled": 1.3800208333333333,
+      "peak_dbfs_before_norm": -2.480414390563965,
+      "rms_dbfs_before_norm": -28.645666122436523,
+      "peak_dbfs_after_norm": -1.0,
+      "sample_rate_input": 96000,
+      "sample_rate_output": 48000,
+      "num_samples_output": 66241
+    },
+    {
+      "file": "m1_shot_02.wav",
+      "start_sec": 6.926,
+      "duration_sec": 1.3910104166666666,
+      "duration_sec_resampled": 1.3910208333333334,
+      "peak_dbfs_before_norm": -1.918618083000183,
+      "rms_dbfs_before_norm": -29.052812576293945,
+      "peak_dbfs_after_norm": -1.0,
+      "sample_rate_input": 96000,
+      "sample_rate_output": 48000,
+      "num_samples_output": 66769
+    },
+    {
+      "file": "m1_shot_03.wav",
+      "start_sec": 13.677,
+      "duration_sec": 1.3890104166666666,
+      "duration_sec_resampled": 1.3890208333333334,
+      "peak_dbfs_before_norm": -1.1473475694656372,
+      "rms_dbfs_before_norm": -29.289566040039062,
+      "peak_dbfs_after_norm": -1.0,
+      "sample_rate_input": 96000,
+      "sample_rate_output": 48000,
+      "num_samples_output": 66673
+    },
+    {
+      "file": "m1_shot_04.wav",
+      "start_sec": 20.427,
+      "duration_sec": 1.3900104166666667,
+      "duration_sec_resampled": 1.3900208333333333,
+      "peak_dbfs_before_norm": -2.4211478233337402,
+      "rms_dbfs_before_norm": -28.92850112915039,
+      "peak_dbfs_after_norm": -1.0,
+      "sample_rate_input": 96000,
+      "sample_rate_output": 48000,
+      "num_samples_output": 66721
+    },
+    {
+      "file": "m1_shot_05.wav",
+      "start_sec": 27.176,
+      "duration_sec": 1.3850104166666666,
+      "duration_sec_resampled": 1.3850208333333334,
+      "peak_dbfs_before_norm": -1.2813801765441895,
+      "rms_dbfs_before_norm": -28.924671173095703,
+      "peak_dbfs_after_norm": -1.0,
+      "sample_rate_input": 96000,
+      "sample_rate_output": 48000,
+      "num_samples_output": 66481
+    },
+    {
+      "file": "m1_shot_06.wav",
+      "start_sec": 33.927,
+      "duration_sec": 1.3890104166666666,
+      "duration_sec_resampled": 1.3890208333333334,
+      "peak_dbfs_before_norm": -2.031859874725342,
+      "rms_dbfs_before_norm": -29.19253921508789,
+      "peak_dbfs_after_norm": -1.0,
+      "sample_rate_input": 96000,
+      "sample_rate_output": 48000,
+      "num_samples_output": 66673
+    },
+    {
+      "file": "m1_shot_07.wav",
+      "start_sec": 40.676,
+      "duration_sec": 1.4300104166666667,
+      "duration_sec_resampled": 1.4300208333333333,
+      "peak_dbfs_before_norm": -0.8961325883865356,
+      "rms_dbfs_before_norm": -29.308944702148438,
+      "peak_dbfs_after_norm": -1.0,
+      "sample_rate_input": 96000,
+      "sample_rate_output": 48000,
+      "num_samples_output": 68641
+    },
+    {
+      "file": "m1_shot_08.wav",
+      "start_sec": 47.427,
+      "duration_sec": 1.3900104166666667,
+      "duration_sec_resampled": 1.3900208333333333,
+      "peak_dbfs_before_norm": -2.18269681930542,
+      "rms_dbfs_before_norm": -28.688453674316406,
+      "peak_dbfs_after_norm": -1.0,
+      "sample_rate_input": 96000,
+      "sample_rate_output": 48000,
+      "num_samples_output": 66721
+    },
+    {
+      "file": "m1_shot_09.wav",
+      "start_sec": 54.176,
+      "duration_sec": 1.4220104166666667,
+      "duration_sec_resampled": 1.4220208333333333,
+      "peak_dbfs_before_norm": -1.9756101369857788,
+      "rms_dbfs_before_norm": -29.10921859741211,
+      "peak_dbfs_after_norm": -1.0,
+      "sample_rate_input": 96000,
+      "sample_rate_output": 48000,
+      "num_samples_output": 68257
+    },
+    {
+      "file": "m1_shot_10.wav",
+      "start_sec": 60.926,
+      "duration_sec": 1.4230104166666666,
+      "duration_sec_resampled": 1.4230208333333334,
+      "peak_dbfs_before_norm": -2.5499842166900635,
+      "rms_dbfs_before_norm": -29.14665412902832,
+      "peak_dbfs_after_norm": -1.0,
+      "sample_rate_input": 96000,
+      "sample_rate_output": 48000,
+      "num_samples_output": 68305
+    }
+  ]
+}

@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>KIT組み合わせマップ エクスプローラ</title>
+<style>
+  :root{ --bg:#1a1a1a; --panel:#2a2a2a; --fg:#eee; --accent:#7ab0ff; }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,sans-serif}
+  header{padding:10px 14px;background:var(--panel);position:sticky;top:0;z-index:5;
+    display:flex;gap:14px;align-items:center;flex-wrap:wrap;border-bottom:1px solid #000}
+  h1{font-size:15px;margin:0 12px 0 0;font-weight:700}
+  label{font-size:13px;color:#bbb}
+  select,button{padding:6px 10px;font-size:14px;background:#333;color:#eee;border:1px solid #555;border-radius:4px;cursor:pointer}
+  button:hover{background:#3d3d3d}
+  .grp{display:flex;gap:6px;align-items:center}
+  .north label{color:#8fd0ff}
+  .south label{color:#ffb27a}
+  #hint{font-size:12px;color:#999}
+  #stage{padding:16px;display:flex;justify-content:center}
+  .frame{position:relative;max-width:1600px;width:100%}
+  canvas{display:block;width:100%;height:auto;border:1px solid #000;background:#000}
+  #seamlabel{position:absolute;left:6px;transform:translateY(-50%);font-size:11px;color:#ff0;
+    background:rgba(0,0,0,.5);padding:1px 4px;border-radius:3px;pointer-events:none;display:none}
+  .tag{display:inline-block;padding:2px 7px;border-radius:10px;font-size:12px}
+  .tag.n{background:#204060;color:#bfe0ff} .tag.s{background:#603820;color:#ffd2b0}
+</style>
+</head>
+<body>
+<header>
+  <h1>🗺️ KIT組み合わせマップ</h1>
+  <div class="grp north"><label>北(上半分)</label><select id="north"></select></div>
+  <div class="grp south"><label>南(下半分)</label><select id="south"></select></div>
+  <button id="rand">🎲 ランダム</button>
+  <button id="seam">継ぎ目線: OFF</button>
+  <span id="hint">北=rows7-9 / 南=rows10-12。継ぎ目は y=628。道がq7で越える設計。</span>
+</header>
+<div id="stage">
+  <div class="frame">
+    <canvas id="cv" width="1600" height="1220"></canvas>
+    <div id="seamlabel">◀ 継ぎ目 (y=628)</div>
+  </div>
+</div>
+<script>
+const SEAM = 628, W = 1600, H = 1220;
+const BOARDS = [
+  { key:'rural_v29',        label:'農村v29(基準)',   file:'asset/environment/maps/rural_v29.png' },
+  { key:'loc_crossroad',    label:'十字路集落',       file:'asset/environment/maps/rural_loc_crossroad.png' },
+  { key:'loc_forest_farm',  label:'森際農家',         file:'asset/environment/maps/rural_loc_forest_farm.png' },
+  { key:'loc_shelled',      label:'砲撃郊外',         file:'asset/environment/maps/rural_loc_shelled.png' },
+  { key:'loc_church_square',label:'教会前広場',       file:'asset/environment/maps/rural_loc_church_square.png' },
+];
+const cache = {};
+function load(file){ return cache[file] || (cache[file] = new Promise((res,rej)=>{ const im=new Image(); im.onload=()=>res(im); im.onerror=rej; im.src=file; })); }
+
+const cv = document.getElementById('cv');
+const ctx = cv.getContext('2d');
+let showSeam = false;
+
+async function render(){
+  const nFile = BOARDS[+northSel.value].file;
+  const sFile = BOARDS[+southSel.value].file;
+  const [n, s] = await Promise.all([load(nFile), load(sFile)]);
+  ctx.clearRect(0,0,W,H);
+  // EXACTLY the kit path: north crop [0,SEAM) on top, south crop [SEAM,H) below
+  ctx.drawImage(n, 0, 0, W, SEAM, 0, 0, W, SEAM);
+  ctx.drawImage(s, 0, SEAM, W, H - SEAM, 0, SEAM, W, H - SEAM);
+  if (showSeam){
+    ctx.strokeStyle = 'rgba(255,255,0,0.55)'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(0, SEAM); ctx.lineTo(W, SEAM); ctx.stroke();
+  }
+  // position the seam label at the right screen y (canvas is CSS-scaled)
+  const sl = document.getElementById('seamlabel');
+  sl.style.display = showSeam ? 'block' : 'none';
+  sl.style.top = (SEAM / H * 100) + '%';
+  document.title = `KIT: ${BOARDS[+northSel.value].label}(北) + ${BOARDS[+southSel.value].label}(南)`;
+}
+
+const northSel = document.getElementById('north');
+const southSel = document.getElementById('south');
+BOARDS.forEach((b,i)=>{
+  northSel.add(new Option(b.label, i));
+  southSel.add(new Option(b.label, i));
+});
+northSel.value = 0; southSel.value = 3; // 農村v29 北 + 砲撃郊外 南（送った例と同じ）
+northSel.onchange = render; southSel.onchange = render;
+document.getElementById('rand').onclick = ()=>{
+  northSel.value = Math.floor(Math.random()*BOARDS.length);
+  southSel.value = Math.floor(Math.random()*BOARDS.length);
+  render();
+};
+document.getElementById('seam').onclick = (e)=>{
+  showSeam = !showSeam; e.target.textContent = '継ぎ目線: ' + (showSeam?'ON':'OFF'); render();
+};
+render();
+</script>
+</body>
+</html>

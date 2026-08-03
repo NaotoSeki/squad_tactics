@@ -1,0 +1,361 @@
+{
+  "schema": "raised-hd-job/v1",
+  "jobId": "cedrus-brevifolia_b_02_s2",
+  "id": "cedrus-brevifolia_b_02",
+  "family": "tree",
+  "roles": [
+    "body"
+  ],
+  "bodySlot": 2,
+  "pairedShadowSlot": 4,
+  "pixelRatio": 2,
+  "lightingContract": "ps-overcast-upper-left-v1",
+  "bodyOrigin": [
+    -30,
+    -68
+  ],
+  "shadowOrigin": [
+    -27,
+    -12
+  ],
+  "references": {
+    "body": "../ps_objects/cedrus-brevifolia_b_02_s2.png",
+    "shadowCalibration": "../ps_objects/cedrus-brevifolia_b_02_s4.png",
+    "bodyRole": "numeric canvas/bbox/origin/contact/color calibration",
+    "shadowRole": "numeric world-origin/contact/bbox/extent/penumbra/density calibration only",
+    "canonicalPixelsCopied": false
+  },
+  "provenance": {
+    "source": "built-in ImageGen selected output",
+    "sourceCopy": "C:\\Projects\\squad_tactics\\tmp\\tree_hd\\cedrus-brevifolia_b_02_s2_source.png",
+    "sourceSha256": "a0688e84e1914ee12544103e0784f3946ebae50291aaecbe0e0b3ddedfeef775",
+    "cutout": "C:\\Projects\\squad_tactics\\tmp\\tree_hd\\cedrus-brevifolia_b_02_s2_cutout.png",
+    "cutoutSha256": "46d628e8f6438fc8d571afe9d14591cf021c7ffe2c8afdff7052f78d2b12c95e",
+    "cutoutAlphaSha256": "6457dee6e5d483d68686365a6930282db1e0fc24d013b83cba66bfba9d309957",
+    "chromaHelper": "C:\\Users\\aware.梨花のPC\\.codex\\skills\\.system\\imagegen\\scripts\\remove_chroma_key.py"
+  },
+  "outputs": {
+    "body": "body/cedrus-brevifolia_b_02_s2_body_hd_v1.png",
+    "shadow": "shadow/cedrus-brevifolia_b_02_s4_shadow_hd_v1.png",
+    "review": "review/cedrus-brevifolia_b_02_s2_world_review.png",
+    "metadata": "metadata/cedrus-brevifolia_b_02_s2.json"
+  },
+  "body": {
+    "normalization": {
+      "sourceSize": [
+        1024,
+        1535
+      ],
+      "sourceBbox": [
+        52,
+        50,
+        888,
+        1386
+      ],
+      "sourceContact": [
+        516.0,
+        1184.75
+      ],
+      "canonicalBbox": [
+        0,
+        0,
+        55,
+        81
+      ],
+      "canonicalContact": [
+        30.0,
+        68.0
+      ],
+      "targetSize": [
+        110,
+        162
+      ],
+      "targetBbox": [
+        0,
+        0,
+        110,
+        162
+      ],
+      "targetContact": [
+        60.0,
+        136.0
+      ],
+      "resultBbox": [
+        0,
+        0,
+        108,
+        160
+      ],
+      "resultContact": [
+        60.0,
+        136.0
+      ],
+      "scale": [
+        0.13053892,
+        0.12059925
+      ],
+      "generatedAlphaSha256": "6457dee6e5d483d68686365a6930282db1e0fc24d013b83cba66bfba9d309957",
+      "normalizedAlphaSha256": "3ed20bb92e3b5787720b00a9be487181c024461ac30dd3d81553333bda62dbcb",
+      "canonicalAlphaSha256": "7181b5b07e91d957a70c7fab2d06f317451f3319a414869771306b42bedee4f3",
+      "alphaAuthority": "accepted generated cutout",
+      "canonicalAlphaRole": "numeric bbox/contact calibration only"
+    },
+    "quality": {
+      "size": [
+        110,
+        162
+      ],
+      "bbox": [
+        0,
+        0,
+        108,
+        160
+      ],
+      "visiblePixels": 8725,
+      "canonicalVisiblePixels": 9432,
+      "coverageRatio": 0.925042,
+      "contact": [
+        60.0,
+        136.0
+      ],
+      "expectedContact": [
+        60.0,
+        136.0
+      ],
+      "contactErrorPx": 0.0,
+      "magentaSpillPixels": 0,
+      "magentaSpillLimit": 2,
+      "canonicalAlphaIdentical": false
+    },
+    "fileSha256": "bb36c3586f4f36b666c72d1522174d42531a9c6a8e88321ff0527e70e57d356b",
+    "alphaSha256": "3ed20bb92e3b5787720b00a9be487181c024461ac30dd3d81553333bda62dbcb"
+  },
+  "shadow": {
+    "method": "paired-canonical-body-transform-v4-light-only",
+    "bodyAlphaAuthority": "3ed20bb92e3b5787720b00a9be487181c024461ac30dd3d81553333bda62dbcb",
+    "calibration": {
+      "referenceSize": [
+        54,
+        35
+      ],
+      "targetSize": [
+        108,
+        70
+      ],
+      "referenceOrigin": [
+        -27,
+        -12
+      ],
+      "worldOriginLocal": [
+        54.0,
+        24.0
+      ],
+      "referenceBbox": [
+        0,
+        0,
+        54,
+        35
+      ],
+      "targetBbox": [
+        0,
+        0,
+        108,
+        70
+      ],
+      "referenceContact": [
+        28.0,
+        13.0
+      ],
+      "referenceCentroid": [
+        31.6046,
+        19.6974
+      ],
+      "referenceCovariance": [
+        [
+          170.160543,
+          17.872865
+        ],
+        [
+          17.872865,
+          40.464553
+        ]
+      ],
+      "referenceMajorAxisAngleDeg": -172.295585,
+      "referenceFillRatio": 0.433862,
+      "referenceAspectRatio": 2.129782,
+      "referenceBboxAspectRatio": 1.542857,
+      "targetMeanVisibleAlpha": 119.841461,
+      "targetMaxAlpha": 176,
+      "alphaFloor": 8,
+      "visiblePixels": 820,
+      "targetVisiblePixels": 3280,
+      "partialAlphaFraction": 0.532927,
+      "blurRadiusPx": 3.2,
+      "referenceRole": "numeric world-origin/contact/bbox/extent/penumbra/density calibration only",
+      "forbiddenPixelReuse": true
+    },
+    "derivation": {
+      "method": "family-specific projection from accepted generated BODY alpha; paired canonical BODY/SHADOW supplies transform calibration only",
+      "version": "shadow-v4-paired-transform",
+      "family": "tree",
+      "bodyAlphaSha256": "3ed20bb92e3b5787720b00a9be487181c024461ac30dd3d81553333bda62dbcb",
+      "canonicalShadowRole": "numeric world-origin/contact/bbox/extent/penumbra/density calibration only",
+      "canonicalShadowPixelsCopied": false,
+      "lightingContract": "ps-overcast-upper-left-v1",
+      "shadowScreenVector": [
+        0.72,
+        0.69
+      ],
+      "projectionMatrix": [
+        1.15807339,
+        -0.02517551,
+        0.16065813,
+        0.35564681
+      ],
+      "layers": {
+        "sourceLayer": "generated canopy and trunk alpha; transform fitted from paired canonical BODY/SHADOW",
+        "canopyFit": {
+          "matrix": [
+            1.1580733894824236,
+            -0.025175508467248146,
+            0.16065813330442413,
+            0.35564681388324154
+          ],
+          "offset": [
+            9.842287160229795,
+            29.32235727178525
+          ],
+          "objective": 0.02804624905357935,
+          "converged": true,
+          "iterations": 8,
+          "rawProjectedBbox": [
+            -3.440712140977631,
+            4.865834850706889,
+            123.73893629568303,
+            67.7277379983276
+          ],
+          "rawProjectedCentroid": [
+            63.20919999999995,
+            39.394799999999954
+          ],
+          "projectedCovariance": [
+            [
+              664.4697071715426,
+              72.89775225396943
+            ],
+            [
+              72.89775225396941,
+              186.4669716000674
+            ]
+          ]
+        },
+        "trunkProjectionMatrix": [
+          0.9,
+          -0.18290367862924076,
+          0.04,
+          -0.17528269201968905
+        ],
+        "canopyOcclusionKernel": 3,
+        "notchDirection": "canvas top to generated trunk-base contact",
+        "projectedTrunkWidth": 3
+      },
+      "bodyContact": [
+        60.0,
+        136.0
+      ],
+      "bodyWorldContact": [
+        0.0,
+        0.0
+      ],
+      "shadowContact": [
+        56.0,
+        26.0
+      ],
+      "shadowContactWorld": [
+        2.0,
+        2.0
+      ],
+      "contactWorldDelta": [
+        2.0,
+        2.0
+      ],
+      "resultContact": [
+        56.0,
+        26.0
+      ],
+      "contactErrorPx": 0.0,
+      "resultBbox": [
+        0,
+        3,
+        108,
+        69
+      ],
+      "targetMeanVisibleAlpha": 119.841461,
+      "meanVisibleAlpha": 67.309098,
+      "targetMaxAlpha": 176,
+      "maxAlpha": 76,
+      "darkCoreRemoved": true,
+      "lightOnlyKneeAlpha": 52.0,
+      "lightOnlyCapAlpha": 76.0,
+      "blurRadiusPx": 1.344,
+      "outputAlphaSha256": "53acce0efe984a01f412dd132ed44077f003320f69ce7dbf8e5bd75f63922415"
+    },
+    "quality": {
+      "contract": "shadow-v4-light-only",
+      "size": [
+        108,
+        70
+      ],
+      "bbox": [
+        0,
+        3,
+        108,
+        69
+      ],
+      "visiblePixels": 4979,
+      "meanVisibleAlpha": 67.309098,
+      "maxAlpha": 76,
+      "darkCoreRemoved": true,
+      "contact": [
+        56.0,
+        26.0
+      ],
+      "expectedContact": [
+        56.0,
+        26.0
+      ],
+      "contactErrorPx": 0.0,
+      "parityBias": 0.00235088,
+      "lowerRightTrunkCastPerHeightPx": 0.253333,
+      "canonicalPixelIdentical": false
+    },
+    "fileSha256": "9b4cfda4d9b9c3d7baf167d1cd42d9219bb6652d6433c3c2be534a7f4574265f",
+    "alphaSha256": "53acce0efe984a01f412dd132ed44077f003320f69ce7dbf8e5bd75f63922415",
+    "canonicalShadowPixelsCopied": false
+  },
+  "review": {
+    "file": "C:/Projects/squad_tactics/output/shadow_v4_light_staging/trees/review/cedrus-brevifolia_b_02_s2_world_review.png",
+    "size": [
+      174,
+      280
+    ],
+    "worldOriginMarker": [
+      90,
+      204
+    ],
+    "shadowVector": [
+      0.72,
+      0.69
+    ],
+    "contactMarkers": {
+      "bodyWorld": [
+        0.0,
+        0.0
+      ],
+      "shadowWorld": [
+        2.0,
+        2.0
+      ]
+    }
+  }
+}

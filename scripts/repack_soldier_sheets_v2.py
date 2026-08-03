@@ -101,9 +101,8 @@ def action_name_from_filename(filename):
     return name
 
 def get_stride(action_name):
-    """Determine stride: 2 for idle, dying, throw_grenade (low fps OK); 1 otherwise"""
+    """Keep every loop frame; sample only long one-shot clips."""
     stride2_actions = {
-        "stand_idle", "kneel_idle", "prone_idle",
         "stand_dying", "kneel_dying", "prone_dying",
         "stand_throw_grenade", "kneel_throw_grenade", "prone_throw_grenade"
     }
@@ -259,7 +258,7 @@ def repack_sheet(sheet_path, action_bbox, scale, action_charH_src, yG):
         "file_size_kb": output_path.stat().st_size / 1024
     }
 
-def main():
+def main(char_h=108):
     # Ensure output directory exists
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -320,7 +319,10 @@ def main():
         print(f"  {action_name}: bbox={bbox}, w={bbox_w}, h={bbox_h}")
 
     # Global scale (from charH_src)
-    scale = 108 / charH_src
+    # char_h はスケール正規化後の立ち身長px。表示側は manifest.charH で正規化する
+    # ため見た目サイズは不変。VRAM予算に効く（2026-07-20、遷移クリップ追加に伴い
+    # 既定108→パイプラインからは72を渡す。表示20px基準で3.6倍のオーバーサンプル）
+    scale = char_h / charH_src
     scale = min(scale, 0.8)
     print(f"\nGlobal scale: {scale:.4f}")
 
@@ -365,7 +367,9 @@ def main():
         "version": 2,
         "scale": scale,
         "srcFps": 24,
-        "dirOrder": ["S", "SE", "E", "NE", "N", "NW", "W", "SW"],
+        # 実測（tests/test_soldier_dir_order.py がシートのピクセルから検証する）。
+        # 旧値 S,SE,E,... は誰も測っていないハードコードで、鏡像かつ45°ずれていた。
+        "dirOrder": ["SE", "S", "SW", "W", "NW", "N", "NE", "E"],
         "anchorSrc": {
             "x": 200,
             "groundY": yG
@@ -521,4 +525,9 @@ def main():
         return 0
 
 if __name__ == "__main__":
-    sys.exit(main())
+    import argparse
+    ap = argparse.ArgumentParser(description="Repack soldier spritesheets v2")
+    ap.add_argument("--char-h", type=int, default=108,
+                    help="正規化後の立ち身長px（既定108。パイプラインは72を渡す）")
+    args = ap.parse_args()
+    sys.exit(main(args.char_h))

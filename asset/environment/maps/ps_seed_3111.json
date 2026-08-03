@@ -1,0 +1,254 @@
+{
+  "schema": "ps_battlefield/v1",
+  "name": "ps_seed_3111",
+  "image": "ps_seed_3111.png",
+  "image_width": 1600,
+  "image_height": 1000,
+  "projection": {
+    "scale": 0.84,
+    "top_left_x": 614.0477246198911,
+    "top_left_y": 349.5,
+    "note": "game_px = top_left + image_px * scale (等方。PS 2:1等角のまま歪ませない)"
+  },
+  "source": {
+    "generator": "gen_ps_seed_map",
+    "seed": 3111,
+    "grammar": "scratch\\ps_placement_grammar\\ps_demo_building_clusters_v1.json"
+  },
+  "rows": [
+    [
+      5,
+      6,
+      [
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS"
+      ]
+    ],
+    [
+      6,
+      5,
+      [
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "BLDG",
+        "GRASS",
+        "GRASS"
+      ]
+    ],
+    [
+      7,
+      5,
+      [
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "ROAD",
+        "GRASS",
+        "FOREST",
+        "GRASS"
+      ]
+    ],
+    [
+      8,
+      4,
+      [
+        "FIELD",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "BLDG",
+        "ROAD",
+        "GRASS",
+        "GRASS",
+        "GRASS"
+      ]
+    ],
+    [
+      9,
+      4,
+      [
+        "FIELD",
+        "FIELD",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "ROAD",
+        "GRASS",
+        "GRASS",
+        "GRASS"
+      ]
+    ],
+    [
+      10,
+      3,
+      [
+        "GRASS",
+        "GRASS",
+        "FIELD",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "BLDG",
+        "ROAD",
+        "GRASS",
+        "GRASS",
+        "GRASS"
+      ]
+    ],
+    [
+      11,
+      3,
+      [
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "ROAD",
+        "GRASS",
+        "GRASS",
+        "GRASS"
+      ]
+    ],
+    [
+      12,
+      2,
+      [
+        "GRASS",
+        "FOREST",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "BLDG",
+        "ROAD",
+        "FOREST",
+        "GRASS",
+        "GRASS"
+      ]
+    ],
+    [
+      13,
+      2,
+      [
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS"
+      ]
+    ],
+    [
+      14,
+      1,
+      [
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS",
+        "GRASS"
+      ]
+    ]
+  ],
+  "audit": {
+    "coverage_ok": true,
+    "terrain_counts": {
+      "BLDG": 4,
+      "FIELD": 4,
+      "FOREST": 3,
+      "GRASS": 103,
+      "ROAD": 6
+    },
+    "connectivity": {
+      "ok": true,
+      "passable": 116,
+      "component_sizes": [
+        116
+      ]
+    },
+    "placements_drawn": 3659,
+    "tall_objects": 166,
+    "missing_assets": {
+      "board_002_02": 2,
+      "bush_003": 2,
+      "bush_medium_05": 2,
+      "bush_small_01": 4,
+      "bush_small_02": 2,
+      "bush_small_03": 2,
+      "bush_small_04": 8,
+      "compose_001_03": 2,
+      "compose_001_04": 2,
+      "compose_002_00": 2,
+      "compose_002_04": 4,
+      "flower_phlox-paniculata_a_01": 2,
+      "flower_phlox-paniculata_a_02": 3,
+      "flower_rhododendron-ponticum_a_01": 1,
+      "flower_rhododendron-ponticum_b_02": 1,
+      "flower_rhododendron-ponticum_c_03": 3,
+      "flower_rudbeckia-hirta_a_01": 1,
+      "flower_rudbeckia-hirta_a_02": 4,
+      "flower_rudbeckia-hirta_b_01": 3,
+      "flower_rudbeckia-hirta_c_02": 2,
+      "flower_rudbeckia-hirta_d_01": 4,
+      "flower_rudbeckia-hirta_e_01": 6,
+      "flower_zantedeschia-aethiopica_a_01": 4,
+      "ladder_002_00": 2,
+      "ladder_002_03": 2,
+      "plant_coriandrum-sativum_b_01": 9,
+      "plant_coriandrum-sativum_c_02": 12,
+      "plant_coriandrum-sativum_c_03": 12,
+      "plant_dryopteris-carthusiana_b_01": 3,
+      "plant_dryopteris-carthusiana_c_01": 2,
+      "plant_dryopteris-carthusiana_d_01": 3,
+      "plant_dryopteris-carthusiana_e_01": 3
+    },
+    "flat_background_fraction": 0.0
+  }
+}

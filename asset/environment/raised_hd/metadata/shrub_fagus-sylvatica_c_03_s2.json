@@ -1,0 +1,353 @@
+{
+  "schema": "raised-hd-job/v1",
+  "jobId": "shrub_fagus-sylvatica_c_03_s2",
+  "id": "shrub_fagus-sylvatica_c_03",
+  "family": "shrub",
+  "roles": [
+    "body",
+    "stateBody"
+  ],
+  "bodySlot": 2,
+  "pairedShadowSlot": 4,
+  "pixelRatio": 2,
+  "lightingContract": "ps-overcast-upper-left-v1",
+  "bodyOrigin": [
+    -19,
+    -43
+  ],
+  "shadowOrigin": [
+    -14,
+    -2
+  ],
+  "references": {
+    "body": "../../../scratch/ps_sprites_canonical_v1/Objects/Plants/shrub_fagus-sylvatica_c_03_s2.png",
+    "shadowCalibration": "../../../scratch/ps_sprites_canonical_v1/Objects/Plants/shrub_fagus-sylvatica_c_03_s4.png",
+    "bodyRole": "numeric canvas/bbox/origin/contact/color calibration",
+    "shadowRole": "numeric world-origin/contact/bbox/extent/penumbra/density calibration only",
+    "canonicalPixelsCopied": false
+  },
+  "provenance": {
+    "source": "built-in ImageGen selected output",
+    "sourceCopy": "C:\\Projects\\squad_tactics\\tmp\\raised_hd\\shrub_fagus-sylvatica_c_03_s2_source.png",
+    "sourceSha256": "0f89539663738678b31e5fd37302cdba7a880d59c3dad31ef2b057313c201b1f",
+    "cutout": "C:\\Projects\\squad_tactics\\tmp\\raised_hd\\shrub_fagus-sylvatica_c_03_s2_cutout.png",
+    "cutoutSha256": "a571671dc345a515765a6357101fa90119bcbd1ab7921d0d6cea9c314a4e6d2d",
+    "cutoutAlphaSha256": "1ac14e66d052ea4e8363eb49452b8513d20b5f0d3083d8e1c169fa0f2e0d1e90",
+    "chromaHelper": "C:\\Users\\aware.梨花のPC\\.codex\\skills\\.system\\imagegen\\scripts\\remove_chroma_key.py"
+  },
+  "outputs": {
+    "body": "body/shrub_fagus-sylvatica_c_03_s2_body_hd_v1.png",
+    "shadow": "shadow/shrub_fagus-sylvatica_c_03_s4_shadow_hd_v1.png",
+    "review": "review/shrub_fagus-sylvatica_c_03_s2_world_review.png",
+    "metadata": "metadata/shrub_fagus-sylvatica_c_03_s2.json"
+  },
+  "body": {
+    "normalization": {
+      "sourceSize": [
+        1189,
+        1323
+      ],
+      "sourceBbox": [
+        232,
+        103,
+        1000,
+        1120
+      ],
+      "sourceContact": [
+        612.0,
+        1117.0
+      ],
+      "canonicalBbox": [
+        0,
+        0,
+        38,
+        43
+      ],
+      "canonicalContact": [
+        18.4229,
+        42.0
+      ],
+      "targetSize": [
+        76,
+        86
+      ],
+      "targetBbox": [
+        0,
+        0,
+        76,
+        86
+      ],
+      "targetContact": [
+        36.8458,
+        84.0
+      ],
+      "resultBbox": [
+        0,
+        0,
+        75,
+        84
+      ],
+      "resultContact": [
+        36.5,
+        83.0
+      ],
+      "scale": [
+        0.09778357,
+        0.08366142
+      ],
+      "generatedAlphaSha256": "1ac14e66d052ea4e8363eb49452b8513d20b5f0d3083d8e1c169fa0f2e0d1e90",
+      "normalizedAlphaSha256": "67ccea5d2cb0ffa76cc03a338084bab7d01966048dd34546d34ba551c78e2eef",
+      "canonicalAlphaSha256": "13c37c99fe8b981825ea6820376efbf58d81dd6ea4ea08f71ba49b9b8ab24edc",
+      "alphaAuthority": "accepted generated cutout",
+      "canonicalAlphaRole": "numeric bbox/contact calibration only"
+    },
+    "quality": {
+      "size": [
+        76,
+        86
+      ],
+      "bbox": [
+        0,
+        0,
+        75,
+        84
+      ],
+      "visiblePixels": 2880,
+      "canonicalVisiblePixels": 3576,
+      "coverageRatio": 0.805369,
+      "contact": [
+        36.5,
+        83.0
+      ],
+      "expectedContact": [
+        36.8458,
+        84.0
+      ],
+      "contactErrorPx": 1.058092,
+      "magentaSpillPixels": 0,
+      "magentaSpillLimit": 2,
+      "canonicalAlphaIdentical": false
+    },
+    "fileSha256": "43e817e6327a186e7a5ba9bf26e564d1300fbcb1b2e21f821900326eb9c7c382",
+    "alphaSha256": "67ccea5d2cb0ffa76cc03a338084bab7d01966048dd34546d34ba551c78e2eef"
+  },
+  "shadow": {
+    "method": "paired-canonical-body-transform-v4-light-only",
+    "bodyAlphaAuthority": "67ccea5d2cb0ffa76cc03a338084bab7d01966048dd34546d34ba551c78e2eef",
+    "calibration": {
+      "referenceSize": [
+        42,
+        23
+      ],
+      "targetSize": [
+        84,
+        46
+      ],
+      "referenceOrigin": [
+        -14,
+        -2
+      ],
+      "worldOriginLocal": [
+        28.0,
+        4.0
+      ],
+      "referenceBbox": [
+        0,
+        0,
+        42,
+        23
+      ],
+      "targetBbox": [
+        0,
+        0,
+        84,
+        46
+      ],
+      "referenceContact": [
+        13.9876,
+        1.9834
+      ],
+      "referenceCentroid": [
+        18.2987,
+        9.9786
+      ],
+      "referenceCovariance": [
+        [
+          71.60009,
+          6.428881
+        ],
+        [
+          6.428881,
+          23.778039
+        ]
+      ],
+      "referenceMajorAxisAngleDeg": -172.475479,
+      "referenceFillRatio": 0.532091,
+      "referenceAspectRatio": 1.777566,
+      "referenceBboxAspectRatio": 1.826087,
+      "targetMeanVisibleAlpha": 104.196495,
+      "targetMaxAlpha": 164,
+      "alphaFloor": 8,
+      "visiblePixels": 514,
+      "targetVisiblePixels": 2056,
+      "partialAlphaFraction": 0.498054,
+      "blurRadiusPx": 3.09144,
+      "referenceRole": "numeric world-origin/contact/bbox/extent/penumbra/density calibration only",
+      "forbiddenPixelReuse": true
+    },
+    "derivation": {
+      "method": "family-specific projection from accepted generated BODY alpha; paired canonical BODY/SHADOW supplies transform calibration only",
+      "version": "shadow-v4-paired-transform",
+      "family": "shrub",
+      "bodyAlphaSha256": "67ccea5d2cb0ffa76cc03a338084bab7d01966048dd34546d34ba551c78e2eef",
+      "canonicalShadowRole": "numeric world-origin/contact/bbox/extent/penumbra/density calibration only",
+      "canonicalShadowPixelsCopied": false,
+      "lightingContract": "ps-overcast-upper-left-v1",
+      "shadowScreenVector": [
+        0.72,
+        0.69
+      ],
+      "projectionMatrix": [
+        1.11428563,
+        -0.00194813,
+        0.07601685,
+        0.4865946
+      ],
+      "layers": {
+        "sourceLayer": "generated shrub alpha",
+        "shapeFit": {
+          "matrix": [
+            1.114285629835773,
+            -0.001948126747539502,
+            0.07601685420470995,
+            0.48659459602481064
+          ],
+          "offset": [
+            11.075722411262173,
+            38.32095316178585
+          ],
+          "objective": 0.010403174042626879,
+          "converged": true,
+          "iterations": 6,
+          "rawProjectedBbox": [
+            -1.5912811765304475,
+            0.19002247212059586,
+            83.0872880322672,
+            44.52700134355196
+          ],
+          "rawProjectedCentroid": [
+            36.59739999999993,
+            19.957200000000018
+          ],
+          "projectedCovariance": [
+            [
+              286.17529048619616,
+              25.729244938826888
+            ],
+            [
+              25.72924493882689,
+              97.6884659060046
+            ]
+          ]
+        }
+      },
+      "bodyContact": [
+        36.5,
+        83.0
+      ],
+      "bodyWorldContact": [
+        -1.5,
+        -3.0
+      ],
+      "shadowContact": [
+        27.9752,
+        3.9668
+      ],
+      "shadowContactWorld": [
+        -0.0248,
+        -0.0332
+      ],
+      "contactWorldDelta": [
+        1.4752,
+        2.9668
+      ],
+      "resultContact": [
+        28.0,
+        4.0054
+      ],
+      "contactErrorPx": 0.045885,
+      "resultBbox": [
+        0,
+        0,
+        84,
+        46
+      ],
+      "targetMeanVisibleAlpha": 104.196495,
+      "meanVisibleAlpha": 63.866478,
+      "targetMaxAlpha": 164,
+      "maxAlpha": 76,
+      "darkCoreRemoved": true,
+      "lightOnlyKneeAlpha": 52.0,
+      "lightOnlyCapAlpha": 76.0,
+      "blurRadiusPx": 1.236576,
+      "outputAlphaSha256": "c3c056ab28555cc823ec54f84d0f3d637d1d24b5c819793542009a6ff45e5cc0"
+    },
+    "quality": {
+      "contract": "shadow-v4-light-only",
+      "size": [
+        84,
+        46
+      ],
+      "bbox": [
+        0,
+        0,
+        84,
+        46
+      ],
+      "visiblePixels": 2831,
+      "meanVisibleAlpha": 63.866478,
+      "maxAlpha": 76,
+      "darkCoreRemoved": true,
+      "contact": [
+        28.0,
+        4.0054
+      ],
+      "expectedContact": [
+        27.9752,
+        3.9668
+      ],
+      "contactErrorPx": 0.045885,
+      "parityBias": 0.00592905,
+      "lowerRightTrunkCastPerHeightPx": null,
+      "canonicalPixelIdentical": false
+    },
+    "fileSha256": "905734e9d489e17f4d1384f4f38b937f1346d771e876f4ffe7612aeefec655db",
+    "alphaSha256": "c3c056ab28555cc823ec54f84d0f3d637d1d24b5c819793542009a6ff45e5cc0",
+    "canonicalShadowPixelsCopied": false
+  },
+  "review": {
+    "file": "C:/Projects/squad_tactics/output/shadow_v4_light_staging/raised/review/shrub_fagus-sylvatica_c_03_s2_world_review.png",
+    "size": [
+      154,
+      226
+    ],
+    "worldOriginMarker": [
+      68,
+      154
+    ],
+    "shadowVector": [
+      0.72,
+      0.69
+    ],
+    "contactMarkers": {
+      "bodyWorld": [
+        -1.5,
+        -3.0
+      ],
+      "shadowWorld": [
+        -0.0248,
+        -0.0332
+      ]
+    }
+  }
+}

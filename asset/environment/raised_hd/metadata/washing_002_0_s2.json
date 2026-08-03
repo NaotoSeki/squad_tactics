@@ -1,0 +1,353 @@
+{
+  "schema": "raised-hd-job/v1",
+  "jobId": "washing_002_0_s2",
+  "id": "washing_002_0",
+  "family": "large_prop",
+  "roles": [
+    "body"
+  ],
+  "bodySlot": 2,
+  "pairedShadowSlot": 4,
+  "pixelRatio": 2,
+  "lightingContract": "ps-overcast-upper-left-v1",
+  "bodyOrigin": [
+    -39,
+    -55
+  ],
+  "shadowOrigin": [
+    -39,
+    -20
+  ],
+  "references": {
+    "body": "../../../scratch/ps_sprites_canonical_v1/Objects/Stands/washing_002_0_s2.png",
+    "shadowCalibration": "../../../scratch/ps_sprites_canonical_v1/Objects/Stands/washing_002_0_s4.png",
+    "bodyRole": "numeric canvas/bbox/origin/contact/color calibration",
+    "shadowRole": "numeric world-origin/contact/bbox/extent/penumbra/density calibration only",
+    "canonicalPixelsCopied": false
+  },
+  "provenance": {
+    "source": "built-in ImageGen selected output",
+    "sourceCopy": "C:\\Projects\\squad_tactics\\tmp\\raised_hd\\washing_002_0_s2_source.png",
+    "sourceSha256": "8835ccb1cfba23894db38bb66c681e2578ae0a377d17210f3527a72cea08ec22",
+    "cutout": "C:\\Projects\\squad_tactics\\tmp\\raised_hd\\washing_002_0_s2_cutout.png",
+    "cutoutSha256": "5fb356e577705e7b38b9e49064c7f3ee215bc1e750cba92015d049dcaf81e839",
+    "cutoutAlphaSha256": "32cb967360699f5f4bb9100cf585b67e5539d57841be63838b2a29f11b4ae939",
+    "chromaHelper": "C:\\Users\\aware.梨花のPC\\.codex\\skills\\.system\\imagegen\\scripts\\remove_chroma_key.py"
+  },
+  "outputs": {
+    "body": "body/washing_002_0_s2_body_hd_v1.png",
+    "shadow": "shadow/washing_002_0_s4_shadow_hd_v1.png",
+    "review": "review/washing_002_0_s2_world_review.png",
+    "metadata": "metadata/washing_002_0_s2.json"
+  },
+  "body": {
+    "normalization": {
+      "sourceSize": [
+        1309,
+        1202
+      ],
+      "sourceBbox": [
+        119,
+        63,
+        1237,
+        1158
+      ],
+      "sourceContact": [
+        606.0,
+        706.0
+      ],
+      "canonicalBbox": [
+        0,
+        0,
+        78,
+        74
+      ],
+      "canonicalContact": [
+        34.0,
+        43.0
+      ],
+      "targetSize": [
+        156,
+        148
+      ],
+      "targetBbox": [
+        0,
+        0,
+        156,
+        148
+      ],
+      "targetContact": [
+        68.0,
+        86.0
+      ],
+      "resultBbox": [
+        0,
+        0,
+        156,
+        147
+      ],
+      "resultContact": [
+        67.0,
+        85.0
+      ],
+      "scale": [
+        0.13876455,
+        0.13436929
+      ],
+      "generatedAlphaSha256": "32cb967360699f5f4bb9100cf585b67e5539d57841be63838b2a29f11b4ae939",
+      "normalizedAlphaSha256": "493b79986115bce97f05501b5ffe071acf628950a0d80e73aa65e88501ba6867",
+      "canonicalAlphaSha256": "f86ced89101aea552f6f01a787fc54cec34a3539a1b04db2d2d00634fc575c65",
+      "alphaAuthority": "accepted generated cutout",
+      "canonicalAlphaRole": "numeric bbox/contact calibration only"
+    },
+    "quality": {
+      "size": [
+        156,
+        148
+      ],
+      "bbox": [
+        0,
+        0,
+        156,
+        147
+      ],
+      "visiblePixels": 3716,
+      "canonicalVisiblePixels": 4208,
+      "coverageRatio": 0.88308,
+      "contact": [
+        67.0,
+        85.0
+      ],
+      "expectedContact": [
+        68.0,
+        86.0
+      ],
+      "contactErrorPx": 1.414214,
+      "magentaSpillPixels": 0,
+      "magentaSpillLimit": 2,
+      "canonicalAlphaIdentical": false
+    },
+    "fileSha256": "bfc63779c4c0b63d1c6496502dc07fa93a2761372a97095fd2d39810367cf034",
+    "alphaSha256": "493b79986115bce97f05501b5ffe071acf628950a0d80e73aa65e88501ba6867"
+  },
+  "shadow": {
+    "method": "paired-canonical-body-transform-v4-light-only",
+    "bodyAlphaAuthority": "493b79986115bce97f05501b5ffe071acf628950a0d80e73aa65e88501ba6867",
+    "calibration": {
+      "referenceSize": [
+        88,
+        49
+      ],
+      "targetSize": [
+        176,
+        98
+      ],
+      "referenceOrigin": [
+        -39,
+        -20
+      ],
+      "worldOriginLocal": [
+        78.0,
+        40.0
+      ],
+      "referenceBbox": [
+        0,
+        0,
+        88,
+        49
+      ],
+      "targetBbox": [
+        0,
+        0,
+        176,
+        98
+      ],
+      "referenceContact": [
+        38.0,
+        21.0
+      ],
+      "referenceCentroid": [
+        48.6159,
+        27.6138
+      ],
+      "referenceCovariance": [
+        [
+          683.168541,
+          339.965577
+        ],
+        [
+          339.965577,
+          171.262574
+        ]
+      ],
+      "referenceMajorAxisAngleDeg": -153.487664,
+      "referenceFillRatio": 0.074443,
+      "referenceAspectRatio": 22.593275,
+      "referenceBboxAspectRatio": 1.795918,
+      "targetMeanVisibleAlpha": 91.040497,
+      "targetMaxAlpha": 176,
+      "alphaFloor": 8,
+      "visiblePixels": 321,
+      "targetVisiblePixels": 1284,
+      "partialAlphaFraction": 0.735202,
+      "blurRadiusPx": 3.2,
+      "referenceRole": "numeric world-origin/contact/bbox/extent/penumbra/density calibration only",
+      "forbiddenPixelReuse": true
+    },
+    "derivation": {
+      "method": "family-specific projection from accepted generated BODY alpha; paired canonical BODY/SHADOW supplies transform calibration only",
+      "version": "shadow-v4-paired-transform",
+      "family": "large_prop",
+      "bodyAlphaSha256": "493b79986115bce97f05501b5ffe071acf628950a0d80e73aa65e88501ba6867",
+      "canonicalShadowRole": "numeric world-origin/contact/bbox/extent/penumbra/density calibration only",
+      "canonicalShadowPixelsCopied": false,
+      "lightingContract": "ps-overcast-upper-left-v1",
+      "shadowScreenVector": [
+        0.72,
+        0.69
+      ],
+      "projectionMatrix": [
+        1.11629972,
+        0.07725303,
+        0.53345879,
+        0.12
+      ],
+      "layers": {
+        "sourceLayer": "generated lower-envelope contact alpha",
+        "shapeFit": {
+          "matrix": [
+            1.1162997169866251,
+            0.07725303180318506,
+            0.5334587863853091,
+            0.12000000002120129
+          ],
+          "offset": [
+            0.0,
+            0.0
+          ],
+          "objective": 0.026803365790798755,
+          "converged": true,
+          "iterations": 16,
+          "rawProjectedBbox": [
+            0.28088258025789514,
+            3.3128491745744952,
+            180.0240630666205,
+            97.38437320322168
+          ],
+          "rawProjectedCentroid": [
+            86.73913667659392,
+            46.07173763575555
+          ],
+          "projectedCovariance": [
+            [
+              2691.1069776881727,
+              1376.5565130123398
+            ],
+            [
+              1376.5565130123398,
+              706.0501004250227
+            ]
+          ]
+        },
+        "fillKernel": 1
+      },
+      "bodyContact": [
+        67.0,
+        85.0
+      ],
+      "bodyWorldContact": [
+        -11.0,
+        -25.0
+      ],
+      "shadowContact": [
+        76.0,
+        42.0
+      ],
+      "shadowContactWorld": [
+        -2.0,
+        2.0
+      ],
+      "contactWorldDelta": [
+        9.0,
+        27.0
+      ],
+      "resultContact": [
+        76.0,
+        41.4755
+      ],
+      "contactErrorPx": 0.524476,
+      "resultBbox": [
+        0,
+        0,
+        176,
+        96
+      ],
+      "targetMeanVisibleAlpha": 91.040497,
+      "meanVisibleAlpha": 68.028369,
+      "targetMaxAlpha": 176,
+      "maxAlpha": 76,
+      "darkCoreRemoved": true,
+      "lightOnlyKneeAlpha": 52.0,
+      "lightOnlyCapAlpha": 76.0,
+      "blurRadiusPx": 0.416,
+      "outputAlphaSha256": "a52699e8adbe9426b811afd1c68da6bca3fbd4664183c3cec727a7661acd200b"
+    },
+    "quality": {
+      "contract": "shadow-v4-light-only",
+      "size": [
+        176,
+        98
+      ],
+      "bbox": [
+        0,
+        0,
+        176,
+        96
+      ],
+      "visiblePixels": 282,
+      "meanVisibleAlpha": 68.028369,
+      "maxAlpha": 76,
+      "darkCoreRemoved": true,
+      "contact": [
+        76.0,
+        41.4755
+      ],
+      "expectedContact": [
+        76.0,
+        42.0
+      ],
+      "contactErrorPx": 0.524476,
+      "parityBias": 0.03815796,
+      "lowerRightTrunkCastPerHeightPx": null,
+      "canonicalPixelIdentical": false
+    },
+    "fileSha256": "ab2e3e82ca7394d2833396c6865e6945bf880509806814cb81ee3bfe144c7eec",
+    "alphaSha256": "a52699e8adbe9426b811afd1c68da6bca3fbd4664183c3cec727a7661acd200b",
+    "canonicalShadowPixelsCopied": false
+  },
+  "review": {
+    "file": "C:/Projects/squad_tactics/output/shadow_v4_light_staging/raised/review/washing_002_0_s2_world_review.png",
+    "size": [
+      236,
+      266
+    ],
+    "worldOriginMarker": [
+      108,
+      178
+    ],
+    "shadowVector": [
+      0.72,
+      0.69
+    ],
+    "contactMarkers": {
+      "bodyWorld": [
+        -11.0,
+        -25.0
+      ],
+      "shadowWorld": [
+        -2.0,
+        2.0
+      ]
+    }
+  }
+}

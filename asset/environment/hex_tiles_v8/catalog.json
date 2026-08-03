@@ -1,0 +1,3234 @@
+{
+  "meta": {
+    "generated": "2026-07-17T21:32:00Z",
+    "count": 366
+  },
+  "tiles": [
+    {
+      "kind": "building",
+      "file": "kbldg_002000_resid_e_d1_rot0.png",
+      "base": "kbldg_002000_resid_e",
+      "seed": "002000",
+      "dmg": 1,
+      "rot": 0
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_002000_resid_e_d1_rot120.png",
+      "base": "kbldg_002000_resid_e",
+      "seed": "002000",
+      "dmg": 1,
+      "rot": 120
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_002000_resid_e_d1_rot180.png",
+      "base": "kbldg_002000_resid_e",
+      "seed": "002000",
+      "dmg": 1,
+      "rot": 180
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_002000_resid_e_d1_rot240.png",
+      "base": "kbldg_002000_resid_e",
+      "seed": "002000",
+      "dmg": 1,
+      "rot": 240
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_002000_resid_e_d1_rot300.png",
+      "base": "kbldg_002000_resid_e",
+      "seed": "002000",
+      "dmg": 1,
+      "rot": 300
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_002000_resid_e_d1_rot60.png",
+      "base": "kbldg_002000_resid_e",
+      "seed": "002000",
+      "dmg": 1,
+      "rot": 60
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003000_camp_a_d0_rot0.png",
+      "base": "kbldg_003000_camp_a",
+      "seed": "003000",
+      "dmg": 0,
+      "rot": 0
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003000_camp_a_d0_rot120.png",
+      "base": "kbldg_003000_camp_a",
+      "seed": "003000",
+      "dmg": 0,
+      "rot": 120
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003000_camp_a_d0_rot180.png",
+      "base": "kbldg_003000_camp_a",
+      "seed": "003000",
+      "dmg": 0,
+      "rot": 180
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003000_camp_a_d0_rot240.png",
+      "base": "kbldg_003000_camp_a",
+      "seed": "003000",
+      "dmg": 0,
+      "rot": 240
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003000_camp_a_d0_rot300.png",
+      "base": "kbldg_003000_camp_a",
+      "seed": "003000",
+      "dmg": 0,
+      "rot": 300
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003000_camp_a_d0_rot60.png",
+      "base": "kbldg_003000_camp_a",
+      "seed": "003000",
+      "dmg": 0,
+      "rot": 60
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003000_camp_a_d1_rot0.png",
+      "base": "kbldg_003000_camp_a",
+      "seed": "003000",
+      "dmg": 1,
+      "rot": 0
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003000_camp_a_d1_rot120.png",
+      "base": "kbldg_003000_camp_a",
+      "seed": "003000",
+      "dmg": 1,
+      "rot": 120
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003000_camp_a_d1_rot180.png",
+      "base": "kbldg_003000_camp_a",
+      "seed": "003000",
+      "dmg": 1,
+      "rot": 180
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003000_camp_a_d1_rot240.png",
+      "base": "kbldg_003000_camp_a",
+      "seed": "003000",
+      "dmg": 1,
+      "rot": 240
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003000_camp_a_d1_rot300.png",
+      "base": "kbldg_003000_camp_a",
+      "seed": "003000",
+      "dmg": 1,
+      "rot": 300
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003000_camp_a_d1_rot60.png",
+      "base": "kbldg_003000_camp_a",
+      "seed": "003000",
+      "dmg": 1,
+      "rot": 60
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003000_camp_a_d2_rot0.png",
+      "base": "kbldg_003000_camp_a",
+      "seed": "003000",
+      "dmg": 2,
+      "rot": 0
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003000_camp_a_d2_rot120.png",
+      "base": "kbldg_003000_camp_a",
+      "seed": "003000",
+      "dmg": 2,
+      "rot": 120
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003000_camp_a_d2_rot180.png",
+      "base": "kbldg_003000_camp_a",
+      "seed": "003000",
+      "dmg": 2,
+      "rot": 180
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003000_camp_a_d2_rot240.png",
+      "base": "kbldg_003000_camp_a",
+      "seed": "003000",
+      "dmg": 2,
+      "rot": 240
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003000_camp_a_d2_rot300.png",
+      "base": "kbldg_003000_camp_a",
+      "seed": "003000",
+      "dmg": 2,
+      "rot": 300
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003000_camp_a_d2_rot60.png",
+      "base": "kbldg_003000_camp_a",
+      "seed": "003000",
+      "dmg": 2,
+      "rot": 60
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003001_resid_a_d0_rot0.png",
+      "base": "kbldg_003001_resid_a",
+      "seed": "003001",
+      "dmg": 0,
+      "rot": 0
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003001_resid_a_d0_rot120.png",
+      "base": "kbldg_003001_resid_a",
+      "seed": "003001",
+      "dmg": 0,
+      "rot": 120
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003001_resid_a_d0_rot180.png",
+      "base": "kbldg_003001_resid_a",
+      "seed": "003001",
+      "dmg": 0,
+      "rot": 180
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003001_resid_a_d0_rot240.png",
+      "base": "kbldg_003001_resid_a",
+      "seed": "003001",
+      "dmg": 0,
+      "rot": 240
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003001_resid_a_d0_rot300.png",
+      "base": "kbldg_003001_resid_a",
+      "seed": "003001",
+      "dmg": 0,
+      "rot": 300
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003001_resid_a_d0_rot60.png",
+      "base": "kbldg_003001_resid_a",
+      "seed": "003001",
+      "dmg": 0,
+      "rot": 60
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003001_resid_a_d1_rot0.png",
+      "base": "kbldg_003001_resid_a",
+      "seed": "003001",
+      "dmg": 1,
+      "rot": 0
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003001_resid_a_d1_rot120.png",
+      "base": "kbldg_003001_resid_a",
+      "seed": "003001",
+      "dmg": 1,
+      "rot": 120
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003001_resid_a_d1_rot180.png",
+      "base": "kbldg_003001_resid_a",
+      "seed": "003001",
+      "dmg": 1,
+      "rot": 180
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003001_resid_a_d1_rot240.png",
+      "base": "kbldg_003001_resid_a",
+      "seed": "003001",
+      "dmg": 1,
+      "rot": 240
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003001_resid_a_d1_rot300.png",
+      "base": "kbldg_003001_resid_a",
+      "seed": "003001",
+      "dmg": 1,
+      "rot": 300
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003001_resid_a_d1_rot60.png",
+      "base": "kbldg_003001_resid_a",
+      "seed": "003001",
+      "dmg": 1,
+      "rot": 60
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003001_resid_a_d2_rot0.png",
+      "base": "kbldg_003001_resid_a",
+      "seed": "003001",
+      "dmg": 2,
+      "rot": 0
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003001_resid_a_d2_rot120.png",
+      "base": "kbldg_003001_resid_a",
+      "seed": "003001",
+      "dmg": 2,
+      "rot": 120
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003001_resid_a_d2_rot180.png",
+      "base": "kbldg_003001_resid_a",
+      "seed": "003001",
+      "dmg": 2,
+      "rot": 180
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003001_resid_a_d2_rot240.png",
+      "base": "kbldg_003001_resid_a",
+      "seed": "003001",
+      "dmg": 2,
+      "rot": 240
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003001_resid_a_d2_rot300.png",
+      "base": "kbldg_003001_resid_a",
+      "seed": "003001",
+      "dmg": 2,
+      "rot": 300
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003001_resid_a_d2_rot60.png",
+      "base": "kbldg_003001_resid_a",
+      "seed": "003001",
+      "dmg": 2,
+      "rot": 60
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003002_hideout_a_d0_rot0.png",
+      "base": "kbldg_003002_hideout_a",
+      "seed": "003002",
+      "dmg": 0,
+      "rot": 0
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003002_hideout_a_d0_rot120.png",
+      "base": "kbldg_003002_hideout_a",
+      "seed": "003002",
+      "dmg": 0,
+      "rot": 120
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003002_hideout_a_d0_rot180.png",
+      "base": "kbldg_003002_hideout_a",
+      "seed": "003002",
+      "dmg": 0,
+      "rot": 180
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003002_hideout_a_d0_rot240.png",
+      "base": "kbldg_003002_hideout_a",
+      "seed": "003002",
+      "dmg": 0,
+      "rot": 240
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003002_hideout_a_d0_rot300.png",
+      "base": "kbldg_003002_hideout_a",
+      "seed": "003002",
+      "dmg": 0,
+      "rot": 300
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003002_hideout_a_d0_rot60.png",
+      "base": "kbldg_003002_hideout_a",
+      "seed": "003002",
+      "dmg": 0,
+      "rot": 60
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003002_hideout_a_d1_rot0.png",
+      "base": "kbldg_003002_hideout_a",
+      "seed": "003002",
+      "dmg": 1,
+      "rot": 0
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003002_hideout_a_d1_rot120.png",
+      "base": "kbldg_003002_hideout_a",
+      "seed": "003002",
+      "dmg": 1,
+      "rot": 120
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003002_hideout_a_d1_rot180.png",
+      "base": "kbldg_003002_hideout_a",
+      "seed": "003002",
+      "dmg": 1,
+      "rot": 180
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003002_hideout_a_d1_rot240.png",
+      "base": "kbldg_003002_hideout_a",
+      "seed": "003002",
+      "dmg": 1,
+      "rot": 240
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003002_hideout_a_d1_rot300.png",
+      "base": "kbldg_003002_hideout_a",
+      "seed": "003002",
+      "dmg": 1,
+      "rot": 300
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003002_hideout_a_d1_rot60.png",
+      "base": "kbldg_003002_hideout_a",
+      "seed": "003002",
+      "dmg": 1,
+      "rot": 60
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003002_hideout_a_d2_rot0.png",
+      "base": "kbldg_003002_hideout_a",
+      "seed": "003002",
+      "dmg": 2,
+      "rot": 0
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003002_hideout_a_d2_rot120.png",
+      "base": "kbldg_003002_hideout_a",
+      "seed": "003002",
+      "dmg": 2,
+      "rot": 120
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003002_hideout_a_d2_rot180.png",
+      "base": "kbldg_003002_hideout_a",
+      "seed": "003002",
+      "dmg": 2,
+      "rot": 180
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003002_hideout_a_d2_rot240.png",
+      "base": "kbldg_003002_hideout_a",
+      "seed": "003002",
+      "dmg": 2,
+      "rot": 240
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003002_hideout_a_d2_rot300.png",
+      "base": "kbldg_003002_hideout_a",
+      "seed": "003002",
+      "dmg": 2,
+      "rot": 300
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003002_hideout_a_d2_rot60.png",
+      "base": "kbldg_003002_hideout_a",
+      "seed": "003002",
+      "dmg": 2,
+      "rot": 60
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003003_resid_e_d0_rot0.png",
+      "base": "kbldg_003003_resid_e",
+      "seed": "003003",
+      "dmg": 0,
+      "rot": 0
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003003_resid_e_d0_rot120.png",
+      "base": "kbldg_003003_resid_e",
+      "seed": "003003",
+      "dmg": 0,
+      "rot": 120
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003003_resid_e_d0_rot180.png",
+      "base": "kbldg_003003_resid_e",
+      "seed": "003003",
+      "dmg": 0,
+      "rot": 180
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003003_resid_e_d0_rot240.png",
+      "base": "kbldg_003003_resid_e",
+      "seed": "003003",
+      "dmg": 0,
+      "rot": 240
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003003_resid_e_d0_rot300.png",
+      "base": "kbldg_003003_resid_e",
+      "seed": "003003",
+      "dmg": 0,
+      "rot": 300
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003003_resid_e_d0_rot60.png",
+      "base": "kbldg_003003_resid_e",
+      "seed": "003003",
+      "dmg": 0,
+      "rot": 60
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003003_resid_e_d1_rot0.png",
+      "base": "kbldg_003003_resid_e",
+      "seed": "003003",
+      "dmg": 1,
+      "rot": 0
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003003_resid_e_d1_rot120.png",
+      "base": "kbldg_003003_resid_e",
+      "seed": "003003",
+      "dmg": 1,
+      "rot": 120
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003003_resid_e_d1_rot180.png",
+      "base": "kbldg_003003_resid_e",
+      "seed": "003003",
+      "dmg": 1,
+      "rot": 180
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003003_resid_e_d1_rot240.png",
+      "base": "kbldg_003003_resid_e",
+      "seed": "003003",
+      "dmg": 1,
+      "rot": 240
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003003_resid_e_d1_rot300.png",
+      "base": "kbldg_003003_resid_e",
+      "seed": "003003",
+      "dmg": 1,
+      "rot": 300
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003003_resid_e_d1_rot60.png",
+      "base": "kbldg_003003_resid_e",
+      "seed": "003003",
+      "dmg": 1,
+      "rot": 60
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003003_resid_e_d2_rot0.png",
+      "base": "kbldg_003003_resid_e",
+      "seed": "003003",
+      "dmg": 2,
+      "rot": 0
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003003_resid_e_d2_rot120.png",
+      "base": "kbldg_003003_resid_e",
+      "seed": "003003",
+      "dmg": 2,
+      "rot": 120
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003003_resid_e_d2_rot180.png",
+      "base": "kbldg_003003_resid_e",
+      "seed": "003003",
+      "dmg": 2,
+      "rot": 180
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003003_resid_e_d2_rot240.png",
+      "base": "kbldg_003003_resid_e",
+      "seed": "003003",
+      "dmg": 2,
+      "rot": 240
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003003_resid_e_d2_rot300.png",
+      "base": "kbldg_003003_resid_e",
+      "seed": "003003",
+      "dmg": 2,
+      "rot": 300
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003003_resid_e_d2_rot60.png",
+      "base": "kbldg_003003_resid_e",
+      "seed": "003003",
+      "dmg": 2,
+      "rot": 60
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003004_resid_d_d0_rot0.png",
+      "base": "kbldg_003004_resid_d",
+      "seed": "003004",
+      "dmg": 0,
+      "rot": 0
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003004_resid_d_d0_rot120.png",
+      "base": "kbldg_003004_resid_d",
+      "seed": "003004",
+      "dmg": 0,
+      "rot": 120
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003004_resid_d_d0_rot180.png",
+      "base": "kbldg_003004_resid_d",
+      "seed": "003004",
+      "dmg": 0,
+      "rot": 180
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003004_resid_d_d0_rot240.png",
+      "base": "kbldg_003004_resid_d",
+      "seed": "003004",
+      "dmg": 0,
+      "rot": 240
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003004_resid_d_d0_rot300.png",
+      "base": "kbldg_003004_resid_d",
+      "seed": "003004",
+      "dmg": 0,
+      "rot": 300
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003004_resid_d_d0_rot60.png",
+      "base": "kbldg_003004_resid_d",
+      "seed": "003004",
+      "dmg": 0,
+      "rot": 60
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003004_resid_d_d1_rot0.png",
+      "base": "kbldg_003004_resid_d",
+      "seed": "003004",
+      "dmg": 1,
+      "rot": 0
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003004_resid_d_d1_rot120.png",
+      "base": "kbldg_003004_resid_d",
+      "seed": "003004",
+      "dmg": 1,
+      "rot": 120
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003004_resid_d_d1_rot180.png",
+      "base": "kbldg_003004_resid_d",
+      "seed": "003004",
+      "dmg": 1,
+      "rot": 180
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003004_resid_d_d1_rot240.png",
+      "base": "kbldg_003004_resid_d",
+      "seed": "003004",
+      "dmg": 1,
+      "rot": 240
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003004_resid_d_d1_rot300.png",
+      "base": "kbldg_003004_resid_d",
+      "seed": "003004",
+      "dmg": 1,
+      "rot": 300
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003004_resid_d_d1_rot60.png",
+      "base": "kbldg_003004_resid_d",
+      "seed": "003004",
+      "dmg": 1,
+      "rot": 60
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003004_resid_d_d2_rot0.png",
+      "base": "kbldg_003004_resid_d",
+      "seed": "003004",
+      "dmg": 2,
+      "rot": 0
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003004_resid_d_d2_rot120.png",
+      "base": "kbldg_003004_resid_d",
+      "seed": "003004",
+      "dmg": 2,
+      "rot": 120
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003004_resid_d_d2_rot180.png",
+      "base": "kbldg_003004_resid_d",
+      "seed": "003004",
+      "dmg": 2,
+      "rot": 180
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003004_resid_d_d2_rot240.png",
+      "base": "kbldg_003004_resid_d",
+      "seed": "003004",
+      "dmg": 2,
+      "rot": 240
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003004_resid_d_d2_rot300.png",
+      "base": "kbldg_003004_resid_d",
+      "seed": "003004",
+      "dmg": 2,
+      "rot": 300
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003004_resid_d_d2_rot60.png",
+      "base": "kbldg_003004_resid_d",
+      "seed": "003004",
+      "dmg": 2,
+      "rot": 60
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003005_camp_b_d0_rot0.png",
+      "base": "kbldg_003005_camp_b",
+      "seed": "003005",
+      "dmg": 0,
+      "rot": 0
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003005_camp_b_d0_rot120.png",
+      "base": "kbldg_003005_camp_b",
+      "seed": "003005",
+      "dmg": 0,
+      "rot": 120
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003005_camp_b_d0_rot180.png",
+      "base": "kbldg_003005_camp_b",
+      "seed": "003005",
+      "dmg": 0,
+      "rot": 180
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003005_camp_b_d0_rot240.png",
+      "base": "kbldg_003005_camp_b",
+      "seed": "003005",
+      "dmg": 0,
+      "rot": 240
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003005_camp_b_d0_rot300.png",
+      "base": "kbldg_003005_camp_b",
+      "seed": "003005",
+      "dmg": 0,
+      "rot": 300
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003005_camp_b_d0_rot60.png",
+      "base": "kbldg_003005_camp_b",
+      "seed": "003005",
+      "dmg": 0,
+      "rot": 60
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003005_camp_b_d1_rot0.png",
+      "base": "kbldg_003005_camp_b",
+      "seed": "003005",
+      "dmg": 1,
+      "rot": 0
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003005_camp_b_d1_rot120.png",
+      "base": "kbldg_003005_camp_b",
+      "seed": "003005",
+      "dmg": 1,
+      "rot": 120
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003005_camp_b_d1_rot180.png",
+      "base": "kbldg_003005_camp_b",
+      "seed": "003005",
+      "dmg": 1,
+      "rot": 180
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003005_camp_b_d1_rot240.png",
+      "base": "kbldg_003005_camp_b",
+      "seed": "003005",
+      "dmg": 1,
+      "rot": 240
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003005_camp_b_d1_rot300.png",
+      "base": "kbldg_003005_camp_b",
+      "seed": "003005",
+      "dmg": 1,
+      "rot": 300
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003005_camp_b_d1_rot60.png",
+      "base": "kbldg_003005_camp_b",
+      "seed": "003005",
+      "dmg": 1,
+      "rot": 60
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003005_camp_b_d2_rot0.png",
+      "base": "kbldg_003005_camp_b",
+      "seed": "003005",
+      "dmg": 2,
+      "rot": 0
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003005_camp_b_d2_rot120.png",
+      "base": "kbldg_003005_camp_b",
+      "seed": "003005",
+      "dmg": 2,
+      "rot": 120
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003005_camp_b_d2_rot180.png",
+      "base": "kbldg_003005_camp_b",
+      "seed": "003005",
+      "dmg": 2,
+      "rot": 180
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003005_camp_b_d2_rot240.png",
+      "base": "kbldg_003005_camp_b",
+      "seed": "003005",
+      "dmg": 2,
+      "rot": 240
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003005_camp_b_d2_rot300.png",
+      "base": "kbldg_003005_camp_b",
+      "seed": "003005",
+      "dmg": 2,
+      "rot": 300
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003005_camp_b_d2_rot60.png",
+      "base": "kbldg_003005_camp_b",
+      "seed": "003005",
+      "dmg": 2,
+      "rot": 60
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003006_camp_b_d0_rot0.png",
+      "base": "kbldg_003006_camp_b",
+      "seed": "003006",
+      "dmg": 0,
+      "rot": 0
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003006_camp_b_d0_rot120.png",
+      "base": "kbldg_003006_camp_b",
+      "seed": "003006",
+      "dmg": 0,
+      "rot": 120
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003006_camp_b_d0_rot180.png",
+      "base": "kbldg_003006_camp_b",
+      "seed": "003006",
+      "dmg": 0,
+      "rot": 180
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003006_camp_b_d0_rot240.png",
+      "base": "kbldg_003006_camp_b",
+      "seed": "003006",
+      "dmg": 0,
+      "rot": 240
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003006_camp_b_d0_rot300.png",
+      "base": "kbldg_003006_camp_b",
+      "seed": "003006",
+      "dmg": 0,
+      "rot": 300
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003006_camp_b_d0_rot60.png",
+      "base": "kbldg_003006_camp_b",
+      "seed": "003006",
+      "dmg": 0,
+      "rot": 60
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003006_camp_b_d1_rot0.png",
+      "base": "kbldg_003006_camp_b",
+      "seed": "003006",
+      "dmg": 1,
+      "rot": 0
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003006_camp_b_d1_rot120.png",
+      "base": "kbldg_003006_camp_b",
+      "seed": "003006",
+      "dmg": 1,
+      "rot": 120
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003006_camp_b_d1_rot180.png",
+      "base": "kbldg_003006_camp_b",
+      "seed": "003006",
+      "dmg": 1,
+      "rot": 180
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003006_camp_b_d1_rot240.png",
+      "base": "kbldg_003006_camp_b",
+      "seed": "003006",
+      "dmg": 1,
+      "rot": 240
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003006_camp_b_d1_rot300.png",
+      "base": "kbldg_003006_camp_b",
+      "seed": "003006",
+      "dmg": 1,
+      "rot": 300
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003006_camp_b_d1_rot60.png",
+      "base": "kbldg_003006_camp_b",
+      "seed": "003006",
+      "dmg": 1,
+      "rot": 60
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003006_camp_b_d2_rot0.png",
+      "base": "kbldg_003006_camp_b",
+      "seed": "003006",
+      "dmg": 2,
+      "rot": 0
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003006_camp_b_d2_rot120.png",
+      "base": "kbldg_003006_camp_b",
+      "seed": "003006",
+      "dmg": 2,
+      "rot": 120
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003006_camp_b_d2_rot180.png",
+      "base": "kbldg_003006_camp_b",
+      "seed": "003006",
+      "dmg": 2,
+      "rot": 180
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003006_camp_b_d2_rot240.png",
+      "base": "kbldg_003006_camp_b",
+      "seed": "003006",
+      "dmg": 2,
+      "rot": 240
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003006_camp_b_d2_rot300.png",
+      "base": "kbldg_003006_camp_b",
+      "seed": "003006",
+      "dmg": 2,
+      "rot": 300
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003006_camp_b_d2_rot60.png",
+      "base": "kbldg_003006_camp_b",
+      "seed": "003006",
+      "dmg": 2,
+      "rot": 60
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003007_camp_a_d0_rot0.png",
+      "base": "kbldg_003007_camp_a",
+      "seed": "003007",
+      "dmg": 0,
+      "rot": 0
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003007_camp_a_d0_rot120.png",
+      "base": "kbldg_003007_camp_a",
+      "seed": "003007",
+      "dmg": 0,
+      "rot": 120
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003007_camp_a_d0_rot180.png",
+      "base": "kbldg_003007_camp_a",
+      "seed": "003007",
+      "dmg": 0,
+      "rot": 180
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003007_camp_a_d0_rot240.png",
+      "base": "kbldg_003007_camp_a",
+      "seed": "003007",
+      "dmg": 0,
+      "rot": 240
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003007_camp_a_d0_rot300.png",
+      "base": "kbldg_003007_camp_a",
+      "seed": "003007",
+      "dmg": 0,
+      "rot": 300
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003007_camp_a_d0_rot60.png",
+      "base": "kbldg_003007_camp_a",
+      "seed": "003007",
+      "dmg": 0,
+      "rot": 60
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003007_camp_a_d1_rot0.png",
+      "base": "kbldg_003007_camp_a",
+      "seed": "003007",
+      "dmg": 1,
+      "rot": 0
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003007_camp_a_d1_rot120.png",
+      "base": "kbldg_003007_camp_a",
+      "seed": "003007",
+      "dmg": 1,
+      "rot": 120
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003007_camp_a_d1_rot180.png",
+      "base": "kbldg_003007_camp_a",
+      "seed": "003007",
+      "dmg": 1,
+      "rot": 180
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003007_camp_a_d1_rot240.png",
+      "base": "kbldg_003007_camp_a",
+      "seed": "003007",
+      "dmg": 1,
+      "rot": 240
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003007_camp_a_d1_rot300.png",
+      "base": "kbldg_003007_camp_a",
+      "seed": "003007",
+      "dmg": 1,
+      "rot": 300
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003007_camp_a_d1_rot60.png",
+      "base": "kbldg_003007_camp_a",
+      "seed": "003007",
+      "dmg": 1,
+      "rot": 60
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003007_camp_a_d2_rot0.png",
+      "base": "kbldg_003007_camp_a",
+      "seed": "003007",
+      "dmg": 2,
+      "rot": 0
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003007_camp_a_d2_rot120.png",
+      "base": "kbldg_003007_camp_a",
+      "seed": "003007",
+      "dmg": 2,
+      "rot": 120
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003007_camp_a_d2_rot180.png",
+      "base": "kbldg_003007_camp_a",
+      "seed": "003007",
+      "dmg": 2,
+      "rot": 180
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003007_camp_a_d2_rot240.png",
+      "base": "kbldg_003007_camp_a",
+      "seed": "003007",
+      "dmg": 2,
+      "rot": 240
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003007_camp_a_d2_rot300.png",
+      "base": "kbldg_003007_camp_a",
+      "seed": "003007",
+      "dmg": 2,
+      "rot": 300
+    },
+    {
+      "kind": "building",
+      "file": "kbldg_003007_camp_a_d2_rot60.png",
+      "base": "kbldg_003007_camp_a",
+      "seed": "003007",
+      "dmg": 2,
+      "rot": 60
+    },
+    {
+      "kind": "tree",
+      "file": "tree_larix_v0_rot0.png",
+      "base": "tree_larix",
+      "species": "larix",
+      "variant": 0,
+      "rot": 0
+    },
+    {
+      "kind": "tree",
+      "file": "tree_larix_v0_rot120.png",
+      "base": "tree_larix",
+      "species": "larix",
+      "variant": 0,
+      "rot": 120
+    },
+    {
+      "kind": "tree",
+      "file": "tree_larix_v0_rot180.png",
+      "base": "tree_larix",
+      "species": "larix",
+      "variant": 0,
+      "rot": 180
+    },
+    {
+      "kind": "tree",
+      "file": "tree_larix_v0_rot240.png",
+      "base": "tree_larix",
+      "species": "larix",
+      "variant": 0,
+      "rot": 240
+    },
+    {
+      "kind": "tree",
+      "file": "tree_larix_v0_rot300.png",
+      "base": "tree_larix",
+      "species": "larix",
+      "variant": 0,
+      "rot": 300
+    },
+    {
+      "kind": "tree",
+      "file": "tree_larix_v0_rot60.png",
+      "base": "tree_larix",
+      "species": "larix",
+      "variant": 0,
+      "rot": 60
+    },
+    {
+      "kind": "tree",
+      "file": "tree_larix_v1_rot0.png",
+      "base": "tree_larix",
+      "species": "larix",
+      "variant": 1,
+      "rot": 0
+    },
+    {
+      "kind": "tree",
+      "file": "tree_larix_v1_rot120.png",
+      "base": "tree_larix",
+      "species": "larix",
+      "variant": 1,
+      "rot": 120
+    },
+    {
+      "kind": "tree",
+      "file": "tree_larix_v1_rot180.png",
+      "base": "tree_larix",
+      "species": "larix",
+      "variant": 1,
+      "rot": 180
+    },
+    {
+      "kind": "tree",
+      "file": "tree_larix_v1_rot240.png",
+      "base": "tree_larix",
+      "species": "larix",
+      "variant": 1,
+      "rot": 240
+    },
+    {
+      "kind": "tree",
+      "file": "tree_larix_v1_rot300.png",
+      "base": "tree_larix",
+      "species": "larix",
+      "variant": 1,
+      "rot": 300
+    },
+    {
+      "kind": "tree",
+      "file": "tree_larix_v1_rot60.png",
+      "base": "tree_larix",
+      "species": "larix",
+      "variant": 1,
+      "rot": 60
+    },
+    {
+      "kind": "tree",
+      "file": "tree_larix_v2_rot0.png",
+      "base": "tree_larix",
+      "species": "larix",
+      "variant": 2,
+      "rot": 0
+    },
+    {
+      "kind": "tree",
+      "file": "tree_larix_v2_rot120.png",
+      "base": "tree_larix",
+      "species": "larix",
+      "variant": 2,
+      "rot": 120
+    },
+    {
+      "kind": "tree",
+      "file": "tree_larix_v2_rot180.png",
+      "base": "tree_larix",
+      "species": "larix",
+      "variant": 2,
+      "rot": 180
+    },
+    {
+      "kind": "tree",
+      "file": "tree_larix_v2_rot240.png",
+      "base": "tree_larix",
+      "species": "larix",
+      "variant": 2,
+      "rot": 240
+    },
+    {
+      "kind": "tree",
+      "file": "tree_larix_v2_rot300.png",
+      "base": "tree_larix",
+      "species": "larix",
+      "variant": 2,
+      "rot": 300
+    },
+    {
+      "kind": "tree",
+      "file": "tree_larix_v2_rot60.png",
+      "base": "tree_larix",
+      "species": "larix",
+      "variant": 2,
+      "rot": 60
+    },
+    {
+      "kind": "tree",
+      "file": "tree_picea_v0_rot0.png",
+      "base": "tree_picea",
+      "species": "picea",
+      "variant": 0,
+      "rot": 0
+    },
+    {
+      "kind": "tree",
+      "file": "tree_picea_v0_rot120.png",
+      "base": "tree_picea",
+      "species": "picea",
+      "variant": 0,
+      "rot": 120
+    },
+    {
+      "kind": "tree",
+      "file": "tree_picea_v0_rot180.png",
+      "base": "tree_picea",
+      "species": "picea",
+      "variant": 0,
+      "rot": 180
+    },
+    {
+      "kind": "tree",
+      "file": "tree_picea_v0_rot240.png",
+      "base": "tree_picea",
+      "species": "picea",
+      "variant": 0,
+      "rot": 240
+    },
+    {
+      "kind": "tree",
+      "file": "tree_picea_v0_rot300.png",
+      "base": "tree_picea",
+      "species": "picea",
+      "variant": 0,
+      "rot": 300
+    },
+    {
+      "kind": "tree",
+      "file": "tree_picea_v0_rot60.png",
+      "base": "tree_picea",
+      "species": "picea",
+      "variant": 0,
+      "rot": 60
+    },
+    {
+      "kind": "tree",
+      "file": "tree_picea_v1_rot0.png",
+      "base": "tree_picea",
+      "species": "picea",
+      "variant": 1,
+      "rot": 0
+    },
+    {
+      "kind": "tree",
+      "file": "tree_picea_v1_rot120.png",
+      "base": "tree_picea",
+      "species": "picea",
+      "variant": 1,
+      "rot": 120
+    },
+    {
+      "kind": "tree",
+      "file": "tree_picea_v1_rot180.png",
+      "base": "tree_picea",
+      "species": "picea",
+      "variant": 1,
+      "rot": 180
+    },
+    {
+      "kind": "tree",
+      "file": "tree_picea_v1_rot240.png",
+      "base": "tree_picea",
+      "species": "picea",
+      "variant": 1,
+      "rot": 240
+    },
+    {
+      "kind": "tree",
+      "file": "tree_picea_v1_rot300.png",
+      "base": "tree_picea",
+      "species": "picea",
+      "variant": 1,
+      "rot": 300
+    },
+    {
+      "kind": "tree",
+      "file": "tree_picea_v1_rot60.png",
+      "base": "tree_picea",
+      "species": "picea",
+      "variant": 1,
+      "rot": 60
+    },
+    {
+      "kind": "tree",
+      "file": "tree_picea_v2_rot0.png",
+      "base": "tree_picea",
+      "species": "picea",
+      "variant": 2,
+      "rot": 0
+    },
+    {
+      "kind": "tree",
+      "file": "tree_picea_v2_rot120.png",
+      "base": "tree_picea",
+      "species": "picea",
+      "variant": 2,
+      "rot": 120
+    },
+    {
+      "kind": "tree",
+      "file": "tree_picea_v2_rot180.png",
+      "base": "tree_picea",
+      "species": "picea",
+      "variant": 2,
+      "rot": 180
+    },
+    {
+      "kind": "tree",
+      "file": "tree_picea_v2_rot240.png",
+      "base": "tree_picea",
+      "species": "picea",
+      "variant": 2,
+      "rot": 240
+    },
+    {
+      "kind": "tree",
+      "file": "tree_picea_v2_rot300.png",
+      "base": "tree_picea",
+      "species": "picea",
+      "variant": 2,
+      "rot": 300
+    },
+    {
+      "kind": "tree",
+      "file": "tree_picea_v2_rot60.png",
+      "base": "tree_picea",
+      "species": "picea",
+      "variant": 2,
+      "rot": 60
+    },
+    {
+      "kind": "tree",
+      "file": "tree_populus_v0_rot0.png",
+      "base": "tree_populus",
+      "species": "populus",
+      "variant": 0,
+      "rot": 0
+    },
+    {
+      "kind": "tree",
+      "file": "tree_populus_v0_rot120.png",
+      "base": "tree_populus",
+      "species": "populus",
+      "variant": 0,
+      "rot": 120
+    },
+    {
+      "kind": "tree",
+      "file": "tree_populus_v0_rot180.png",
+      "base": "tree_populus",
+      "species": "populus",
+      "variant": 0,
+      "rot": 180
+    },
+    {
+      "kind": "tree",
+      "file": "tree_populus_v0_rot240.png",
+      "base": "tree_populus",
+      "species": "populus",
+      "variant": 0,
+      "rot": 240
+    },
+    {
+      "kind": "tree",
+      "file": "tree_populus_v0_rot300.png",
+      "base": "tree_populus",
+      "species": "populus",
+      "variant": 0,
+      "rot": 300
+    },
+    {
+      "kind": "tree",
+      "file": "tree_populus_v0_rot60.png",
+      "base": "tree_populus",
+      "species": "populus",
+      "variant": 0,
+      "rot": 60
+    },
+    {
+      "kind": "tree",
+      "file": "tree_populus_v1_rot0.png",
+      "base": "tree_populus",
+      "species": "populus",
+      "variant": 1,
+      "rot": 0
+    },
+    {
+      "kind": "tree",
+      "file": "tree_populus_v1_rot120.png",
+      "base": "tree_populus",
+      "species": "populus",
+      "variant": 1,
+      "rot": 120
+    },
+    {
+      "kind": "tree",
+      "file": "tree_populus_v1_rot180.png",
+      "base": "tree_populus",
+      "species": "populus",
+      "variant": 1,
+      "rot": 180
+    },
+    {
+      "kind": "tree",
+      "file": "tree_populus_v1_rot240.png",
+      "base": "tree_populus",
+      "species": "populus",
+      "variant": 1,
+      "rot": 240
+    },
+    {
+      "kind": "tree",
+      "file": "tree_populus_v1_rot300.png",
+      "base": "tree_populus",
+      "species": "populus",
+      "variant": 1,
+      "rot": 300
+    },
+    {
+      "kind": "tree",
+      "file": "tree_populus_v1_rot60.png",
+      "base": "tree_populus",
+      "species": "populus",
+      "variant": 1,
+      "rot": 60
+    },
+    {
+      "kind": "tree",
+      "file": "tree_populus_v2_rot0.png",
+      "base": "tree_populus",
+      "species": "populus",
+      "variant": 2,
+      "rot": 0
+    },
+    {
+      "kind": "tree",
+      "file": "tree_populus_v2_rot120.png",
+      "base": "tree_populus",
+      "species": "populus",
+      "variant": 2,
+      "rot": 120
+    },
+    {
+      "kind": "tree",
+      "file": "tree_populus_v2_rot180.png",
+      "base": "tree_populus",
+      "species": "populus",
+      "variant": 2,
+      "rot": 180
+    },
+    {
+      "kind": "tree",
+      "file": "tree_populus_v2_rot240.png",
+      "base": "tree_populus",
+      "species": "populus",
+      "variant": 2,
+      "rot": 240
+    },
+    {
+      "kind": "tree",
+      "file": "tree_populus_v2_rot300.png",
+      "base": "tree_populus",
+      "species": "populus",
+      "variant": 2,
+      "rot": 300
+    },
+    {
+      "kind": "tree",
+      "file": "tree_populus_v2_rot60.png",
+      "base": "tree_populus",
+      "species": "populus",
+      "variant": 2,
+      "rot": 60
+    },
+    {
+      "kind": "tree",
+      "file": "tree_prunus_pink_v0_rot0.png",
+      "base": "tree_prunus_pink",
+      "species": "prunus_pink",
+      "variant": 0,
+      "rot": 0
+    },
+    {
+      "kind": "tree",
+      "file": "tree_prunus_pink_v0_rot120.png",
+      "base": "tree_prunus_pink",
+      "species": "prunus_pink",
+      "variant": 0,
+      "rot": 120
+    },
+    {
+      "kind": "tree",
+      "file": "tree_prunus_pink_v0_rot180.png",
+      "base": "tree_prunus_pink",
+      "species": "prunus_pink",
+      "variant": 0,
+      "rot": 180
+    },
+    {
+      "kind": "tree",
+      "file": "tree_prunus_pink_v0_rot240.png",
+      "base": "tree_prunus_pink",
+      "species": "prunus_pink",
+      "variant": 0,
+      "rot": 240
+    },
+    {
+      "kind": "tree",
+      "file": "tree_prunus_pink_v0_rot300.png",
+      "base": "tree_prunus_pink",
+      "species": "prunus_pink",
+      "variant": 0,
+      "rot": 300
+    },
+    {
+      "kind": "tree",
+      "file": "tree_prunus_pink_v0_rot60.png",
+      "base": "tree_prunus_pink",
+      "species": "prunus_pink",
+      "variant": 0,
+      "rot": 60
+    },
+    {
+      "kind": "tree",
+      "file": "tree_prunus_pink_v1_rot0.png",
+      "base": "tree_prunus_pink",
+      "species": "prunus_pink",
+      "variant": 1,
+      "rot": 0
+    },
+    {
+      "kind": "tree",
+      "file": "tree_prunus_pink_v1_rot120.png",
+      "base": "tree_prunus_pink",
+      "species": "prunus_pink",
+      "variant": 1,
+      "rot": 120
+    },
+    {
+      "kind": "tree",
+      "file": "tree_prunus_pink_v1_rot180.png",
+      "base": "tree_prunus_pink",
+      "species": "prunus_pink",
+      "variant": 1,
+      "rot": 180
+    },
+    {
+      "kind": "tree",
+      "file": "tree_prunus_pink_v1_rot240.png",
+      "base": "tree_prunus_pink",
+      "species": "prunus_pink",
+      "variant": 1,
+      "rot": 240
+    },
+    {
+      "kind": "tree",
+      "file": "tree_prunus_pink_v1_rot300.png",
+      "base": "tree_prunus_pink",
+      "species": "prunus_pink",
+      "variant": 1,
+      "rot": 300
+    },
+    {
+      "kind": "tree",
+      "file": "tree_prunus_pink_v1_rot60.png",
+      "base": "tree_prunus_pink",
+      "species": "prunus_pink",
+      "variant": 1,
+      "rot": 60
+    },
+    {
+      "kind": "tree",
+      "file": "tree_prunus_pink_v2_rot0.png",
+      "base": "tree_prunus_pink",
+      "species": "prunus_pink",
+      "variant": 2,
+      "rot": 0
+    },
+    {
+      "kind": "tree",
+      "file": "tree_prunus_pink_v2_rot120.png",
+      "base": "tree_prunus_pink",
+      "species": "prunus_pink",
+      "variant": 2,
+      "rot": 120
+    },
+    {
+      "kind": "tree",
+      "file": "tree_prunus_pink_v2_rot180.png",
+      "base": "tree_prunus_pink",
+      "species": "prunus_pink",
+      "variant": 2,
+      "rot": 180
+    },
+    {
+      "kind": "tree",
+      "file": "tree_prunus_pink_v2_rot240.png",
+      "base": "tree_prunus_pink",
+      "species": "prunus_pink",
+      "variant": 2,
+      "rot": 240
+    },
+    {
+      "kind": "tree",
+      "file": "tree_prunus_pink_v2_rot300.png",
+      "base": "tree_prunus_pink",
+      "species": "prunus_pink",
+      "variant": 2,
+      "rot": 300
+    },
+    {
+      "kind": "tree",
+      "file": "tree_prunus_pink_v2_rot60.png",
+      "base": "tree_prunus_pink",
+      "species": "prunus_pink",
+      "variant": 2,
+      "rot": 60
+    },
+    {
+      "kind": "tree",
+      "file": "tree_quercus_v0_rot0.png",
+      "base": "tree_quercus",
+      "species": "quercus",
+      "variant": 0,
+      "rot": 0
+    },
+    {
+      "kind": "tree",
+      "file": "tree_quercus_v0_rot120.png",
+      "base": "tree_quercus",
+      "species": "quercus",
+      "variant": 0,
+      "rot": 120
+    },
+    {
+      "kind": "tree",
+      "file": "tree_quercus_v0_rot180.png",
+      "base": "tree_quercus",
+      "species": "quercus",
+      "variant": 0,
+      "rot": 180
+    },
+    {
+      "kind": "tree",
+      "file": "tree_quercus_v0_rot240.png",
+      "base": "tree_quercus",
+      "species": "quercus",
+      "variant": 0,
+      "rot": 240
+    },
+    {
+      "kind": "tree",
+      "file": "tree_quercus_v0_rot300.png",
+      "base": "tree_quercus",
+      "species": "quercus",
+      "variant": 0,
+      "rot": 300
+    },
+    {
+      "kind": "tree",
+      "file": "tree_quercus_v0_rot60.png",
+      "base": "tree_quercus",
+      "species": "quercus",
+      "variant": 0,
+      "rot": 60
+    },
+    {
+      "kind": "tree",
+      "file": "tree_quercus_v1_rot0.png",
+      "base": "tree_quercus",
+      "species": "quercus",
+      "variant": 1,
+      "rot": 0
+    },
+    {
+      "kind": "tree",
+      "file": "tree_quercus_v1_rot120.png",
+      "base": "tree_quercus",
+      "species": "quercus",
+      "variant": 1,
+      "rot": 120
+    },
+    {
+      "kind": "tree",
+      "file": "tree_quercus_v1_rot180.png",
+      "base": "tree_quercus",
+      "species": "quercus",
+      "variant": 1,
+      "rot": 180
+    },
+    {
+      "kind": "tree",
+      "file": "tree_quercus_v1_rot240.png",
+      "base": "tree_quercus",
+      "species": "quercus",
+      "variant": 1,
+      "rot": 240
+    },
+    {
+      "kind": "tree",
+      "file": "tree_quercus_v1_rot300.png",
+      "base": "tree_quercus",
+      "species": "quercus",
+      "variant": 1,
+      "rot": 300
+    },
+    {
+      "kind": "tree",
+      "file": "tree_quercus_v1_rot60.png",
+      "base": "tree_quercus",
+      "species": "quercus",
+      "variant": 1,
+      "rot": 60
+    },
+    {
+      "kind": "tree",
+      "file": "tree_quercus_v2_rot0.png",
+      "base": "tree_quercus",
+      "species": "quercus",
+      "variant": 2,
+      "rot": 0
+    },
+    {
+      "kind": "tree",
+      "file": "tree_quercus_v2_rot120.png",
+      "base": "tree_quercus",
+      "species": "quercus",
+      "variant": 2,
+      "rot": 120
+    },
+    {
+      "kind": "tree",
+      "file": "tree_quercus_v2_rot180.png",
+      "base": "tree_quercus",
+      "species": "quercus",
+      "variant": 2,
+      "rot": 180
+    },
+    {
+      "kind": "tree",
+      "file": "tree_quercus_v2_rot240.png",
+      "base": "tree_quercus",
+      "species": "quercus",
+      "variant": 2,
+      "rot": 240
+    },
+    {
+      "kind": "tree",
+      "file": "tree_quercus_v2_rot300.png",
+      "base": "tree_quercus",
+      "species": "quercus",
+      "variant": 2,
+      "rot": 300
+    },
+    {
+      "kind": "tree",
+      "file": "tree_quercus_v2_rot60.png",
+      "base": "tree_quercus",
+      "species": "quercus",
+      "variant": 2,
+      "rot": 60
+    },
+    {
+      "kind": "tree",
+      "file": "tree_salix_v0_rot0.png",
+      "base": "tree_salix",
+      "species": "salix",
+      "variant": 0,
+      "rot": 0
+    },
+    {
+      "kind": "tree",
+      "file": "tree_salix_v0_rot120.png",
+      "base": "tree_salix",
+      "species": "salix",
+      "variant": 0,
+      "rot": 120
+    },
+    {
+      "kind": "tree",
+      "file": "tree_salix_v0_rot180.png",
+      "base": "tree_salix",
+      "species": "salix",
+      "variant": 0,
+      "rot": 180
+    },
+    {
+      "kind": "tree",
+      "file": "tree_salix_v0_rot240.png",
+      "base": "tree_salix",
+      "species": "salix",
+      "variant": 0,
+      "rot": 240
+    },
+    {
+      "kind": "tree",
+      "file": "tree_salix_v0_rot300.png",
+      "base": "tree_salix",
+      "species": "salix",
+      "variant": 0,
+      "rot": 300
+    },
+    {
+      "kind": "tree",
+      "file": "tree_salix_v0_rot60.png",
+      "base": "tree_salix",
+      "species": "salix",
+      "variant": 0,
+      "rot": 60
+    },
+    {
+      "kind": "tree",
+      "file": "tree_salix_v1_rot0.png",
+      "base": "tree_salix",
+      "species": "salix",
+      "variant": 1,
+      "rot": 0
+    },
+    {
+      "kind": "tree",
+      "file": "tree_salix_v1_rot120.png",
+      "base": "tree_salix",
+      "species": "salix",
+      "variant": 1,
+      "rot": 120
+    },
+    {
+      "kind": "tree",
+      "file": "tree_salix_v1_rot180.png",
+      "base": "tree_salix",
+      "species": "salix",
+      "variant": 1,
+      "rot": 180
+    },
+    {
+      "kind": "tree",
+      "file": "tree_salix_v1_rot240.png",
+      "base": "tree_salix",
+      "species": "salix",
+      "variant": 1,
+      "rot": 240
+    },
+    {
+      "kind": "tree",
+      "file": "tree_salix_v1_rot300.png",
+      "base": "tree_salix",
+      "species": "salix",
+      "variant": 1,
+      "rot": 300
+    },
+    {
+      "kind": "tree",
+      "file": "tree_salix_v1_rot60.png",
+      "base": "tree_salix",
+      "species": "salix",
+      "variant": 1,
+      "rot": 60
+    },
+    {
+      "kind": "tree",
+      "file": "tree_salix_v2_rot0.png",
+      "base": "tree_salix",
+      "species": "salix",
+      "variant": 2,
+      "rot": 0
+    },
+    {
+      "kind": "tree",
+      "file": "tree_salix_v2_rot120.png",
+      "base": "tree_salix",
+      "species": "salix",
+      "variant": 2,
+      "rot": 120
+    },
+    {
+      "kind": "tree",
+      "file": "tree_salix_v2_rot180.png",
+      "base": "tree_salix",
+      "species": "salix",
+      "variant": 2,
+      "rot": 180
+    },
+    {
+      "kind": "tree",
+      "file": "tree_salix_v2_rot240.png",
+      "base": "tree_salix",
+      "species": "salix",
+      "variant": 2,
+      "rot": 240
+    },
+    {
+      "kind": "tree",
+      "file": "tree_salix_v2_rot300.png",
+      "base": "tree_salix",
+      "species": "salix",
+      "variant": 2,
+      "rot": 300
+    },
+    {
+      "kind": "tree",
+      "file": "tree_salix_v2_rot60.png",
+      "base": "tree_salix",
+      "species": "salix",
+      "variant": 2,
+      "rot": 60
+    },
+    {
+      "kind": "tree",
+      "file": "tree_tilia_v0_rot0.png",
+      "base": "tree_tilia",
+      "species": "tilia",
+      "variant": 0,
+      "rot": 0
+    },
+    {
+      "kind": "tree",
+      "file": "tree_tilia_v0_rot120.png",
+      "base": "tree_tilia",
+      "species": "tilia",
+      "variant": 0,
+      "rot": 120
+    },
+    {
+      "kind": "tree",
+      "file": "tree_tilia_v0_rot180.png",
+      "base": "tree_tilia",
+      "species": "tilia",
+      "variant": 0,
+      "rot": 180
+    },
+    {
+      "kind": "tree",
+      "file": "tree_tilia_v0_rot240.png",
+      "base": "tree_tilia",
+      "species": "tilia",
+      "variant": 0,
+      "rot": 240
+    },
+    {
+      "kind": "tree",
+      "file": "tree_tilia_v0_rot300.png",
+      "base": "tree_tilia",
+      "species": "tilia",
+      "variant": 0,
+      "rot": 300
+    },
+    {
+      "kind": "tree",
+      "file": "tree_tilia_v0_rot60.png",
+      "base": "tree_tilia",
+      "species": "tilia",
+      "variant": 0,
+      "rot": 60
+    },
+    {
+      "kind": "tree",
+      "file": "tree_tilia_v1_rot0.png",
+      "base": "tree_tilia",
+      "species": "tilia",
+      "variant": 1,
+      "rot": 0
+    },
+    {
+      "kind": "tree",
+      "file": "tree_tilia_v1_rot120.png",
+      "base": "tree_tilia",
+      "species": "tilia",
+      "variant": 1,
+      "rot": 120
+    },
+    {
+      "kind": "tree",
+      "file": "tree_tilia_v1_rot180.png",
+      "base": "tree_tilia",
+      "species": "tilia",
+      "variant": 1,
+      "rot": 180
+    },
+    {
+      "kind": "tree",
+      "file": "tree_tilia_v1_rot240.png",
+      "base": "tree_tilia",
+      "species": "tilia",
+      "variant": 1,
+      "rot": 240
+    },
+    {
+      "kind": "tree",
+      "file": "tree_tilia_v1_rot300.png",
+      "base": "tree_tilia",
+      "species": "tilia",
+      "variant": 1,
+      "rot": 300
+    },
+    {
+      "kind": "tree",
+      "file": "tree_tilia_v1_rot60.png",
+      "base": "tree_tilia",
+      "species": "tilia",
+      "variant": 1,
+      "rot": 60
+    },
+    {
+      "kind": "tree",
+      "file": "tree_tilia_v2_rot0.png",
+      "base": "tree_tilia",
+      "species": "tilia",
+      "variant": 2,
+      "rot": 0
+    },
+    {
+      "kind": "tree",
+      "file": "tree_tilia_v2_rot120.png",
+      "base": "tree_tilia",
+      "species": "tilia",
+      "variant": 2,
+      "rot": 120
+    },
+    {
+      "kind": "tree",
+      "file": "tree_tilia_v2_rot180.png",
+      "base": "tree_tilia",
+      "species": "tilia",
+      "variant": 2,
+      "rot": 180
+    },
+    {
+      "kind": "tree",
+      "file": "tree_tilia_v2_rot240.png",
+      "base": "tree_tilia",
+      "species": "tilia",
+      "variant": 2,
+      "rot": 240
+    },
+    {
+      "kind": "tree",
+      "file": "tree_tilia_v2_rot300.png",
+      "base": "tree_tilia",
+      "species": "tilia",
+      "variant": 2,
+      "rot": 300
+    },
+    {
+      "kind": "tree",
+      "file": "tree_tilia_v2_rot60.png",
+      "base": "tree_tilia",
+      "species": "tilia",
+      "variant": 2,
+      "rot": 60
+    },
+    {
+      "kind": "tree",
+      "file": "tree_ulmus_v0_rot0.png",
+      "base": "tree_ulmus",
+      "species": "ulmus",
+      "variant": 0,
+      "rot": 0
+    },
+    {
+      "kind": "tree",
+      "file": "tree_ulmus_v0_rot120.png",
+      "base": "tree_ulmus",
+      "species": "ulmus",
+      "variant": 0,
+      "rot": 120
+    },
+    {
+      "kind": "tree",
+      "file": "tree_ulmus_v0_rot180.png",
+      "base": "tree_ulmus",
+      "species": "ulmus",
+      "variant": 0,
+      "rot": 180
+    },
+    {
+      "kind": "tree",
+      "file": "tree_ulmus_v0_rot240.png",
+      "base": "tree_ulmus",
+      "species": "ulmus",
+      "variant": 0,
+      "rot": 240
+    },
+    {
+      "kind": "tree",
+      "file": "tree_ulmus_v0_rot300.png",
+      "base": "tree_ulmus",
+      "species": "ulmus",
+      "variant": 0,
+      "rot": 300
+    },
+    {
+      "kind": "tree",
+      "file": "tree_ulmus_v0_rot60.png",
+      "base": "tree_ulmus",
+      "species": "ulmus",
+      "variant": 0,
+      "rot": 60
+    },
+    {
+      "kind": "tree",
+      "file": "tree_ulmus_v1_rot0.png",
+      "base": "tree_ulmus",
+      "species": "ulmus",
+      "variant": 1,
+      "rot": 0
+    },
+    {
+      "kind": "tree",
+      "file": "tree_ulmus_v1_rot120.png",
+      "base": "tree_ulmus",
+      "species": "ulmus",
+      "variant": 1,
+      "rot": 120
+    },
+    {
+      "kind": "tree",
+      "file": "tree_ulmus_v1_rot180.png",
+      "base": "tree_ulmus",
+      "species": "ulmus",
+      "variant": 1,
+      "rot": 180
+    },
+    {
+      "kind": "tree",
+      "file": "tree_ulmus_v1_rot240.png",
+      "base": "tree_ulmus",
+      "species": "ulmus",
+      "variant": 1,
+      "rot": 240
+    },
+    {
+      "kind": "tree",
+      "file": "tree_ulmus_v1_rot300.png",
+      "base": "tree_ulmus",
+      "species": "ulmus",
+      "variant": 1,
+      "rot": 300
+    },
+    {
+      "kind": "tree",
+      "file": "tree_ulmus_v1_rot60.png",
+      "base": "tree_ulmus",
+      "species": "ulmus",
+      "variant": 1,
+      "rot": 60
+    },
+    {
+      "kind": "tree",
+      "file": "tree_ulmus_v2_rot0.png",
+      "base": "tree_ulmus",
+      "species": "ulmus",
+      "variant": 2,
+      "rot": 0
+    },
+    {
+      "kind": "tree",
+      "file": "tree_ulmus_v2_rot120.png",
+      "base": "tree_ulmus",
+      "species": "ulmus",
+      "variant": 2,
+      "rot": 120
+    },
+    {
+      "kind": "tree",
+      "file": "tree_ulmus_v2_rot180.png",
+      "base": "tree_ulmus",
+      "species": "ulmus",
+      "variant": 2,
+      "rot": 180
+    },
+    {
+      "kind": "tree",
+      "file": "tree_ulmus_v2_rot240.png",
+      "base": "tree_ulmus",
+      "species": "ulmus",
+      "variant": 2,
+      "rot": 240
+    },
+    {
+      "kind": "tree",
+      "file": "tree_ulmus_v2_rot300.png",
+      "base": "tree_ulmus",
+      "species": "ulmus",
+      "variant": 2,
+      "rot": 300
+    },
+    {
+      "kind": "tree",
+      "file": "tree_ulmus_v2_rot60.png",
+      "base": "tree_ulmus",
+      "species": "ulmus",
+      "variant": 2,
+      "rot": 60
+    },
+    {
+      "kind": "vignette",
+      "file": "vig_brokencart_v0_rot0.png",
+      "base": "vig_brokencart",
+      "name": "brokencart",
+      "variant": 0,
+      "rot": 0
+    },
+    {
+      "kind": "vignette",
+      "file": "vig_brokencart_v0_rot120.png",
+      "base": "vig_brokencart",
+      "name": "brokencart",
+      "variant": 0,
+      "rot": 120
+    },
+    {
+      "kind": "vignette",
+      "file": "vig_brokencart_v0_rot180.png",
+      "base": "vig_brokencart",
+      "name": "brokencart",
+      "variant": 0,
+      "rot": 180
+    },
+    {
+      "kind": "vignette",
+      "file": "vig_brokencart_v0_rot240.png",
+      "base": "vig_brokencart",
+      "name": "brokencart",
+      "variant": 0,
+      "rot": 240
+    },
+    {
+      "kind": "vignette",
+      "file": "vig_brokencart_v0_rot300.png",
+      "base": "vig_brokencart",
+      "name": "brokencart",
+      "variant": 0,
+      "rot": 300
+    },
+    {
+      "kind": "vignette",
+      "file": "vig_brokencart_v0_rot60.png",
+      "base": "vig_brokencart",
+      "name": "brokencart",
+      "variant": 0,
+      "rot": 60
+    },
+    {
+      "kind": "vignette",
+      "file": "vig_brokencart_v1_rot0.png",
+      "base": "vig_brokencart",
+      "name": "brokencart",
+      "variant": 1,
+      "rot": 0
+    },
+    {
+      "kind": "vignette",
+      "file": "vig_brokencart_v1_rot120.png",
+      "base": "vig_brokencart",
+      "name": "brokencart",
+      "variant": 1,
+      "rot": 120
+    },
+    {
+      "kind": "vignette",
+      "file": "vig_brokencart_v1_rot180.png",
+      "base": "vig_brokencart",
+      "name": "brokencart",
+      "variant": 1,
+      "rot": 180
+    },
+    {
+      "kind": "vignette",
+      "file": "vig_brokencart_v1_rot240.png",
+      "base": "vig_brokencart",
+      "name": "brokencart",
+      "variant": 1,
+      "rot": 240
+    },
+    {
+      "kind": "vignette",
+      "file": "vig_brokencart_v1_rot300.png",
+      "base": "vig_brokencart",
+      "name": "brokencart",
+      "variant": 1,
+      "rot": 300
+    },
+    {
+      "kind": "vignette",
+      "file": "vig_brokencart_v1_rot60.png",
+      "base": "vig_brokencart",
+      "name": "brokencart",
+      "variant": 1,
+      "rot": 60
+    },
+    {
+      "kind": "vignette",
+      "file": "vig_camp_rest_v0_rot0.png",
+      "base": "vig_camp_rest",
+      "name": "camp_rest",
+      "variant": 0,
+      "rot": 0
+    },
+    {
+      "kind": "vignette",
+      "file": "vig_camp_rest_v0_rot120.png",
+      "base": "vig_camp_rest",
+      "name": "camp_rest",
+      "variant": 0,
+      "rot": 120
+    },
+    {
+      "kind": "vignette",
+      "file": "vig_camp_rest_v0_rot180.png",
+      "base": "vig_camp_rest",
+      "name": "camp_rest",
+      "variant": 0,
+      "rot": 180
+    },
+    {
+      "kind": "vignette",
+      "file": "vig_camp_rest_v0_rot240.png",
+      "base": "vig_camp_rest",
+      "name": "camp_rest",
+      "variant": 0,
+      "rot": 240
+    },
+    {
+      "kind": "vignette",
+      "file": "vig_camp_rest_v0_rot300.png",
+      "base": "vig_camp_rest",
+      "name": "camp_rest",
+      "variant": 0,
+      "rot": 300
+    },
+    {
+      "kind": "vignette",
+      "file": "vig_camp_rest_v0_rot60.png",
+      "base": "vig_camp_rest",
+      "name": "camp_rest",
+      "variant": 0,
+      "rot": 60
+    },
+    {
+      "kind": "vignette",
+      "file": "vig_camp_rest_v1_rot0.png",
+      "base": "vig_camp_rest",
+      "name": "camp_rest",
+      "variant": 1,
+      "rot": 0
+    },
+    {
+      "kind": "vignette",
+      "file": "vig_camp_rest_v1_rot120.png",
+      "base": "vig_camp_rest",
+      "name": "camp_rest",
+      "variant": 1,
+      "rot": 120
+    },
+    {
+      "kind": "vignette",
+      "file": "vig_camp_rest_v1_rot180.png",
+      "base": "vig_camp_rest",
+      "name": "camp_rest",
+      "variant": 1,
+      "rot": 180
+    },
+    {
+      "kind": "vignette",
+      "file": "vig_camp_rest_v1_rot240.png",
+      "base": "vig_camp_rest",
+      "name": "camp_rest",
+      "variant": 1,
+      "rot": 240
+    },
+    {
+      "kind": "vignette",
+      "file": "vig_camp_rest_v1_rot300.png",
+      "base": "vig_camp_rest",
+      "name": "camp_rest",
+      "variant": 1,
+      "rot": 300
+    },
+    {
+      "kind": "vignette",
+      "file": "vig_camp_rest_v1_rot60.png",
+      "base": "vig_camp_rest",
+      "name": "camp_rest",
+      "variant": 1,
+      "rot": 60
+    },
+    {
+      "kind": "vignette",
+      "file": "vig_cart_v0_rot0.png",
+      "base": "vig_cart",
+      "name": "cart",
+      "variant": 0,
+      "rot": 0
+    },
+    {
+      "kind": "vignette",
+      "file": "vig_cart_v0_rot120.png",
+      "base": "vig_cart",
+      "name": "cart",
+      "variant": 0,
+      "rot": 120
+    },
+    {
+      "kind": "vignette",
+      "file": "vig_cart_v0_rot180.png",
+      "base": "vig_cart",
+      "name": "cart",
+      "variant": 0,
+      "rot": 180
+    },
+    {
+      "kind": "vignette",
+      "file": "vig_cart_v0_rot240.png",
+      "base": "vig_cart",
+      "name": "cart",
+      "variant": 0,
+      "rot": 240
+    },
+    {
+      "kind": "vignette",
+      "file": "vig_cart_v0_rot300.png",
+      "base": "vig_cart",
+      "name": "cart",
+      "variant": 0,
+      "rot": 300
+    },
+    {
+      "kind": "vignette",
+      "file": "vig_cart_v0_rot60.png",
+      "base": "vig_cart",
+      "name": "cart",
+      "variant": 0,
+      "rot": 60
+    },
+    {
+      "kind": "vignette",
+      "file": "vig_cart_v1_rot0.png",
+      "base": "vig_cart",
+      "name": "cart",
+      "variant": 1,
+      "rot": 0
+    },
+    {
+      "kind": "vignette",
+      "file": "vig_cart_v1_rot120.png",
+      "base": "vig_cart",
+      "name": "cart",
+      "variant": 1,
+      "rot": 120
+    },
+    {
+      "kind": "vignette",
+      "file": "vig_cart_v1_rot180.png",
+      "base": "vig_cart",
+      "name": "cart",
+      "variant": 1,
+      "rot": 180
+    },
+    {
+      "kind": "vignette",
+      "file": "vig_cart_v1_rot240.png",
+      "base": "vig_cart",
+      "name": "cart",
+      "variant": 1,
+      "rot": 240
+    },
+    {
+      "kind": "vignette",
+      "file": "vig_cart_v1_rot300.png",
+      "base": "vig_cart",
+      "name": "cart",
+      "variant": 1,
+      "rot": 300
+    },
+    {
+      "kind": "vignette",
+      "file": "vig_cart_v1_rot60.png",
+      "base": "vig_cart",
+      "name": "cart",
+      "variant": 1,
+      "rot": 60
+    },
+    {
+      "kind": "vignette",
+      "file": "vig_defense_v0_rot0.png",
+      "base": "vig_defense",
+      "name": "defense",
+      "variant": 0,
+      "rot": 0
+    },
+    {
+      "kind": "vignette",
+      "file": "vig_defense_v0_rot120.png",
+      "base": "vig_defense",
+      "name": "defense",
+      "variant": 0,
+      "rot": 120
+    },
+    {
+      "kind": "vignette",
+      "file": "vig_defense_v0_rot180.png",
+      "base": "vig_defense",
+      "name": "defense",
+      "variant": 0,
+      "rot": 180
+    },
+    {
+      "kind": "vignette",
+      "file": "vig_defense_v0_rot240.png",
+      "base": "vig_defense",
+      "name": "defense",
+      "variant": 0,
+      "rot": 240
+    },
+    {
+      "kind": "vignette",
+      "file": "vig_defense_v0_rot300.png",
+      "base": "vig_defense",
+      "name": "defense",
+      "variant": 0,
+      "rot": 300
+    },
+    {
+      "kind": "vignette",
+      "file": "vig_defense_v0_rot60.png",
+      "base": "vig_defense",
+      "name": "defense",
+      "variant": 0,
+      "rot": 60
+    },
+    {
+      "kind": "vignette",
+      "file": "vig_defense_v1_rot0.png",
+      "base": "vig_defense",
+      "name": "defense",
+      "variant": 1,
+      "rot": 0
+    },
+    {
+      "kind": "vignette",
+      "file": "vig_defense_v1_rot120.png",
+      "base": "vig_defense",
+      "name": "defense",
+      "variant": 1,
+      "rot": 120
+    },
+    {
+      "kind": "vignette",
+      "file": "vig_defense_v1_rot180.png",
+      "base": "vig_defense",
+      "name": "defense",
+      "variant": 1,
+      "rot": 180
+    },
+    {
+      "kind": "vignette",
+      "file": "vig_defense_v1_rot240.png",
+      "base": "vig_defense",
+      "name": "defense",
+      "variant": 1,
+      "rot": 240
+    },
+    {
+      "kind": "vignette",
+      "file": "vig_defense_v1_rot300.png",
+      "base": "vig_defense",
+      "name": "defense",
+      "variant": 1,
+      "rot": 300
+    },
+    {
+      "kind": "vignette",
+      "file": "vig_defense_v1_rot60.png",
+      "base": "vig_defense",
+      "name": "defense",
+      "variant": 1,
+      "rot": 60
+    },
+    {
+      "kind": "vignette",
+      "file": "vig_market_v0_rot0.png",
+      "base": "vig_market",
+      "name": "market",
+      "variant": 0,
+      "rot": 0
+    },
+    {
+      "kind": "vignette",
+      "file": "vig_market_v0_rot120.png",
+      "base": "vig_market",
+      "name": "market",
+      "variant": 0,
+      "rot": 120
+    },
+    {
+      "kind": "vignette",
+      "file": "vig_market_v0_rot180.png",
+      "base": "vig_market",
+      "name": "market",
+      "variant": 0,
+      "rot": 180
+    },
+    {
+      "kind": "vignette",
+      "file": "vig_market_v0_rot240.png",
+      "base": "vig_market",
+      "name": "market",
+      "variant": 0,
+      "rot": 240
+    },
+    {
+      "kind": "vignette",
+      "file": "vig_market_v0_rot300.png",
+      "base": "vig_market",
+      "name": "market",
+      "variant": 0,
+      "rot": 300
+    },
+    {
+      "kind": "vignette",
+      "file": "vig_market_v0_rot60.png",
+      "base": "vig_market",
+      "name": "market",
+      "variant": 0,
+      "rot": 60
+    },
+    {
+      "kind": "vignette",
+      "file": "vig_market_v1_rot0.png",
+      "base": "vig_market",
+      "name": "market",
+      "variant": 1,
+      "rot": 0
+    },
+    {
+      "kind": "vignette",
+      "file": "vig_market_v1_rot120.png",
+      "base": "vig_market",
+      "name": "market",
+      "variant": 1,
+      "rot": 120
+    },
+    {
+      "kind": "vignette",
+      "file": "vig_market_v1_rot180.png",
+      "base": "vig_market",
+      "name": "market",
+      "variant": 1,
+      "rot": 180
+    },
+    {
+      "kind": "vignette",
+      "file": "vig_market_v1_rot240.png",
+      "base": "vig_market",
+      "name": "market",
+      "variant": 1,
+      "rot": 240
+    },
+    {
+      "kind": "vignette",
+      "file": "vig_market_v1_rot300.png",
+      "base": "vig_market",
+      "name": "market",
+      "variant": 1,
+      "rot": 300
+    },
+    {
+      "kind": "vignette",
+      "file": "vig_market_v1_rot60.png",
+      "base": "vig_market",
+      "name": "market",
+      "variant": 1,
+      "rot": 60
+    },
+    {
+      "kind": "vignette",
+      "file": "vig_woodpile_v0_rot0.png",
+      "base": "vig_woodpile",
+      "name": "woodpile",
+      "variant": 0,
+      "rot": 0
+    },
+    {
+      "kind": "vignette",
+      "file": "vig_woodpile_v0_rot120.png",
+      "base": "vig_woodpile",
+      "name": "woodpile",
+      "variant": 0,
+      "rot": 120
+    },
+    {
+      "kind": "vignette",
+      "file": "vig_woodpile_v0_rot180.png",
+      "base": "vig_woodpile",
+      "name": "woodpile",
+      "variant": 0,
+      "rot": 180
+    },
+    {
+      "kind": "vignette",
+      "file": "vig_woodpile_v0_rot240.png",
+      "base": "vig_woodpile",
+      "name": "woodpile",
+      "variant": 0,
+      "rot": 240
+    },
+    {
+      "kind": "vignette",
+      "file": "vig_woodpile_v0_rot300.png",
+      "base": "vig_woodpile",
+      "name": "woodpile",
+      "variant": 0,
+      "rot": 300
+    },
+    {
+      "kind": "vignette",
+      "file": "vig_woodpile_v0_rot60.png",
+      "base": "vig_woodpile",
+      "name": "woodpile",
+      "variant": 0,
+      "rot": 60
+    },
+    {
+      "kind": "vignette",
+      "file": "vig_woodpile_v1_rot0.png",
+      "base": "vig_woodpile",
+      "name": "woodpile",
+      "variant": 1,
+      "rot": 0
+    },
+    {
+      "kind": "vignette",
+      "file": "vig_woodpile_v1_rot120.png",
+      "base": "vig_woodpile",
+      "name": "woodpile",
+      "variant": 1,
+      "rot": 120
+    },
+    {
+      "kind": "vignette",
+      "file": "vig_woodpile_v1_rot180.png",
+      "base": "vig_woodpile",
+      "name": "woodpile",
+      "variant": 1,
+      "rot": 180
+    },
+    {
+      "kind": "vignette",
+      "file": "vig_woodpile_v1_rot240.png",
+      "base": "vig_woodpile",
+      "name": "woodpile",
+      "variant": 1,
+      "rot": 240
+    },
+    {
+      "kind": "vignette",
+      "file": "vig_woodpile_v1_rot300.png",
+      "base": "vig_woodpile",
+      "name": "woodpile",
+      "variant": 1,
+      "rot": 300
+    },
+    {
+      "kind": "vignette",
+      "file": "vig_woodpile_v1_rot60.png",
+      "base": "vig_woodpile",
+      "name": "woodpile",
+      "variant": 1,
+      "rot": 60
+    }
+  ],
+  "bases": {
+    "kbldg_002000_resid_e": {
+      "kind": "building",
+      "rotations": [
+        0,
+        60,
+        120,
+        180,
+        240,
+        300
+      ],
+      "dmgs": [
+        1
+      ]
+    },
+    "kbldg_003000_camp_a": {
+      "kind": "building",
+      "rotations": [
+        0,
+        60,
+        120,
+        180,
+        240,
+        300
+      ],
+      "dmgs": [
+        0,
+        1,
+        2
+      ]
+    },
+    "kbldg_003001_resid_a": {
+      "kind": "building",
+      "rotations": [
+        0,
+        60,
+        120,
+        180,
+        240,
+        300
+      ],
+      "dmgs": [
+        0,
+        1,
+        2
+      ]
+    },
+    "kbldg_003002_hideout_a": {
+      "kind": "building",
+      "rotations": [
+        0,
+        60,
+        120,
+        180,
+        240,
+        300
+      ],
+      "dmgs": [
+        0,
+        1,
+        2
+      ]
+    },
+    "kbldg_003003_resid_e": {
+      "kind": "building",
+      "rotations": [
+        0,
+        60,
+        120,
+        180,
+        240,
+        300
+      ],
+      "dmgs": [
+        0,
+        1,
+        2
+      ]
+    },
+    "kbldg_003004_resid_d": {
+      "kind": "building",
+      "rotations": [
+        0,
+        60,
+        120,
+        180,
+        240,
+        300
+      ],
+      "dmgs": [
+        0,
+        1,
+        2
+      ]
+    },
+    "kbldg_003005_camp_b": {
+      "kind": "building",
+      "rotations": [
+        0,
+        60,
+        120,
+        180,
+        240,
+        300
+      ],
+      "dmgs": [
+        0,
+        1,
+        2
+      ]
+    },
+    "kbldg_003006_camp_b": {
+      "kind": "building",
+      "rotations": [
+        0,
+        60,
+        120,
+        180,
+        240,
+        300
+      ],
+      "dmgs": [
+        0,
+        1,
+        2
+      ]
+    },
+    "kbldg_003007_camp_a": {
+      "kind": "building",
+      "rotations": [
+        0,
+        60,
+        120,
+        180,
+        240,
+        300
+      ],
+      "dmgs": [
+        0,
+        1,
+        2
+      ]
+    },
+    "tree_larix": {
+      "kind": "tree",
+      "rotations": [
+        0,
+        60,
+        120,
+        180,
+        240,
+        300
+      ]
+    },
+    "tree_picea": {
+      "kind": "tree",
+      "rotations": [
+        0,
+        60,
+        120,
+        180,
+        240,
+        300
+      ]
+    },
+    "tree_populus": {
+      "kind": "tree",
+      "rotations": [
+        0,
+        60,
+        120,
+        180,
+        240,
+        300
+      ]
+    },
+    "tree_prunus_pink": {
+      "kind": "tree",
+      "rotations": [
+        0,
+        60,
+        120,
+        180,
+        240,
+        300
+      ]
+    },
+    "tree_quercus": {
+      "kind": "tree",
+      "rotations": [
+        0,
+        60,
+        120,
+        180,
+        240,
+        300
+      ]
+    },
+    "tree_salix": {
+      "kind": "tree",
+      "rotations": [
+        0,
+        60,
+        120,
+        180,
+        240,
+        300
+      ]
+    },
+    "tree_tilia": {
+      "kind": "tree",
+      "rotations": [
+        0,
+        60,
+        120,
+        180,
+        240,
+        300
+      ]
+    },
+    "tree_ulmus": {
+      "kind": "tree",
+      "rotations": [
+        0,
+        60,
+        120,
+        180,
+        240,
+        300
+      ]
+    },
+    "vig_brokencart": {
+      "kind": "vignette",
+      "rotations": [
+        0,
+        60,
+        120,
+        180,
+        240,
+        300
+      ]
+    },
+    "vig_camp_rest": {
+      "kind": "vignette",
+      "rotations": [
+        0,
+        60,
+        120,
+        180,
+        240,
+        300
+      ]
+    },
+    "vig_cart": {
+      "kind": "vignette",
+      "rotations": [
+        0,
+        60,
+        120,
+        180,
+        240,
+        300
+      ]
+    },
+    "vig_defense": {
+      "kind": "vignette",
+      "rotations": [
+        0,
+        60,
+        120,
+        180,
+        240,
+        300
+      ]
+    },
+    "vig_market": {
+      "kind": "vignette",
+      "rotations": [
+        0,
+        60,
+        120,
+        180,
+        240,
+        300
+      ]
+    },
+    "vig_woodpile": {
+      "kind": "vignette",
+      "rotations": [
+        0,
+        60,
+        120,
+        180,
+        240,
+        300
+      ]
+    }
+  }
+}

@@ -207,7 +207,14 @@ class UIManager {
 
         const setEnabled = (btn, enabled) => { if(enabled) btn.classList.remove('disabled'); else btn.classList.add('disabled'); };
         
-        setEnabled(btnMove, u.ap >= 1);
+        const rtwp = window.RtwpBattle && window.RtwpBattle.active
+            && window.RtwpBattle.instance;
+        const rtSoldier = rtwp && rtwp.sim
+            ? rtwp.sim.getSoldier(String(u.id)) : null;
+
+        // RTwP does not consume the legacy turn AP. The old AP check made the
+        // attack command unreachable even though actionAttack was adapted.
+        setEnabled(btnMove, rtSoldier ? rtSoldier.hp > 0 : u.ap >= 1);
         
         // 射撃可能条件: ①AP足りる ②InHandsにWeaponry(or仮想迫撃砲) ③残弾あり（戦車は予備弾があれば可）
         const w = window.getCurrentWeapon(u);
@@ -217,7 +224,11 @@ class UIManager {
             || (w.reserve !== undefined && (w.reserve || 0) > 0)
             || (u.def && u.def.isTank && (w.reserve || 0) > 0)
         );
-        setEnabled(btnAttack, !!w && u.ap >= weaponCost && hasAmmo);
+        const rtHasAmmo = rtSoldier && rtSoldier.weapon
+            && ((rtSoldier.magRemaining || 0) > 0 || (rtSoldier.magsLeft || 0) > 0);
+        setEnabled(btnAttack, rtSoldier
+            ? !!rtHasAmmo
+            : (!!w && u.ap >= weaponCost && hasAmmo));
 
         const anyBroken = Array.isArray(u.hands) ? u.hands.some(h => h && h.isBroken) : (u.hands && u.hands.isBroken);
         setEnabled(btnRepair, anyBroken);
@@ -385,13 +396,18 @@ class UIManager {
 
         const u = window.gameLogic.getUnitInHex(hex.q, hex.r);
         const t = window.gameLogic.isValidHex(hex.q, hex.r) ? window.gameLogic.map[hex.q][hex.r] : null;
+        // RTwP では AP もターン終了も無い（ターン制へ戻したときだけ従来通り出す）
+        const rtwp = !!(window.RtwpBattle && window.RtwpBattle.active);
         let h = "";
         if (u) {
-            h += `<div style="color:#0af;font-weight:bold">${u.name}</div>HP:${u.hp}/${u.maxHp} AP:${u.ap}/${u.maxAp}<br>Stance: ${u.stance}`;
+            const ap = rtwp ? '' : ` AP:${u.ap}/${u.maxAp}`;
+            h += `<div style="color:#0af;font-weight:bold">${u.name}</div>HP:${u.hp}/${u.maxHp}${ap}<br>Stance: ${u.stance}`;
         } else if (t) {
             h += `<div style="color:#da4;font-weight:bold">${t.name}</div>Cost:${t.cost} Cover:${t.cover}%`;
         }
-        h += `<hr style="border:0;border-top:1px solid #444;margin:5px 0;"><button onclick="gameLogic.endTurn();document.getElementById('context-menu').style.display='none';" style="width:100%;cursor:pointer;background:#522;color:#fcc;border:1px solid #d44;padding:3px;">TURN END</button>`;
+        if (!rtwp) {
+            h += `<hr style="border:0;border-top:1px solid #444;margin:5px 0;"><button onclick="gameLogic.endTurn();document.getElementById('context-menu').style.display='none';" style="width:100%;cursor:pointer;background:#522;color:#fcc;border:1px solid #d44;padding:3px;">TURN END</button>`;
+        }
         if (h !== "") { m.innerHTML = h; m.style.display = 'block'; m.style.left = (mx + 10) + 'px'; m.style.top = (my + 10) + 'px'; }
     }
 
@@ -489,9 +505,10 @@ class UIManager {
             mainSlotsHtml += makeSlot(u.hands[i], 'main', i);
         }
         
-        let subSlotsHtml = ""; 
-        for (let i = 0; i < 4; i++) { 
-            subSlotsHtml += makeSlot(u.bag[i], 'bag', i); 
+        let subSlotsHtml = "";
+        // 背嚢は8枠（Phaser版サイドバーの BAG_SLOTS と揃える）
+        for (let i = 0; i < 8; i++) {
+            subSlotsHtml += makeSlot(u.bag[i], 'bag', i);
         }
         
         let reloadBtn = "";

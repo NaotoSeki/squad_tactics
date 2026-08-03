@@ -1,0 +1,10 @@
+{
+ "variants": 4,
+ "steps": 2,
+ "cols": 2,
+ "rows": 4,
+ "frameSize": 128,
+ "fps": 40,
+ "originX": 0.34,
+ "style": "round-fireball-single"
+}

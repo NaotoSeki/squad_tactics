@@ -440,6 +440,47 @@ function runT7() {
 }
 
 // ===========================================================================
+// T9 Real-round economy: one SHOT event reports and consumes every projectile
+// in the burst so rendering can show exactly the same number of flashes.
+// ===========================================================================
+
+{
+  const map = makeGridMap({ coverAt: () => 0.2 });
+  const sim = new SimCore({ map: map, tuning: SIM_TUNING, rng: mulberry32(31) });
+  const mg = toSimWeapon('mg42', WPNS.mg42, SIM_TUNING);
+  const rifle = toSimWeapon('m1', WPNS.m1, SIM_TUNING);
+  sim.addSoldier({ id: 'gunner', team: 'A', q: 0, r: 0, weapon: mg, ammo: { mags: 1 }, skill: 1.0, facing: { q: 1, r: 0 } });
+  sim.addSoldier({ id: 'target', team: 'B', q: 3, r: 0, weapon: rifle, ammo: { mags: 0 }, skill: 1.0, facing: { q: -1, r: 0 } });
+  sim.issueOrder({ type: 'TARGET', soldierIds: ['gunner'], payload: { targetId: 'target', mode: 'aimed' } });
+  let shot = null;
+  for (let t = 0; t < 200 && !shot; t++) {
+    sim.tick();
+    shot = sim.drainEvents().find((ev) => ev.type === 'SHOT' && ev.shooterId === 'gunner') || null;
+  }
+  const gunner = sim.getSoldier('gunner');
+  check(shot && shot.roundsFired === mg.burstSize,
+    `T9 SHOT reports actual burst rounds (${shot && shot.roundsFired}/${mg.burstSize})`);
+  check(gunner.magRemaining === mg.magCap - mg.burstSize,
+    `T9 magazine consumes actual rounds (${gunner.magRemaining}/${mg.magCap})`);
+  check(gunner.engageTargetId === 'target',
+    'T9 public soldier snapshot exposes engageTargetId for visual facing');
+}
+
+// A blocked line is not a fired projectile. Keep the magazine and event stream
+// unchanged so ammo, flashes, and SHOT logs can never disagree.
+{
+  const map = makeGridMap({ losBlocked: () => true });
+  const sim = new SimCore({ map: map, tuning: SIM_TUNING, rng: mulberry32(32) });
+  const rifle = toSimWeapon('m1', WPNS.m1, SIM_TUNING);
+  const shooter = sim.addSoldier({ id: 'blocked-a', team: 'A', q: 0, r: 0, weapon: rifle, ammo: { mags: 1 }, skill: 1, facing: { q: 1, r: 0 } });
+  const target = sim.addSoldier({ id: 'blocked-b', team: 'B', q: 2, r: 0, weapon: rifle, ammo: { mags: 1 }, skill: 1, facing: { q: -1, r: 0 } });
+  const before = shooter.magRemaining;
+  sim._resolveBurst(shooter, target, SIM_TUNING);
+  check(shooter.magRemaining === before && sim.drainEvents().every((ev) => ev.type !== 'SHOT'),
+    'T9 blocked LOS consumes no rounds and emits no unmatched SHOT');
+}
+
+// ===========================================================================
 // summary
 // ===========================================================================
 

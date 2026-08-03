@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>WW2 Ruined City + KHAOS Explosions — overlay verification</title>
+<style>
+  body { background:#141416; color:#ccc; font-family: system-ui, sans-serif; margin:0; }
+  #bar { padding:8px 12px; background:#1e1e22; display:flex; gap:10px; align-items:center; position:sticky; top:0; z-index:5; flex-wrap:wrap; }
+  #bar input { width:80px; background:#0f0f12; color:#eee; border:1px solid #444; padding:4px 6px; }
+  #bar button { background:#3a4a3a; color:#eee; border:1px solid #666; padding:5px 14px; cursor:pointer; }
+  #bar button:hover { background:#4a5f4a; }
+  .hint { color:#777; font-size:12px; }
+  #fxbar { padding:8px 12px; background:#241c1c; display:flex; gap:8px; align-items:center; flex-wrap:wrap; position:sticky; top:39px; z-index:5; border-top:1px solid #3a2a2a; }
+  #fxbar .tierbtn { background:#4a3a2a; color:#eee; border:1px solid #6a5030; padding:5px 12px; cursor:pointer; border-radius:4px; }
+  #fxbar .tierbtn.active { background:#c0742f; border-color:#e0964f; color:#fff; font-weight:bold; }
+  #fxbar button { background:#3a3a44; color:#eee; border:1px solid #555; padding:5px 12px; cursor:pointer; border-radius:4px; }
+  #fxbar button:hover { filter:brightness(1.2); }
+  #fxbar button.on { background:#7a2f2f; border-color:#b04a4a; }
+  .fxhint { color:#a88; font-size:12px; }
+  #stage { position:relative; width:fit-content; margin:0 auto; }
+  #cv { display:block; }
+  #fx { position:absolute; top:0; left:0; cursor:crosshair; }
+</style>
+</head>
+<body>
+<div id="bar">
+  seed <input id="seed" type="number" value="7">
+  <button onclick="regen()">生成</button>
+  <button onclick="document.getElementById('seed').value=Math.floor(Math.random()*99999);regen()">ランダム</button>
+  <span class="hint">v5: 荒地スカー遷移・2hexクレーター・掘削塹壕・ボカージュ・教会/工場・ひび割れ道路</span>
+</div>
+<div id="fxbar">
+  <span class="fxhint">着弾:</span>
+  <button class="tierbtn" data-tier="t1_12mm">① 12.7mm</button>
+  <button class="tierbtn" data-tier="t2_grenade">② 手榴弾</button>
+  <button class="tierbtn" data-tier="t3_mortar60">③ 60mm</button>
+  <button class="tierbtn active" data-tier="t4_shell120">④ 120mm</button>
+  <button class="tierbtn" data-tier="t5_aerialbomb">⑤ 航空爆弾</button>
+  <button id="barrageBtn">💥 ランダム弾幕</button>
+  <button id="autoBtn">🔁 連続爆撃</button>
+  <span class="fxhint">マップをクリックで着弾 / variantはランダム</span>
+</div>
+<div id="stage">
+  <canvas id="cv"></canvas>
+  <canvas id="fx"></canvas>
+</div>
+<script>
+const CANVAS_W = 576, CANVAS_H = 768;
+const HEX_R_PX = 256;
+const ANCHOR_X = 288, ANCHOR_Y = 469;
+const SCALE = 0.35;
+const COLS = 12, ROWS = 9;
+const NG = { cobble: 6, street: 3 };
+
+const DIRS = [[1,0],[1,-1],[0,-1],[-1,0],[-1,1],[0,1]];   // index = edge k
+const SCAR_BASES = { e1:[0], e2a:[0,1], e2o:[0,3], e3:[0,1,2], e4:[0,1,2,3], full:[0,1,2,3,4,5] };
+
+function h32(...args) {
+  let s = args.join('|'), h = 2166136261 >>> 0;
+  for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619) >>> 0; }
+  h ^= h >>> 13; h = Math.imul(h, 0x5bd1e995) >>> 0; h ^= h >>> 15;
+  return h >>> 0;
+}
+const rnd = (...a) => h32(...a) / 4294967295;
+const setEq = (a, b) => a.size === b.length && b.every(x => a.has(x));
+
+function scarResolve(mask) {
+  if (!mask.size) return null;
+  for (const [pat, base] of Object.entries(SCAR_BASES))
+    for (let r = 0; r < 6; r++)
+      if (setEq(new Set([...mask].map(k => ((k - r) % 6 + 6) % 6)), base))
+        return [pat, r * 60];
+  return null;
+}
+
+function roadTile(dirs, seed, q, r) {
+  const nvar = { straight: 4, corner: 3, tee: 2, cross: 2 };
+  const ds = [...new Set(dirs)].sort((a, b) => a - b);
+  const f = (pat, rot) => `road_${pat}_v${h32(seed, q, r, 'rv') % nvar[pat]}_rot${rot}.png`;
+  if (ds.length === 2) {
+    const [a, b] = ds;
+    if ((b - a) % 6 === 3) return f('straight', (a % 3) * 60);
+    if ((b - a) % 6 === 2) return f('corner', a * 60);
+    if (((a - b) % 6 + 6) % 6 === 2) return f('corner', b * 60);
+  }
+  if (ds.length === 3)
+    for (let k = 0; k < 6; k++)
+      if (setEq(new Set(ds.map(d => ((d - k) % 6 + 6) % 6)), [0, 2, 3]))
+        return f('tee', k * 60);
+  if (ds.length === 4)
+    for (const k of [0, 1, 2])
+      if (setEq(new Set(ds.map(d => ((d - k) % 6 + 6) % 6)), [0, 2, 3, 5]))
+        return f('cross', k * 60);
+  return null;
+}
+
+function genCity(seed) {
+  const grid = new Map();
+  const key = (q, r) => q + ',' + r;
+  const at = (q, r) => grid.get(key(q, r));
+  const streets = new Set();
+  const avR = 2 + h32(seed, 'avr') % (ROWS - 4);
+  for (let q = 0; q < COLS; q++) streets.add(key(q, avR));
+  let bq = 2 + h32(seed, 'avq') % (COLS - 4);
+  for (let r = 0; r < ROWS; r++) { streets.add(key(bq, r)); if (r % 2 === 1) bq -= 1; }
+
+  const cx = COLS / 2, cy = ROWS / 2;
+  for (let r = 0; r < ROWS; r++) for (let q = 0; q < COLS; q++) {
+    const dist = Math.hypot(q - cx, r - cy) / Math.max(cx, cy);
+    const wreck = Math.max(0, 1 - dist) + (rnd(seed, q, r, 'n') - 0.5) * 0.55;
+    const cell = { q, r, ground: 'cobble', gfile: null, flat: [], over: [],
+                   wreck, dist, open: true, scar: false };
+    if (streets.has(key(q, r))) { cell.open = false; cell.ground = 'street'; }
+    grid.set(key(q, r), cell);
+  }
+
+  // wasteland blobs + crater pairs
+  const scarCells = new Set();
+  const pairCells = new Map();
+  const nBlob = 1 + h32(seed, 'nblob') % 2;
+  for (let i = 0; i < nBlob; i++) {
+    for (let t = 0; t < 20; t++) {
+      const bq_ = 1 + h32(seed, 'blq', i, t) % (COLS - 3);
+      const br_ = 1 + h32(seed, 'blr', i, t) % (ROWS - 2);
+      const k = h32(seed, 'blk', i, t) % 3;
+      const nb = [bq_ + DIRS[k][0], br_ + DIRS[k][1]];
+      const c0 = at(bq_, br_), c1 = at(nb[0], nb[1]);
+      if (!c0 || !c0.open || !c1 || !c1.open) continue;
+      const v = h32(seed, 'blv', i) % 2;
+      pairCells.set(key(bq_, br_), `cpair_v${v}_a_rot${k * 60}.png`);
+      pairCells.set(key(nb[0], nb[1]), `cpair_v${v}_b_rot${k * 60}.png`);
+      scarCells.add(key(bq_, br_)); scarCells.add(key(nb[0], nb[1]));
+      for (const cc of [[bq_, br_], nb])
+        for (const [dq, dr] of DIRS) {
+          const n2 = at(cc[0] + dq, cc[1] + dr);
+          if (n2 && n2.open) scarCells.add(key(n2.q, n2.r));
+        }
+      break;
+    }
+  }
+  const frontier = [...scarCells].filter(c => !pairCells.has(c));
+  const extra = 2 + h32(seed, 'blx') % 4;
+  for (let j = 0; j < extra && frontier.length; j++) {
+    const c = frontier[h32(seed, 'blf', j) % frontier.length].split(',').map(Number);
+    for (const [dq, dr] of DIRS) {
+      const n2 = at(c[0] + dq, c[1] + dr);
+      if (n2 && n2.open && !scarCells.has(key(n2.q, n2.r)) &&
+          rnd(seed, 'blg', j, n2.q, n2.r) < 0.5) {
+        scarCells.add(key(n2.q, n2.r)); frontier.push(key(n2.q, n2.r));
+      }
+    }
+  }
+  const maskOf = (q, r) => new Set(DIRS.map((d, k) =>
+    scarCells.has(key(q + d[0], r + d[1])) ? k : -1).filter(k => k >= 0));
+  for (let it = 0; it < 6; it++) {
+    const bad = [];
+    for (const c of scarCells) {
+      if (pairCells.has(c)) continue;
+      const [q, r] = c.split(',').map(Number);
+      if (!scarResolve(maskOf(q, r))) bad.push([q, r]);
+    }
+    if (!bad.length) break;
+    for (const [q, r] of bad) {
+      const mask = maskOf(q, r);
+      for (let k = 0; k < 6; k++) {
+        if (mask.has(k)) continue;
+        const n2 = at(q + DIRS[k][0], r + DIRS[k][1]);
+        if (n2 && n2.open && !scarCells.has(key(n2.q, n2.r))) {
+          scarCells.add(key(n2.q, n2.r)); break;
+        }
+      }
+    }
+  }
+  for (const c of scarCells) {
+    const [q, r] = c.split(',').map(Number);
+    const cell = at(q, r);
+    if (!cell) continue;
+    cell.scar = true; cell.open = false;
+    if (pairCells.has(c)) { cell.ground = 'pair'; cell.gfile = pairCells.get(c); }
+    else {
+      const res = scarResolve(maskOf(q, r)) || ['full', 0];
+      const [pat, rot] = res;
+      const nv = pat === 'full' ? 3 : 2;
+      cell.ground = 'scar';
+      cell.gfile = `scar_${pat}_v${h32(seed, q, r, 'sv') % nv}_rot${pat === 'full' ? 0 : rot}.png`;
+    }
+  }
+
+  // roads
+  for (const s of streets) {
+    const [q, r] = s.split(',').map(Number);
+    if (!at(q, r)) continue;   // diagonal avenue may leave the grid
+    const dirs = DIRS.map((d, k) => streets.has(key(q + d[0], r + d[1])) ? k : -1)
+                     .filter(k => k >= 0);
+    const t = roadTile(dirs, seed, q, r);
+    if (t) { at(q, r).ground = 'road'; at(q, r).gfile = t; }
+  }
+
+  // buildings / rubble / specials
+  let churchDone = false, factoryDone = false;
+  for (let r = 0; r < ROWS; r++) for (let q = 0; q < COLS; q++) {
+    const cell = at(q, r);
+    if (!cell.open) continue;
+    const roll = rnd(seed, q, r, 'b');
+    const dmgOf = w => w < 0.25 ? 0 : (w < 0.6 ? 1 : 2);
+    if (!churchDone && rnd(seed, 'chp') < 0.75 && cell.dist > 0.3 && cell.dist < 0.75 && roll < 0.2) {
+      cell.over.push(`church_d${cell.wreck < 0.3 ? 0 : (cell.wreck < 0.65 ? 1 : 2)}_rot${60 * (h32(seed, q, r, 'cr') % 6)}.png`);
+      cell.open = false; churchDone = true; continue;
+    }
+    if (!factoryDone && rnd(seed, 'fap') < 0.65 && cell.dist > 0.5 && roll < 0.25) {
+      cell.over.push(`factory_d${cell.wreck < 0.3 ? 0 : (cell.wreck < 0.65 ? 1 : 2)}_rot${60 * (h32(seed, q, r, 'fr') % 6)}.png`);
+      cell.open = false; factoryDone = true; continue;
+    }
+    if (roll < 0.62) {
+      cell.over.push(`bldg_s${1 + h32(seed, q, r, 'bs') % 5}_d${dmgOf(cell.wreck)}_rot${60 * (h32(seed, q, r, 'rot') % 6)}.png`);
+      cell.open = false;
+    } else if (roll < 0.76) {
+      cell.over.push(`rubble_v${h32(seed, q, r, 'rv') % 3}_rot${60 * (h32(seed, q, r, 'rr') % 2)}.png`);
+    }
+  }
+
+  // trench + wire + foxholes
+  const trR = (h32(seed, 'trs') % 2) ? (ROWS - 2) : 1;
+  const tq0 = 1 + h32(seed, 'tq0') % Math.max(1, COLS >> 1);
+  const tlen = 3 + h32(seed, 'tql') % 4;
+  const run = [];
+  for (let q = tq0; q < Math.min(COLS - 1, tq0 + tlen); q++) {
+    const c = at(q, trR);
+    if (!c || !c.open) break;
+    run.push(q);
+  }
+  if (run.length >= 2) {
+    run.forEach((q, i) => {
+      const c = at(q, trR);
+      if (i === 0) c.flat.push('trench_end_v0_rot0.png');
+      else if (i === run.length - 1) c.flat.push('trench_end_v0_rot180.png');
+      else c.flat.push(`trench_straight_v${h32(seed, q, trR, 'tv') % 2}_rot0.png`);
+      c.open = false;
+    });
+    const wr = trR + (trR < ROWS / 2 ? 1 : -1);
+    for (const q of run) {
+      const c = at(q, wr);
+      if (c && c.open && rnd(seed, q, wr, 'w') < 0.8)
+        c.over.push(`wire_v${h32(seed, q, wr, 'wv') % 2}_rot0.png`);
+    }
+    const fr = trR + (trR < ROWS / 2 ? 2 : -2);
+    for (const q of run) {
+      const c = at(q, fr);
+      if (c && c.open && rnd(seed, q, trR, 'fx') < 0.25) {
+        c.flat.push(`foxhole_v${h32(seed, q, trR, 'fv') % 2}_rot0.png`);
+        c.open = false;
+      }
+    }
+  }
+
+  // bocage line
+  const bgR = trR !== 1 ? 1 : ROWS - 2;
+  const bq0 = 1 + h32(seed, 'bg0') % Math.max(1, COLS >> 1);
+  const blen = 3 + h32(seed, 'bgl') % 4;
+  const brun = [];
+  for (let q = bq0; q < Math.min(COLS - 1, bq0 + blen); q++) {
+    const c = at(q, bgR);
+    if (!c || !c.open) break;
+    brun.push(q);
+  }
+  if (brun.length >= 2) {
+    brun.forEach((q, i) => {
+      const c = at(q, bgR);
+      if (i === 0) c.over.push('bocage_end_v0_rot0.png');
+      else if (i === brun.length - 1) c.over.push('bocage_end_v0_rot180.png');
+      else c.over.push(`bocage_straight_v${h32(seed, q, bgR, 'bv') % 2}_rot0.png`);
+      c.open = false;
+    });
+  }
+
+  // props / nature
+  for (let r = 0; r < ROWS; r++) for (let q = 0; q < COLS; q++) {
+    const cell = at(q, r);
+    if (cell.ground === 'road') {
+      if (rnd(seed, q, r, 'hh') < 0.08)
+        cell.over.push(`prop_hedgehog_v${h32(seed, q, r, 'hv') % 2}_rot${(h32(seed, q, r, 'hr') % 3) * 60}.png`);
+      continue;
+    }
+    if (!cell.open && !cell.scar) continue;
+    const p = rnd(seed, q, r, 'px');
+    if (cell.scar) {
+      if (p < 0.15)
+        cell.over.push(`tree_v${[0,1,2,3,3,4][h32(seed, q, r, 'tw') % 6]}_rot0.png`);
+      continue;
+    }
+    if (p < 0.05) {
+      const k = (h32(seed, q, r, 'pk') % 2) ? 'sandbag' : 'barrels';
+      cell.over.push(`prop_${k}_v${h32(seed, q, r, 'pv') % 2}_rot0.png`);
+    } else if (cell.dist > 0.6 && p < 0.25) {
+      if (rnd(seed, q, r, 'tv2') < 0.5)
+        cell.over.push(`tree_v${[0,1,2,0,3,4][h32(seed, q, r, 'tvv') % 6]}_rot0.png`);
+      else cell.over.push(`veg_v${h32(seed, q, r, 'vv') % 3}_rot0.png`);
+    } else if (p > 0.93) {
+      cell.over.push(`veg_v${h32(seed, q, r, 'vv2') % 3}_rot0.png`);
+    }
+  }
+  return grid;
+}
+
+const imgCache = new Map();
+function loadImg(name) {
+  if (!imgCache.has(name)) {
+    imgCache.set(name, new Promise((res) => {
+      const im = new Image();
+      im.onload = () => res(im);
+      im.onerror = () => res(null);
+      im.src = name;
+    }));
+  }
+  return imgCache.get(name);
+}
+
+// Geometry constants are seed-independent, so they live at module scope --
+// this lets paintAll() repaint the SAME map (after mutating grid state, e.g.
+// a building taking damage) without re-running genCity (which would roll a
+// new random city).
+const R = HEX_R_PX * SCALE;
+const PAD = 30;
+const hexKey = (q, r) => q + ',' + r;
+const centerOf = (q, r) => [Math.sqrt(3) * R * (q + r / 2), 1.5 * R * r];
+
+const MAP = { grid: null, seed: 0 };
+
+// Full repaint from current MAP.grid state (ground -> flat -> over passes,
+// same order/z-logic as the original generator). Cheap: every image is
+// already decoded in imgCache, so this is just a sequence of drawImage calls
+// -- no network, no re-simulation of the city layout.
+async function paintAll() {
+  const grid = MAP.grid, seed = MAP.seed;
+  const cv = document.getElementById('cv');
+  const ctx = cv.getContext('2d');
+  ctx.clearRect(0, 0, cv.width, cv.height);
+  ctx.fillStyle = '#18181a';
+  ctx.fillRect(0, 0, cv.width, cv.height);
+  const draw = async (name, q, r) => {
+    const im = await loadImg(name);
+    if (!im) return;
+    const [cx, cy] = centerOf(q, r);
+    ctx.drawImage(im, cx - ANCHOR_X * SCALE + PAD, cy - ANCHOR_Y * SCALE + PAD * 4,
+                  CANVAS_W * SCALE, CANVAS_H * SCALE);
+  };
+  const groundFile = (cell, q, r) => cell.gfile ? cell.gfile
+    : `gnd_${cell.ground}_v${h32(seed, q, r, 'gv') % NG[cell.ground]}.png`;
+  for (let r = 0; r < ROWS; r++) for (let q = 0; q < COLS; q++)
+    await draw(groundFile(grid.get(hexKey(q, r)), q, r), q, r);
+  for (let r = 0; r < ROWS; r++) for (let q = 0; q < COLS; q++)
+    for (const n of grid.get(hexKey(q, r)).flat) await draw(n, q, r);
+  for (let r = 0; r < ROWS; r++) for (let q = 0; q < COLS; q++)
+    for (const n of grid.get(hexKey(q, r)).over) await draw(n, q, r);
+}
+
+async function regen() {
+  const seed = document.getElementById('seed').value | 0;
+  const cv = document.getElementById('cv');
+  cv.width = Math.ceil(Math.sqrt(3) * R * (COLS + ROWS / 2) + PAD * 2);
+  cv.height = Math.ceil(1.5 * R * ROWS + R + PAD * 5);
+
+  // --- FX overlay sync: match size, capture hex centers in canvas pixels ---
+  // A tile image's hex center lands at (ANCHOR_X, ANCHOR_Y) in source; on
+  // canvas that becomes center(q,r) + (pad, pad*4) (the anchor terms cancel).
+  const fx = document.getElementById('fx');
+  fx.width = cv.width; fx.height = cv.height;
+  window.HEX_SCREEN_R = R;
+
+  MAP.grid = genCity(seed);
+  MAP.seed = seed;
+
+  window.hexCenters = [];
+  for (let r = 0; r < ROWS; r++) for (let q = 0; q < COLS; q++) {
+    const [sx, sy] = centerOf(q, r);
+    window.hexCenters.push({ q, r, x: sx + PAD, y: sy + PAD * 4 });
+  }
+  await paintAll();
+}
+
+// ===================== KHAOS explosion overlay =====================
+// Sprite-sheet metadata mirrors the *.json sidecars in asset/. Sheets live two
+// dirs up (asset/), tiles live here (asset/environment/hex_tiles_v7/).
+const FX_TIERS = {
+  t1_12mm:      { frames: 8,  cols: 8, rows: 1, fps: 20, sizeMul: 1.0 },
+  t2_grenade:   { frames: 12, cols: 8, rows: 2, fps: 20, sizeMul: 1.3 },
+  t3_mortar60:  { frames: 18, cols: 8, rows: 3, fps: 20, sizeMul: 1.7 },
+  t4_shell120:  { frames: 32, cols: 8, rows: 4, fps: 24, sizeMul: 2.3 },
+  t5_aerialbomb:{ frames: 40, cols: 8, rows: 5, fps: 24, sizeMul: 3.0 },
+};
+const FX_SRC = 256;                 // source frame px in the 256 sheets (2026-07-12: settled here + Unsharp Mask sourced from the 512 native render -- see build_tier.py's UNSHARP note. The real complaint was style (soft volumetric smoke vs crisp hex tiles), not pixel count.)
+const VARIANTS = ['', '_v2', '_v3'];
+let selectedTier = 't4_shell120';
+
+const sheetCache = new Map();
+function sheetImg(tier, vsuf) {
+  const kk = tier + vsuf;
+  if (!sheetCache.has(kk)) {
+    const im = new Image();
+    im.src = `../../explosion_khaos_${tier}${vsuf}_256.png`;
+    sheetCache.set(kk, im);
+  }
+  return sheetCache.get(kk);
+}
+// warm the cache so first click is instant
+for (const t of Object.keys(FX_TIERS)) for (const v of VARIANTS) sheetImg(t, v);
+
+// ---- screen shake (④⑤ only, graduated by tier) ----
+// A later, stronger trigger always wins; a later WEAKER trigger never cuts a
+// bigger shake short (e.g. a T4 during an ongoing T5 shake shouldn't visibly
+// calm things down).
+let shakeAmp = 0, shakeStart = 0, shakeDur = 0;
+function triggerShake(amp, dur) {
+  const now = performance.now();
+  const remaining = shakeDur - (now - shakeStart);
+  const currentPower = shakeAmp * Math.max(0, remaining) / Math.max(1, shakeDur);
+  if (amp >= currentPower) { shakeAmp = amp; shakeStart = now; shakeDur = dur; }
+}
+function shakeTick() {
+  const stage = document.getElementById('stage');
+  const now = performance.now();
+  const elapsed = now - shakeStart;
+  if (shakeAmp > 0 && elapsed < shakeDur) {
+    const k = 1 - elapsed / shakeDur;
+    const dx = (Math.random() * 2 - 1) * shakeAmp * k;
+    const dy = (Math.random() * 2 - 1) * shakeAmp * k * 0.6;
+    stage.style.transform = `translate(${dx.toFixed(1)}px,${dy.toFixed(1)}px)`;
+  } else if (stage.style.transform) {
+    stage.style.transform = '';
+  }
+  requestAnimationFrame(shakeTick);
+}
+requestAnimationFrame(shakeTick);
+const SHAKE_BY_TIER = { t4_shell120: { amp: 6, dur: 320 }, t5_aerialbomb: { amp: 14, dur: 600 } };
+
+// ---- building destruction (direct hit, ④⑤ only) ----
+// Buildings are tagged `bldg_s<style>_d<0|1|2>_rot<deg>.png` (3 damage
+// stages, already produced by the generator's own dmgOf() logic). A direct
+// hit bumps the hex's building one damage stage, capped at d2 (already the
+// most-wrecked variant the tileset has -- no further state after that).
+const BLDG_RE = /^bldg_s(\d+)_d(\d+)_rot(\d+)\.png$/;
+function tryDamageBuilding(hex) {
+  if (!hex || !MAP.grid) return false;
+  const cell = MAP.grid.get(hexKey(hex.q, hex.r));
+  if (!cell) return false;
+  for (let i = 0; i < cell.over.length; i++) {
+    const m = cell.over[i].match(BLDG_RE);
+    if (!m) continue;
+    const [, s, dStr, rot] = m;
+    const d = parseInt(dStr, 10);
+    if (d >= 2) return false;
+    cell.over[i] = `bldg_s${s}_d${d + 1}_rot${rot}.png`;
+    return true;
+  }
+  return false;
+}
+
+const explosions = [];
+function detonate(tier, x, y, hex) {
+  const meta = FX_TIERS[tier];
+  const vsuf = VARIANTS[(Math.random() * VARIANTS.length) | 0];
+  explosions.push({
+    img: sheetImg(tier, vsuf), meta,
+    x, y, start: performance.now(),
+    // hex on-screen width ~ sqrt(3)*R; scale the sprite off that
+    size: Math.sqrt(3) * (window.HEX_SCREEN_R || 90) * meta.sizeMul,
+  });
+
+  const shakeCfg = SHAKE_BY_TIER[tier];
+  if (shakeCfg) {
+    triggerShake(shakeCfg.amp, shakeCfg.dur);
+    if (hex) {
+      // let the fireball/smoke cover the hex before the tile swaps under it
+      const collapseDelay = (meta.frames / meta.fps) * 1000 * 0.45;
+      setTimeout(() => { if (tryDamageBuilding(hex)) paintAll(); }, collapseDelay);
+    }
+  }
+}
+
+function fxLoop(now) {
+  const fx = document.getElementById('fx');
+  const g = fx.getContext('2d');
+  g.clearRect(0, 0, fx.width, fx.height);
+  for (let i = explosions.length - 1; i >= 0; i--) {
+    const e = explosions[i];
+    const t = (now - e.start) / 1000;
+    const frame = Math.floor(t * e.meta.fps);
+    if (frame >= e.meta.frames) { explosions.splice(i, 1); continue; }
+    const im = e.img;
+    if (!im.complete || !im.naturalWidth) continue;
+    const col = frame % e.meta.cols, row = (frame / e.meta.cols) | 0;
+    // anchor: horizontal center on hex, burst base a touch below hex center so
+    // tall columns rise upward out of the tile
+    const dx = e.x - e.size / 2;
+    const dy = e.y - e.size * 0.62;
+    g.drawImage(im, col * FX_SRC, row * FX_SRC, FX_SRC, FX_SRC, dx, dy, e.size, e.size);
+  }
+  requestAnimationFrame(fxLoop);
+}
+requestAnimationFrame(fxLoop);
+
+function nearestHex(px, py) {
+  let best = null, bd = 1e9;
+  for (const h of (window.hexCenters || [])) {
+    const d = (h.x - px) ** 2 + (h.y - py) ** 2;
+    if (d < bd) { bd = d; best = h; }
+  }
+  return best;
+}
+
+document.getElementById('fx').addEventListener('click', (ev) => {
+  const fx = ev.currentTarget;
+  const rect = fx.getBoundingClientRect();
+  const px = (ev.clientX - rect.left) * (fx.width / rect.width);
+  const py = (ev.clientY - rect.top) * (fx.height / rect.height);
+  const h = nearestHex(px, py);
+  if (h) detonate(selectedTier, h.x, h.y, h);
+});
+
+document.querySelectorAll('.tierbtn').forEach(b => {
+  b.addEventListener('click', () => {
+    selectedTier = b.dataset.tier;
+    document.querySelectorAll('.tierbtn').forEach(x => x.classList.toggle('active', x === b));
+  });
+});
+
+function barrage(n) {
+  const hs = window.hexCenters || [];
+  const tiers = Object.keys(FX_TIERS);
+  for (let i = 0; i < n; i++) {
+    const h = hs[(Math.random() * hs.length) | 0];
+    const tier = tiers[(Math.random() * tiers.length) | 0];
+    setTimeout(() => h && detonate(tier, h.x, h.y, h), Math.random() * 900);
+  }
+}
+document.getElementById('barrageBtn').addEventListener('click', () => barrage(8));
+
+let autoTimer = null;
+document.getElementById('autoBtn').addEventListener('click', (ev) => {
+  if (autoTimer) {
+    clearInterval(autoTimer); autoTimer = null;
+    ev.currentTarget.classList.remove('on');
+  } else {
+    ev.currentTarget.classList.add('on');
+    autoTimer = setInterval(() => barrage(1), 500);
+  }
+});
+
+regen();
+</script>
+</body>
+</html>

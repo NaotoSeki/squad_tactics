@@ -84,9 +84,9 @@ def main() -> None:
         if cat is None or cat > 17:
             continue
         u = read_rec(cbe, wi)
-        raw = [x for x in (r.get("ammo_indices") or []) if x]
+        slot_indices = [x for x in (r.get("ammo_indices") or []) if x]
         slots = []
-        for ai in raw[:4]:
+        for ai in slot_indices[:4]:
             ar = by.get(ai, {})
             slots.append(
                 {
@@ -97,12 +97,16 @@ def main() -> None:
                 }
             )
 
-        u26 = u[26]
+        # u16[26], like the four regular link slots, is a one-based raw item
+        # ID. Convert before looking it up in zero-based cbeNameIndex tables.
+        u26_raw_item_id = u[26]
+        u26 = u26_raw_item_id - 1 if u26_raw_item_id else None
         u26_link = None
-        if u26:
+        if u26 is not None:
             tr = by.get(u26, {})
             kind = classify_link(names, u26, tr.get("category_code"))
             u26_link = {
+                "rawItemId": u26_raw_item_id,
                 "idx": u26,
                 "name": n(names, u26),
                 "cat": tr.get("category_code"),

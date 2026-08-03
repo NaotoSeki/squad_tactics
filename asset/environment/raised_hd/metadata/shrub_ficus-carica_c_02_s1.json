@@ -1,0 +1,155 @@
+{
+  "schema": "raised-hd-job/v1",
+  "jobId": "shrub_ficus-carica_c_02_s1",
+  "id": "shrub_ficus-carica_c_02",
+  "family": "shrub",
+  "roles": [
+    "stateBody"
+  ],
+  "bodySlot": 1,
+  "pairedShadowSlot": null,
+  "pixelRatio": 2,
+  "lightingContract": "ps-overcast-upper-left-v1",
+  "bodyOrigin": [
+    -19,
+    -12
+  ],
+  "shadowOrigin": null,
+  "references": {
+    "body": "../../../scratch/ps_sprites_canonical_v1/Objects/Plants/shrub_ficus-carica_c_02_s1.png",
+    "shadowCalibration": null,
+    "bodyRole": "numeric canvas/bbox/origin/contact/color calibration",
+    "shadowRole": null,
+    "canonicalPixelsCopied": false
+  },
+  "provenance": {
+    "source": "built-in ImageGen selected output",
+    "sourceCopy": "C:\\Projects\\squad_tactics\\tmp\\raised_hd\\shrub_ficus-carica_c_02_s1_source.png",
+    "sourceSha256": "7fa069a37913a03532ecba596aff31ce80eea2b108bf2ee9f0c50b7aa9cd87f7",
+    "cutout": "C:\\Projects\\squad_tactics\\tmp\\raised_hd\\shrub_ficus-carica_c_02_s1_cutout.png",
+    "cutoutSha256": "a18f00781dc336dd0f096cfcabb77d8ad9723483901edbdf54adfa89176c597e",
+    "cutoutAlphaSha256": "43b9d346af18b88390626833c045e3be05baf5d08cb9500da4c6de7993c4458a",
+    "chromaHelper": "C:\\Users\\aware.梨花のPC\\.codex\\skills\\.system\\imagegen\\scripts\\remove_chroma_key.py"
+  },
+  "outputs": {
+    "body": "body/shrub_ficus-carica_c_02_s1_body_hd_v1.png",
+    "shadow": null,
+    "review": "review/shrub_ficus-carica_c_02_s1_world_review.png",
+    "metadata": "metadata/shrub_ficus-carica_c_02_s1.json"
+  },
+  "body": {
+    "normalization": {
+      "sourceSize": [
+        1536,
+        1024
+      ],
+      "sourceBbox": [
+        82,
+        63,
+        1479,
+        943
+      ],
+      "sourceContact": [
+        799.2,
+        521.6
+      ],
+      "canonicalBbox": [
+        0,
+        0,
+        38,
+        24
+      ],
+      "canonicalContact": [
+        19.0063,
+        12.0
+      ],
+      "targetSize": [
+        76,
+        48
+      ],
+      "targetBbox": [
+        0,
+        0,
+        76,
+        48
+      ],
+      "targetContact": [
+        38.0126,
+        24.0
+      ],
+      "resultBbox": [
+        0,
+        0,
+        74,
+        47
+      ],
+      "resultContact": [
+        38.25,
+        24.0
+      ],
+      "scale": [
+        0.05372493,
+        0.05346985
+      ],
+      "generatedAlphaSha256": "43b9d346af18b88390626833c045e3be05baf5d08cb9500da4c6de7993c4458a",
+      "normalizedAlphaSha256": "a1d68588f779fa6c8b4716005046e6f1af52beae64f4ae30d478880d2175c310",
+      "canonicalAlphaSha256": "44abbc4cf541fab5bb3f164fc1c6f87e5124f95f37910066f56a2f9bc78068b2",
+      "alphaAuthority": "accepted generated cutout",
+      "canonicalAlphaRole": "numeric bbox/contact calibration only"
+    },
+    "quality": {
+      "size": [
+        76,
+        48
+      ],
+      "bbox": [
+        0,
+        0,
+        74,
+        47
+      ],
+      "visiblePixels": 1487,
+      "canonicalVisiblePixels": 2216,
+      "coverageRatio": 0.671029,
+      "contact": [
+        38.25,
+        24.0
+      ],
+      "expectedContact": [
+        38.0126,
+        24.0
+      ],
+      "contactErrorPx": 0.237372,
+      "magentaSpillPixels": 0,
+      "magentaSpillLimit": 2,
+      "canonicalAlphaIdentical": false
+    },
+    "fileSha256": "6c9c709540b02fb1e36b1960e8f5cb195804dc74d12196f3f093b9b4adb95d11",
+    "alphaSha256": "a1d68588f779fa6c8b4716005046e6f1af52beae64f4ae30d478880d2175c310"
+  },
+  "shadow": {
+    "method": "intentionally-shadowless-state",
+    "canonicalShadowPixelsCopied": false
+  },
+  "review": {
+    "file": "C:/Projects/squad_tactics/asset/environment/raised_hd/review/shrub_ficus-carica_c_02_s1_world_review.png",
+    "size": [
+      136,
+      146
+    ],
+    "worldOriginMarker": [
+      68,
+      92
+    ],
+    "shadowVector": [
+      0.72,
+      0.69
+    ],
+    "contactMarkers": {
+      "bodyWorld": [
+        0.25,
+        0.0
+      ]
+    }
+  }
+}

@@ -1,0 +1,155 @@
+{
+  "schema": "raised-hd-job/v1",
+  "jobId": "shrub_taxus-baccata_a_03_s1",
+  "id": "shrub_taxus-baccata_a_03",
+  "family": "shrub",
+  "roles": [
+    "stateBody"
+  ],
+  "bodySlot": 1,
+  "pairedShadowSlot": null,
+  "pixelRatio": 2,
+  "lightingContract": "ps-overcast-upper-left-v1",
+  "bodyOrigin": [
+    -48,
+    -27
+  ],
+  "shadowOrigin": null,
+  "references": {
+    "body": "../../../scratch/ps_sprites_canonical_v1/Objects/Plants/shrub_taxus-baccata_a_03_s1.png",
+    "shadowCalibration": null,
+    "bodyRole": "numeric canvas/bbox/origin/contact/color calibration",
+    "shadowRole": null,
+    "canonicalPixelsCopied": false
+  },
+  "provenance": {
+    "source": "built-in ImageGen selected output",
+    "sourceCopy": "C:\\Projects\\squad_tactics\\tmp\\raised_hd\\shrub_taxus-baccata_a_03_s1_source.png",
+    "sourceSha256": "2f6675f0ce1125a0c215a4896ce513a578770fbbd050e2368a43e99dcab738dd",
+    "cutout": "C:\\Projects\\squad_tactics\\tmp\\raised_hd\\shrub_taxus-baccata_a_03_s1_cutout.png",
+    "cutoutSha256": "335a42feed968c6cf34b0dc1b0e06836b9d00b8eba90d7612b3ff1910eb65ffd",
+    "cutoutAlphaSha256": "ac2fb7c5aba35cf27681cf912154d4dc84d9dd007763fec946efcad1a4abb3b7",
+    "chromaHelper": "C:\\Users\\aware.梨花のPC\\.codex\\skills\\.system\\imagegen\\scripts\\remove_chroma_key.py"
+  },
+  "outputs": {
+    "body": "body/shrub_taxus-baccata_a_03_s1_body_hd_v1.png",
+    "shadow": null,
+    "review": "review/shrub_taxus-baccata_a_03_s1_world_review.png",
+    "metadata": "metadata/shrub_taxus-baccata_a_03_s1.json"
+  },
+  "body": {
+    "normalization": {
+      "sourceSize": [
+        1774,
+        887
+      ],
+      "sourceBbox": [
+        51,
+        43,
+        1635,
+        847
+      ],
+      "sourceContact": [
+        923.5,
+        495.5
+      ],
+      "canonicalBbox": [
+        0,
+        0,
+        88,
+        48
+      ],
+      "canonicalContact": [
+        47.9476,
+        26.4859
+      ],
+      "targetSize": [
+        176,
+        96
+      ],
+      "targetBbox": [
+        0,
+        0,
+        176,
+        96
+      ],
+      "targetContact": [
+        95.8952,
+        52.9718
+      ],
+      "resultBbox": [
+        0,
+        0,
+        174,
+        94
+      ],
+      "resultContact": [
+        96.0,
+        53.0
+      ],
+      "scale": [
+        0.11054959,
+        0.11830635
+      ],
+      "generatedAlphaSha256": "ac2fb7c5aba35cf27681cf912154d4dc84d9dd007763fec946efcad1a4abb3b7",
+      "normalizedAlphaSha256": "f2613d6c737d6d2e257a98944ff72ad4ff39bd80a528977ee013d4b052518f87",
+      "canonicalAlphaSha256": "ccc569f374921b64a136581b71a06734d321a1c8b9bd106f87b12c2f4386e427",
+      "alphaAuthority": "accepted generated cutout",
+      "canonicalAlphaRole": "numeric bbox/contact calibration only"
+    },
+    "quality": {
+      "size": [
+        176,
+        96
+      ],
+      "bbox": [
+        0,
+        0,
+        174,
+        94
+      ],
+      "visiblePixels": 7223,
+      "canonicalVisiblePixels": 6980,
+      "coverageRatio": 1.034814,
+      "contact": [
+        96.0,
+        53.0
+      ],
+      "expectedContact": [
+        95.8952,
+        52.9718
+      ],
+      "contactErrorPx": 0.108572,
+      "magentaSpillPixels": 0,
+      "magentaSpillLimit": 2,
+      "canonicalAlphaIdentical": false
+    },
+    "fileSha256": "3808b9a6ce0f0ed39b7286938e97b44362349717e76b313688076d6ea8eb6f32",
+    "alphaSha256": "f2613d6c737d6d2e257a98944ff72ad4ff39bd80a528977ee013d4b052518f87"
+  },
+  "shadow": {
+    "method": "intentionally-shadowless-state",
+    "canonicalShadowPixelsCopied": false
+  },
+  "review": {
+    "file": "C:/Projects/squad_tactics/asset/environment/raised_hd/review/shrub_taxus-baccata_a_03_s1_world_review.png",
+    "size": [
+      236,
+      194
+    ],
+    "worldOriginMarker": [
+      126,
+      122
+    ],
+    "shadowVector": [
+      0.72,
+      0.69
+    ],
+    "contactMarkers": {
+      "bodyWorld": [
+        0.0,
+        -1.0
+      ]
+    }
+  }
+}

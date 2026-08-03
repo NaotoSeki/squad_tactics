@@ -1,9 +1,20 @@
 /**
  * 戦雲（密集クラスタ）: 同一ヘックス上の重なり＋隣接ヘックス上の兵士を1つの塊として扱う。
  * 兵士数は「同一マス＋隣接マス」にいる全員でカウント。4名で発生、12名付近で最大化。
+ *
+ * 【2026-07-25 一時廃止】window.BATTLE_CLOUD_ENABLED = false。
+ * 戦雲の外周グロー・ヘックス塗りが六角グリッドを画面上で強調しすぎ、PS由来の
+ * 精緻な連続キャンバス（docs/PS_NATIVE_MAP_ASSEMBLER.md）と絵の意図が衝突するため。
+ * computeAll() が描画・ダメージ乗数・AI戦術の共通上流なので、ここ一箇所で系全体を止める。
+ * 復活は true に戻すだけ（他ファイルに条件分岐を撒いていない）。
  */
 (function () {
     'use strict';
+
+    // 一時廃止スイッチ。false = 戦雲の視覚・戦闘補正・AI戦術をすべて無効化。
+    if (typeof window.BATTLE_CLOUD_ENABLED === 'undefined') {
+        window.BATTLE_CLOUD_ENABLED = false;
+    }
 
     const START_COUNT = 4;
     const MAX_COUNT = 12;
@@ -432,7 +443,9 @@
                 return gl._battleCloudClusters;
             }
 
-            if (!units || !units.length) {
+            // 一時廃止中: 空クラスタを返す。下流は全て無害に縮退する
+            // （描画=何も描かない / 各乗数=1.0 / AIは最短経路へフォールバック）。
+            if (!window.BATTLE_CLOUD_ENABLED || !units || !units.length) {
                 if (gl) {
                     gl._battleCloudUnitIntensity = new Map();
                     gl._battleCloudIntruderPressure = new Map();
