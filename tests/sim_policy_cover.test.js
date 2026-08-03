@@ -221,6 +221,13 @@ function runUnderFire(sim) {
   for (let i = 0; i < 30; i++) {
     const cur = sim._soldiers.get('a1');
     visited.push(cur.q + ',' + cur.r);
+    // 検証したいのは「撃たれた時に遮蔽へ移る判断」であって生存率ではない。
+    // 命中モデルをPL正本へ替えて致死性が上がり、退避を決める前に倒れるように
+    // なったので、観測窓の間は生かしておく（2026-08-03）。
+    cur.hp = 100;
+    // HPを戻すだけでは足りない。一度 incap に落ちると state が残り、
+    // _phaseDecide が自己判断ごと飛ばすので退避の判断自体が走らない。
+    if (cur.state === 'incap') cur.state = 'idle';
     if (cur.suppression < SIM_TUNING.PINNED_AT) {
       cur.suppression = (SIM_TUNING.COVER_SEEK_AT + SIM_TUNING.PINNED_AT) / 2;
     }

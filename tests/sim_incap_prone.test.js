@@ -256,7 +256,9 @@ function runBurstTrials(seed, n, proneTarget) {
     shooter.magRemaining = shooter.weapon.magCap;
     sim._resolveBurst(shooter, target, SIM_TUNING);
     for (const ev of sim.drainEvents()) {
-      if (ev.type === 'SHOT' && ev.hit) hits++;
+      // **発単位で数える。** 斉射単位（ev.hit）だと命中率が上がった今は伏せ・立ち
+      // どちらもほぼ100%で飽和し、伏せの補正が見えなくなる（2026-08-03）。
+      if (ev.type === 'SHOT') hits += (ev.hits || 0);
     }
   }
   return hits;
@@ -290,7 +292,7 @@ function runBurstTrials(seed, n, proneTarget) {
     shooter.magRemaining = shooter.weapon.magCap;
     sim._resolveBurst(shooter, target, SIM_TUNING);
     for (const ev of sim.drainEvents()) {
-      if (ev.type === 'SHOT' && ev.hit) hitsMoving++;
+      if (ev.type === 'SHOT') hitsMoving += (ev.hits || 0);
     }
   }
   const map2 = makeGridMap({ coverAt: () => 0.3 });
@@ -307,10 +309,13 @@ function runBurstTrials(seed, n, proneTarget) {
     shooter2.magRemaining = shooter2.weapon.magCap;
     sim2._resolveBurst(shooter2, target2, SIM_TUNING);
     for (const ev of sim2.drainEvents()) {
-      if (ev.type === 'SHOT' && ev.hit) hitsMovingNotProne++;
+      if (ev.type === 'SHOT') hitsMovingNotProne += (ev.hits || 0);
     }
   }
-  check(hitsMoving === hitsMovingNotProne,
+  // 発ごとに乱数を引くようになったので、完全一致は原理的に成立しない（消費する
+  // 乱数列が試行ごとに変わる）。伏せの補正が「掛かっていない」ことを差で見る。
+  const movingDiff = Math.abs(hitsMoving - hitsMovingNotProne) / Math.max(1, hitsMovingNotProne);
+  check(movingDiff < 0.1,
     `移動中は prone でも PHIT_VS_PRONE が効かない (prone=${hitsMoving} 非prone=${hitsMovingNotProne})`);
 }
 

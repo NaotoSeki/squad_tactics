@@ -314,9 +314,22 @@ class UnitView {
                 this._hexMapCache = hexMap;
             }
 
+            // 選択の印は**輪**に一本化した（2026-08-04）。
+            //
+            // postFX.addGlow は1体につきフレームバッファ往復1回で、実測すると
+            // 0体16.7ms / 20体21.3ms / 30体29.0ms / 40体38.7ms。矩形で30人選ぶと
+            // 34fpsまで落ちる（ディレクター報告と一致）。輪ならコンテナ内の
+            // 図形1個ぶんで、人数に比例しても効かない。
+            // 位置と意味は PAUSE 中の〇と揃えてある（足元 y-8）。発光はサイドバーへ
+            // 出ている**主兵1体だけ**に残す — 1体なら実測差は出ない。
+            const primaryUnit = window.gameLogic.selectedUnit;
+            const multiSel = window.gameLogic.selectedUnits;
+            const selIds = (multiSel && multiSel.length)
+                ? new Set(multiSel.map(su => su.id)) : null;
+
             window.gameLogic.units.forEach(u => {
                 if (u.hp <= 0) return;
-                
+
                 try {
                     let visual = this.visuals.get(u.id);
                     if (!visual) {
@@ -335,11 +348,13 @@ class UnitView {
                     const count = siblings.length;
                     this.updateVisual(visual, u, delta, index, count);
 
-                    const isSelected = (window.gameLogic.selectedUnit === u);
+                    const isPrimary = (primaryUnit === u);
+                    const isSelected = isPrimary || (selIds ? selIds.has(u.id) : false);
                     // Yソート: 建物・樹木(TerrainRenderV7が同レイヤへdepth=Y-0.5で配置)との
                     // 前後関係を出す。選択中ユニットは視認性優先で常に最前面
                     visual.container.setDepth(visual.container.y + (isSelected ? 100000 : 0));
-                    if (isSelected) {
+                    this._syncSelectionRing(visual, isSelected, isPrimary);
+                    if (isPrimary) {
                         if (visual.fusionGlowFx && visual.sprite) {
                             visual.sprite.postFX.remove(visual.fusionGlowFx);
                             visual.fusionGlowFx = null;
@@ -637,6 +652,31 @@ class UnitView {
                 visual.skillContainer.setPosition(visual.container.x, skillY);
                 visual.skillContainer.setScale(scaleFactor);
             }
+        }
+    }
+
+    /**
+     * 選択中を示す足元の輪。コンテナの子なので、兵と一緒にYソートされる。
+     *
+     * 主兵（サイドバーに出ている1体）だけ太く描く。PAUSE中のオーバーレイも
+     * 同じ規則で〇を描くので、ポーズしても選択の見え方が変わらない。
+     */
+    _syncSelectionRing(visual, on, isPrimary) {
+        if (!on) {
+            if (visual.selRing) visual.selRing.setVisible(false);
+            return;
+        }
+        if (!visual.selRing) {
+            // 塗りなしの楕円。addAt(_,0) で兵とその影の下へ敷く
+            const ring = this.scene.add.ellipse(2, -8, 21, 8);
+            visual.container.addAt(ring, 0);
+            visual.selRing = ring;
+            visual._selRingPrimary = null;
+        }
+        visual.selRing.setVisible(true);
+        if (visual._selRingPrimary !== isPrimary) {
+            visual.selRing.setStrokeStyle(isPrimary ? 2 : 1.2, 0xffdd44, isPrimary ? 1 : 0.8);
+            visual._selRingPrimary = isPrimary;
         }
     }
 

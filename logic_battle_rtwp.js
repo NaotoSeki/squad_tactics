@@ -389,7 +389,9 @@
 
     const soldiers = this.sim.soldiers();
     ['A', 'B'].forEach((team) => {
-      const leader = soldiers.find((s) => s.team === team && s.isLeader && s.hp > 0);
+      // incap の分隊長は采配しない（倒れた指揮官が指揮を続けない）
+      const leader = soldiers.find((s) => s.team === team && s.isLeader && s.hp > 0
+        && s.state !== 'incap');
       if (!leader) return;
       try {
         const wv = { soldiers: soldiers, map: this.map, tuning: T, tick: this.sim._tick };
@@ -808,6 +810,36 @@
     return false;
   };
 
+  /**
+   * 複数兵へ同じ行動を構える（矩形選択→同一メニュー）。
+   *
+   * メニューは単一選択と**まったく同じ**ものを出す（2026-08-03 ディレクター指示）。
+   * 語彙を増やさず、主語だけが増える形にしてある。対象が要らない行動はその場で
+   * 全員へ適用し、要る行動は1回のクリックで全員へ配る。
+   * @returns {boolean} 実行した（=対象待ちにならなかった）か
+   */
+  RtwpInstance.prototype.armActionForUnits = function (actionId, units) {
+    const SA = resolveDeps().SimActions;
+    const def = SA && SA.get(actionId);
+    const list = (units || []).filter(Boolean);
+    if (!def || !list.length) return false;
+    if (list.length === 1) return this.armAction(actionId, list[0]);
+    if (!def.needs) {
+      this.pendingAction = null;
+      let any = false;
+      for (const u of list) { if (this.runAction(actionId, u, null, null)) any = true; }
+      return any;
+    }
+    this.pendingAction = {
+      id: actionId,
+      unitId: String(list[0].id),
+      unitIds: list.map((u) => String(u.id)),
+    };
+    this._log(def.label + '（' + list.length + '名）: '
+      + (def.needs === 'enemy' ? '対象の敵をクリック' : '地点をクリック'));
+    return false;
+  };
+
   /** その hex に居る生きた敵ユニット（右クリックの目的語判定用）。 */
   RtwpInstance.prototype._enemyAt = function (hex) {
     if (!hex || !this.sim) return null;
@@ -842,6 +874,16 @@
     if (def.needs === 'enemy' && !target) return false;
     if (def.needs === 'hex' && !hex) return false;
     this.pendingAction = null;
+    // 複数選択で構えていたなら、1回のクリックを全員へ配る。
+    // 個々に available() が通らない兵は runAction 側で弾かれるので、ここでは選別しない。
+    if (pending.unitIds && pending.unitIds.length > 1) {
+      let any = false;
+      for (const id of pending.unitIds) {
+        const u = this.unitById.get(id);
+        if (u && u.hp > 0 && this.runAction(pending.id, u, target, hex)) any = true;
+      }
+      return any;
+    }
     return this.runAction(pending.id, unit, target, hex);
   };
 
@@ -923,7 +965,35 @@
    * 所要秒数・射線数のような数字も、tooltip も出さない。命令の意味は名前だけで
    * 伝わるべきで、伝わらないなら名前を直す（2026-08-02「ALT文消せ ださい」）。
    */
-  RtwpInstance.prototype.showSoldierMenu = function (unit, px, py) {
+  /**
+   * 矩形選択された兵へ、単一選択と**同じメニュー**を出す。
+   * 語彙も見た目も変えない — 変わるのは適用先が複数になることだけ。
+   */
+  RtwpInstance.prototype.showSquadSelectionMenu = function (units, px, py) {
+    const list = (units || []).filter((u) => u && u.hp > 0 && u.team === 'player');
+    if (!list.length) return false;
+    return this.showSoldierMenu(this._firstActionable(list), px, py, list);
+  };
+
+  /**
+   * メニューの可否判定を代表する兵を選ぶ。
+   *
+   * 可否は代表1名の文脈で決まるので、矩形の先頭がたまたま行動不能（hp は
+   * 残っているが state='incap'/'rout'）だと**分隊ごとメニューが灰色**になる。
+   * 動ける兵を代表に立てれば、残りの全員へ命令は届く（2026-08-04）。
+   */
+  RtwpInstance.prototype._firstActionable = function (list) {
+    const SA = resolveDeps().SimActions;
+    if (!SA || !list.length) return list[0];
+    for (const u of list) {
+      const ctx = this.actionContext(u, null, null);
+      if (!ctx) continue;
+      if (SA.list(ctx).some((e) => e.ok && e.action.scope === 'self')) return u;
+    }
+    return list[0];
+  };
+
+  RtwpInstance.prototype.showSoldierMenu = function (unit, px, py, units) {
     const SA = resolveDeps().SimActions;
     const menu = (typeof document !== 'undefined') ? document.getElementById('command-menu') : null;
     if (!SA || !menu || !unit) return false;
@@ -932,12 +1002,39 @@
 
     const entries = SA.list(ctx).filter((e) => e.action.scope === 'self');
     if (!entries.length) return false;
+    // 複数選択なら適用先を覚えておく。メニューの中身は単一選択と同一。
+    // gameLogic 側にも置くのは描画のため — 選ばれた兵はここを見て発光する。
+    // 単一選択で開いた時は null が入り、それで前の集合が解ける。
+    const targets = (units && units.length > 1) ? units.slice() : null;
+    this.selectedUnits = targets;
+    if (this.gameLogic) this.gameLogic.selectedUnits = targets;
     this.pendingAction = null;
     if (this._menuHtml == null) this._menuHtml = menu.innerHTML;
 
     const self = this;
     const g = this.gameLogic;
     menu.innerHTML = '';
+
+    // 何人へ命じるのかを見出しに出す。ボタンではないので押せない — 命令の語彙は
+    // 単一選択と同じままで、主語だけが明示される。
+    //
+    // 全部の行動が塞がっている時は**その理由**も出す。hp が残っているのに
+    // 何も押せないと理由が分からない（2026-08-04 ディレクター指摘）。理由は
+    // sim_actions.js が返す文言をそのまま使う（行動不能／敗走中／弾切れ…）。
+    const dead = entries.every(function (e) { return !e.ok; });
+    const why = dead ? (entries.find(function (e) { return e.reason; }) || {}).reason : '';
+    if (targets || why) {
+      const head = document.createElement('div');
+      head.className = 'cmd-head';
+      head.style.cssText = 'padding:2px 4px 5px; margin-bottom:4px;'
+        + ' border-bottom:1px solid rgba(255,255,255,0.15); text-align:center;'
+        + ' color:' + (why ? '#c66' : 'var(--accent)') + ';'
+        + " font-family:'Share Tech Mono', monospace;"
+        + ' font-size:11px; letter-spacing:1px;';
+      head.textContent = [targets ? targets.length + '人を選択' : '', why]
+        .filter(Boolean).join(' — ');
+      menu.appendChild(head);
+    }
 
     entries.forEach(function (entry) {
       const def = entry.action;
@@ -946,7 +1043,8 @@
       btn.textContent = def.label;
       if (entry.ok) {
         btn.onclick = function () {
-          self.armAction(def.id, unit);
+          if (targets) self.armActionForUnits(def.id, targets);
+          else self.armAction(def.id, unit);
           if (g && g.ui && g.ui.hideActionMenu) g.ui.hideActionMenu();
         };
       }
@@ -964,9 +1062,15 @@
     };
     menu.appendChild(cancel);
 
-    menu.style.left = (px + 20) + 'px';
-    menu.style.top = (py - 50) + 'px';
+    // 先に表示してから置く — display:none のままでは寸法が測れず、画面端で
+    // 押し戻すべき量が分からない
     menu.style.display = 'block';
+    if (typeof window !== 'undefined' && window.RtwpBattle && window.RtwpBattle.placeMenu) {
+      window.RtwpBattle.placeMenu(menu, px, py);
+    } else {
+      menu.style.left = (px + 20) + 'px';
+      menu.style.top = (py - 50) + 'px';
+    }
     return true;
   };
 
@@ -994,6 +1098,7 @@
     if (!g || this._uiInstalled) return;
     this._orig = {
       handleClick: g.handleClick,
+      handleMarqueeSelect: g.handleMarqueeSelect,
       handleRightClick: g.handleRightClick,
       actionAttack: g.actionAttack,
       onUnitClick: g.onUnitClick,
@@ -1012,6 +1117,19 @@
     if (g.ui && typeof g.ui.showActionMenu === 'function' && resolveDeps().SimActions) {
       g.ui.showActionMenu = function (u, px, py) { self.showSoldierMenu(u, px, py); };
     }
+
+    // 矩形選択（左ドラッグ）。単一選択と同じメニューを、選んだ全員へ向けて開く。
+    // 1人しか掴めなかった時は従来の単体選択とまったく同じ経路へ落とす。
+    g.handleMarqueeSelect = function (units, px, py) {
+      const list = (units || []).filter((u) => u && u.hp > 0 && u.team === 'player');
+      if (!list.length) { if (g.clearSelection) g.clearSelection(); return; }
+      // 主兵はメニューの可否を代表する兵と揃える（サイドバーもこの兵を出す）
+      g.selectedUnit = self._firstActionable(list);
+      self.selectedUnits = list.length > 1 ? list.slice() : null;
+      g.selectedUnits = self.selectedUnits;   // 選択表示用（phaser_unit.js の輪が読む）
+      if (g.updateSidebar) g.updateSidebar();
+      self.showSquadSelectionMenu(list, px, py);
+    };
 
     // 左クリック = 選んだ行動の対象を指す。行き先を左で確定できないと、メニューで
     // 「移動」を選んだ後に何をすればよいか分からない（2026-08-02 ディレクター指摘）。
@@ -1166,6 +1284,8 @@
     if (g && this._orig) {
       if (this._orig.handleClick) g.handleClick = this._orig.handleClick;
       else delete g.handleClick;
+      if (this._orig.handleMarqueeSelect) g.handleMarqueeSelect = this._orig.handleMarqueeSelect;
+      else delete g.handleMarqueeSelect;
       if (this._orig.handleRightClick) g.handleRightClick = this._orig.handleRightClick;
       else delete g.handleRightClick;
       if (this._orig.actionAttack) g.actionAttack = this._orig.actionAttack;
@@ -1296,6 +1416,50 @@
     active: false,
     instance: null,
     fixedSeed: null,
+
+    /**
+     * メニューを画面内へ収めて置く。
+     *
+     * 画面下端・右端の近くで開くと枠外へはみ出て選べなくなる（2026-08-04
+     * ディレクター指摘）。logic_ui.js には「簡易的な画面端チェック (もし必要なら)」
+     * とコメントだけが残っていた箇所で、3つのメニューが同じ穴を持っていたので
+     * ここに1本化する。
+     *
+     * **寸法は display:block にした後でないと測れない**ので、呼ぶ側は表示を
+     * 先に済ませること。
+     *
+     * @param {HTMLElement} el 表示済みのメニュー
+     * @param {number} px クリックした画面座標
+     * @param {number} py
+     * @param {{dx?:number, dy?:number, margin?:number}} [opts] 既定のずらし量と画面端の余白
+     * @returns {{left:number, top:number}|null} 実際に置いた位置
+     */
+    placeMenu(el, px, py, opts) {
+      if (!el) return null;
+      const o = opts || {};
+      const dx = (o.dx != null) ? o.dx : 20;
+      const dy = (o.dy != null) ? o.dy : -50;
+      const m = (o.margin != null) ? o.margin : 8;
+      const vw = (typeof window !== 'undefined' && window.innerWidth) || 0;
+      const vh = (typeof window !== 'undefined' && window.innerHeight) || 0;
+      const w = el.offsetWidth || 0;
+      const h = el.offsetHeight || 0;
+      let left = px + dx;
+      let top = py + dy;
+      if (vw && w) {
+        // 右に入らなければカーソルの反対側へ返す。それでも入らない狭さなら端に寄せる
+        if (left + w > vw - m) left = px - dx - w;
+        if (left < m) left = m;
+        if (left + w > vw - m) left = Math.max(m, vw - m - w);
+      }
+      if (vh && h) {
+        if (top + h > vh - m) top = vh - m - h;
+        if (top < m) top = m;
+      }
+      el.style.left = Math.round(left) + 'px';
+      el.style.top = Math.round(top) + 'px';
+      return { left: left, top: top };
+    },
 
     /**
      * この起動でRTwPが走る見込みか。`active` は初回 MainScene.update の attach まで

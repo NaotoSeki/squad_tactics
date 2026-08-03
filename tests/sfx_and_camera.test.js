@@ -173,13 +173,17 @@ const { validHexExtent } = require(path.join(ROOT, 'sim_battle_adapter.js'));
   ['thompson', 'bar', 'm1911', 'mg42'].forEach((code) => {
     check(Sfx.groupFor(code) === null, code + ' は M1 の音を使わない');
   });
-  check(Sfx.pickVariant('thompson') === null, '未登録の武器では null（合成音へフォールバック）');
+  // 'thompson' は群名ではない（群は thompson_auto/burst/single）。
+  check(Sfx.pickVariant('thompson') === null, '群名でないキーでは null');
   check(Sfx.soundIdForWeapon({ code: 'm1', class: 'rifle' }) === 'm1',
     'M1は自身の実録音へ解決される');
   check(Sfx.soundIdForWeapon({ code: 'pl_8', class: 'rifle' }) === 'm1',
     '個別音源が無い本編rifleも製品ビュー基準のM1実録音へ解決される');
-  check(Sfx.soundIdForWeapon({ code: 'thompson', class: 'smg' }) === 'thompson',
-    'SMGをrifle実録音へ誤分類しない');
+  // 2026-08-03: Thompson実録を採用。SMGはM1(rifle)ではなくThompson群へ解決される。
+  check(Sfx.soundIdForWeapon({ code: 'thompson', class: 'smg' }) === 'thompson_single',
+    'SMGをrifle実録音へ誤分類せずThompson実録へ解決される');
+  check(Sfx.soundIdForWeapon({ code: 'thompson', class: 'smg', burstSize: 3 }, 'suppress')
+    === 'thompson_auto', 'SMGの制圧射撃はThompson auto実録へ解決される');
   check(Sfx.soundIdForWeapon({ code: 'mg42', class: 'mg' }) === 'mg42_single',
     'MG42の単発設定はsingle実録へ解決される');
   check(Sfx.soundIdForWeapon({ code: 'mg42', class: 'mg', burstSize: 10 }, 'aimed') === 'mg42_burst',
@@ -190,8 +194,13 @@ const { validHexExtent } = require(path.join(ROOT, 'sim_battle_adapter.js'));
     '旧ActionのWPNS形（burst）でもMG42 Burst実録へ解決される');
   check(Sfx.soundIdForWeapon({ code: 'mg42', burst: 10 }, 'suppress') === 'mg42_auto',
     '旧Actionの制圧射撃でもMG42 Auto実録へ解決される');
-  check(Sfx.soundIdForWeapon({ code: 'bar', class: 'mg', burstSize: 10 }, 'suppress') === 'bar',
-    '別の機関銃へMG42実録音を誤流用しない');
+  // 2026-08-03: 個別音源の無い小火器は StG44 実録が既定になった。MG42 の音を
+  // 別の機関銃へ流用しないこと自体は変わらない（既定へ落ちるのが正しい）。
+  check(Sfx.soundIdForWeapon({ code: 'bar', class: 'mg', burstSize: 10 }, 'suppress')
+    === 'stg44_auto', '別の機関銃へMG42実録音を誤流用しない（既定のStG44へ落ちる）');
+  // 砲・ロケット・部品は銃声を鳴らさない（弾種が違う / そもそも発砲しない）
+  check(Sfx.soundIdForWeapon({ code: 'kwk', class: 'at' }, 'aimed') === 'kwk',
+    '戦車砲に小銃の実録音を当てない');
   check(Sfx.soundIdForWeapon({ code: 'k98_scope', class: 'sniper', burstSize: 1 }) === 'k98_scope',
     'Kar98Kは明示マッピング経由で実録群へ解決される');
 }

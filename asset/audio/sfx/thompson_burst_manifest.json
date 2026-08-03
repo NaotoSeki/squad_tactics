@@ -1,0 +1,128 @@
+{
+  "input_file": "asset\\audio\\GUNAuto_SMG-Thompson M1928A1 Burst 50m_B00M_WW2FC_Ambix.wav",
+  "input_channel": 0,
+  "input_mono_mode": "channel",
+  "input_sr": 96000,
+  "input_duration_sec": 52.45364583333333,
+  "output_sr": 48000,
+  "parameters": {
+    "frame_ms": 5.0,
+    "hop_ms": 1.0,
+    "floor_pct": 20.0,
+    "onset_db": 18.0,
+    "min_gap_ms": 300.0,
+    "pre_ms": 5.0,
+    "decay_db": -45.0,
+    "decay_hold_ms": 30.0,
+    "max_len_ms": 2500.0,
+    "fade_in_ms": 1.0,
+    "fade_out_ms": 15.0,
+    "peak_db": -1.0,
+    "rate_out": 48000,
+    "min_len_ms": 120.0,
+    "min_peak_db": -30.0
+  },
+  "num_detected": 16,
+  "num_accepted": 8,
+  "rejected": {
+    "short_or_low_peak": 8
+  },
+  "shots": [
+    {
+      "file": "thompson_burst_01.wav",
+      "start_sec": 0.207,
+      "duration_sec": 1.4350104166666666,
+      "duration_sec_resampled": 1.4350208333333334,
+      "peak_dbfs_before_norm": -2.8304386138916016,
+      "rms_dbfs_before_norm": -34.09236145019531,
+      "peak_dbfs_after_norm": -1.0,
+      "sample_rate_input": 96000,
+      "sample_rate_output": 48000,
+      "num_samples_output": 68881
+    },
+    {
+      "file": "thompson_burst_02.wav",
+      "start_sec": 6.921,
+      "duration_sec": 1.5800104166666666,
+      "duration_sec_resampled": 1.5800208333333334,
+      "peak_dbfs_before_norm": -2.709451675415039,
+      "rms_dbfs_before_norm": -32.6985969543457,
+      "peak_dbfs_after_norm": -1.0,
+      "sample_rate_input": 96000,
+      "sample_rate_output": 48000,
+      "num_samples_output": 75841
+    },
+    {
+      "file": "thompson_burst_03.wav",
+      "start_sec": 13.634,
+      "duration_sec": 1.5540104166666666,
+      "duration_sec_resampled": 1.5540208333333334,
+      "peak_dbfs_before_norm": -3.0641918182373047,
+      "rms_dbfs_before_norm": -32.214698791503906,
+      "peak_dbfs_after_norm": -1.0,
+      "sample_rate_input": 96000,
+      "sample_rate_output": 48000,
+      "num_samples_output": 74593
+    },
+    {
+      "file": "thompson_burst_04.wav",
+      "start_sec": 20.375,
+      "duration_sec": 1.6330104166666666,
+      "duration_sec_resampled": 1.6330208333333334,
+      "peak_dbfs_before_norm": -2.358522653579712,
+      "rms_dbfs_before_norm": -31.587488174438477,
+      "peak_dbfs_after_norm": -1.0,
+      "sample_rate_input": 96000,
+      "sample_rate_output": 48000,
+      "num_samples_output": 78385
+    },
+    {
+      "file": "thompson_burst_05.wav",
+      "start_sec": 27.207,
+      "duration_sec": 1.3650104166666666,
+      "duration_sec_resampled": 1.3650208333333333,
+      "peak_dbfs_before_norm": -3.516521692276001,
+      "rms_dbfs_before_norm": -33.4582633972168,
+      "peak_dbfs_after_norm": -1.0,
+      "sample_rate_input": 96000,
+      "sample_rate_output": 48000,
+      "num_samples_output": 65521
+    },
+    {
+      "file": "thompson_burst_06.wav",
+      "start_sec": 33.89,
+      "duration_sec": 1.5380104166666666,
+      "duration_sec_resampled": 1.5380208333333334,
+      "peak_dbfs_before_norm": -2.6593027114868164,
+      "rms_dbfs_before_norm": -33.64219284057617,
+      "peak_dbfs_after_norm": -1.0,
+      "sample_rate_input": 96000,
+      "sample_rate_output": 48000,
+      "num_samples_output": 73825
+    },
+    {
+      "file": "thompson_burst_07.wav",
+      "start_sec": 40.652,
+      "duration_sec": 1.5850104166666668,
+      "duration_sec_resampled": 1.5850208333333333,
+      "peak_dbfs_before_norm": -2.658564567565918,
+      "rms_dbfs_before_norm": -32.1065673828125,
+      "peak_dbfs_after_norm": -1.0,
+      "sample_rate_input": 96000,
+      "sample_rate_output": 48000,
+      "num_samples_output": 76081
+    },
+    {
+      "file": "thompson_burst_08.wav",
+      "start_sec": 47.457,
+      "duration_sec": 1.5210104166666667,
+      "duration_sec_resampled": 1.5210208333333333,
+      "peak_dbfs_before_norm": -3.6329734325408936,
+      "rms_dbfs_before_norm": -33.675411224365234,
+      "peak_dbfs_after_norm": -1.0,
+      "sample_rate_input": 96000,
+      "sample_rate_output": 48000,
+      "num_samples_output": 73009
+    }
+  ]
+}

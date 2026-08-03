@@ -1482,6 +1482,9 @@ window.BattleLogic = class BattleLogic {
 
   onUnitClick(u) {
     if (this.state !== 'PLAY' && this.state !== 'ANIM') return;
+    // 誰か1人を選び直した時点で矩形選択は解ける（味方の場合は続く
+    // showActionMenu が同じ値を入れ直す）
+    this.selectedUnits = null;
     if (u.team === 'player') {
       if (this.interactionMode !== 'SELECT') { this.setMode('SELECT'); }
       this.selectedUnit = u;
@@ -1659,6 +1662,7 @@ window.BattleLogic = class BattleLogic {
 
   clearSelection() {
     this.selectedUnit = null;
+    this.selectedUnits = null;   // 矩形選択の集合。足元の輪の解除もこれが正
     this.reachableHexes = [];
     this.marchReachableHexes = [];
     this.attackLine = [];

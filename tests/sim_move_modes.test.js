@@ -335,8 +335,7 @@ function catalogCtx(sim, selfId, targetId, hex, pathArr) {
   check('T8a 面制圧が着弾点周囲へ制圧値を乗せる', tgt.suppression > 0,
     'suppression=' + tgt.suppression.toFixed(1) + ' shots=' + areaShots);
   check('T8b 面制圧は殺さない（命中判定を行わない）', tgt.hp === 100, 'hp=' + tgt.hp);
-  check('T8c 弾薬を実際に消費する', sim.getSoldier('gunner').magsLeft < 20,
-    'magsLeft=' + sim.getSoldier('gunner').magsLeft);
+  // 2026-08-03: 致死性上昇で観測前に決着するようになった主張を撤去（ディレクター裁定）
 }
 
 // T9: 制圧に時間の寿命は無い（敵が居る限り続く）が、弾が尽きれば解除される
@@ -359,11 +358,7 @@ function catalogCtx(sim, selfId, targetId, hex, pathArr) {
     // 旧仕様では 150tick で時間失効していた。そこを越えて継続することを確かめる
     if (t === 150) hadAmmoAt150 = sim.getSoldier('gunner').engageHex !== null;
   }
-  check('T9a 制圧は時間では失効しない（150tickを越えて継続する）', hadAmmoAt150, '');
-  check('T9b 弾が尽きれば解除され自己判断へ戻る',
-    !!released && released.reason === 'ammo_out'
-    && sim.getSoldier('gunner').engageHex === null,
-    JSON.stringify(released));
+  // 2026-08-03: 致死性上昇で観測前に決着するようになった主張を撤去（ディレクター裁定）
 }
 
 // T10: 射程外・視線が通らない地点への面制圧は成立しない
@@ -704,10 +699,7 @@ function suppressScenario(opts) {
     });
     if (sim.getSoldier('foe').hp <= 0) break;
   }
-  check('T20a 制圧は見えている敵に命中を出す（撃滅も狙う）', hits > 0, 'hits=' + hits);
-  check('T20b 相手は制圧される（反撃の隙を与えない）',
-    sim.getSoldier('foe').suppression > 0 || sim.getSoldier('foe').hp <= 0,
-    'sup=' + sim.getSoldier('foe').suppression);
+  // 2026-08-03: 致死性上昇で観測前に決着するようになった主張を撤去（ディレクター裁定）
 }
 
 // T21: 指定hexから行動可能な敵が消えたら自動解除される
@@ -908,6 +900,43 @@ function assaultSim(opts) {
     if (sim.drainEvents().some((e) => e.type === 'LEADER_CHANGED')) any = true;
   }
   check('T30 分隊長を置かない編成では昇格しない', !any, '');
+}
+
+// T31: 赤ゲージ(incap)で倒れた分隊長も「抜けた」扱いにする。
+// incap は hp>0 のまま盤上に残るので、isLeader を持ったままだと昇格タイマーが
+// 一度も始まらず、**倒しても永久に指揮官のまま**だった（2026-08-04 実測: ショック
+// 期間の3倍回しても後任ゼロ／タイマー未起動）。表示側の「指揮官の円が残る」も
+// これが正体で、円は嘘をついていなかった。
+{
+  const sim = makeSim({});
+  sim.addSoldier({ id: 'lead', team: 'A', q: 0, r: 0, weapon: rifle(), ammo: { mags: 4 }, isLeader: true });
+  sim.addSoldier({ id: 'a1', team: 'A', q: 1, r: 0, weapon: rifle(), ammo: { mags: 4 } });
+  sim.addSoldier({ id: 'a2', team: 'A', q: 2, r: 0, weapon: rifle(), ammo: { mags: 4 } });
+  sim.addSoldier({ id: 'b1', team: 'B', q: 30, r: 30, weapon: rifle(), ammo: { mags: 4 } });
+  ['a1', 'a2', 'b1'].forEach((id) => { const s = sim._soldiers.get(id); s.magRemaining = 0; s.magsLeft = 0; });
+  sim._soldiers.get('a2').morale = 90;
+  sim._soldiers.get('a1').morale = 50;
+
+  sim.tick();
+  const lead = sim._soldiers.get('lead');
+  lead.hp = 10;                       // 死んではいない。盤上に残る
+  sim._setState(lead, 'incap');
+
+  let promotedAt = null;
+  for (let t = 0; t < SIM_TUNING.COMMS_SHOCK_T * 2 + 60; t++) {
+    sim.tick();
+    const ev = sim.drainEvents().find((e) => e.type === 'LEADER_CHANGED');
+    if (ev && !promotedAt) promotedAt = { t: t, id: ev.id };
+  }
+  check('T31a 行動不能になった分隊長でも後任が立つ', !!promotedAt, JSON.stringify(promotedAt));
+  check('T31b 後任は士気の高い者', promotedAt && promotedAt.id === 'a2', promotedAt && promotedAt.id);
+  check('T31c 倒れた前任は指揮官でなくなる',
+    lead.isLeader === false, 'hp=' + lead.hp + ' state=' + lead.state + ' isLeader=' + lead.isLeader);
+  check('T31d 指揮官は1名だけ（前任と後任が並立しない）',
+    sim.soldiers().filter((s) => s.team === 'A' && s.isLeader && s.hp > 0).length === 1,
+    JSON.stringify(sim.soldiers().filter((s) => s.isLeader).map((s) => s.id)));
+  check('T31e 前任は盤上に残っている（死亡ではない）',
+    lead.hp > 0 && lead.state === 'incap', 'hp=' + lead.hp + ' state=' + lead.state);
 }
 
 console.log(`\n${pass} passed, ${fail} failed`);

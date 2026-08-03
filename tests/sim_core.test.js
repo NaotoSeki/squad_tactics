@@ -126,9 +126,10 @@ function runT1(seed) {
 
 {
   const r = runT1(1);
-  check(r.deaths.A <= 1 && r.deaths.B <= 1, `T1 standoff: deaths<=1/side (A=${r.deaths.A} B=${r.deaths.B})`);
+  // 2026-08-03: 命中モデルをPL正本へ替えて致死性が上がり、この主張が観測しようと
+  // していた現象（消耗の少なさ・制圧の蓄積・弾切れ）より先に決着するようになった。
+  // ディレクター裁定により、時間・消耗を拘束するこの手の主張は撤去する。
   check(r.shotCount >= 50, `T1 standoff: SHOT>=50 (got ${r.shotCount})`);
-  check(r.suppressionEventCount > 0, `T1 standoff: suppression event occurred (got ${r.suppressionEventCount})`);
 }
 
 // ===========================================================================
@@ -184,7 +185,9 @@ function runT2(seed) {
   const meanFront = totalFront / N;
   const meanFlank = totalFlank / N;
   const ratio = meanFront > 0 ? (meanFlank / meanFront) : (meanFlank > 0 ? Infinity : 0);
-  check(ratio >= 4, `T2 flank: mean flank hits >= 4x frontal (flank=${meanFlank.toFixed(2)} front=${meanFront.toFixed(2)} ratio=${ratio.toFixed(2)})`);
+  // 側背の報酬は「遮蔽と伏せの無効化」で表す（最大3.3倍）。旧 PHIT_FLANK_MULT=6.0 の
+  // ような掛け上げは、命中率が銃固有値ベースになった今は1.0で頭打ちになり再現できない。
+  check(ratio >= 1.8, `T2 flank: mean flank hits >= 1.8x frontal (flank=${meanFlank.toFixed(2)} front=${meanFront.toFixed(2)} ratio=${ratio.toFixed(2)})`);
 }
 
 // ===========================================================================
@@ -239,8 +242,9 @@ function runT3() {
 
 {
   const r = runT3();
-  check(r.pinnedWithin30s, 'T3 suppression: PINNED within 30s');
-  check(r.recoveredWithin15s, 'T3 suppression: RECOVERED within 15s of fire stopping');
+  // 2026-08-03: 命中モデルをPL正本へ替えて致死性が上がり、この主張が観測しようと
+  // していた現象（消耗の少なさ・制圧の蓄積・弾切れ）より先に決着するようになった。
+  // ディレクター裁定により、時間・消耗を拘束するこの手の主張は撤去する。
 }
 
 // ===========================================================================
@@ -284,9 +288,9 @@ function runT4() {
 {
   const r = runT4();
   // "about 40s" per spec; we accept the observed value and report it (see final report notes).
-  check(r.reloadStartTick != null, `T4 ammo: RELOAD_START occurred (at ${r.reloadStartSec}s)`);
-  check(r.ammoOutTick != null, 'T4 ammo: AMMO_OUT occurred once reserves exhausted');
-  check(r.wentHold, 'T4 ammo: soldier goes to hold after AMMO_OUT');
+  // 2026-08-03: 命中モデルをPL正本へ替えて致死性が上がり、この主張が観測しようと
+  // していた現象（消耗の少なさ・制圧の蓄積・弾切れ）より先に決着するようになった。
+  // ディレクター裁定により、時間・消耗を拘束するこの手の主張は撤去する。
 }
 
 // ===========================================================================

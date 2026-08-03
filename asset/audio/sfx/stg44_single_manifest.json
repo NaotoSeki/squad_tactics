@@ -1,0 +1,152 @@
+{
+  "input_file": "asset\\audio\\GUNAuto_AR-StG 44 Single Shot 50m_B00M_WW2FC_Ambix.wav",
+  "input_channel": 0,
+  "input_mono_mode": "channel",
+  "input_sr": 96000,
+  "input_duration_sec": 65.89114583333334,
+  "output_sr": 48000,
+  "parameters": {
+    "frame_ms": 5.0,
+    "hop_ms": 1.0,
+    "floor_pct": 20.0,
+    "onset_db": 18.0,
+    "min_gap_ms": 300.0,
+    "pre_ms": 5.0,
+    "decay_db": -45.0,
+    "decay_hold_ms": 30.0,
+    "max_len_ms": 2500.0,
+    "fade_in_ms": 1.0,
+    "fade_out_ms": 15.0,
+    "peak_db": -1.0,
+    "rate_out": 48000,
+    "min_len_ms": 120.0,
+    "min_peak_db": -30.0
+  },
+  "num_detected": 18,
+  "num_accepted": 10,
+  "rejected": {
+    "short_or_low_peak": 8
+  },
+  "shots": [
+    {
+      "file": "stg44_single_01.wav",
+      "start_sec": 0.145,
+      "duration_sec": 1.8180104166666666,
+      "duration_sec_resampled": 1.8180208333333334,
+      "peak_dbfs_before_norm": -2.5186476707458496,
+      "rms_dbfs_before_norm": -30.589075088500977,
+      "peak_dbfs_after_norm": -1.0,
+      "sample_rate_input": 96000,
+      "sample_rate_output": 48000,
+      "num_samples_output": 87265
+    },
+    {
+      "file": "stg44_single_02.wav",
+      "start_sec": 6.895,
+      "duration_sec": 1.7960104166666666,
+      "duration_sec_resampled": 1.7960208333333334,
+      "peak_dbfs_before_norm": -2.8502588272094727,
+      "rms_dbfs_before_norm": -30.637928009033203,
+      "peak_dbfs_after_norm": -1.0,
+      "sample_rate_input": 96000,
+      "sample_rate_output": 48000,
+      "num_samples_output": 86209
+    },
+    {
+      "file": "stg44_single_03.wav",
+      "start_sec": 13.645,
+      "duration_sec": 1.6080104166666667,
+      "duration_sec_resampled": 1.6080208333333332,
+      "peak_dbfs_before_norm": -2.805643081665039,
+      "rms_dbfs_before_norm": -30.189464569091797,
+      "peak_dbfs_after_norm": -1.0,
+      "sample_rate_input": 96000,
+      "sample_rate_output": 48000,
+      "num_samples_output": 77185
+    },
+    {
+      "file": "stg44_single_04.wav",
+      "start_sec": 20.395,
+      "duration_sec": 1.6320104166666667,
+      "duration_sec_resampled": 1.6320208333333333,
+      "peak_dbfs_before_norm": -2.8901467323303223,
+      "rms_dbfs_before_norm": -29.81702423095703,
+      "peak_dbfs_after_norm": -1.0,
+      "sample_rate_input": 96000,
+      "sample_rate_output": 48000,
+      "num_samples_output": 78337
+    },
+    {
+      "file": "stg44_single_05.wav",
+      "start_sec": 27.067,
+      "duration_sec": 1.7080104166666668,
+      "duration_sec_resampled": 1.7080208333333333,
+      "peak_dbfs_before_norm": -2.802952527999878,
+      "rms_dbfs_before_norm": -30.330732345581055,
+      "peak_dbfs_after_norm": -1.0,
+      "sample_rate_input": 96000,
+      "sample_rate_output": 48000,
+      "num_samples_output": 81985
+    },
+    {
+      "file": "stg44_single_06.wav",
+      "start_sec": 33.894,
+      "duration_sec": 1.6360104166666667,
+      "duration_sec_resampled": 1.6360208333333333,
+      "peak_dbfs_before_norm": -3.0745482444763184,
+      "rms_dbfs_before_norm": -30.07707405090332,
+      "peak_dbfs_after_norm": -1.0,
+      "sample_rate_input": 96000,
+      "sample_rate_output": 48000,
+      "num_samples_output": 78529
+    },
+    {
+      "file": "stg44_single_07.wav",
+      "start_sec": 40.645,
+      "duration_sec": 1.6290104166666666,
+      "duration_sec_resampled": 1.6290208333333334,
+      "peak_dbfs_before_norm": -3.21073579788208,
+      "rms_dbfs_before_norm": -29.97614097595215,
+      "peak_dbfs_after_norm": -1.0,
+      "sample_rate_input": 96000,
+      "sample_rate_output": 48000,
+      "num_samples_output": 78193
+    },
+    {
+      "file": "stg44_single_08.wav",
+      "start_sec": 47.394,
+      "duration_sec": 1.6370104166666666,
+      "duration_sec_resampled": 1.6370208333333334,
+      "peak_dbfs_before_norm": -3.021113634109497,
+      "rms_dbfs_before_norm": -30.139225006103516,
+      "peak_dbfs_after_norm": -1.0,
+      "sample_rate_input": 96000,
+      "sample_rate_output": 48000,
+      "num_samples_output": 78577
+    },
+    {
+      "file": "stg44_single_09.wav",
+      "start_sec": 54.144,
+      "duration_sec": 1.5560104166666666,
+      "duration_sec_resampled": 1.5560208333333334,
+      "peak_dbfs_before_norm": -3.027790069580078,
+      "rms_dbfs_before_norm": -29.834774017333984,
+      "peak_dbfs_after_norm": -1.0,
+      "sample_rate_input": 96000,
+      "sample_rate_output": 48000,
+      "num_samples_output": 74689
+    },
+    {
+      "file": "stg44_single_10.wav",
+      "start_sec": 60.895,
+      "duration_sec": 1.5960104166666667,
+      "duration_sec_resampled": 1.5960208333333334,
+      "peak_dbfs_before_norm": -1.8529200553894043,
+      "rms_dbfs_before_norm": -30.018253326416016,
+      "peak_dbfs_after_norm": -1.0,
+      "sample_rate_input": 96000,
+      "sample_rate_output": 48000,
+      "num_samples_output": 76609
+    }
+  ]
+}

@@ -1,0 +1,152 @@
+{
+  "input_file": "asset\\audio\\GUNAuto_SMG-Thompson M1928A1 Single Shot 50m_B00M_WW2FC_Ambix.wav",
+  "input_channel": 0,
+  "input_mono_mode": "channel",
+  "input_sr": 96000,
+  "input_duration_sec": 65.95364583333334,
+  "output_sr": 48000,
+  "parameters": {
+    "frame_ms": 5.0,
+    "hop_ms": 1.0,
+    "floor_pct": 20.0,
+    "onset_db": 18.0,
+    "min_gap_ms": 300.0,
+    "pre_ms": 5.0,
+    "decay_db": -45.0,
+    "decay_hold_ms": 30.0,
+    "max_len_ms": 2500.0,
+    "fade_in_ms": 1.0,
+    "fade_out_ms": 15.0,
+    "peak_db": -1.0,
+    "rate_out": 48000,
+    "min_len_ms": 120.0,
+    "min_peak_db": -30.0
+  },
+  "num_detected": 21,
+  "num_accepted": 10,
+  "rejected": {
+    "short_or_low_peak": 11
+  },
+  "shots": [
+    {
+      "file": "thompson_single_01.wav",
+      "start_sec": 0.208,
+      "duration_sec": 1.3310104166666668,
+      "duration_sec_resampled": 1.3310208333333333,
+      "peak_dbfs_before_norm": -1.6242787837982178,
+      "rms_dbfs_before_norm": -33.98899459838867,
+      "peak_dbfs_after_norm": -1.0,
+      "sample_rate_input": 96000,
+      "sample_rate_output": 48000,
+      "num_samples_output": 63889
+    },
+    {
+      "file": "thompson_single_02.wav",
+      "start_sec": 6.957,
+      "duration_sec": 1.3690104166666666,
+      "duration_sec_resampled": 1.3690208333333334,
+      "peak_dbfs_before_norm": -2.0636448860168457,
+      "rms_dbfs_before_norm": -34.552520751953125,
+      "peak_dbfs_after_norm": -1.0,
+      "sample_rate_input": 96000,
+      "sample_rate_output": 48000,
+      "num_samples_output": 65713
+    },
+    {
+      "file": "thompson_single_03.wav",
+      "start_sec": 13.668,
+      "duration_sec": 1.2230104166666667,
+      "duration_sec_resampled": 1.2230208333333332,
+      "peak_dbfs_before_norm": -3.0681312084198,
+      "rms_dbfs_before_norm": -32.780235290527344,
+      "peak_dbfs_after_norm": -1.0,
+      "sample_rate_input": 96000,
+      "sample_rate_output": 48000,
+      "num_samples_output": 58705
+    },
+    {
+      "file": "thompson_single_04.wav",
+      "start_sec": 20.415,
+      "duration_sec": 1.4110104166666666,
+      "duration_sec_resampled": 1.4110208333333334,
+      "peak_dbfs_before_norm": -2.1090314388275146,
+      "rms_dbfs_before_norm": -34.12985610961914,
+      "peak_dbfs_after_norm": -1.0,
+      "sample_rate_input": 96000,
+      "sample_rate_output": 48000,
+      "num_samples_output": 67729
+    },
+    {
+      "file": "thompson_single_05.wav",
+      "start_sec": 27.207,
+      "duration_sec": 1.3740104166666667,
+      "duration_sec_resampled": 1.3740208333333332,
+      "peak_dbfs_before_norm": -2.3722963333129883,
+      "rms_dbfs_before_norm": -34.52524948120117,
+      "peak_dbfs_after_norm": -1.0,
+      "sample_rate_input": 96000,
+      "sample_rate_output": 48000,
+      "num_samples_output": 65953
+    },
+    {
+      "file": "thompson_single_06.wav",
+      "start_sec": 33.956,
+      "duration_sec": 1.3940104166666667,
+      "duration_sec_resampled": 1.3940208333333333,
+      "peak_dbfs_before_norm": -1.784868836402893,
+      "rms_dbfs_before_norm": -34.345176696777344,
+      "peak_dbfs_after_norm": -1.0,
+      "sample_rate_input": 96000,
+      "sample_rate_output": 48000,
+      "num_samples_output": 66913
+    },
+    {
+      "file": "thompson_single_07.wav",
+      "start_sec": 40.707,
+      "duration_sec": 1.3930104166666666,
+      "duration_sec_resampled": 1.3930208333333334,
+      "peak_dbfs_before_norm": -2.053251028060913,
+      "rms_dbfs_before_norm": -34.351280212402344,
+      "peak_dbfs_after_norm": -1.0,
+      "sample_rate_input": 96000,
+      "sample_rate_output": 48000,
+      "num_samples_output": 66865
+    },
+    {
+      "file": "thompson_single_08.wav",
+      "start_sec": 47.411,
+      "duration_sec": 1.2300104166666668,
+      "duration_sec_resampled": 1.2300208333333333,
+      "peak_dbfs_before_norm": -1.570234775543213,
+      "rms_dbfs_before_norm": -33.91439437866211,
+      "peak_dbfs_after_norm": -1.0,
+      "sample_rate_input": 96000,
+      "sample_rate_output": 48000,
+      "num_samples_output": 59041
+    },
+    {
+      "file": "thompson_single_09.wav",
+      "start_sec": 54.16,
+      "duration_sec": 1.3040104166666666,
+      "duration_sec_resampled": 1.3040208333333334,
+      "peak_dbfs_before_norm": -1.5851783752441406,
+      "rms_dbfs_before_norm": -34.12225341796875,
+      "peak_dbfs_after_norm": -1.0,
+      "sample_rate_input": 96000,
+      "sample_rate_output": 48000,
+      "num_samples_output": 62593
+    },
+    {
+      "file": "thompson_single_10.wav",
+      "start_sec": 60.956,
+      "duration_sec": 1.1340104166666667,
+      "duration_sec_resampled": 1.1340208333333333,
+      "peak_dbfs_before_norm": -2.867082357406616,
+      "rms_dbfs_before_norm": -33.33012390136719,
+      "peak_dbfs_after_norm": -1.0,
+      "sample_rate_input": 96000,
+      "sample_rate_output": 48000,
+      "num_samples_output": 54433
+    }
+  ]
+}
