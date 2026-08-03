@@ -1147,6 +1147,11 @@ class MainScene extends Phaser.Scene {
                 },
                 getSelectedId: () => window.gameLogic && window.gameLogic.selectedUnit
                     ? String(window.gameLogic.selectedUnit.id) : null,
+                // 分隊長AIの采配（LeaderPolicy が leaderState へ残す計画）
+                getPlan: () => {
+                    const rtwp = window.RtwpBattle && window.RtwpBattle.instance;
+                    return rtwp && rtwp.leaderState ? rtwp.leaderState.A.plan || null : null;
+                },
                 getPosition: (id) => {
                     let v = this.unitView && this.unitView.visuals.get(id);
                     if (!v && this.unitView && this.unitView.visuals) {
@@ -1565,7 +1570,13 @@ class MainScene extends Phaser.Scene {
         // 下の unitView.update() がそのまま実時間の動きを描く（描画側の改修は不要）。
         if (window.RtwpBattle && window.RtwpBattle.enabled
             && !/(?:\?|&)rtwp=0(?:&|$)/.test(window.location.search)) {
-            if (!window.RtwpBattle.instance && window.gameLogic.state === 'PLAY'
+            // セクターごとに BattleLogic は作り直される（logic_campaign.js:301）。
+            // 「instance が無い時だけ接続」だと、前のセクターのインスタンスが残って
+            // いる限り新しい盤面へ繋がらず、面が一切動かなくなる。別の gameLogic を
+            // 掴んでいたら繋ぎ直す（決着時の detach と二重の安全弁）。
+            const bound = window.RtwpBattle.instance;
+            const stale = bound && bound.gameLogic !== window.gameLogic;
+            if ((!bound || stale) && window.gameLogic.state === 'PLAY'
                 && window.gameLogic.map.length > 0 && this.battlefieldReady()) {
                 try { window.RtwpBattle.attach(window.gameLogic); } catch (e) { console.error('RTwP attach', e); }
             }

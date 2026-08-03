@@ -367,7 +367,9 @@ def main(char_h=108):
         "version": 2,
         "scale": scale,
         "srcFps": 24,
-        "dirOrder": ["S", "SE", "E", "NE", "N", "NW", "W", "SW"],
+        # 実測（tests/test_soldier_dir_order.py がシートのピクセルから検証する）。
+        # 旧値 S,SE,E,... は誰も測っていないハードコードで、鏡像かつ45°ずれていた。
+        "dirOrder": ["SE", "S", "SW", "W", "NW", "N", "NE", "E"],
         "anchorSrc": {
             "x": 200,
             "groundY": yG

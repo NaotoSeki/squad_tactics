@@ -493,6 +493,18 @@ class CampaignManager {
                 const count = optBase.mag || 1;
                 for (let i = 0; i < count; i++) { bag.push(createItem(t.opt)); }
             }
+            // 銃擲弾。**今そいつが持っている小銃に適合するものだけ**を配る
+            // （RIFLE_GRENADE_FOR_MAIN は PL 実データ由来）。適合品が無い銃なら
+            // 何も持たない — 持てるはずのない装備を生やさないための分岐。
+            const rgTable = (typeof RIFLE_GRENADE_FOR_MAIN !== 'undefined')
+                ? RIFLE_GRENADE_FOR_MAIN : (window.RIFLE_GRENADE_FOR_MAIN || {});
+            const mainCode = hands[0] && hands[0].code;
+            const rgCodes = (t.rifleGrenade && mainCode) ? rgTable[mainCode] : null;
+            if (rgCodes && rgCodes.length && WPNS[rgCodes[0]]) {
+                const rgCode = rgCodes[0];
+                const rgCount = WPNS[rgCode].mag || 1;
+                for (let i = 0; i < rgCount; i++) { bag.push(createItem(rgCode)); }
+            }
         }
         
         if (isPlayer && !t.isTank && hands[0] && hands[0].code) {
@@ -644,11 +656,39 @@ class CampaignManager {
             };
             b.appendChild(d);
         });
-        if (window.Sfx) Sfx.play('win');
+        if (window.Sfx) Sfx.play('sector_clear');
     }
 
-    onGameOver() {
-        document.getElementById('gameover-screen').style.display = 'flex';
+    /**
+     * 敗北画面。**負け方を取り違えて伝えない。**
+     *
+     * sim は「行動不能だけが残った＝戦闘継続不能」を rout として、全員戦死の
+     * annihilation と区別している（sim_core._phaseCheckResult）。文言が
+     * 「全滅しました」固定だったため、負傷兵が盤上に生きているのに全滅と
+     * 表示されていた（2026-08-03 実プレイ報告）。命中モデルをPL正本へ替えて
+     * 負傷で止まる兵が増え、rout 経路の頻度が上がって露見した。
+     * @param {string=} reason sim_core の決着理由（'annihilation' | 'rout' | 'mutual'）
+     * @param {number=} survivors 生存している自軍兵数（戦闘不能を含む）
+     */
+    onGameOver(reason, survivors) {
+        const screen = document.getElementById('gameover-screen');
+        if (!screen) return;
+        const title = screen.querySelector('h1');
+        const body = screen.querySelector('p');
+        const alive = Number(survivors) || 0;
+        if (reason === 'rout' || (reason !== 'annihilation' && alive > 0)) {
+            if (title) title.textContent = 'COMBAT INEFFECTIVE';
+            if (body) {
+                body.textContent = alive > 0
+                    ? `分隊は戦闘継続不能（生存 ${alive} 名 — 全員が行動不能）`
+                    : '分隊は戦闘継続不能';
+            }
+        } else {
+            if (title) title.textContent = 'M.I.A.';
+            if (body) body.textContent = '全滅しました';
+        }
+        screen.style.display = 'flex';
+        if (window.Sfx) Sfx.play('sector_fail');
     }
 
     promoteSurvivors() {

@@ -223,12 +223,14 @@ function leaderWorld(map, squad, enemies) {
   return { soldiers: squad.concat(enemies), map: map, tuning: SIM_TUNING, tick: 5000 };
 }
 
-// --- 9. 露出兵が閾値以上なら TAKE_COVER を発令する ---------------------------
+// --- 9. 露出兵が閾値以上 かつ 撃たれているなら TAKE_COVER を発令する ---------
 {
   const m = makeMap({}, 0);            // どこも遮蔽ゼロ = 全員露出
   const leader = makeSoldier({ id: 'L', q: 0, r: 0, isLeader: true });
   const squad = [leader];
   for (let i = 0; i < minExposed; i++) squad.push(makeSoldier({ id: 's' + i, q: i + 1, r: 0 }));
+  // 弾が飛んできていることが発令条件（撃たれる前に隠れるのは兵士側の判断）
+  squad[1].suppression = 30;
   const orders = LeaderPolicy.assess(leader, leaderWorld(m, squad, [mg('e1', 6, 0)]), () => 0.5, {});
   check(orders.length >= minExposed, '露出兵が閾値以上なら命令が出る');
   check(orders.length > 0 && orders.every((o) => o.type === 'TAKE_COVER'),
@@ -237,6 +239,19 @@ function leaderWorld(map, squad, enemies) {
     '分隊長の号令がノートに乗る');
   check(orders.length > 0 && orders.every((o) => !o.payload.hex),
     '行き先は指定しない（どこへ隠れるかは現場の兵が決める）');
+}
+
+// --- 9b. まだ撃たれていなければ分隊長は口を出さない -------------------------
+// 「開豁地に立っている」だけで毎回発令していた版は、遮蔽の薄い市街地でこの
+// ドクトリンが采配を独占し、攻勢まで一度も辿り着かなかった（2026-08-02 実測）。
+{
+  const m = makeMap({}, 0);
+  const leader = makeSoldier({ id: 'L', q: 0, r: 0, isLeader: true });
+  const squad = [leader];
+  for (let i = 0; i < minExposed; i++) squad.push(makeSoldier({ id: 's' + i, q: i + 1, r: 0 }));
+  const orders = LeaderPolicy.assess(leader, leaderWorld(m, squad, [mg('e1', 6, 0)]), () => 0.5, {});
+  check(!orders.some((o) => o.type === 'TAKE_COVER'),
+    '無傷・無制圧なら TAKE_COVER は発令されない（兵士側の自衛に任せる）');
 }
 
 // --- 10. 露出兵が閾値未満なら発令しない --------------------------------------

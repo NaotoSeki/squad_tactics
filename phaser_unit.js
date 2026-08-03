@@ -455,6 +455,38 @@ class UnitView {
         return visual;
     }
 
+    /**
+     * 歩兵スプライトが1フレームで進む距離(px)。走る兵は実際に速く滑る。
+     *
+     * 以前は 0.9px/frame 固定だった。ヘックス間隔は √3·HEX_SIZE ≈ 93.5px で、sim の
+     * 歩きは 8tick(0.8秒)/hex なので必要なのは約1.95px/frame — 固定値では**歩きにすら
+     * 追いつけず**、走り(0.4秒/hex)では4倍の遅れが溜まって論理位置から千切れていた。
+     * 歩/走の差が画面に出ず、匍匐(2.0秒/hex)だけが唯一まともに見えていた正体はここ。
+     * 実効モードの所要時間から逆算する。sim を持たないターン制本編は従来のまま。
+     */
+    _infantryStepPx(u, delta, dist) {
+        const s = u && u._sim;
+        if (!s) return 0.9; // ターン制本編（sim 無し）は従来の一定速度
+        const T = window.SIM_TUNING || {};
+        const pitch = Math.sqrt(3) * (typeof HEX_SIZE !== 'undefined' ? HEX_SIZE : 54);
+        // sim が publish する実所要tick（地形コスト・脚の速さ込み）が最優先。無い時だけ
+        // モードから概算する — 概算のままだと重い地形や鈍足の兵で先に着いて待ってしまう。
+        let ticks = s.stepTicks;
+        if (!(ticks > 0)) {
+            const mode = s.stepMode || ((s.moveMode && s.moveMode !== 'auto') ? s.moveMode : 'walk');
+            const mult = (T.MOVE_MODE_MULT && T.MOVE_MODE_MULT[mode] != null) ? T.MOVE_MODE_MULT[mode] : 1;
+            ticks = (T.MOVE_T_PER_HEX || 8) * mult;
+        }
+        const secPerHex = Math.max(0.05, ticks * ((T.TICK_MS || 100) / 1000));
+        // delta は稀に跳ねる（タブ復帰・重いフレーム）。3フレーム分で頭打ちにする
+        const dt = Math.min(50, Math.max(1, delta || 16.7)) / 1000;
+        let px = (pitch / secPerHex) * dt;
+        // 地形コスト・脚の速さ・様子見の停止で遅れる分がある。1ヘックス以上離れたら
+        // 追走を速めて千切れを防ぐ（上限つき。ワープはさせない）
+        if (dist > pitch) px *= Math.min(3, dist / pitch);
+        return px;
+    }
+
     updateVisual(visual, u, delta, index, count) {
         if(typeof Renderer === 'undefined' || !Renderer.hexToPx) return;
         const basePos = Renderer.hexToPx(u.q, u.r);
@@ -486,8 +518,7 @@ class UnitView {
         let isMoving = false;
         if (dist > arriveThreshold) {
             if (isInfantry) {
-                const crawlPxPerFrame = 0.9; // 一定速度でじわじわ（加速しない）
-                const step = Math.min(crawlPxPerFrame, dist);
+                const step = Math.min(this._infantryStepPx(u, delta, dist), dist);
                 visual.container.x += (dx / dist) * step;
                 visual.container.y += (dy / dist) * step;
             } else {

@@ -40,6 +40,23 @@ const POSTURE_HOLD_T = 50; // 姿勢を上げ直すまでの最低保持 tick（
 const COVER_LEAN_MIN = 0.3; // この遮蔽値(0..1)以上で「遮蔽中」とみなす（縁寄せ＋cover_fire 変種）
 const COVER_LEAN_PX = 2.5;  // 遮蔽射撃時に射線方向へ身を乗り出すオフセット（表示20px基準）
 
+// 歩調の上下動（表示20px基準の振幅px）。**本体だけを動かし影は接地させたまま**にする。
+// 2026-08-03 追加（ディレクター指摘「重みが感じられない」）。実測の裏付け:
+// stand_forward は頭頂の上下が**全14フレームで0px**＝歩きには元々まったく縦の動きが
+// 無かった。stand_run は6px(シート空間、表示換算1.7px)持つが、谷が p=0・山が p=0.25 に
+// 来るので、同位相のサイン波を足して増幅する（逆位相だと打ち消してぼやける）。
+// 匍匐は対象外 — 伏せた体は跳ねない。
+const GAIT_BOB_WALK_PX = 0.8;  // 歩き。元が0なのでここが唯一の縦の手がかり
+const GAIT_BOB_RUN_PX = 1.3;   // 走り。焼き込み済みの上下に上乗せする
+const GAIT_STRIDES = 2;        // 1ループ＝2歩（cx曲線に山が2つ。実測）
+
+// 回頭（2026-08-03 ディレクター指摘「バックステップで後退する / 発砲方向を向かない」）。
+// 旧実装は状況を問わず 45°/3tick で、180°の反転に 0.9秒＝**0.75ヘックスぶん後ろ歩き**して
+// いた（135°で0.5hex。scratchpad の実測）。移動中はズレの上限を設けて詰める。
+const TURN_STEP_T = 3;       // 静止時の回頭間隔(tick)。45°ずつ刻む見え方は維持する
+const TURN_STEP_T_MOVE = 1;  // 移動中は速く回る
+const MOVE_FACE_MAX_LAG = 1; // 移動中に許す向きのズレ(45°単位)。超過分は待たずに詰める
+
 // 画面上の兵士の見かけ高さ（px）。2026-07-13、建物との比較が「デカすぎる」との
 // 指摘を受け実測ベースで再算出: bldg_s2_d0(3階建、生成コードのRNGを複製し
 // 実世界高さ11.93mと確定)の描画ピクセル高さ(298px, source 576x768空間)から
@@ -51,20 +68,36 @@ const COVER_LEAN_PX = 2.5;  // 遮蔽射撃時に射線方向へ身を乗り出�
 const SOLDIER_VIEW_H = 20;
 
 /**
+ * シートの実際の行順（2026-08-03、シルエット実測で確定）。
+ *
+ * 旧コメントと `manifest.dirOrder` は `S,SE,E,NE,N,NW,W,SW` を主張していたが、
+ * **これは repack スクリプトのハードコード文字列で実測ではなく、鏡像かつ45°ずれていた。**
+ * 実測の根拠（prone_idle / stand_fire で一致）:
+ *   - シルエット幅が最小なのは row 1,5（視線軸に沿う＝N/S）、最大は row 3,7（横向き＝E/W）。
+ *     **カーディナルが奇数行に来る**ので「row 0 = S」は原理的にありえない。
+ *   - 東西の別は絵で確定: row 3 は小銃が画面左＝W、row 7 は右＝E。
+ *   - 体の重心は常に狙いと反対側へ寄る（脚が後ろに伸びる）ので、これが機械判定に使える。
+ * 「撃ち合っている二人が互いに逆を向く」の原因がこれ。正本は `tests/test_soldier_dir_order.py`
+ * が実シートのピクセルから検証する。
+ */
+const SHEET_DIR_ORDER = ['SE', 'S', 'SW', 'W', 'NW', 'N', 'NE', 'E'];
+const SHEET_ROW_S = SHEET_DIR_ORDER.indexOf('S');   // = 1（無方向時の既定＝手前向き）
+
+/**
  * 画面座標デルタ → シートの方向行。y は下向き正。
- * manifest.dirOrder が正本: row 0..7 = S,SE,E,NE,N,NW,W,SW。
- * 以前は古い検分メモを優先して左右反転しており、射撃時に反対方向を向いていた。
  */
 function soldierDirFromDelta(dx, dy) {
-    if (!dx && !dy) return 0;
-    let k = Math.round(Math.atan2(-dy, dx) / (Math.PI / 4)) + 2; // E=2 基準（S,SE,E,...順）
+    if (!dx && !dy) return SHEET_ROW_S;
+    // いったん S=0,SE=1,E=2,NE=3,N=4,NW=5,W=6,SW=7 の中間表現へ（読みやすさのため）
+    let k = Math.round(Math.atan2(-dy, dx) / (Math.PI / 4)) + 2;
     k %= 8; if (k < 0) k += 8;
-    return k;
+    // → 実シート行。row1=S を起点に行が増えるほど時計回り（S→SW→W→…）
+    return (1 - k + 8) % 8;
 }
 
 /** sim の facing {q,r}（軸座標ベクトル）→ 方向行。hexToPx と同じ射影。 */
 function soldierDirFromFacing(f) {
-    if (!f) return 0;
+    if (!f) return SHEET_ROW_S;
     const dx = Math.sqrt(3) * (f.q + f.r / 2);
     const dy = 1.5 * f.r;
     return soldierDirFromDelta(dx, dy);
@@ -193,20 +226,22 @@ class SoldierUnitView extends UnitView {
         // ---- 方向 ----
         let dir;
         const targetId = s.engageTargetId || u._rtwpPendingTargetId || u._rtwpTargetId;
-        let targetVisual = targetId != null
-            ? (this.visuals.get(targetId) || this.visuals.get(String(targetId)))
-            : null;
-        if (!targetVisual && typeof targetId === 'string' && /^\d+$/.test(targetId)) {
-            targetVisual = this.visuals.get(Number(targetId));
-        }
-        if (isMoving) {
-            dir = soldierDirFromDelta(visual.lastDx || 0, visual.lastDy || 0);
+        const targetVisual = this._visualById(targetId);
+        const moveDir = this._moveFacing(s, u, visual, isMoving);
+        if (moveDir != null) {
+            dir = moveDir;
         } else if (targetVisual && targetVisual.container && visual.container) {
             // SHOTが発生した瞬間だけでなく、照準・観測・再装填中も現在の対敵方向を保持。
             dir = soldierDirFromDelta(
                 targetVisual.container.x - visual.container.x,
                 targetVisual.container.y - visual.container.y
             );
+        } else if (s.engageHex && (s.engageHex.q !== u.q || s.engageHex.r !== u.r)) {
+            // 面制圧(TARGET_HEX)は個体ではなく地点を撃つので engageTargetId が null。
+            // ここを見ないと「撃てと命じた方角を向かないまま撃つ」ことになる
+            // （撃ち始めれば SHOT 由来の _faceDir が後追いで合わせるが、発砲前と
+            //   観測休止中は前の向きのまま固まる）。
+            dir = soldierDirFromFacing({ q: s.engageHex.q - u.q, r: s.engageHex.r - u.r });
         } else if (this._faceDir.has(u.id)) {
             dir = this._faceDir.get(u.id);
         } else if (s.facing) {
@@ -216,15 +251,26 @@ class SoldierUnitView extends UnitView {
         }
         visual.soldierDir = dir;
 
-        // 目標方向は保持しつつ、通常時だけ3tickごとに45°ずつ回頭する。
+        // 目標方向は保持しつつ、静止時は3tickごとに45°ずつ回頭する。
         // 射撃・one-shot・出現直後は演出の意図を優先して即時に向ける。
         if (visual.dispDir == null || os || s.state === 'engage') {
             visual.dispDir = dir;
             visual.dispDirTick = tick;
-        } else if (visual.dispDir !== dir && tick - (visual.dispDirTick || 0) >= 3) {
+        } else if (visual.dispDir !== dir) {
             const cw = (dir - visual.dispDir + 8) % 8;
-            visual.dispDir = (visual.dispDir + (cw <= 4 ? 1 : -1) + 8) % 8;
-            visual.dispDirTick = tick;
+            const sign = cw <= 4 ? 1 : -1;
+            const lag = Math.min(cw, 8 - cw);   // 最短で何歩ぶんズレているか（1..4）
+            let steps = 0;
+            // **移動中は45°を超えてズレたまま歩かない。** 超過分は回頭間隔を待たずに
+            // 詰める。これが無いと、向きが追いつく前に translate が始まって
+            // 「後ろ歩き」になる（旧実装の180°反転で0.75ヘックスぶん）。
+            if (isMoving && lag > MOVE_FACE_MAX_LAG) steps = lag - MOVE_FACE_MAX_LAG;
+            const every = isMoving ? TURN_STEP_T_MOVE : TURN_STEP_T;
+            if (tick - (visual.dispDirTick || 0) >= every) steps += 1;
+            if (steps > 0) {
+                visual.dispDir = (visual.dispDir + sign * Math.min(steps, lag) + 8) % 8;
+                visual.dispDirTick = tick;
+            }
         }
         const dispDir = visual.dispDir;
 
@@ -339,7 +385,12 @@ class SoldierUnitView extends UnitView {
 
         const posture = POSTURE_NAMES[visual.postureLv] || 'stand';
         let action = 'idle';
-        if (isMoving) action = 'forward';
+        // `isMoving` は画面上で滑っているかどうかでしかない。同じヘックスに味方が
+        // 出入りすると散布オフセット（UnitView._calcUnitOffset）が組み替わって
+        // 全員が横滑りするので、**自力で動けない兵**まで移動アニメを始めてしまう
+        // ——倒れた兵がにじり歩く絵になる（2026-08-03 実測: 移動サンプルの10%が
+        // これで、全て state=incap だった）。動けるかどうかは sim に訊く。
+        if (isMoving && this._canLocomote(s, u)) action = 'forward';
         else if (s.state === 'reload') action = 'reload';
         else if (s.state === 'engage') action = 'fire';
 
@@ -355,9 +406,9 @@ class SoldierUnitView extends UnitView {
             // 遮蔽内で撃っていない間は物陰に身を潜める。重制圧(cower)の方が緊急なので
             // 上の分岐を先に評価する。cover_idle が無い環境では基本形へ自動フォールバック。
             next = this._firstAnim([`${posture}_cover_idle`, next], dispDir) || next;
-        } else if (action === 'forward' && this._recentlyUnderFire(s, tick)) {
-            // 撃たれながらの移動＝躍進なので走る。sim には歩/走の速度区分が無いため、
-            // 「被弾中の移動」を唯一の確かな走行トリガとして使う（自動Coverの退避と一致する）。
+        } else if (action === 'forward' && this._isRunning(s, tick)) {
+            // 走る/歩くの切替は sim の実効モードが正本（_effMoveMode）。伏せ姿勢には
+            // 走りのシートが無いので prone_forward（匍匐）へ自動フォールバックする。
             next = this._firstAnim([`${posture}_run`, next], dispDir) || next;
         } else if (action === 'reload') {
             // 姿勢別リロードが無い環境では「その姿勢の idle」へ落とす。下の大域
@@ -458,6 +509,19 @@ class SoldierUnitView extends UnitView {
     /** テクスチャ（=アクション）切替時に per-action 原点を適用し、影を追従させる */
     _syncShadowTex(visual, spr) {
         this._applyActionOrigin(spr);
+
+        // 遮蔽射撃の「身乗り出し」オフセットをイージング適用（本体スプライトのみ）。
+        // leanTarget は毎フレーム上流が設定する。
+        const t = visual.leanTarget || (visual.leanTarget = { x: 0, y: 0 });
+        const c = visual.leanCur || (visual.leanCur = { x: 0, y: 0 });
+        c.x += (t.x - c.x) * 0.25;
+        c.y += (t.y - c.y) * 0.25;
+        if (Math.abs(t.x - c.x) < 0.02 && Math.abs(t.y - c.y) < 0.02) { c.x = t.x; c.y = t.y; }
+
+        // **影は接地位置から作る。** syncSunShadow は source.x/y を読むので、歩調の
+        // 上下を乗せた後に呼ぶと影まで一緒に跳ねて足元が浮く。接地位置で置く →
+        // 影を作る → 本体にだけ上下を足す、の順で「体だけが弾む」絵になる。
+        spr.setPosition(c.x, c.y);
         const sh = visual.shadowSprite;
         if (sh && sh.texture) {
             if (sh.texture.key !== spr.texture.key) sh.setTexture(spr.texture.key);
@@ -471,14 +535,37 @@ class SoldierUnitView extends UnitView {
                 });
             }
         }
-        // 遮蔽射撃の「身乗り出し」オフセットをイージング適用（本体スプライトのみ。
-        // 影は接地させたままにして浮きを防ぐ）。leanTarget は毎フレーム上流が設定する。
-        const t = visual.leanTarget || (visual.leanTarget = { x: 0, y: 0 });
-        const c = visual.leanCur || (visual.leanCur = { x: 0, y: 0 });
-        c.x += (t.x - c.x) * 0.25;
-        c.y += (t.y - c.y) * 0.25;
-        if (Math.abs(t.x - c.x) < 0.02 && Math.abs(t.y - c.y) < 0.02) { c.x = t.x; c.y = t.y; }
-        spr.setPosition(c.x, c.y);
+        spr.setPosition(c.x, c.y + this._gaitBob(spr));
+    }
+
+    /**
+     * 歩調に合わせた上下動（サイン波）。歩き・走りだけに掛かり、匍匐と静止には掛からない。
+     *
+     * 位相はクリップの再生位置に固定する（時間で回すと足の接地とずれて、足が地面に
+     * 着いた瞬間に体が浮く絵になる）。1ループ＝2歩で、**接地の谷を p=0 に置く** —
+     * stand_run の焼き込み済みの上下（谷 p=0 / 山 p=0.25）と同位相にして増幅するため。
+     * 逆位相にすると打ち消し合って、上下しているのにぼやけて見える。
+     * @returns {number} y へ足すオフセット（負＝上）
+     */
+    _gaitBob(spr) {
+        const st = spr.anims;
+        const anim = st && st.currentAnim;
+        if (!anim) return 0;
+        const name = this._actionNameFromKey(anim.key);
+        // 伏せ(prone_forward)は跳ねない。_forward の語尾で一括りにしないこと
+        const amp = /^(stand|kneel)_run$/.test(name) ? GAIT_BOB_RUN_PX
+            : /^(stand|kneel)_forward$/.test(name) ? GAIT_BOB_WALK_PX
+                : 0;
+        if (!amp) return 0;
+        // frame.index は1始まり。getProgress() はバージョンによって量子化の仕様が
+        // 違うので、フレーム番号から自前で出す（スプライト自体が24fps刻みなので、
+        // ここだけ滑らかにしても意味が無い）
+        const total = (anim.frames && anim.frames.length) || 1;
+        const idx = st.currentFrame ? (st.currentFrame.index - 1) : 0;
+        const p = total > 0 ? (idx / total) : 0;
+        // 持ち上がり量: p=0 で最小(接地)、p=0.25 で最大。-cos = 1/4位相ずらしのサイン波
+        const lift = -Math.cos(2 * Math.PI * GAIT_STRIDES * p); // -1..+1
+        return -amp * lift;   // y は下向き正なので反転して返す
     }
 
     /**
@@ -513,9 +600,14 @@ class SoldierUnitView extends UnitView {
         return null;
     }
 
-    /** シート方向行 → 画面上の単位ベクトル（soldierDirFromDelta の逆写像）。 */
+    /**
+     * シート方向行 → 画面上の単位ベクトル（soldierDirFromDelta の逆写像）。
+     * row1=S(0,+1) を起点に、行が増えるほど時計回り（S→SW→W→…）。
+     * 旧実装は行が増えるほど反時計回りで、行順そのものと同じく鏡像だった。
+     */
     _dirToScreenVec(row) {
-        const th = Math.PI / 2 - (row % 8) * (Math.PI / 4);
+        const r = (((row | 0) % 8) + 8) % 8;
+        const th = Math.PI / 2 + (r - SHEET_ROW_S) * (Math.PI / 4);
         return { x: Math.cos(th), y: Math.sin(th) };
     }
 
@@ -527,6 +619,81 @@ class SoldierUnitView extends UnitView {
         if (!s) return false;
         const uf = this._underFire.get(s.id);
         return uf != null && tick - uf <= UNDER_FIRE_T;
+    }
+
+    /**
+     * ユニットID → visual。**本編のIDは `Math.random()` 由来の小数**で、sim へは
+     * `String(id)` で渡している。`visuals` のキーは数値のままなので、文字列で
+     * 引くと必ず外れる。旧実装のフォールバックは `/^\d+$/`（整数のみ）で小数を
+     * 弾いていたため、本編では「狙っている相手を向き続ける」分岐が**一度も成立
+     * していなかった** —— 撃った瞬間の `_faceDir` だけが頼りで、次弾までの照準・
+     * 観測休止・装填中は前の向きのまま固まっていた（発砲方向を向かない件の一因）。
+     * sim_battle.html は文字列IDなので、そちらでは露見しない。
+     */
+    _visualById(id) {
+        if (id == null) return null;
+        let v = this.visuals.get(id) || this.visuals.get(String(id));
+        if (!v && typeof id === 'string' && id !== '') {
+            const n = Number(id);
+            if (!Number.isNaN(n)) v = this.visuals.get(n);
+        }
+        return v || null;
+    }
+
+    /**
+     * 自力で移動しうる状態か。行動不能・戦死は「滑っていても歩いてはいない」。
+     *
+     * スプライトが到着位置へ寄り直すだけの滑りは正常な動作（1ヘックスぶん遅れて
+     * 追走することがある）なので、状態が move かどうかでは判定しない —— それだと
+     * 経路の最後で本当に歩いている兵まで idle に落ちて滑る。
+     */
+    _canLocomote(s, u) {
+        if (u && u.hp <= 0) return false;
+        return !(s && (s.state === 'incap' || s.state === 'down'));
+    }
+
+    /**
+     * 移動中の向き。**sim の facing が正本**で、画面上のピクセル差分は使わない。
+     *
+     * ピクセル差分（`visual.lastDx/lastDy`）を向きに使うと、同じヘックスに味方が
+     * 出入りするたびに散布オフセット（`UnitView._calcUnitOffset`）が組み替わり、
+     * その横滑りを「移動方向」と誤読して兵士がその場で回れ右する —— これが
+     * バックステップの正体。到着判定は 0.15px なので、わずかな寄り直しでも
+     * `isMoving` が立ってしまう。
+     *
+     * `s.facing` は sim が1マス進むたびに「いまアニメートしている step の向き」を
+     * 入れるので、スプライトの滑りと必ず一致する。まだ一歩も進んでいない兵は
+     * null を返し、射線・面制圧・直近の向きへ判断を譲る。
+     *
+     * @returns {number|null} 方向行 0..7、移動中でなければ null
+     */
+    _moveFacing(s, u, visual, isMoving) {
+        if (!isMoving) return null;
+        // ターン制本編（sim スナップショット無し）は従来どおり画面差分で向く
+        if (!u || !u._sim) return soldierDirFromDelta(visual.lastDx || 0, visual.lastDy || 0);
+        return s.facing ? soldierDirFromFacing(s.facing) : null;
+    }
+
+    /**
+     * そのマスを実際にどう渡っているか（walk/rush/crawl）。
+     *
+     * 命令は「移動」1つで、渡り方は1マスごとに sim_policy.pickMoveStep が決める。
+     * 生の `moveMode` はその間 'auto' に据え置かれるため、ここを見ないと走りの
+     * シートが一度も選ばれない。`stepMode` を持たない経路（ターン制本編の合成
+     * スナップショット・古いセーブ）では従来どおり `moveMode` へ落ちる。
+     */
+    _effMoveMode(s) {
+        if (!s) return 'walk';
+        if (s.stepMode) return s.stepMode;
+        return (s.moveMode && s.moveMode !== 'auto') ? s.moveMode : 'walk';
+    }
+
+    /** 走行サイクルを出すか。匍匐中は走らない（伏せたまま進んでいる）。 */
+    _isRunning(s, tick) {
+        const mode = this._effMoveMode(s);
+        if (mode === 'crawl') return false;
+        // 被弾中の移動＝躍進。stepMode を持たない経路でも躍進だけは見えるよう残す。
+        return mode === 'rush' || this._recentlyUnderFire(s, tick);
     }
 
     /** 制圧が重い（cower 相当＝伏せて縮こまる）状態か。 */
@@ -636,6 +803,9 @@ class SoldierUnitView extends UnitView {
         else if (s.state === 'suppressed' || s.suppression >= (T.SUPPRESSED_AT || 999)) lv = 1;
         const uf = this._underFire.get(s.id);
         if (uf != null && tick - uf <= UNDER_FIRE_T) lv = (lv >= 1) ? 2 : Math.max(lv, 1);
+        // 遮蔽から開豁地へ出る前の一拍（sim_policy の observeT）は、立ったまま棒立ちで
+        // 待つのではなく身を屈めて頃合いを窺う。走り出す直前の「溜め」が見える。
+        if (s.observeT > 0) lv = Math.max(lv, 1);
         return lv;
     }
 

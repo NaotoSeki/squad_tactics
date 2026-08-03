@@ -55,9 +55,20 @@ const { validHexExtent } = require(path.join(ROOT, 'sim_battle_adapter.js'));
   vm.runInContext(fs.readFileSync(path.join(ROOT, 'phaser_soldier_view.js'), 'utf8')
     + '\n;this.__soldierDirFromDelta = soldierDirFromDelta; this.__SoldierUnitView = SoldierUnitView;',
     unitBox, { filename: 'phaser_soldier_view.js' });
-  const manifestVectors = [[0, 1], [1, 1], [1, 0], [1, -1], [0, -1], [-1, -1], [-1, 0], [-1, 1]];
-  check(manifestVectors.every((v, i) => unitBox.__soldierDirFromDelta(v[0], v[1]) === i),
-    '写実兵manifestの方向順 S,SE,E,NE,N,NW,W,SW と画面方向が一致する');
+  // 方向行の正本は manifest.dirOrder で、その dirOrder 自体は実シートのピクセルから
+  // tests/test_soldier_dir_order.py が検証する。ここで期待値を直書きすると、2026-08-03 に
+  // 実際に起きたように「誰も測っていない順序」をテストが固定してしまう（撃ち合う二人が
+  // 互いに逆を向いていても99%一致と報告された）。
+  {
+    const dirOrder = JSON.parse(fs.readFileSync(
+      path.join(ROOT, 'asset', 'sprites', 'soldier', 'manifest.json'), 'utf8')).dirOrder;
+    const screenVec = { S: [0, 1], SE: [1, 1], E: [1, 0], NE: [1, -1],
+                        N: [0, -1], NW: [-1, -1], W: [-1, 0], SW: [-1, 1] };
+    check(dirOrder.every((name, row) => {
+      const v = screenVec[name];
+      return unitBox.__soldierDirFromDelta(v[0], v[1]) === row;
+    }), '写実兵の方向計算が manifest.dirOrder（実シート実測）と一致する');
+  }
 
   const muzzleView = Object.create(unitBox.__UnitView.prototype);
   muzzleView.visuals = new Map([

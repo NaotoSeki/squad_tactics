@@ -181,7 +181,11 @@ function makeHasLos(cellAt, isPlayable) {
 
       if (cell.building || (typeof cell.cost === 'number' && cell.cost >= 99)) return false;
 
-      const block = sightBlockTable[cell.id];
+      // セルが自前の遮光度を持つならそちらが正本（立体物台帳から導出した
+      // per-hex の値。低木・柵・薪など、地形の種別だけでは表せないもの）。
+      // 持たないセルは従来どおり地形id表を引く。
+      const block = (typeof cell.sightBlock === 'number')
+        ? cell.sightBlock : sightBlockTable[cell.id];
       if (typeof block === 'number') sightBlock += block;
       if (sightBlock >= threshold) return false;
     }

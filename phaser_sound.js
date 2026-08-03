@@ -14,7 +14,12 @@ const Sfx = {
         'reload': 'asset/audio/001_reload.wav',
         'mg42':   'asset/audio/002_mg42.wav',
         // ★追加: 戦車砲リロード音
-        'tank_reload': 'asset/audio/003_tank_gun_reload.wav'
+        'tank_reload': 'asset/audio/003_tank_gun_reload.wav',
+        // セクター決着のジングル。**この2つ専用のキー**にしてある — 汎用の 'win' に
+        // 実音を載せると、将来 'win' を別の場面で鳴らした時に巻き添えになる。
+        // 既存の合成音フォールバック（'win' の tone 3連）はそのまま残す。
+        'sector_clear': 'asset/audio/jingle_win.wav',
+        'sector_fail':  'asset/audio/jingle_defeat.wav'
     },
 
     /**
@@ -369,7 +374,9 @@ const Sfx = {
         if (this.assets[id]) {
             const scene = this._soundScene();
             if (scene && scene.sound) {
-                const vol = (id === 'tank_reload') ? 0.28 : 0.4;
+                // ジングルは一度きりの節目なので銃声より前に出す
+                const vol = (id === 'tank_reload') ? 0.28
+                    : (id === 'sector_clear' || id === 'sector_fail') ? 0.6 : 0.4;
                 scene.sound.play(id, { volume: vol });
                 return;
             }

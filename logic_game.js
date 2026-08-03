@@ -267,7 +267,9 @@ window.BattleLogic = class BattleLogic {
   checkLose() {
     const players = this.units.filter(u => u.team === 'player' && u.hp > 0);
     if (players.length === 0) {
-      this.campaign.onGameOver();
+      // ここへ来るのは本当に全員戦死した時だけ（生存者が居る敗北は
+      // RtwpInstance.finishBattle が理由付きで送る）
+      this.campaign.onGameOver('annihilation', 0);
     }
   }
 

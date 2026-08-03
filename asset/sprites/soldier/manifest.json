@@ -3,14 +3,14 @@
   "scale": 0.43373493975903615,
   "srcFps": 24,
   "dirOrder": [
-    "S",
     "SE",
-    "E",
-    "NE",
-    "N",
-    "NW",
+    "S",
+    "SW",
     "W",
-    "SW"
+    "NW",
+    "N",
+    "NE",
+    "E"
   ],
   "anchorSrc": {
     "x": 200,

@@ -335,6 +335,15 @@ window.RuralV29Map = {
       terrainTable = this._getTerrainTable();
     }
 
+    // 立体物台帳から導出した per-hex の加算修正（低木・柵・薪など）。
+    // 地形テーブルは1ヘックス＝1種別の単値なので、台帳が持つ低木や柵の情報が
+    // そこには乗らない。描画が使っている座標そのものから導いた mod を重ねることで、
+    // **絵に見えている茂みや柵が実際に射線を遮り遮蔽になる**。
+    // 生成は scripts/derive_terrain_mods.py（psNative バリアントは rot180 と排他なので
+    // 座標変換は不要）。
+    const modKey = this.lastVariant && this.lastVariant.psNative;
+    const mods = (modKey && window.PS_TERRAIN_MODS && window.PS_TERRAIN_MODS[modKey]) || null;
+
     // 30hexテーブルを配置（各セルは TERRAIN またはローカル地形定義のシャローコピー）
     for (const entry of terrainTable) {
       const { q, r, base } = entry;
@@ -347,7 +356,19 @@ window.RuralV29Map = {
       else terrainDef = TERRAIN[base];
 
       // シャローコピーで独立オブジェクト化
-      game.map[q][r] = { ...terrainDef };
+      const cell = { ...terrainDef };
+      const mod = mods && mods[q + ',' + r];
+      if (mod && !cell.building) {
+        // 建物は既に単独で完全遮蔽・不可侵なので上書きしない
+        const [addBlock, addCover] = mod;
+        if (addBlock > 0) {
+          const baseBlock = (window.SIM_TUNING
+            && window.SIM_TUNING.TERRAIN_SIGHT_BLOCK[cell.id]) || 0;
+          cell.sightBlock = Math.min(1, baseBlock + addBlock);
+        }
+        if (addCover > 0) cell.cover = Math.min(45, (cell.cover || 0) + addCover);
+      }
+      game.map[q][r] = cell;
     }
 
     this.active = true;

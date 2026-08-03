@@ -78,6 +78,9 @@
     this.speed = 1;
     this.paused = false;
     this._skipNextDelta = false;
+    // 対象待ちの行動。「走る」を選んだ後に行き先をクリックする、の中間状態。
+    // { id, unit } を持ち、次のクリックで消費される。
+    this.pendingAction = null;
   }
 
   /**
@@ -132,9 +135,27 @@
     const mags = spares.length ? spares.length : (found.length ? 0 : defaultMags);
     unit._rtwpSpareAmmo = spares;
 
+    // 投擲弾は**実際に背負っている物**から数える。既定値で配ると、右ペインに
+    // 見えている個数とシムの残数が別勘定になる（弾倉で踏んだのと同じ罠）。
+    // 銃擲弾はその銃に適合する品だけ（RIFLE_GRENADE_FOR_MAIN は PL 実データ由来）。
+    const rgCodes = (D.RIFLE_GRENADE_FOR_MAIN && D.RIFLE_GRENADE_FOR_MAIN[code]) || [];
+    const nades = this._collectMunitions(unit, ['nade']);
+    const rifleNades = this._collectMunitions(unit, rgCodes);
+    unit._rtwpNades = nades;
+    unit._rtwpRifleNades = rifleNades;
+
     this.sim.addSoldier({
       id: id, team: team, q: unit.q, r: unit.r,
       weapon: simWeapon, ammo: { mags: mags }, skill: 1.0,
+      grenades: nades.length, rifleGrenades: rifleNades.length,
+      // 実物の性能（射程・威力）を弾種スペックへ持ち込む。SIM_TUNING 側は
+      // 挙動（構え・信管・範囲）だけを持ち、数字は現物に従う。
+      munitionSpec: {
+        grenade: this._munitionSpecFromItem(nades[0]),
+        rifle_grenade: this._munitionSpecFromItem(rifleNades[0]),
+      },
+      attrs: unit.params || null,
+      sidearm: this._findSidearm(unit, code, T, D),
       isLeader: !hasLeader, traits: traits,
       facing: (team === 'A') ? { q: 1, r: 0 } : { q: -1, r: 0 },
     });
@@ -196,6 +217,9 @@
       // 弾薬もq/r/hpと同じ接ぎ木で書き戻す。旧ターン制の item.current は RTwP では
       // 誰も減らさないため、既存の弾ゲージが常に満タンのままだった（正本は sim）。
       this._writeBackAmmo(unit, s);
+      // 投げた分だけ背嚢から実体を消す（残数バーではなく物の数で見せる）
+      this._writeBackMunitions(unit, '_rtwpNades', s.grenades);
+      this._writeBackMunitions(unit, '_rtwpRifleNades', s.rifleGrenades);
 
       if (s.state === 'pinned' || s.state === 'suppressed') unit.stance = 'prone';
       else if (s.state === 'move') unit.stance = 'stand';
@@ -236,6 +260,62 @@
       const gone = spares.pop();
       this._removeItem(unit, gone);
     }
+  };
+
+  /**
+   * 指定コードの投擲弾を背嚢・LOADOUT から集める。1個 = 1発として扱い、
+   * 使うたびに実体を取り除く（右ペインの個数がそのまま残数になる）。
+   */
+  RtwpInstance.prototype._collectMunitions = function (unit, codes) {
+    const out = [];
+    if (!codes || !codes.length) return out;
+    const take = (item) => { if (item && codes.indexOf(item.code) >= 0) out.push(item); };
+    for (let i = 1; i < (unit.hands || []).length; i++) take(unit.hands[i]);
+    (unit.bag || []).forEach(take);
+    return out;
+  };
+
+  /**
+   * 副武装（拳銃）。強襲で主武器が尽きた時に持ち替える先。
+   * 現物主義: 背嚢・LOADOUT に**実際に入っている拳銃**だけを拾う。
+   */
+  RtwpInstance.prototype._findSidearm = function (unit, mainCode, T, D) {
+    const isPistol = (item) => {
+      if (!item || !item.code || item.code === mainCode) return false;
+      const def = D.WPNS && D.WPNS[item.code];
+      if (!def || def.type !== 'bullet') return false;
+      return def.plCategory === 'pistol' || (def.rng <= 4 && (def.cap || 0) > 0 && (def.cap || 0) <= 10);
+    };
+    const slots = [];
+    for (let i = 1; i < (unit.hands || []).length; i++) slots.push(unit.hands[i]);
+    (unit.bag || []).forEach((item) => slots.push(item));
+    const found = slots.find(isPistol);
+    if (!found) return null;
+    let w = null;
+    try { w = D.toSimWeapon(found.code, D.WPNS[found.code], T); } catch (e) { w = null; }
+    return w ? { weapon: w, mags: 1 } : null;
+  };
+
+  /**
+   * 投擲弾の実物性能。射程と威力は WPNS（PL実データ）から取り、SIM_TUNING 側の
+   * 既定を上書きする。挙動（構え時間・信管・範囲）はチューニング表が持つ。
+   */
+  RtwpInstance.prototype._munitionSpecFromItem = function (item) {
+    const W = resolveDeps().WPNS;
+    const def = item && W && W[item.code];
+    if (!def) return null;
+    const spec = {};
+    if (def.rng > 0) spec.rng = def.rng;
+    if (def.dmg > 0) spec.dmg = { base: def.dmg, spread: Math.round(def.dmg * 0.4) };
+    return spec;
+  };
+
+  /** sim の残数まで、背嚢の投擲弾を減らす。 */
+  RtwpInstance.prototype._writeBackMunitions = function (unit, key, want) {
+    const list = unit[key];
+    if (!list || !list.length) return;
+    const target = Math.max(0, Number(want) || 0);
+    while (list.length > target) this._removeItem(unit, list.pop());
   };
 
   /** 背嚢/LOADOUT から実体を取り除く（同じ参照だけを消す） */
@@ -332,11 +412,33 @@
   RtwpInstance.prototype.formatEvent = function (ev) {
     const parts = ['t' + ev.tick, ev.type];
     if (ev.id) parts.push(this._name(ev.id));
-    if (ev.shooterId) parts.push(this._name(ev.shooterId) + '->' + this._name(ev.targetId)
-      + (ev.hit ? ' HIT' : ' miss') + (ev.killed ? ' KILL' : ''));
+    if (ev.shooterId && ev.area) {
+      parts.push(this._name(ev.shooterId) + '->('
+        + (ev.targetHex ? ev.targetHex.q + ',' + ev.targetHex.r : '?') + ') 面制圧');
+    } else if (ev.shooterId) {
+      parts.push(this._name(ev.shooterId) + '->' + this._name(ev.targetId)
+        + (ev.hit ? ' HIT' : ' miss') + (ev.killed ? ' KILL' : ''));
+    }
     if (ev.type === 'SHOT' && ev.roundsFired) parts.push('x' + ev.roundsFired);
+    if (ev.type === 'GRENADE') {
+      const T = resolveDeps().SIM_TUNING;
+      const spec = (T && T.MUNITIONS && T.MUNITIONS[ev.kind]) || null;
+      parts.push((spec ? spec.label : ev.kind)
+        + '->(' + ev.target.q + ',' + ev.target.r + ')');
+    }
+    if (ev.type === 'BLAST') {
+      const killed = (ev.casualties || []).filter((c) => c.killed).length;
+      parts.push('(' + ev.hex.q + ',' + ev.hex.r + ') 命中'
+        + (ev.casualties || []).length + (killed ? ' KILL' + killed : ''));
+    }
     if (ev.note) parts.push('「' + ev.note + '」');
     if (ev.type === 'ORDER_DELIVERED' && ev.order) parts.push(ev.order.type);
+    if (ev.type === 'ASSAULT_START') parts.push('強襲 -> ' + this._name(ev.targetId));
+    if (ev.type === 'ASSAULT_END') parts.push('強襲終了 (' + ev.reason + ')');
+    if (ev.type === 'SUPPRESS_END') parts.push('制圧終了 (' + ev.reason + ')');
+    if (ev.type === 'MELEE_START') parts.push('白兵 -> ' + this._name(ev.targetId));
+    if (ev.type === 'SWAP') parts.push('拳銃へ持ち替え');
+    if (ev.type === 'STUMBLE') parts.push('躓いて伏せる');
     return parts.join(' ');
   };
 
@@ -376,11 +478,14 @@
         switch (ev.type) {
           case 'SHOT': {
             const sh = this.sim.getSoldier(String(ev.shooterId));
-            const tg = this.sim.getSoldier(String(ev.targetId));
+            const tg = ev.targetId ? this.sim.getSoldier(String(ev.targetId)) : null;
             const R = window.Renderer;
             if (R && typeof R.hexToPx === 'function' && sh && window.VFX) {
               const a = R.hexToPx(sh.q, sh.r);
-              const b = tg ? R.hexToPx(tg.q, tg.r) : null;
+              // 面制圧(TARGET_HEX)は撃つ相手が個体ではないので、着弾点は hex から取る。
+              // これが無いと銃口炎も着弾も出ず、命令したのに何も起きていないように見える。
+              const aimAt = tg || ev.targetHex;
+              const b = aimAt ? R.hexToPx(aimAt.q, aimAt.r) : null;
               if (b && R.playMuzzleFlash) {
                 const muzzle = R.getMuzzlePoint ? R.getMuzzlePoint(sh, tg) : null;
                 const mx = muzzle ? muzzle.x : a.x;
@@ -392,7 +497,11 @@
                   R.playMuzzleFlash(mx, my, angle, sh.weapon);
                 }
               }
-              if (R.playAttackAnim && tg) R.playAttackAnim(sh, tg);
+              // 面制圧でも射手は撃つ動作を見せる。目標は個体でないので、着弾点だけを
+              // 持つ擬似ターゲットを渡す（triggerAttack は id が無くても向きを出せる）。
+              const animTarget = tg || (ev.targetHex
+                ? { id: null, q: ev.targetHex.q, r: ev.targetHex.r } : null);
+              if (R.playAttackAnim && animTarget) R.playAttackAnim(sh, animTarget);
               // 1 burst = 1煙ではなく、発射された実弾ごとに小さな着弾を出す。
               // 命中弾以外も標的周辺の地面へ落ちるので、missでも表示する。
               if (b && window.VFX.addBulletImpact) {
@@ -404,6 +513,42 @@
               if (window.Sfx.playWeapon) window.Sfx.playWeapon(sh.weapon, sh.fireMode);
               else window.Sfx.play(sh.weapon.code, 'shot');
             }
+            break;
+          }
+          case 'GRENADE': {
+            // 手を離れた瞬間。飛翔体を出し、投擲モーションを再生する。
+            const R = window.Renderer;
+            const thrower = this.sim.getSoldier(String(ev.id));
+            if (R && R.hexToPx && ev.target) {
+              const a = R.hexToPx(ev.from.q, ev.from.r);
+              const b = R.hexToPx(ev.target.q, ev.target.r);
+              if (window.VFX && window.VFX.addRocket) window.VFX.addRocket(a.x, a.y - 10, b.x, b.y - 10);
+              const main = window.phaserGame && window.phaserGame.scene
+                && window.phaserGame.scene.getScene('MainScene');
+              if (main && main.unitView && main.unitView.playThrow && thrower) {
+                main.unitView.playThrow(thrower, a, b);
+              }
+            }
+            if (window.Sfx) window.Sfx.play('throw');
+            break;
+          }
+          case 'BLAST': {
+            const R = window.Renderer;
+            if (R && R.hexToPx && ev.hex && window.VFX) {
+              const p = R.hexToPx(ev.hex.q, ev.hex.r);
+              if (window.VFX.addExplosion) window.VFX.addExplosion(p.x, p.y - 8, '#ffb347', 16);
+              if (window.VFX.addSmoke) window.VFX.addSmoke(p.x, p.y - 8);
+            }
+            if (window.Sfx) window.Sfx.play('explosion');
+            break;
+          }
+          case 'MELEE_START': {
+            // 白兵は突撃モーションで見せる（専用アセットが無いので突進を流用）
+            const R = window.Renderer;
+            const a = this.sim.getSoldier(String(ev.id));
+            const b = this.sim.getSoldier(String(ev.targetId));
+            if (R && R.playAttackAnim && a && b) R.playAttackAnim(a, b);
+            if (window.Sfx) window.Sfx.play('melee');
             break;
           }
           case 'DOWN':
@@ -422,7 +567,11 @@
     // カード配置や後着増援は戦闘開始後に gameLogic.units へ増える。
     // ポーズ中でも即座にRTwPへ登録し、見た目だけの兵士にしない。
     this.registerMissingUnits();
-    if (this.paused || !this.sim || this.sim.result()) return;
+    // 行き先マーカーはポーズ中こそ要る（盤面を読んで命令を組み立てる時間だから）。
+    // シムを進める判定より前に更新しないと、PAUSE 中は一切表示されない。
+    this.updateMovePreview();
+    if (this.sim && this.sim.result()) { this.finishBattle(); return; }
+    if (this.paused || !this.sim) return;
     // 非アクティブ中の巨大deltaを復帰後に消化すると、古いSHOTイベントが連続再生される。
     if (isPageInactive()) {
       this.acc = 0;
@@ -446,6 +595,120 @@
       n++;
     }
     this.syncUnits();
+    this.updateMovePreview();
+  };
+
+  /**
+   * 行き先を **hex のマーカー**で示す（`gameLogic.reachableHexes` = 既存の hex 枠描画）。
+   *
+   * 線は使わない（2026-08-02 ディレクター指示「六角ヘックスで移動先指定して。
+   * 移動線やだ」）。示すのは経路ではなく**行き先1マス**だけ。
+   *
+   * 状態は2つしかない:
+   *   1. 行き先を選んでいる最中 → カーソルのマス
+   *   2. 命令を出した後 → その兵が向かっている目的地のマス（命令の受領確認）
+   * それ以外では必ず消す。以前はホバーする限り出し続けたため、命令を出した後も
+   * 残って何も確定していないように見えた。
+   */
+  RtwpInstance.prototype.updateMovePreview = function () {
+    const g = this.gameLogic;
+    if (!g || !this.sim) return;
+    const clear = () => {
+      if (this._previewOwned) {
+        g.reachableHexes = [];
+        g.path = [];
+        this._previewOwned = false;
+      }
+    };
+    const mark = (hex) => {
+      g.reachableHexes = [{ q: hex.q, r: hex.r }];
+      g.path = [];   // 線は出さない
+      this._previewOwned = true;
+    };
+    const sel = g.selectedUnit;
+    if (!sel || sel.team !== 'player') return clear();
+    const s = this.sim.getSoldier(String(sel.id));
+    if (!s) return clear();
+
+    // 1. 行き先を選んでいる最中: カーソルのマスを指す
+    const SA = resolveDeps().SimActions;
+    const pending = this.pendingAction;
+    const pendingDef = pending && SA && SA.get(pending.id);
+    if (pendingDef && pendingDef.needs === 'hex' && pending.unitId === String(sel.id)) {
+      const hover = g.hoverHex;
+      if (!hover || (hover.q === s.q && hover.r === s.r)) return clear();
+      return mark(hover);
+    }
+
+    // 2. 移動中なら目的地のマス
+    if (s.movePath && s.movePath.length) {
+      delete sel._rtwpOrderedPath;
+      return mark(s.movePath[s.movePath.length - 1]);
+    }
+    // 2b. 発令したが伝達中（§3.4 の遅延で数秒かかる）。届くまでマーカーが消えると
+    //     「命令が通っていない」ように見えるので、頼んだ行き先を出したままにする。
+    const ordered = sel._rtwpOrderedPath;
+    if (ordered && ordered.length) return mark(ordered[ordered.length - 1]);
+    clear();
+  };
+
+  /**
+   * 戦闘の決着をキャンペーン進行へ渡す。
+   *
+   * **RTwP には決着処理が最初から無かった。** 旧ターン制の勝敗判定
+   * （checkWin/checkLose）は `gameLogic.applyDamage` と `endTurn` からしか
+   * 呼ばれず、RTwP はそのどちらも通らない — ダメージは sim_core の中で解決し、
+   * endTurn は一時停止トグルへ差し替えてあるため。結果、敵を全滅させても
+   * セクターが進まないまま盤面が止まる（2026-08-02 実プレイで判明）。
+   *
+   * 報酬画面・増援・セクター加算は旧経路が正本なので、こちらでは判定結果を
+   * その入口へ運ぶだけにする。
+   */
+  RtwpInstance.prototype.finishBattle = function () {
+    if (this._finished) return;
+    const g = this.gameLogic;
+    const res = this.sim && this.sim.result();
+    if (!g || !res) return;
+    this._finished = true;
+
+    this.syncUnits();          // 最終状態（戦死者の hp=0）を本編ユニットへ反映
+    this.pendingAction = null;
+    this.setPaused(true);
+    this._log(res.winner === 'A'
+      ? '-- SECTOR CLEAR (' + res.reason + ') --'
+      : '-- 作戦失敗 (' + res.reason + ') --');
+
+    const alivePlayers = (g.units || []).filter((u) => u.team === 'player' && u.hp > 0);
+
+    if (res.winner === 'A') {
+      // 全滅させた場合は旧来の判定がそのまま通る（報酬画面 → promoteSurvivors →
+      // 次セクターの経路を共有する。経験値・昇進はこの先の既存処理が担当）
+      if (!(typeof g.checkWin === 'function' && g.checkWin())) {
+        // 敗走勝ち: 敵が盤上に生き残っているので上の判定は通らない。同じ結末へ手で運ぶ
+        g.state = 'WIN';
+        g._victoryProcessed = true;
+        if (g.campaign && typeof g.campaign.onSectorCleared === 'function') {
+          g.campaign.onSectorCleared(alivePlayers);
+        }
+      }
+    } else {
+      if (typeof g.checkLose === 'function') g.checkLose();
+      // 全滅ではなく敗走・戦闘不能で負けた場合は checkLose が発火しないので、
+      // ここで送る。**負け方を取り違えて伝えないよう理由と生存数を渡す** —
+      // 文言が「全滅しました」固定で、負傷兵が生きているのに全滅と出ていた。
+      if (alivePlayers.length > 0 && g.campaign && typeof g.campaign.onGameOver === 'function') {
+        g.campaign.onGameOver(res.reason, alivePlayers.length);
+      }
+    }
+
+    // **必ず自分を切り離す。** 次のセクターは新しい BattleLogic として作られるが、
+    // phaser_bridge の接続は「instance が無い時だけ」なので、決着済みのインスタンス
+    // が残っていると再接続されない。その結果、次セクターは決着済みsimを抱えたまま
+    // update() が即returnし、盤面が一切動かない（2026-08-02 SECTOR2 で発生）。
+    if (typeof window !== 'undefined' && window.RtwpBattle
+      && window.RtwpBattle.instance === this) {
+      window.RtwpBattle.detach();
+    }
   };
 
   /** プレイヤーが命令を出したら、分隊長AIが即座に上書きしないよう黙らせる */
@@ -454,7 +717,70 @@
     this.leaderState.A.playerLockUntil = this.sim._tick + (T.PLAYER_ORDER_LOCK_T || 150);
   };
 
-  RtwpInstance.prototype.orderMove = function (unit, q, r) {
+  // -------------------------------------------------------------------------
+  // 行動カタログ（sim_actions.js）の呼び出し口
+  //
+  // 前提条件の判定はカタログ側にしか無い。ここで「射程内か」「弾があるか」を
+  // 再実装すると、AIとプレイヤーで使える技が食い違う（カタログを作った理由）。
+  // -------------------------------------------------------------------------
+
+  /**
+   * 行動カタログへ渡す文脈。sim のスナップショットだけを積む（§7.3-2 破壊的プローブ禁止）。
+   * @param {Object} unit 本編ユニット（実行者） / @param {Object} target 敵ユニット / @param {{q,r}} hex 目標地点
+   */
+  RtwpInstance.prototype.actionContext = function (unit, target, hex) {
+    if (!this.sim) return null;
+    const self = unit ? this.sim.getSoldier(String(unit.id)) : null;
+    if (!self) return null;
+    const soldiers = this.sim.soldiers();
+    const ctx = {
+      self: self,
+      target: target ? this.sim.getSoldier(String(target.id)) : null,
+      hex: hex || null,
+      squad: soldiers.filter((s) => s.team === self.team && s.hp > 0),
+      world: { soldiers: soldiers, map: this.map, tuning: resolveDeps().SIM_TUNING },
+    };
+    // 経路は1hexずつ刻む。1要素へ遠い hex を入れると sim_core の移動がワープする。
+    if (hex) ctx.path = straightPath(this.map, { q: self.q, r: self.r }, hex);
+    return ctx;
+  };
+
+  /** カタログの行動を実行する。@returns {boolean} 命令を発行できたか */
+  RtwpInstance.prototype.runAction = function (actionId, unit, target, hex) {
+    const SA = resolveDeps().SimActions;
+    if (!SA || !this.sim) return false;
+    const ctx = this.actionContext(unit, target, hex);
+    if (!ctx || ctx.self.team !== 'A') return false;
+    const orders = SA.issue(actionId, ctx);
+    if (!orders.length) return false;
+    orders.forEach((o) => this.sim.issueOrder(o));
+    // 伝達遅延中も「どんな命令を受けたか」は見た目へ即時反映する。
+    // 実際の発砲・移動は ORDER_DELIVERED 後なので、弾薬・命中処理は先走らない。
+    if (ctx.target && unit) unit._rtwpPendingTargetId = ctx.target.id;
+    // 命令が通ったことを盤面で見せる。クリックしただけでは「効いた感じ」が出ない
+    // （2026-08-02 ディレクター指摘）ので、対象へターゲットカーソルを点滅させる。
+    if (ctx.target && typeof window !== 'undefined' && window.TacticalPauseOverlay
+      && window.TacticalPauseOverlay.flash) {
+      window.TacticalPauseOverlay.flash(ctx.target.id);
+    }
+    if (unit) {
+      const mine = orders.find((o) => o.type === 'MOVE_TO'
+        && o.soldierIds.indexOf(String(unit.id)) >= 0);
+      if (mine && mine.payload.path) unit._rtwpOrderedPath = mine.payload.path.slice();
+      else delete unit._rtwpOrderedPath;
+    }
+    this._lockLeader();
+    const def = SA.get(actionId);
+    this._log('命令: ' + (def ? def.label : actionId)
+      + (def && def.scope === 'self' && unit ? '（' + unit.name + '）' : '')
+      + (target ? ' → ' + target.name : ''));
+    return true;
+  };
+
+  RtwpInstance.prototype.orderMove = function (unit, q, r, mode) {
+    const id = (mode === 'rush') ? 'RUSH' : (mode === 'crawl') ? 'CRAWL' : 'MOVE';
+    if (resolveDeps().SimActions) return this.runAction(id, unit, null, { q: q, r: r });
+    // カタログが読み込まれていない環境（古いHTML）でも移動だけは通す
     if (!unit || !this.sim) return false;
     const s = this.sim.getSoldier(String(unit.id));
     if (!s || s.hp <= 0 || s.team !== 'A') return false;
@@ -463,6 +789,60 @@
     this.sim.issueOrder({ type: 'MOVE_TO', soldierIds: [String(unit.id)], payload: { path: path } });
     this._lockLeader();
     return true;
+  };
+
+  /**
+   * 行動を「対象待ち」にする。needs が無い行動はその場で実行する。
+   * @returns {boolean} 実行した（=対象待ちにならなかった）か
+   */
+  RtwpInstance.prototype.armAction = function (actionId, unit) {
+    const SA = resolveDeps().SimActions;
+    const def = SA && SA.get(actionId);
+    if (!def) return false;
+    if (!def.needs) {
+      this.pendingAction = null;
+      return this.runAction(actionId, unit, null, null);
+    }
+    this.pendingAction = { id: actionId, unitId: unit ? String(unit.id) : null };
+    this._log(def.label + ': ' + (def.needs === 'enemy' ? '対象の敵をクリック' : '地点をクリック'));
+    return false;
+  };
+
+  /** その hex に居る生きた敵ユニット（右クリックの目的語判定用）。 */
+  RtwpInstance.prototype._enemyAt = function (hex) {
+    if (!hex || !this.sim) return null;
+    const foe = this.sim.soldiers().find((s) => s.team === 'B' && s.hp > 0
+      && s.q === hex.q && s.r === hex.r);
+    return foe ? this.unitById.get(String(foe.id)) || null : null;
+  };
+
+  /** 分隊命令のホットキー用に、生きている自軍兵を1人拾う（誰でも文脈は同じ）。 */
+  RtwpInstance.prototype._anyPlayerUnit = function () {
+    if (!this.sim) return null;
+    const alive = this.sim.soldiers().find((s) => s.team === 'A' && s.hp > 0);
+    return alive ? this.unitById.get(String(alive.id)) || null : null;
+  };
+
+  /** 対象待ちの行動の実行者。選び直しで選択が動いていても、命じた本人へ届ける。 */
+  RtwpInstance.prototype._pendingActor = function (fallbackUnit) {
+    const pending = this.pendingAction;
+    if (pending && pending.unitId && this.unitById.has(pending.unitId)) {
+      return this.unitById.get(pending.unitId);
+    }
+    return fallbackUnit;
+  };
+
+  /** 対象待ちの行動を、クリックされた敵/地点で消費する。@returns {boolean} 消費したか */
+  RtwpInstance.prototype.consumePendingAction = function (unit, target, hex) {
+    const pending = this.pendingAction;
+    if (!pending) return false;
+    const SA = resolveDeps().SimActions;
+    const def = SA && SA.get(pending.id);
+    if (!def) { this.pendingAction = null; return false; }
+    if (def.needs === 'enemy' && !target) return false;
+    if (def.needs === 'hex' && !hex) return false;
+    this.pendingAction = null;
+    return this.runAction(pending.id, unit, target, hex);
   };
 
   RtwpInstance.prototype.orderFocusFire = function (targetUnit) {
@@ -533,6 +913,63 @@
     return issued > 0;
   };
 
+  /**
+   * 味方兵を左クリックした時の命令メニュー。旧ターン制と同じ位置・同じ操作。
+   *
+   * **その兵にできることだけを、一語ずつ並べる。** 分隊全体への命令（集中射撃・
+   * 制圧射撃・遮蔽）はここに出さない — 1人を選んで開いたメニューに分隊命令が
+   * 混ざるのは筋が通らない（2026-08-02 ディレクター指摘）。分隊命令はホットキー。
+   *
+   * 所要秒数・射線数のような数字も、tooltip も出さない。命令の意味は名前だけで
+   * 伝わるべきで、伝わらないなら名前を直す（2026-08-02「ALT文消せ ださい」）。
+   */
+  RtwpInstance.prototype.showSoldierMenu = function (unit, px, py) {
+    const SA = resolveDeps().SimActions;
+    const menu = (typeof document !== 'undefined') ? document.getElementById('command-menu') : null;
+    if (!SA || !menu || !unit) return false;
+    const ctx = this.actionContext(unit, null, null);
+    if (!ctx || ctx.self.team !== 'A') return false;
+
+    const entries = SA.list(ctx).filter((e) => e.action.scope === 'self');
+    if (!entries.length) return false;
+    this.pendingAction = null;
+    if (this._menuHtml == null) this._menuHtml = menu.innerHTML;
+
+    const self = this;
+    const g = this.gameLogic;
+    menu.innerHTML = '';
+
+    entries.forEach(function (entry) {
+      const def = entry.action;
+      const btn = document.createElement('div');
+      btn.className = 'cmd-btn' + (entry.ok ? '' : ' disabled');
+      btn.textContent = def.label;
+      if (entry.ok) {
+        btn.onclick = function () {
+          self.armAction(def.id, unit);
+          if (g && g.ui && g.ui.hideActionMenu) g.ui.hideActionMenu();
+        };
+      }
+      menu.appendChild(btn);
+    });
+
+    const cancel = document.createElement('div');
+    cancel.className = 'cmd-btn';
+    cancel.style.cssText = 'text-align:center; color:#888;';
+    cancel.textContent = 'CANCEL';
+    cancel.onclick = function () {
+      self.pendingAction = null;
+      if (g && g.clearSelection) g.clearSelection();
+      else if (g && g.ui && g.ui.hideActionMenu) g.ui.hideActionMenu();
+    };
+    menu.appendChild(cancel);
+
+    menu.style.left = (px + 20) + 'px';
+    menu.style.top = (py - 50) + 'px';
+    menu.style.display = 'block';
+    return true;
+  };
+
   RtwpInstance.prototype.orderTakeCover = function () {
     if (!this.sim) return false;
     const ids = this.sim.soldiers().filter((s) => s.team === 'A' && s.hp > 0).map((s) => s.id);
@@ -556,11 +993,13 @@
     const self = this;
     if (!g || this._uiInstalled) return;
     this._orig = {
+      handleClick: g.handleClick,
       handleRightClick: g.handleRightClick,
       actionAttack: g.actionAttack,
       onUnitClick: g.onUnitClick,
       endTurn: g.endTurn,
       uiLog: g.ui && g.ui.log,
+      showActionMenu: g.ui && g.ui.showActionMenu,
     };
 
     // 戦闘中のログはフローティング窓を再表示せず、RTwPドックへ集約する。
@@ -568,14 +1007,28 @@
       g.ui.log = function (msg) { self.pushEventLog(String(msg)); };
     }
 
-    // 右クリック = 移動命令。RTwP では経路も AP も無いので、選択兵へ直接命令する。
-    g.handleRightClick = function (px, py, hex) {
-      const sel = g.selectedUnit;
-      if (sel && hex && self.orderMove(sel, hex.q, hex.r)) {
-        self._log(sel.name + ' へ移動命令');
-        return;
+    // 命令メニューは**味方の左クリック**で開く（旧ターン制と同じ操作）。中身だけ
+    // RTwP の語彙へ差し替える — 修理・白兵・治療は AP 制ターン戦のもので対応行動が無い。
+    if (g.ui && typeof g.ui.showActionMenu === 'function' && resolveDeps().SimActions) {
+      g.ui.showActionMenu = function (u, px, py) { self.showSoldierMenu(u, px, py); };
+    }
+
+    // 左クリック = 選んだ行動の対象を指す。行き先を左で確定できないと、メニューで
+    // 「移動」を選んだ後に何をすればよいか分からない（2026-08-02 ディレクター指摘）。
+    g.handleClick = function (hex, px, py) {
+      if (hex && self.pendingAction) {
+        const actor = self._pendingActor(g.selectedUnit);
+        if (self.consumePendingAction(actor, self._enemyAt(hex), hex)) return;
       }
-      if (self._orig.handleRightClick) return self._orig.handleRightClick.call(g, px, py, hex);
+      if (self._orig.handleClick) return self._orig.handleClick.call(g, hex, px, py);
+    };
+
+    // 右クリック = **取り消しだけ。** 移動の意味は持たせない（2026-08-02 ディレクター
+    // 指示）。命令はメニューかホットキーから出す、という一本道にする。
+    g.handleRightClick = function () {
+      if (self.pendingAction) { self.pendingAction = null; self._log('取り消し'); }
+      if (g.ui && g.ui.hideActionMenu) g.ui.hideActionMenu();
+      if (g.clearSelection) g.clearSelection();
     };
 
     // コンテキストメニューの「射撃」もRTwPへ流す。旧 actionAttack を呼ぶとAP制・
@@ -600,6 +1053,9 @@
     // click into an aimed TARGET order instead of replacing the selection.
     g.onUnitClick = function (unit) {
       const shooter = g.selectedUnit;
+      // メニューで選んだ「射撃」「集中射撃」の対象として先に消費する
+      if (unit && unit.team === 'enemy'
+        && self.consumePendingAction(self._pendingActor(shooter), unit, null)) return;
       if (self.paused && shooter && shooter.team === 'player'
           && unit && unit.team === 'enemy') {
         if (self.orderAttack(shooter, unit, 'aimed')) {
@@ -627,19 +1083,28 @@
           e.preventDefault();
           self.setPaused(!self.paused); self._log(self.paused ? '一時停止' : '再開');
           break;
-        case 'f': case 'F':
-          if (sel && sel.team === 'enemy' && self.orderFocusFire(sel)) self._log('命令: ' + sel.name + 'へ集中射撃');
-          break;
-        case 's': case 'S':
-          if (self.orderSuppress()) self._log('命令: 制圧射撃');
-          break;
-        case 'c': case 'C':
-          if (self.orderTakeCover()) self._log('命令: 遮蔽に入れ');
-          break;
         case '1': self.setSpeed(1); break;
         case '2': self.setSpeed(2); break;
         case '3': self.setSpeed(4); break;
-        default: return;
+        case 'Escape':
+          if (self.pendingAction) { self.pendingAction = null; self._log('命令を取り消し'); }
+          break;
+        default: {
+          // ホットキーもメニューと同じカタログを引く。片方にしか無い技を作らない。
+          const SA = resolveDeps().SimActions;
+          const def = SA && SA.byHotkey(e.key);
+          if (!def) return;
+          const friendly = (sel && sel.team === 'player') ? sel : self._anyPlayerUnit();
+          if (!friendly) return;
+          // 単体行動は「誰に」が決まっていないと出せない
+          if (def.scope === 'self' && (!sel || sel.team !== 'player')) return;
+          if (def.needs === 'enemy' && sel && sel.team === 'enemy') {
+            self.runAction(def.id, friendly, sel, null);
+          } else {
+            self.armAction(def.id, friendly);
+          }
+          break;
+        }
       }
     };
     document.addEventListener('keydown', this._keyHandler);
@@ -699,6 +1164,8 @@
     const g = this.gameLogic;
     if (!this._uiInstalled) return;
     if (g && this._orig) {
+      if (this._orig.handleClick) g.handleClick = this._orig.handleClick;
+      else delete g.handleClick;
       if (this._orig.handleRightClick) g.handleRightClick = this._orig.handleRightClick;
       else delete g.handleRightClick;
       if (this._orig.actionAttack) g.actionAttack = this._orig.actionAttack;
@@ -708,7 +1175,16 @@
       if (this._orig.endTurn) g.endTurn = this._orig.endTurn;
       else delete g.endTurn;
       if (g.ui && this._orig.uiLog) g.ui.log = this._orig.uiLog;
+      if (g.ui && this._orig.showActionMenu) g.ui.showActionMenu = this._orig.showActionMenu;
     }
+    // カタログ駆動で書き換えたメニューDOMを元へ戻す（旧ターン制は id 付きの
+    // ボタンを直接掴むので、innerHTML を戻さないと切り戻しで壊れる）
+    if (this._menuHtml != null && typeof document !== 'undefined') {
+      const menu = document.getElementById('command-menu');
+      if (menu) { menu.innerHTML = this._menuHtml; menu.style.display = 'none'; }
+      this._menuHtml = null;
+    }
+    this.pendingAction = null;
     if (this._keyHandler) document.removeEventListener('keydown', this._keyHandler);
     if (this._visibilityHandler) document.removeEventListener('visibilitychange', this._visibilityHandler);
     if (this._visibilityHandler && window.removeEventListener) {
@@ -756,8 +1232,12 @@
     units.forEach((u) => {
       delete u._rtwpSkipped; delete u._rtwpHpScale;
       delete u._rtwpTargetId; delete u._rtwpPendingTargetId;
-      delete u._rtwpAmmo; delete u._sim;
+      delete u._rtwpAmmo; delete u._sim; delete u._rtwpOrderedPath;
     });
+    if (this.gameLogic && this._previewOwned) {
+      this.gameLogic.path = [];
+      this.gameLogic.reachableHexes = [];
+    }
     this.sim = null;
     this.gameLogic = null;
     this.unitById.clear();
@@ -792,12 +1272,17 @@
     d.TraitPolicy = (typeof TraitPolicy !== 'undefined') ? TraitPolicy : window.TraitPolicy;
     d.CommsOrders = (typeof CommsOrders !== 'undefined') ? CommsOrders : window.CommsOrders;
     d.LeaderPolicy = (typeof LeaderPolicy !== 'undefined') ? LeaderPolicy : window.LeaderPolicy;
+    // 行動カタログ。必須にはしない — 読み込まれていなければ移動・射撃だけの
+    // 旧UIへ degrade する（REQUIRED に入れると古いHTMLでRTwPごと起動しなくなる）。
+    d.SimActions = (typeof SimActions !== 'undefined') ? SimActions : window.SimActions;
     d.makePsBattleMapApi = (typeof makePsBattleMapApi !== 'undefined')
       ? makePsBattleMapApi : window.makePsBattleMapApi;
     d.mulberry32 = (typeof mulberry32 !== 'undefined') ? mulberry32 : window.mulberry32;
     d.toSimWeapon = (typeof toSimWeapon !== 'undefined') ? toSimWeapon : window.toSimWeapon;
     d.SIM_TUNING = (typeof SIM_TUNING !== 'undefined') ? SIM_TUNING : window.SIM_TUNING;
     d.WPNS = (typeof WPNS !== 'undefined') ? WPNS : window.WPNS;
+    d.RIFLE_GRENADE_FOR_MAIN = (typeof RIFLE_GRENADE_FOR_MAIN !== 'undefined')
+      ? RIFLE_GRENADE_FOR_MAIN : window.RIFLE_GRENADE_FOR_MAIN;
     d.MAP_W = (typeof MAP_W !== 'undefined') ? MAP_W : window.MAP_W;
     d.MAP_H = (typeof MAP_H !== 'undefined') ? MAP_H : window.MAP_H;
     return d;

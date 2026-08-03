@@ -118,6 +118,33 @@ function collectThreats(soldierView, worldView) {
 }
 
 /**
+ * 経路が「何人にどれだけ見られているか」の総量。findCoverPath の内部評価と同じ
+ * 尺度（脅威の weight を、視線の通るマスごとに積算）を経路全体へ適用したもの。
+ *
+ * 移動モードの判断に使う: 見られていない経路なら歩いても這っても同じなので、
+ * 性格による分岐は**露出がある時にだけ**意味を持つ。
+ *
+ * @returns {number} 0 なら死角。大きいほど射線に晒される
+ */
+function pathExposure(soldierView, worldView, path) {
+  if (!path || !path.length) return 0;
+  const map = worldView && worldView.map;
+  if (!map || typeof map.hasLos !== 'function') return 0;
+  const threats = collectThreats(soldierView, worldView);
+  if (!threats.length) return 0;
+
+  let total = 0;
+  for (let i = 0; i < path.length; i++) {
+    for (let j = 0; j < threats.length; j++) {
+      let visible = false;
+      try { visible = map.hasLos({ q: threats[j].q, r: threats[j].r }, path[i]); } catch (e) { visible = false; }
+      if (visible) total += threats[j].weight;
+    }
+  }
+  return total;
+}
+
+/**
  * 遮蔽へ向かう短距離経路を幅優先で探す。
  *
  * 隣接1マスしか見ないと、大きな畑の中にいる兵士は隣接6マスすべてが同じ薄い遮蔽で
@@ -266,6 +293,110 @@ function findPathTo(map, start, goal, maxSteps) {
 
 const TraitPolicy = {
   /**
+   * 移動命令の関門（2026-08-02）。**命令された移動にだけ**掛かり、「どう渡るか」を
+   * 現場の性格で書き換える。NORTH_STAR §4.1「個性 = 無命令時の行動差」を、命令への
+   * 応答差まで広げたもの — 走れと言われて走る兵と、這って寄る兵が居る。
+   *
+   * 自発移動（selfPreserve 等）は sim_core 側で素通りする（payload.selfInitiated）。
+   * 自分の判断を自分で検閲すると、トレイト補正が二重に乗る。
+   *
+   * @param {{path: Array, mode: string}} payload - 命令された経路と移動モード
+   * @returns {{mode?: string, refuse?: boolean, note?: string}|null} null = 命令どおり
+   */
+  vetMoveOrder: function (soldierView, worldView, rng, payload) {
+    const s = soldierView;
+    const traits = s.traits || [];
+    const has = function (t) { return traits.indexOf(t) !== -1; };
+    const T = (worldView && worldView.tuning) || {};
+    const requested = (payload && payload.mode) || 'walk';
+
+    // 臆病は制圧下では命令が通らない。seekCoverForOrder と同じ閾値・同じ見せ方に
+    // 揃える（黙って無視せず、なぜ動かないかをノートで出す）。
+    if (has('timid') && s.suppression >= TRAIT_MODS.timid.FREEZE_AT_SUPPRESSION) {
+      return { refuse: true, note: '臆病: 竦んで動けない' };
+    }
+
+    // 釘付けの兵は誰であれ這うしかない。sim_core の _effectiveMoveMode が強制するが、
+    // 命令側でも降格させて「走れと言ったのに這っている」理由を可視化する。
+    const pinnedAt = T.PINNED_AT != null ? T.PINNED_AT : 80;
+    if (requested === 'rush' && s.suppression >= pinnedAt) {
+      return { mode: 'crawl', note: '釘付け: 走れない、匍匐で進む' };
+    }
+
+    // 露出のない経路ではどう渡っても同じなので、性格差を出す意味がない。
+    const exposure = pathExposure(s, worldView, payload && payload.path);
+    if (exposure <= 0) return null;
+
+    // 慎重は「見られている地面を走って渡る」を拒む。動かないのではなく、這ってでも
+    // 行く — cautious は臆病ではなく、生き延びる道を選ぶ性格として実装する。
+    if (has('cautious') && requested === 'rush') {
+      return { mode: 'crawl', note: '慎重: 走らず匍匐で寄る' };
+    }
+    // 攻撃的は歩けと言われても駆ける。速く着く代わりに息を切らす（§4.1 の
+    // 「弾を浪費する」と同じ質の、勝手に前に出る癖）。
+    if (has('aggressive') && requested === 'walk') {
+      return { mode: 'rush', note: '攻撃的: 駆け足で行く' };
+    }
+    return null;
+  },
+
+  /**
+   * 次の1マスをどう渡るか（2026-08-02 ディレクター指示）。
+   *
+   * プレイヤーの命令は「移動」だけ。敵が居る戦場で「歩け」と命じるのは不自然で、
+   * 遮蔽伝いに寄るのか・様子を窺うのか・開豁地を走り抜けるのかは、そのマスへ
+   * 踏み出す直前に現場が決める（§3.4 三現主義）。ここがその判断。
+   *
+   *   撃たれている／制圧されている → 匍匐（伏せたまま進む）
+   *   次が開豁地で敵に見られている → ダッシュ。ただし遮蔽から出るなら一拍様子を窺う
+   *   次に遮蔽がある               → 歩き（遮蔽伝いに慎重に）
+   *
+   * @returns {{mode:string, observeT:number, note?:string}}
+   */
+  pickMoveStep: function (soldierView, worldView, nextHex) {
+    const s = soldierView;
+    const T = (worldView && worldView.tuning) || {};
+    const map = worldView && worldView.map;
+    if (!map || !nextHex) return { mode: 'walk', observeT: 0 };
+
+    const pinnedAt = T.PINNED_AT != null ? T.PINNED_AT : 80;
+    const underFireWindow = T.COVER_SEEK_UNDER_FIRE_T != null ? T.COVER_SEEK_UNDER_FIRE_T : 30;
+    const tick = (typeof worldView.tick === 'number') ? worldView.tick : null;
+    const beingShot = (tick != null && typeof s.underFireT === 'number')
+      && (tick - s.underFireT) <= underFireWindow;
+
+    // 弾が来ている間に立ち上がるのは自殺。伏せたまま進む
+    if (s.suppression >= pinnedAt || beingShot) {
+      return { mode: 'crawl', observeT: 0, note: '匍匐で前進' };
+    }
+
+    let nextCover = 0;
+    try { nextCover = map.cover(nextHex) || 0; } catch (e) { nextCover = 0; }
+    const openAt = T.AUTO_MOVE_OPEN_COVER != null ? T.AUTO_MOVE_OPEN_COVER : 0.2;
+
+    // 次のマスが見られているか（1挺でも射線が通れば開豁地の横断とみなす）
+    const threats = collectThreats(s, worldView);
+    let watched = false;
+    for (let i = 0; i < threats.length && !watched; i++) {
+      try { watched = map.hasLos({ q: threats[i].q, r: threats[i].r }, nextHex); } catch (e) { watched = false; }
+    }
+
+    if (nextCover < openAt && watched) {
+      // 遮蔽の中から開豁地へ出る時だけ、しゃがんで頃合いを窺う。既に開豁地に
+      // 居るなら止まる方が危ないので、そのまま走り抜ける。
+      let hereCover = 0;
+      try { hereCover = map.cover({ q: s.q, r: s.r }) || 0; } catch (e) { hereCover = 0; }
+      const fromCover = hereCover >= openAt;
+      return {
+        mode: 'rush',
+        observeT: fromCover ? (T.AUTO_MOVE_OBSERVE_T || 0) : 0,
+        note: fromCover ? '様子を窺って開豁地へ' : '開豁地を走り抜ける',
+      };
+    }
+    return { mode: 'walk', observeT: 0, note: watched ? null : '遮蔽伝いに前進' };
+  },
+
+  /**
    * 自衛の反射（自動Cover）。撃たれて露出しているなら隣接のより濃い遮蔽へ退避する。
    *
    * `decide` から独立させてあるのは、**射撃命令が立っている間も自衛だけは通す**ため。
@@ -353,14 +484,67 @@ const TraitPolicy = {
     // 「死角伝い」を名乗れるのは**露出を実際に評価した上で** risk 0 だった時だけ。
     // 敵が1人も見えていない時は評価そのものをしていないので従来の文言に戻す。
     // 匍匐は死角かどうかより優先して見せる（プレイヤーが姿勢を読み取る手掛かり）。
+    // 文言と実際の移動モードを一致させる。以前は「匍匐で遮蔽へ」と言いながら
+    // 速度は伏せ状態の副作用でしか変わっておらず、表示と機構が別物だった。
+    const mode = pinned ? 'crawl' : (threats.length > 0 ? 'rush' : 'walk');
     const label = pinned ? '匍匐で遮蔽へ'
       : (threats.length > 0 && found.risk === 0) ? '死角伝いに遮蔽へ'
         : '遮蔽へ退避';
     return {
       type: 'MOVE_TO', soldierIds: [s.id],
-      payload: { path: found.path },
+      payload: { path: found.path, mode: mode, selfInitiated: true },
       note: (has('cautious') ? '慎重: 被制圧、' : '被制圧: ') + label,
     };
+  },
+
+  /**
+   * 撃たれる前の遮蔽確保。開豁地に立っていて敵から見えているなら、遮蔽へ移るか
+   * 伏せる。selfPreserve（撃たれたら動く）の一段手前にある、歩兵の常識のほう。
+   *
+   * @returns {Object|null} MOVE_TO / GO_PRONE intent、必要なければ null
+   */
+  seekCoverIfExposed: function (soldierView, worldView, rng) {
+    const s = soldierView;
+    const T = (worldView && worldView.tuning) || {};
+    const map = worldView && worldView.map;
+    if (!map || typeof map.cover !== 'function' || typeof map.neighbors !== 'function') return null;
+    if (s.state === 'move' || (s.movePath && s.movePath.length > 0)) return null;
+
+    const openMax = T.OPEN_GROUND_COVER_MAX != null ? T.OPEN_GROUND_COVER_MAX : 0.18;
+    const here = { q: s.q, r: s.r };
+    const hereCover = map.cover(here);
+    if (typeof hereCover !== 'number' || hereCover >= openMax) return null;
+
+    const traits = s.traits || [];
+    const has = function (t) { return traits.indexOf(t) !== -1; };
+    if (has('timid') && s.suppression >= TRAIT_MODS.timid.FREEZE_AT_SUPPRESSION) return null;
+
+    // 見られていなければ隠れる必要はない
+    const threats = collectThreats(s, worldView);
+    if (!threats.length) return null;
+
+    const minGain = T.COVER_SEEK_MIN_GAIN != null ? T.COVER_SEEK_MIN_GAIN : 0.10;
+    const maxSteps = T.COVER_SEEK_MAX_STEPS != null ? T.COVER_SEEK_MAX_STEPS : 4;
+    const found = findCoverPath(map, here, hereCover + minGain, 0, maxSteps, {
+      threats: threats,
+      cost: T.COVER_SEEK_EXPOSURE_COST != null ? T.COVER_SEEK_EXPOSURE_COST : 0.05,
+      includeDest: false,
+    });
+    if (found) {
+      return {
+        type: 'MOVE_TO', soldierIds: [s.id],
+        payload: { path: found.path, mode: 'auto', selfInitiated: true },
+        note: '開豁地: 遮蔽へ移る',
+      };
+    }
+    // 移れる遮蔽が無いなら、せめて伏せる（棒立ちで撃たれるのを待たない）
+    if (!s.prone) {
+      return {
+        type: 'GO_PRONE', soldierIds: [s.id], payload: {},
+        note: '開豁地: 身を伏せる',
+      };
+    }
+    return null;
   },
 
   /**
@@ -416,7 +600,11 @@ const TraitPolicy = {
       if (!path) return null;
       return {
         type: 'MOVE_TO', soldierIds: [s.id],
-        payload: { path: path },
+        payload: {
+          path: path,
+          mode: payload.mode || (pinned ? 'crawl' : 'walk'),
+          selfInitiated: true,
+        },
         note: '命令: 指示された地点へ',
       };
     }
@@ -438,12 +626,13 @@ const TraitPolicy = {
     });
     if (!found) return null;
 
+    const mode = pinned ? 'crawl' : (threats.length > 0 ? 'rush' : 'walk');
     const label = pinned ? '命令: 匍匐で遮蔽へ'
       : (threats.length > 0 && found.risk === 0) ? '命令: 死角伝いに遮蔽へ'
         : '命令: 遮蔽へ';
     return {
       type: 'MOVE_TO', soldierIds: [s.id],
-      payload: { path: found.path },
+      payload: { path: found.path, mode: mode, selfInitiated: true },
       note: label,
     };
   },
@@ -555,6 +744,15 @@ const TraitPolicy = {
     const preserve = this.selfPreserve(s, worldView, rng);
     if (preserve) return preserve;
 
+    // **撃たれる前に身を隠す。** selfPreserve は「撃たれたら動く」なので、まだ
+    // 誰も撃ってきていない開豁地では発火せず、兵が平野に突っ立ったままになる
+    // （2026-08-02 ディレクター指摘）。敵に見られている開豁地に居ると分かった
+    // 時点で、遮蔽へ移るか、無ければ伏せる — 撃たれてから動くのでは遅い。
+    if (sawEnemy && T.OPEN_GROUND_SEEK_COVER !== false) {
+      const exposed = this.seekCoverIfExposed(s, worldView, rng);
+      if (exposed) return exposed;
+    }
+
     if (bestTarget) {
       // calm: withhold fire until well within range, regardless of trait
       // combos -- if calm's threshold is not yet met, fall through to idle.
@@ -608,6 +806,7 @@ if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
     TraitPolicy: TraitPolicy,
     TRAIT_MODS: TRAIT_MODS,
+    pathExposure: pathExposure,
   };
 }
 if (typeof window !== 'undefined') {

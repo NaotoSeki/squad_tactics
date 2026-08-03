@@ -166,9 +166,13 @@ function attach(g) {
   const g = makeGameLogic({ players: 4, enemies: 4 });
   const inst = attach(g);
   const before = g.units.map((u) => u.q + ',' + u.r + ':' + u.hp);
-  for (let i = 0; i < 400; i++) inst.update(T.TICK_MS * 5);
+  // 決着すると finishBattle が自分を切り離す（inst.sim は null になる）。
+  // ここで見たいのは「units が sim に追従するか」なので、sim の参照を先に取り、
+  // 切り離されたら回すのをやめる。
+  const sim6 = inst.sim;
+  for (let i = 0; i < 400 && SB.RtwpBattle.instance; i++) inst.update(T.TICK_MS * 5);
   const after = g.units.map((u) => u.q + ',' + u.r + ':' + u.hp);
-  check(inst.sim._tick > 0, 'sim が進んでいる (tick=' + inst.sim._tick + ')');
+  check(sim6._tick > 0, 'sim が進んでいる (tick=' + sim6._tick + ')');
   check(before.join('|') !== after.join('|'), 'units の座標かHPが sim に追従して変化する');
   check(g.units.every((u) => u.hp >= 0 && u.hp <= u.maxHp), 'hp が 0..maxHp に収まる');
   check(g.units.some((u) => typeof u.suppression === 'number'), '制圧値が units へ書き戻される');
@@ -180,10 +184,13 @@ function attach(g) {
   const g = makeGameLogic({ players: 2, enemies: 2 });
   const inst = attach(g);
   inst.update(T.TICK_MS * 3);
-  const t0 = inst.sim._tick;
-  inst.sim.result = () => ({ winner: 'A', reason: 'test', tick: t0 });
+  const sim7 = inst.sim;
+  const t0 = sim7._tick;
+  sim7.result = () => ({ winner: 'A', reason: 'test', tick: t0 });
   inst.update(T.TICK_MS * 20);
-  check(inst.sim._tick === t0, '決着したら update が sim を進めない');
+  check(sim7._tick === t0, '決着したら update が sim を進めない');
+  check(SB.RtwpBattle.instance === null,
+    '決着したインスタンスは切り離される（次セクターが接続できる）');
 }
 
 // --- 7. 一時停止 -------------------------------------------------------------

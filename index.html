@@ -553,12 +553,13 @@
     </script>
     <script src="tactics_morph.js"></script>
     <script src="logic_math.js"></script>
-    <script src="data.js?v=rtwp-polish-3"></script>
+    <script src="data.js?v=actions-10"></script>
     <!-- data_buildings.js: 別セッションのWIP(PS抽出建物)。phaser_bridge側の未完成配線が
          updateMap未定義エラーでゲームを壊したため一時無効化(2026-07-19 Fable5)。
          復元用パッチ: scratchpad/foreign_phaser_bridge_edit_20260719.patch -->
     <!-- <script src="data_buildings.js"></script> -->
     <script src="data/wpns_pl_master.js"></script>
+    <script src="data/pl_weapon_stats.js?v=phit-1"></script>
     <script src="pl_infantry_loadout.js"></script>
     <script src="data/pl_ammo_data.js"></script>
     <script src="data/pl_cbe_mag_shape.js"></script>
@@ -580,7 +581,7 @@
     <script src="phaser_sidebar.js?v=rtwp-polish-6"></script>
 <script src="phaser_sound.js?v=rtwp-combat-7"></script>
 <script src="phaser_alpha_light.js?v=rtwp-light-3"></script>
-<script src="phaser_tactical_pause.js?v=rtwp-display-3"></script>
+<script src="phaser_tactical_pause.js?v=actions-10"></script>
 <script src="phaser_vfx.js?v=rtwp-light-3"></script>
     <script src="phaser_terrain_v1_bake.js?v=terrain-v1-6"></script>
     <script src="phaser_terrain.js?v=terrain-v1-6"></script>
@@ -598,13 +599,14 @@
     <script src="battle_cloud.js"></script>
     <script src="battle_cloud_tactics.js"></script>
     <script src="phaser_battle_cloud.js"></script>
-<script src="phaser_bridge.js?v=rtwp-display-3"></script>
+<script src="phaser_bridge.js?v=actions-10"></script>
     <script src="logic_ui.js?v=rtwp-polish-6"></script>
     <script src="logic_ai.js"></script>
     <script src="logic_map_city.js"></script>
     <!-- PS正本キャンバスのレジストリ(生成物)。RuralV29Map.generate() は同期なので
          fetch ではなく素のグローバルとして先に読ませる。 -->
     <script src="asset/environment/maps/ps_battlefields.js?v=rtwp-combat-9"></script>
+    <script src="asset/environment/maps/ps_terrain_mods.js?v=terrain-mods-1"></script>
     <script src="logic_map_rural_v29.js?v=rtwp-combat-9"></script>
     <script src="logic_map.js?v=terrain-seam-5"></script>
     <script src="logic_campaign.js?v=rtwp-polish-1"></script>
@@ -614,11 +616,12 @@
 <script src="logic_game.js?v=rtwp-combat-7"></script>
     <!-- RTwP（NORTH_STAR §7 Strangler Fig）。旧ターン制コア(logic_game.js)は
          書き換えず残置し、?rtwp=1 の時だけ接ぎ木する。外せば元に戻る。 -->
-    <script src="sim_core.js?v=rtwp-polish-3"></script>
-    <script src="sim_policy.js?v=rtwp-polish-3"></script>
+    <script src="sim_core.js?v=actions-10"></script>
+    <script src="sim_policy.js?v=actions-10"></script>
     <script src="sim_orders.js"></script>
-    <script src="sim_leader.js"></script>
+    <script src="sim_leader.js?v=actions-10"></script>
+    <script src="sim_actions.js?v=actions-10"></script>
     <script src="sim_battle_adapter.js?v=rtwp-pause-1"></script>
-<script src="logic_battle_rtwp.js?v=rtwp-polish-5"></script>
+<script src="logic_battle_rtwp.js?v=actions-10"></script>
 </body>
 </html>

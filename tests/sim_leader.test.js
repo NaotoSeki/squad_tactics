@@ -156,7 +156,11 @@ function runF2(seed) {
     }
     const evs = sim.drainEvents();
     for (const ev of evs) {
-      if (ev.type === 'ORDER_DELIVERED' && ev.order && ev.order.note === '制圧しろ！頭を上げさせるな！' && orderDeliveredTick === null) {
+      // 制圧で応じたか。攻勢ドクトリン(PUSH_SUPPRESS)は同じ要求を、狙いを一点へ
+      // 束ねたうえで満たすので、こちらも「制圧射撃で応じた」に数える。
+      const note = ev.order && ev.order.note;
+      const answered = note === '制圧しろ！頭を上げさせるな！' || note === 'あの一角を黙らせろ！';
+      if (ev.type === 'ORDER_DELIVERED' && answered && orderDeliveredTick === null) {
         orderDeliveredTick = ev.tick;
       }
     }
@@ -307,20 +311,25 @@ function runF5(seed) {
   // SUPPRESS_FIRE "score" (suppressedCount) keeps changing and the same-doctrine
   // suppression rule never accounts for the silence on its own -- any gap seen
   // here must come from DOCTRINE_COOLDOWN_T (isolating the cooldown timer).
+  //
+  // 残弾は意図的に細くしてある（magsLeft:1 -> 残弾率 0.23 < PUSH_MIN_AMMO）。
+  // 攻勢ドクトリン(PUSH_*)は残弾が細ると決死突撃へ切り替わるが、敵を 6hex 先
+  // （突撃圏外）へ置き投擲弾も持たせていないので、そちらも成立しない。
+  // これで確実に SUPPRESS_FIRE が選ばれ、この試験がクールダウンだけを測れる。
   for (let tick = interval; tick <= 1000; tick += interval) {
     const leaderView = {
       id: 'A0', team: 'A', q: 0, r: 0, hp: 100, isLeader: true, suppression: 0, morale: 100,
-      magRemaining: 5, magsLeft: 5, weapon: rifle,
+      magRemaining: 5, magsLeft: 1, weapon: rifle,
     };
     const thirdSuppressed = (tick % (interval * 2)) === 0;
     const worldView = {
       tick: tick, map: map, tuning: SIM_TUNING,
       soldiers: [
         leaderView,
-        { id: 'A1', team: 'A', q: 0, r: 1, hp: 100, suppression: 90, morale: 100, weapon: rifle, magRemaining: 5, magsLeft: 5 },
-        { id: 'A2', team: 'A', q: 0, r: 2, hp: 100, suppression: 90, morale: 100, weapon: rifle, magRemaining: 5, magsLeft: 5 },
-        { id: 'A3', team: 'A', q: 0, r: 3, hp: 100, suppression: thirdSuppressed ? 90 : 0, morale: 100, weapon: rifle, magRemaining: 5, magsLeft: 5 },
-        { id: 'B0', team: 'B', q: 3, r: 0, hp: 100, suppression: 0, morale: 100, state: 'idle', weapon: rifle },
+        { id: 'A1', team: 'A', q: 0, r: 1, hp: 100, suppression: 90, morale: 100, weapon: rifle, magRemaining: 5, magsLeft: 1 },
+        { id: 'A2', team: 'A', q: 0, r: 2, hp: 100, suppression: 90, morale: 100, weapon: rifle, magRemaining: 5, magsLeft: 1 },
+        { id: 'A3', team: 'A', q: 0, r: 3, hp: 100, suppression: thirdSuppressed ? 90 : 0, morale: 100, weapon: rifle, magRemaining: 5, magsLeft: 1 },
+        { id: 'B0', team: 'B', q: 6, r: 0, hp: 100, suppression: 0, morale: 100, state: 'idle', weapon: rifle },
       ],
     };
     const orders = LeaderPolicy.assess(leaderView, worldView, mulberry32(tick), state);
@@ -336,6 +345,106 @@ function runF5(seed) {
 }
 
 // ---------------------------------------------------------------------------
+
+// ===========================================================================
+// F7: 攻勢ドクトリン — 制圧してから突入する（唯一「勝ちに行く」采配）
+// ===========================================================================
+
+function pushWorld(opts) {
+  opts = opts || {};
+  const rifle = toSimWeapon('m1', WPNS.m1, SIM_TUNING);
+  const map = makeGridMap({ coverAt: opts.coverAt || (() => 0.3) });
+  const mate = (id, q, r, extra) => Object.assign({
+    id: id, team: 'A', q: q, r: r, hp: 100, suppression: 0, morale: 100,
+    weapon: rifle, magRemaining: 8, magsLeft: 6, state: 'idle', traits: [],
+  }, extra || {});
+  const foe = (id, q, r, sup) => ({
+    id: id, team: 'B', q: q, r: r, hp: 100, suppression: sup || 0, morale: 100,
+    weapon: rifle, magRemaining: 8, magsLeft: 6, state: 'idle',
+  });
+  const leaderView = mate('A0', 0, 0, { isLeader: true });
+  const soldiers = [leaderView, mate('A1', 0, 1), mate('A2', 1, 0), mate('A3', 1, 1)];
+  (opts.foes || [[4, 0, 0], [4, 0, 0]]).forEach((f, i) => soldiers.push(foe('B' + i, f[0], f[1], f[2])));
+  return {
+    leaderView: leaderView,
+    world: { tick: 500, map: map, tuning: SIM_TUNING, soldiers: soldiers },
+  };
+}
+
+{
+  // 敵が元気なうちは制圧しか出さない（頭が上がったまま突っ込ませない）
+  const w = pushWorld({ foes: [[4, 0, 0], [4, 0, 0], [4, 1, 0]] });
+  const state = freshLeaderState();
+  const orders = LeaderPolicy.assess(w.leaderView, w.world, mulberry32(3), state);
+  check(orders.length > 0 && orders.every((o) => o.type === 'TARGET_HEX'),
+    `F7a: 未制圧の敵には制圧のみを命じる (types=${orders.map((o) => o.type).join(',')})`);
+  check(state.plan && state.plan.name === 'PUSH_SUPPRESS' && state.plan.phase === 'suppress',
+    `F7b: 采配が plan として残る (${JSON.stringify(state.plan && state.plan.name)})`);
+  check(state.plan && state.plan.hex.q === 4 && state.plan.hex.r === 0,
+    `F7c: 最も敵が重なる hex を目標に選ぶ (${JSON.stringify(state.plan && state.plan.hex)})`);
+}
+
+{
+  // 頭が下がったら突入班を出す。制圧班は撃ち続ける
+  const w = pushWorld({ foes: [[4, 0, 90], [4, 0, 90]] });
+  const state = freshLeaderState();
+  const orders = LeaderPolicy.assess(w.leaderView, w.world, mulberry32(3), state);
+  const assaults = orders.filter((o) => o.type === 'ASSAULT');
+  const suppress = orders.filter((o) => o.type === 'TARGET_HEX');
+  check(assaults.length > 0, `F7d: 制圧が効いたら突入させる (assault=${assaults.length})`);
+  check(suppress.length > 0, `F7e: 突入中も制圧班は撃ち続ける (suppress=${suppress.length})`);
+  check(assaults.length <= SIM_TUNING.PUSH_ASSAULT_MAX,
+    `F7f: 突入班は上限を超えない (${assaults.length} <= ${SIM_TUNING.PUSH_ASSAULT_MAX})`);
+  const baseIds = state.plan.baseIds;
+  const assaultIds = state.plan.assaultIds;
+  check(assaultIds.every((id) => baseIds.indexOf(id) < 0),
+    `F7g: 制圧班と突入班は重ならない (base=${baseIds}, assault=${assaultIds})`);
+  check(state.plan.targetId != null && state.plan.phase === 'assault',
+    `F7h: 突入目標が plan に載る (${JSON.stringify(state.plan.targetId)})`);
+}
+
+{
+  // 弾が細ったら攻めない（撃ち尽くして立ち往生しないため）
+  const w = pushWorld({ foes: [[4, 0, 90], [4, 0, 90]] });
+  w.world.soldiers.forEach((s) => {
+    if (s.team === 'A') { s.magRemaining = 1; s.magsLeft = 0; }
+  });
+  const state = freshLeaderState();
+  const orders = LeaderPolicy.assess(w.leaderView, w.world, mulberry32(3), state);
+  // 「弾が無いから撃ち合いを続ける」が最悪手。撃ち合いで勝てないと分かった
+  // 局面では、投擲弾と白兵で間合いを潰しに行くのが正解。
+  check(orders.length > 0 && orders.every((o) => o.type === 'ASSAULT'),
+    `F7i: 残弾が細ったら制圧をやめて決死突撃へ切り替える (types=${orders.map((o) => o.type).join(',')})`);
+  check(state.plan && state.plan.name === 'PUSH_LAST' && state.plan.baseIds.length === 0,
+    `F7i2: 決死突撃には制圧班を残さない (${JSON.stringify(state.plan && state.plan.name)})`);
+}
+
+{
+  // 地形を読む: 経路の遮蔽が厚い兵が突入班に選ばれる。
+  // r=1 の帯だけ遮蔽を厚くする。**開豁地にはしない** — 0.20 を下回ると
+  // TAKE_COVER ドクトリンが先に発火して攻勢まで届かない。
+  const w = pushWorld({
+    foes: [[4, 0, 90], [4, 0, 90]],
+    coverAt: (hex) => (hex.r === 1 ? 0.6 : 0.3),
+  });
+  // 全員を等距離に置き直し、差が「経路の遮蔽」だけになるようにする
+  w.world.soldiers.forEach((s) => { if (s.team === 'A' && s.id !== 'A0') s.q = 1; });
+  const state = freshLeaderState();
+  LeaderPolicy.assess(w.leaderView, w.world, mulberry32(3), state);
+  const chosen = state.plan.assaultIds;
+  const coveredRoute = w.world.soldiers.filter((s) => s.team === 'A' && s.r === 1).map((s) => s.id);
+  check(chosen.some((id) => coveredRoute.indexOf(id) >= 0),
+    `F7j: 遮蔽に恵まれた経路を持つ兵を突入させる (chosen=${chosen}, covered=${coveredRoute})`);
+}
+
+{
+  // 敵が居なければ攻勢は成立しない
+  const w = pushWorld({ foes: [] });
+  const state = freshLeaderState();
+  const orders = LeaderPolicy.assess(w.leaderView, w.world, mulberry32(3), state);
+  check(!orders.some((o) => o.type === 'TARGET_HEX' || o.type === 'ASSAULT'),
+    `F7k: 敵が居なければ攻勢を出さない (types=${orders.map((o) => o.type).join(',')})`);
+}
 
 console.log(`\n${passCount} passed, ${failCount} failed`);
 if (failCount > 0) {
