@@ -501,7 +501,15 @@ window.PhaserSidebar = class PhaserSidebar {
             container.add(rainbowSlot);
         }
 
-        if (item && typeof window.plItemHasWeaponIcon === 'function' && window.plItemHasWeaponIcon(item)
+        const mortarIconKey = item && window.M2Mortar
+            ? ((isMain && isMortarActive) ? M2Mortar.ASSEMBLED_SLICE_KEYS[index] : M2Mortar.textureKeyForItem(item.code))
+            : null;
+        if (item && mortarIconKey && this.scene.textures.exists(mortarIconKey)) {
+            const icon = this.scene.add.image(slotW / 2, slotH / 2, mortarIconKey);
+            const fitScale = Math.min((slotW - 8) / icon.width, (slotH - 8) / icon.height);
+            icon.setScale(fitScale).setAlpha(isMortarActive && isMain ? 0.9 : 0.78);
+            container.addAt(icon, 1);
+        } else if (item && typeof window.plItemHasWeaponIcon === 'function' && window.plItemHasWeaponIcon(item)
             && typeof window.plCbeWeaponIconPath === 'function') {
             const iconKey = window.plCbeWeaponIconKey(item.cbeNameIndex);
             const iconPath = window.plCbeWeaponIconPath(item.cbeNameIndex);

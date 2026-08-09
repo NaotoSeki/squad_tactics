@@ -62,16 +62,85 @@ const fakeOverlay = {
   },
   banner: { setScale() { return this; }, setPosition() { return this; } },
   help: { setScale() { return this; }, setPosition() { return this; } },
-  detail: { setScale() { return this; }, setPosition() { return this; }, setText() {} },
+  detail: {
+    setScale() { return this; }, setPosition() { return this; },
+    setText(t) { this.text = t; }, setVisible(v) { this.visible = v; },
+  },
   lines: { clear() {} },
   labels: new Map(),
   domUi: null,
+  _setDetail: Overlay.prototype._setDetail,
 };
 Overlay.prototype.update.call(fakeOverlay);
 assert.deepStrictEqual(shadeCalls, [
   ['position', 100, 200],
   ['size', 500, 250],
 ]);
+
+// 未選択・采配なしの時は詳細パネルを出さない。操作説明（「味方兵をクリック」）は
+// チュートリアルの領分で、常設HUDには置かない。
+assert.strictEqual(fakeOverlay.detail.text, '');
+assert.strictEqual(fakeOverlay.detail.visible, false);
+
+// 未配達の一括命令は、PAUSE中の意思決定図では古いsim命令より先に表示する。
+function pendingOrderLine(mode, approach) {
+  const calls = [];
+  const label = {
+    setText() { return this; }, setScale() { return this; },
+    setPosition() { return this; }, setVisible() { return this; },
+  };
+  const soldier = { id: 'A1', team: 'A', hp: 100, q: 0, r: 0,
+    state: 'move', movePath: [{ q: -3, r: 0 }], fireMode: 'hold' };
+  const overlay = Object.assign({}, fakeOverlay, {
+    frame: 0,
+    labels: new Map(),
+    cloud: null,
+    flashes: new Map(),
+    options: {
+      getSoldiers: () => [soldier], getSelectedId: () => null,
+      getPendingTargetId: () => null,
+      getPendingTargetHex: () => ({ q: 7, r: 3 }),
+      getPendingTargetMode: () => mode,
+      getPendingFiringHex: () => approach ? ({ q: 5, r: 1 }) : null,
+      getPendingApproachPath: () => approach
+        ? [{ q: 2, r: 0 }, { q: 5, r: 1 }] : null,
+    },
+    lines: {
+      clear() {}, lineStyle() {}, strokeCircle() {}, beginPath() {},
+      moveTo() {}, lineTo() {}, strokePath() {},
+    },
+    _position: () => ({ x: 0, y: 0 }),
+    _label: () => label,
+    _name: (id) => id,
+    _line: (from, to, color) => calls.push({ from, to, color }),
+    _drawPlan() {},
+  });
+  sandbox.Renderer = { hexToPx: (q, r) => ({ x: q * 10, y: r * 10 }) };
+  Overlay.prototype.update.call(overlay);
+  return calls;
+}
+
+const pendingMoveLines = pendingOrderLine('move');
+assert.strictEqual(pendingMoveLines.length, 1, '予約移動はMarching Antsを1本描く');
+assert.deepStrictEqual(pendingMoveLines[0].to, { x: 70, y: 30 });
+assert.strictEqual(pendingMoveLines[0].color, 0x7fe7ff, '予約移動は移動色で描く');
+
+const pendingSuppressLines = pendingOrderLine('suppress');
+assert.strictEqual(pendingSuppressLines.length, 1, '予約制圧はMarching Antsを1本描く');
+assert.deepStrictEqual(pendingSuppressLines[0].to, { x: 70, y: 30 });
+assert.strictEqual(pendingSuppressLines[0].color, 0xff8a38, '予約制圧は制圧色で描く');
+
+const pendingApproachLines = pendingOrderLine('suppress', true);
+assert.strictEqual(pendingApproachLines.length, 3,
+  '接近→制圧は経路2区間と射撃位置→目標を別々に描く');
+assert.deepStrictEqual(pendingApproachLines[0].to, { x: 20, y: 0 });
+assert.deepStrictEqual(pendingApproachLines[1].to, { x: 50, y: 10 });
+assert.deepStrictEqual(pendingApproachLines[2].from, { x: 50, y: 10 });
+assert.deepStrictEqual(pendingApproachLines[2].to, { x: 70, y: 30 });
+assert.strictEqual(pendingApproachLines[0].color, 0x7fe7ff,
+  '射撃位置までの経路は移動色で描く');
+assert.strictEqual(pendingApproachLines[2].color, 0xff8a38,
+  '射撃位置から本来の目標までは制圧色で描く');
 
 // --- 強襲中・投擲中の表示 ---------------------------------------------------
 assert.strictEqual(
@@ -144,6 +213,29 @@ assert.notDeepStrictEqual(
   framed.ops.filter((o) => o[0] === 'move'),
   'フレームが進むと破線の位相がずれる（marching ants）');
 
+// 蟻は射手→標的へ流れる（逆走していると、静止画で撃っている側を読み違える）。
+// 破線の先頭位置がフレームとともに前進することで確かめる。
+function dashHeads(frame) {
+  const xs = [];
+  const g = {
+    lineStyle() {}, beginPath() {}, strokePath() {}, closePath() {}, fillPath() {},
+    moveTo(x) { xs.push(x); }, lineTo() {}, fillStyle() {}, fillTriangle() {},
+  };
+  Overlay.prototype._line.call(
+    { scene: fakeOverlay.scene, lines: g, frame },
+    { x: 0, y: 0 }, { x: 400, y: 0 }, 0xffffff, 2, 0.9, 1);
+  return xs;
+}
+// zoom=2 → dash 4.5 / gap 3 / period 7.5、1フレーム 0.8px 進む。1周期未満で比較する。
+const heads0 = dashHeads(0);
+const heads1 = dashHeads(1);
+const heads2 = dashHeads(2);
+assert.ok(heads0.length > 1 && heads1.length > 1, '破線が引かれている');
+// 先頭の断片は始点で切り落とされるので、2本目以降で位相の進みを見る
+assert.ok(heads1[1] > heads0[1] && heads2[1] > heads1[1],
+  'marching ants は射手→標的の向きに流れる: '
+  + [heads0[1], heads1[1], heads2[1]].join(' -> '));
+
 // --- 戦雲の勢力重み ---------------------------------------------------------
 // 頭数ではなく「維持できる火力」であること。弾切れ・釘付け・指揮からの孤立が
 // それぞれ独立に勢力を痩せさせる。
@@ -163,5 +255,66 @@ assert.strictEqual(W(Object.assign({}, base, { state: 'incap' }), leader), 0,
   '行動不能者は勢力に数えない');
 assert.strictEqual(W(Object.assign({}, base, { hp: 0 }), leader), 0,
   '死者は勢力に数えない');
+
+// ---------------------------------------------------------------------------
+// 采配リング: 狙っていた敵が倒れたら**その場で**描かれなくなる
+//
+// state.plan は分隊長が次の采配を出した時にしか書き換わらないので、的が倒れても
+// 計画は残る。LeaderPolicy 側の検算は数秒に1回・生きた分隊長が居る時だけなので
+// 「倒した瞬間に消える」を保証できない。描画側の毎フレーム検算が最後の砦
+// （2026-08-05 ディレクター報告4回目「遺体の上／誰も居ない所に円が残る」）。
+// ここでは実物の _drawPlan を呼び、描かれた図形の数を数える。
+// ---------------------------------------------------------------------------
+sandbox.SIM_TUNING = { PINNED_AT: 80, COMMS_VOICE_RNG: 2, PLAN_STALE_RADIUS: 1 };
+sandbox.Renderer = { hexToPx: (q, r) => ({ x: q * 10, y: r * 10 }) };
+
+function drawPlanCalls(plan, soldiers) {
+  const calls = { circles: 0, paths: 0 };
+  const lines = {
+    lineStyle() {}, beginPath() { }, moveTo() {}, lineTo() {},
+    strokePath() { calls.paths++; }, strokeCircle() { calls.circles++; },
+  };
+  const self = {
+    lines: lines,
+    frame: 0,
+    scene: { cameras: { main: { zoom: 1 } } },
+    _position: (id, s) => ({ x: s.q * 10, y: s.r * 10 }),
+    _line() { calls.paths++; },
+    _planHasLiveFoe: Overlay.prototype._planHasLiveFoe,
+  };
+  const byId = new Map(soldiers.filter((s) => s.hp > 0).map((s) => [String(s.id), s]));
+  Overlay.prototype._drawPlan.call(self, plan, byId);
+  return calls;
+}
+
+const foeAlive = { id: 'B1', team: 'B', q: 6, r: 0, hp: 100, state: 'engage' };
+const mateA = { id: 'A1', team: 'A', q: 0, r: 0, hp: 100, state: 'engage' };
+const planAt6 = { name: 'PUSH_SUPPRESS', label: '制圧', phase: 'suppress',
+  hex: { q: 6, r: 0 }, baseIds: ['A1'], assaultIds: [], targetId: null };
+
+assert.ok(drawPlanCalls(planAt6, [mateA, foeAlive]).circles > 0,
+  '敵が居る采配リングは描かれる');
+
+assert.strictEqual(
+  drawPlanCalls(planAt6, [mateA, Object.assign({}, foeAlive, { hp: 0 })]).circles, 0,
+  '狙っていた敵が戦死したら采配リングは描かれない');
+
+assert.strictEqual(
+  drawPlanCalls(planAt6, [mateA, Object.assign({}, foeAlive, { state: 'incap' })]).circles, 0,
+  '行動不能だけが残った hex に采配リングを描かない（遺体の上に残さない）');
+
+assert.strictEqual(
+  drawPlanCalls(planAt6, [mateA, Object.assign({}, foeAlive, { q: 20 })]).circles, 0,
+  '敵が離れた hex の采配リングは描かない（誰も居ない所に残さない）');
+
+// 采配が消えれば、そこへ伸びていた火力/機動の線も消える
+assert.strictEqual(
+  drawPlanCalls(planAt6, [mateA, Object.assign({}, foeAlive, { hp: 0 })]).paths, 0,
+  '采配が無効なら制圧班の線も描かれない');
+
+// 名指しの的が生きていれば、hex の更新が1フレーム遅れてもリングは瞬かない
+const planNamed = Object.assign({}, planAt6, { targetId: 'B1', hex: { q: 99, r: 99 } });
+assert.ok(drawPlanCalls(planNamed, [mateA, foeAlive]).circles > 0,
+  '名指しの的が生きていれば hex がずれていてもリングは残る');
 
 console.log('tactical_pause.test.js: passed');

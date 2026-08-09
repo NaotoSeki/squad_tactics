@@ -31,12 +31,15 @@ function makeSandbox() {
     .forEach((f) => vm.runInContext(fs.readFileSync(path.join(ROOT, f), 'utf8'), sb, { filename: f }));
   vm.runInContext('this.MAP_W = MAP_W; this.MAP_H = MAP_H; this.SIM_TUNING = SIM_TUNING; this.WPNS = WPNS;',
     sb, { filename: 'expose' });
+  vm.runInContext(fs.readFileSync(path.join(ROOT, 'loadout_weight.js'), 'utf8'),
+    sb, { filename: 'loadout_weight.js' });
 
   const core = require(path.join(ROOT, 'sim_core.js'));
   sb.SimCore = core.SimCore; sb.mulberry32 = core.mulberry32; sb.toSimWeapon = core.toSimWeapon;
   sb.TraitPolicy = require(path.join(ROOT, 'sim_policy.js')).TraitPolicy;
   sb.CommsOrders = require(path.join(ROOT, 'sim_orders.js')).CommsOrders;
   sb.LeaderPolicy = require(path.join(ROOT, 'sim_leader.js')).LeaderPolicy;
+  sb.SimActions = require(path.join(ROOT, 'sim_actions.js')).SimActions;
 
   vm.runInContext(fs.readFileSync(path.join(ROOT, 'logic_battle_rtwp.js'), 'utf8'),
     sb, { filename: 'logic_battle_rtwp.js' });
@@ -103,6 +106,34 @@ function attach(g) {
   SB.RtwpBattle.fixedSeed = 7;
   SB.RtwpBattle.detach();
   return SB.RtwpBattle.attach(g);
+}
+
+// Loadout changes must replace the speed captured when the RTwP soldier was registered.
+{
+  const g = makeGameLogic({ players: 1, enemies: 1 });
+  const u = g.units[0];
+  u.params = { speed: 3, str: 6 };
+  u.ap = 4;
+  u.maxAp = 4;
+  u.hands = ['mortar_barrel', 'mortar_bipod', 'mortar_plate']
+    .map((code) => Object.assign({ code: code }, SB.WPNS[code]));
+  const sidearm = Object.assign({ code: 'm1911' }, SB.WPNS.m1911);
+  u.bag = [Object.assign({ code: 'mortar_shell_box' }, SB.WPNS.mortar_shell_box), sidearm];
+  SB.LoadoutWeight.refreshUnitLoadout(u);
+  const inst = attach(g);
+  const soldier = inst.sim.getSoldier(String(u.id));
+  soldier.attrs.speed = 0; // reproduce the stale value reported after changing equipment
+  u.hands = [null, null, null];
+  u.bag = [null, sidearm];
+  SB.LoadoutWeight.refreshUnitLoadout(u);
+  inst.syncUnitLoadout(u);
+  const moveEntry = SB.SimActions.list(inst.actionContext(u, null, null))
+    .find((entry) => entry.action.id === 'MOVE');
+  check(u._carriedWeightKg === 2.4, 'M2 4カード解除後はM1911だけの2.4kg');
+  check(u.params.effectiveSpeed === 3 && soldier.attrs.speed === 3,
+    '装備解除直後にunitとRTwP soldierのspdを再同期');
+  check(SB.LoadoutWeight.getMovementBudget(u, 4) === 2, 'M2 4カード解除で移動力2');
+  check(!!moveEntry && moveEntry.ok === true, 'M2 4カード解除でRTwP移動メニュー有効');
 }
 
 // --- 1. 依存が欠けたら何もしない（旧ターン制が壊れない） ---------------------
@@ -458,6 +489,25 @@ function attach(g) {
   inst.onWindowActivity('visibilitychange');
   check(inst.paused === true, 'visibilitychange(hidden) でも PAUSE に入る');
   delete SB.document;
+}
+
+// --- 17. resolving tick result freezes before leader AI or another tick --------
+{
+  const g = makeGameLogic({ players: 2, enemies: 2 });
+  const inst = attach(g);
+  const sim = inst.sim;
+  let ticks = 0, leaderAiCalls = 0;
+  sim.tick = function () {
+    ticks++;
+    this._tick++;
+    this._result = { winner: 'A', reason: 'annihilation', tick: this._tick };
+    this._events.push({ type: 'RESULT', tick: this._tick, winner: 'A', reason: 'annihilation' });
+  };
+  inst.runLeaderAI = function () { leaderAiCalls++; };
+  inst.update(T.TICK_MS * 5);
+  check(ticks === 1, '決着tickの同一フレームで追加tickを実行しない');
+  check(leaderAiCalls === 0, '決着後にリーダーAIや命令発行へ進まない');
+  check(SB.RtwpBattle.instance === null, '決着tick内でfreezeしてRTwPを切り離す');
 }
 
 console.log('\n' + passCount + ' passed, ' + failCount + ' failed');

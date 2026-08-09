@@ -233,6 +233,38 @@ function stepMoving(rig, u, isMoving) {
     stepMoving(rig, u, false) === box.__dirFromDelta(0, 100));
 }
 
+// --- F5a: PAUSE中の未配達命令は古い移動・射撃方向より優先 -----------------
+{
+  const west = { q: -1, r: 0 };
+  const east = { q: 1, r: 0 };
+  const rig = makeRig({ dispDir: dirFromFacing(east), lastDx: 100, lastDy: 0 });
+  const u = { id: 'a', q: 5, r: 5,
+    _rtwpPendingTargetHex: { q: 2, r: 5 }, _rtwpPendingTargetMode: 'move',
+    _sim: { id: 'a', state: 'move', suppression: 0, stepMode: 'walk', facing: east,
+      engageTargetId: null, engageHex: null } };
+  check('F5a 予約hexは配達前でも古い移動方向より優先される',
+    stepMoving(rig, u, true) === dirFromFacing(west));
+
+  const rig2 = makeRig({ dispDir: dirFromFacing(east) });
+  const u2 = { id: 'b', q: 5, r: 5,
+    _rtwpPendingTargetHex: { q: 2, r: 5 }, _rtwpPendingTargetMode: 'suppress',
+    _sim: { id: 'b', state: 'idle', suppression: 0, facing: east,
+      engageTargetId: null, engageHex: null } };
+  check('F5a 予約制圧hexも配達前から射撃方向へ向く',
+    stepMoving(rig2, u2, false) === dirFromFacing(west));
+
+  const northEast = { q: 1, r: -1 };
+  const rig3 = makeRig({ dispDir: dirFromFacing(west) });
+  const u3 = { id: 'c', q: 5, r: 5,
+    _rtwpPendingTargetHex: { q: 2, r: 5 },
+    _rtwpPendingFiringHex: { q: 8, r: 2 },
+    _rtwpPendingTargetMode: 'suppress',
+    _sim: { id: 'c', state: 'idle', suppression: 0, facing: west,
+      engageTargetId: null, engageHex: null } };
+  check('F5a 接近制圧は目標hexでなく予定射撃位置を向く',
+    stepMoving(rig3, u3, false) === dirFromFacing(northEast));
+}
+
 // --- F6: 散布オフセットの横滑りでは回れ右しない（バックステップの正体）-----
 {
   const east = { q: 1, r: 0 };

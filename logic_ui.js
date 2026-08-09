@@ -214,7 +214,11 @@ class UIManager {
 
         // RTwP does not consume the legacy turn AP. The old AP check made the
         // attack command unreachable even though actionAttack was adapted.
-        setEnabled(btnMove, rtSoldier ? rtSoldier.hp > 0 : u.ap >= 1);
+        const movementBudget = window.gameLogic && window.gameLogic.getMovementBudget
+            ? window.gameLogic.getMovementBudget(u) : (u.ap >= 1 ? 1 : 0);
+        setEnabled(btnMove, rtSoldier
+            ? rtSoldier.hp > 0 && Number(rtSoldier.attrs && rtSoldier.attrs.speed) > 0
+            : movementBudget > 0);
         
         // 射撃可能条件: ①AP足りる ②InHandsにWeaponry(or仮想迫撃砲) ③残弾あり（戦車は予備弾があれば可）
         const w = window.getCurrentWeapon(u);
@@ -358,7 +362,9 @@ class UIManager {
         const btnHeal = document.getElementById('btn-heal');
         const grpStance = menu.querySelector('.cmd-group');
         const setEnabled = (btn, enabled) => { if (btn) { if (enabled) btn.classList.remove('disabled'); else btn.classList.add('disabled'); } };
-        setEnabled(btnMove, u.ap >= 1);
+        const movementBudget = window.gameLogic && window.gameLogic.getMovementBudget
+            ? window.gameLogic.getMovementBudget(u) : (u.ap >= 1 ? 1 : 0);
+        setEnabled(btnMove, movementBudget > 0);
         const w = window.getCurrentWeapon(u);
         const weaponCost = w ? w.ap : 99;
         const hasAmmo = w && (
@@ -487,9 +493,14 @@ class UIManager {
                     partMeta = `<div class="slot-meta" style="position:relative;z-index:1;color:#888;">補助装備</div>`;
                 }
             }
-            const iconPath = (typeof window.plItemHasWeaponIcon === 'function' && window.plItemHasWeaponIcon(item)
+            const mortarIconPath = window.M2Mortar
+                ? ((isMain && isMortarActive)
+                    ? M2Mortar.ASSEMBLED_SLICE_PATHS[index]
+                    : M2Mortar.texturePathForItem(item.code))
+                : '';
+            const iconPath = mortarIconPath || ((typeof window.plItemHasWeaponIcon === 'function' && window.plItemHasWeaponIcon(item)
                 && typeof window.plCbeWeaponIconPath === 'function')
-                ? window.plCbeWeaponIconPath(item.cbeNameIndex) : '';
+                ? window.plCbeWeaponIconPath(item.cbeNameIndex) : '');
             const iconStyle = iconPath
                 ? `background-image:url('${iconPath}');background-size:contain;background-position:center;background-repeat:no-repeat;`
                 : '';

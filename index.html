@@ -303,11 +303,15 @@
         #rtwp-dock #battle-log-body { display: block; height: min(300px, calc(48vh - 35px)); overflow-y: auto; padding: 9px 10px; font: 10px/1.35 'Share Tech Mono', monospace; color: #9f9; background: rgba(0,5,0,.35); }
         #rtwp-dock #battle-log-body .log-entry { margin-bottom: 2px; padding-bottom: 2px; border-bottom: 1px solid rgba(255,255,255,.035); white-space: pre-wrap; word-break: break-all; }
         #rtwp-dock #debug-window { position: static !important; width: auto !important; min-width: 0; max-height: calc(48vh - 35px); overflow-y: auto; padding: 10px; border: 0; border-radius: 0; box-shadow: none; background: rgba(0,5,0,.35); flex-wrap: wrap; align-items: flex-start; }
+        .battle-review-action { display:block; margin:14px auto 0; padding:9px 15px; color:#d8d8c8; background:#182018; border:1px solid #687060; cursor:pointer; }
+        #battle-review-return { display:none; position:absolute; z-index:1250; top:12px; left:50%; transform:translateX(-50%); padding:8px 14px; color:#ddd; background:rgba(18,24,18,.94); border:1px solid #777; cursor:pointer; }
+        body.battle-review-active #command-menu, body.battle-review-active #context-menu, body.battle-review-active #auto-toggle { display:none !important; }
     </style>
 </head>
 <body>
     <div id="app" class="phaser-sidebar">
         <div id="game-view">
+            <button id="battle-review-return" type="button" onclick="BattleReview.close()">結果画面へ戻る</button>
             <div id="sector-counter">SECTOR: 01</div>
             <div id="mode-label" class="mode-indicator">SELECT TARGET</div>
             <div id="auto-toggle" onclick="gameLogic.toggleAuto()">AUTO</div>
@@ -553,7 +557,7 @@
     </script>
     <script src="tactics_morph.js"></script>
     <script src="logic_math.js"></script>
-    <script src="data.js?v=actions-10"></script>
+    <script src="data.js?v=tank-gate-1"></script>
     <!-- data_buildings.js: 別セッションのWIP(PS抽出建物)。phaser_bridge側の未完成配線が
          updateMap未定義エラーでゲームを壊したため一時無効化(2026-07-19 Fable5)。
          復元用パッチ: scratchpad/foreign_phaser_bridge_edit_20260719.patch -->
@@ -578,29 +582,30 @@
     <script src="data/pl_mg_tripod.js"></script>
     <script src="loadout_weight.js"></script>
     <script src="pl_weapon_icon.js"></script>
-    <script src="phaser_sidebar.js?v=rtwp-polish-6"></script>
-<script src="phaser_sound.js?v=rtwp-combat-7"></script>
+    <script src="m2_mortar.js?v=m2-scatter-1"></script>
+    <script src="phaser_sidebar.js?v=m2-1"></script>
+<script src="phaser_sound.js?v=firemode-1"></script>
+<script src="fx_pack_registry.js?v=1"></script>
 <script src="phaser_alpha_light.js?v=rtwp-light-3"></script>
-<script src="phaser_tactical_pause.js?v=actions-10"></script>
-<script src="phaser_vfx.js?v=rtwp-light-3"></script>
-    <script src="phaser_terrain_v1_bake.js?v=terrain-v1-6"></script>
+<script src="phaser_tactical_pause.js?v=firemode-1"></script>
+<script src="phaser_vfx.js?v=m2-2"></script>    <script src="phaser_terrain_v1_bake.js?v=terrain-v1-6"></script>
     <script src="phaser_terrain.js?v=terrain-v1-6"></script>
     <script src="phaser_terrain_v7.js"></script>
     <script src="phaser_terrain_rural_v29.js?v=rtwp-polish-7"></script>
     <!-- 着弾痕の焼き込みレイヤー。terrain より後、bridge より前に読む -->
-    <script src="phaser_decals.js"></script>
+    <script src="phaser_decals.js?v=m2-2"></script>
     <!-- 立体物(建物/木/柵/低木)を生きたスプライトで持つ層。破壊状態の差し替えを担う -->
 <script src="phaser_ps_objects.js?v=rtwp-light-3"></script>
     <script src="phaser_scene_composition.js"></script>
     <script src="phaser_vegetation_layer.js"></script>
-<script src="phaser_unit.js?v=rtwp-polish-8"></script>
-    <script src="phaser_soldier_view.js?v=rtwp-polish-3"></script>
+<script src="phaser_unit.js?v=m2-2"></script>
+    <script src="phaser_soldier_view.js?v=m2-1"></script>
     <script src="phaser_minimap.js?v=rtwp-combat-9"></script>
     <script src="battle_cloud.js"></script>
     <script src="battle_cloud_tactics.js"></script>
     <script src="phaser_battle_cloud.js"></script>
-<script src="phaser_bridge.js?v=actions-10"></script>
-    <script src="logic_ui.js?v=rtwp-polish-6"></script>
+<script src="phaser_bridge.js?v=m2-2"></script>
+    <script src="logic_ui.js?v=m2-3"></script>
     <script src="logic_ai.js"></script>
     <script src="logic_map_city.js"></script>
     <!-- PS正本キャンバスのレジストリ(生成物)。RuralV29Map.generate() は同期なので
@@ -609,19 +614,20 @@
     <script src="asset/environment/maps/ps_terrain_mods.js?v=terrain-mods-1"></script>
     <script src="logic_map_rural_v29.js?v=rtwp-combat-9"></script>
     <script src="logic_map.js?v=terrain-seam-5"></script>
-    <script src="logic_campaign.js?v=rtwp-polish-1"></script>
+    <script src="logic_campaign.js?v=tank-gate-1"></script>
     <script src="logic_reaction.js"></script>
     <!-- logic_game.js から切り出した規則。logic_game.js より前に読む -->
-    <script src="logic_combat_rules.js"></script>
-<script src="logic_game.js?v=rtwp-combat-7"></script>
+    <script src="logic_combat_rules.js?v=m2-2"></script>
+<script src="logic_game.js?v=m2-scatter-1"></script>
     <!-- RTwP（NORTH_STAR §7 Strangler Fig）。旧ターン制コア(logic_game.js)は
          書き換えず残置し、?rtwp=1 の時だけ接ぎ木する。外せば元に戻る。 -->
-    <script src="sim_core.js?v=actions-10"></script>
-    <script src="sim_policy.js?v=actions-10"></script>
+    <script src="sim_core.js?v=m2-scatter-1"></script>
+    <script src="sim_policy.js?v=m2-1"></script>
     <script src="sim_orders.js"></script>
     <script src="sim_leader.js?v=actions-10"></script>
-    <script src="sim_actions.js?v=actions-10"></script>
+    <script src="sim_actions.js?v=m2-2"></script>
     <script src="sim_battle_adapter.js?v=rtwp-pause-1"></script>
-<script src="logic_battle_rtwp.js?v=actions-10"></script>
+    <script src="battle_review.js?v=1"></script>
+<script src="logic_battle_rtwp.js?v=m2-scatter-1"></script>
 </body>
 </html>

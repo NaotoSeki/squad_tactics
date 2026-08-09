@@ -48,18 +48,19 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
-<script src="data.js"></script>
+<script src="data.js?v=firemode-1"></script>
 <script src="data/wpns_pl_master.js"></script>
 <script src="data/pl_weapon_stats.js?v=phit-1"></script>
-<script src="sim_core.js?v=rtwp-combat-9"></script>
+<script src="m2_mortar.js?v=m2-scatter-1"></script>
+<script src="sim_core.js?v=m2-scatter-1"></script>
 <script src="sim_orders.js"></script>
 <script src="sim_policy.js"></script>
 <script src="sim_leader.js"></script>
 <script src="sim_battle_adapter.js?v=rtwp-pause-1"></script>
-<script src="phaser_sound.js?v=rtwp-combat-7"></script>
+<script src="phaser_sound.js?v=firemode-1"></script>
 <script src="phaser_alpha_light.js?v=rtwp-light-3"></script>
-<script src="phaser_tactical_pause.js?v=rtwp-pause-2"></script>
-<script src="phaser_vfx.js?v=rtwp-light-3"></script>
+<script src="phaser_tactical_pause.js?v=firemode-1"></script>
+<script src="phaser_vfx.js?v=firemode-1"></script>
 <script src="phaser_terrain_v1_bake.js"></script>
 <script src="phaser_terrain.js"></script>
 <script src="phaser_unit.js?v=rtwp-light-3"></script>
@@ -295,6 +296,8 @@ class SimBattleScene extends Phaser.Scene {
     if (window.TacticalPauseOverlay) {
       this.tacticalPause = new TacticalPauseOverlay(this, {
         getSoldiers: () => this.sim ? this.sim.soldiers() : [],
+        getCommandDelay: (id) => this.sim && this.sim.orders && this.sim.orders.estimateDelay
+          ? this.sim.orders.estimateDelay(String(id), this.sim._tick) : null,
         getSelectedId: () => this.gameLogic && this.gameLogic.selectedUnit
           ? String(this.gameLogic.selectedUnit.id) : null,
         getPosition: (id) => {
@@ -752,9 +755,12 @@ class SimBattleScene extends Phaser.Scene {
           }
           // 武器コードで鳴らす。'shot' 固定だと Sfx 側の実録音（武器別の
           // ラウンドロビン群）が一度も選ばれず、合成音のままになる。
+          // 実発射数(ev.roundsFired)を渡す。音側はこれで単発/バースト/掃射の
+          // クリップを選ぶので、鳴る弾数と減る弾数が食い違わない。
           if (window.Sfx) try {
-            if (window.Sfx.playWeapon) window.Sfx.playWeapon(sh.weapon, sh.fireMode);
-            else window.Sfx.play((sh.weapon && sh.weapon.code) || 'shot', 'shot');
+            if (window.Sfx.playWeapon) {
+              window.Sfx.playWeapon(sh.weapon, sh.fireMode, undefined, ev.roundsFired);
+            } else window.Sfx.play((sh.weapon && sh.weapon.code) || 'shot', 'shot');
           } catch (e) { }
           break;
         }

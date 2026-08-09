@@ -99,7 +99,7 @@ const { validHexExtent } = require(path.join(ROOT, 'sim_battle_adapter.js'));
     '発射弾数ぶんの小さなアニメ着弾を本番・検証画面へ渡す');
 
   const soldierSource = fs.readFileSync(path.join(ROOT, 'phaser_soldier_view.js'), 'utf8');
-  check(soldierSource.indexOf('s.engageTargetId || u._rtwpPendingTargetId') !== -1
+  check(soldierSource.indexOf('u._rtwpPendingTargetId || s.engageTargetId') !== -1
     && soldierSource.indexOf('targetVisual.container.x - visual.container.x') !== -1,
     '兵士の向きは命令中または交戦中の対象を継続して追う');
 
@@ -182,22 +182,36 @@ const { validHexExtent } = require(path.join(ROOT, 'sim_battle_adapter.js'));
   // 2026-08-03: Thompson実録を採用。SMGはM1(rifle)ではなくThompson群へ解決される。
   check(Sfx.soundIdForWeapon({ code: 'thompson', class: 'smg' }) === 'thompson_single',
     'SMGをrifle実録音へ誤分類せずThompson実録へ解決される');
-  check(Sfx.soundIdForWeapon({ code: 'thompson', class: 'smg', burstSize: 3 }, 'suppress')
-    === 'thompson_auto', 'SMGの制圧射撃はThompson auto実録へ解決される');
   check(Sfx.soundIdForWeapon({ code: 'mg42', class: 'mg' }) === 'mg42_single',
     'MG42の単発設定はsingle実録へ解決される');
-  check(Sfx.soundIdForWeapon({ code: 'mg42', class: 'mg', burstSize: 10 }, 'aimed') === 'mg42_burst',
-    'MG42の通常射撃はburst実録へ解決される');
-  check(Sfx.soundIdForWeapon({ code: 'mg42', class: 'mg', burstSize: 10 }, 'suppress') === 'mg42_auto',
-    'MG42の制圧射撃はauto実録へ解決される');
-  check(Sfx.soundIdForWeapon({ code: 'mg42', burst: 10 }, 'aimed') === 'mg42_burst',
-    '旧ActionのWPNS形（burst）でもMG42 Burst実録へ解決される');
-  check(Sfx.soundIdForWeapon({ code: 'mg42', burst: 10 }, 'suppress') === 'mg42_auto',
-    '旧Actionの制圧射撃でもMG42 Auto実録へ解決される');
+  check(Sfx.soundIdForWeapon({ code: 'mg42', burst: 10 }) === 'mg42_auto',
+    '旧ActionのWPNS形（burst）でも段数からクリップを選ぶ');
   // 2026-08-03: 個別音源の無い小火器は StG44 実録が既定になった。MG42 の音を
   // 別の機関銃へ流用しないこと自体は変わらない（既定へ落ちるのが正しい）。
-  check(Sfx.soundIdForWeapon({ code: 'bar', class: 'mg', burstSize: 10 }, 'suppress')
+  check(Sfx.soundIdForWeapon({ code: 'bar', class: 'mg', burstSize: 30 })
     === 'stg44_auto', '別の機関銃へMG42実録音を誤流用しない（既定のStG44へ落ちる）');
+
+  // 2026-08-04: **クリップは実発射数で選ぶ。** 旧版は fireMode==='suppress' だけを
+  // 見ていたので、制圧射撃の兵が2発撃つたびに30発ぶんの auto クリップを鳴らして
+  // いた（ディレクター指摘「Autoのサウンドはほぼマガジン撃ち尽くし位」）。
+  // fireMode を渡しても結果が変わらないこと自体が、その回帰に対する門になる。
+  {
+    const mg = { code: 'mg42', class: 'mg', burstSize: 5 };
+    check(Sfx.soundIdForWeapon(mg, 'aimed', 1) === 'mg42_single', '1発なら単発クリップ');
+    check(Sfx.soundIdForWeapon(mg, 'aimed', 5) === 'mg42_burst', '5発ならバーストクリップ');
+    check(Sfx.soundIdForWeapon(mg, 'aimed', 30) === 'mg42_auto', '30発なら掃射クリップ');
+    check(Sfx.soundIdForWeapon(mg, 'suppress', 5) === 'mg42_burst',
+      '制圧射撃でも実発射数が5発なら掃射クリップを鳴らさない（今回の本丸）');
+    check(Sfx.soundIdForWeapon(mg, 'aimed', 30) === Sfx.soundIdForWeapon(mg, 'suppress', 30),
+      'クリップ選択が fireMode に依存しない');
+    // 閾値の境界。AUTO_SOUND_MIN_ROUNDS はシム側 AUTO_MIN_ROUNDS と対になっている。
+    const n = Sfx.AUTO_SOUND_MIN_ROUNDS;
+    check(Sfx.soundIdForWeapon(mg, 'aimed', n) === 'mg42_auto', '閾値ちょうどで掃射クリップ');
+    check(Sfx.soundIdForWeapon(mg, 'aimed', n - 1) === 'mg42_burst', '閾値未満はバーストクリップ');
+    // rounds 未指定なら従来どおり武器の既定段数で決まる（旧呼び出しの後方互換）
+    check(Sfx.soundIdForWeapon({ code: 'mg42', class: 'mg', burstSize: 32 }) === 'mg42_auto',
+      'rounds 未指定なら武器の既定段数から選ぶ');
+  }
   // 砲・ロケット・部品は銃声を鳴らさない（弾種が違う / そもそも発砲しない）
   check(Sfx.soundIdForWeapon({ code: 'kwk', class: 'at' }, 'aimed') === 'kwk',
     '戦車砲に小銃の実録音を当てない');

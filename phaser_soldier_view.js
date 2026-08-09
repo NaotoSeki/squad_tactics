@@ -225,17 +225,24 @@ class SoldierUnitView extends UnitView {
 
         // ---- 方向 ----
         let dir;
-        const targetId = s.engageTargetId || u._rtwpPendingTargetId || u._rtwpTargetId;
+        const targetId = u._rtwpPendingTargetId || s.engageTargetId || u._rtwpTargetId;
+        const pendingHex = u._rtwpPendingTargetHex;
+        const pendingFacingHex = u._rtwpPendingFiringHex || pendingHex;
         const targetVisual = this._visualById(targetId);
         const moveDir = this._moveFacing(s, u, visual, isMoving);
-        if (moveDir != null) {
-            dir = moveDir;
-        } else if (targetVisual && targetVisual.container && visual.container) {
+        if (targetVisual && targetVisual.container && visual.container) {
             // SHOTが発生した瞬間だけでなく、照準・観測・再装填中も現在の対敵方向を保持。
             dir = soldierDirFromDelta(
                 targetVisual.container.x - visual.container.x,
                 targetVisual.container.y - visual.container.y
             );
+        } else if (pendingFacingHex
+            && (pendingFacingHex.q !== u.q || pendingFacingHex.r !== u.r)) {
+            dir = soldierDirFromFacing({
+                q: pendingFacingHex.q - u.q, r: pendingFacingHex.r - u.r,
+            });
+        } else if (moveDir != null) {
+            dir = moveDir;
         } else if (s.engageHex && (s.engageHex.q !== u.q || s.engageHex.r !== u.r)) {
             // 面制圧(TARGET_HEX)は個体ではなく地点を撃つので engageTargetId が null。
             // ここを見ないと「撃てと命じた方角を向かないまま撃つ」ことになる
@@ -253,7 +260,7 @@ class SoldierUnitView extends UnitView {
 
         // 目標方向は保持しつつ、静止時は3tickごとに45°ずつ回頭する。
         // 射撃・one-shot・出現直後は演出の意図を優先して即時に向ける。
-        if (visual.dispDir == null || os || s.state === 'engage') {
+        if (visual.dispDir == null || os || s.state === 'engage' || targetId || pendingHex) {
             visual.dispDir = dir;
             visual.dispDirTick = tick;
         } else if (visual.dispDir !== dir) {
@@ -319,9 +326,10 @@ class SoldierUnitView extends UnitView {
         // ---- 姿勢: 遷移アニメを挟んだステートマシン ----
         // ターン制本編は姿勢メニュー（u.stance）が正本。RTwP は制圧度＋被弾から導出
         const stanceDriven = !u._sim && u.stance != null;
-        const target = stanceDriven
+        let target = stanceDriven
             ? (STANCE_LEVEL[u.stance] != null ? STANCE_LEVEL[u.stance] : 0)
             : this._postureLevelOf(s, tick);
+        if (!isMoving && s.weapon && s.weapon.code === 'm2_mortar') target = Math.max(1, target);
         if (visual.postureLv == null) visual.postureLv = target; // 出現時は即時
 
         // ヒステリシス: 姿勢を上げ直す（伏せ→立ち方向）のは HOLD 経過後のみ。
@@ -746,7 +754,12 @@ class SoldierUnitView extends UnitView {
         visual.dispDir = dir; // triggerAttack 起因の回頭は即時
         visual.dispDirTick = this._now();
         if (target && target.id != null) this._underFire.set(target.id, this._now());
-        const posture = POSTURE_NAMES[visual.postureLv || 0] || 'stand';
+        // The mortar crew works from a kneeling posture; the existing kneel-fire
+        // clip reads as the loader leaning in and dropping a round into the tube.
+        const mortarAttack = (attacker.weapon && attacker.weapon.code === 'm2_mortar')
+            || (window.M2Mortar && M2Mortar.isAssembled(attacker));
+        const posture = mortarAttack
+            ? 'kneel' : (POSTURE_NAMES[visual.postureLv || 0] || 'stand');
         // fire はループ定義なので時限式 one-shot（約1秒）で流用する
         this._oneShot.set(attacker.id, { key: `sold_${posture}_fire_${dir}`, started: false, untilTick: this._now() + 25 });
     }

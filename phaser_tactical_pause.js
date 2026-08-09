@@ -42,6 +42,14 @@
     return orderPath && orderPath.length ? orderPath[orderPath.length - 1] : null;
   }
 
+  // 直近の撃ち方。射撃の意図（照準/制圧）とは別軸で、1トリガーの弾数を表す。
+  // 掃射(auto)は弾倉を一気に燃やすので、プレイヤーが気付ける所に出しておく。
+  const PULL_LABEL = { single: '単射', burst: 'バースト', auto: '掃射' };
+  function pullSuffix(s) {
+    const label = s && PULL_LABEL[s.pullMode];
+    return label ? '・' + label : '';
+  }
+
   function describeSoldier(s, nameOf) {
     if (!s || s.hp <= 0) return { action: '戦闘不能', targetId: null, moveGoal: null };
     const targetId = targetIdOf(s);
@@ -53,8 +61,8 @@
     else if (s.state === 'pinned') action = '釘付け';
     else if (s.state === 'suppressed') action = '制圧下';
     else if (s.state === 'move' || moveGoal) action = '移動中';
-    else if (s.engageHex) action = '制圧射撃';
-    else if (targetId) action = s.fireMode === 'suppress' ? '制圧射撃' : '照準・射撃';
+    else if (s.engageHex) action = '制圧射撃' + pullSuffix(s);
+    else if (targetId) action = (s.fireMode === 'suppress' ? '制圧射撃' : '照準・射撃') + pullSuffix(s);
     else if (s.fireMode === 'hold') action = '射撃待機';
     else action = '状況判断';
     const targetName = targetId && nameOf ? nameOf(targetId) : targetId;
@@ -84,6 +92,11 @@
         color: '#f2ead0', backgroundColor: 'rgba(15,20,19,0.90)',
         padding: { x: 14, y: 7 },
       }).setOrigin(0.5, 0).setScrollFactor(0).setDepth(DEPTH + 30).setVisible(false);
+      // 操作説明は既定で出さない。「何を押せば何ができるか」はチュートリアルの
+      // 仕事で、常設HUDに貼っておくものではない（ゲーム完成後に別途作る）。
+      // 復活させたい時は options.showHelp か TacticalPauseOverlay.showHelp = true。
+      this.helpEnabled = this.options.showHelp != null
+        ? !!this.options.showHelp : !!TacticalPauseOverlay.showHelp;
       this.help = scene.add.text(0, 0,
         '味方を左クリック → 移動 / 制圧 / 強襲\n右クリック: 取り消し\n分隊: F 集中射撃  A 面制圧  C 遮蔽', {
           fontFamily: 'Share Tech Mono, monospace', fontSize: '12px',
@@ -108,8 +121,10 @@
           const help = document.createElement('div');
           help.textContent = '味方を左クリック → 移動 / 制圧 / 強襲\n右クリック: 取り消し\n分隊: F 集中射撃  A 面制圧  C 遮蔽';
           help.style.cssText = 'position:absolute;right:12px;top:92px;white-space:pre-line;padding:7px 10px;background:rgba(10,15,14,.88);border-left:2px solid #7fd9e8;font-size:11px;line-height:1.5;text-align:right';
+          if (!this.helpEnabled) help.style.display = 'none';
           const detail = document.createElement('div');
-          detail.style.cssText = 'position:absolute;left:12px;bottom:64px;white-space:pre-line;padding:8px 10px;background:rgba(10,15,14,.92);border-left:2px solid #7fd9e8;font-size:12px;line-height:1.45';
+          // 中身が入るまで出さない。空の黒箱が画面隅に残るのを防ぐ。
+          detail.style.cssText = 'display:none;position:absolute;left:12px;bottom:64px;white-space:pre-line;padding:8px 10px;background:rgba(10,15,14,.92);border-left:2px solid #7fd9e8;font-size:12px;line-height:1.45';
           root.appendChild(banner); root.appendChild(help); root.appendChild(detail);
           host.appendChild(root);
           this.domUi = { root, banner, help, detail };
@@ -125,7 +140,7 @@
       this.cloud.setVisible(value);
       this.lines.setVisible(value);
       this.banner.setVisible(value && !this.domUi);
-      this.help.setVisible(value && !this.domUi);
+      this.help.setVisible(value && !this.domUi && this.helpEnabled);
       this.detail.setVisible(value && !this.domUi);
       if (this.domUi) this.domUi.root.style.display = value ? 'block' : 'none';
       if (value) {
@@ -141,6 +156,14 @@
         this._cloudAt = -1;
         this.labels.forEach((label) => label.setVisible(false));
       }
+    }
+
+    /** 詳細パネル。空文字なら枠ごと消す（空の黒箱を残さない）。 */
+    _setDetail(text) {
+      this.detail.setText(text);
+      this.detail.setVisible(this.active && !this.domUi && !!text);
+      if (this.domUi) this.domUi.detail.textContent = text;
+      if (this.domUi) this.domUi.detail.style.display = text ? '' : 'none';
     }
 
     _name(id) {
@@ -191,11 +214,14 @@
       const reach = full * (stopAt == null ? 1 : Math.max(0, Math.min(1, stopAt)));
       const a = alpha == null ? 0.9 : alpha;
 
-      // 破線。位相を毎フレームずらすと蟻の行進になる
+      // 破線。位相を毎フレームずらすと蟻の行進になる。
+      // 破線は s = -phase + k*period に置くので、phase を**減らす**方向に動かさない
+      // と蟻が標的→射手へ逆走する（2026-08-05 ディレクター指摘）。period から引いて
+      // 位相を反転させることで、射手→標的の流れになる。
       const dash = 9 / zoom;
       const gap = 6 / zoom;
       const period = dash + gap;
-      const phase = (this.frame * (1.6 / zoom)) % period;
+      const phase = period - ((this.frame * (1.6 / zoom)) % period);
       this.lines.lineStyle((width || 2) / zoom, color, a);
       for (let s = -phase; s < reach; s += period) {
         const s0 = Math.max(0, s);
@@ -264,6 +290,33 @@
     }
 
     /**
+     * その采配がまだ生きた敵を指しているか。
+     *
+     * `byId` は hp>0 の兵だけを含む。行動不能は「もう戦列に居ない」ので敵として
+     * 数えない — 遺体の上にリングを残さないための判定はここが本体。
+     * 名指しの的(`targetId`)が生きているならそれだけで有効とする（的が動いた
+     * 直後、hex の更新が1フレーム遅れてもリングが瞬かないように）。
+     */
+    _planHasLiveFoe(plan, byId) {
+      if (!plan || !plan.hex || !byId) return false;
+      const T = (typeof SIM_TUNING !== 'undefined') ? SIM_TUNING : {};
+      const radius = T.PLAN_STALE_RADIUS != null ? T.PLAN_STALE_RADIUS : 1;
+      const isFoe = (s) => s && s.team !== 'A' && s.state !== 'incap';
+      if (plan.targetId != null) {
+        const tg = byId.get(String(plan.targetId));
+        if (isFoe(tg)) return true;
+      }
+      let found = false;
+      byId.forEach((s) => {
+        if (found || !isFoe(s)) return;
+        const d = Math.max(Math.abs(s.q - plan.hex.q), Math.abs(s.r - plan.hex.r),
+          Math.abs((s.q + s.r) - (plan.hex.q + plan.hex.r)));
+        if (d <= radius) found = true;
+      });
+      return found;
+    }
+
+    /**
      * 指揮官の采配（`LeaderPolicy` が state.plan へ残した計画）を描く。
      *
      *   制圧目標 = 脈打つ二重リング（そこを黙らせようとしている）
@@ -275,6 +328,17 @@
      */
     _drawPlan(plan, byId) {
       if (!plan || !plan.hex || !this.lines) return;
+
+      // **敵の居なくなった采配は描かない。**
+      //
+      // state.plan は分隊長が次の采配を出した時にしか書き換わらないので、狙って
+      // いた敵が倒れても計画は残る。LeaderPolicy 側でも毎サイクル検算している
+      // が、それは数秒に1回・生きた分隊長が居る時だけなので「倒した瞬間に消える」
+      // を保証できない。ここで毎フレーム検算するのが唯一の保証になる
+      // （2026-08-05 ディレクター報告4回目「遺体の上／誰も居ない所に円が残る。
+      //  ターゲット誤認のもと。即消えるようにしてほしい」）。
+      if (!this._planHasLiveFoe(plan, byId)) return;
+
       const R = global.Renderer;
       if (!R || !R.hexToPx) return;
       const cam = this.scene.cameras.main;
@@ -483,11 +547,31 @@
         if (!pos) return;
         visible.add(id);
         const pending = this.options.getPendingTargetId && this.options.getPendingTargetId(id, s);
+        const pendingHex = this.options.getPendingTargetHex
+          && this.options.getPendingTargetHex(id, s);
+        const pendingMode = this.options.getPendingTargetMode
+          && this.options.getPendingTargetMode(id, s);
+        const pendingFiringHex = this.options.getPendingFiringHex
+          && this.options.getPendingFiringHex(id, s);
+        const pendingApproachPath = this.options.getPendingApproachPath
+          && this.options.getPendingApproachPath(id, s);
         const info = describeSoldier(s, (targetId) => this._name(targetId));
-        if (!info.targetId && pending) {
+        // The queued command is the decision being reviewed, so show it ahead
+        // of an older sim intent until communications deliver the new order.
+        if (pending) {
           info.targetId = pending;
           info.targetName = this._name(pending);
           info.action = '命令伝達中';
+          info.moveGoal = null;
+          info.targetHex = null;
+        } else if (pendingHex) {
+          info.targetId = null;
+          info.targetName = null;
+          info.moveGoal = pendingMode === 'move' ? pendingHex : null;
+          info.targetHex = pendingMode === 'suppress' ? pendingHex : null;
+          info.firingHex = pendingFiringHex || null;
+          info.approachPath = pendingApproachPath || null;
+          info.action = pendingFiringHex ? '接近→制圧（命令伝達中）' : '命令伝達中';
         }
 
         const label = this._label(id, s.team);
@@ -523,9 +607,28 @@
               2.2, 0.86, clashing ? 0.46 : 1);
             if (clashing && String(id) < String(info.targetId)) this._clash(pos, targetPos);
           }
-        } else if (info.moveGoal && global.Renderer && global.Renderer.hexToPx) {
-          const goal = global.Renderer.hexToPx(info.moveGoal.q, info.moveGoal.r);
-          if (goal) this._line(pos, goal, MOVE, 2, 0.82);
+        } else if (info.targetHex && info.firingHex
+          && global.Renderer && global.Renderer.hexToPx) {
+          let cursor = pos;
+          (info.approachPath || []).forEach((h) => {
+            const step = global.Renderer.hexToPx(h.q, h.r);
+            if (step) {
+              this._line(cursor, step, MOVE, 1.8, 0.72, 0.999);
+              cursor = step;
+            }
+          });
+          const firing = global.Renderer.hexToPx(info.firingHex.q, info.firingHex.r);
+          const target = global.Renderer.hexToPx(info.targetHex.q, info.targetHex.r);
+          if (firing && target) {
+            this.lines.lineStyle(2 / zoom, MOVE, 0.85);
+            this.lines.strokeCircle(firing.x, firing.y - 8 / zoom, 12 / zoom);
+            this._line(firing, target, SUPPRESS, 2.2, 0.9, 1);
+          }
+        } else if ((info.targetHex || info.moveGoal) && global.Renderer && global.Renderer.hexToPx) {
+          const goalHex = info.targetHex || info.moveGoal;
+          const goal = global.Renderer.hexToPx(goalHex.q, goalHex.r);
+          if (goal) this._line(pos, goal, info.targetHex ? SUPPRESS : MOVE,
+            info.targetHex ? 2.2 : 2, info.targetHex ? 0.86 : 0.82);
         }
       });
 
@@ -563,14 +666,11 @@
           + `行動: ${info.action}   対象: ${target}\n`
           + `HP ${Math.round(selected.hp)}   制圧 ${Math.round(selected.suppression || 0)}   弾薬 ${ammo}`
           + (planLine ? `\n${planLine}` : '');
-        this.detail.setText(detailText);
-        if (this.domUi) this.domUi.detail.textContent = detailText;
+        this._setDetail(detailText);
       } else {
-        const idle = planLine
-          ? `味方兵をクリックして命令対象を選択\n${planLine}`
-          : '味方兵をクリックして命令対象を選択';
-        this.detail.setText(idle);
-        if (this.domUi) this.domUi.detail.textContent = idle;
+        // 未選択時は操作説明を出さない（チュートリアルの領分）。指揮官の采配だけ、
+        // 出ている時に出す。
+        this._setDetail(planLine || '');
       }
     }
 

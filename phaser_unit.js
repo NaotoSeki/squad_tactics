@@ -432,7 +432,15 @@ class UnitView {
             });
         }
 
+        let mortarSprite = null;
+        if (!u.def.isTank && window.M2Mortar && M2Mortar.isAssembled(u)
+            && this.scene.textures.exists(M2Mortar.TEXTURE_KEYS.map)) {
+            mortarSprite = this.scene.add.image(10, -2, M2Mortar.TEXTURE_KEYS.map);
+            mortarSprite.setDisplaySize(M2Mortar.MAP_DISPLAY_SIZE, M2Mortar.MAP_DISPLAY_SIZE)
+                .setOrigin(0.5, 0.72).setAlpha(0.94);
+        }
         if (shadow) container.add(shadow);
+        if (mortarSprite) container.add(mortarSprite);
         container.add(sprite);
 
         const hpBg = this.scene.add.rectangle(0, 0, 20, 2, 0x000000).setOrigin(0, 0.5);
@@ -444,7 +452,7 @@ class UnitView {
         this.hpLayer.add(infoContainer);
 
         const visual = {
-            container, sprite, shadowSprite: shadow, hpBg, hpBar, infoContainer,
+            container, sprite, shadowSprite: shadow, mortarSprite, hpBg, hpBar, infoContainer,
             glowFx: null, fusionGlowFx: null, lastDx: 0, lastDy: 0, crawlStopDelay: 0
         };
         this.visuals.set(u.id, visual);
