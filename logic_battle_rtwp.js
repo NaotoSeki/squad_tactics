@@ -33,6 +33,73 @@
     return Math.max(Math.abs(dq), Math.abs(dr), Math.abs(dq + dr));
   }
 
+  /**
+   * 兵と候補地点の総 hex 距離が最小になる対応を返す（Hungarian algorithm）。
+   * 候補が兵より少ない時だけ地点を複製し、同じ地点への集中を許す。
+   */
+  function minimumDistanceAssignment(actors, candidates, baseCost) {
+    const rows = actors || [];
+    const raw = candidates || [];
+    if (!rows.length || !raw.length) return [];
+    const slots = [];
+    let repetition = 0;
+    while (slots.length < rows.length || (repetition === 0 && slots.length < raw.length)) {
+      for (let i = 0; i < raw.length; i++) {
+        slots.push({ value: raw[i], repetition: repetition, sourceIndex: i });
+      }
+      repetition++;
+      if (raw.length >= rows.length) break;
+    }
+
+    const n = rows.length, m = slots.length;
+    const u = new Array(n + 1).fill(0);
+    const v = new Array(m + 1).fill(0);
+    const p = new Array(m + 1).fill(0);
+    const way = new Array(m + 1).fill(0);
+    const cost = function (i, j) {
+      // 呼び出し側の実行可否を最優先し、その中で距離・重複・入力順を決定基準にする。
+      const distance = baseCost
+        ? baseCost(rows[i - 1], slots[j - 1].value)
+        : hexDist(rows[i - 1], slots[j - 1].value);
+      return distance * 1000
+        + slots[j - 1].repetition * 10 + slots[j - 1].sourceIndex;
+    };
+
+    for (let i = 1; i <= n; i++) {
+      p[0] = i;
+      let j0 = 0;
+      const minv = new Array(m + 1).fill(Infinity);
+      const used = new Array(m + 1).fill(false);
+      do {
+        used[j0] = true;
+        const i0 = p[j0];
+        let delta = Infinity, j1 = 0;
+        for (let j = 1; j <= m; j++) {
+          if (used[j]) continue;
+          const cur = cost(i0, j) - u[i0] - v[j];
+          if (cur < minv[j]) { minv[j] = cur; way[j] = j0; }
+          if (minv[j] < delta) { delta = minv[j]; j1 = j; }
+        }
+        for (let j = 0; j <= m; j++) {
+          if (used[j]) { u[p[j]] += delta; v[j] -= delta; }
+          else minv[j] -= delta;
+        }
+        j0 = j1;
+      } while (p[j0] !== 0);
+      do {
+        const j1 = way[j0];
+        p[j0] = p[j1];
+        j0 = j1;
+      } while (j0 !== 0);
+    }
+
+    const result = new Array(n);
+    for (let j = 1; j <= m; j++) {
+      if (p[j] > 0 && p[j] <= n) result[p[j] - 1] = slots[j - 1].value;
+    }
+    return rows.map(function (actor, i) { return { unit: actor, destination: result[i] }; });
+  }
+
   function cubeRound(q, r) {
     const x = q, z = r, y = -x - z;
     let rx = Math.round(x), ry = Math.round(y), rz = Math.round(z);
@@ -127,13 +194,20 @@
     // 携行弾を持たないユニット（敵の既定装備など）だけ従来の既定値へ落とす。
     const found = this._collectSpareAmmo(unit, weapon);
     const magCap = Number(simWeapon.magCap) || 0;
+    const isMortar = code === 'm2_mortar';
+    const mortarTotal = isMortar
+      ? ((window.M2Mortar && M2Mortar.ammoTotal) ? M2Mortar.ammoTotal(unit)
+        : found.reduce((sum, item) => sum + (Number(item.current) || 0), 0))
+      : 0;
     const defaultMags = (T.DEFAULT_MAGS && T.DEFAULT_MAGS[simWeapon.class] != null)
       ? T.DEFAULT_MAGS[simWeapon.class] : 4;
-    const spares = (found.length && magCap > 0)
+    const spares = isMortar ? found : ((found.length && magCap > 0)
       ? this._splitIntoMagazines(unit, found, magCap)
-      : [];
-    const mags = spares.length ? spares.length : (found.length ? 0 : defaultMags);
+      : []);
+    const mags = isMortar ? Math.max(0, mortarTotal - 1)
+      : (spares.length ? spares.length : (found.length ? 0 : defaultMags));
     unit._rtwpSpareAmmo = spares;
+    unit._rtwpMortarAmmoBoxes = isMortar ? found : null;
 
     // 投擲弾は**実際に背負っている物**から数える。既定値で配ると、右ペインに
     // 見えている個数とシムの残数が別勘定になる（弾倉で踏んだのと同じ罠）。
@@ -143,6 +217,16 @@
     const rifleNades = this._collectMunitions(unit, rgCodes);
     unit._rtwpNades = nades;
     unit._rtwpRifleNades = rifleNades;
+
+    // Feed the simulation the weight-adjusted speed. Zero is a real value:
+    // falling back to the template speed here would let a fully laden crew move.
+    const simAttrs = { ...(unit.params || {}) };
+    if (typeof LoadoutWeight !== 'undefined' && LoadoutWeight.getEffectiveSpeed) {
+      simAttrs.speed = LoadoutWeight.getEffectiveSpeed(unit);
+      if (unit.params) unit.params.effectiveSpeed = simAttrs.speed;
+    } else if (simAttrs.effectiveSpeed != null) {
+      simAttrs.speed = Number(simAttrs.effectiveSpeed);
+    }
 
     this.sim.addSoldier({
       id: id, team: team, q: unit.q, r: unit.r,
@@ -154,7 +238,7 @@
         grenade: this._munitionSpecFromItem(nades[0]),
         rifle_grenade: this._munitionSpecFromItem(rifleNades[0]),
       },
-      attrs: unit.params || null,
+      attrs: simAttrs,
       sidearm: this._findSidearm(unit, code, T, D),
       isLeader: !hasLeader, traits: traits,
       facing: (team === 'A') ? { q: 1, r: 0 } : { q: -1, r: 0 },
@@ -162,6 +246,10 @@
 
     const soldier = this.sim.getSoldier(id);
     if (!soldier) return null;
+    if (isMortar) {
+      soldier.magRemaining = mortarTotal > 0 ? 1 : 0;
+      soldier.magsLeft = Math.max(0, mortarTotal - soldier.magRemaining);
+    }
     const maxHp = Number(unit.maxHp) || Number(unit.hp) || 100;
     unit._rtwpHpScale = maxHp / Math.max(1, soldier.hp || 100);
     // 弾薬の書き戻し先。sim は code から作った simWeapon で撃つので、
@@ -205,7 +293,22 @@
       unit.simState = s.state;
       unit.facing = s.facing;
       unit._rtwpTargetId = s.engageTargetId || null;
-      if (s.engageTargetId) delete unit._rtwpPendingTargetId;
+      if (s.engageTargetId && String(s.engageTargetId) === String(unit._rtwpPendingTargetId)) {
+        delete unit._rtwpPendingTargetId;
+      }
+      const pendingHex = unit._rtwpPendingTargetHex;
+      if (pendingHex) {
+        const deliveredHex = unit._rtwpPendingTargetMode === 'move'
+          ? (s.movePath && s.movePath.length ? s.movePath[s.movePath.length - 1]
+            : (s.q === pendingHex.q && s.r === pendingHex.r ? { q: s.q, r: s.r } : null))
+          : s.engageHex;
+        if (deliveredHex && deliveredHex.q === pendingHex.q && deliveredHex.r === pendingHex.r) {
+          delete unit._rtwpPendingTargetHex;
+          delete unit._rtwpPendingTargetMode;
+          delete unit._rtwpPendingFiringHex;
+          delete unit._rtwpPendingApproachPath;
+        }
+      }
       // SoldierUnitView はこの完全なsnapshotから engage/reload/suppression/facingを
       // 選ぶ。本番側で渡していなかったため、見た目だけ常時idleになっていた。
       unit._sim = s;
@@ -237,6 +340,19 @@
     const code = unit._rtwpWeaponCode;
     if (!code || !unit.hands || !s.weapon) return;
     const magCap = Number(s.weapon.magCap) || 0;
+
+    if (code === 'm2_mortar') {
+      const total = Math.max(0, Number(s.magRemaining) || 0) + Math.max(0, Number(s.magsLeft) || 0);
+      if (window.M2Mortar && M2Mortar.setAmmoTotal) M2Mortar.setAmmoTotal(unit, total);
+      else {
+        let left = total;
+        (unit._rtwpMortarAmmoBoxes || []).forEach((box) => {
+          box.current = Math.min(Number(box.cap) || 0, left);
+          left -= box.current;
+        });
+      }
+      return;
+    }
 
     for (let i = 0; i < unit.hands.length; i++) {
       const item = unit.hands[i];
@@ -414,7 +530,14 @@
   RtwpInstance.prototype.formatEvent = function (ev) {
     const parts = ['t' + ev.tick, ev.type];
     if (ev.id) parts.push(this._name(ev.id));
-    if (ev.shooterId && ev.area) {
+    if (ev.shooterId && ev.scatter && ev.targetHex) {
+      const aim = ev.aimHex || ev.targetHex;
+      const dmg = (ev.casualties || []).reduce((sum, c) => sum + (Number(c.dmg) || 0), 0);
+      parts.push(this._name(ev.shooterId) + ' M2 (' + aim.q + ',' + aim.r + ')->('
+        + ev.targetHex.q + ',' + ev.targetHex.r + ')'
+        + (ev.scatter.adjacent ? ' SCATTER' : '')
+        + ' DMG' + dmg + (ev.killed ? ' KILL' : ''));
+    } else if (ev.shooterId && ev.area) {
       parts.push(this._name(ev.shooterId) + '->('
         + (ev.targetHex ? ev.targetHex.q + ',' + ev.targetHex.r : '?') + ') 面制圧');
     } else if (ev.shooterId) {
@@ -437,6 +560,12 @@
     if (ev.type === 'ORDER_DELIVERED' && ev.order) parts.push(ev.order.type);
     if (ev.type === 'ASSAULT_START') parts.push('強襲 -> ' + this._name(ev.targetId));
     if (ev.type === 'ASSAULT_END') parts.push('強襲終了 (' + ev.reason + ')');
+    if (ev.type === 'SUPPRESS_APPROACH_START' && ev.firingHex) {
+      parts.push('接近→制圧 射撃位置(' + ev.firingHex.q + ',' + ev.firingHex.r + ')');
+    }
+    if (ev.type === 'SUPPRESS_START' && ev.hex) {
+      parts.push('制圧開始 (' + ev.hex.q + ',' + ev.hex.r + ')');
+    }
     if (ev.type === 'SUPPRESS_END') parts.push('制圧終了 (' + ev.reason + ')');
     if (ev.type === 'MELEE_START') parts.push('白兵 -> ' + this._name(ev.targetId));
     if (ev.type === 'SWAP') parts.push('拳銃へ持ち替え');
@@ -476,19 +605,41 @@
   RtwpInstance.prototype.dispatch = function (events) {
     for (let i = 0; i < events.length; i++) {
       const ev = events[i];
+      let deferEventLog = false;
       try {
+        if (ev.id && (ev.type === 'SUPPRESS_END'
+            || (ev.type === 'ORDER_REFUSED' && ev.order === 'SUPPRESS_APPROACH'))) {
+          const unit = this.unitById.get(String(ev.id));
+          if (unit) {
+            delete unit._rtwpPendingTargetHex;
+            delete unit._rtwpPendingTargetMode;
+            delete unit._rtwpPendingFiringHex;
+            delete unit._rtwpPendingApproachPath;
+            delete unit._rtwpOrderedPath;
+          }
+        }
         switch (ev.type) {
           case 'SHOT': {
             const sh = this.sim.getSoldier(String(ev.shooterId));
             const tg = ev.targetId ? this.sim.getSoldier(String(ev.targetId)) : null;
+            const isMortar = !!(sh && sh.weapon && sh.weapon.code === 'm2_mortar');
             const R = window.Renderer;
             if (R && typeof R.hexToPx === 'function' && sh && window.VFX) {
               const a = R.hexToPx(sh.q, sh.r);
               // 面制圧(TARGET_HEX)は撃つ相手が個体ではないので、着弾点は hex から取る。
               // これが無いと銃口炎も着弾も出ず、命令したのに何も起きていないように見える。
-              const aimAt = tg || ev.targetHex;
-              const b = aimAt ? R.hexToPx(aimAt.q, aimAt.r) : null;
-              if (b && R.playMuzzleFlash) {
+              const aimAt = isMortar && ev.targetHex ? ev.targetHex : (tg || ev.targetHex);
+              const impact = isMortar && ev.targetHex ? {
+                hex: ev.targetHex,
+                offsetQ: ev.impactOffset ? ev.impactOffset.q : 0,
+                offsetR: ev.impactOffset ? ev.impactOffset.r : 0
+              } : null;
+              const b = aimAt
+                ? (impact && window.M2Mortar && M2Mortar.impactScreenPoint
+                  ? M2Mortar.impactScreenPoint(impact, (q, r) => R.hexToPx(q, r))
+                  : R.hexToPx(aimAt.q, aimAt.r))
+                : null;
+              if (b && !isMortar && R.playMuzzleFlash) {
                 const muzzle = R.getMuzzlePoint ? R.getMuzzlePoint(sh, tg) : null;
                 const mx = muzzle ? muzzle.x : a.x;
                 const my = muzzle ? muzzle.y : a.y - 14;
@@ -498,22 +649,47 @@
                 } else {
                   R.playMuzzleFlash(mx, my, angle, sh.weapon);
                 }
+                if (R.playMuzzleSmoke) {
+                  R.playMuzzleSmoke(mx, my, angle, sh.weapon, ev.roundsFired || 1);
+                }
               }
               // 面制圧でも射手は撃つ動作を見せる。目標は個体でないので、着弾点だけを
               // 持つ擬似ターゲットを渡す（triggerAttack は id が無くても向きを出せる）。
-              const animTarget = tg || (ev.targetHex
+              const animTarget = (isMortar ? ev.targetHex : tg) || (ev.targetHex
                 ? { id: null, q: ev.targetHex.q, r: ev.targetHex.r } : null);
               if (R.playAttackAnim && animTarget) R.playAttackAnim(sh, animTarget);
+              if (b && isMortar && window.VFX.addMortarShell) {
+                deferEventLog = true;
+                window.VFX.addMortarShell(a.x + 10, a.y - 24, b.x, b.y - 8, () => {
+                  if (R.playExplosion) R.playExplosion(b.x, b.y - 8, 't2_grenade', aimAt, {
+                    sizeScale: 1.18,
+                    blastTier: 't3_mortar60',
+                    persistentDecal: true,
+                    psDecalTier: 'medium',
+                    psDecalScale: 0.50
+                  });
+                  const usedPsSmoke = R.playPsFx && R.playPsFx(b.x, b.y - 8, 'smoke', { scale: 1.08 });
+                  if (!usedPsSmoke && window.VFX.addMortarSmoke) window.VFX.addMortarSmoke(b.x, b.y - 8);
+                  if (window.Sfx) window.Sfx.play('boom');
+                  this.pushEventLog(this.formatEvent(ev));
+                });
+              }
               // 1 burst = 1煙ではなく、発射された実弾ごとに小さな着弾を出す。
               // 命中弾以外も標的周辺の地面へ落ちるので、missでも表示する。
-              if (b && window.VFX.addBulletImpact) {
+              if (b && !isMortar && window.VFX.addBulletImpact) {
                 window.VFX.addBulletImpact(b.x, b.y - 16, ev.roundsFired || 1, sh.weapon, ev.hit);
               }
             }
-            // 武器コードで鳴らす（'shot' 固定だと実録音のラウンドロビンが使われない）
+            // 武器コードで鳴らす（'shot' 固定だと実録音のラウンドロビンが使われない）。
+            // **実発射数を渡すこと** — 音側はこれで単発/バースト/掃射のクリップを
+            // 選ぶ。渡さないと武器の既定弾数で鳴り、シムの消費弾数とずれる。
             if (window.Sfx && sh && sh.weapon) {
-              if (window.Sfx.playWeapon) window.Sfx.playWeapon(sh.weapon, sh.fireMode);
-              else window.Sfx.play(sh.weapon.code, 'shot');
+              if (isMortar) {
+                // M2 launch sound belongs to SHOT, before the shell flight begins.
+                window.Sfx.play('m2_mortar_fire_ps', 'cannon');
+              } else if (window.Sfx.playWeapon) {
+                window.Sfx.playWeapon(sh.weapon, sh.fireMode, undefined, ev.roundsFired);
+              } else window.Sfx.play(sh.weapon.code, 'shot');
             }
             break;
           }
@@ -538,10 +714,12 @@
             const R = window.Renderer;
             if (R && R.hexToPx && ev.hex && window.VFX) {
               const p = R.hexToPx(ev.hex.q, ev.hex.r);
-              if (window.VFX.addExplosion) window.VFX.addExplosion(p.x, p.y - 8, '#ffb347', 16);
-              if (window.VFX.addSmoke) window.VFX.addSmoke(p.x, p.y - 8);
+              if (R.playExplosion) R.playExplosion(p.x, p.y - 8, 't2_grenade', ev.hex, { visualOnly: true });
+              const usedPsSmoke = R.playPsFx && R.playPsFx(p.x, p.y - 8, 'smoke');
+              if (!usedPsSmoke && window.VFX.addSmoke) window.VFX.addSmoke(p.x, p.y - 8);
             }
-            if (window.Sfx) window.Sfx.play('explosion');
+            // BLAST is emitted at fuse expiry, so this cannot sound at throw time.
+            if (window.Sfx) window.Sfx.play('grenade_explosion_ps', 'boom');
             break;
           }
           case 'MELEE_START': {
@@ -558,7 +736,7 @@
             break;
           default: break;
         }
-        this.pushEventLog(this.formatEvent(ev));
+        if (!deferEventLog) this.pushEventLog(this.formatEvent(ev));
       } catch (e) { /* 演出の失敗でシムを止めない */ }
     }
   };
@@ -591,10 +769,15 @@
     // 大量のtickを一度に回すと、さらに重くなって雪だるま式に破綻する。
     while (this.acc >= T.TICK_MS && n < 5) {
       this.sim.tick();
-      this.runLeaderAI();
       this.dispatch(this.sim.drainEvents());
       this.acc -= T.TICK_MS;
       n++;
+      if (this.sim.result()) {
+        this.syncUnits();
+        this.finishBattle();
+        return;
+      }
+      this.runLeaderAI();
     }
     this.syncUnits();
     this.updateMovePreview();
@@ -682,7 +865,27 @@
 
     const alivePlayers = (g.units || []).filter((u) => u.team === 'player' && u.hp > 0);
 
-    if (res.winner === 'A') {
+    // Capture plain immutable state before CampaignManager promotes, heals or
+    // otherwise mutates the surviving unit objects.
+    g.state = res.winner === 'A' ? 'WIN' : 'LOSS';
+    g._victoryProcessed = res.winner === 'A';
+    if (g.campaign && typeof BattleReview !== 'undefined' && BattleReview.capture) {
+      g.campaign.endBattleSnapshot = BattleReview.capture(g, res, {
+        tick: res.tick, units: g.units,
+        visual: { sector: g.campaign.sector, resultReason: res.reason }
+      });
+    }
+
+    const showFrozenResult = function () {
+      if (!g.campaign) return;
+      if (res.winner === 'A' && typeof g.campaign.onSectorCleared === 'function') {
+        g.campaign.onSectorCleared(alivePlayers);
+      } else if (res.winner !== 'A' && typeof g.campaign.onGameOver === 'function') {
+        g.campaign.onGameOver(res.reason, alivePlayers.length);
+      }
+    };
+
+    if (typeof document === 'undefined' && res.winner === 'A') {
       // 全滅させた場合は旧来の判定がそのまま通る（報酬画面 → promoteSurvivors →
       // 次セクターの経路を共有する。経験値・昇進はこの先の既存処理が担当）
       if (!(typeof g.checkWin === 'function' && g.checkWin())) {
@@ -693,7 +896,7 @@
           g.campaign.onSectorCleared(alivePlayers);
         }
       }
-    } else {
+    } else if (typeof document === 'undefined') {
       if (typeof g.checkLose === 'function') g.checkLose();
       // 全滅ではなく敗走・戦闘不能で負けた場合は checkLose が発火しないので、
       // ここで送る。**負け方を取り違えて伝えないよう理由と生存数を渡す** —
@@ -710,6 +913,9 @@
     if (typeof window !== 'undefined' && window.RtwpBattle
       && window.RtwpBattle.instance === this) {
       window.RtwpBattle.detach();
+    }
+    if (typeof document !== 'undefined' && typeof setTimeout === 'function') {
+      setTimeout(showFrozenResult, 500);
     }
   };
 
@@ -758,7 +964,33 @@
     orders.forEach((o) => this.sim.issueOrder(o));
     // 伝達遅延中も「どんな命令を受けたか」は見た目へ即時反映する。
     // 実際の発砲・移動は ORDER_DELIVERED 後なので、弾薬・命中処理は先走らない。
-    if (ctx.target && unit) unit._rtwpPendingTargetId = ctx.target.id;
+    if (unit) {
+      delete unit._rtwpPendingTargetId;
+      delete unit._rtwpPendingTargetHex;
+      delete unit._rtwpPendingTargetMode;
+      delete unit._rtwpPendingFiringHex;
+      delete unit._rtwpPendingApproachPath;
+      const issued = orders.find((o) => o.soldierIds.indexOf(String(unit.id)) >= 0);
+      if (ctx.target) {
+        unit._rtwpPendingTargetId = ctx.target.id;
+      } else if (issued && issued.type === 'SUPPRESS_APPROACH' && issued.payload
+        && issued.payload.hex && issued.payload.firingHex && issued.payload.path) {
+        unit._rtwpPendingTargetHex = { q: issued.payload.hex.q, r: issued.payload.hex.r };
+        unit._rtwpPendingTargetMode = 'suppress';
+        unit._rtwpPendingFiringHex = {
+          q: issued.payload.firingHex.q, r: issued.payload.firingHex.r,
+        };
+        unit._rtwpPendingApproachPath = issued.payload.path.map((h) => ({ q: h.q, r: h.r }));
+      } else if (issued && issued.type === 'MOVE_TO' && issued.payload && issued.payload.path
+        && issued.payload.path.length) {
+        const goal = issued.payload.path[issued.payload.path.length - 1];
+        unit._rtwpPendingTargetHex = { q: goal.q, r: goal.r };
+        unit._rtwpPendingTargetMode = 'move';
+      } else if (issued && issued.type === 'TARGET_HEX' && issued.payload && issued.payload.hex) {
+        unit._rtwpPendingTargetHex = { q: issued.payload.hex.q, r: issued.payload.hex.r };
+        unit._rtwpPendingTargetMode = 'suppress';
+      }
+    }
     // 命令が通ったことを盤面で見せる。クリックしただけでは「効いた感じ」が出ない
     // （2026-08-02 ディレクター指摘）ので、対象へターゲットカーソルを点滅させる。
     if (ctx.target && typeof window !== 'undefined' && window.TacticalPauseOverlay
@@ -766,7 +998,7 @@
       window.TacticalPauseOverlay.flash(ctx.target.id);
     }
     if (unit) {
-      const mine = orders.find((o) => o.type === 'MOVE_TO'
+      const mine = orders.find((o) => (o.type === 'MOVE_TO' || o.type === 'SUPPRESS_APPROACH')
         && o.soldierIds.indexOf(String(unit.id)) >= 0);
       if (mine && mine.payload.path) unit._rtwpOrderedPath = mine.payload.path.slice();
       else delete unit._rtwpOrderedPath;
@@ -806,6 +1038,7 @@
       return this.runAction(actionId, unit, null, null);
     }
     this.pendingAction = { id: actionId, unitId: unit ? String(unit.id) : null };
+    if (this.gameLogic) this.gameLogic.targetPreview = null;
     this._log(def.label + ': ' + (def.needs === 'enemy' ? '対象の敵をクリック' : '地点をクリック'));
     return false;
   };
@@ -835,6 +1068,7 @@
       unitId: String(list[0].id),
       unitIds: list.map((u) => String(u.id)),
     };
+    if (this.gameLogic) this.gameLogic.targetPreview = null;
     this._log(def.label + '（' + list.length + '名）: '
       + (def.needs === 'enemy' ? '対象の敵をクリック' : '地点をクリック'));
     return false;
@@ -864,27 +1098,123 @@
     return fallbackUnit;
   };
 
+  RtwpInstance.prototype._pendingActors = function (fallbackUnit) {
+    const pending = this.pendingAction;
+    const ids = pending && pending.unitIds && pending.unitIds.length
+      ? pending.unitIds : (pending && pending.unitId ? [pending.unitId] : []);
+    const out = ids.map((id) => this.unitById.get(String(id)))
+      .filter((u) => u && u.hp > 0 && u.team === 'player');
+    if (!out.length && fallbackUnit && fallbackUnit.hp > 0) out.push(fallbackUnit);
+    return out;
+  };
+
+  RtwpInstance.prototype._uniqueHexes = function (hexes) {
+    const seen = new Set();
+    const out = [];
+    for (const h of (hexes || [])) {
+      if (!h || !Number.isFinite(h.q) || !Number.isFinite(h.r)) continue;
+      const key = h.q + ',' + h.r;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      out.push({ q: h.q, r: h.r });
+    }
+    return out;
+  };
+
+  /**
+   * 対象待ちの命令について「誰が、どのhex/敵を担当するか」を副作用なしで計画する。
+   * ユニットを直接指した時は全員がその1体へ集中し、地面を指した時だけ面へ分散する。
+   */
+  RtwpInstance.prototype.planPendingTargets = function (targetUnits, hexes, exactUnit) {
+    const pending = this.pendingAction;
+    const SA = resolveDeps().SimActions;
+    const def = pending && SA && SA.get(pending.id);
+    if (!pending || !def) return null;
+    const actors = this._pendingActors(this.gameLogic && this.gameLogic.selectedUnit);
+    const areaHexes = this._uniqueHexes(hexes);
+    const clickedUnits = (targetUnits || []).filter((u) => u && u.hp > 0);
+    let pairs = [];
+
+    if (def.needs === 'enemy') {
+      let enemies = clickedUnits.filter((u) => u.team === 'enemy');
+      if (!enemies.length && areaHexes.length && this.sim) {
+        const keys = new Set(areaHexes.map((h) => h.q + ',' + h.r));
+        enemies = this.sim.soldiers().filter((s) => s.team === 'B' && s.hp > 0
+          && keys.has(s.q + ',' + s.r)).map((s) => this.unitById.get(String(s.id))).filter(Boolean);
+      }
+      if (exactUnit && enemies.length === 1) {
+        pairs = actors.map((u) => ({ unit: u, destination: enemies[0] }));
+      } else {
+        pairs = minimumDistanceAssignment(actors, enemies, (actor, enemy) => {
+          const ctx = this.actionContext(actor, enemy, null);
+          let available = false;
+          try { available = !!(ctx && SA.issue(pending.id, ctx).length); } catch (e) { available = false; }
+          return (available ? 0 : 100000) + hexDist(actor, enemy);
+        });
+      }
+    } else if (def.needs === 'hex') {
+      const unitHexes = clickedUnits.map((u) => ({ q: u.q, r: u.r }));
+      const destinations = unitHexes.length ? this._uniqueHexes(unitHexes) : areaHexes;
+      pairs = minimumDistanceAssignment(actors, destinations, (actor, destination) => {
+        const ctx = this.actionContext(actor, null, destination);
+        let available = false;
+        try { available = !!(ctx && SA.issue(pending.id, ctx).length); } catch (e) { available = false; }
+        return (available ? 0 : 100000) + hexDist(actor, destination);
+      });
+    }
+
+    const assignments = pairs.map((pair) => {
+      const target = def.needs === 'enemy' ? pair.destination : null;
+      const hex = def.needs === 'hex' ? pair.destination
+        : (pair.destination ? { q: pair.destination.q, r: pair.destination.r } : null);
+      const ctx = this.actionContext(pair.unit, target, hex);
+      let orders = [];
+      try { orders = ctx ? SA.issue(pending.id, ctx) : []; } catch (e) { orders = []; }
+      const order = orders[0] || null;
+      const approach = order && order.type === 'SUPPRESS_APPROACH' ? order.payload : null;
+      return {
+        unit: pair.unit, target: target, hex: hex, valid: !!orders.length,
+        plannedFiringHex: approach && approach.firingHex
+          ? { q: approach.firingHex.q, r: approach.firingHex.r } : null,
+        plannedPath: approach && approach.path
+          ? approach.path.map((h) => ({ q: h.q, r: h.r })) : null,
+      };
+    });
+    return {
+      actionId: pending.id,
+      needs: def.needs,
+      targetKind: exactUnit && clickedUnits.length ? 'unit' : 'hex',
+      hexes: areaHexes,
+      hoverUnit: exactUnit && clickedUnits.length ? clickedUnits[0] : null,
+      assignments: assignments,
+      valid: assignments.some((a) => a.valid),
+    };
+  };
+
+  RtwpInstance.prototype.previewPendingTargets = function (targetUnits, hexes, exactUnit) {
+    const plan = this.planPendingTargets(targetUnits, hexes, exactUnit);
+    if (this.gameLogic) this.gameLogic.targetPreview = plan;
+    return plan;
+  };
+
+  RtwpInstance.prototype.consumePendingTargets = function (targetUnits, hexes, exactUnit) {
+    const plan = this.planPendingTargets(targetUnits, hexes, exactUnit);
+    if (!plan || !plan.valid) return false;
+    let any = false;
+    for (const a of plan.assignments) {
+      if (a.valid && this.runAction(plan.actionId, a.unit, a.target, a.hex)) any = true;
+    }
+    if (any) {
+      this.pendingAction = null;
+      if (this.gameLogic) this.gameLogic.targetPreview = null;
+    }
+    return any;
+  };
+
   /** 対象待ちの行動を、クリックされた敵/地点で消費する。@returns {boolean} 消費したか */
   RtwpInstance.prototype.consumePendingAction = function (unit, target, hex) {
-    const pending = this.pendingAction;
-    if (!pending) return false;
-    const SA = resolveDeps().SimActions;
-    const def = SA && SA.get(pending.id);
-    if (!def) { this.pendingAction = null; return false; }
-    if (def.needs === 'enemy' && !target) return false;
-    if (def.needs === 'hex' && !hex) return false;
-    this.pendingAction = null;
-    // 複数選択で構えていたなら、1回のクリックを全員へ配る。
-    // 個々に available() が通らない兵は runAction 側で弾かれるので、ここでは選別しない。
-    if (pending.unitIds && pending.unitIds.length > 1) {
-      let any = false;
-      for (const id of pending.unitIds) {
-        const u = this.unitById.get(id);
-        if (u && u.hp > 0 && this.runAction(pending.id, u, target, hex)) any = true;
-      }
-      return any;
-    }
-    return this.runAction(pending.id, unit, target, hex);
+    if (!this.pendingAction) return false;
+    return this.consumePendingTargets(target ? [target] : [], hex ? [hex] : [], !!target);
   };
 
   RtwpInstance.prototype.orderFocusFire = function (targetUnit) {
@@ -911,6 +1241,10 @@
     });
     // 伝達遅延中も「誰を狙う命令を受けたか」は見た目へ即時反映する。
     // 実際の発砲はORDER_DELIVERED後なので、弾薬・命中処理は先走らない。
+    delete shooterUnit._rtwpPendingTargetHex;
+    delete shooterUnit._rtwpPendingTargetMode;
+    delete shooterUnit._rtwpPendingFiringHex;
+    delete shooterUnit._rtwpPendingApproachPath;
     shooterUnit._rtwpPendingTargetId = tg.id;
     this._lockLeader();
     return true;
@@ -1002,6 +1336,9 @@
 
     const entries = SA.list(ctx).filter((e) => e.action.scope === 'self');
     if (!entries.length) return false;
+    this._openMenuUnitId = String(unit.id);
+    this._openMenuX = px;
+    this._openMenuY = py;
     // 複数選択なら適用先を覚えておく。メニューの中身は単一選択と同一。
     // gameLogic 側にも置くのは描画のため — 選ばれた兵はここを見て発光する。
     // 単一選択で開いた時は null が入り、それで前の集合が解ける。
@@ -1009,6 +1346,7 @@
     this.selectedUnits = targets;
     if (this.gameLogic) this.gameLogic.selectedUnits = targets;
     this.pendingAction = null;
+    if (this.gameLogic) this.gameLogic.targetPreview = null;
     if (this._menuHtml == null) this._menuHtml = menu.innerHTML;
 
     const self = this;
@@ -1057,6 +1395,7 @@
     cancel.textContent = 'CANCEL';
     cancel.onclick = function () {
       self.pendingAction = null;
+      if (g) g.targetPreview = null;
       if (g && g.clearSelection) g.clearSelection();
       else if (g && g.ui && g.ui.hideActionMenu) g.ui.hideActionMenu();
     };
@@ -1072,6 +1411,28 @@
       menu.style.top = (py - 50) + 'px';
     }
     return true;
+  };
+
+  /** Keep the RTwP soldier and an already-open command menu in sync with loadout changes. */
+  RtwpInstance.prototype.syncUnitLoadout = function (unit) {
+    if (!unit || !this.sim) return null;
+    const soldier = this.sim.getSoldier(String(unit.id));
+    if (!soldier) return null;
+    const raw = unit.params || {};
+    const computed = (typeof LoadoutWeight !== 'undefined' && LoadoutWeight.getEffectiveSpeed)
+      ? LoadoutWeight.getEffectiveSpeed(unit)
+      : (raw.effectiveSpeed != null ? raw.effectiveSpeed : raw.speed);
+    const speed = Number.isFinite(Number(computed)) ? Math.max(0, Number(computed)) : 0;
+    // getSoldier() returns a snapshot, but attrs intentionally retains the core
+    // object's reference; mutate that object instead of replacing the snapshot field.
+    soldier.attrs = Object.assign(soldier.attrs || {}, raw, { speed: speed });
+    raw.effectiveSpeed = speed;
+
+    const menu = (typeof document !== 'undefined') ? document.getElementById('command-menu') : null;
+    if (menu && menu.style.display === 'block' && this._openMenuUnitId === String(unit.id)) {
+      this.showSoldierMenu(unit, this._openMenuX, this._openMenuY, this.selectedUnits);
+    }
+    return soldier;
   };
 
   RtwpInstance.prototype.orderTakeCover = function () {
@@ -1099,6 +1460,10 @@
     this._orig = {
       handleClick: g.handleClick,
       handleMarqueeSelect: g.handleMarqueeSelect,
+      canDragPendingTargets: g.canDragPendingTargets,
+      handleTargetHover: g.handleTargetHover,
+      handleTargetDragPreview: g.handleTargetDragPreview,
+      handleTargetDrag: g.handleTargetDrag,
       handleRightClick: g.handleRightClick,
       actionAttack: g.actionAttack,
       onUnitClick: g.onUnitClick,
@@ -1131,12 +1496,29 @@
       self.showSquadSelectionMenu(list, px, py);
     };
 
+    // MainScene はこの4本だけを見れば、RTwP内部の action catalog を知らずに
+    // 「選択ドラッグ」から「対象ドラッグ」へ入力の意味を切り替えられる。
+    g.canDragPendingTargets = function () { return !!self.pendingAction; };
+    g.handleTargetHover = function (hex, unit) {
+      if (!self.pendingAction) { g.targetPreview = null; return null; }
+      if (!hex && !unit) { g.targetPreview = null; return null; }
+      return self.previewPendingTargets(unit ? [unit] : [], hex ? [hex] : [], !!unit);
+    };
+    g.handleTargetDragPreview = function (hexes) {
+      return self.previewPendingTargets([], hexes || [], false);
+    };
+    g.handleTargetDrag = function (hexes) {
+      return self.consumePendingTargets([], hexes || [], false);
+    };
+
     // 左クリック = 選んだ行動の対象を指す。行き先を左で確定できないと、メニューで
     // 「移動」を選んだ後に何をすればよいか分からない（2026-08-02 ディレクター指摘）。
     g.handleClick = function (hex, px, py) {
       if (hex && self.pendingAction) {
-        const actor = self._pendingActor(g.selectedUnit);
-        if (self.consumePendingAction(actor, self._enemyAt(hex), hex)) return;
+        // スプライトを押した時だけ onUnitClick が「ユニット対象」を作る。
+        // 地面側へ来たクリックは、同じhexに敵が居てもあくまで「hex対象」。
+        self.consumePendingTargets([], [hex], false);
+        return;
       }
       if (self._orig.handleClick) return self._orig.handleClick.call(g, hex, px, py);
     };
@@ -1144,7 +1526,7 @@
     // 右クリック = **取り消しだけ。** 移動の意味は持たせない（2026-08-02 ディレクター
     // 指示）。命令はメニューかホットキーから出す、という一本道にする。
     g.handleRightClick = function () {
-      if (self.pendingAction) { self.pendingAction = null; self._log('取り消し'); }
+      if (self.pendingAction) { self.pendingAction = null; g.targetPreview = null; self._log('取り消し'); }
       if (g.ui && g.ui.hideActionMenu) g.ui.hideActionMenu();
       if (g.clearSelection) g.clearSelection();
     };
@@ -1171,9 +1553,12 @@
     // click into an aimed TARGET order instead of replacing the selection.
     g.onUnitClick = function (unit) {
       const shooter = g.selectedUnit;
-      // メニューで選んだ「射撃」「集中射撃」の対象として先に消費する
-      if (unit && unit.team === 'enemy'
-        && self.consumePendingAction(self._pendingActor(shooter), unit, null)) return;
+      // ユニットの姿を直接押した時は、hexではなくその1体を明示対象にする。
+      // hex系行動（制圧など）は、そのユニットが立つhexへ変換して実行する。
+      if (unit && self.pendingAction) {
+        self.consumePendingAction(self._pendingActor(shooter), unit, { q: unit.q, r: unit.r });
+        return;
+      }
       if (self.paused && shooter && shooter.team === 'player'
           && unit && unit.team === 'enemy') {
         if (self.orderAttack(shooter, unit, 'aimed')) {
@@ -1205,7 +1590,7 @@
         case '2': self.setSpeed(2); break;
         case '3': self.setSpeed(4); break;
         case 'Escape':
-          if (self.pendingAction) { self.pendingAction = null; self._log('命令を取り消し'); }
+          if (self.pendingAction) { self.pendingAction = null; g.targetPreview = null; self._log('命令を取り消し'); }
           break;
         default: {
           // ホットキーもメニューと同じカタログを引く。片方にしか無い技を作らない。
@@ -1286,6 +1671,14 @@
       else delete g.handleClick;
       if (this._orig.handleMarqueeSelect) g.handleMarqueeSelect = this._orig.handleMarqueeSelect;
       else delete g.handleMarqueeSelect;
+      if (this._orig.canDragPendingTargets) g.canDragPendingTargets = this._orig.canDragPendingTargets;
+      else delete g.canDragPendingTargets;
+      if (this._orig.handleTargetHover) g.handleTargetHover = this._orig.handleTargetHover;
+      else delete g.handleTargetHover;
+      if (this._orig.handleTargetDragPreview) g.handleTargetDragPreview = this._orig.handleTargetDragPreview;
+      else delete g.handleTargetDragPreview;
+      if (this._orig.handleTargetDrag) g.handleTargetDrag = this._orig.handleTargetDrag;
+      else delete g.handleTargetDrag;
       if (this._orig.handleRightClick) g.handleRightClick = this._orig.handleRightClick;
       else delete g.handleRightClick;
       if (this._orig.actionAttack) g.actionAttack = this._orig.actionAttack;
@@ -1305,6 +1698,7 @@
       this._menuHtml = null;
     }
     this.pendingAction = null;
+    if (g) g.targetPreview = null;
     if (this._keyHandler) document.removeEventListener('keydown', this._keyHandler);
     if (this._visibilityHandler) document.removeEventListener('visibilitychange', this._visibilityHandler);
     if (this._visibilityHandler && window.removeEventListener) {
@@ -1352,6 +1746,8 @@
     units.forEach((u) => {
       delete u._rtwpSkipped; delete u._rtwpHpScale;
       delete u._rtwpTargetId; delete u._rtwpPendingTargetId;
+      delete u._rtwpPendingTargetHex; delete u._rtwpPendingTargetMode;
+      delete u._rtwpPendingFiringHex; delete u._rtwpPendingApproachPath;
       delete u._rtwpAmmo; delete u._sim; delete u._rtwpOrderedPath;
     });
     if (this.gameLogic && this._previewOwned) {

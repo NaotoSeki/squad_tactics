@@ -8,7 +8,7 @@ const Sfx = {
     _pageActive: true,
     _windowFocused: true,
     RESUME_GUARD_MS: 1200,
-    
+
     // 登録された音声アセット
     assets: {
         'reload': 'asset/audio/001_reload.wav',
@@ -19,7 +19,14 @@ const Sfx = {
         // 実音を載せると、将来 'win' を別の場面で鳴らした時に巻き添えになる。
         // 既存の合成音フォールバック（'win' の tone 3連）はそのまま残す。
         'sector_clear': 'asset/audio/jingle_win.wav',
-        'sector_fail':  'asset/audio/jingle_defeat.wav'
+        'sector_fail':  'asset/audio/jingle_defeat.wav',
+        // Project-owned conversions of user-provided sources; Downloads originals stay untouched.
+        'grenade_explosion_ps': 'asset/audio/sfx/grenade_explosion_ps.wav',
+        'm2_mortar_fire_ps': 'asset/audio/sfx/m2_mortar_fire_ps.wav'
+    },
+    assetVolumes: {
+        'grenade_explosion_ps': 0.36,
+        'm2_mortar_fire_ps': 0.30
     },
 
     /**
@@ -52,6 +59,33 @@ const Sfx = {
         'stg44_burst': { prefix: 'stg44_burst', count: 8 },
         'stg44_single': { prefix: 'stg44_single', count: 10 },
     },
+
+    /**
+     * クリップ1本に入っている**実際の発射弾数**（2026-08-04 実測）。
+     *
+     * これが無かった頃は、音は fireMode（制圧かどうか）だけで auto/burst を選び、
+     * 弾数は WPNS.burst 固定だったので、両者は構造的に一致し得なかった
+     * ——「auto が30発鳴っているのに弾倉は2発しか減らない」。ここを台帳にして、
+     * **鳴らすクリップを実発射数から引く**ことで嘘が出ない形にしてある。
+     *
+     * 実測は `python scripts/audio/count_rounds.py`（オンセット検出＋自己相関）。
+     * 数字を動かす時はスクリプトを回してから動かすこと。シム側の対は
+     * SIM_TUNING.ROUNDS_PER_PULL で、tests/sim_fire_modes.test.js が両者を突合する。
+     */
+    variantRounds: {
+        mg42:     { single: 1, burst: 5, auto: 32 },
+        thompson: { single: 1, burst: 3, auto: 30 },
+        stg44:    { single: 1, burst: 3, auto: 19 },
+    },
+    /** 連射レート（発/秒）。実測 mg42 1304rpm / thompson 769rpm / stg44 448rpm。
+     *  auto クリップを実発射数ぶんで切る尺として使う。 */
+    variantRate: { mg42: 21.7, thompson: 12.8, stg44: 7.5 },
+    /** これ以上の発射数なら auto クリップを使う（SIM_TUNING.AUTO_MIN_ROUNDS と対）。 */
+    AUTO_SOUND_MIN_ROUNDS: 8,
+    /** 単発テイクしか持たない群（M1/Kar98K）で速射を表す時の間隔(ms)・ゆらぎ・上限。 */
+    SEMI_REPEAT_MS: 220,
+    SEMI_REPEAT_JITTER_MS: 40,
+    SEMI_REPEAT_MAX: 4,
 
     /**
      * 武器コード -> 音プロファイル。**明示的な対応表**にしてあるのは、武器コードを
@@ -91,6 +125,10 @@ const Sfx = {
         const prof = this.weaponSfx[id];
         return (prof && this.variantGroups[prof]) ? prof : null;
     },
+    /** 'mg42_auto' -> 'mg42'。接尾辞を持たないIDはそのまま返す。 */
+    familyOf(id) {
+        return String(id || '').replace(/_(single|burst|auto)$/, '');
+    },
     /**
      * SimWeapon を実際に鳴らすIDへ解決する。
      *
@@ -98,7 +136,7 @@ const Sfx = {
      * 含む多様なコードが来る。個別音源がまだ無い rifle は、製品ビューの基準音である
      * M1 実録群へ寄せる。SMG/拳銃/BAR等を名前だけで誤判定せず、sim の class を使う。
      */
-    soundIdForWeapon(weapon, fireMode) {
+    soundIdForWeapon(weapon, fireMode, rounds) {
         const code = weapon && weapon.code;
         let master = null;
         if (code && typeof WPNS !== 'undefined') master = WPNS[code] || null;
@@ -115,10 +153,10 @@ const Sfx = {
         if (isSmallArm) {
             const same = this.sameGunCodes;
             if ((code && same.mg42[code]) || family === 'mg42') {
-                return this._burstVariant('mg42', weapon, fireMode);
+                return this._burstVariant('mg42', weapon, fireMode, rounds);
             }
             if ((code && same.thompson[code]) || family === 'thompson' || weapon.class === 'smg') {
-                return this._burstVariant('thompson', weapon, fireMode);
+                return this._burstVariant('thompson', weapon, fireMode, rounds);
             }
         }
         if (code && (this.groupFor(code) || this.assets[code])) return code;
@@ -127,25 +165,144 @@ const Sfx = {
                 && (!master || master.plCategory === 'rifle'))) return 'm1';
             // 個別音源をまだ割り当てていない小火器は、一旦すべて StG 44 の実録で鳴らす
             // （2026-08-03 ディレクター指示。合成音より実録の方が良い）。
-            return this._burstVariant('stg44', weapon, fireMode);
+            return this._burstVariant('stg44', weapon, fireMode, rounds);
         }
         return code || 'shot';
     },
 
     /**
-     * 連射段数と射撃任務から auto / burst / single を選ぶ。
-     * SimWeapon は burstSize、旧Action側の WPNS は burst を持つので両方受ける
-     * （片方だけだと手動射撃が常に single 音へ落ちる）。
+     * **実発射数**から auto / burst / single を選ぶ。
+     *
+     * 旧版は fireMode==='suppress' かどうかで選んでいたので、制圧射撃の兵は
+     * 2発撃つたびに30発ぶんの auto クリップを鳴らしていた。判断材料を実発射数に
+     * 一本化すれば、音と弾数は構造的に食い違えない。
+     *
+     * @param {string} prefix - 群の接頭辞（'mg42' 等）
+     * @param {Object} weapon - SimWeapon（burstSize）or 旧Action の WPNS（burst）
+     * @param {string} [fireMode] - **未使用**。呼び出し側の互換のために残している
+     * @param {number} [rounds] - このトリガーで実際に出た弾数。無ければ武器の既定値
      */
-    _burstVariant(prefix, weapon, fireMode) {
-        const burstSize = weapon.burstSize != null ? weapon.burstSize : (weapon.burst || 1);
-        if (burstSize <= 1) return prefix + '_single';
-        return fireMode === 'suppress' ? prefix + '_auto' : prefix + '_burst';
+    _burstVariant(prefix, weapon, fireMode, rounds) {
+        const n = (Number.isFinite(rounds) && rounds > 0)
+            ? rounds
+            : (weapon.burstSize != null ? weapon.burstSize : (weapon.burst || 1));
+        if (n >= this.AUTO_SOUND_MIN_ROUNDS) return prefix + '_auto';
+        if (n >= 2) return prefix + '_burst';
+        return prefix + '_single';
     },
-    /** sim_battle / 本編の共通射撃音入口 */
-    playWeapon(weapon, fireMode, visibilityEpoch) {
-        return this.play(this.soundIdForWeapon(weapon, fireMode), 'shot', visibilityEpoch);
+
+    /**
+     * その武器の**1発あたりの間隔(ms)**。鳴らすクリップの実測レートから引く。
+     *
+     * 銃口炎と着弾煙はこれを使って弾を並べる（phaser_vfx._roundSpacing）。
+     * 「音の刻み」と「絵の刻み」を別々の定数で持つと必ずずれる — 実際、旧実装は
+     * クラス固定値(MG34ms/SMG46ms/他72ms)で並べていて、SMGの30発掃射は閃光が
+     * 1.38秒で終わるのに音は2.34秒鳴り続けていた（2026-08-04 ディレクター指摘）。
+     * 連射テイクを持たない群（M1/Kar98K）は半自動の速射間隔を返す。
+     *
+     * @returns {number} 1発あたりのms
+     */
+    roundIntervalMs(weapon, rounds) {
+        const family = this.familyOf(this.soundIdForWeapon(weapon, null, rounds));
+        const rate = this.variantRate[family];
+        if (rate) return 1000 / rate;
+        return this.SEMI_REPEAT_MS;
     },
+
+    /**
+     * sim_battle / 本編の共通射撃音入口。
+     * @param {number} [rounds] - このトリガーの実発射数。SHOT イベントの roundsFired を渡す。
+     */
+    playWeapon(weapon, fireMode, visibilityEpoch, rounds) {
+        const id = this.soundIdForWeapon(weapon, fireMode, rounds);
+        const family = this.familyOf(id);
+        const hasVolumeTakes = !!this.variantRounds[family];
+
+        // 単発テイクしか持たない群（M1 Garand / Kar98K）で2発以上撃った時。
+        // 半自動小銃の速射は「1発の音」ではなく「単発が続けて鳴る」形にする
+        // ——ここが無いと M1 は2発消費して1発ぶんしか鳴らない。
+        if (Number.isFinite(rounds) && rounds >= 2 && !hasVolumeTakes && this.groupFor(id)) {
+            const played = this.play(id, 'shot', visibilityEpoch);
+            if (!played) return played;
+            const count = Math.min(rounds, this.SEMI_REPEAT_MAX);
+            let delay = 0;
+            for (let i = 1; i < count; i++) {
+                delay += this.SEMI_REPEAT_MS
+                    + (Math.random() * 2 - 1) * this.SEMI_REPEAT_JITTER_MS;
+                // 2発目以降は _playNow（スロットルを見ない内部入口）。同じ id を連続で
+                // 鳴らすので、スロットルを通すと速射が1発に潰れる。
+                this.schedule(() => this._playNow(id, 'shot', visibilityEpoch), delay);
+            }
+            return played;
+        }
+
+        // 弾倉の残りが尽きて auto を撃ち切れなかった時は、クリップも撃った分だけで切る。
+        if (hasVolumeTakes && id.endsWith('_auto') && Number.isFinite(rounds)
+            && rounds > 0 && rounds < this.variantRounds[family].auto) {
+            const cut = this._playAutoCut(id, family, rounds, visibilityEpoch);
+            if (cut) return cut;
+            // 切って鳴らせなかった（シーン未準備等）。スロットルはまだ刻んでいないので
+            // 通常再生へ落ちて構わない。
+        }
+
+        return this.play(id, 'shot', visibilityEpoch);
+    },
+
+    /**
+     * auto クリップを実発射数ぶんの尺で鳴らして、末尾をフェードで畳む。
+     * 鳴らせた場合だけ true を返す（呼び出し側はフォールバックの判断に使う）。
+     * @private
+     */
+    _playAutoCut(id, family, rounds, visibilityEpoch) {
+        const rate = this.variantRate[family];
+        if (!rate) return false;
+        if (!this._canPlay(visibilityEpoch)) return false;
+        if (!this.init()) return false;
+
+        // スロットルは**実際に鳴らす直前**に見る。先に刻むと、鳴らせなかった時の
+        // 通常再生フォールバックが自分の刻んだ時刻で弾かれて無音になる。
+        const throttle = this.throttles[id];
+        if (throttle) {
+            const now = Date.now();
+            if (now - (this.lastPlayTime[id] || 0) < throttle) return true;  // 抑止も「処理済み」
+        }
+
+        const scene = this._soundScene();
+        if (!scene || !scene.sound || !scene.sound.add) return false;
+        const key = this.pickVariant(id);
+        if (!key) return false;
+        if (scene.cache && scene.cache.audio && !scene.cache.audio.exists(key)) return false;
+
+        if (throttle) this.lastPlayTime[id] = Date.now();
+
+        const snd = scene.sound.add(key);
+        snd.play({ volume: 0.45 });
+
+        const durMs = (rounds / rate) * 1000 + 250;   // 末尾250msは残響ぶん
+        const full = (typeof snd.totalDuration === 'number') ? snd.totalDuration * 1000 : Infinity;
+        const FADE_MS = 90;
+        const stop = () => {
+            try { snd.stop(); } catch (e) { }
+            try { snd.destroy(); } catch (e) { }
+        };
+        if (durMs >= full) {
+            // 切るまでもない。ただし add() したインスタンスは自分で片付けること —
+            // 放っておくと鳴り終わった Sound が Phaser の音管理に溜まり続ける。
+            if (snd.once) snd.once('complete', stop);
+            else this.schedule(stop, full);
+            return true;
+        }
+
+        this.schedule(() => {
+            if (scene.tweens && scene.tweens.add) {
+                scene.tweens.add({ targets: snd, volume: 0, duration: FADE_MS, onComplete: stop });
+            } else {
+                stop();
+            }
+        }, Math.max(0, durMs - FADE_MS));
+        return true;
+    },
+
     variantPathOf(key) { return 'asset/audio/sfx/' + key + '.wav'; },
     _bags: {},
     _lastVariant: {},
@@ -189,15 +346,18 @@ const Sfx = {
     // 再生間隔の制限 (ms)
     throttles: {
         'mg42': 2000, // 1回の攻撃アクションが終わるまで次を鳴らさない
-        'mg42_auto': 1800,
-        'mg42_burst': 1100,
+        // auto クリップは実測2.5秒。途中で別のautoに踏まれると掃射が細切れに聞こえる。
+        'mg42_auto': 2600,
+        'mg42_burst': 900,   // 5発0.4秒。旧1100は短連射に対して長すぎた
         'mg42_single': 180,
-        'thompson_auto': 1500,
+        'thompson_auto': 2600,
         'thompson_burst': 900,
         'thompson_single': 150,
-        'stg44_auto': 1500,
+        'stg44_auto': 2600,
         'stg44_burst': 900,
         'stg44_single': 150,
+        'grenade_explosion_ps': 280,
+        'm2_mortar_fire_ps': 450,
         'tank_reload': 1500  // 敵戦車の連続射撃で2回鳴るのを防止
     },
     lastPlayTime: {},
@@ -336,7 +496,7 @@ const Sfx = {
         for(let i=0;i<d.length;i++) d[i]=(Math.random()*2-1)*Math.exp(-i/(d.length*0.3));
         const s=this._trackNode(this.ctx.createBufferSource()); s.buffer=b;
         const f=this.ctx.createBiquadFilter(); f.type=type; f.frequency.value=freq;
-        const g=this.ctx.createGain(); 
+        const g=this.ctx.createGain();
         g.gain.setValueAtTime(vol,t); g.gain.exponentialRampToValueAtTime(0.01,t+dur);
         s.connect(f); f.connect(g); g.connect(this.ctx.destination);
         s.start(t);
@@ -389,7 +549,30 @@ const Sfx = {
         o.start(t); o.stop(t + 0.08);
     },
 
+    /**
+     * 通常の再生入口。スロットル判定を通してから _playNow へ渡す。
+     *
+     * **判定の順序を変えないこと。** hidden/世代切れの棄却をスロットルより先に
+     * 置くのは、鳴らさなかった再生でスロットル時刻を刻まないため（刻むと復帰直後の
+     * 1発が自分の刻んだ時刻で弾かれる）。
+     */
     play(id, fallbackType = null, visibilityEpoch = null) {
+        if (id === 'tank_reload') return;
+        if (!this._canPlay(visibilityEpoch)) return;
+
+        if (this.throttles[id]) {
+            const now = Date.now();
+            const last = this.lastPlayTime[id] || 0;
+            if (now - last < this.throttles[id]) {
+                return;
+            }
+            this.lastPlayTime[id] = now;
+        }
+        return this._playNow(id, fallbackType, visibilityEpoch);
+    },
+
+    /** スロットルを見ない内部入口。連続再生（半自動の速射）の2発目以降が通る。 @private */
+    _playNow(id, fallbackType = null, visibilityEpoch = null) {
         if (id === 'tank_reload') return;
         // hidden中、復帰直後、または古いActionの世代なら再生予約そのものを作らない。
         if (!this._canPlay(visibilityEpoch)) return;
@@ -401,23 +584,13 @@ const Sfx = {
             if (quiet.includes(id) || quiet.includes(ft)) return;
         }
 
-        // スロットリング処理
-        if (this.throttles[id]) {
-            const now = Date.now();
-            const last = this.lastPlayTime[id] || 0;
-            if (now - last < this.throttles[id]) {
-                return; 
-            }
-            this.lastPlayTime[id] = now;
-        }
-
         // 1a. ラウンドロビン群が登録されていれば、そこから1テイク引いて再生
         if (this.groupFor(id)) {
             const scene = this._soundScene();
             const key = scene && this.pickVariant(id);
             if (key && scene.sound && (!scene.cache || !scene.cache.audio || scene.cache.audio.exists(key))) {
                 scene.sound.play(key, { volume: 0.45 });
-                return;
+                return true;
             }
         }
 
@@ -426,10 +599,14 @@ const Sfx = {
             const scene = this._soundScene();
             if (scene && scene.sound) {
                 // ジングルは一度きりの節目なので銃声より前に出す
-                const vol = (id === 'tank_reload') ? 0.28
-                    : (id === 'sector_clear' || id === 'sector_fail') ? 0.6 : 0.4;
-                scene.sound.play(id, { volume: vol });
-                return;
+                const cached = !scene.cache || !scene.cache.audio || scene.cache.audio.exists(id);
+                if (cached) try {
+                    const vol = this.assetVolumes[id] != null ? this.assetVolumes[id]
+                        : (id === 'tank_reload') ? 0.28
+                        : (id === 'sector_clear' || id === 'sector_fail') ? 0.6 : 0.4;
+                    scene.sound.play(id, { volume: vol });
+                    return true;
+                } catch (e) { /* Preserve the requested synth fallback below. */ }
             }
         }
 
@@ -453,6 +630,7 @@ const Sfx = {
             this.schedule(()=>this.tone(554,'square',0.1),150);
             this.schedule(()=>this.tone(659,'square',0.4),300);
         }
+        return true;
     }
 };
 window.Sfx = Sfx;

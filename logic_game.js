@@ -116,7 +116,11 @@ window.BattleLogic = class BattleLogic {
     // 支援カード配布（融合カードを先頭に、続けてランダム）
     setTimeout(() => {
       if (typeof Renderer !== 'undefined' && Renderer.game && Renderer.dealCards) {
-        const deck = [...(this.campaign.carriedCards || [])];
+        const deck = [...(this.campaign.carriedCards || [])].filter(card => {
+          const key = card && typeof card === 'object' ? card.type : card;
+          const template = typeof UNIT_TEMPLATES !== 'undefined' ? UNIT_TEMPLATES[key] : null;
+          return !!template && (!template.isTank || (typeof FEATURE_TANK_UNITS !== 'undefined' && FEATURE_TANK_UNITS));
+        });
         this.campaign.carriedCards = [];
         const need = Math.max(0, 5 - deck.length);
         for (let i = 0; i < need; i++) {
@@ -151,8 +155,9 @@ window.BattleLogic = class BattleLogic {
   pickEnemyTemplate() {
     const cfg = (typeof BATTLE_SCALE !== 'undefined') ? BATTLE_SCALE : {};
     const s = this.sector;
-    const tigerP = (cfg.ENEMY_TIGER_CHANCE || 0) + s * (cfg.ENEMY_TIGER_CHANCE_PER_SECTOR || 0);
-    const tankP = (cfg.ENEMY_TANK_CHANCE || 0.02) + s * (cfg.ENEMY_TANK_CHANCE_PER_SECTOR || 0);
+    const tanksAvailable = typeof FEATURE_TANK_UNITS !== 'undefined' && FEATURE_TANK_UNITS;
+    const tigerP = tanksAvailable ? (cfg.ENEMY_TIGER_CHANCE || 0) + s * (cfg.ENEMY_TIGER_CHANCE_PER_SECTOR || 0) : 0;
+    const tankP = tanksAvailable ? (cfg.ENEMY_TANK_CHANCE || 0.02) + s * (cfg.ENEMY_TANK_CHANCE_PER_SECTOR || 0) : 0;
     const r = Math.random();
     if (r < tigerP) return 'tank_tiger';
     if (r < tigerP + tankP) return 'tank_pz4';
@@ -167,6 +172,8 @@ window.BattleLogic = class BattleLogic {
   }
 
   spawnUnitAt(team, templateKey) {
+    const template = typeof UNIT_TEMPLATES !== 'undefined' ? UNIT_TEMPLATES[templateKey] : null;
+    if (!template || (template.isTank && (typeof FEATURE_TANK_UNITS === 'undefined' || !FEATURE_TANK_UNITS))) return false;
     const u = this.campaign.createSoldier(templateKey, team);
     if (!u) return false;
     const p = this.getSafeSpawnPos(team, u.def && u.def.isTank);
@@ -258,6 +265,12 @@ window.BattleLogic = class BattleLogic {
       this.state = 'WIN';
       this._victoryProcessed = true;
       const survivors = this.units.filter(u => u.team === 'player' && u.hp > 0);
+      if (this.campaign && typeof BattleReview !== 'undefined' && BattleReview.capture) {
+        this.campaign.endBattleSnapshot = BattleReview.capture(this,
+          { winner: 'A', reason: 'annihilation', tick: this.turn || 0 },
+          { tick: this.turn || 0, units: this.units,
+            visual: { sector: this.campaign.sector, mode: 'turn-based' } });
+      }
       this.campaign.onSectorCleared(survivors);
       return true;
     }
@@ -267,6 +280,13 @@ window.BattleLogic = class BattleLogic {
   checkLose() {
     const players = this.units.filter(u => u.team === 'player' && u.hp > 0);
     if (players.length === 0) {
+      this.state = 'LOSS';
+      if (this.campaign && typeof BattleReview !== 'undefined' && BattleReview.capture) {
+        this.campaign.endBattleSnapshot = BattleReview.capture(this,
+          { winner: 'B', reason: 'annihilation', tick: this.turn || 0 },
+          { tick: this.turn || 0, units: this.units,
+            visual: { sector: this.campaign.sector, mode: 'turn-based' } });
+      }
       // ここへ来るのは本当に全員戦死した時だけ（生存者が居る敗北は
       // RtwpInstance.finishBattle が理由付きで送る）
       this.campaign.onGameOver('annihilation', 0);
@@ -635,23 +655,40 @@ window.BattleLogic = class BattleLogic {
         }
 
         const sPos = Renderer.hexToPx(a.q, a.r);
-        const ePos = Renderer.hexToPx(targetHex.q, targetHex.r);
         const sx = sPos.x + muzzleOffsetX;
         const sy = sPos.y;
 
         const isMortar = (w.code === 'm2_mortar');
         const isShell = w.type.includes('shell');
+        const mortarImpact = isMortar && typeof M2Mortar !== 'undefined' && M2Mortar.resolveImpact
+          ? M2Mortar.resolveImpact({
+            aimHex: targetHex, range: dist, minRange: w.minRng || 0,
+            maxRange: Math.max((w.minRng || 0) + 1, Math.ceil((w.rng || dist) * 2)),
+            accuracy: w.acc,
+            suppressionRatio: Math.max(0, Math.min(1, (Number(a.suppression) || 0) / 80)),
+            neighbors: (hex) => game.getNeighbors(hex.q, hex.r),
+            isValidHex: (hex) => game.canAttackHex(hex.q, hex.r),
+            rng: Math.random
+          }) : null;
+        const resolvedHex = mortarImpact ? mortarImpact.hex : targetHex;
+        const ePos = mortarImpact && M2Mortar.impactScreenPoint
+          ? M2Mortar.impactScreenPoint(mortarImpact, (q, r) => Renderer.hexToPx(q, r))
+          : Renderer.hexToPx(resolvedHex.q, resolvedHex.r);
         const spread = (100 - w.acc) * 0.3;
-        const tx = ePos.x + (Math.random() - 0.5) * spread * (isMg42 ? 2 : 1);
-        const ty = ePos.y + (Math.random() - 0.5) * spread * (isMg42 ? 2 : 1);
+        const tx = isMortar ? ePos.x : ePos.x + (Math.random() - 0.5) * spread * (isMg42 ? 2 : 1);
+        const ty = isMortar ? ePos.y : ePos.y + (Math.random() - 0.5) * spread * (isMg42 ? 2 : 1);
 
         if (window.Sfx) {
-          if (isShell || !Sfx.playWeapon) {
+          if (isMortar) {
+            // Legacy action path: fire sound precedes the one-second mortar flight.
+            Sfx.play('m2_mortar_fire_ps', 'cannon', audioEpoch);
+          } else if (isShell || !Sfx.playWeapon) {
             Sfx.play(w.code, isShell ? 'cannon' : (isMg42 ? 'mg' : 'shot'), audioEpoch);
           } else {
             // `?rtwp=0` の手動ActionでもRTwPと同じ武器別実録音を使う。
             // WPNSのburstではなく、このActionで実際に選んだ弾数を渡す。
-            Sfx.playWeapon({ ...w, burstSize: shots }, isAreaAttack ? 'suppress' : 'aimed', audioEpoch);
+            Sfx.playWeapon({ ...w, burstSize: shots },
+              isAreaAttack ? 'suppress' : 'aimed', audioEpoch, shots);
           }
         }
 
@@ -659,8 +696,13 @@ window.BattleLogic = class BattleLogic {
         if (!isMortar && typeof Renderer !== 'undefined' && Renderer.playMuzzleFlash) {
           const my = sy - 14;
           const mAng = Math.atan2(ty - my, tx - sx);
-          Renderer.playMuzzleFlash(sx + Math.cos(mAng) * 10, my + Math.sin(mAng) * 10, mAng,
-            { ...w, burstSize: shots });
+          const muzzleX = sx + Math.cos(mAng) * 10;
+          const muzzleY = my + Math.sin(mAng) * 10;
+          const muzzleWeapon = { ...w, burstSize: shots };
+          Renderer.playMuzzleFlash(muzzleX, muzzleY, mAng, muzzleWeapon);
+          if (Renderer.playMuzzleSmoke) {
+            Renderer.playMuzzleSmoke(muzzleX, muzzleY, mAng, muzzleWeapon, shots);
+          }
         }
 
         const flightTime = isMortar ? 1000 : (isShell ? 300 : (isMg42 ? dist * 50 : dist * 30));
@@ -670,33 +712,46 @@ window.BattleLogic = class BattleLogic {
         setTimeout(() => {
           if (isMortar || isShell) {
             if (typeof Renderer !== 'undefined' && Renderer.playExplosion) {
-              // 迫撃砲はT3の煙が薄い問題(リベイク保留)のワークアラウンドでT2を拡大再生
-              if (isMortar) Renderer.playExplosion(tx, ty, 't2_grenade', targetHex, { sizeScale: 1.3 });
-              else Renderer.playExplosion(tx, ty, 't4_shell120', targetHex);
+              // 60mm用の18フレームT3爆発を少し大きくし、専用の残煙を重ねる。
+              if (isMortar) {
+                Renderer.playExplosion(tx, ty, 't2_grenade', resolvedHex, {
+                  sizeScale: 1.18,
+                  blastTier: 't3_mortar60',
+                  persistentDecal: true,
+                  psDecalTier: 'medium',
+                  psDecalScale: 0.50
+                });
+                const usedPsSmoke = Renderer.playPsFx && Renderer.playPsFx(tx, ty, 'smoke', { scale: 1.08 });
+                if (!usedPsSmoke && window.VFX && VFX.addMortarSmoke) VFX.addMortarSmoke(tx, ty);
+              }
+              else Renderer.playExplosion(tx, ty, 't4_shell120', resolvedHex);
             } else if (window.VFX) window.VFX.addExplosion(tx, ty, "#f55", 5);
             if (window.Sfx) Sfx.play('death', null, audioEpoch);
             if (isShell && window.Sfx) setTimeout(() => Sfx.play('tank_reload', null, audioEpoch), 200);
           }
 
           if (w.indirect) {
-            const victims = game.getUnitsInHex(targetHex.q, targetHex.r);
-            const neighbors = game.getNeighbors(targetHex.q, targetHex.r);
+            const victims = game.getUnitsInHex(resolvedHex.q, resolvedHex.r);
+            const neighbors = game.getNeighbors(resolvedHex.q, resolvedHex.r);
             const areaVictims = [];
             neighbors.forEach(n => { areaVictims.push(...game.getUnitsInHex(n.q, n.r)); });
             const wDmg = getWeaponDmg(w);
-            victims.forEach(v => {
-              if ((Math.random() * 100) < 65 + 20 - dist * 2) {
-                game.applyDamage(v, wDmg, "迫撃砲");
-              } else {
-                game.ui.log(">> 至近弾！");
-                game.applyDamage(v, Math.floor(wDmg / 3), "爆風");
-              }
-            });
-            areaVictims.forEach(v => {
-              game.applyDamage(v, Math.floor(wDmg / 4), "爆風");
-            });
+            let totalBlastDamage = 0;
+            const applyMortarBlast = (v, blastDistance) => {
+              const rawCover = game.map[v.q] && game.map[v.q][v.r] ? Number(game.map[v.q][v.r].cover) || 0 : 0;
+              const cover = Math.max(0, Math.min(1, rawCover > 1 ? rawCover / 100 : rawCover));
+              const radialScale = 0.62 * (blastDistance === 0 ? 1 : (w.splashScale || 0.45));
+              const variance = 0.82 + Math.random() * 0.36;
+              const dmg = Math.max(1, Math.round(wDmg * radialScale * Math.max(0.35, 1 - cover * 0.65) * variance));
+              const before = v.hp;
+              game.applyDamage(v, dmg, blastDistance === 0 ? "迫撃砲" : "爆風");
+              totalBlastDamage += Math.max(0, before - v.hp);
+            };
+            victims.forEach(v => applyMortarBlast(v, 0));
+            areaVictims.forEach(v => applyMortarBlast(v, 1));
+            game.ui.log(`>> M2着弾 (${targetHex.q},${targetHex.r})→(${resolvedHex.q},${resolvedHex.r})${mortarImpact && mortarImpact.adjacent ? ' 散布' : ''} DMG ${totalBlastDamage}`);
             // 迫撃砲による制圧
-            game.applySuppression(targetHex.q, targetHex.r, w, a);
+            game.applySuppression(resolvedHex.q, resolvedHex.r, w, a);
 
           } else if (isAreaAttack) {
             const victims = game.getUnitsInHex(targetHex.q, targetHex.r).filter(v => v.team !== a.team);
@@ -956,8 +1011,10 @@ window.BattleLogic = class BattleLogic {
     }
 
     // 迫撃砲パーツ3種揃い → 仮想 m2_mortar
-    const parts = u.hands.map(i => i ? i.code : null);
-    if (parts.includes('mortar_barrel') && parts.includes('mortar_bipod') && parts.includes('mortar_plate')) {
+    const mortarReady = (typeof M2Mortar !== 'undefined')
+      ? M2Mortar.isAssembled(u)
+      : ['mortar_barrel', 'mortar_bipod', 'mortar_plate'].every(code => u.hands.some(i => i && i.code === code));
+    if (mortarReady) {
       const base = WPNS['m2_mortar'];
       const fn = this._ammoCtx().findMortarShellTotal;
       const totalAmmo = typeof fn === 'function' ? fn(u) : 0;
@@ -1248,14 +1305,9 @@ window.BattleLogic = class BattleLogic {
     if (src.type === 'main') fromUnit.hands[srcIdx] = item2; else fromUnit.bag[srcIdx] = item2;
     if (tgt.type === 'main') toUnit.hands[tgtIdx] = item1; else toUnit.bag[tgtIdx] = item1;
 
-    if (typeof LoadoutWeight !== 'undefined') {
-      LoadoutWeight.refreshUnitLoadout(fromUnit);
-      LoadoutWeight.refreshUnitLoadout(toUnit);
-    }
-    this.updateSidebar();
-    if (fromUnit === this.selectedUnit || toUnit === this.selectedUnit) {
-      this.ui.refreshCommandMenuState(this.selectedUnit);
-    }
+    this.refreshLoadoutDerivedState(fromUnit);
+    this.refreshLoadoutDerivedState(toUnit);
+    if (fromUnit !== this.selectedUnit && toUnit !== this.selectedUnit) this.updateSidebar();
     if (window.Sfx) Sfx.play('swap');
     const itemName = item1 ? (item1.name || item1.code) : (item2 ? item2.name || item2.code : '装備');
     this.ui.log(`${fromUnit.name} → ${toUnit.name}: ${itemName}`);
@@ -1270,6 +1322,21 @@ window.BattleLogic = class BattleLogic {
     this.refreshUnitState(u);
     this.updateSidebar(u);
     if (window.Sfx) Sfx.play('click');
+  }
+
+  /** Recompute all load-dependent state before repainting the sidebar/menu. */
+  refreshLoadoutDerivedState(u) {
+    if (!u) return;
+    if (typeof LoadoutWeight !== 'undefined' && LoadoutWeight.refreshUnitLoadout) {
+      LoadoutWeight.refreshUnitLoadout(u);
+    }
+    const rtwp = (typeof RtwpBattle !== 'undefined' && RtwpBattle.active)
+      ? RtwpBattle.instance : null;
+    if (rtwp && rtwp.syncUnitLoadout) rtwp.syncUnitLoadout(u);
+    if (u === this.selectedUnit) {
+      this.updateSidebar(u);
+      if (this.ui && this.ui.refreshCommandMenuState) this.ui.refreshCommandMenuState(u);
+    }
   }
 
   getUnitInHex(q, r) { return this.units.find(u => u.q === q && u.r === r && u.hp > 0); }
@@ -1481,6 +1548,13 @@ window.BattleLogic = class BattleLogic {
   }
 
   onUnitClick(u) {
+    if (this.state === 'REVIEW' && this._battleReviewReadOnly) {
+      this.selectedUnits = null;
+      this.selectedUnit = u;
+      if (this.ui && this.ui.hideActionMenu) this.ui.hideActionMenu();
+      if (this.updateSidebar) this.updateSidebar();
+      return;
+    }
     if (this.state !== 'PLAY' && this.state !== 'ANIM') return;
     // 誰か1人を選び直した時点で矩形選択は解ける（味方の場合は続く
     // showActionMenu が同じ値を入れ直す）
@@ -1786,10 +1860,8 @@ window.BattleLogic = class BattleLogic {
     if (src.type === 'main') u.hands[srcIdx] = item2; else u.bag[srcIdx] = item2;
     if (tgt.type === 'main') u.hands[tgtIdx] = item1; else u.bag[tgtIdx] = item1;
 
-    this.updateSidebar();
-    if (u === this.selectedUnit) this.ui.refreshCommandMenuState(u);
+    this.refreshLoadoutDerivedState(u);
     if (window.Sfx) Sfx.play('click');
-    if (typeof LoadoutWeight !== 'undefined') LoadoutWeight.refreshUnitLoadout(u);
     this.ui.log(`${u.name} 装備変更`);
   }
 
@@ -1824,8 +1896,7 @@ window.BattleLogic = class BattleLogic {
     if (typeof Renderer !== 'undefined' && Renderer.dealCard) {
       Renderer.dealCard({ type: item.code, weaponData: item });
     }
-    this.updateSidebar();
-    if (typeof LoadoutWeight !== 'undefined') LoadoutWeight.refreshUnitLoadout(u);
+    this.refreshLoadoutDerivedState(u);
     if (window.Sfx) Sfx.play('click');
     this.ui.log(`${u.name} 装備解除: ${item.name || item.code}`);
   }
@@ -1884,8 +1955,7 @@ window.BattleLogic = class BattleLogic {
     if (oldItem && this._canMoveItemToDeck(oldItem) && typeof Renderer !== 'undefined' && Renderer.dealCard) {
       Renderer.dealCard({ type: oldItem.code, weaponData: oldItem });
     }
-    this.updateSidebar();
-    if (typeof LoadoutWeight !== 'undefined') LoadoutWeight.refreshUnitLoadout(u);
+    this.refreshLoadoutDerivedState(u);
     if (window.Sfx) Sfx.play('click');
     this.ui.log(`${u.name} 装備: ${newItem.name || newItem.code}`);
   }
@@ -2025,6 +2095,9 @@ window.BattleLogic = class BattleLogic {
   async runAuto() { if(this.state!=='PLAY') return; if (this.isAutoProcessing) return; this.ui.log(":: Auto ::"); this.clearSelection(); this.isAutoProcessing = true; await this.ai.execute(this.units, 'player'); this.isAutoProcessing = false; if(this.state==='WIN') return; if(this.isAuto && this.state==='PLAY') this.endTurn(); }
   async actionMove(u, p, opts) {
     if (!u || u.hp <= 0) return;
+    // Equipment weight can reduce effective spd to zero. Direct callers must
+    // not bypass the reachable-hex budget used by the normal UI path.
+    if (this.getMovementBudget(u) <= 0) return;
     const parallel = !!(opts && opts.parallel);
     const rtCfg = this.getRtTacticsCfg();
     const rtStep = (parallel && rtCfg && rtCfg.RT_MOVE_STEP_MS) ? rtCfg.RT_MOVE_STEP_MS : null;
@@ -2060,10 +2133,12 @@ window.BattleLogic = class BattleLogic {
 
   // --- UTILS ---
   checkDeploy(targetHex, cardType) {
+    const template = typeof UNIT_TEMPLATES !== 'undefined' && cardType ? UNIT_TEMPLATES[cardType] : null;
+    if (!template || (template.isTank && (typeof FEATURE_TANK_UNITS === 'undefined' || !FEATURE_TANK_UNITS))) return false;
     if(!this.isValidHex(targetHex.q, targetHex.r) || this.map[targetHex.q][targetHex.r].id === -1) return false;
     const t = this.map[targetHex.q][targetHex.r];
     if(t.cost >= 99) return false;
-    const isTank = typeof UNIT_TEMPLATES !== 'undefined' && cardType && UNIT_TEMPLATES[cardType] && UNIT_TEMPLATES[cardType].isTank;
+    const isTank = template.isTank;
     if (isTank && t.tankBlocked) return false;
     if (this.getUnitsInHex(targetHex.q, targetHex.r).length >= this.getHexUnitCap()) return false;
     if (this.cardsUsed >= this.getDeployCardMax()) return false;

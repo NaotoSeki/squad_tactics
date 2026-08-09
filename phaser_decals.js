@@ -89,12 +89,13 @@ window.DecalLayer = {
    * ワールド座標へ着弾痕を1つ焼き込む（不可逆）。
    * @param {number} worldX ゲーム座標
    * @param {number} worldY ゲーム座標
-   * @param {string} khaosTier KHAOS_FX.TIERS のキー
+   * @param {string} tier KHAOS_FX.TIERS のキー、またはPSデカールのティア名
+   * @param {{scale?: number}=} opts 個別の表示倍率
    * @returns {boolean} 焼けたか
    */
-  stamp(worldX, worldY, khaosTier) {
+  stamp(worldX, worldY, tier, opts) {
     if (!this.ready()) return false;
-    const tierName = this.TIER_MAP[khaosTier] || 'light';
+    const tierName = this.TIER_MAP[tier] || tier || 'light';
     const decal = this._pick(tierName);
     if (!decal) return false;
 
@@ -109,8 +110,10 @@ window.DecalLayer = {
     const left = imgX + decal.ox;
     const top = imgY + decal.oy;
 
-    const extra = this.TIER_SCALE[khaosTier];
-    if (extra) {
+    const requestedScale = Number(opts && opts.scale);
+    const extra = (this.TIER_SCALE[tier] || 1)
+      * (Number.isFinite(requestedScale) && requestedScale > 0 ? requestedScale : 1);
+    if (extra !== 1) {
       // 拡大焼きは中心を保つよう左上を補正する
       const dw = decal.w * (extra - 1), dh = decal.h * (extra - 1);
       const img = this._scene.add.image(0, 0, key).setOrigin(0, 0).setScale(extra).setVisible(false);

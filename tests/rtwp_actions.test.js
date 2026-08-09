@@ -289,15 +289,18 @@ function attach(g) {
     && o.payload.hex.r === spot.r),
     '地点をクリックするとその地点への制圧になる', 'issued=' + issued.length);
 
-  // 射線の通らない地点は命令にならない（理由付きで弾く）
+  // 現在地から射線が通らなくても、射撃位置へ安全に接近できるなら複合命令になる。
   issued.length = 0;
   const blocked = { q: foe.q, r: foe.r };
   if (!inst.map.hasLos({ q: me.q, r: me.r }, blocked)) {
     g.selectedUnit = me;
     dom._key('S');
     g.handleClick(blocked, 0, 0);
-    check(issued.length === 0, '射線の通らない地点への制圧は発行されない',
-      'issued=' + issued.length);
+    const approach = issued.find((o) => o.type === 'SUPPRESS_APPROACH');
+    check(!!approach && approach.payload.hex.q === blocked.q
+      && approach.payload.hex.r === blocked.r && approach.payload.path.length > 0,
+    '射線外の地点でも射撃位置があれば接近→制圧を発行する',
+    'issued=' + issued.map((o) => o.type).join(','));
   } else {
     check(true, '射線の通らない地点のテスト: この配置では遮蔽が無いため省略');
   }
@@ -601,6 +604,131 @@ function attach(g) {
   check(inst.pendingAction && !inst.pendingAction.unitIds,
     '1名だけの矩形選択は従来どおり単体として扱う');
   inst.pendingAction = null;
+  SB.RtwpBattle.detach();
+}
+
+// ===========================================================================
+// 対象ドラッグ: 複数hexへ最短配分 / ユニット直指定は集中
+// ===========================================================================
+{
+  const g = makeGameLogic();
+  const dom = makeDom();
+  SB.document = dom;
+  const inst = attach(g);
+  inst.installUi();
+  const players = g.units.filter((u) => u.team === 'player');
+  g.selectedUnit = players[0];
+
+  const open = [];
+  for (let q = 0; q < inst.map._W; q++) {
+    for (let r = 0; r < inst.map._H; r++) {
+      const h = { q, r };
+      if (isFinite(inst.map.moveCost(h, h))) open.push(h);
+    }
+  }
+  const fullPathTo = (u, h) => {
+    const path = inst.actionContext(u, null, h).path || [];
+    const last = path[path.length - 1];
+    return last && last.q === h.q && last.r === h.r;
+  };
+  const h0 = open.filter((h) => fullPathTo(players[0], h))
+    .sort((a, b) => inst.map.dist(players[0], a) - inst.map.dist(players[0], b))
+    .find((h) => inst.map.dist(players[0], h) >= 2);
+  const h1 = open.filter((h) => h0 && (h.q !== h0.q || h.r !== h0.r) && fullPathTo(players[1], h))
+    .sort((a, b) => inst.map.dist(players[1], a) - inst.map.dist(players[1], b))
+    .find((h) => inst.map.dist(players[1], h) >= 2);
+  check(!!h0 && !!h1, '複数移動の検証用に到達可能な2地点がある');
+
+  inst.setPaused(true);
+  inst.armActionForUnits('MOVE', players);
+  const movePlan = inst.planPendingTargets([], [h0, h1], false);
+  const assignedCost = movePlan.assignments.reduce((sum, a) => sum + inst.map.dist(a.unit, a.hex), 0);
+  const validMoveCost = (u, h) => SB.SimActions.issue('MOVE', inst.actionContext(u, null, h)).length
+    ? inst.map.dist(u, h) : Infinity;
+  const swappedCost = validMoveCost(players[0], h1) + validMoveCost(players[1], h0);
+  const straightCost = validMoveCost(players[0], h0) + validMoveCost(players[1], h1);
+  check(movePlan.assignments.every((a) => a.valid)
+    && assignedCost === Math.min(swappedCost, straightCost),
+    '複数hexは実行可能な組み合わせの中で総移動距離を最小化する',
+    `${assignedCost} vs min(${straightCost},${swappedCost})`);
+  check(movePlan.targetKind === 'hex' && movePlan.hexes.length === 2,
+    '地面ドラッグのプレビューはhex対象として2地点を保持する');
+  check(inst.consumePendingTargets([], [h0, h1], false) && inst.pendingAction === null,
+    '複数hexを確定すると割り当て済み移動命令を消費する');
+  const moveEnds = players.map((u) => {
+    const path = u._rtwpOrderedPath || [];
+    const last = path[path.length - 1];
+    return last ? last.q + ',' + last.r : '';
+  }).sort();
+  check(JSON.stringify(moveEnds) === JSON.stringify([h0.q + ',' + h0.r, h1.q + ',' + h1.r].sort()),
+    '各兵の移動命令は別々の選択hexへ届く', JSON.stringify(moveEnds));
+  check(players.every((u) => {
+    const path = u._rtwpOrderedPath || [];
+    const end = path[path.length - 1];
+    return end && u._rtwpPendingTargetHex
+      && u._rtwpPendingTargetHex.q === end.q && u._rtwpPendingTargetHex.r === end.r
+      && u._rtwpPendingTargetMode === 'move';
+  }), '一括移動の確定直後から各兵の表示用目標hexが割当先を指す');
+
+  inst.armActionForUnits('SUPPRESS_HEX', players);
+  const usedSuppressHexes = new Set();
+  const suppressDestinations = [];
+  players.forEach((u) => {
+    const h = open.find((candidate) => {
+      const key = candidate.q + ',' + candidate.r;
+      return !usedSuppressHexes.has(key)
+        && SB.SimActions.issue('SUPPRESS_HEX', inst.actionContext(u, null, candidate)).length;
+    });
+    if (h) {
+      suppressDestinations.push(h);
+      usedSuppressHexes.add(h.q + ',' + h.r);
+    }
+  });
+  const suppressPlan = inst.planPendingTargets([], suppressDestinations, false);
+  check(!!suppressPlan, '複数制圧の検証用に射撃可能な2地点がある');
+  check(suppressDestinations.length === players.length
+    && suppressPlan.assignments.every((a) => a.valid),
+    '各兵へ割り当て可能な制圧地点が揃う');
+  check(inst.consumePendingTargets([], suppressDestinations, false),
+    'PAUSE中に複数hexへの制圧命令を確定できる');
+  check(players.every((u) => {
+    const assigned = suppressPlan.assignments.find((a) => a.unit === u);
+    return assigned && u._rtwpPendingTargetHex
+      && u._rtwpPendingTargetHex.q === assigned.hex.q
+      && u._rtwpPendingTargetHex.r === assigned.hex.r
+      && u._rtwpPendingTargetMode === 'suppress';
+  }), '一括制圧の確定直後から各兵の表示用目標hexが割当先を指す');
+
+  // 2体目の敵を盤上へ足し、面指定なら分散、姿を直接押した時は集中することを確認。
+  const foe0 = g.units.find((u) => u.team === 'enemy');
+  const foeHex = open.find((h) => h.q !== foe0.q || h.r !== foe0.r);
+  const foe1 = mkUnit('E1', 'enemy', foeHex);
+  g.units.push(foe1);
+  inst.registerUnit(foe1);
+  inst.armActionForUnits('ASSAULT', players);
+  const areaPlan = inst.planPendingTargets([], [
+    { q: foe0.q, r: foe0.r }, { q: foe1.q, r: foe1.r },
+  ], false);
+  check(new Set(areaPlan.assignments.map((a) => a.target && a.target.id)).size === 2,
+    '強襲の複数hex指定は複数の敵へ攻撃兵を分散する');
+
+  const directPlan = inst.planPendingTargets([foe0], [{ q: foe0.q, r: foe0.r }], true);
+  check(directPlan.targetKind === 'unit'
+    && directPlan.assignments.every((a) => a.target && a.target.id === foe0.id),
+    'ユニットを直接選ぶと選択兵全員がその1体を対象にする');
+  inst.consumePendingTargets([foe0], [{ q: foe0.q, r: foe0.r }], true);
+  check(players.every((u) => u._rtwpPendingTargetId === foe0.id),
+    'ユニット直指定の強襲命令が全選択兵へ届く');
+  check(players.every((u) => !u._rtwpPendingTargetHex),
+    'ユニット直指定へ切り替えると以前の予約hexを残さない');
+  check(g.targetPreview === null, '確定後は対象プレビューを消す');
+
+  inst.armActionForUnits('MOVE', players);
+  const hover = g.handleTargetHover(h0, null);
+  check(hover && hover.targetKind === 'hex' && g.targetPreview === hover,
+    'hexホバーだけでクリック対象と割り当てプレビューが作られる');
+  g.handleRightClick();
+  check(g.targetPreview === null, '取り消しでホバープレビューも消える');
   SB.RtwpBattle.detach();
 }
 

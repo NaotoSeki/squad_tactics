@@ -1,8 +1,53 @@
 /** PHASER BRIDGE: Precise Click Handling & Aerial Support UI (Safety Check Added) */
 let phaserGame = null;
 window.HIGH_RES_SCALE = 2.0;
+const psFxParams = typeof URLSearchParams !== 'undefined'
+    ? new URLSearchParams(window.location.search) : null;
+window.PS_ORIGINAL_FX = {
+    // Private research benchmark only. Commercial/default runtime never loads PS pixels.
+    enabled: !!(window.FxPacks && FxPacks.activeId === 'panzer_reference'),
+    preview: !!(window.FxPacks && FxPacks.activeId === 'panzer_reference'
+        && psFxParams.get('psfxpreview') === '1'),
+    fire: { key: 'ps_fire_cell_00', frames: 133, frameWidth: 89, frameHeight: 175,
+        anchorX: 51, anchorY: 165, fps: 30, repeat: true },
+    fireAlt: { key: 'ps_fire_cell_01', frames: 135, frameWidth: 91, frameHeight: 188,
+        anchorX: 49, anchorY: 176, fps: 30, repeat: true },
+    dust: { key: 'ps_gun_light_dust_00', frames: 72, frameWidth: 150, frameHeight: 89,
+        anchorX: 66, anchorY: 49, fps: 30, repeat: false },
+    smoke: { key: 'ps_gun_medium_smoke_00', frames: 108, frameWidth: 67, frameHeight: 138,
+        anchorX: 31, anchorY: 124, fps: 30, repeat: false }
+};
+// Review-only original Fire V1. It is never loaded or called without the URL gate.
+window.PS_FIRE_PROTOTYPE = {
+    // V1 used PS imagery as an ImageGen reference and remains research-only/rejected.
+    enabled: !!(window.FxPacks && FxPacks.activeId === 'panzer_reference'
+        && psFxParams.get('psfireprototype') === '1'),
+    key: 'ps_fire_prototype_v1', frames: 32, frameWidth: 96, frameHeight: 160,
+    anchorX: 48, anchorY: 154, fps: 30, repeat: true, scale: 0.72
+};
+window.M2_CRATER_PREVIEW = !!(psFxParams && psFxParams.get('m2craterpreview') === '1');
+window.MUZZLE_SMOKE_FX = {
+    enabled: !!(psFxParams && (psFxParams.get('muzzlesmoke') === '1'
+        || psFxParams.get('muzzlesmokepreview') === '1')),
+    preview: !!(psFxParams && psFxParams.get('muzzlesmokepreview') === '1'),
+    key: 'ps_muzzle_smoke_v3', frames: 32, fps: 30,
+    frameWidth: 72, frameHeight: 64, anchorX: 5, anchorY: 12,
+    scale: 0.62, alpha: 0.46, breezeX: 7, breezeY: -3,
+    _seq: 0
+};
+window.PS_FX_INVENTORY_PREVIEW = (window.FxPacks && FxPacks.activeId === 'panzer_reference')
+    ? psFxParams.get('psfxfamily') : null;
+window.PS_FX_INVENTORY_PREVIEW_CLIP = psFxParams ? Number(psFxParams.get('psfxclip') || 0) : 0;
 
-const FUSABLE_UNIT_TYPES = ['rifleman', 'scout', 'gunner', 'sniper', 'mortar_gunner', 'tank_pz4', 'tank_tiger'];
+/**
+ * 兵士のHPゲージ/情報アイコン層の深度。戦場の立体物（PS立体物は depth = world Y、
+ * 植生レイヤーは 10）より必ず上、戦術ポーズ(90000)より下。
+ */
+const HP_OVERLAY_DEPTH = 50000;
+window.HP_OVERLAY_DEPTH = HP_OVERLAY_DEPTH;
+
+const FUSABLE_UNIT_TYPES = ['rifleman', 'scout', 'gunner', 'sniper', 'mortar_gunner', 'tank_pz4', 'tank_tiger']
+  .filter(key => !UNIT_TEMPLATES[key]?.isTank || (typeof FEATURE_TANK_UNITS !== 'undefined' && FEATURE_TANK_UNITS));
 
 function generateFusionData() {
   const skillKeys = Object.keys(typeof SKILLS !== 'undefined' ? SKILLS : {}).filter(z => z !== 'Hero');
@@ -410,8 +455,10 @@ const Renderer = {
     playAttackAnim(attacker, target) { const main = this.game.scene.getScene('MainScene'); if (main && main.unitView) main.unitView.triggerAttack(attacker, target); },
     getMuzzlePoint(attacker, target) { const main = this.game.scene.getScene('MainScene'); return main && main.unitView && main.unitView.getMuzzlePoint ? main.unitView.getMuzzlePoint(attacker, target) : null; },
     playExplosion(x, y, tier, hex, opts) { const main = this.game.scene.getScene('MainScene'); if (main) main.triggerExplosion(x, y, tier, hex, opts); },
+    playPsFx(x, y, kind, opts) { const main = this.game.scene.getScene('MainScene'); return !!(main && main.playPsOriginalFx(x, y, kind, opts)); },
     playMuzzleFlash(x, y, angle, weapon) { const main = this.game.scene.getScene('MainScene'); if (main && main.triggerMuzzleFlash) main.triggerMuzzleFlash(x, y, angle, weapon); },
     playMuzzleBurst(x, y, angle, weapon, rounds) { if (window.VFX && window.VFX.playMuzzleBurst) window.VFX.playMuzzleBurst(x, y, angle, weapon, rounds); else this.playMuzzleFlash(x, y, angle, weapon); },
+    playMuzzleSmoke(x, y, angle, weapon, rounds, opts) { const main = this.game.scene.getScene('MainScene'); return !!(main && main.playMuzzleSmoke(x, y, angle, weapon, rounds, opts)); },
     playImpactSmoke(x, y, scale) { if (window.VFX && window.VFX.playImpactSmoke) window.VFX.playImpactSmoke(x, y, scale); },
     generateFaceIcon(seed) { const c = document.createElement('canvas'); c.width = 64; c.height = 64; const ctx = c.getContext('2d'); const rnd = function() { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; }; ctx.fillStyle = "#334"; ctx.fillRect(0,0,64,64); const skinTones = ["#ffdbac", "#f1c27d", "#e0ac69", "#8d5524"]; ctx.fillStyle = skinTones[Math.floor(rnd() * skinTones.length)]; ctx.beginPath(); ctx.arc(32, 36, 18, 0, Math.PI*2); ctx.fill(); ctx.fillStyle = "#343"; ctx.beginPath(); ctx.arc(32, 28, 20, Math.PI, 0); ctx.lineTo(54, 30); ctx.lineTo(10, 30); ctx.fill(); ctx.strokeStyle = "#121"; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(10,28); ctx.lineTo(54,28); ctx.stroke(); ctx.fillStyle = "#000"; const eyeY = 36; const eyeOff = 6 + rnd()*2; ctx.fillRect(32-eyeOff-2, eyeY, 4, 2); ctx.fillRect(32+eyeOff-2, eyeY, 4, 2); ctx.strokeStyle = "#a76"; ctx.lineWidth = 1; ctx.beginPath(); const mouthW = 4 + rnd()*6; ctx.moveTo(32-mouthW/2, 48); ctx.lineTo(32+mouthW/2, 48); ctx.stroke(); if (rnd() < 0.5) { ctx.fillStyle = "rgba(0,0,0,0.2)"; ctx.fillRect(20 + rnd()*20, 30 + rnd()*20, 4, 2); } return c.toDataURL(); }
 };
@@ -1001,7 +1048,7 @@ class UIScene extends Phaser.Scene {
 }
 
 class MainScene extends Phaser.Scene {
-    constructor() { super({ key: 'MainScene' }); this.hexGroup=null; this.decorGroup=null; this.unitGroup=null; this.treeGroup=null; this.hpGroup=null; this.vfxGraphics=null; this.overlayGraphics=null; this.mapGenerated=false; this.dragHighlightHex=null; this.crosshairGroup=null; this.unitView = null; this.tacticalPause = null; }
+    constructor() { super({ key: 'MainScene' }); this.hexGroup=null; this.decorGroup=null; this.unitGroup=null; this.treeGroup=null; this.hpGroup=null; this.vfxGraphics=null; this.overlayGraphics=null; this.mapGenerated=false; this.dragHighlightHex=null; this.crosshairGroup=null; this.unitView = null; this.tacticalPause = null; this._persistentImpactDecals = []; }
     preload() { 
         if (window.TerrainRender) window.TerrainRender.preload(this);
         if(window.EnvSystem) window.EnvSystem.preload(this);
@@ -1031,6 +1078,41 @@ class MainScene extends Phaser.Scene {
         this.load.spritesheet('soldier_sheet', 'asset/soldier_sheet_1.png', { frameWidth: 128, frameHeight: 128 });
         this.load.spritesheet('tank_sheet', 'asset/tank_sheet_1.png', { frameWidth: 128, frameHeight: 128 });
         this.load.spritesheet('explosion_sheet', 'asset/explosion_sheet_1.png', { frameWidth: 64, frameHeight: 64 });
+        if (window.PS_ORIGINAL_FX && PS_ORIGINAL_FX.enabled) {
+            for (const meta of [PS_ORIGINAL_FX.fire, PS_ORIGINAL_FX.fireAlt,
+                PS_ORIGINAL_FX.dust, PS_ORIGINAL_FX.smoke]) {
+                this.load.spritesheet(meta.key, `asset/ps_fx/${meta.key}.png`, {
+                    frameWidth: meta.frameWidth, frameHeight: meta.frameHeight,
+                    endFrame: meta.frames - 1
+                });
+            }
+        }
+        if (window.PS_FIRE_PROTOTYPE && PS_FIRE_PROTOTYPE.enabled) {
+            this.load.spritesheet(PS_FIRE_PROTOTYPE.key,
+                'asset/ps_fx/prototypes/fire_v1/fire_v1_sheet.png', {
+                    frameWidth: PS_FIRE_PROTOTYPE.frameWidth,
+                    frameHeight: PS_FIRE_PROTOTYPE.frameHeight,
+                    endFrame: PS_FIRE_PROTOTYPE.frames - 1
+                });
+        }
+        if (window.MUZZLE_SMOKE_FX && MUZZLE_SMOKE_FX.enabled) {
+            this.load.spritesheet(MUZZLE_SMOKE_FX.key,
+                'asset/ps_fx/candidates/muzzle_smoke_v3_original_derived/muzzle_smoke_v3.png', {
+                    frameWidth: MUZZLE_SMOKE_FX.frameWidth,
+                    frameHeight: MUZZLE_SMOKE_FX.frameHeight,
+                    endFrame: MUZZLE_SMOKE_FX.frames - 1
+                });
+        }
+        if (window.M2Mortar) {
+            Object.keys(M2Mortar.TEXTURE_KEYS).forEach((code) => {
+                const key = M2Mortar.TEXTURE_KEYS[code];
+                const path = code === 'map' ? M2Mortar.ASSET_PATHS.map : M2Mortar.ASSET_PATHS[code];
+                if (key && path) this.load.image(key, path);
+            });
+            M2Mortar.ASSEMBLED_SLICE_KEYS.forEach((key, index) => {
+                this.load.image(key, M2Mortar.ASSEMBLED_SLICE_PATHS[index]);
+            });
+        }
         if (window.KHAOS_FX && KHAOS_FX.MUZZLE_READY) {
             // 4形状(行) x pop/fade(列) = 8フレーム。frame = variant*2 + step
             this.load.spritesheet('muzzle_flash', 'asset/muzzle_flash_128.png',
@@ -1127,7 +1209,12 @@ class MainScene extends Phaser.Scene {
         this.unitGroup = this.add.layer(); this.unitGroup.setDepth(20);
         this.rubbleFrontGroup = this.add.layer(); this.rubbleFrontGroup.setDepth(21);
         this.treeGroup = this.add.container(0, 0); this.treeGroup.setDepth(9);
-        this.hpGroup = this.add.layer(); this.hpGroup.setDepth(10);
+        // HPゲージ/情報アイコンは戦場オブジェクトへ必ずオーバレイさせる。
+        // PS立体物(phaser_ps_objects)は `depth = world Y` 規約でルート直下に
+        // 置かれるため深度は数百〜数千まで伸びる。旧値10では樹冠の裏へ回って
+        // 負傷が読めなかった（2026-08-05 ディレクター指摘）。ワールド深度の
+        // 上限を確実に超え、かつ戦術ポーズ(90000)やミニマップより下に置く。
+        this.hpGroup = this.add.layer(); this.hpGroup.setDepth(HP_OVERLAY_DEPTH);
         this.crosshairGroup = this.add.graphics().setDepth(200);
         this.hitChanceText = this.add.text(0, 0, '', { fontSize: '14px', fontFamily: 'sans-serif', color: '#e8e8f0' }).setScrollFactor(0).setDepth(300).setVisible(false);
         this.vfxGraphics = this.add.graphics().setDepth(2000).setScrollFactor(1);
@@ -1144,6 +1231,12 @@ class MainScene extends Phaser.Scene {
                 getSoldiers: () => {
                     const rtwp = window.RtwpBattle && window.RtwpBattle.instance;
                     return rtwp && rtwp.sim ? rtwp.sim.soldiers() : [];
+                },
+                getCommandDelay: (id) => {
+                    const rtwp = window.RtwpBattle && window.RtwpBattle.instance;
+                    const sim = rtwp && rtwp.sim;
+                    return sim && sim.orders && sim.orders.estimateDelay
+                        ? sim.orders.estimateDelay(String(id), sim._tick) : null;
                 },
                 getSelectedId: () => window.gameLogic && window.gameLogic.selectedUnit
                     ? String(window.gameLogic.selectedUnit.id) : null,
@@ -1180,6 +1273,26 @@ class MainScene extends Phaser.Scene {
                     const rtwp = window.RtwpBattle && window.RtwpBattle.instance;
                     const unit = rtwp && rtwp.unitById && rtwp.unitById.get(String(id));
                     return unit && unit._rtwpPendingTargetId;
+                },
+                getPendingTargetHex: (id) => {
+                    const rtwp = window.RtwpBattle && window.RtwpBattle.instance;
+                    const unit = rtwp && rtwp.unitById && rtwp.unitById.get(String(id));
+                    return unit && unit._rtwpPendingTargetHex;
+                },
+                getPendingTargetMode: (id) => {
+                    const rtwp = window.RtwpBattle && window.RtwpBattle.instance;
+                    const unit = rtwp && rtwp.unitById && rtwp.unitById.get(String(id));
+                    return unit && unit._rtwpPendingTargetMode;
+                },
+                getPendingFiringHex: (id) => {
+                    const rtwp = window.RtwpBattle && window.RtwpBattle.instance;
+                    const unit = rtwp && rtwp.unitById && rtwp.unitById.get(String(id));
+                    return unit && unit._rtwpPendingFiringHex;
+                },
+                getPendingApproachPath: (id) => {
+                    const rtwp = window.RtwpBattle && window.RtwpBattle.instance;
+                    const unit = rtwp && rtwp.unitById && rtwp.unitById.get(String(id));
+                    return unit && unit._rtwpPendingApproachPath;
                 },
             });
         }
@@ -1278,10 +1391,23 @@ class MainScene extends Phaser.Scene {
                 // 判定の正、画面側はドラッグ判定の閾値（6px）とクリック時の座標用。
                 // 閾値だけは画面px でないと、ズームを引いた時に指がやたら動く。
                 const wp0 = this.cameras.main.getWorldPoint(p.x, p.y);
+                const gl = window.gameLogic;
+                const targeting = !!(gl && gl.canDragPendingTargets && gl.canDragPendingTargets());
+                // ユニットの見えている範囲から始めた操作は、地面ドラッグへ落とさない。
+                // sprite本体のイベントが先に拾うが、透明縁でも同じ意味になる安全弁。
+                const directUnit = targeting && this.getUnitAtScreenPosition
+                    ? this.getUnitAtScreenPosition(p.x, p.y) : null;
+                if (directUnit && gl.onUnitClick) {
+                    gl.onUnitClick(directUnit);
+                    return;
+                }
                 Renderer.marquee = {
                     x0: p.x, y0: p.y, x1: p.x, y1: p.y,
                     wx0: wp0.x, wy0: wp0.y, wx1: wp0.x, wy1: wp0.y,
                     active: false, hex: hex,
+                    mode: targeting ? 'targets' : 'units',
+                    hexes: targeting ? [{ q: hex.q, r: hex.r }] : null,
+                    lastHex: targeting ? { q: hex.q, r: hex.r } : null,
                 };
             } else if(p.button === 1) {
                 // ホイールクリックドラッグ = 地図の平行移動
@@ -1298,6 +1424,12 @@ class MainScene extends Phaser.Scene {
             this.drawMarquee(null);
             if (!m || p.button !== 0) return;
             if (m.active) {
+                if (m.mode === 'targets') {
+                    if (window.gameLogic && window.gameLogic.handleTargetDrag) {
+                        window.gameLogic.handleTargetDrag(m.hexes || []);
+                    }
+                    return;
+                }
                 const units = this.unitsInWorldRect(m.wx0, m.wy0, m.wx1, m.wy1);
                 if (window.gameLogic && window.gameLogic.handleMarqueeSelect) {
                     window.gameLogic.handleMarqueeSelect(units, p.x, p.y);
@@ -1319,9 +1451,39 @@ class MainScene extends Phaser.Scene {
                 m.wx1 = wp.x; m.wy1 = wp.y;
                 // 手ぶれをドラッグと誤認しない閾値。これ未満はクリック扱いのまま
                 if (!m.active && (Math.abs(m.x1 - m.x0) > 6 || Math.abs(m.y1 - m.y0) > 6)) m.active = true;
+                if (m.active && m.mode === 'targets') {
+                    const current = Renderer.pxToHex(p.x, p.y);
+                    const segment = this.hexDragSegment(m.lastHex, current);
+                    const known = new Set((m.hexes || []).map(h => h.q + ',' + h.r));
+                    segment.forEach(h => {
+                        const valid = !window.gameLogic || !window.gameLogic.isValidHex
+                            || window.gameLogic.isValidHex(h.q, h.r);
+                        const key = h.q + ',' + h.r;
+                        if (valid && !known.has(key)) { known.add(key); m.hexes.push(h); }
+                    });
+                    m.lastHex = current;
+                    if (window.gameLogic && window.gameLogic.handleTargetDragPreview) {
+                        window.gameLogic.handleTargetDragPreview(m.hexes || []);
+                    }
+                    this.drawMarquee(null);
+                    return;
+                }
                 if (m.active) { this.drawMarquee(m); return; }
             }
-            if(!Renderer.isMapDragging && window.gameLogic && window.gameLogic.handleHover) window.gameLogic.handleHover(Renderer.pxToHex(p.x, p.y));
+            if (!Renderer.isMapDragging && window.gameLogic) {
+                const hoverHex = Renderer.pxToHex(p.x, p.y);
+                const hoverUnit = this.getUnitAtScreenPosition
+                    ? this.getUnitAtScreenPosition(p.x, p.y) : null;
+                if (window.gameLogic.handleTargetHover) {
+                    window.gameLogic.handleTargetHover(hoverHex, hoverUnit);
+                }
+                if (window.gameLogic.handleHover) window.gameLogic.handleHover(hoverHex);
+            }
+        });
+        this.input.on('gameout', () => {
+            if (window.gameLogic && window.gameLogic.handleTargetHover) {
+                window.gameLogic.handleTargetHover(null, null);
+            }
         });
         this.input.mouse.disableContextMenu();
         this.input.keyboard.on('keydown-ESC', () => { if(window.gameLogic && window.gameLogic.clearSelection) { window.gameLogic.clearSelection(); } });
@@ -1356,6 +1518,30 @@ class MainScene extends Phaser.Scene {
         // 線幅もワールド単位なので、ズームで割って画面上は常に細い1本にする
         g.lineStyle(1 / (this.cameras.main.zoom || 1), 0xaaddff, 0.9);
         g.strokeRect(x, y, w, h);
+    }
+
+    /** ポインタが飛んだフレームでも途中のhexを取りこぼさない axial 線分。 */
+    hexDragSegment(from, to) {
+        if (!from || !to) return [];
+        const dist = Math.max(Math.abs(from.q - to.q), Math.abs(from.r - to.r),
+            Math.abs((from.q + from.r) - (to.q + to.r)));
+        if (!dist) return [{ q: to.q, r: to.r }];
+        const round = (q, r) => {
+            const x = q, z = r, y = -x - z;
+            let rx = Math.round(x), ry = Math.round(y), rz = Math.round(z);
+            const dx = Math.abs(rx - x), dy = Math.abs(ry - y), dz = Math.abs(rz - z);
+            if (dx > dy && dx > dz) rx = -ry - rz;
+            else if (dy > dz) ry = -rx - rz;
+            else rz = -rx - ry;
+            return { q: rx, r: rz };
+        };
+        const out = [];
+        for (let i = 0; i <= dist; i++) {
+            const t = i / dist;
+            const h = round(from.q + (to.q - from.q) * t, from.r + (to.r - from.r) * t);
+            if (!out.length || out[out.length - 1].q !== h.q || out[out.length - 1].r !== h.r) out.push(h);
+        }
+        return out;
     }
 
     /**
@@ -1429,10 +1615,19 @@ class MainScene extends Phaser.Scene {
         // 煙がタイルを覆った頃に差し込むと、晴れたときには既に痕が残り
         // 建物が崩れている、というPS的な見え方になる。
         const burnDelay = (meta.frames / meta.fps) * 1000 * 0.45;
-        const blast = window.KHAOS_FX && KHAOS_FX.BLAST[tier];
-        if ((window.DecalLayer && window.DecalLayer.ready()) || window.PsObjectLayer) {
+        const blastTier = (opts && opts.blastTier) || tier;
+        const blast = window.KHAOS_FX && KHAOS_FX.BLAST[blastTier];
+        const visualOnly = !!(opts && opts.visualOnly);
+        const psTier = (opts && opts.psDecalTier) || tier;
+        const psScale = opts && opts.psDecalScale;
+        if (!visualOnly && ((opts && opts.persistentDecal)
+            || (window.DecalLayer && window.DecalLayer.ready()) || window.PsObjectLayer)) {
             setTimeout(() => {
-                if (window.DecalLayer && window.DecalLayer.ready()) window.DecalLayer.stamp(x, y, tier);
+                if (opts && opts.persistentDecal) {
+                    this._stampPersistentImpactDecal(x, y, psTier, psScale);
+                } else if (window.DecalLayer && window.DecalLayer.ready()) {
+                    window.DecalLayer.stamp(x, y, psTier, { scale: psScale });
+                }
                 // severity 0 (銃弾) は痕だけ残し構造は壊さない
                 if (blast && blast.severity > 0 && window.PsObjectLayer && window.PsObjectLayer.count()) {
                     window.PsObjectLayer.damageAt(x, y, blast.radius, blast.severity);
@@ -1441,7 +1636,7 @@ class MainScene extends Phaser.Scene {
         }
         // 直撃地点の段階破壊: 煙がタイルを覆った頃に差し替える。
         // 建物があれば建物を、なければ地面（道路寸断・石畳クレーター化）を損傷
-        if (meta.damageBuilding && hex && window.TerrainRenderV7 && window.CityMap && window.CityMap.active) {
+        if (!visualOnly && meta.damageBuilding && hex && window.TerrainRenderV7 && window.CityMap && window.CityMap.active) {
             const collapseDelay = (meta.frames / meta.fps) * 1000 * 0.45;
             setTimeout(() => {
                 if (!window.TerrainRenderV7.damageBuilding(this, hex.q, hex.r)) {
@@ -1449,6 +1644,116 @@ class MainScene extends Phaser.Scene {
                 }
             }, collapseDelay);
         }
+    }
+    playPsOriginalFx(x, y, kind, opts) {
+        const registry = window.PS_ORIGINAL_FX;
+        const meta = registry && registry.enabled && registry[kind];
+        if (!meta || !this.textures.exists(meta.key)) return false;
+        const animKey = meta.key + '_anim';
+        if (!this.anims.exists(animKey)) {
+            this.anims.create({
+                key: animKey,
+                frames: this.anims.generateFrameNumbers(meta.key, { start: 0, end: meta.frames - 1 }),
+                frameRate: meta.fps,
+                repeat: meta.repeat ? -1 : 0
+            });
+        }
+        const sprite = this.add.sprite(x, y, meta.key, 0)
+            .setOrigin(meta.anchorX / meta.frameWidth, meta.anchorY / meta.frameHeight)
+            .setScale((opts && opts.scale) || 1)
+            .setDepth((opts && opts.depth) || 1998);
+        sprite.play(animKey);
+        if (meta.repeat) {
+            const duration = (opts && opts.duration) || 6000;
+            if (this.time && this.time.delayedCall) this.time.delayedCall(duration, () => sprite.destroy());
+            else setTimeout(() => sprite.destroy(), duration);
+        } else {
+            sprite.once('animationcomplete', () => sprite.destroy());
+        }
+        return true;
+    }
+    playFirePrototype(x, y, opts) {
+        const meta = window.PS_FIRE_PROTOTYPE;
+        if (!meta || !meta.enabled || !this.textures.exists(meta.key)) return false;
+        const animKey = meta.key + '_anim';
+        if (!this.anims.exists(animKey)) {
+            this.anims.create({
+                key: animKey,
+                frames: this.anims.generateFrameNumbers(meta.key, { start: 0, end: meta.frames - 1 }),
+                frameRate: meta.fps,
+                repeat: meta.repeat ? -1 : 0
+            });
+        }
+        const sprite = this.add.sprite(x, y, meta.key, 0)
+            .setOrigin(meta.anchorX / meta.frameWidth, meta.anchorY / meta.frameHeight)
+            .setScale((opts && opts.scale) || meta.scale)
+            .setDepth((opts && opts.depth) || 1998)
+            .play(animKey);
+        const duration = (opts && opts.duration) || 8000;
+        if (this.time && this.time.delayedCall) this.time.delayedCall(duration, () => sprite.destroy());
+        return true;
+    }
+    playMuzzleSmoke(x, y, angle, weapon, rounds, opts) {
+        const meta = window.MUZZLE_SMOKE_FX;
+        const count = Math.max(1, Math.round(rounds || 1));
+        if (!meta || !meta.enabled || !this.textures.exists(meta.key)) return false;
+        if (!(opts && opts.reference) && (count >= 5 || (weapon && weapon.type && weapon.type !== 'bullet'))) return false;
+        const animKey = meta.key + '_anim';
+        if (!this.anims.exists(animKey)) {
+            this.anims.create({
+                key: animKey,
+                frames: this.anims.generateFrameNumbers(meta.key, { start: 0, end: meta.frames - 1 }),
+                frameRate: meta.fps,
+                repeat: 0
+            });
+        }
+        const reference = !!(opts && opts.reference);
+        const alpha = reference ? 0.82 : (count >= 2 ? 0.18 : meta.alpha);
+        const scale = reference ? 1 : meta.scale;
+        const muzzleLead = reference ? 0 : 3;
+        const sprite = this.add.sprite(x + Math.cos(angle) * muzzleLead,
+            y + Math.sin(angle) * muzzleLead, meta.key, 0)
+            .setOrigin(meta.anchorX / meta.frameWidth, meta.anchorY / meta.frameHeight)
+            .setRotation(angle)
+            .setScale(scale)
+            .setAlpha(alpha)
+            .setDepth(1498);
+        sprite.play(animKey);
+        if (!reference) {
+            const seq = ++meta._seq;
+            const jitter = (((Math.imul(seq + Math.round(x), 1103515245) >>> 16) & 255) / 255) - 0.5;
+            const duration = (meta.frames / meta.fps) * 1000;
+            const sampledWind = window.VFX && VFX.getVisualWindVector
+                ? VFX.getVisualWindVector(Math.hypot(meta.breezeX, meta.breezeY)) : null;
+            const windX = sampledWind ? sampledWind.x : meta.breezeX;
+            const windY = sampledWind ? sampledWind.y : meta.breezeY;
+            this.tweens.add({
+                targets: sprite,
+                x: sprite.x + windX + jitter * 2,
+                y: sprite.y + windY + jitter,
+                duration: duration,
+                ease: 'Linear'
+            });
+        }
+        sprite.once('animationcomplete', () => sprite.destroy());
+        return true;
+    }
+    _stampPersistentImpactDecal(x, y, tier, scale) {
+        const layer = window.DecalLayer;
+        const manifest = layer && layer.manifest;
+        const tierName = layer && layer.TIER_MAP ? (layer.TIER_MAP[tier] || tier) : tier;
+        const list = manifest && manifest.tiers && manifest.tiers[tierName];
+        if (!list || !list.length) return false;
+        const decal = list[(Math.random() * list.length) | 0];
+        const key = 'decal_' + decal.id;
+        if (!this.textures.exists(key)) return false;
+        const extra = Number(scale) > 0 ? Number(scale) : 1;
+        const image = this.add.image(x, y, key)
+            .setOrigin(-decal.ox / decal.w, -decal.oy / decal.h)
+            .setScale(extra)
+            .setDepth(0.1);
+        this._persistentImpactDecals.push(image);
+        return true;
     }
     /**
      * 銃口炎。4つの独立した燃焼形状(pop+fade各2フレーム)を毎回ラウンドロビンで
@@ -1567,6 +1872,8 @@ class MainScene extends Phaser.Scene {
     }
     createMap() {
         if(!window.gameLogic || !window.gameLogic.map) return;
+        this._persistentImpactDecals.forEach((image) => { if (image && image.destroy) image.destroy(); });
+        this._persistentImpactDecals.length = 0;
         const map = window.gameLogic.map; this.hexGroup.removeAll(true); this.decorGroup.removeAll(true); this.unitGroup.removeAll(true); if(this.rubbleFrontGroup) this.rubbleFrontGroup.removeAll(true); this.treeGroup.removeAll(true); this.hpGroup.removeAll(true);
         if(this.unitView) this.unitView.clear();
         // 農村V29モード: 背景画像レンダラへ全面委譲
@@ -1636,20 +1943,134 @@ class MainScene extends Phaser.Scene {
         return !(this.load && this.load.isLoading && this.load.isLoading());
     }
 
-    /** 揃うまで戦場を伏せておく幕。準備が終わったら update 側で消える。 */
-    updateBattlefieldGate() {
-        if (this.battlefieldGate || this.battlefieldReady()) return;
+    /**
+     * 揃うまで戦場を伏せておく幕。
+     * - 幕は不透明。半透明だと「作りかけの盤面が透けて見える」のが一番みすぼらしい。
+     * - 寸法は毎フレーム張り直す。起動直後は #game-view の実寸が数フレーム遅れて
+     *   確定するため、生成時のサイズで固定すると右下に戦場が覗く。
+     * - ミニマップは DOM canvas で幕の外側にいる。準備中は伏せる。
+     */
+    updateBattlefieldGate(time) {
+        const ready = this.battlefieldReady();
+        if (!this.battlefieldGate) {
+            if (ready || this.battlefieldGateFading) return;
+            const veil = this.add.rectangle(0, 0, 10, 10, 0x05070a, 1).setOrigin(0, 0);
+            const label = this.add.text(0, 0, '戦場を準備中', {
+                fontFamily: 'Share Tech Mono, monospace', fontSize: '18px', color: '#d8e9e5',
+            }).setOrigin(0.5, 0.5);
+            label.setLetterSpacing && label.setLetterSpacing(2);
+            const bar = this.add.graphics();
+            const gate = this.add.container(0, 0, [veil, label, bar]);
+            gate.setScrollFactor(0).setDepth(100000);
+            this.battlefieldGate = gate;
+            this.battlefieldGateParts = { veil, label, bar };
+            this._setMinimapHidden(true);
+        }
+
+        const gate = this.battlefieldGate;
+        const { veil, label, bar } = this.battlefieldGateParts;
         const w = this.scale.width, h = this.scale.height;
-        const veil = this.add.rectangle(0, 0, w, h, 0x05070a, 0.92).setOrigin(0, 0);
-        const label = this.add.text(w / 2, h / 2, '戦場を準備中…', {
-            fontFamily: 'Share Tech Mono, monospace', fontSize: '18px', color: '#d8e9e5',
-        }).setOrigin(0.5, 0.5);
-        const gate = this.add.container(0, 0, [veil, label]);
-        gate.setScrollFactor(0).setDepth(100000);
-        this.battlefieldGate = gate;
+        veil.setSize(w, h);
+        label.setPosition(Math.round(w / 2), Math.round(h / 2) - 12);
+
+        // 進捗の実数は連鎖ロードで拾えないので、往復するスキャンバーで「動いて
+        // いる」ことだけを見せる（偽のパーセント表示より正直）。
+        const t = (time || 0) * 0.001;
+        label.setText('戦場を準備中' + '.'.repeat(1 + (Math.floor(t * 2) % 3)));
+        const trackW = Math.min(280, Math.max(160, Math.round(w * 0.22)));
+        const trackX = Math.round(w / 2 - trackW / 2), trackY = Math.round(h / 2) + 14;
+        const knobW = Math.round(trackW * 0.34);
+        const phase = 0.5 - 0.5 * Math.cos(t * 1.9);
+        const knobX = trackX + (trackW - knobW) * phase;
+        bar.clear();
+        bar.fillStyle(0x1a2420, 1).fillRect(trackX, trackY, trackW, 2);
+        bar.fillStyle(0x7fd8c4, 0.85).fillRect(knobX, trackY, knobW, 2);
+
+        if (ready) this._revealBattlefield();
+    }
+
+    /** 準備完了。幕を溶かして戦場を出す。 */
+    _revealBattlefield() {
+        const gate = this.battlefieldGate;
+        if (!gate || this.battlefieldGateFading) return;
+        this.battlefieldGateFading = true;
+        this.battlefieldGate = null;
+        this._setMinimapHidden(false);
+        this.tweens.add({
+            targets: gate, alpha: 0, duration: 420, ease: 'Sine.easeOut',
+            onComplete: () => {
+                gate.destroy(true);
+                this.battlefieldGateParts = null;
+                this.battlefieldGateFading = false;
+            },
+        });
+    }
+
+    _setMinimapHidden(hidden) {
+        const mm = this.tacticalMinimap;
+        if (mm && mm.setVisible) mm.setVisible(!hidden);
     }
 
     update(time, delta) {
+        if (this.mapGenerated && window.PS_FX_INVENTORY_PREVIEW
+            && !this._psFxInventoryPreviewStarted && window.PsFxInventory) {
+            this._psFxInventoryPreviewStarted = true;
+            const center = Renderer.hexToPx(Math.floor(MAP_W / 2), Math.floor(MAP_H / 2));
+            PsFxInventory.play(this, PS_FX_INVENTORY_PREVIEW,
+                PS_FX_INVENTORY_PREVIEW_CLIP, center.x, center.y, { depth: 1498 })
+                .then(result => {
+                    this.add.text(center.x - 90, center.y - 80,
+                        'PANZER STRIKE: ' + result.family.category + ' / ' + result.clip.id, {
+                            font: '10px monospace', color: '#e5d9c4', backgroundColor: '#202020'
+                        }).setDepth(1499);
+                }).catch(err => console.error('PS FX inventory preview', err));
+        }
+        if (this.mapGenerated && window.M2_CRATER_PREVIEW && !this._m2CraterPreviewPlayed) {
+            const center = Renderer.hexToPx(Math.floor(MAP_W / 2), Math.floor(MAP_H / 2));
+            if (this._stampPersistentImpactDecal(center.x, center.y, 'medium', 0.50)) {
+                this._m2CraterPreviewPlayed = true;
+            }
+        }
+        if (this.mapGenerated && window.PS_ORIGINAL_FX && PS_ORIGINAL_FX.preview
+            && !this._psFxPreviewPlayed) {
+            this._psFxPreviewPlayed = true;
+            const center = Renderer.hexToPx(Math.floor(MAP_W / 2), Math.floor(MAP_H / 2));
+            this.playPsOriginalFx(center.x - 90, center.y, 'fire', { duration: 8000 });
+            this.playPsOriginalFx(center.x, center.y, 'fireAlt', { duration: 8000 });
+            this.playPsOriginalFx(center.x + 90, center.y, 'smoke');
+        }
+        if (this.mapGenerated && window.PS_FIRE_PROTOTYPE && PS_FIRE_PROTOTYPE.enabled
+            && !this._firePrototypePreviewPlayed) {
+            this._firePrototypePreviewPlayed = true;
+            const center = Renderer.hexToPx(Math.floor(MAP_W / 2), Math.floor(MAP_H / 2));
+            this.add.text(center.x - 92, center.y - 88, 'PANZER STRIKE ORIGINAL', {
+                font: '10px monospace', color: '#e5d9c4', backgroundColor: '#202020'
+            }).setDepth(1999);
+            this.add.text(center.x + 28, center.y - 88, 'ORIGINAL FIRE V1 (GATED)', {
+                font: '10px monospace', color: '#e5d9c4', backgroundColor: '#202020'
+            }).setDepth(1999);
+            this.playPsOriginalFx(center.x - 55, center.y, 'fire', { duration: 30000, scale: 0.72 });
+            this.playFirePrototype(center.x + 55, center.y, { duration: 30000 });
+        }
+        if (this.mapGenerated && window.MUZZLE_SMOKE_FX && MUZZLE_SMOKE_FX.preview
+            && !this._muzzleSmokePreviewPlayed) {
+            this._muzzleSmokePreviewPlayed = true;
+            const center = Renderer.hexToPx(Math.floor(MAP_W / 2), Math.floor(MAP_H / 2));
+            this.add.text(center.x - 72, center.y - 60, 'ORIGINAL PS RGBA', {
+                font: '10px monospace', color: '#e5d9c4', backgroundColor: '#202020'
+            }).setDepth(1499);
+            this.add.text(center.x + 26, center.y - 60, 'V3 ORIGINAL-DERIVED', {
+                font: '10px monospace', color: '#e5d9c4', backgroundColor: '#202020'
+            }).setDepth(1499);
+            let previewPass = 0;
+            const previewShot = () => {
+                this.playMuzzleSmoke(center.x - 45, center.y, 0, { type: 'bullet' }, 1, { reference: true });
+                this.playMuzzleSmoke(center.x + 45, center.y, 0, { type: 'bullet' }, 1);
+                previewPass++;
+                if (previewPass < 4) this.time.delayedCall(1400, previewShot);
+            };
+            previewShot();
+        }
         // ★修正: gameLogicが準備できていない、またはマップデータが無い場合は何もしない
         if (!window.gameLogic || !window.gameLogic.map) return;
         
@@ -1667,7 +2088,7 @@ class MainScene extends Phaser.Scene {
         }
         
         if (window.gameLogic.map.length > 0 && !this.mapGenerated) { this.createMap(); this.mapGenerated = true; }
-        this.updateBattlefieldGate();
+        this.updateBattlefieldGate(time);
 
         // RTwP（NORTH_STAR §7 Strangler Fig）。**既定で有効**。
         // 旧ターン制へ戻すには URL へ ?rtwp=0 を付ける（logic_game.js は無改造で
@@ -1690,7 +2111,6 @@ class MainScene extends Phaser.Scene {
             if (rt) { try { rt.update(delta); } catch (e) { console.error('RTwP update', e); } }
         }
 
-        if (this.battlefieldGate) this.battlefieldGate.setVisible(!this.battlefieldReady());
         if(this.unitView) this.unitView.update(time, delta);
         if (this.tacticalMinimap) this.tacticalMinimap.update();
         if (this.tacticalPause) {
@@ -1724,6 +2144,59 @@ class MainScene extends Phaser.Scene {
         }
         
         const selected = window.gameLogic.selectedUnit;
+        const targetPreview = window.gameLogic.targetPreview;
+        if (targetPreview) {
+            const actionColors = { MOVE: 0x55ddff, RUSH: 0x55ddff, CRAWL: 0x55ddff,
+                SUPPRESS_HEX: 0xffcc55, ASSAULT: 0xff5555 };
+            const previewColor = targetPreview.valid
+                ? (actionColors[targetPreview.actionId] || 0x88ddff) : 0xb85a5a;
+            if (targetPreview.targetKind === 'hex') {
+                (targetPreview.hexes || []).forEach(h => {
+                    this.drawFilledHex(this.overlayGraphics, h.q, h.r, previewColor, 0.16);
+                    this.overlayGraphics.lineStyle(2, previewColor, 0.9);
+                    this.drawHexOutline(this.overlayGraphics, h.q, h.r);
+                });
+            }
+            (targetPreview.assignments || []).forEach(a => {
+                if (!a || !a.unit) return;
+                const fromVisual = this.unitView && this.unitView.visuals.get(a.unit.id);
+                const from = fromVisual && fromVisual.container
+                    ? { x: fromVisual.container.x, y: fromVisual.container.y }
+                    : Renderer.hexToPx(a.unit.q, a.unit.r);
+                let to = null;
+                if (a.target && this.unitView) {
+                    const targetVisual = this.unitView.visuals.get(a.target.id);
+                    if (targetVisual && targetVisual.container) {
+                        to = { x: targetVisual.container.x, y: targetVisual.container.y };
+                    }
+                }
+                if (!to && a.hex) to = Renderer.hexToPx(a.hex.q, a.hex.r);
+                if (!to && a.target) to = Renderer.hexToPx(a.target.q, a.target.r);
+                if (a.plannedFiringHex && a.plannedPath && a.plannedPath.length) {
+                    const firing = Renderer.hexToPx(a.plannedFiringHex.q, a.plannedFiringHex.r);
+                    this.drawFilledHex(this.overlayGraphics,
+                        a.plannedFiringHex.q, a.plannedFiringHex.r, 0x55ddff, 0.16);
+                    this.overlayGraphics.lineStyle(2, 0x55ddff, a.valid ? 0.85 : 0.38);
+                    this.drawHexOutline(this.overlayGraphics,
+                        a.plannedFiringHex.q, a.plannedFiringHex.r);
+                    this.drawPlannedPath(this.overlayGraphics, from, a.plannedPath,
+                        a.valid ? 0x55ddff : 0x884444, a.valid ? 0.68 : 0.32);
+                    if (to) this.drawAssignmentArrow(this.overlayGraphics, firing, to,
+                        a.valid ? previewColor : 0x884444, a.valid ? 0.78 : 0.38);
+                } else if (to) {
+                    this.drawAssignmentArrow(this.overlayGraphics, from, to,
+                        a.valid ? previewColor : 0x884444, a.valid ? 0.72 : 0.38);
+                }
+            });
+            if (targetPreview.hoverUnit && this.unitView) {
+                const hoverVisual = this.unitView.visuals.get(targetPreview.hoverUnit.id);
+                if (hoverVisual && hoverVisual.container) {
+                    const pulse = 21 + Math.sin(time * 0.009) * 2;
+                    this.overlayGraphics.lineStyle(3, previewColor, targetPreview.valid ? 0.95 : 0.55);
+                    this.overlayGraphics.strokeCircle(hoverVisual.container.x, hoverVisual.container.y - 4, pulse);
+                }
+            }
+        }
         if(selected) {
             if(window.gameLogic.reachableHexes && window.gameLogic.reachableHexes.length > 0) { 
                 this.overlayGraphics.lineStyle(1, 0xffffff, 0.3); 
@@ -1816,7 +2289,9 @@ class MainScene extends Phaser.Scene {
         if (window.gameLogic.aimTargetUnit) { const u = window.gameLogic.aimTargetUnit; const pos = Renderer.hexToPx(u.q, u.r); this.drawCrosshair(this.crosshairGroup, pos.x, pos.y, time); }
         const canvas = this.game && this.game.canvas;
         if (canvas) {
-            if (overAimTarget) {
+            if (targetPreview) {
+                canvas.style.cursor = targetPreview.valid ? 'crosshair' : 'not-allowed';
+            } else if (overAimTarget) {
                 const svgBright = '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><circle cx="16" cy="16" r="12" fill="none" stroke="#f44" stroke-width="2"/><line x1="16" y1="2" x2="16" y2="30" stroke="#f44" stroke-width="2"/><line x1="2" y1="16" x2="30" y2="16" stroke="#f44" stroke-width="2"/></svg>';
                 const svgDim = '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><circle cx="16" cy="16" r="12" fill="none" stroke="#a33" stroke-width="2"/><line x1="16" y1="2" x2="16" y2="30" stroke="#a33" stroke-width="2"/><line x1="2" y1="16" x2="30" y2="16" stroke="#a33" stroke-width="2"/></svg>';
                 const phase = Math.floor(time / 280) % 2;
@@ -1831,6 +2306,46 @@ class MainScene extends Phaser.Scene {
         }
     }
     drawHexOutline(g, q, r) { const c = Renderer.hexToPx(q, r); g.beginPath(); for(let i=0; i<6; i++) { const a = Math.PI/180*(90+60*i); g.lineTo(c.x+HEX_SIZE*0.9*Math.cos(a), c.y+HEX_SIZE*0.9*Math.sin(a)); } g.closePath(); g.strokePath(); }
+    drawFilledHex(g, q, r, color, alpha) {
+        const c = Renderer.hexToPx(q, r);
+        g.fillStyle(color, alpha);
+        g.beginPath();
+        for (let i = 0; i < 6; i++) {
+            const a = Math.PI / 180 * (90 + 60 * i);
+            const x = c.x + HEX_SIZE * 0.9 * Math.cos(a);
+            const y = c.y + HEX_SIZE * 0.9 * Math.sin(a);
+            if (i === 0) g.moveTo(x, y); else g.lineTo(x, y);
+        }
+        g.closePath();
+        g.fillPath();
+    }
+    drawAssignmentArrow(g, from, to, color, alpha) {
+        const dx = to.x - from.x, dy = to.y - from.y;
+        const len = Math.sqrt(dx * dx + dy * dy);
+        if (len < 2) return;
+        const ux = dx / len, uy = dy / len;
+        const endX = to.x - ux * 13, endY = to.y - uy * 13;
+        g.lineStyle(2, color, alpha);
+        g.beginPath(); g.moveTo(from.x, from.y - 4); g.lineTo(endX, endY); g.strokePath();
+        const wing = 7;
+        g.beginPath();
+        g.moveTo(endX, endY);
+        g.lineTo(endX - ux * wing - uy * wing * 0.65, endY - uy * wing + ux * wing * 0.65);
+        g.moveTo(endX, endY);
+        g.lineTo(endX - ux * wing + uy * wing * 0.65, endY - uy * wing - ux * wing * 0.65);
+        g.strokePath();
+    }
+    drawPlannedPath(g, from, path, color, alpha) {
+        if (!path || !path.length) return;
+        g.lineStyle(2, color, alpha);
+        g.beginPath();
+        g.moveTo(from.x, from.y - 4);
+        path.forEach(h => {
+            const p = Renderer.hexToPx(h.q, h.r);
+            g.lineTo(p.x, p.y);
+        });
+        g.strokePath();
+    }
     drawDashedHexOutline(g, q, r, timeOffset = 0) {
         const c = Renderer.hexToPx(q, r); const pts = []; for(let i=0; i<6; i++) { const a = Math.PI/180*(90+60*i); pts.push({ x: c.x+HEX_SIZE*0.9*Math.cos(a), y: c.y+HEX_SIZE*0.9*Math.sin(a) }); }
         const dashLen = 6; const gapLen = 4; const period = dashLen + gapLen; let currentDistInPath = -timeOffset; 

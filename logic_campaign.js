@@ -1,6 +1,16 @@
 /** LOGIC CAMPAIGN: Game Lifecycle, Data Persistence, and Unit Factory */
 
-const AVAILABLE_CARDS = ['rifleman', 'scout', 'gunner', 'sniper', 'mortar_gunner', 'aerial', 'tank_pz4', 'tank_tiger'];
+function isUnitTemplateAvailable(templateKey) {
+    if (templateKey && typeof templateKey === 'object') templateKey = templateKey.type;
+    const template = (typeof UNIT_TEMPLATES !== 'undefined') ? UNIT_TEMPLATES[templateKey] : null;
+    if (!template) return false;
+    if (template.isTank && (typeof FEATURE_TANK_UNITS === 'undefined' || !FEATURE_TANK_UNITS)) return false;
+    return true;
+}
+if (typeof window !== 'undefined') window.isUnitTemplateAvailable = isUnitTemplateAvailable;
+
+const AVAILABLE_CARDS = ['rifleman', 'scout', 'gunner', 'sniper', 'mortar_gunner', 'aerial', 'tank_pz4', 'tank_tiger']
+    .filter(isUnitTemplateAvailable);
 
 /** @deprecated 正本は data/pl_mg_tripod.js の PlMgTripod.TRIPOD_CODE_FOR_MAIN */
 const TRIPOD_CODE_FOR_MAIN = (typeof PlMgTripod !== 'undefined')
@@ -367,6 +377,7 @@ class CampaignManager {
     createSoldier(templateKey, team, fusionData, overridePortraitIndex, overrideName, fusionCount) {
         const t = UNIT_TEMPLATES[templateKey]; 
         if (!t) { console.error("Template not found:", templateKey); return null; }
+        if (!isUnitTemplateAvailable(templateKey)) return null;
         
         const isPlayer = (team === 'player'); 
         
@@ -618,11 +629,16 @@ class CampaignManager {
         }
         
         document.getElementById('reward-screen').style.display = 'flex';
+        if (typeof BattleReview !== 'undefined' && this.endBattleSnapshot) {
+            BattleReview.addAction(document.getElementById('reward-screen'), this.endBattleSnapshot);
+        }
         const b = document.getElementById('reward-cards'); 
         b.innerHTML = ''; 
         
         const replacementHint = (typeof REALISM_PACK !== 'undefined' && REALISM_PACK.REPLACEMENT_PENALTY) ? '（経験不足）' : '';
-        [{k:'rifleman',t:'新兵' + replacementHint}, {k:'mortar_gunner',t:'迫撃砲兵' + replacementHint}, {k:'tank_pz4',t:'鹵獲戦車'}, {k:'supply',t:'補給'}].forEach(o => {
+        [{k:'rifleman',t:'新兵' + replacementHint}, {k:'mortar_gunner',t:'迫撃砲兵' + replacementHint}, {k:'tank_pz4',t:'鹵獲戦車'}, {k:'supply',t:'補給'}]
+            .filter(o => o.k === 'supply' || isUnitTemplateAvailable(o.k))
+            .forEach(o => {
             const d = document.createElement('div'); d.className = 'card';
             const iconType = o.k === 'supply' ? 'heal' : 'infantry';
             d.innerHTML = `<div class="card-img-box"><img src="${createCardIcon(iconType)}"></div><div class="card-body"><p>${o.t}</p></div>`;
@@ -667,7 +683,10 @@ class CampaignManager {
      * 「全滅しました」固定だったため、負傷兵が盤上に生きているのに全滅と
      * 表示されていた（2026-08-03 実プレイ報告）。命中モデルをPL正本へ替えて
      * 負傷で止まる兵が増え、rout 経路の頻度が上がって露見した。
-     * @param {string=} reason sim_core の決着理由（'annihilation' | 'rout' | 'mutual'）
+     * 2026-08-04: 士気に回復を入れて敗走が一時的な状態になったため、決着理由の
+     * 'rout' は廃止し 'incapacitated'（行動不能だけが残った）へ改名した。
+     * 敗走中の兵は戦闘力ありとして数える。
+     * @param {string=} reason sim_core の決着理由（'annihilation' | 'incapacitated' | 'mutual'）
      * @param {number=} survivors 生存している自軍兵数（戦闘不能を含む）
      */
     onGameOver(reason, survivors) {
@@ -676,7 +695,7 @@ class CampaignManager {
         const title = screen.querySelector('h1');
         const body = screen.querySelector('p');
         const alive = Number(survivors) || 0;
-        if (reason === 'rout' || (reason !== 'annihilation' && alive > 0)) {
+        if (reason === 'incapacitated' || (reason !== 'annihilation' && alive > 0)) {
             if (title) title.textContent = 'COMBAT INEFFECTIVE';
             if (body) {
                 body.textContent = alive > 0
@@ -688,6 +707,9 @@ class CampaignManager {
             if (body) body.textContent = '全滅しました';
         }
         screen.style.display = 'flex';
+        if (typeof BattleReview !== 'undefined' && this.endBattleSnapshot) {
+            BattleReview.addAction(screen, this.endBattleSnapshot);
+        }
         if (window.Sfx) Sfx.play('sector_fail');
     }
 

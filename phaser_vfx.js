@@ -31,9 +31,23 @@ class VFXSystem {
         return { flash: 0.055, coreAlpha: 0.55, length: 38, width: 15, alpha: 0.075, rim: 52 };
     }
 
-    _roundSpacing(weapon) {
+    /**
+     * 弾を並べる1発あたりの間隔(ms)。**正本は音源の実測レート**（Sfx.roundIntervalMs）。
+     *
+     * 絵と音で別々の定数を持つと必ずずれる。旧実装はここがクラス固定値
+     * (MG34/SMG46/他72ms) で、どの武器でも音より閃光の方が速く終わっていた
+     * ——SMGの30発掃射で閃光1.38秒 対 音2.34秒（2026-08-04 ディレクター指摘）。
+     * Sfx が居ない環境（VFX単体のテスト等）では従来の固定値へ落ちる。
+     */
+    _roundSpacing(weapon, rounds) {
+        if (window.Sfx && window.Sfx.roundIntervalMs) {
+            try {
+                const ms = window.Sfx.roundIntervalMs(weapon, rounds);
+                if (isFinite(ms) && ms > 0) return ms;
+            } catch (e) { /* 音側が壊れていても描画は続ける */ }
+        }
         const cls = String((weapon && weapon.class) || '').toLowerCase();
-        return cls === 'mg' ? 34 : (cls === 'smg' ? 46 : 72);
+        return cls === 'mg' ? 46 : (cls === 'smg' ? 78 : 134);
     }
 
     _ensureMuzzleGlowTexture(scene) {
@@ -78,7 +92,7 @@ class VFXSystem {
         const scene = this.scene;
         if (!scene) return;
         const count = Math.max(1, Math.round(rounds || 1));
-        const spacing = this._roundSpacing(weapon);
+        const spacing = this._roundSpacing(weapon, count);
         for (let i = 0; i < count; i++) {
             const fire = () => this.playMuzzleFlash(x, y, angle, weapon);
             if (i === 0) fire();
@@ -157,7 +171,7 @@ class VFXSystem {
         const scene = this.scene;
         if (!scene) return;
         const count = Math.max(1, Math.round(rounds || 1));
-        const spacing = this._roundSpacing(weapon);
+        const spacing = this._roundSpacing(weapon, count);
         const cls = String((weapon && weapon.class) || '').toLowerCase();
         const spread = cls === 'mg' ? 18 : (cls === 'smg' ? 14 : 9);
         for (let i = 0; i < count; i++) {
@@ -192,7 +206,7 @@ class VFXSystem {
             
             if (p.type === 'wind') {
                 p.alpha = Math.sin((p.life / p.maxLife) * Math.PI) * 0.03;
-            } else if (p.type === 'rocket') {
+            } else if (p.type === 'rocket' || p.type === 'mortar') {
                 p.progress += p.speed;
                 let t = p.progress;
                 if (t >= 1) t = 1;
@@ -200,7 +214,7 @@ class VFXSystem {
                 p.prevX = p.x; p.prevY = p.y;
                 p.x = p.sx + dx * t; p.y = p.sy + dy * t;
                 if (p.arcHeight > 0) p.y -= Math.sin(t * Math.PI) * p.arcHeight;
-                if (t < 1) {
+                if (t < 1 && p.type === 'rocket') {
                     for (let s = 0; s < 2; s++) {
                         this.add({
                             x: p.x + (Math.random() - 0.5) * 6, y: p.y + (Math.random() - 0.5) * 6,
@@ -233,19 +247,31 @@ class VFXSystem {
         if(window.EnvSystem) window.EnvSystem.onGust();
     }
 
+    /** Direction-only visual wind sample for short-lived sprite effects. */
+    getVisualWindVector(speed) {
+        const gusts = this.particles.filter(p => p.type === 'wind' && p.life > 0);
+        if (!gusts.length) return null;
+        const vx = gusts.reduce((sum, p) => sum + p.vx, 0) / gusts.length;
+        const vy = gusts.reduce((sum, p) => sum + p.vy, 0) / gusts.length;
+        const len = Math.hypot(vx, vy) || 1;
+        const amount = Number(speed) > 0 ? Number(speed) : 7;
+        return { x: vx / len * amount, y: vy / len * amount };
+    }
+
     draw(graphics) {
         this.particles.forEach(p => {
             if (p.delay > 0) return;
             
             // ロケット (弧を描く飛翔＋煙の尾)
-            if (p.type === 'rocket') {
+            if (p.type === 'rocket' || p.type === 'mortar') {
                 const alpha = 0.95 - p.progress * 0.4;
-                graphics.lineStyle(4, 0xffaa44, alpha);
+                const mortar = p.type === 'mortar';
+                graphics.lineStyle(mortar ? 2 : 4, mortar ? 0xd8d0aa : 0xffaa44, alpha);
                 graphics.beginPath(); graphics.moveTo(p.prevX, p.prevY); graphics.lineTo(p.x, p.y); graphics.strokePath();
-                graphics.lineStyle(2, 0xffdd88, alpha + 0.2);
+                graphics.lineStyle(mortar ? 1 : 2, mortar ? 0x5d5a48 : 0xffdd88, alpha + 0.2);
                 graphics.beginPath(); graphics.moveTo(p.prevX, p.prevY); graphics.lineTo(p.x, p.y); graphics.strokePath();
-                graphics.fillStyle(0xffcc66, alpha);
-                graphics.fillCircle(p.x, p.y, 3);
+                graphics.fillStyle(mortar ? 0x252820 : 0xffcc66, alpha);
+                graphics.fillCircle(p.x, p.y, mortar ? 2.5 : 3);
             }
             // 風
             else if (p.type === 'wind') {
@@ -340,6 +366,39 @@ class VFXSystem {
             maxLife: 999,
             onHit: onHit || (() => {})
         });
+    }
+
+    /** 60mm shell: steep, smoke-free arc followed by a dedicated impact callback. */
+    addMortarShell(sx, sy, ex, ey, onHit) {
+        const dist = Math.hypot(ex - sx, ey - sy);
+        this.add({
+            type: 'mortar',
+            x: sx, y: sy, prevX: sx, prevY: sy,
+            sx, sy, ex, ey,
+            progress: 0,
+            speed: 0.026,
+            arcHeight: Math.min(260, Math.max(120, dist * 0.46)),
+            life: 999,
+            maxLife: 999,
+            onHit: onHit || (() => {})
+        });
+    }
+
+    /** Lingering post-blast dust/smoke; intentionally slower than rifle impacts. */
+    addMortarSmoke(x, y) {
+        for (let i = 0; i < 32; i++) {
+            this.add({
+                x: x + (Math.random() - 0.5) * 34,
+                y: y - 8 + (Math.random() - 0.5) * 14,
+                vx: (Math.random() - 0.5) * 0.24,
+                vy: -0.22 - Math.random() * 0.28,
+                color: Math.random() > 0.35 ? '#625f55' : '#817b69',
+                size: 9 + Math.random() * 15,
+                life: 90 + Math.random() * 90,
+                type: 'smoke',
+                delay: Math.floor(Math.random() * 16)
+            });
+        }
     }
 
     addBulletImpact(x, y, rounds, weapon, hit) {
