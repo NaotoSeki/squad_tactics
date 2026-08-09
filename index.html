@@ -314,7 +314,8 @@
             <button id="battle-review-return" type="button" onclick="BattleReview.close()">結果画面へ戻る</button>
             <div id="sector-counter">SECTOR: 01</div>
             <div id="mode-label" class="mode-indicator">SELECT TARGET</div>
-            <div id="auto-toggle" onclick="gameLogic.toggleAuto()">AUTO</div>
+            <!-- AUTO ボタン（旧ターン制の自動戦闘＝EnemyAI をプレイヤーユニットに回す）は
+                 撤去。RTwP では全AIが sim policy/leader 経由。速度/一時停止は戦術ポーズ側。 -->
             <div id="eyecatch"><div id="eyecatch-text">ENEMY PHASE</div></div>
             
             <div id="setup-screen" class="overlay">

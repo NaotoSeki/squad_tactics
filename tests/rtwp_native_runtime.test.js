@@ -68,4 +68,12 @@ const off = loadRtwp('');
 off.enabled = false;
 ok(off.isEnabled() === false, 'enabled=false のときだけ isEnabled() は false');
 
+// 6. 旧ターン制の自動戦闘エントリ（AUTO ボタン = EnemyAI をプレイヤーへ回す）が
+//    リリース入口(index.html)から撤去され、全AIが sim 経由になっている
+const html = read('index.html');
+ok(!/id="auto-toggle"/.test(html),
+  'index.html に AUTO ボタン(#auto-toggle)が無い（旧自動戦闘AIの入口を撤去）');
+ok(!/onclick="gameLogic\.toggleAuto\(\)"/.test(html),
+  'index.html に toggleAuto() の起動口が無い');
+
 console.log('\n' + pass + ' passed');
