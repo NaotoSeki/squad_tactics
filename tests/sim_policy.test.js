@@ -178,12 +178,19 @@ function firstShotTick(policy, traits, seed, opts) {
   const rngMax = sniperWeapon.rngMax;
   const farDist = Math.max(1, Math.floor(rngMax * 0.9)); // in range, but beyond 2/3 threshold
 
-  function firstShotWithWeapon(policy, traits, weapon, dist, seedN) {
+  function firstShotWithWeapon(policy, traits, weapon, dist, seedN, opts) {
+    opts = opts || {};
     const map = makeGridMap({ coverAt: () => 0.6 });
     const rng = mulberry32(seedN);
     const sim = new SimCore({ map: map, tuning: SIM_TUNING, rng: rng, policy: policy });
     sim.addSoldier({ id: 'shooter', team: 'A', q: 0, r: 0, weapon: weapon, ammo: { mags: 10 }, skill: 1.0, traits: traits, facing: { q: 1, r: 0 } });
     sim.addSoldier({ id: 'target', team: 'B', q: dist, r: 0, weapon: weapon, ammo: { mags: 10 }, skill: 1.0, traits: [], facing: { q: -1, r: 0 } });
+    // 撃ち返されない状況を作る。calm の「引きつけ」は**自分が撃たれていない時**の
+    // 規律なので、的が撃ってくると成立しない（2026-08-05 に意図を明文化）。
+    if (opts.silentTarget) {
+      const tg = sim._soldiers.get('target');
+      tg.magRemaining = 0; tg.magsLeft = 0;
+    }
     let shotTick = null, lastDist = dist;
     const map2 = map;
     for (let t = 0; t < 2000; t++) {
@@ -198,10 +205,19 @@ function firstShotTick(policy, traits, seed, opts) {
     return { shotTick: shotTick, distAtShot: lastDist };
   }
 
-  const calmResult = firstShotWithWeapon(TraitPolicy, ['calm'], sniperWeapon, farDist, seed);
-  const defaultResult = firstShotWithWeapon(DefaultPolicy, [], sniperWeapon, farDist, seed);
+  // 撃ってこない的が相手なら、従来どおり引きつける（これが calm の性格）
+  const calmResult = firstShotWithWeapon(TraitPolicy, ['calm'], sniperWeapon, farDist, seed,
+    { silentTarget: true });
+  const defaultResult = firstShotWithWeapon(DefaultPolicy, [], sniperWeapon, farDist, seed,
+    { silentTarget: true });
 
   check(calmResult.shotTick === null, `calm: does not open fire at dist=${farDist} (rngMax=${rngMax}, threshold=${(rngMax * 2 / 3).toFixed(1)}) (shotTick=${calmResult.shotTick})`);
+
+  // **撃たれたら撃ち返す。** 引きつけを無条件にしていた版は、射程いっぱいで
+  // 膠着した撃ち合いで calm の兵が一発も撃たずに終わっていた（2026-08-05 実測）。
+  const calmReturnFire = firstShotWithWeapon(TraitPolicy, ['calm'], sniperWeapon, farDist, seed);
+  check(calmReturnFire.shotTick !== null,
+    `calm: 撃たれれば保留線の外でも撃ち返す (dist=${farDist}) (shotTick=${calmReturnFire.shotTick})`);
   check(defaultResult.shotTick !== null, `calm baseline sanity: DefaultPolicy DOES open fire at the same far-but-in-range distance (shotTick=${defaultResult.shotTick})`);
 
   // now place the target within the calm threshold -- calm should engage.
@@ -290,6 +306,135 @@ function runDeterminismScenario(seed) {
 }
 
 // ---------------------------------------------------------------------------
+
+// ---------------------------------------------------------------------------
+// calm: 引きつけの保留は「単独で判断している時」だけ
+//
+// 無条件に保留していた版は、射程いっぱいで膠着した撃ち合い（実戦で最も多い形）
+// では間合いが詰まらず、冷静な兵が**一発も撃たないまま**戦闘が終わっていた
+// （2026-08-05 実測: calm の兵が総発砲0発／非交戦理由の最大が この保留で全判断の
+// 18%）。m1 は rngMax=7 で保留線は約4.7hex、撃ち合いは5〜7hexで安定するため
+// 構造的に永久保留だった。分隊が撃っていれば加わり、撃たれていれば撃ち返す。
+// ---------------------------------------------------------------------------
+{
+  const rifle = toSimWeapon('m1', WPNS.m1, SIM_TUNING);
+  // 遮蔽は厚めにする。薄い遮蔽で撃たれると自衛(GO_PRONE)が先に働き
+  // （「撃ち返すより先に身を守る」＝設計どおり）、射撃判断まで到達しない。
+  const map = makeGridMap({ coverAt: () => 0.6 });
+  // 保留線(rngMax * 2/3)より遠く、射程内の距離に敵を置く
+  const holdLine = rifle.rngMax * (2 / 3);
+  const farButInRange = Math.min(rifle.rngMax, Math.ceil(holdLine) + 1);
+
+  const calmSoldier = (over) => Object.assign({
+    id: 'c', team: 'A', q: 0, r: 0, hp: 100, weapon: rifle, traits: ['calm'],
+    magRemaining: 8, magsLeft: 4, suppression: 0, morale: 100, state: 'idle',
+    prone: false, fireMode: 'aimed', underFireT: -9999, attrs: null,
+  }, over || {});
+  const foe = {
+    id: 'e', team: 'B', q: farButInRange, r: 0, hp: 100, weapon: rifle,
+    suppression: 0, state: 'idle', traits: [],
+  };
+  const mate = (id, q, r, state) => ({
+    id: id, team: 'A', q: q, r: r, hp: 100, weapon: rifle,
+    suppression: 0, state: state, traits: [], isLeader: false,
+  });
+  const world = (soldiers, tick) => ({
+    soldiers: soldiers, map: map, tuning: SIM_TUNING, tick: tick != null ? tick : 1000,
+  });
+  const rng = mulberry32(4);
+
+  // ① 単独: 従来どおり引きつける
+  const alone = calmSoldier();
+  const d1 = TraitPolicy.decide(alone, world([alone, foe]), rng);
+  check(d1 && d1.type === 'HOLD_POS' && /冷静/.test(d1.note || ''),
+    `calm は単独なら遠距離で射撃を保留する (d=${farButInRange})`);
+
+  // ② 分隊が撃っている: 斉射へ加わる
+  const joiner = calmSoldier();
+  const firing = [joiner, foe, mate('m1', 1, 0, 'engage'), mate('m2', 0, 1, 'engage')];
+  const d2 = TraitPolicy.decide(joiner, world(firing), rng);
+  check(d2 && d2.type === 'TARGET' && d2.payload.targetId === 'e',
+    'calm でも分隊が交戦していれば斉射に加わる');
+
+  // ③ 自分が撃たれている: 撃ち返す
+  const shotAt = calmSoldier({ underFireT: 995 });   // tick 1000 の直近
+  const d3 = TraitPolicy.decide(shotAt, world([shotAt, foe]), rng);
+  check(d3 && d3.type === 'TARGET' && d3.payload.targetId === 'e',
+    'calm でも自分が撃たれていれば撃ち返す');
+
+  // ④ 味方が1名だけ交戦: 閾値未満なので保留のまま（性格は残っている）
+  const one = calmSoldier();
+  const d4 = TraitPolicy.decide(one, world([one, foe, mate('m1', 1, 0, 'engage')]), rng);
+  check(d4 && d4.type === 'HOLD_POS' && /冷静/.test(d4.note || ''),
+    `味方1名の交戦では保留を解かない (CALM_JOIN_VOLLEY_N=${SIM_TUNING.CALM_JOIN_VOLLEY_N})`);
+
+  // ⑤ 間合いが詰まれば単独でも撃つ（元からの挙動）
+  const near = calmSoldier();
+  const closeFoe = Object.assign({}, foe, { q: 1 });
+  const d5 = TraitPolicy.decide(near, world([near, closeFoe]), rng);
+  check(d5 && d5.type === 'TARGET', 'calm も保留線の内側なら単独で撃つ');
+}
+
+// Known target + blocked LOS: bounded, covered approach instead of indefinite idle.
+{
+  const rifle = toSimWeapon('m1', WPNS.m1, SIM_TUNING);
+  const coverMap = (h) => (h.q === 1 && h.r === 0 ? 0.05 : 0.55);
+  const map = makeGridMap({
+    coverAt: coverMap,
+    losBlocked: (a, b) => {
+      const targetSide = (a.q === 5 && a.r === 0) || (b.q === 5 && b.r === 0);
+      const other = (a.q === 5 && a.r === 0) ? b : a;
+      return targetSide && other.q < 2;
+    },
+  });
+  const foe = { id: 'known', team: 'B', q: 5, r: 0, hp: 100, state: 'idle',
+    weapon: rifle, suppression: 0, traits: [] };
+  const makeScout = (id, r) => ({ id: id, team: 'A', q: 0, r: r, hp: 100,
+    state: 'idle', weapon: rifle, magRemaining: 8, magsLeft: 4, suppression: 0,
+    morale: 100, traits: [], engageTargetId: 'known', prone: false, fireMode: 'aimed' });
+  const a = makeScout('approach-a', 0);
+  const b = makeScout('approach-b', 1);
+  const world = { soldiers: [a, b, foe], map: map, tuning: SIM_TUNING, tick: 100 };
+  const da = TraitPolicy.decide(a, world, mulberry32(30));
+  const db = TraitPolicy.decide(b, world, mulberry32(31));
+  check(da && da.type === 'MOVE_TO' && da.payload.path.length > 0,
+    'known target + blocked LOS initiates cautious movement instead of idle');
+  const enda = da && da.payload.path[da.payload.path.length - 1];
+  check(enda && map.cover(enda) >= 0.25 && map.dist(enda, foe) < map.dist(a, foe),
+    'cautious approach advances to useful cover');
+  check(enda && map.hasLos(enda, foe), 'covered approach can reach a firing position with LOS');
+  const endb = db && db.payload.path && db.payload.path[db.payload.path.length - 1];
+  check(enda && endb && (enda.q !== endb.q || enda.r !== endb.r),
+    'squad members choose dispersed cover destinations instead of stacking');
+
+  const exposedMap = makeGridMap({
+    coverAt: (h) => (h.q === 1 ? 0.05 : 0.55),
+    losBlocked: (x, y) => {
+      const targetSide = (x.q === 5 && x.r === 0) || (y.q === 5 && y.r === 0);
+      const other = (x.q === 5 && x.r === 0) ? y : x;
+      return targetSide && other.q < 2;
+    },
+  });
+  const lone = makeScout('approach-crawl', 0);
+  const exposedWorld = { soldiers: [lone, foe], map: exposedMap, tuning: SIM_TUNING, tick: 100 };
+  const cautious = TraitPolicy.decide(lone, exposedWorld, mulberry32(32));
+  check(cautious && cautious.type === 'MOVE_TO' && cautious.payload.mode === 'crawl',
+    'an unavoidable low-cover crossing uses crawl instead of a blind standing charge');
+
+  const visibleMap = makeGridMap({ coverAt: () => 0.55 });
+  const visibleWorld = { soldiers: [a, foe], map: visibleMap, tuning: SIM_TUNING, tick: 100 };
+  const fire = TraitPolicy.decide(a, visibleWorld, mulberry32(33));
+  check(fire && fire.type === 'TARGET' && fire.payload.targetId === 'known',
+    'unit that regains LOS resumes firing decision');
+
+  const cautiousTrait = Object.assign({}, makeScout('approach-trait', 0), { traits: ['cautious'] });
+  const thinMap = makeGridMap({ coverAt: () => 0.26, losBlocked: () => true });
+  const thinWorld = { soldiers: [cautiousTrait, foe], map: thinMap,
+    tuning: SIM_TUNING, tick: 100 };
+  const refusesThin = TraitPolicy.decide(cautiousTrait, thinWorld, mulberry32(34));
+  check(refusesThin && refusesThin.type === 'HOLD_POS',
+    'cautious trait keeps its existing 0.3 minimum cover during approach');
+}
 
 console.log(`\n${passCount} passed, ${failCount} failed`);
 if (failCount > 0) {

@@ -84,6 +84,9 @@ function makeRoster(list) {
   ]);
   const orders = new CommsOrders({ getSoldier: roster.getSoldier, soldiers: roster.soldiers, map, tuning: SIM_TUNING });
 
+  check(orders.estimateDelay('near', 100) === SIM_TUNING.COMMS_VOICE_DELAY_T,
+    'estimateDelay: UI reads the same live voice cost used by delivery');
+
   orders.queue({ type: 'HOLD_POS', soldierIds: ['near'], payload: {} }, 100);
 
   const before = orders.deliveries(100 + SIM_TUNING.COMMS_VOICE_DELAY_T - 1);

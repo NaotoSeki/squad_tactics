@@ -291,6 +291,93 @@ function findPathTo(map, start, goal, maxSteps) {
   return null;
 }
 
+/**
+ * A known enemy behind cover should cause a bounded, covered approach rather
+ * than permanent observation.  Search nearby cells only; prefer a firing
+ * position, otherwise make safe progress.  Occupied/adjacent cells are
+ * penalized and a stable soldier-specific choice spreads a squad over equally
+ * useful cover instead of collapsing it onto one hex.
+ */
+function findCautiousApproach(s, target, worldView) {
+  const map = worldView && worldView.map;
+  const T = (worldView && worldView.tuning) || {};
+  if (!map || typeof map.neighbors !== 'function' || typeof map.cover !== 'function'
+      || typeof map.dist !== 'function' || typeof map.hasLos !== 'function') return null;
+
+  const start = { q: s.q, r: s.r };
+  const targetHex = { q: target.q, r: target.r };
+  const startDist = map.dist(start, targetHex);
+  const maxSteps = T.CAUTIOUS_APPROACH_MAX_STEPS != null ? T.CAUTIOUS_APPROACH_MAX_STEPS : 5;
+  const baseMinCover = T.CAUTIOUS_APPROACH_MIN_COVER != null ? T.CAUTIOUS_APPROACH_MIN_COVER : 0.25;
+  const minCover = (s.traits || []).indexOf('cautious') !== -1
+    ? Math.max(baseMinCover, TRAIT_MODS.cautious.MIN_SELF_MOVE_COVER) : baseMinCover;
+  const openCover = T.AUTO_MOVE_OPEN_COVER != null ? T.AUTO_MOVE_OPEN_COVER : 0.2;
+  const occupied = {};
+  (worldView.soldiers || []).forEach(function (o) {
+    if (o && o.hp > 0 && o.id !== s.id) occupied[o.q + ',' + o.r] = o;
+  });
+
+  const keyOf = function (h) { return h.q + ',' + h.r; };
+  const seen = {}; seen[keyOf(start)] = true;
+  let frontier = [{ hex: start, path: [], minPathCover: 1, exposed: 0 }];
+  const candidates = [];
+  for (let depth = 1; depth <= maxSteps; depth++) {
+    const next = [];
+    for (let n = 0; n < frontier.length; n++) {
+      const node = frontier[n];
+      const neighbors = map.neighbors(node.hex) || [];
+      for (let i = 0; i < neighbors.length; i++) {
+        const cell = neighbors[i];
+        if (!cell || seen[keyOf(cell)] || !isPassable(map, node.hex, cell)) continue;
+        seen[keyOf(cell)] = true;
+        let cover = 0;
+        try { cover = Number(map.cover(cell)) || 0; } catch (e) { cover = 0; }
+        let watched = false;
+        try { watched = !!map.hasLos(targetHex, cell); } catch (e) { watched = false; }
+        const exposed = node.exposed + ((watched && cover < openCover) ? 1 : 0);
+        const path = node.path.concat([{ q: cell.q, r: cell.r }]);
+        const minPathCover = Math.min(node.minPathCover, cover);
+        const entry = { hex: cell, path: path, minPathCover: minPathCover, exposed: exposed };
+        next.push(entry);
+
+        const dist = map.dist(cell, targetHex);
+        const progress = startDist - dist;
+        if (progress <= 0 || cover < minCover || occupied[keyOf(cell)] || exposed > 0) continue;
+        let firing = false;
+        try { firing = map.hasLos(cell, targetHex)
+          && dist <= (s.weapon && s.weapon.rngMax != null ? s.weapon.rngMax : Infinity)
+          && dist >= (s.weapon && s.weapon.rngMin != null ? s.weapon.rngMin : 0); } catch (e) { firing = false; }
+        let nearAllies = 0;
+        (worldView.soldiers || []).forEach(function (o) {
+          if (!o || o.hp <= 0 || o.id === s.id || o.team !== s.team) return;
+          if (map.dist(cell, { q: o.q, r: o.r }) <= 1) nearAllies++;
+        });
+        const score = (firing ? 100 : 0) + progress * 5 + cover * 12 - depth - nearAllies * 4;
+        candidates.push({ path: path, score: score, firing: firing,
+          minPathCover: minPathCover, key: keyOf(cell) });
+      }
+    }
+    frontier = next;
+    if (!frontier.length) break;
+  }
+  if (!candidates.length) return null;
+  const firingExists = candidates.some(function (c) { return c.firing; });
+  const useful = candidates.filter(function (c) { return !firingExists || c.firing; });
+  useful.sort(function (a, b) { return b.score - a.score || a.key.localeCompare(b.key); });
+  const bestScore = useful[0].score;
+  const peers = useful.filter(function (c) { return c.score >= bestScore - 3; }).slice(0, 4);
+  let hash = 0;
+  const id = String(s.id || '');
+  for (let i = 0; i < id.length; i++) hash = ((hash * 31) + id.charCodeAt(i)) >>> 0;
+  const chosen = peers[hash % peers.length];
+  return {
+    type: 'MOVE_TO', soldierIds: [s.id],
+    payload: { path: chosen.path,
+      mode: chosen.minPathCover < openCover ? 'crawl' : 'auto', selfInitiated: true },
+    note: chosen.firing ? '接敵: 遮蔽射点へ接近' : '接敵: 遮蔽伝いに接近',
+  };
+}
+
 const TraitPolicy = {
   /**
    * 移動命令の関門（2026-08-02）。**命令された移動にだけ**掛かり、「どう渡るか」を
@@ -698,6 +785,31 @@ const TraitPolicy = {
       return { type: 'HOLD_POS', soldierIds: [s.id], payload: { prone: true } };
     }
 
+    // Retain knowledge of a previously acquired target across temporary LOS
+    // loss. Explicit orders never enter this branch (SimCore applies them
+    // before policy.decide), and assault/throw states skip decision entirely.
+    if (s.engageTargetId) {
+      const known = (worldView.soldiers || []).find(function (o) {
+        return o && o.id === s.engageTargetId && o.team !== s.team && o.hp > 0;
+      });
+      if (known) {
+        let directLos = false;
+        try { directLos = !!worldView.map.hasLos(
+          { q: s.q, r: s.r }, { q: known.q, r: known.r }); } catch (e) { directLos = false; }
+        if (!directLos) {
+          if (s.state === 'move' && s.movePath && s.movePath.length) {
+            return { type: 'HOLD_POS', soldierIds: [s.id], payload: {},
+              note: '接敵: 遮蔽接近を継続' };
+          }
+          const approach = findCautiousApproach(s, known, worldView);
+          if (approach) return approach;
+          return { type: 'HOLD_POS', soldierIds: [s.id],
+            payload: { prone: worldView.map.cover({ q: s.q, r: s.r }) < 0.2 },
+            note: '接敵: 安全な接近路を待つ' };
+        }
+      }
+    }
+
     const effRangeBonus = has('aggressive') ? TRAIT_MODS.aggressive.ENGAGE_RANGE_BONUS : 0;
 
     // fire discipline (aggressive ignores it -- that IS the trait):
@@ -716,10 +828,10 @@ const TraitPolicy = {
       // AIが勝手に「安全な相手」と決めて無視してよいものではない。
       // （fire discipline 側で「頭を下げている敵は後回し」は既に効いている）
       if (other.team === s.team || other.hp <= 0) continue;
-      if (!worldView.map.hasLos({ q: s.q, r: s.r }, { q: other.q, r: other.r })) continue;
+      if (!s.weapon.indirect && !worldView.map.hasLos({ q: s.q, r: s.r }, { q: other.q, r: other.r })) continue;
       const d = worldView.map.dist({ q: s.q, r: s.r }, { q: other.q, r: other.r });
       const effRange = s.weapon.rngMax + effRangeBonus;
-      if (d > effRange) continue;
+      if (d > effRange || d < (s.weapon.rngMin || 0)) continue;
       sawEnemy = true;
       if (disciplined && other.suppression >= supAt && d > closeRng && other.state !== 'move') {
         let harassP = T.HARASS_FIRE_P != null ? T.HARASS_FIRE_P : 0.25;
@@ -754,11 +866,26 @@ const TraitPolicy = {
     }
 
     if (bestTarget) {
-      // calm: withhold fire until well within range, regardless of trait
-      // combos -- if calm's threshold is not yet met, fall through to idle.
+      // calm: 確実な距離まで引きつけてから撃つ。
+      //
+      // **ただし引きつけるのは「自分ひとりで判断している時」だけ。**
+      // 無条件に保留していた版は、射程いっぱいで膠着した撃ち合い（＝実戦で最も
+      // 多い形）では間合いが詰まらないので、冷静な兵が**一度も撃たないまま**
+      // 戦闘が終わっていた（2026-08-05 実測: calm の兵が総発砲0発、非交戦理由の
+      // 最大がこの保留で全判断の18%）。m1 は rngMax=7 なので保留線は約4.7hex、
+      // 撃ち合いはたいてい5〜7hexで安定する — 構造的に永久保留だった。
+      //
+      // 分隊が撃ち始めているなら斉射に加わる。撃たれているなら撃ち返す。
+      // 「冷静」は無駄弾を惜しむ性格であって、傍観する性格ではない。
       if (has('calm')) {
         const calmMaxDist = s.weapon.rngMax * TRAIT_MODS.calm.ENGAGE_RANGE_FRACTION;
-        if (bestDist > calmMaxDist) {
+        const joinAt = T.CALM_JOIN_VOLLEY_N != null ? T.CALM_JOIN_VOLLEY_N : 2;
+        const squadFiring = engagedNeighbours >= joinAt;
+        const underFireWindow = T.COVER_SEEK_UNDER_FIRE_T != null ? T.COVER_SEEK_UNDER_FIRE_T : 30;
+        const tick = worldView.tick;
+        const underFire = (tick != null && typeof s.underFireT === 'number')
+          && (tick - s.underFireT) <= underFireWindow;
+        if (bestDist > calmMaxDist && !squadFiring && !underFire) {
           return {
             type: 'HOLD_POS', soldierIds: [s.id], payload: {},
             note: '冷静: 距離が詰まるまで射撃を保留',

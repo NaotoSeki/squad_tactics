@@ -71,7 +71,8 @@ function canEngage(s, target, world) {
   if (!target || target.hp <= 0) return no('対象なし');
   const d = distTo(world, s, target);
   if (d > s.weapon.rngMax) return no('射程外');
-  if (!hasLos(world, s, target)) return no('射線が通らない');
+  if (d < (s.weapon.rngMin || 0)) return no('最小射程内');
+  if (!s.weapon.indirect && !hasLos(world, s, target)) return no('射線が通らない');
   return OK;
 }
 
@@ -82,6 +83,8 @@ function canEngage(s, target, world) {
 function canMoveTo(ctx) {
   const r = canReceiveOrders(ctx.self);
   if (!r.ok) return r;
+  const rawSpeed = ctx.self && ctx.self.attrs ? Number(ctx.self.attrs.speed) : NaN;
+  if (Number.isFinite(rawSpeed) && rawSpeed <= 0) return no('移動不能: spd 0');
   if (ctx.hex && (!ctx.path || !ctx.path.length)) return no('到達できない');
   return OK;
 }
@@ -106,6 +109,149 @@ function routeExposure(ctx, path) {
     }
   }
   return seen;
+}
+
+function validTargetHex(map, hex) {
+  if (!hex || !Number.isFinite(hex.q) || !Number.isFinite(hex.r)
+      || Math.floor(hex.q) !== hex.q || Math.floor(hex.r) !== hex.r) return false;
+  if (Number.isFinite(map && map._W) && (hex.q < 0 || hex.q >= map._W)) return false;
+  if (Number.isFinite(map && map._H) && (hex.r < 0 || hex.r >= map._H)) return false;
+  return true;
+}
+
+/**
+ * Find a covered, reachable firing position for a player-issued suppression
+ * target. Travel cost, hostile LOS and poor cover are all charged so the
+ * result is an approach, not a shortest-line charge across open ground.
+ */
+function planSuppressApproach(ctx) {
+  const s = ctx && ctx.self;
+  const world = ctx && ctx.world;
+  const map = world && world.map;
+  const target = ctx && ctx.hex;
+  if (!s || !s.weapon || !map || !validTargetHex(map, target)) {
+    return { ok: false, reason: '対象地点が無効' };
+  }
+  const here = { q: s.q, r: s.r };
+  const inBand = function (cell) {
+    const d = distTo(world, cell, target);
+    if (d > s.weapon.rngMax || d < (s.weapon.rngMin || 0)) return false;
+    return !!s.weapon.indirect || hasLos(world, cell, target);
+  };
+  if (inBand(here)) {
+    return { ok: true, direct: true, firingHex: here, path: [], score: 0 };
+  }
+  const rawSpeed = s.attrs ? Number(s.attrs.speed) : NaN;
+  if (Number.isFinite(rawSpeed) && rawSpeed <= 0) {
+    return { ok: false, reason: '移動不能' };
+  }
+  if (typeof map.neighbors !== 'function' || typeof map.moveCost !== 'function') {
+    return { ok: false, reason: '射撃位置へ到達できない' };
+  }
+
+  const T = world.tuning || {};
+  const startDist = distTo(world, here, target);
+  const boundedCells = Number.isFinite(map._W) && Number.isFinite(map._H)
+    ? Math.max(1, map._W * map._H) : null;
+  const maxSteps = T.SUPPRESS_APPROACH_MAX_STEPS != null
+    ? T.SUPPRESS_APPROACH_MAX_STEPS
+    : (boundedCells || Math.max(64, Math.ceil(startDist - s.weapon.rngMax) + 24));
+  const maxNodes = T.SUPPRESS_APPROACH_MAX_NODES != null
+    ? T.SUPPRESS_APPROACH_MAX_NODES : (boundedCells || 1600);
+  const impassableCost = T.IMPASSABLE_COST != null ? T.IMPASSABLE_COST : 99;
+  const exposureW = T.SUPPRESS_APPROACH_EXPOSURE_W != null
+    ? T.SUPPRESS_APPROACH_EXPOSURE_W : 8;
+  const openW = T.SUPPRESS_APPROACH_OPEN_W != null ? T.SUPPRESS_APPROACH_OPEN_W : 1.5;
+  const foes = (world.soldiers || []).filter(function (o) {
+    return o && o.hp > 0 && o.team !== s.team && o.state !== 'incap';
+  });
+  const occupied = {};
+  (world.soldiers || []).forEach(function (o) {
+    if (o && o.hp > 0 && String(o.id) !== String(s.id)) occupied[o.q + ',' + o.r] = true;
+  });
+  const keyOf = function (h) { return h.q + ',' + h.r; };
+  const riskAt = function (cell) {
+    let cover = 0;
+    try { cover = Math.max(0, Math.min(1, Number(map.cover(cell)) || 0)); } catch (e) { cover = 0; }
+    let watched = 0;
+    if (typeof map.hasLos === 'function') {
+      for (let i = 0; i < foes.length; i++) {
+        try {
+          if (map.hasLos({ q: foes[i].q, r: foes[i].r }, cell)) watched++;
+        } catch (e) { /* blocked/invalid counts as not watched */ }
+      }
+    }
+    return { cover: cover, watched: watched, cost: watched * (1 - cover) * exposureW + (1 - cover) * openW };
+  };
+  const best = {};
+  best[keyOf(here)] = 0;
+  const queue = [];
+  const less = function (a, b) { return a.cost < b.cost || (a.cost === b.cost && a.steps < b.steps); };
+  const pushNode = function (node) {
+    queue.push(node);
+    let i = queue.length - 1;
+    while (i > 0) {
+      const p = Math.floor((i - 1) / 2);
+      if (!less(queue[i], queue[p])) break;
+      const swap = queue[i]; queue[i] = queue[p]; queue[p] = swap; i = p;
+    }
+  };
+  const popNode = function () {
+    const first = queue[0];
+    const last = queue.pop();
+    if (queue.length) {
+      queue[0] = last;
+      let i = 0;
+      while (true) {
+        const left = i * 2 + 1, right = left + 1;
+        let next = i;
+        if (left < queue.length && less(queue[left], queue[next])) next = left;
+        if (right < queue.length && less(queue[right], queue[next])) next = right;
+        if (next === i) break;
+        const swap = queue[i]; queue[i] = queue[next]; queue[next] = swap; i = next;
+      }
+    }
+    return first;
+  };
+  pushNode({ hex: here, path: [], cost: 0, steps: 0 });
+  let chosen = null;
+  let visited = 0;
+  while (queue.length && visited < maxNodes) {
+    const node = popNode();
+    if (node.cost !== best[keyOf(node.hex)]) continue;
+    visited++;
+    if (node.path.length && inBand(node.hex) && !occupied[keyOf(node.hex)]) {
+      const safety = riskAt(node.hex);
+      const score = node.cost - safety.cover * 6 + node.steps * 0.15;
+      if (!chosen || score < chosen.score) {
+        chosen = { ok: true, direct: false,
+          firingHex: { q: node.hex.q, r: node.hex.r }, path: node.path, score: score };
+      }
+    }
+    if (node.steps >= maxSteps) continue;
+    const neighbors = map.neighbors(node.hex) || [];
+    for (let i = 0; i < neighbors.length; i++) {
+      const cell = neighbors[i];
+      if (!cell || !validTargetHex(map, cell) || occupied[keyOf(cell)]) continue;
+      let move = Infinity;
+      try {
+        // Legacy/synthetic MapApi accepts the destination only; the PS map
+        // accepts (from, to). Supporting both avoids scoring the cell behind
+        // the unit and accidentally walking through a 99-cost impassable hex.
+        move = map.moveCost.length >= 2
+          ? map.moveCost(node.hex, cell) : map.moveCost(cell);
+      } catch (e) { move = Infinity; }
+      if (!Number.isFinite(move) || move <= 0 || move >= impassableCost) continue;
+      const safety = riskAt(cell);
+      const cost = node.cost + move + safety.cost;
+      const key = keyOf(cell);
+      if (best[key] != null && best[key] <= cost) continue;
+      best[key] = cost;
+      pushNode({ hex: { q: cell.q, r: cell.r },
+        path: node.path.concat([{ q: cell.q, r: cell.r }]), cost: cost, steps: node.steps + 1 });
+    }
+  }
+  return chosen || { ok: false, reason: '有効な射撃位置・経路がない' };
 }
 
 /** その経路を指定モードで渡り切る秒数。地形コストを1マスずつ積む。 */
@@ -225,11 +371,23 @@ const ACTIONS = {
       const f = canFire(ctx.self);
       if (!f.ok) return f;
       if (!ctx.hex) return OK;
-      if (distTo(ctx.world, ctx.self, ctx.hex) > ctx.self.weapon.rngMax) return no('射程外');
-      if (!hasLos(ctx.world, ctx.self, ctx.hex)) return no('射線が通らない');
-      return OK;
+      const plan = planSuppressApproach(ctx);
+      ctx._suppressPlan = plan;
+      return plan.ok ? OK : no(plan.reason || '実行不能');
     },
     issue: function (ctx) {
+      const plan = ctx._suppressPlan || planSuppressApproach(ctx);
+      if (!plan.ok) return [];
+      if (!plan.direct) {
+        return [{
+          type: 'SUPPRESS_APPROACH', soldierIds: [ctx.self.id],
+          payload: {
+            hex: { q: ctx.hex.q, r: ctx.hex.r },
+            firingHex: { q: plan.firingHex.q, r: plan.firingHex.r },
+            path: plan.path.slice(), mode: 'auto',
+          },
+        }];
+      }
       return [{
         type: 'TARGET_HEX', soldierIds: [ctx.self.id],
         payload: { hex: { q: ctx.hex.q, r: ctx.hex.r }, mode: 'suppress' },
@@ -449,8 +607,9 @@ function areaShooters(ctx) {
   if (!ctx.hex) return [];
   return (ctx.squad || []).filter(function (s) {
     if (!canReceiveOrders(s).ok || !canFire(s).ok) return false;
-    if (distTo(ctx.world, s, ctx.hex) > s.weapon.rngMax) return false;
-    return hasLos(ctx.world, s, ctx.hex);
+    const d = distTo(ctx.world, s, ctx.hex);
+    if (d > s.weapon.rngMax || d < (s.weapon.rngMin || 0)) return false;
+    return s.weapon.indirect || hasLos(ctx.world, s, ctx.hex);
   });
 }
 
@@ -484,6 +643,7 @@ const SimActions = {
 
   /** メニューに出さない行動（移動モードの名指し）。AI・テストからは使える。 */
   HIDDEN: HIDDEN_ACTIONS,
+  planSuppressApproach: planSuppressApproach,
 
   /**
    * 表示順に、各行動の可否・理由・見積りを返す。メニュー描画はこれをそのまま

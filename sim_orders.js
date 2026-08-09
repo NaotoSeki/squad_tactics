@@ -89,6 +89,46 @@ CommsOrders.prototype._leaderDeathTickFor = function (team, tick) {
   return this._leaderDeathTick.get(team);
 };
 
+/** Read-only estimate used by UI; queue() uses the same calculation. */
+CommsOrders.prototype.estimateDelay = function (soldierId, tick) {
+  const target = this.getSoldier(soldierId);
+  if (!target || target.hp <= 0) return null;
+  return this._delayFor(target, tick, false);
+};
+
+CommsOrders.prototype._delayFor = function (target, tick, recordLeaderLoss) {
+  const T = this.tuning;
+  if (tick === 0) return 0;
+  const leader = this._findLeader(target.team);
+  const targetPos = { q: target.q, r: target.r };
+  let delay;
+  if (leader && this.map.dist({ q: leader.q, r: leader.r }, targetPos) <= T.COMMS_VOICE_RNG &&
+      this.map.hasLos({ q: leader.q, r: leader.r }, targetPos)) {
+    delay = T.COMMS_VOICE_DELAY_T;
+  } else {
+    const refPos = leader ? { q: leader.q, r: leader.r } : this._lastLeaderPos.get(target.team);
+    const dist = refPos ? this.map.dist(refPos, targetPos) : 0;
+    delay = dist * T.COMMS_RUNNER_T_PER_HEX;
+  }
+  if (target.hasRadio) {
+    const withinVoice = leader &&
+      this.map.dist({ q: leader.q, r: leader.r }, targetPos) <= T.COMMS_VOICE_RNG &&
+      this.map.hasLos({ q: leader.q, r: leader.r }, targetPos);
+    if (!withinVoice && T.COMMS_RADIO_DELAY_T < delay) delay = T.COMMS_RADIO_DELAY_T;
+  }
+  let deathTick = null;
+  if (!leader) {
+    deathTick = recordLeaderLoss ? this._leaderDeathTickFor(target.team, tick)
+      : (this._leaderDeathTick.has(target.team) ? this._leaderDeathTick.get(target.team) : tick);
+  }
+  if (deathTick != null) {
+    delay *= T.COMMS_LEADER_DOWN_MULT;
+    const shockEnd = deathTick + T.COMMS_SHOCK_T;
+    if (tick + delay < shockEnd) delay = shockEnd - tick;
+  }
+  return delay;
+};
+
 /**
  * Queue an order for delivery. Computes a delivery tick per target soldier
  * (SS12 rules 1-5) and stores it in the pending map.
@@ -96,55 +136,11 @@ CommsOrders.prototype._leaderDeathTickFor = function (team, tick) {
  * @param {number} tick - current sim tick at issue time
  */
 CommsOrders.prototype.queue = function (order, tick) {
-  const T = this.tuning;
   for (const soldierId of order.soldierIds) {
     const target = this.getSoldier(soldierId);
     if (!target || target.hp <= 0) continue;
-
-    let delay;
-    if (tick === 0) {
-      // rule 1: operation-planning phase, free.
-      delay = 0;
-    } else {
-      const leader = this._findLeader(target.team);
-      const targetPos = { q: target.q, r: target.r };
-
-      if (leader && this.map.dist({ q: leader.q, r: leader.r }, targetPos) <= T.COMMS_VOICE_RNG &&
-          this.map.hasLos({ q: leader.q, r: leader.r }, targetPos)) {
-        // rule 2: voice/hand-signal range from leader.
-        delay = T.COMMS_VOICE_DELAY_T;
-      } else {
-        // rule 3: runner, distance-proportional. If the leader is currently
-        // dead, fall back to their last known position as the reference
-        // point (still exists as long as the team ever had a leader).
-        const refPos = leader ? { q: leader.q, r: leader.r } : this._lastLeaderPos.get(target.team);
-        const dist = refPos ? this.map.dist(refPos, targetPos) : 0;
-        delay = dist * T.COMMS_RUNNER_T_PER_HEX;
-      }
-
-      // rule 4: radio -- fixed delay, only better than what we already have when
-      // the target is beyond voice range (dist > COMMS_VOICE_RNG).
-      if (target.hasRadio) {
-        const withinVoice = leader &&
-          this.map.dist({ q: leader.q, r: leader.r }, targetPos) <= T.COMMS_VOICE_RNG &&
-          this.map.hasLos({ q: leader.q, r: leader.r }, targetPos);
-        if (!withinVoice && T.COMMS_RADIO_DELAY_T < delay) {
-          delay = T.COMMS_RADIO_DELAY_T;
-        }
-      }
-
-      // rule 5: leader down -> all delays x mult, plus a shock window during
-      // which delivery is halted entirely (deadline pushed back).
-      const deathTick = this._leaderDeathTickFor(target.team, tick);
-      if (deathTick != null) {
-        delay = delay * T.COMMS_LEADER_DOWN_MULT;
-        const shockEnd = deathTick + T.COMMS_SHOCK_T;
-        if (tick + delay < shockEnd) {
-          delay = shockEnd - tick;
-        }
-      }
-    }
-
+    // Keep visualization and delivery on one authoritative calculation.
+    const delay = this._delayFor(target, tick, true);
     const deliveryTick = tick + delay;
     if (!this._pending.has(deliveryTick)) this._pending.set(deliveryTick, []);
     this._pending.get(deliveryTick).push({ soldierId: soldierId, order: order });

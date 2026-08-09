@@ -93,6 +93,8 @@ const R = CombatRules;
     '速度10なら倍');
   check(R.movementBudget({ ap: 4, params: { speed: 2 } }, null, { LoadoutWeight: null }) === 1,
     '速度2なら floor(4*0.4)=1');
+  check(R.movementBudget({ ap: 4, params: { speed: 0 } }, null, { LoadoutWeight: null }) === 0,
+    'spd 0 ならフォールバック経路でも移動予算0');
   check(R.movementBudget({ ap: 0, params: { speed: 5 } }, null, { LoadoutWeight: null }) === 1,
     'AP0でも下限1（0にはならない）');
   check(R.movementBudget({ ap: 4 }, null, { LoadoutWeight: null }) === 4,

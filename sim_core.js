@@ -34,6 +34,14 @@ function mulberry32(seed) {
   };
 }
 
+function m2BallisticsApi() {
+  if (typeof globalThis !== 'undefined' && globalThis.M2Mortar) return globalThis.M2Mortar;
+  if (typeof module !== 'undefined' && module.exports && typeof require === 'function') {
+    try { return require('./m2_mortar.js'); } catch (e) { return null; }
+  }
+  return null;
+}
+
 // ---------------------------------------------------------------------------
 // toSimWeapon -- WPNS/PL master data -> SimWeapon adapter (SS5)
 // ---------------------------------------------------------------------------
@@ -109,6 +117,24 @@ function toSimWeapon(code, wpnsEntry, tuning) {
   const reloadT = (T.RELOAD_T[cls] != null) ? T.RELOAD_T[cls] : T.RELOAD_T.rifle;
   const suppressPerBurst = (T.SUPPRESS_PER_BURST[cls] != null) ? T.SUPPRESS_PER_BURST[cls] : T.SUPPRESS_PER_BURST.rifle;
 
+  // 1トリガーの弾数（single/burst/auto）。**WPNS.burst は使わない** — 素データの
+  // burst は連射段数として一貫していない（M2 HB HMG が burst:1、MG42 が burst:10、
+  // M1917A1 MMG が burst:2）。正本は音源の実測に合わせたクラス表 ROUNDS_PER_PULL で、
+  // これで初めて「鳴っている弾数」と「減る弾数」が一致する。
+  // 表に無いクラス（at 等）は素データの burst へ落とす — rifle の値を当てると
+  // 戦車砲が1トリガー2発になる。
+  const roundsPerPull = T.ROUNDS_PER_PULL || {};
+  const burstTable = roundsPerPull.burst || {};
+  const burstRounds = Math.max(1, (burstTable[cls] != null)
+    ? burstTable[cls]
+    : Math.max(1, w.burst || 1));
+  const autoOverrides = T.WEAPON_AUTO_OVERRIDES || {};
+  const autoCapable = T.AUTO_CAPABLE || {};
+  const canAuto = (typeof autoOverrides[code] === 'boolean')
+    ? autoOverrides[code]
+    : autoCapable[cls] === true;
+  const autoRounds = canAuto ? ((roundsPerPull.auto || {})[cls] || 0) : 0;
+
   // PL正本の武器統計（銃固有の命中率・命中低下・貫通力・貫通低下）。
   // 統計を持たない武器はクラス別の代表値へ落ちる。
   const pl = plStatsFor(code);
@@ -116,10 +142,15 @@ function toSimWeapon(code, wpnsEntry, tuning) {
     if (!table) return fallback;
     return (table[cls] != null) ? table[cls] : (table.rifle != null ? table.rifle : fallback);
   };
-  const accPct = (pl && pl.acc != null) ? pl.acc : pick(T.PHIT_FALLBACK, 70);
-  const accDropPct = (pl && pl.accDrop != null) ? pl.accDrop : pick(T.PHIT_FALLBACK_DROP, 6);
-  const penBase = (pl && pl.pen != null) ? pl.pen : pick(T.PEN_FALLBACK, 72);
-  const penDrop = (pl && pl.penDrop != null) ? pl.penDrop : pick(T.PEN_FALLBACK_DROP, 3);
+  const bespokeMortar = code === 'm2_mortar';
+  const accPct = (pl && pl.acc != null) ? pl.acc
+    : (bespokeMortar && w.acc != null ? w.acc : pick(T.PHIT_FALLBACK, 70));
+  const accDropPct = (pl && pl.accDrop != null) ? pl.accDrop
+    : (bespokeMortar && w.acc_drop != null ? w.acc_drop : pick(T.PHIT_FALLBACK_DROP, 6));
+  const penBase = (pl && pl.pen != null) ? pl.pen
+    : (bespokeMortar && w.dmg != null ? w.dmg : pick(T.PEN_FALLBACK, 72));
+  const penDrop = (pl && pl.penDrop != null) ? pl.penDrop
+    : (bespokeMortar && w.pen_drop != null ? w.pen_drop : pick(T.PEN_FALLBACK_DROP, 3));
   // 白兵専用の攻撃力。**弾丸の威力ではない**（PL正本のモデル）。
   // 「その物で殴れるか」を表す: 拳銃2(銃底)/小銃5(銃床)/重機関銃0(振り回せない)。
   // 銃剣は aux として加算される（M1903A1 の5 + 銃剣4 = 9）。
@@ -128,7 +159,11 @@ function toSimWeapon(code, wpnsEntry, tuning) {
 
   return {
     code: code,
-    burstSize: Math.max(1, w.burst || 1),
+    burstRounds: burstRounds,
+    autoRounds: autoRounds,
+    canAuto: canAuto,
+    // 旧名。描画(phaser_vfx)・旧Action・音側が読むので burstRounds と同値で残す。
+    burstSize: burstRounds,
     burstIntervalT: burstIntervalT,
     aimT: T.AIM_T.aimed,
     // Store real rounds. PL compatibility entries with no cap receive a safe
@@ -149,8 +184,12 @@ function toSimWeapon(code, wpnsEntry, tuning) {
     penDrop: penDrop,
     meleeAttack: meleeAttack,
     hasPlStats: !!pl,
-    suppressPerBurst: suppressPerBurst,
+    suppressPerBurst: w.area ? Math.max(26, suppressPerBurst) : suppressPerBurst,
     class: cls,
+    indirect: !!w.indirect,
+    area: !!w.area,
+    blastRadius: Math.max(0, Number(w.blastRadius) || 0),
+    splashScale: Math.max(0, Number(w.splashScale) || 0),
   };
 }
 
@@ -216,9 +255,9 @@ const DefaultPolicy = {
     let sawEnemy = false;
     for (const other of worldView.soldiers) {
       if (other.team === s.team || other.hp <= 0) continue;
-      if (!worldView.map.hasLos({ q: s.q, r: s.r }, { q: other.q, r: other.r })) continue;
+      if (!s.weapon.indirect && !worldView.map.hasLos({ q: s.q, r: s.r }, { q: other.q, r: other.r })) continue;
       const d = worldView.map.dist({ q: s.q, r: s.r }, { q: other.q, r: other.r });
-      if (d > s.weapon.rngMax) continue;
+      if (d > s.weapon.rngMax || d < (s.weapon.rngMin || 0)) continue;
       sawEnemy = true;
       // fire discipline: a target keeping its head down is not worth ammo
       // unless it is a close threat or on the move. suppressed targets are engaged
@@ -320,6 +359,9 @@ SimCore.prototype.addSoldier = function (spec) {
     magRemaining: spec.weapon ? spec.weapon.magCap : 0,
     magsLeft: spec.ammo && spec.ammo.mags != null ? spec.ammo.mags : 0,
     fireMode: 'hold',
+    // 直近のトリガーの撃ち方（single/burst/auto）。射撃するまでは null。
+    // 意図(fireMode)とは別軸で、「この一撃で何発出たか」を表す。
+    pullMode: null,
     facing: spec.facing || null,
     currentOrder: null,
     movePath: null,
@@ -382,6 +424,7 @@ SimCore.prototype._snapshot = function (s) {
     hp: s.hp, state: s.state, stateT: s.stateT, prone: s.prone,
     suppression: s.suppression, morale: s.morale, underFireT: s.underFireT,
     magRemaining: s.magRemaining, magsLeft: s.magsLeft, fireMode: s.fireMode,
+    pullMode: s.pullMode,
     facing: s.facing, engageTargetId: s.engageTargetId,
     engageHex: s.engageHex ? { q: s.engageHex.q, r: s.engageHex.r } : null,
     currentOrder: s.currentOrder, movePath: s.movePath ? s.movePath.slice() : null,
@@ -439,6 +482,7 @@ SimCore.prototype.tick = function () {
   this._phaseDeliverOrders();
   this._phaseDecide();
   this._phaseAct(); // includes fire resolution (SS7 step 3-4: engage state resolves bursts inline)
+  this._phaseTrackMotion(); // 実移動が反映された直後に速度を測る（強襲の未来位置予測が使う）
   this._phaseBlasts(); // 信管の切れた投擲弾（_actThrow が積む）
   this._phaseSuppressionMorale();
   this._phaseCommand();
@@ -451,6 +495,9 @@ SimCore.prototype._phaseDeliverOrders = function () {
   for (const d of deliveries) {
     const s = this._soldiers.get(d.soldierId);
     if (!s || s.hp <= 0) continue;
+    if (s._suppressApproachOrder && s._suppressApproachOrder !== d.order) {
+      this._cancelSuppressApproach(s, 'replaced');
+    }
     s.currentOrder = d.order;
     s.currentOrderT = this._tick;   // 失効判定用（下の _phaseDecide 参照）
     this._emit('ORDER_DELIVERED', { id: s.id, order: d.order });
@@ -509,6 +556,33 @@ SimCore.prototype._phaseDecide = function () {
     let intent = null;
     if (s.currentOrder) {
       intent = s.currentOrder;
+      // **接敵は移動命令に優先する。** 移動命令は currentOrder として残り続け、
+      // policy.decide() を覆い隠すので、移動中の兵は的を探すことすらしない。
+      // 結果、敵と1hexですれ違っても互いに一発も撃たなかった（2026-08-05
+      // ディレクター報告「敵と対峙しても互いに素通りする」）。
+      // 足を止めて撃つ。**経路は残す**ので、接敵が片付けば MOVE_TO の再適用が
+      // 残りの経路から再開する（＝Attack Move ではなく「移動中に絡まれた」形）。
+      // 撃てない兵（弾が尽きた／装填中）は足を止めさせない。止めても
+      // _actEngage が AMMO_OUT で即 idle へ落とし、命令の再適用と往復するだけで、
+      // 「撃たずにその場で固まる兵」が増える。装填は中断させない。
+      const canShoot = (s.magRemaining > 0 || s.magsLeft > 0) && s.state !== 'reload';
+      const atSuppressFiringHex = intent.type === 'SUPPRESS_APPROACH'
+        && intent.payload && intent.payload.firingHex
+        && s.q === intent.payload.firingHex.q && s.r === intent.payload.firingHex.r;
+      if ((intent.type === 'MOVE_TO'
+          || (intent.type === 'SUPPRESS_APPROACH' && !atSuppressFiringHex)) && canShoot) {
+        const foe = this._contactFoe(s, T);
+        if (foe) {
+          s.engageTargetId = foe.id;
+          if (s.fireMode === 'hold') s.fireMode = 'aimed';
+          if (s.state !== 'engage') {
+            this._setState(s, 'engage');
+            s.aimT = (s.fireMode === 'suppress') ? T.AIM_T.suppress : T.AIM_T.aimed;
+            this._emit('CONTACT', { id: s.id, targetId: foe.id });
+          }
+          return;
+        }
+      }
       // 自衛は命令に割り込める（NORTH_STAR §3.2「pinned: 自衛のみ」）。
       // TARGET は一度も消費されず永続するため、これが無いと「一度撃てと言われた兵士は
       // 以後永久に自己判断せず、撃たれても遮蔽へ移らない」状態になる。
@@ -567,6 +641,66 @@ SimCore.prototype._applyIntent = function (s, intent, worldView) {
         s.aimT = this.tuning.AIM_T.suppress;
       }
       break;
+    case 'SUPPRESS_APPROACH': {
+      const payload = intent.payload || {};
+      const hex = payload.hex;
+      const firingHex = payload.firingHex;
+      if (!hex || !firingHex || !s.weapon) {
+        if (s.currentOrder === intent) s.currentOrder = null;
+        this._cancelSuppressApproach(s, 'invalid');
+        this._emit('ORDER_REFUSED', { id: s.id, order: intent.type, reason: 'INVALID_PLAN' });
+        break;
+      }
+      const here = { q: s.q, r: s.r };
+      const dist = this.map.dist(here, hex);
+      const atFiringHex = here.q === firingHex.q && here.r === firingHex.r;
+      const ready = atFiringHex
+        && dist <= s.weapon.rngMax && dist >= (s.weapon.rngMin || 0)
+        && (s.weapon.indirect || this.map.hasLos(here, hex));
+      s._suppressApproachOrder = intent;
+      s._suppressObjectiveHex = { q: hex.q, r: hex.r };
+      s._suppressFiringHex = { q: firingHex.q, r: firingHex.r };
+      if (ready) {
+        s.movePath = null;
+        s._moveOrder = null;
+        s.engageHex = { q: hex.q, r: hex.r };
+        s.engageTargetId = null;
+        s.fireMode = 'suppress';
+        if (s.state !== 'engage') {
+          this._setState(s, 'engage');
+          s.aimT = this.tuning.AIM_T.suppress;
+          this._emit('SUPPRESS_START', { id: s.id,
+            hex: { q: hex.q, r: hex.r }, firingHex: { q: s.q, r: s.r } });
+        }
+        break;
+      }
+      if (atFiringHex) {
+        if (s.currentOrder === intent) s.currentOrder = null;
+        this._cancelSuppressApproach(s, 'interrupted');
+        this._emit('ORDER_REFUSED', { id: s.id, order: intent.type,
+          reason: 'FIRING_POSITION_INVALID' });
+        break;
+      }
+      if (s._moveOrder === intent && s.movePath && s.movePath.length) {
+        if (s.state !== 'move') this._setState(s, 'move');
+        break;
+      }
+      const vetted = this._vetMove(s, intent, worldView);
+      if (!vetted || !vetted.path || !vetted.path.length) {
+        this._cancelSuppressApproach(s, 'interrupted');
+        break;
+      }
+      s.engageHex = null;
+      s.engageTargetId = null;
+      s.fireMode = 'suppress';
+      s.movePath = vetted.path;
+      s.moveMode = vetted.mode;
+      s._moveOrder = intent;
+      this._setState(s, 'move');
+      this._emit('SUPPRESS_APPROACH_START', { id: s.id,
+        hex: { q: hex.q, r: hex.r }, firingHex: { q: firingHex.q, r: firingHex.r } });
+      break;
+    }
     case 'FIRE_MODE':
       if (intent.payload.mode === 'reload') {
         if (s.state !== 'reload' && s.magsLeft > 0) {
@@ -630,14 +764,25 @@ SimCore.prototype._applyIntent = function (s, intent, worldView) {
       break;
     }
     case 'HOLD_POS':
-      // intent.payload.prone: suppressed/pinned handling stays with the
-      // suppression phase; HOLD_POS here just cancels active engagement intent.
+      // payload.prone を実際に適用する。policy は PINNED で prone:true を出して
+      // いるのに、ここが「姿勢は制圧フェーズが持つ」と書いて読み捨てており、
+      // 制圧フェーズも姿勢に触っていなかった。結果、**最も激しく撃たれている
+      // pinned だけが棒立ち**という逆転が起きていた（2026-08-04 実測: 制圧55で
+      // 伏せ99% / 制圧85で0%）。decide() は PINNED でここへ早期returnするので、
+      // selfPreserve の GO_PRONE にも到達しない。
+      if (intent.payload && intent.payload.prone && !s.prone) {
+        s.prone = true;
+        this._emit('PRONE', { id: s.id, prone: true });
+      }
       if (s.state === 'engage') this._setState(s, 'idle');
       break;
     case 'ASSAULT': {
       const tg = this._soldiers.get(intent.payload.targetId);
       if (!tg || tg.hp <= 0) break;
       s.engageTargetId = intent.payload.targetId;
+      // **任務の的。** 強襲は Attack Move なので、道中で接敵した敵へ目標が
+      // 移っても、片付いたらここへ戻ってくる（_assaultObjective 参照）。
+      s._assaultPrimaryId = intent.payload.targetId;
       // 同一hexの敵を全滅させるまで続けるので、目標地点を覚えておく
       s._assaultHex = { q: tg.q, r: tg.r };
       s._assaultThrowT = 0; s._assaultSwapT = 0; s._assaultMeleeT = 0;
@@ -694,6 +839,14 @@ SimCore.prototype._vetMove = function (s, intent, worldView) {
   const payload = intent.payload || {};
   const path = payload.path ? payload.path.slice() : null;
   const requested = payload.mode || 'walk';
+  const speed = s.attrs ? Number(s.attrs.speed) : NaN;
+  if (Number.isFinite(speed) && speed <= 0) {
+    if (s.currentOrder === intent) s.currentOrder = null;
+    s.movePath = null;
+    s._moveOrder = null;
+    this._emit('ORDER_REFUSED', { id: s.id, order: intent.type, reason: 'NO_MOBILITY' });
+    return null;
+  }
   if (payload.selfInitiated || !worldView
     || !this.policy || typeof this.policy.vetMoveOrder !== 'function') {
     return { path: path, mode: requested };
@@ -725,6 +878,8 @@ SimCore.prototype._vetMove = function (s, intent, worldView) {
  * `auto` は1マスごとに現場が決めた `_stepMode` を使う。
  */
 SimCore.prototype._effectiveMoveMode = function (s, T) {
+  // 敗走は姿勢ごと決まっている。立って逃げる兵は居ない
+  if (s.state === 'rout') return 'crawl';
   if (s.state === 'pinned' || s.suppression >= T.PINNED_AT) return 'crawl';
   if (s.moveMode === 'auto') return s._stepMode || 'walk';
   return s.moveMode || 'walk';
@@ -737,7 +892,8 @@ SimCore.prototype._effectiveMoveMode = function (s, T) {
 SimCore.prototype._attrMult = function (s, key, range) {
   if (!range) return 1;
   const ref = this.tuning.ATTR_REF || 5;
-  const v = (s.attrs && Number(s.attrs[key])) || ref;
+  const raw = s.attrs ? Number(s.attrs[key]) : NaN;
+  const v = Number.isFinite(raw) ? raw : ref;
   const t = Math.max(0, Math.min(2, v / Math.max(1, ref)));  // 0..2（5で1）
   // t=0 -> max（遅い/鈍い）, t=1 -> 1.0, t=2 -> min（速い/鋭い）
   return (t <= 1)
@@ -785,6 +941,9 @@ SimCore.prototype._phaseAct = function () {
         // self-defense only: a suppressed shooter may still engage (pHit penalty applies)
         if (s.engageTargetId) this._actEngage(s, T);
         break;
+      case 'rout':
+        this._actRout(s, T);
+        break;
       case 'incap':
         // 赤ゲージ。撃たない・動かない・突撃しない
         break;
@@ -794,7 +953,111 @@ SimCore.prototype._phaseAct = function () {
   });
 };
 
+/** 六方位（軸座標）。敗走の退がる向きを決めるのに使う。 */
+const HEX_DIRS = [[1, 0], [1, -1], [0, -1], [-1, 0], [-1, 1], [0, 1]];
+
+/** ID から決まる安定した散らばり。乱数だと毎回ふらついて「散開」に見えない。 */
+function routLane(id) {
+  const str = String(id);
+  let h = 0;
+  for (let i = 0; i < str.length; i++) h = ((h << 5) - h + str.charCodeAt(i)) | 0;
+  return (Math.abs(h) % 3) - 1;   // -1, 0, +1
+}
+
+/**
+ * 敗走。**伏せたまま、敵と反対の向きへ退がる。**
+ *
+ * 「30を切ったら匍匐のまま蜘蛛の子を散らすように後方へ散開」（2026-08-04
+ * ディレクター定義）。旧実装は state を rout にするだけで act 側に分岐が無く、
+ * 逃げもせずその場で凍りついていた（実測: 士気を100へ戻して600秒回しても
+ * rout のまま1hexも動かない）。
+ *
+ * 散開は兵ごとの固定レーン(-1/0/+1)で退路を左右にずらして作る。乱数で毎tick
+ * ふらつかせると酔っ払いになるので、ID由来の固定値にして「あいつは右へ、
+ * こいつは左へ」と一貫して散らす。
+ */
+SimCore.prototype._actRout = function (s, T) {
+  if (!s.prone) {
+    s.prone = true;
+    this._emit('PRONE', { id: s.id, prone: true });
+  }
+  if (!s.movePath || !s.movePath.length) {
+    const path = this._routPath(s, T);
+    if (!path) return;              // 退がる先が無い（敵が見えない/囲まれている）
+    s.movePath = path;
+  }
+  this._actMove(s, T);
+};
+
+/**
+ * 敗走の退路。最寄りの敵から離れる六方位を選び、兵ごとのレーンぶん回してから
+ * 1マスずつ伸ばす。通れない/近づいてしまうマスに当たったら、そこで打ち切る。
+ * @returns {Array<{q:number,r:number}>|null}
+ */
+SimCore.prototype._routPath = function (s, T) {
+  const map = this.map;
+  if (!map || typeof map.dist !== 'function' || typeof map.moveCost !== 'function') return null;
+
+  let foe = null;
+  let nearest = Infinity;
+  this._soldiers.forEach((o) => {
+    if (o.team === s.team || o.hp <= 0 || o.state === 'incap') return;
+    const d = map.dist({ q: s.q, r: s.r }, { q: o.q, r: o.r });
+    if (d < nearest) { nearest = d; foe = o; }
+  });
+  if (!foe) return null;
+
+  const here = { q: s.q, r: s.r };
+  const away = { q: foe.q, r: foe.r };
+  // 敵から最も離れる向き
+  let bestDir = 0;
+  let bestD = -Infinity;
+  for (let i = 0; i < HEX_DIRS.length; i++) {
+    const n = { q: here.q + HEX_DIRS[i][0], r: here.r + HEX_DIRS[i][1] };
+    const d = map.dist(n, away);
+    if (d > bestD) { bestD = d; bestDir = i; }
+  }
+  const steps = (T.ROUT_FALLBACK_HEX != null) ? T.ROUT_FALLBACK_HEX : 6;
+  const d0 = map.dist(here, away);
+  const walk = (dir) => {
+    const path = [];
+    let cur = here;
+    for (let i = 0; i < steps; i++) {
+      const n = { q: cur.q + HEX_DIRS[dir][0], r: cur.r + HEX_DIRS[dir][1] };
+      if (typeof map.inBounds === 'function' && !map.inBounds(n)) break;
+      if (!isFinite(map.moveCost(cur, n))) break;
+      if (map.dist(n, away) < map.dist(cur, away)) break;  // 敵へ近づく向きには退がらない
+      path.push(n);
+      cur = n;
+    }
+    return path;
+  };
+
+  // まず兵ごとのレーン（真後ろから±60°）で退がる。真横へ流れて敵との距離が
+  // 縮まないレーンだったら、素直に真後ろへ退がる — 散開は目的ではなく、
+  // 「隊列のまま一列で下がらない」ための手段なので、退がれない散開はしない。
+  const lane = (bestDir + routLane(s.id) + HEX_DIRS.length) % HEX_DIRS.length;
+  let path = walk(lane);
+  if (!path.length || map.dist(path[path.length - 1], away) <= d0) {
+    const straight = walk(bestDir);
+    if (straight.length && (!path.length
+      || map.dist(straight[straight.length - 1], away) > map.dist(path[path.length - 1], away))) {
+      path = straight;
+    }
+  }
+  return path.length ? path : null;
+};
+
 SimCore.prototype._actMove = function (s, T) {
+  // Cover direct, assault and rout movement paths as well as vetted orders.
+  const effectiveSpeed = s.attrs ? Number(s.attrs.speed) : NaN;
+  if (Number.isFinite(effectiveSpeed) && effectiveSpeed <= 0) {
+    s.movePath = null;
+    s._moveOrder = null;
+    if (s.currentOrder && s.currentOrder.type === 'MOVE_TO') s.currentOrder = null;
+    if (s.state === 'move') this._setState(s, 'idle');
+    return;
+  }
   // 次の1マスをどう渡るかは、そのマスへ踏み出す直前に現場で決める。
   // 「移動」という1つの命令のまま、遮蔽伝い・様子見・開豁地のダッシュ・被弾して
   // 伏せ、が状況次第で切り替わる（§3.4 三現主義）。
@@ -975,7 +1238,8 @@ SimCore.prototype._actEngageHex = function (s, T) {
   const hex = s.engageHex;
   const here = { q: s.q, r: s.r };
   const dist = this.map.dist(here, hex);
-  if (!s.weapon || dist > s.weapon.rngMax || !this.map.hasLos(here, hex)) {
+  if (!s.weapon || dist > s.weapon.rngMax || dist < (s.weapon.rngMin || 0)
+      || (!s.weapon.indirect && !this.map.hasLos(here, hex))) {
     this._releaseHexOrder(s, 'unreachable');
     return;
   }
@@ -1004,13 +1268,20 @@ SimCore.prototype._actEngageHex = function (s, T) {
   if (victim) {
     this._resolveBurst(s, victim, T);
   } else {
-    const roundsFired = Math.max(1, Math.min(s.magRemaining, (s.weapon.burstSize) || 1));
+    // 誰も見えていない面制圧。撃ち方の判断は個体射撃と同じ表を通す — 伏せて
+    // 見えない敵が2名以上潜んでいる hex なら掃射になる（それが「掃射」の意味）。
+    const pull = this._selectPull(s, hex, T);
+    const nominal = (pull === 'auto') ? s.weapon.autoRounds
+      : (pull === 'burst') ? s.weapon.burstRounds : 1;
+    const roundsFired = Math.max(1, Math.min(s.magRemaining, nominal || 1));
+    s.pullMode = pull;
     s.magRemaining -= roundsFired;
     s.quietT = 0;
     s.facing = { q: hex.q - s.q, r: hex.r - s.r };
     this._emit('SHOT', {
       shooterId: s.id, targetId: null, targetHex: { q: hex.q, r: hex.r },
       roundsFired: roundsFired, hit: false, killed: false, area: true,
+      pull: pull,
     });
   }
 
@@ -1038,9 +1309,28 @@ SimCore.prototype._actEngageHex = function (s, T) {
 /** 制圧任務の解除。次の最適な戦闘行動は自分で選ばせる。@private */
 SimCore.prototype._releaseHexOrder = function (s, reason) {
   s.engageHex = null;
-  if (s.currentOrder && s.currentOrder.type === 'TARGET_HEX') s.currentOrder = null;
+  if (s.currentOrder && (s.currentOrder.type === 'TARGET_HEX'
+      || s.currentOrder.type === 'SUPPRESS_APPROACH')) s.currentOrder = null;
+  if (s._suppressApproachOrder) this._cancelSuppressApproach(s, reason);
   if (s.state === 'engage') this._setState(s, 'idle');
   this._emit('SUPPRESS_END', { id: s.id, reason: reason });
+};
+
+/** Clear a queued/active approach without disturbing an unrelated new order. */
+SimCore.prototype._cancelSuppressApproach = function (s, reason) {
+  const old = s._suppressApproachOrder;
+  if (old && s._moveOrder === old) {
+    s.movePath = null;
+    s._moveOrder = null;
+  }
+  if (old && s.currentOrder === old) s.currentOrder = null;
+  s._suppressApproachOrder = null;
+  s._suppressObjectiveHex = null;
+  s._suppressFiringHex = null;
+  if (reason === 'replaced' || reason === 'cancelled' || reason === 'interrupted') {
+    s.engageHex = null;
+    if (s.state === 'move' || s.state === 'engage') this._setState(s, 'idle');
+  }
 };
 
 /** 指定hex（+半径）に**行動可能な**敵が居るか。重傷・死亡は数えない。@private */
@@ -1054,13 +1344,56 @@ SimCore.prototype._hasActiveFoeAt = function (s, hex, radius) {
   return found;
 };
 
+/** 指定hexに居る**行動可能な**敵の人数。掃射へ上げるかの判断に使う。@private */
+SimCore.prototype._activeFoeCountAt = function (s, hex) {
+  if (!hex) return 0;
+  let count = 0;
+  this._soldiers.forEach((o) => {
+    if (o.team === s.team || o.hp <= 0) return;
+    if (o.state === 'incap' || o.state === 'down') return;
+    if (o.q === hex.q && o.r === hex.r) count++;
+  });
+  return count;
+};
+
+/**
+ * このトリガーの撃ち方を決める。
+ *
+ * **基本はバースト。** 陸軍のマニュアルどおり短連射が既定で、単射と掃射は
+ * そこからの逸脱として条件付きで選ばれる。掃射(auto)は「同一hexに固まった
+ * 複数の敵へ浴びせる」時だけの例外で、弾倉を空にする勢いで撃つぶん、代償は
+ * 直後の装填時間になる（MGなら8秒、その間は撃てず動けない）。
+ *
+ * @returns {'single'|'burst'|'auto'}
+ * @private
+ */
+SimCore.prototype._selectPull = function (s, hex, T) {
+  const tuning = T || {};
+  const w = s.weapon;
+  // ボルト小銃・狙撃・拳銃は構造上そもそも連射できない
+  if (!w || Math.max(1, w.burstRounds || 1) <= 1) return 'single';
+
+  // 射撃規律: 最終弾倉に入ったら1発ずつ撃つ（§3.3 弾薬経済）
+  if (tuning.DISCIPLINE_LAST_MAG_SINGLE === true && s.magsLeft <= 0) return 'single';
+
+  const minRounds = (tuning.AUTO_MIN_ROUNDS != null) ? tuning.AUTO_MIN_ROUNDS : 8;
+  const minFoes = (tuning.AUTO_MIN_FOES_IN_HEX != null) ? tuning.AUTO_MIN_FOES_IN_HEX : 2;
+  if (w.canAuto && w.autoRounds > 0
+    && s.magRemaining >= minRounds
+    && hex && this._activeFoeCountAt(s, hex) >= minFoes) {
+    return 'auto';
+  }
+
+  return 'burst';
+};
+
 /** 指定hexに居て、射手から視線の通る敵。最も手強い（未制圧の）者を選ぶ。@private */
 SimCore.prototype._visibleFoeAt = function (s, hex) {
   let best = null;
   this._soldiers.forEach((o) => {
     if (o.team === s.team || o.hp <= 0 || o.state === 'incap') return;
     if (o.q !== hex.q || o.r !== hex.r) return;
-    if (!this.map.hasLos({ q: s.q, r: s.r }, { q: o.q, r: o.r })) return;
+    if (!s.weapon.indirect && !this.map.hasLos({ q: s.q, r: s.r }, { q: o.q, r: o.r })) return;
     if (!best || o.suppression < best.suppression) best = o;
   });
   return best;
@@ -1218,6 +1551,9 @@ SimCore.prototype._actAssault = function (s, T) {
   if (!objective) { this._endAssault(s, 'cleared'); return; }
   const target = objective.target;
   const goal = { q: target.q, r: target.r };
+  // 足は「今居る場所」ではなく「自分が着く頃に居る場所」へ向ける。
+  // 撃つ・投げる・掃討すべき地点(goal)は実位置のままで、**移動だけ**が先を読む。
+  const aim = this._interceptHex(s, target, T);
   s._assaultHex = { q: goal.q, r: goal.r };   // 掃討すべき地点は追随する
   const d = this.map.dist({ q: s.q, r: s.r }, goal);
   const los = this.map.hasLos({ q: s.q, r: s.r }, goal);
@@ -1233,6 +1569,7 @@ SimCore.prototype._actAssault = function (s, T) {
     return;
   }
   if (d === 1) {
+    if (this._ownBlastHazardAt(s, goal)) return;
     // 最後の1歩は踏み込み。走って入る（止まって撃ち合う間合いではない）
     s.movePath = [{ q: goal.q, r: goal.r }];
     s.moveMode = 'rush';
@@ -1277,8 +1614,13 @@ SimCore.prototype._actAssault = function (s, T) {
     }
   }
 
-  // ⑤ 届かない・見えないなら前進する（走って詰める）
-  const step = this._stepToward(s, goal);
+  // ⑤ 届かない・見えないなら前進する（走って詰める）。
+  //    向かうのは迎撃点。読み違えて詰まった時だけ実位置へ落とす。
+  const normalStep = this._stepToward(s, aim) || this._stepToward(s, goal);
+  const step = this._safeAssaultStepToward(s, aim) || this._safeAssaultStepToward(s, goal);
+  // A pending friendly grenade is temporary, so waiting is not an unreachable
+  // assault.  The blast queue is pruned on detonation and the next tick retries.
+  if (!step && normalStep && this._ownBlastHazardAt(s, normalStep)) return;
   if (!step) { this._endAssault(s, 'unreachable'); return; }
   s.movePath = [step];
   s.moveMode = 'rush';
@@ -1286,15 +1628,69 @@ SimCore.prototype._actAssault = function (s, T) {
 };
 
 /**
- * 強襲の目標。指定ユニットが倒れても、**同じhexに残る敵が居る限り続ける**。
+ * 強襲の目標。**強襲は Attack Move である**（2026-08-05 ディレクター定義）:
+ *
+ *   「ターゲットを強襲している道すがら、敵の近くを通ったらそっちを攻撃して、
+ *    戦闘不能まで陥れたら、最初のターゲットまでは自動で向かっていく」
+ *
+ * つまり任務の的(`_assaultPrimaryId`)は覚えたまま、道中で接敵した敵を先に片付ける。
+ * 的だけを見て突っ走る旧実装は、脇を通り過ぎる敵に一発も撃たなかった。
+ *
+ * 指定ユニットが倒れても、**同じhexに残る敵が居る限り続ける**。
  * 全滅させたか、見失って周囲にも居なくなったら null（解除）。
  * @private
  */
-SimCore.prototype._assaultObjective = function (s, T) {
-  const named = this._soldiers.get(s.engageTargetId);
+/**
+ * 接敵している敵（居なければ null）。**「脇を通り過ぎる」を構造的に禁じる規則**で、
+ * 強襲の道中と、移動命令の遂行中の両方がこれを見る。
+ *
+ * 隣接(1)は射線が通らなくても接敵とする — 同じ生垣の中で鉢合わせているのに
+ * 「見えていないから素通り」は起きてほしくない。
+ * @private
+ */
+SimCore.prototype._contactFoe = function (s, T) {
   const alive = (o) => o && o.hp > 0 && o.state !== 'incap' && o.state !== 'down';
-  if (alive(named)) return { target: named };
+  const contact = (T.ASSAULT_CONTACT_RNG != null) ? T.ASSAULT_CONTACT_RNG : 2;
+  const here = { q: s.q, r: s.r };
+  let near = null, nearD = Infinity;
+  this._soldiers.forEach((o) => {
+    if (o.team === s.team || !alive(o)) return;
+    const d = this.map.dist(here, { q: o.q, r: o.r });
+    if (d > contact || d >= nearD) return;
+    if (d > 1 && !this.map.hasLos(here, { q: o.q, r: o.r })) return;
+    nearD = d; near = o;
+  });
+  return near;
+};
 
+SimCore.prototype._assaultObjective = function (s, T) {
+  const alive = (o) => o && o.hp > 0 && o.state !== 'incap' && o.state !== 'down';
+  // 任務の的。命令で指定された相手を、道中で目標が変わっても覚えておく
+  if (!s._assaultPrimaryId) s._assaultPrimaryId = s.engageTargetId;
+  const primary = this._soldiers.get(s._assaultPrimaryId);
+  const here = { q: s.q, r: s.r };
+
+  // 的が手の届く所に居るなら、寄り道せず任務を果たす（それが強襲の目的）
+  const contact = (T.ASSAULT_CONTACT_RNG != null) ? T.ASSAULT_CONTACT_RNG : 2;
+  if (alive(primary) && this.map.dist(here, { q: primary.q, r: primary.r }) <= contact) {
+    s.engageTargetId = primary.id;
+    return { target: primary };
+  }
+
+  // 道中の接敵。**的でなくても、脇に居る敵は無視できない。**
+  const near = this._contactFoe(s, T);
+  if (near) {
+    if (s.engageTargetId !== near.id) {
+      this._emit('ASSAULT_CONTACT', { id: s.id, targetId: near.id, primaryId: s._assaultPrimaryId });
+    }
+    s.engageTargetId = near.id;
+    return { target: near };
+  }
+
+  // 接敵していない: 任務の的へ向かい直す（片付いたら自動で戻るのがここ）
+  if (alive(primary)) { s.engageTargetId = primary.id; return { target: primary }; }
+
+  const named = primary;
   // 指定ユニットが落ちた: その最後の位置に残る敵を掃討し続ける
   const hex = s._assaultHex || (named ? { q: named.q, r: named.r } : null);
   if (hex) {
@@ -1303,7 +1699,8 @@ SimCore.prototype._assaultObjective = function (s, T) {
       if (next || o.team === s.team || !alive(o)) return;
       if (o.q === hex.q && o.r === hex.r) next = o;
     });
-    if (next) { s.engageTargetId = next.id; return { target: next }; }
+    // 掃討で拾い直した相手が新しい任務の的になる（前の的はもう居ない）
+    if (next) { s.engageTargetId = next.id; s._assaultPrimaryId = next.id; return { target: next }; }
   }
 
   // 見失った: 周囲に敵が居るなら最寄りへ切り替え、居なければ解除
@@ -1314,7 +1711,7 @@ SimCore.prototype._assaultObjective = function (s, T) {
     const d = this.map.dist({ q: s.q, r: s.r }, { q: o.q, r: o.r });
     if (d <= radius && d < bestD) { bestD = d; best = o; }
   });
-  if (best) { s.engageTargetId = best.id; return { target: best }; }
+  if (best) { s.engageTargetId = best.id; s._assaultPrimaryId = best.id; return { target: best }; }
   return null;
 };
 
@@ -1346,6 +1743,39 @@ SimCore.prototype._assaultRelease = function (s, T) {
   });
   if (!this._blasts) this._blasts = [];
   this._blasts.push({ at: this._tick + spec.fuseT, hex: hex, kind: kind, ownerId: s.id, spec: spec });
+};
+
+/** Return true while an assault step would enter the thrower's own pending blast. */
+SimCore.prototype._ownBlastHazardAt = function (s, hex) {
+  if (!hex || !this._blasts || !this._blasts.length) return false;
+  for (let i = 0; i < this._blasts.length; i++) {
+    const blast = this._blasts[i];
+    if (!blast || !blast.hex || blast.ownerId !== s.id) continue;
+    const spec = blast.spec || (this.tuning.MUNITIONS || {})[blast.kind] || {};
+    const radius = (spec.radius != null) ? spec.radius : 1;
+    if (this.map.dist(hex, blast.hex) <= radius) return true;
+  }
+  return false;
+};
+
+/** Pick a forward step outside the thrower's own pending blasts. */
+SimCore.prototype._safeAssaultStepToward = function (s, goal) {
+  const direct = this._stepToward(s, goal);
+  if (direct && !this._ownBlastHazardAt(s, direct)) return direct;
+
+  const here = { q: s.q, r: s.r };
+  const hereD = this.map.dist(here, goal);
+  const cells = this.map.neighbors(here) || [];
+  let best = null, bestD = Infinity;
+  for (let i = 0; i < cells.length; i++) {
+    const cell = cells[i];
+    let cost = Infinity;
+    try { cost = this.map.moveCost(here, cell); } catch (e) { cost = Infinity; }
+    if (!isFinite(cost) || cost <= 0 || this._ownBlastHazardAt(s, cell)) continue;
+    const d = this.map.dist(cell, goal);
+    if (d <= hereD && d < bestD) { best = cell; bestD = d; }
+  }
+  return best;
 };
 
 /** 主武器 <-> 拳銃の持ち替え（弾ごと入れ替える）。@private */
@@ -1441,6 +1871,146 @@ SimCore.prototype._resolveMelee = function (s, T) {
   });
 };
 
+/** axial距離。**小数座標でも使える**連続量として測れるのが map.dist との違い。 */
+function axialDist(a, b) {
+  const dq = a.q - b.q;
+  const dr = a.r - b.r;
+  return (Math.abs(dq) + Math.abs(dq + dr) + Math.abs(dr)) / 2;
+}
+
+/** 小数の axial 座標を最寄りの hex へ丸める（cube round）。 */
+function cubeRound(q, r) {
+  let x = q;
+  let z = r;
+  let y = -x - z;
+  const rx = Math.round(x);
+  const ry = Math.round(y);
+  const rz = Math.round(z);
+  const dx = Math.abs(rx - x);
+  const dy = Math.abs(ry - y);
+  const dz = Math.abs(rz - z);
+
+  // 一番ずれた軸を、残る2軸から復元する（x+y+z=0 を保つ）
+  if (dx > dy && dx > dz) x = -ry - rz;
+  else if (dy > dz) y = -rx - rz;
+  else z = -rx - ry;
+
+  return { q: Math.round(x), r: Math.round(z) };
+}
+
+/**
+ * 各兵の**実移動**から速度ベクトル（hex/tick）を起こして持たせる。
+ *
+ * 命令された経路ではなく、地形・様子見・立ち上がり・被弾を経た**結果の位置**を
+ * 測るのが要点。「あいつは実際どちらへどれだけ走れているか」だけが、追う側に
+ * とって意味のある情報だから（命令は見えないし、途中で頓挫もする）。
+ * @private
+ */
+SimCore.prototype._phaseTrackMotion = function () {
+  const T = this.tuning || {};
+  const alpha = (T.ASSAULT_LEAD_EMA != null) ? T.ASSAULT_LEAD_EMA : 0.5;
+  const staleT = (T.ASSAULT_LEAD_STALE_T != null) ? T.ASSAULT_LEAD_STALE_T : 30;
+
+  this._soldiers.forEach(function (s) {
+    if (s.hp <= 0) return;
+
+    if (!s._trackHex) {
+      s._trackHex = { q: s.q, r: s.r };
+      s._trackTick = this._tick;
+      s._vel = { q: 0, r: 0 };
+      return;
+    }
+
+    if (s.q !== s._trackHex.q || s.r !== s._trackHex.r) {
+      const dt = Math.max(1, this._tick - s._trackTick);
+      const vq = (s.q - s._trackHex.q) / dt;
+      const vr = (s.r - s._trackHex.r) / dt;
+      const old = s._vel || { q: 0, r: 0 };
+      s._vel = {
+        q: old.q + (vq - old.q) * alpha,
+        r: old.r + (vr - old.r) * alpha,
+      };
+      s._trackHex = { q: s.q, r: s.r };
+      s._trackTick = this._tick;
+      s._moveIdleT = 0;
+      return;
+    }
+
+    // 足が止まってからの経過。追う側はこれで予測を薄める（下記 _interceptHex）
+    s._moveIdleT = (s._moveIdleT || 0) + 1;
+
+    if (this._tick - s._trackTick >= staleT) {
+      // しばらく動いていない相手は「止まった」とみなして慣性を捨てる。
+      // **同時に時刻も引き直す** — これを忘れると、長く伏せていた兵が次の一歩を
+      // 踏んだ時に巨大な dt で割られて速度がほぼ 0 になり、以後永久に
+      // 「止まっている奴」として扱われる。
+      s._vel = { q: 0, r: 0 };
+      s._trackTick = this._tick;
+    }
+  }, this);
+};
+
+/**
+ * 迎撃点。**目標が今の速度で走り続けるとして、自分が全力で走った時に出会う地点。**
+ *
+ * 追う側が「相手が今居るhex」を目指すと、着いた頃には相手はそこに居ない。横切る
+ * 相手に対しては永久に尻を追いかけることになり、決着がつかない（2026-08-04
+ * ディレクター指摘「古い過去位置めがけて移動しちゃう」）。到着時刻と目標の変位を
+ * 相互に解いて、**出会う場所**を出す。
+ *
+ * 予測が当てにならない場面（相手が止まっている・自分の脚が読めない・予測先が
+ * 進入不可・予測先が自分の足元）では、素直に実位置を返して従来の追尾へ落ちる。
+ * @private
+ */
+SimCore.prototype._interceptHex = function (s, target, T) {
+  const here = { q: target.q, r: target.r };
+  const raw = target._vel;
+  if (!raw || Math.abs(raw.q) + Math.abs(raw.r) < 1e-4) return here;
+
+  // **止まった相手を先読みし続けない。** 足が止まってからの経過で予測を薄める。
+  // 「止まった」と断ずるまで待って一気に切ると、その間ずっと居もしない前方へ
+  // 走り、実測で接敵が 20〜35 tick 遅れた（2026-08-04 A/B 計測）。
+  const staleT = (T.ASSAULT_LEAD_STALE_T != null) ? T.ASSAULT_LEAD_STALE_T : 30;
+  const fade = Math.max(0, 1 - (target._moveIdleT || 0) / Math.max(1, staleT));
+  if (fade <= 0) return here;
+  const v = { q: raw.q * fade, r: raw.r * fade };
+  if (Math.abs(v.q) + Math.abs(v.r) < 1e-4) return here;
+
+  const rushMult = (T.MOVE_MODE_MULT && T.MOVE_MODE_MULT.rush != null)
+    ? T.MOVE_MODE_MULT.rush : 0.5;
+  const ticksPerHex = T.MOVE_T_PER_HEX * rushMult * this._attrMult(s, 'speed', T.ATTR_SPD_RANGE);
+  if (!isFinite(ticksPerHex) || ticksPerHex <= 0) return here;
+  const speed = 1 / ticksPerHex;   // hex/tick
+
+  const maxLead = (T.ASSAULT_LEAD_MAX_T != null) ? T.ASSAULT_LEAD_MAX_T : 300;
+  if (maxLead <= 0) return here;   // 0 で予測を無効化＝従来の純追尾
+
+  // **一番早く出会える点**を採る。等速だと「間に合う点」は一続きに存在するので、
+  // 不動点反復で解くと一番遠い＝一番遅い解へ寄り、純追尾より遅れる（実測）。
+  // 経路の地形コストは先読みできないので平地(1)として到着時刻を見積もる。
+  const probe = Math.max(1, ticksPerHex / 2);   // 半hex刻みで走査すれば十分
+  let leadT = -1;
+  for (let tt = probe; tt <= maxLead; tt += probe) {
+    const cand = { q: here.q + v.q * tt, r: here.r + v.r * tt };
+    if (axialDist({ q: s.q, r: s.r }, cand) <= tt * speed) { leadT = tt; break; }
+  }
+  // 間に合う点が無い（真後ろから同速で追う等）なら先読みしない。追いつけない
+  // 相手の前方へ回り込もうとしても、居ない場所へ走る分だけ遅れるだけ。
+  if (leadT < 0) return here;
+
+  const p = { q: here.q + v.q * leadT, r: here.r + v.r * leadT };
+  const aim = cubeRound(p.q, p.r);
+  // 足元を指した予測は使えない。_stepToward が「近づける隣接hexなし」で null を
+  // 返し、強襲が 'unreachable' で解除されてしまう。
+  if (aim.q === s.q && aim.r === s.r) return here;
+
+  let cost = Infinity;
+  try { cost = this.map.moveCost(here, aim); } catch (e) { cost = Infinity; }
+  if (!isFinite(cost) || cost <= 0) return here;
+
+  return aim;
+};
+
 /** 目標へ1マス寄る（進入可能な隣接hexのうち最も近づくもの）。@private */
 SimCore.prototype._stepToward = function (s, goal) {
   const cells = this.map.neighbors({ q: s.q, r: s.r }) || [];
@@ -1460,7 +2030,11 @@ SimCore.prototype._stepToward = function (s, goal) {
 SimCore.prototype._endAssault = function (s, reason) {
   s.engageTargetId = null;
   s._assaultHex = null;
+  s._assaultPrimaryId = null;
   s._assaultThrowT = 0; s._assaultSwapT = 0; s._assaultMeleeT = 0;
+  // 装填で中断していた突撃の「戻り札」も捨てる。残すと、畳んだはずの突撃が
+  // 装填完了で勝手に再開する（釘付けで頓挫させた兵が立ち上がって走り出す）。
+  s._assaultResume = false;
   s.movePath = null;
   s.moveMode = 'walk';
   if (s.currentOrder && s.currentOrder.type === 'ASSAULT') s.currentOrder = null;
@@ -1469,21 +2043,100 @@ SimCore.prototype._endAssault = function (s, reason) {
 };
 
 // 4. fire resolution (pHit calculation, SS6)
+SimCore.prototype._resolveMortarBurst = function (shooter, target, T) {
+  const api = m2BallisticsApi();
+  if (!api || !api.resolveImpact) return false;
+  const aimHex = { q: target.q, r: target.r };
+  const from = { q: shooter.q, r: shooter.r };
+  const range = this.map.dist(from, aimHex);
+  if (range < (shooter.weapon.rngMin || 0) || range > shooter.weapon.rngMax) return true;
+
+  const pinAt = Math.max(1, Number(T.PINNED_AT || T.SUPPRESS_PINNED || 70));
+  const impact = api.resolveImpact({
+    aimHex: aimHex,
+    range: range,
+    minRange: shooter.weapon.rngMin || 0,
+    maxRange: shooter.weapon.rngMax,
+    accuracy: shooter.weapon.accPct,
+    suppressionRatio: Math.max(0, Number(shooter.suppression) || 0) / pinAt,
+    neighbors: (hex) => this.map.neighbors(hex),
+    rng: this.rng,
+  });
+
+  const roundsFired = Math.max(1, Math.min(shooter.magRemaining, 1));
+  shooter.pullMode = 'single';
+  shooter.magRemaining -= roundsFired;
+  shooter.quietT = 0;
+  target.quietT = 0;
+  shooter.facing = { q: aimHex.q - shooter.q, r: aimHex.r - shooter.r };
+
+  const casualties = [];
+  const spilled = [];
+  const blastRadius = Math.max(1, shooter.weapon.blastRadius || 1);
+  const directScale = api.BALLISTICS ? api.BALLISTICS.directDamageScale : 0.62;
+  const coverMitigation = api.BALLISTICS ? api.BALLISTICS.coverMitigation : 0.65;
+  this._soldiers.forEach((o) => {
+    // Preserve RTwP's established rule: area weapon spill does not hurt friendlies.
+    if (o.team === shooter.team || o.hp <= 0 || o.state === 'incap') return;
+    const blastDist = this.map.dist({ q: o.q, r: o.r }, impact.hex);
+    if (blastDist > blastRadius) return;
+    let cover = 0;
+    try { cover = Math.max(0, Math.min(1, Number(this.map.cover({ q: o.q, r: o.r })) || 0)); } catch (e) { cover = 0; }
+    const radialScale = directScale * (blastDist === 0 ? 1 : (shooter.weapon.splashScale || 0.45));
+    const effectivePen = shooter.weapon.penBase * radialScale * Math.max(0.35, 1 - cover * coverMitigation);
+    const before = o.hp;
+    const killed = this._applyDamage(o, this._rollDamage(T, effectivePen), shooter);
+    const dmg = Math.max(0, before - o.hp);
+    this._addSuppression(o, shooter.weapon.suppressPerBurst * (blastDist === 0 ? 1 : 0.7), T);
+    o.underFireT = this._tick;
+    o.quietT = 0;
+    this._checkSuppressionThresholds(o, T);
+    casualties.push({ id: o.id, dmg: dmg, killed: killed, distance: blastDist, cover: cover });
+    if (o.id !== target.id) spilled.push(o.id);
+  });
+
+  const targetCasualty = casualties.find((c) => c.id === target.id);
+  this._emit('SHOT', {
+    shooterId: shooter.id,
+    targetId: target.id,
+    aimHex: impact.aimHex,
+    targetHex: impact.hex,
+    impactOffset: { q: impact.offsetQ, r: impact.offsetR },
+    scatter: { adjacent: impact.adjacent, chance: impact.adjacentChance },
+    roundsFired: roundsFired,
+    hits: targetCasualty && targetCasualty.dmg > 0 ? 1 : 0,
+    hit: !!(targetCasualty && targetCasualty.dmg > 0),
+    killed: !!(targetCasualty && targetCasualty.killed),
+    crit: false,
+    pull: 'single',
+    area: true,
+    casualties: casualties,
+    spilled: spilled,
+  });
+  return true;
+};
+
 SimCore.prototype._resolveBurst = function (shooter, target, T) {
   const dist = this.map.dist({ q: shooter.q, r: shooter.r }, { q: target.q, r: target.r });
   const cover = this.map.cover({ q: target.q, r: target.r });
-  const hasLos = this.map.hasLos({ q: shooter.q, r: shooter.r }, { q: target.q, r: target.r });
+  const hasLos = (shooter.weapon && shooter.weapon.indirect)
+    || this.map.hasLos({ q: shooter.q, r: shooter.r }, { q: target.q, r: target.r });
 
   // A blocked shot is not fired, so it must not spend rounds or create a
   // flash/tracer that has no matching projectile event.
-  if (!hasLos) return;
+  if (!hasLos || (shooter.weapon && dist < (shooter.weapon.rngMin || 0))) return;
+  if (shooter.weapon && shooter.weapon.code === 'm2_mortar'
+      && this._resolveMortarBurst(shooter, target, T)) return;
 
-  // One resolution is one burst; consume the actual projectiles in it. A
-  // nearly empty magazine naturally produces a shorter final burst.
-  const roundsFired = Math.max(1, Math.min(
-    shooter.magRemaining,
-    (shooter.weapon && shooter.weapon.burstSize) || 1
-  ));
+  // 1トリガーの弾数は撃ち方で決まる（single/burst/auto）。弾倉が尽きかけていれば
+  // 最後の一撃だけ自然に短くなる。**この roundsFired が音側の正本でもある** —
+  // 描画・SFX は SHOT イベントのこの値からクリップを選ぶので、鳴っている弾数と
+  // 減る弾数が構造的に食い違えない。
+  const pull = this._selectPull(shooter, { q: target.q, r: target.r }, T);
+  const nominal = (pull === 'auto') ? shooter.weapon.autoRounds
+    : (pull === 'burst') ? shooter.weapon.burstRounds : 1;
+  const roundsFired = Math.max(1, Math.min(shooter.magRemaining, nominal || 1));
+  shooter.pullMode = pull;
   shooter.magRemaining -= roundsFired;
   shooter.quietT = 0;
   target.quietT = 0;
@@ -1579,6 +2232,59 @@ SimCore.prototype._resolveBurst = function (shooter, target, T) {
     }
   }
 
+  // 掃射が弾倉1本を燃やす見返り。同一hexに固まった敵へ余った弾が回る。
+  // これが無いと30発撃っても27発は制圧値にしかならず（MAX_DMG_HITS_PER_BURST の
+  // 頭打ち）、「同一hexの複数兵士に浴びせる」が機構として存在しない。
+  // クリティカルは本来の的にだけ効く — ばら撒いた弾に頭部命中は乗らない。
+  const spilled = [];
+  // HE fragmentation affects every hostile sharing the impact hex. The direct
+  // target keeps the normal hit roll; nearby occupants receive a reduced roll.
+  if (w.area) {
+    this._soldiers.forEach((o) => {
+      if (o.id === target.id || o.team === shooter.team || o.hp <= 0 || o.state === 'incap') return;
+      const blastDist = this.map.dist({ q: o.q, r: o.r }, { q: target.q, r: target.r });
+      const blastRadius = Math.max(0, w.blastRadius || 0);
+      if (blastDist > blastRadius) return;
+      const dmgScale = blastDist === 0 ? 0.75 : (w.splashScale || 0.45);
+      const splashHit = blastDist === 0 ? Math.max(0.28, pHit * 0.8) : Math.max(0.22, pHit * 0.55);
+      if (this.rng() < splashHit) {
+        this._applyDamage(o, this._rollDamage(T, penAt * dmgScale), shooter);
+        spilled.push(o.id);
+      }
+      this._addSuppression(o, w.suppressPerBurst * (blastDist === 0 ? 1 : 0.7), T);
+      o.underFireT = this._tick;
+      o.quietT = 0;
+      this._checkSuppressionThresholds(o, T);
+    });
+  }
+  if (pull === 'auto' && hits > maxDmgHits) {
+    const maxTargets = (T.AUTO_SPILL_MAX_TARGETS != null) ? T.AUTO_SPILL_MAX_TARGETS : 3;
+    const room = Math.max(0, maxTargets - 1);   // 本来の的を含めた総数の上限
+    const victims = [];
+    this._soldiers.forEach((o) => {
+      if (victims.length >= room) return;
+      if (o.id === target.id || o.team === shooter.team || o.hp <= 0) return;
+      if (o.state === 'incap' || o.state === 'down') return;
+      if (o.q !== target.q || o.r !== target.r) return;
+      if (!this.map.hasLos({ q: shooter.q, r: shooter.r }, { q: o.q, r: o.r })) return;
+      victims.push(o);
+    });
+    let spare = hits - maxDmgHits;
+    for (let i = 0; i < victims.length && spare > 0; i++) {
+      const o = victims[i];
+      const share = Math.min(spare, maxDmgHits);
+      spare -= share;
+      spilled.push(o.id);
+      for (let j = 0; j < share; j++) {
+        if (this._applyDamage(o, this._rollDamage(T, penAt), shooter)) break;
+      }
+      this._addSuppression(o, shooter.weapon.suppressPerBurst, T);
+      o.underFireT = this._tick;
+      o.quietT = 0;
+      this._checkSuppressionThresholds(o, T);
+    }
+  }
+
   this._emit('SHOT', {
     shooterId: shooter.id,
     targetId: target.id,
@@ -1586,11 +2292,18 @@ SimCore.prototype._resolveBurst = function (shooter, target, T) {
     hits: hits,        // 命中弾数（連射の手応え・検証用）
     hit: hit,
     killed: killed,
-    crit: crit
+    crit: crit,
+    pull: pull,        // 'single'|'burst'|'auto'。音側はこれではなく roundsFired を見る
+    spilled: spilled   // 掃射で巻き込んだ同一hexの敵
   });
 
-  // suppression (applied on hit or miss -- near-misses suppress too)
-  this._addSuppression(target, shooter.weapon.suppressPerBurst, T);
+  // 制圧は浴びた弾量に比例する。単射1発は怖くないし、掃射は撃ち込まれた分だけ怖い。
+  // 基準はバースト(=1.0)。上限は SUPPRESS_MAX_PER_SEC と二重に効くので、
+  // 掃射を連発しても制圧ゲージが一瞬で飽和することはない。
+  const burstBase = Math.max(1, shooter.weapon.burstRounds || 1);
+  const suppressCap = (T.AUTO_SUPPRESS_MULT_CAP != null) ? T.AUTO_SUPPRESS_MULT_CAP : 2.5;
+  const suppressMult = Math.min(roundsFired / burstBase, suppressCap);
+  this._addSuppression(target, shooter.weapon.suppressPerBurst * suppressMult, T);
   // 「今撃たれている」時刻。自衛の反射は制圧値ではなくこの時刻で判定する
   // （弾が来たから動く、が自然）。
   target.underFireT = this._tick;
@@ -1700,21 +2413,48 @@ SimCore.prototype._applyDamage = function (target, dmg, source) {
   return false;
 };
 
+/**
+ * 戦死による士気への影響。
+ *
+ * 「3hex内の味方戦死 -15」は廃止した（2026-08-04 ディレクター判断）。1人倒れる
+ * たびに周囲全員が削れるため、序盤の1名損耗から分隊全体が坂を転げ落ちていた。
+ * 残すのは指揮官を失った時だけ。
+ */
 SimCore.prototype._applyMoraleOnDeath = function (deadSoldier) {
   const T = this.tuning;
+  if (!deadSoldier.isLeader) return;
   this._soldiers.forEach((s) => {
     if (s.hp <= 0 || s.team !== deadSoldier.team || s.id === deadSoldier.id) return;
-    const d = this.map.dist({ q: s.q, r: s.r }, { q: deadSoldier.q, r: deadSoldier.r });
-    if (d <= 3) {
-      s.morale = Math.max(0, s.morale + T.MORALE_CASUALTY_NEAR);
-    }
-    if (deadSoldier.isLeader) {
-      s.morale = Math.max(0, s.morale + T.MORALE_LEADER_DOWN);
-    }
+    s.morale = Math.max(0, s.morale + T.MORALE_LEADER_DOWN);
   });
 };
 
 SimCore.prototype._checkSuppressionThresholds = function (s, T) {
+  // 敗走・行動不能は制圧で上書きしない。どちらも「もう戦列に居ない」状態で、
+  // ここで pinned を被せると敗走が解けたように見え、行動不能が起き上がる。
+  if (s.state === 'rout' || s.state === 'incap' || s.state === 'down') return;
+
+  // **突撃は制圧では止まらない**（2026-08-04 ディレクター定義）。
+  //
+  // ここが assault を suppressed で上書きしていたため、突撃兵は平野の中腹で
+  // 無言のまま突撃を失っていた（ASSAULT_END も出ず、engageTargetId と
+  // _assaultHex が残骸として残る）。制圧が抜けた後は policy が引き取って
+  // 遮蔽へ帰るので、盤面には「突っ込んだのに何もせず戻ってきた」だけが見える。
+  // _phaseDecide が「強襲は自衛の反射も働かない＝リスクを取る」と宣言している
+  // のに、その宣言を裏から無効化していたのがこの1行だった。
+  //
+  // 頭を下げさせられるのは**釘付け(PINNED_AT)まで**。そこまで浴びたら突撃は
+  // 頓挫するが、黙って消えるのではなく _endAssault で正式に畳んでから伏せる。
+  // 弾が当たれば当然倒れる — それは制圧ではなく _applyDamage の領分。
+  if (s.state === 'assault' || s._assaultResume) {
+    if (s.suppression >= T.PINNED_AT) {
+      this._endAssault(s, 'pinned');
+      this._setState(s, 'pinned');
+      this._emit('PINNED', { id: s.id });
+    }
+    return;
+  }
+
   const wasSuppressed = s.state === 'suppressed' || s.state === 'pinned';
   const wasPinned = s.state === 'pinned';
 
@@ -1742,32 +2482,68 @@ SimCore.prototype._phaseSuppressionMorale = function () {
     if (s.suppression > 0 && s.quietT >= quietThresholdT) {
       const before = s.suppression;
       s.suppression = Math.max(0, s.suppression - decayPerTick);
+      // **立ち直りで書き換えてよいのは、制圧が伏せさせた状態だけ。**
+      //
+      // 無条件に _setState していたため、制圧値が閾値を割った兵は今どんな状態でも
+      // idle へ引き戻されていた。最悪なのが行動不能で、赤ゲージで倒れた兵が
+      // 制圧の抜けた瞬間に**起き上がる**（2026-08-04 実測: incap の分隊長が
+      // t=46 で idle に戻り、以後ずっと「生きている指揮官」と見なされた）。
+      // 表示は遺体に指揮官の印を描き直し、_phaseCommand は後任を立てるのをやめる
+      // — ディレクター報告「指揮官が死んでも指揮官円が遺体の上に残る」の正体。
+      // 敗走・突撃・移動も同じ経路で無言のうちに解除されていた（敗走の立ち直りは
+      // 士気(ROUT_RALLY_ABOVE)が決めるのであって、制圧の減衰ではない）。
+      const liftable = (s.state === 'suppressed' || s.state === 'pinned');
       if (before >= T.PINNED_AT && s.suppression < T.PINNED_AT) {
-        this._emit('RECOVERED', { id: s.id });
-        this._setState(s, (s.suppression >= T.SUPPRESSED_AT) ? 'suppressed' : 'idle');
+        if (liftable) {
+          this._emit('RECOVERED', { id: s.id });
+          this._setState(s, (s.suppression >= T.SUPPRESSED_AT) ? 'suppressed' : 'idle');
+        }
       } else if (before >= T.SUPPRESSED_AT && s.suppression < T.SUPPRESSED_AT) {
-        this._emit('RECOVERED', { id: s.id });
-        this._setState(s, 'idle');
-      }
-    }
-
-    if (s.state === 'pinned') {
-      s.morale = Math.max(0, s.morale - (T.MORALE_PINNED_DRAIN / ticksPerSec));
-    }
-
-    // rout check (below ROUT_CHECK_BELOW, rolled every 5 seconds)
-    s.routCheckT++;
-    const routCheckIntervalT = 5 * ticksPerSec;
-    if (s.morale < T.ROUT_CHECK_BELOW && s.routCheckT >= routCheckIntervalT) {
-      s.routCheckT = 0;
-      if (this.rng() < (1 - s.morale / 100)) {
-        if (s.state !== 'rout' && s.state !== 'down') {
-          this._setState(s, 'rout');
-          this._emit('ROUT', { id: s.id });
+        if (liftable) {
+          this._emit('RECOVERED', { id: s.id });
+          this._setState(s, 'idle');
         }
       }
-    } else if (s.routCheckT >= routCheckIntervalT) {
-      s.routCheckT = 0;
+    }
+
+    // 釘付けの間だけ削れ、解けている間は戻る（2026-08-04 ディレクター定義）。
+    // 回復があるので「一度崩れたら終わり」ではなくなり、退がって落ち着いた兵が
+    // 戦列へ戻れる。敗走中は pinned にならない（下の _checkSuppressionThresholds
+    // ガード）ので、退がっている間に立ち直っていく。
+    if (s.state === 'pinned') {
+      // **加算**する。MORALE_PINNED_DRAIN は -1（他の士気定数と同じく「加える差分」）
+      // なので、減算すると符号が反転して**釘付けの兵の士気が上がっていた**
+      // （2026-08-04 実測: 120秒釘付けで 100 -> 220）。敗走が実戦でまず起きなかった
+      // のはこれが原因。
+      s.morale = Math.max(0, s.morale + (T.MORALE_PINNED_DRAIN / ticksPerSec));
+    } else if (s.state !== 'incap') {
+      const rec = (T.MORALE_RECOVER != null) ? T.MORALE_RECOVER : 0;
+      if (rec > 0) s.morale = Math.min(100, s.morale + (rec / ticksPerSec));
+    }
+
+    if (s.state === 'down' || s.state === 'incap') return;
+
+    // 敗走は確率判定をやめ、**30を切った時点で確定**（2026-08-04）。
+    // 立ち直りは上に離した閾値で見る — 同じ値だと境目で敗走と復帰が交互に出る。
+    if (s.state === 'rout') {
+      if (s.morale >= (T.ROUT_RALLY_ABOVE != null ? T.ROUT_RALLY_ABOVE : 45)) {
+        s._routGoal = null;
+        this._setState(s, 'idle');
+        this._emit('RALLY', { id: s.id, morale: Math.round(s.morale) });
+      }
+    } else if (s.morale < T.ROUT_CHECK_BELOW) {
+      s._routGoal = null;
+      this._setState(s, 'rout');
+      // 弾雨の中を立って逃げる兵は居ない。伏せたまま退がる
+      if (!s.prone) {
+        s.prone = true;
+        this._emit('PRONE', { id: s.id, prone: true });
+      }
+      s.engageTargetId = null;
+      s.movePath = null;
+      s.currentOrder = null;
+      s.fireMode = 'hold';
+      this._emit('ROUT', { id: s.id });
     }
   });
 };
@@ -1826,8 +2602,14 @@ SimCore.prototype._phaseCheckResult = function () {
     const t = teams.get(s.team);
     if (s.hp > 0) {
       t.alive++;
-      // 行動不能だけが残ったチームは戦闘力を失っている（生存者数には数える）
-      if (s.state !== 'rout' && s.state !== 'incap') t.active++;
+      // 行動不能だけが残ったチームは戦闘力を失っている（生存者数には数える）。
+      //
+      // 敗走は**戦闘力ありとして数える**（2026-08-04）。士気に回復を入れた以上、
+      // 敗走は一時的な状態で、退がって落ち着けば戦列へ戻る。旧版のように敗走を
+      // 無力と数えると、分隊全員が一瞬30を割った時点でセクターが即決着してしまう
+      // （実測: 全員敗走した瞬間に RESULT が出てシムが停止した）。決着は戦死と
+      // 行動不能だけで決まる。
+      if (s.state !== 'incap') t.active++;
     }
   });
 
@@ -1844,7 +2626,9 @@ SimCore.prototype._phaseCheckResult = function () {
   const survivors = teamList.filter((t) => defeated.indexOf(t) === -1);
   if (survivors.length === 1) {
     const anyAlive = teams.get(survivors[0]).alive > 0;
-    const reason = teams.get(defeated[0]).alive === 0 ? 'annihilation' : 'rout';
+    // 生存者ゼロなら全滅、そうでなければ「立っている者が居ない」＝戦闘継続不能。
+    // 敗走は数えなくなったので、この分岐に来るのは行動不能だけが残った場合。
+    const reason = teams.get(defeated[0]).alive === 0 ? 'annihilation' : 'incapacitated';
     this._result = { winner: anyAlive ? survivors[0] : null, reason: reason, tick: this._tick };
     this._emit('RESULT', { winner: this._result.winner, reason: this._result.reason });
   } else if (survivors.length === 0) {

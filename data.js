@@ -39,6 +39,8 @@ const FEATURE_SAME_HEX_TRANSFER = true;
 
 /** 複数ターン行軍プラン（森など移動力不足時）。false = 従来（1ターン到達のみ） */
 const FEATURE_EXTENDED_MARCH = true;
+/** Tanks remain defined for future reactivation, but are temporarily unavailable in gameplay. */
+const FEATURE_TANK_UNITS = false;
 /** 行軍プラン表示・移動の最大ターン数 */
 const MARCH_PLAN_MAX_TURNS = 5;
 
@@ -246,11 +248,12 @@ const WPNS = {
     kwk: { name:"75mm KwK", rng:8, acc:70, acc_drop:2, dmg:150, cap:1, mag:99, ap:3, rld:0, wgt:0, type:'shell_fast', burst:1, overRangePenalty:4, desc:"戦車砲。", weight: 0, attr: ATTR.WEAPON },
     kwk88: { name:"88mm KwK36", rng:10, acc:85, acc_drop:1, dmg:250, cap:1, mag:99, ap:3, rld:0, wgt:0, type:'shell_fast', burst:1, overRangePenalty:3, desc:"重戦車砲。", weight: 0, attr: ATTR.WEAPON },
 
-    'mortar_barrel': { name: "M2 Tube", type: "part", partType: "barrel", desc: "M2迫撃砲の砲身。", weight: 12.8, attr: ATTR.WEAPON },
-    'mortar_bipod':  { name: "M2 Bipod", type: "part", partType: "bipod", desc: "M2迫撃砲の二脚。", weight: 16.4, attr: ATTR.WEAPON },
-    'mortar_plate':  { name: "M2 Baseplate", type: "part", partType: "plate", desc: "M2迫撃砲の底板。", weight: 12.8, attr: ATTR.WEAPON },
-    'm2_mortar': { name: "M2 60mm Mortar", type: "shell", rng: 12, minRng: 2, dmg: 150, ap: 4, acc: 65, cap: 1, burst: 1, modes:[1, 2], rld: 0, area: true, indirect: true, desc: "曲射弾道。", weight: 42, attr: ATTR.WEAPON },
-    'mortar_shell_box': { name: "60mm Ammo Box", type: "ammo", ammoFor: "m2_mortar", cap: 12, current: 12, desc: "迫撃砲弾。", weight: 20, attr: ATTR.WEAPON, isConsumable: false }
+    // FM/TM figures are 12.8/16.4/12.8 lb, converted here to kilograms.
+    'mortar_barrel': { name: "M2 Tube", type: "part", partType: "barrel", desc: "M2迫撃砲の砲身。", weight: 5.8, attr: ATTR.WEAPON },
+    'mortar_bipod':  { name: "M2 Bipod", type: "part", partType: "bipod", desc: "M2迫撃砲の二脚。", weight: 7.4, attr: ATTR.WEAPON },
+    'mortar_plate':  { name: "M2 Baseplate", type: "part", partType: "plate", desc: "M2迫撃砲の底板。", weight: 5.8, attr: ATTR.WEAPON },
+    'm2_mortar': { name: "M2 60mm Mortar", type: "shell", rng: 12, minRng: 2, dmg: 190, ap: 4, acc: 68, acc_drop: 2, cap: 1, burst: 1, modes:[1, 2], rld: 0, area: true, indirect: true, blastRadius: 1, splashScale: 0.45, desc: "曲射弾道。", weight: 42, attr: ATTR.WEAPON },
+    'mortar_shell_box': { name: "60mm Ammo Box", type: "ammo", ammoFor: "m2_mortar", cap: 12, current: 12, desc: "迫撃砲弾。", weight: 22.2, attr: ATTR.WEAPON, isConsumable: false }
 };
 
 /** 能力値8種（1〜10）。行動=AP, 速度=移動ヘックス, 筋力=装備重量, 士気=命中等, 射撃/投擲/白兵/索敵 */
@@ -442,6 +445,40 @@ const SIM_TUNING = {
     // 全弾が一人へ吸い込まれるのは非現実的（MG42の10発が全部当たると即死する）。
     // 上限を超えた命中は制圧にだけ効く。
     MAX_DMG_HITS_PER_BURST: 3,
+
+    // ---- 1トリガーの弾数モデル（2026-08-04）--------------------------------
+    // **音源の実測値が正本。** ここが食い違うと「auto の音が30発鳴っているのに
+    // 弾は2発しか減らない」という嘘になる（2026-08-04 まで実際そうだった。
+    // 旧実装は WPNS.burst 固定の弾数で撃ち、音は fireMode だけで auto/burst を
+    // 選んでいたので、両者が構造的に一致し得なかった）。
+    // 実測は scripts/audio/count_rounds.py（オンセット検出＋自己相関）:
+    //   mg42_auto 33.7発/1304rpm・mg42_burst 4.8発
+    //   thompson_auto 30.6発/769rpm・thompson_burst 2〜3発
+    //   stg44_auto 18.9発/448rpm・stg44_burst 2〜3発
+    // レートが実銃の公称値（MG42 1200-1500 / Thompson 700 / StG44 500）と
+    // 一致するので、この検出は信用してよい。
+    ROUNDS_PER_PULL: {
+        single: 1,
+        // **基本はこれ。** 陸軍のマニュアルどおり短連射で撃つのが既定で、
+        // 単射と掃射はそこからの逸脱として条件付きで選ばれる。
+        burst: { rifle: 2, smg: 3, mg: 5, sniper: 1, pistol: 1, at: 1 },
+        // 掃射＝弾倉を空にする勢い。撃てば当然すぐ弾切れ・装填になる。
+        auto: { smg: 30, mg: 30, rifle: 20 },
+    },
+    // 構造上 auto が撃てるクラス。ボルト小銃・狙撃・拳銃は不可。rifle も既定は
+    // 不可（M1 Garand は半自動）。StG44 のような自動小銃は下の表で個別に開ける。
+    AUTO_CAPABLE: { smg: true, mg: true, rifle: false, sniper: false, pistol: false },
+    WEAPON_AUTO_OVERRIDES: {},   // 武器コード -> true/false（クラス既定より優先）
+    // auto へ上げる条件。基本がバーストである以上、ここは**例外の門**。
+    AUTO_MIN_FOES_IN_HEX: 2,   // 同一hexに行動可能な敵がこれ以上＝浴びせる価値がある
+    AUTO_MIN_ROUNDS: 8,        // 弾倉の残りがこれ未満なら auto へ上げない
+    //（＝「最後の数発を掃射に使う」をさせない。音の側も8発以上を auto クリップの
+    //   下限にしているので、この門は音と弾数の一致条件でもある）
+    AUTO_SPILL_MAX_TARGETS: 3, // 掃射1回で弾が回る敵の上限（本来の的を含む）
+    AUTO_SUPPRESS_MULT_CAP: 2.5, // 弾数比で伸びる制圧の上限（burst基準の倍率）
+    // 射撃規律: 最終弾倉に入ったら単射へ落とす（§3.3 弾薬経済）
+    DISCIPLINE_LAST_MAG_SINGLE: true,
+
     // 貫通力 -> HPダメージの換算。1.0 = 貫通力がそのまま効き目。
     // HP100・INCAP_AT_HP=25 なので、Kar98k(貫通72)はゼロ距離で1発が致命傷、
     // P08(貫通41)は2発で行動不能、という読み。**ここが致死性の主つまみ。**
@@ -523,10 +560,22 @@ const SIM_TUNING = {
     ORDERED_COVER_RISK_TOLERANCE: 0.5,
     ORDERED_COVER_MAX_STEPS: 6,       // 命令なら反射(4)より遠くまで行く
 
-    MORALE_CASUALTY_NEAR: -15, // 3hex内の味方死亡
-    MORALE_LEADER_DOWN: -25,
-    MORALE_PINNED_DRAIN: -1, // /秒
-    ROUT_CHECK_BELOW: 30, // 5秒ごとに morale/100 判定
+    // 士気（2026-08-04 改訂）。旧版は「近くで味方が死ぬたび -15」で坂を転げ落ち、
+    // 一度崩れたら二度と戻らないザル実装だった。削る要因を減らし、回復を入れて、
+    // 崩れる→退がる→立ち直る、が回るようにする。
+    //   ・3hex内の味方戦死ペナルティは**廃止**（ディレクター判断）
+    //   ・指揮官喪失は -25 → -15
+    //   ・釘付けの間だけ削れ、解ければ 0.5 秒に 1 ずつ戻る
+    MORALE_LEADER_DOWN: -15,
+    MORALE_PINNED_DRAIN: -1,   // /秒（釘付けの間だけ）
+    MORALE_RECOVER: 2,         // /秒（釘付けが解けている間 = 0.5秒に1）
+    // 30 を切ったら敗走。確率判定ではなく確定で、下回った時点で崩れる。
+    ROUT_CHECK_BELOW: 30,
+    // 立ち直る閾値。割れると 30 の境目で敗走と復帰が交互に出るので、上に離す。
+    ROUT_RALLY_ABOVE: 45,
+    // 敗走中の散開: 敵から離れる向きへ匍匐で退がる。1人ずつ向きをずらして
+    // 「蜘蛛の子を散らす」ようにし、隊列のまま後退するのを防ぐ。
+    ROUT_FALLBACK_HEX: 6,      // どこまで退がろうとするか（hex）
 
     RELOAD_T: { rifle: 30, smg: 30, mg: 80, sniper: 30 },
     SWITCH_T: 30,
@@ -591,6 +640,16 @@ const SIM_TUNING = {
     //   PUSH_READY_RATIO    クラスタの何割が制圧されたら突入させるか
     //   PUSH_ASSAULT_MAX    突入班の人数上限（出しすぎると制圧が細る）
     //   PUSH_APPROACH_W     突入者選びで「経路の遮蔽」を何倍重く見るか（地形を読む係数）
+    // 冷静な兵が斉射へ加わる閾値（2026-08-05）。周囲2hex以内でこの人数が
+    // 交戦していれば、引きつけの保留を解いて撃ち始める。「冷静」は無駄弾を
+    // 惜しむ性格であって、分隊が撃っている横で傍観する性格ではない。
+    CALM_JOIN_VOLLEY_N: 2,
+
+    // 采配リングの賞味期限（2026-08-05）。指した hex からこの距離内に生きた敵が
+    // 居なくなったら、その采配は捨てて盤面から消す。名指しの的が生きている間は
+    // リングがその的に追随する（古い hex を指したままにしない）。
+    PLAN_STALE_RADIUS: 1,
+
     PUSH_MIN_AMMO: 0.3,
     PUSH_MIN_SHOOTERS: 2,
     PUSH_READY_RATIO: 0.5,
@@ -658,9 +717,28 @@ const SIM_TUNING = {
     MELEE_BARE_HANDS: 1,   // 殴れる物が何も無い時（重機関銃手など）
     ASSAULT_NADE_MIN_COVER: 0.25,
     ASSAULT_LOST_RADIUS: 4,
+    // 接敵と見なす距離（2026-08-05 ディレクター定義「強襲は Attack Move」）。
+    // 任務の的へ向かう道中、この距離まで寄った敵は的でなくても先に片付ける。
+    // 脇を敵が通り過ぎるのに一発も撃たない、が起きなくなる。隣接(1)は射線が
+    // 通らなくても接敵扱い（同じ生垣の中で鉢合わせている）。
+    ASSAULT_CONTACT_RNG: 2,
     ASSAULT_SWAP_T: 20,
     // 撃滅を優先するので、通常の射撃規律（観測休止・弾薬節制）を外す
     ASSAULT_FIRE_INTERVAL_MULT: 0.7,
+
+    // 迎撃（2026-08-04 ディレクター指摘「古い過去位置めがけて移動しちゃう」）。
+    // 動いている目標へは、現在位置ではなく**着く頃に相手が居る位置**へ向かう。
+    //   LEAD_MAX_T    先読みの上限（tick）。これ以上先の合流は当てにしない。
+    //                 突撃の走行距離ぶん（数十hex）先まで見ないと、そもそも
+    //                 「間に合う合流点」が視野に入らない。40 では 6hex 相当しか
+    //                 見えず予測が一度も成立しなかった（2026-08-04 実測）。
+    //                 **0 にすると予測が無効化され、従来の純追尾に戻る**
+    //   LEAD_STALE_T  この tick 数 hex が変わらなければ「止まっている」とみなす
+    //                 （そこへ向けて予測は線形に薄れていく）
+    //   LEAD_EMA      速度の平滑化係数（0..1。大きいほど直近の一歩を信じる）
+    ASSAULT_LEAD_MAX_T: 300,
+    ASSAULT_LEAD_STALE_T: 30,
+    ASSAULT_LEAD_EMA: 0.5,
 
     // 制圧（2026-08-02）。指定hexを制圧しつつ、見えている敵は着実に削る。
     // 反撃の隙を与えないよう持続射撃で、命中も取る（面制圧＝命中なし とは別物）。

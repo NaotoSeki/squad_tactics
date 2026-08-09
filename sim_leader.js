@@ -286,6 +286,15 @@ const LeaderPolicy = {
     // but a dead/missing leaderView is guarded here defensively.
     if (!leaderView || leaderView.hp <= 0 || !leaderView.isLeader) return [];
 
+    // **采配の賞味期限。** state.plan は新しい采配を発令した時にしか書き換わらない
+    // ので、下のクールダウン・同一采配抑制・「該当する采配なし」のどの早期returnを
+    // 通っても、古い計画が盤面に残り続ける。的が倒れた／移動した後もリングだけが
+    // 居座り、プレイヤーは誰も居ない地点を狙う（2026-08-05 ディレクター報告
+    // 「遺体の上に指揮官円」「誰もいないところに残る」。実測: 描画中の41%が
+    // 敵の居ない hex を指し、連続7.9秒嘘をついた）。
+    // 発令の有無に関わらず、毎サイクルここで前提を検算する。
+    this._refreshPlan(state, worldView, team, T);
+
     // HOLD_FIRE's "no engagement for N ticks" proxy: LeaderPolicy holds no event
     // history, so it tracks "nobody on the squad is currently engaging" as a
     // running counter across assess() calls (SIM_CORE_SPEC.md SS16 design note).
@@ -319,6 +328,34 @@ const LeaderPolicy = {
       ? Object.assign({ name: doctrine.name, tick: tick }, doctrine.plan)
       : { name: doctrine.name, tick: tick, label: doctrine.name };
     return doctrine.orders;
+  },
+
+  /**
+   * 采配の前提を検算し、消えていたら采配ごと捨てる。
+   *
+   *   ・名指しの的が生きている → その**今の位置**へリングを追随させる
+   *     （倒していないのに古い hex を指すのは、それ自体が誤認の元）
+   *   ・的は居ないが、指した hex の近くにまだ敵が居る → そのまま有効
+   *   ・どちらでもない → 采配を捨てる（盤面から消える）
+   *
+   * @private
+   */
+  _refreshPlan: function (state, worldView, team, T) {
+    const plan = state.plan;
+    if (!plan) return;
+    if (!plan.hex) { state.plan = null; return; }   // hex の無い采配は元々描けない
+
+    const alive = (s) => s && s.hp > 0 && s.state !== 'incap' && s.state !== 'down';
+    const foes = worldView.soldiers.filter((s) => s.team !== team && alive(s));
+
+    if (plan.targetId) {
+      const tg = foes.filter((s) => s.id === plan.targetId)[0];
+      if (tg) { plan.hex = { q: tg.q, r: tg.r }; return; }
+    }
+    const radius = T.PLAN_STALE_RADIUS != null ? T.PLAN_STALE_RADIUS : 1;
+    const stillThere = foes.some((s) =>
+      worldView.map.dist({ q: s.q, r: s.r }, plan.hex) <= radius);
+    if (!stillThere) state.plan = null;
   },
 
   /**

@@ -875,6 +875,10 @@ function assaultSim(opts) {
 
   let promotedAt = null;
   for (let t = 0; t < shock * 2 + 60; t++) {
+    // 士気は回復するようになった（2026-08-04）。放っておくと全員100で並び、
+    // 「誰が継ぐか」の差が消えてこのテストの前提が崩れるので、差を保ち続ける。
+    sim._soldiers.get('a2').morale = 90;
+    sim._soldiers.get('a1').morale = 50;
     sim.tick();
     const ev = sim.drainEvents().find((e) => e.type === 'LEADER_CHANGED');
     if (ev && !promotedAt) promotedAt = { t: t, id: ev.id };
@@ -924,6 +928,8 @@ function assaultSim(opts) {
 
   let promotedAt = null;
   for (let t = 0; t < SIM_TUNING.COMMS_SHOCK_T * 2 + 60; t++) {
+    sim._soldiers.get('a2').morale = 90;   // T29 と同じ理由（回復で差が消える）
+    sim._soldiers.get('a1').morale = 50;
     sim.tick();
     const ev = sim.drainEvents().find((e) => e.type === 'LEADER_CHANGED');
     if (ev && !promotedAt) promotedAt = { t: t, id: ev.id };
@@ -937,6 +943,129 @@ function assaultSim(opts) {
     JSON.stringify(sim.soldiers().filter((s) => s.isLeader).map((s) => s.id)));
   check('T31e 前任は盤上に残っている（死亡ではない）',
     lead.hp > 0 && lead.state === 'incap', 'hp=' + lead.hp + ' state=' + lead.state);
+}
+
+// --- 士気と敗走（2026-08-04 改訂） ----------------------------------------
+// 旧実装の穴を3つ潰した上での挙動を固定する。
+//   ・pinned なのに伏せない（policy は prone:true を出しているのに誰も読まない）
+//   ・MORALE_PINNED_DRAIN が減算されていて、釘付けの兵の士気が**上がる**
+//   ・敗走に act の分岐が無く、逃げずにその場で永久に凍る
+{
+  // T32: 釘付けなら必ず伏せる。制圧55で伏せて85で立ったまま、という逆転だった。
+  const sim = makeSim({});
+  sim.addSoldier({ id: 'a1', team: 'A', q: 0, r: 0, weapon: rifle(), ammo: { mags: 4 } });
+  sim.addSoldier({ id: 'b1', team: 'B', q: 6, r: 0, weapon: rifle(), ammo: { mags: 4 } });
+  const s = sim._soldiers.get('a1');
+  sim._soldiers.get('b1').magRemaining = 0;
+  sim._soldiers.get('b1').magsLeft = 0;
+  let proneT = 0;
+  const total = 120;
+  for (let t = 0; t < total; t++) {
+    s.suppression = SIM_TUNING.PINNED_AT + 5;
+    s.quietT = 0;
+    sim._checkSuppressionThresholds(s, SIM_TUNING);
+    sim.tick();
+    if (s.prone) proneT++;
+  }
+  check('T32a 釘付けの兵は伏せる', s.prone, 'state=' + s.state + ' prone=' + s.prone);
+  check('T32b 釘付けの間はほぼ伏せている', proneT > total * 0.8, proneT + '/' + total);
+  check('T32c 釘付けは士気を削る（上げない）', s.morale < 100, 'morale=' + s.morale.toFixed(1));
+}
+
+{
+  // T33: 釘付けが解ければ士気が戻る
+  const sim = makeSim({});
+  sim.addSoldier({ id: 'a1', team: 'A', q: 0, r: 0, weapon: rifle(), ammo: { mags: 4 } });
+  sim.addSoldier({ id: 'b1', team: 'B', q: 20, r: 0, weapon: rifle(), ammo: { mags: 4 } });
+  ['a1', 'b1'].forEach((id) => { const x = sim._soldiers.get(id); x.magRemaining = 0; x.magsLeft = 0; });
+  const s = sim._soldiers.get('a1');
+  s.morale = 50;
+  for (let t = 0; t < 100; t++) sim.tick();   // 10秒
+  const expected = 50 + SIM_TUNING.MORALE_RECOVER * 10;
+  check('T33 釘付けでなければ士気が回復する',
+    Math.abs(s.morale - Math.min(100, expected)) < 1.5,
+    'morale=' + s.morale.toFixed(1) + ' 期待=' + Math.min(100, expected));
+}
+
+{
+  // T34: 30 を切ったら敗走。伏せたまま敵と反対へ退がり、隊列のまま下がらない。
+  const sim = makeSim({});
+  const ids = ['a1', 'a2', 'a3', 'a4', 'a5'];
+  ids.forEach((id, i) => sim.addSoldier({
+    id: id, team: 'A', q: 0, r: i, weapon: rifle(), ammo: { mags: 4 },
+  }));
+  sim.addSoldier({ id: 'b1', team: 'B', q: 12, r: 2, weapon: rifle(), ammo: { mags: 4 } });
+  ids.concat('b1').forEach((id) => { const x = sim._soldiers.get(id); x.magRemaining = 0; x.magsLeft = 0; });
+  const men = ids.map((id) => sim._soldiers.get(id));
+  const foe = sim._soldiers.get('b1');
+  const start = men.map((s) => ({ q: s.q, r: s.r }));
+  const d0 = men.map((s) => sim.map.dist({ q: s.q, r: s.r }, { q: foe.q, r: foe.r }));
+
+  men.forEach((s) => { s.morale = 25; });
+  sim.tick();
+  check('T34a 士気が30を切ったら敗走する', men.every((s) => s.state === 'rout'),
+    men.map((s) => s.state).join(','));
+  check('T34b 敗走に入ったら伏せる', men.every((s) => s.prone),
+    men.map((s) => (s.prone ? '伏' : '立')).join(''));
+
+  // 立ち直らせずに退路だけ見る（回復で戻ってしまうと移動が観察できない）
+  for (let t = 0; t < 300; t++) { men.forEach((s) => { s.morale = 25; }); sim.tick(); }
+  const d1 = men.map((s) => sim.map.dist({ q: s.q, r: s.r }, { q: foe.q, r: foe.r }));
+  const movedAway = men.filter((s, i) => d1[i] > d0[i]).length;
+  check('T34c 敗走中は敵から離れる向きへ退がる', movedAway === men.length,
+    d0.map((d, i) => d + '->' + d1[i]).join(', '));
+  check('T34d 匍匐のまま退がる', men.every((s) => s.prone), '');
+  const moved = men.filter((s, i) => s.q !== start[i].q || s.r !== start[i].r).length;
+  check('T34e 全員がその場から動く（凍りつかない）', moved === men.length, moved + '/' + men.length);
+  // 「蜘蛛の子を散らす」= 全員が同じ向きへ一列で下がらないこと
+  const dirs = new Set(men.map((s, i) => (s.q - start[i].q) + ',' + (s.r - start[i].r)));
+  check('T34f 退路が1方向に揃わない（散開する）', dirs.size >= 2,
+    JSON.stringify([...dirs]));
+  // 全員敗走でセクターが即決着しないこと（回復して戻る余地を残す）
+  check('T34g 全員敗走でも決着しない', sim.result() == null, JSON.stringify(sim.result()));
+}
+
+{
+  // T35: 落ち着けば戦列へ戻る
+  const sim = makeSim({});
+  sim.addSoldier({ id: 'a1', team: 'A', q: 0, r: 0, weapon: rifle(), ammo: { mags: 4 } });
+  sim.addSoldier({ id: 'b1', team: 'B', q: 20, r: 0, weapon: rifle(), ammo: { mags: 4 } });
+  ['a1', 'b1'].forEach((id) => { const x = sim._soldiers.get(id); x.magRemaining = 0; x.magsLeft = 0; });
+  const s = sim._soldiers.get('a1');
+  s.morale = 25;
+  sim.tick();
+  check('T35a 前提: 敗走している', s.state === 'rout', s.state);
+  let rallied = null;
+  for (let t = 0; t < 600 && rallied === null; t++) {
+    sim.tick();
+    if (s.state !== 'rout') rallied = t;
+  }
+  check('T35b 士気が戻れば敗走から復帰する', rallied !== null,
+    'state=' + s.state + ' morale=' + s.morale.toFixed(1));
+  check('T35c 復帰は立ち直り閾値を超えてから',
+    rallied !== null && s.morale >= SIM_TUNING.ROUT_RALLY_ABOVE - 1,
+    'morale=' + s.morale.toFixed(1) + ' 閾値=' + SIM_TUNING.ROUT_RALLY_ABOVE);
+}
+
+{
+  // T36: 3hex内の味方戦死ペナルティは廃止した
+  const sim = makeSim({});
+  sim.addSoldier({ id: 'a1', team: 'A', q: 0, r: 0, weapon: rifle(), ammo: { mags: 4 } });
+  sim.addSoldier({ id: 'a2', team: 'A', q: 1, r: 0, weapon: rifle(), ammo: { mags: 4 } });
+  sim.addSoldier({ id: 'b1', team: 'B', q: 20, r: 0, weapon: rifle(), ammo: { mags: 4 } });
+  ['a1', 'a2', 'b1'].forEach((id) => { const x = sim._soldiers.get(id); x.magRemaining = 0; x.magsLeft = 0; });
+  const survivor = sim._soldiers.get('a1');
+  survivor.morale = 80;
+  const before = survivor.morale;
+  sim._applyMoraleOnDeath(sim._soldiers.get('a2'));   // 隣の味方が戦死（非指揮官）
+  check('T36a 隣で味方が倒れても士気は下がらない', survivor.morale === before,
+    before + ' -> ' + survivor.morale);
+  const lead = sim._soldiers.get('a2');
+  lead.isLeader = true;
+  sim._applyMoraleOnDeath(lead);
+  check('T36b 指揮官の戦死だけは効く',
+    Math.abs(survivor.morale - (before + SIM_TUNING.MORALE_LEADER_DOWN)) < 0.01,
+    before + ' -> ' + survivor.morale + ' (期待 ' + (before + SIM_TUNING.MORALE_LEADER_DOWN) + ')');
 }
 
 console.log(`\n${pass} passed, ${fail} failed`);

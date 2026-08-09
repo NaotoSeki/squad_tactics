@@ -472,5 +472,80 @@ function preserve(soldier, map, others) {
   check(becameProne, 'TARGET 命令下でも、退避先の無い開豁地では GO_PRONE に割り込まれて伏せる');
 }
 
+// ===========================================================================
+// 制圧の立ち直りが incap / rout / 突撃 を書き換えない
+//
+// 制圧値が閾値を割った時の _setState が無条件だったため、赤ゲージで倒れた兵は
+// 制圧が抜けた瞬間に idle へ戻って**起き上がって**いた（2026-08-04 実測: incap の
+// 分隊長が t=46 で idle 化し、以後ずっと「生きている指揮官」扱い）。表示は遺体に
+// 指揮官の印を描き直し、_phaseCommand は後任を立てるのをやめる — ディレクター報告
+// 「指揮官が死んでも指揮官円が遺体の上に残る」の正体。
+// 立ち直りで持ち上げてよいのは、制圧が伏せさせた suppressed / pinned だけ。
+// ===========================================================================
+
+{
+  const map = makeGridMap({ coverAt: () => 0 });
+  const sim = new SimCore({
+    map: map, tuning: SIM_TUNING, rng: mulberry32(7),
+    policy: TraitPolicy, orders: new InstantOrders(),
+  });
+  sim.addSoldier({ id: 'lead', team: 'A', q: 0, r: 0, weapon: rifle, ammo: { mags: 4 }, isLeader: true });
+  sim.addSoldier({ id: 'a1', team: 'A', q: 1, r: 0, weapon: rifle, ammo: { mags: 4 } });
+  sim.addSoldier({ id: 'b1', team: 'B', q: 30, r: 30, weapon: rifle, ammo: { mags: 4 } });
+  ['a1', 'b1'].forEach((id) => { const s = sim._soldiers.get(id); s.magRemaining = 0; s.magsLeft = 0; });
+  sim.tick();
+
+  const lead = sim._soldiers.get('lead');
+  lead.hp = 10;
+  sim._setState(lead, 'incap');
+  lead.suppression = SIM_TUNING.SUPPRESSED_AT + 10;   // 撃たれて倒れた＝制圧も乗っている
+  lead.quietT = 0;
+
+  // 表示側(phaser_tactical_pause.js isActingLeader)と同じ判定
+  const showsLeaderRing = (s) => !!(s && s.isLeader && s.hp > 0 && s.state !== 'incap');
+
+  let stoodUp = false;
+  let ringOnBody = false;
+  for (let t = 0; t < SIM_TUNING.COMMS_SHOCK_T + 120; t++) {
+    sim.tick();
+    if (lead.state !== 'incap') stoodUp = true;
+    if (showsLeaderRing(lead)) ringOnBody = true;
+  }
+
+  check(!stoodUp, '制圧が抜けても行動不能の兵は起き上がらない');
+  check(lead.hp > 0 && lead.state === 'incap', '行動不能のまま盤上に残る（死亡ではない）');
+  check(!ringOnBody, '遺体（行動不能）の上に指揮官の印が復活しない');
+  check(lead.isLeader === false, 'ショック期間を過ぎれば前任の指揮官の印は落ちる');
+  check(sim.soldiers().filter((s) => s.isLeader && s.hp > 0 && s.state !== 'incap').length === 1,
+    '後任が1名だけ立っている');
+}
+
+// 突撃中の兵も、制圧の減衰で idle へ引き戻されない（突撃の持ち主は assault 状態）
+{
+  const map = makeGridMap({ coverAt: () => 0 });
+  const sim = new SimCore({
+    map: map, tuning: SIM_TUNING, rng: mulberry32(11),
+    policy: TraitPolicy, orders: new InstantOrders(),
+  });
+  sim.addSoldier({ id: 'hero', team: 'A', q: 0, r: 0, weapon: rifle, ammo: { mags: 4 } });
+  sim.addSoldier({ id: 'foe', team: 'B', q: 12, r: 0, weapon: rifle, ammo: { mags: 4 } });
+  sim.addSoldier({ id: 'watch', team: 'A', q: -30, r: 0, weapon: rifle, ammo: { mags: 4 } });
+  const hero = sim._soldiers.get('hero');
+  hero.magRemaining = 0; hero.magsLeft = 0;
+  sim._soldiers.get('foe').magRemaining = 0; sim._soldiers.get('foe').magsLeft = 0;
+  sim.issueOrder({ type: 'ASSAULT', soldierIds: ['hero'], payload: { targetId: 'foe' } });
+  for (let t = 0; t < 20; t++) sim.tick();
+  const started = hero.state === 'assault';
+
+  // 制圧を浴びた直後に射撃が止み、閾値を割って減衰していく状況
+  hero.suppression = SIM_TUNING.SUPPRESSED_AT + 2;
+  hero.quietT = 0;
+  let kept = true;
+  for (let t = 0; t < 120; t++) { sim.tick(); if (hero.state !== 'assault') kept = false; }
+
+  check(started, '前提: 突撃状態に入っている');
+  check(kept, '制圧が抜けても突撃は idle へ引き戻されない');
+}
+
 console.log('\n' + passCount + ' passed, ' + failCount + ' failed');
 if (failCount) { failures.forEach((f) => console.log('  - ' + f)); process.exit(1); }

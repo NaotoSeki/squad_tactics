@@ -446,6 +446,67 @@ function pushWorld(opts) {
     `F7k: 敵が居なければ攻勢を出さない (types=${orders.map((o) => o.type).join(',')})`);
 }
 
+// ===========================================================================
+// 采配の賞味期限: 前提（そこに居る敵）が消えたら采配は盤面から消える
+//
+// state.plan は新しい采配を発令した時にしか書き換わらないので、クールダウン・
+// 同一采配抑制・「該当する采配なし」のどの早期returnを通っても古い計画が残り、
+// 的が倒れた／移動した後もリングだけが居座っていた（2026-08-05 ディレクター報告
+// 「遺体の上に指揮官円」「誰もいないところに残る」。実測: 描画中の41%が敵の
+// 居ない hex を指し、連続7.9秒）。ターゲット誤認の元なので、毎サイクル検算する。
+// ===========================================================================
+
+{
+  const map = makeGridMap({ coverAt: () => 0.6 });
+  const rifle = toSimWeapon('m1', WPNS.m1, SIM_TUNING);
+  const mk = (id, team, q, r, over) => Object.assign({
+    id: id, team: team, q: q, r: r, hp: 100, weapon: rifle, traits: [],
+    suppression: 0, morale: 100, state: 'idle', magRemaining: 8, magsLeft: 4,
+    isLeader: false,
+  }, over || {});
+
+  const leader = mk('L', 'A', 0, 0, { isLeader: true });
+  const mate = mk('m', 'A', 1, 0);
+  const foe = mk('f', 'B', 6, 0);
+  const world = (soldiers) => ({ soldiers: soldiers, map: map, tuning: SIM_TUNING, tick: 500 });
+
+  // ① 名指しの的が生きていればリングは的へ追随する（古い hex に留まらない）
+  const st1 = freshLeaderState();
+  st1.plan = { name: 'PUSH_ASSAULT', tick: 100, label: '強襲', hex: { q: 6, r: 0 }, targetId: 'f' };
+  const movedFoe = Object.assign({}, foe, { q: 9, r: 1 });
+  LeaderPolicy.assess(leader, world([leader, mate, movedFoe]), mulberry32(1), st1);
+  check(st1.plan && st1.plan.hex.q === 9 && st1.plan.hex.r === 1,
+    `采配リングは生きている的へ追随する (hex=${st1.plan ? st1.plan.hex.q + ',' + st1.plan.hex.r : 'null'})`);
+
+  // ② 的が倒れ、その hex にも敵が居なくなったら采配ごと消える
+  const st2 = freshLeaderState();
+  st2.plan = { name: 'PUSH_ASSAULT', tick: 100, label: '強襲', hex: { q: 6, r: 0 }, targetId: 'f' };
+  const deadFoe = Object.assign({}, foe, { hp: 0, state: 'down' });
+  LeaderPolicy.assess(leader, world([leader, mate, deadFoe]), mulberry32(1), st2);
+  check(st2.plan == null, `的が倒れたら采配は消える (plan=${JSON.stringify(st2.plan)})`);
+
+  // ③ 行動不能も「居ない」扱い（遺体の上にリングを残さない）
+  const st3 = freshLeaderState();
+  st3.plan = { name: 'PUSH_SUPPRESS', tick: 100, label: '制圧', hex: { q: 6, r: 0 }, targetId: null };
+  const incapFoe = Object.assign({}, foe, { hp: 12, state: 'incap' });
+  LeaderPolicy.assess(leader, world([leader, mate, incapFoe]), mulberry32(1), st3);
+  check(st3.plan == null, `行動不能だけが残った hex の采配も消える (plan=${JSON.stringify(st3.plan)})`);
+
+  // ④ hex にまだ生きた敵が居るなら采配は残る（消しすぎない）
+  const st4 = freshLeaderState();
+  st4.plan = { name: 'PUSH_SUPPRESS', tick: 100, label: '制圧', hex: { q: 6, r: 0 }, targetId: null };
+  LeaderPolicy.assess(leader, world([leader, mate, foe]), mulberry32(1), st4);
+  check(st4.plan != null && st4.plan.label === '制圧',
+    `敵がまだ居る采配は残す (plan=${JSON.stringify(st4.plan)})`);
+
+  // ⑤ プレイヤーの命令ロック中でも検算は走る（発令しない＝残す、ではない）
+  const st5 = freshLeaderState();
+  st5.playerLockUntil = 99999;
+  st5.plan = { name: 'PUSH_ASSAULT', tick: 100, label: '強襲', hex: { q: 6, r: 0 }, targetId: 'f' };
+  LeaderPolicy.assess(leader, world([leader, mate, deadFoe]), mulberry32(1), st5);
+  check(st5.plan == null, `命令ロック中でも古い采配は消える (plan=${JSON.stringify(st5.plan)})`);
+}
+
 console.log(`\n${passCount} passed, ${failCount} failed`);
 if (failCount > 0) {
   console.log('Failures:', failures.join(', '));

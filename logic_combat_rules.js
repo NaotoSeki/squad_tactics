@@ -86,6 +86,7 @@ function movementBudget(u, apOverride, deps) {
   }
   const spd = (u.params && u.params.speed != null) ? u.params.speed : 5;
   const ap = apOverride != null ? apOverride : u.ap;
+  if (spd <= 0) return 0;
   return Math.max(1, Math.floor(ap * (spd / 5)));
 }
 
