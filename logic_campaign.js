@@ -306,14 +306,15 @@ class CampaignManager {
             });
         }
 
-        // BattleLogic（logic_game.js）をインスタンス化
-        if (window.BattleLogic) {
-            window.gameLogic = new BattleLogic(this, deployUnits, this.sector);
+        // BattleFacade（logic_game.js）をインスタンス化（RTwP-native の実行基盤）
+        const Battle = window.BattleFacade || window.BattleLogic;
+        if (Battle) {
+            window.gameLogic = new Battle(this, deployUnits, this.sector);
             window.gameLogic.init();
             return true;
         }
-        console.error("BattleLogic not found! logic_game.js loaded?");
-        alert("BattleLogic Error: Please check console.");
+        console.error("BattleFacade not found! logic_game.js loaded?");
+        alert("BattleFacade Error: Please check console.");
         return false;
     }
 
@@ -861,7 +862,7 @@ if (typeof location !== 'undefined' && new URLSearchParams(location.search).has(
             if (typeof Renderer !== 'undefined') Renderer.centerMap();
         }, 400);
     };
-    const runBoot = () => setTimeout(bootMapDebug, window.BattleLogic ? 200 : 1200);
+    const runBoot = () => setTimeout(bootMapDebug, (window.BattleFacade || window.BattleLogic) ? 200 : 1200);
     if (document.readyState === 'complete') runBoot();
     else window.addEventListener('load', runBoot);
 }

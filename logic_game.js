@@ -1,7 +1,16 @@
-/** LOGIC BATTLE: Pure Combat Engine (Decoupled from Meta-Game) */
+/**
+ * LOGIC BATTLE: RTwP-native BattleFacade (旧 BattleLogic を改称)
+ *
+ * このクラスは戦闘の**共有面**（campaign/map/spawn/units/inventory/ammo/deploy/
+ * geometry/UI/log）を持つ facade である。RTwP（logic_battle_rtwp.js）はこの facade を
+ * 直接の実行基盤として使う。旧ターン制のAP行動オーケストレーション（endTurn/runAuto/
+ * checkPhaseEnd 等）はここに同居したまま**段階退役中**で、参照が消え次第削除する。
+ *
+ * NORTH_STAR §7 Strangler Fig の最終段階: RTwP が唯一の実行系。?rtwp=0 の切り戻しは撤去済み。
+ */
 
-// グローバルスコープにBattleLogicを登録
-window.BattleLogic = class BattleLogic {
+// グローバルスコープに BattleFacade を登録（BattleLogic は後方互換の別名）
+window.BattleFacade = class BattleFacade {
   constructor(campaign, playerUnits, sector) {
     this.campaign = campaign; // 親への参照
     this.units = [...playerUnits]; // プレイヤーユニット
@@ -2233,3 +2242,7 @@ window.BattleLogic = class BattleLogic {
     this.updateSidebar();
   }
 };
+
+// 後方互換: 旧名 BattleLogic は BattleFacade の別名。既存の呼び出し・テストが
+// 移行し切るまで残す（段階退役の対象。参照が消えたら削除する）。
+window.BattleLogic = window.BattleFacade;
