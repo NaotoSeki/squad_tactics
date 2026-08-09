@@ -260,7 +260,7 @@
         #battle-log-window.minimized .log-resize-handle { display: none; }
 
         /* フローティングのログ/DEBUGは RTwP では一度も出さない（兵士カードを覆うため）。
-           body.mission-active は旧ターン制(?rtwp=0)で出撃した時だけ付く。
+           body.mission-active は旧ターン制ブート（退役済み）で付いていたクラス。
            RTwP のログ/デバッグは右ペイン(#rtwp-dock)が受け持つ。 */
         body:not(.mission-active) #battle-log-window,
         body:not(.mission-active) #debug-window { display: none !important; }
@@ -619,8 +619,8 @@
     <!-- logic_game.js から切り出した規則。logic_game.js より前に読む -->
     <script src="logic_combat_rules.js?v=m2-2"></script>
 <script src="logic_game.js?v=m2-scatter-1"></script>
-    <!-- RTwP（NORTH_STAR §7 Strangler Fig）。旧ターン制コア(logic_game.js)は
-         書き換えず残置し、?rtwp=1 の時だけ接ぎ木する。外せば元に戻る。 -->
+    <!-- RTwP（NORTH_STAR §7 Strangler Fig 最終段階）。BattleFacade(logic_game.js)を
+         実行基盤に、これらが唯一の戦闘ランタイム。?rtwp=0 の切り戻しは撤去済み。 -->
     <script src="sim_core.js?v=m2-scatter-1"></script>
     <script src="sim_policy.js?v=m2-1"></script>
     <script src="sim_orders.js"></script>

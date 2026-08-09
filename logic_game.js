@@ -694,7 +694,7 @@ window.BattleFacade = class BattleFacade {
           } else if (isShell || !Sfx.playWeapon) {
             Sfx.play(w.code, isShell ? 'cannon' : (isMg42 ? 'mg' : 'shot'), audioEpoch);
           } else {
-            // `?rtwp=0` の手動ActionでもRTwPと同じ武器別実録音を使う。
+            // 旧ターン制の手動Action（退役予定）でもRTwPと同じ武器別実録音を使う。
             // WPNSのburstではなく、このActionで実際に選んだ弾数を渡す。
             Sfx.playWeapon({ ...w, burstSize: shots },
               isAreaAttack ? 'suppress' : 'aimed', audioEpoch, shots);

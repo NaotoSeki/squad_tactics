@@ -1,8 +1,9 @@
 /**
- * LOGIC BATTLE RTWP — 本編をリアルタイム＋一時停止へ移行する接ぎ木モジュール
+ * LOGIC BATTLE RTWP — 本編のリアルタイム＋一時停止（唯一の実行系）
  *
- * NORTH_STAR §7 Strangler Fig。**logic_game.js（2133行）は一行も書き換えない。**
- * 旧ターン制コアは残置し、このモジュールを外せば即座に元へ戻る。
+ * NORTH_STAR §7 Strangler Fig の最終段階。BattleFacade(logic_game.js) を実行基盤に、
+ * このモジュールが唯一の戦闘ランタイムとしてシムを回す。?rtwp=0 の旧ターン制切り戻しは
+ * 撤去済み。旧AP行動オーケストレーションは BattleFacade 内で段階退役中。
  *
  * この方式が成立する理由:
  *   phaser_unit.js の UnitView.update() は毎フレーム window.gameLogic.units を走査し、
@@ -1863,9 +1864,8 @@
      * 実際に attach するかの判断は phaser_bridge.js の update 側が正本。
      */
     isEnabled() {
-      if (!this.enabled) return false;
-      if (typeof location === 'undefined' || !location.search) return true;
-      return !/(?:\?|&)rtwp=0(?:&|$)/.test(location.search);
+      // RTwP は唯一の実行系。?rtwp=0 の切り戻しは撤去済み。
+      return !!this.enabled;
     },
 
     attach(gameLogic) {

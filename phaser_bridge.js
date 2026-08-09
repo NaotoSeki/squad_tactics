@@ -2090,14 +2090,12 @@ class MainScene extends Phaser.Scene {
         if (window.gameLogic.map.length > 0 && !this.mapGenerated) { this.createMap(); this.mapGenerated = true; }
         this.updateBattlefieldGate(time);
 
-        // RTwP（NORTH_STAR §7 Strangler Fig）。**既定で有効**。
-        // 旧ターン制へ戻すには URL へ ?rtwp=0 を付ける（logic_game.js は無改造で
-        // 残してあるので、これだけで完全に元の挙動になる）。
-        // 接続後は RtwpBattle 側がシムを回して gameLogic.units へ状態を書き戻すので、
-        // 下の unitView.update() がそのまま実時間の動きを描く（描画側の改修は不要）。
-        if (window.RtwpBattle && window.RtwpBattle.enabled
-            && !/(?:\?|&)rtwp=0(?:&|$)/.test(window.location.search)) {
-            // セクターごとに BattleLogic は作り直される（logic_campaign.js:301）。
+        // RTwP（NORTH_STAR §7 Strangler Fig 最終段階）。**唯一の実行系**。
+        // ?rtwp=0 の旧ターン制切り戻しは撤去済み。RtwpBattle が常時シムを回して
+        // gameLogic.units へ状態を書き戻すので、下の unitView.update() がそのまま
+        // 実時間の動きを描く（描画側の改修は不要）。
+        if (window.RtwpBattle && window.RtwpBattle.enabled) {
+            // セクターごとに BattleFacade は作り直される（logic_campaign.js）。
             // 「instance が無い時だけ接続」だと、前のセクターのインスタンスが残って
             // いる限り新しい盤面へ繋がらず、面が一切動かなくなる。別の gameLogic を
             // 掴んでいたら繋ぎ直す（決着時の detach と二重の安全弁）。
