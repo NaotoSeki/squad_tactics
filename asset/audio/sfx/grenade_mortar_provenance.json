@@ -1,0 +1,54 @@
+{
+  "schema": "squad-tactics-user-audio-import/v1",
+  "sourceScope": "user-provided local assets; originals preserved read-only",
+  "entries": [
+    {
+      "role": "grenade explosion at BLAST/detonation",
+      "sourcePath": "C:\\Users\\aware.梨花のPC\\Downloads\\Epic.Stock.Media.Game.Weapons.Gun.and.Firearm.Sound.Effects.WAV\\Weapons.Gun.and.Firearm\\Epic Stock Media Game Weapons Gun & Firearm Sound Effects\\Designed_Explosions\\Grenade\\ESM_GW_explosion_one_shot_grenade_fragment_effect_ricochet_whiz_effect_close_heavy_2.wav",
+      "sourceSha256": "6a387f77aa2a9f42b0a423c6a26afcaf081292617c0043ca694a6a8957471207",
+      "sourceBytes": 905516,
+      "sourceFormat": {
+        "codec": "PCM 24-bit",
+        "channels": 2,
+        "sampleRate": 96000,
+        "frames": 150912,
+        "durationSeconds": 1.572
+      },
+      "outputPath": "asset/audio/sfx/grenade_explosion_ps.wav",
+      "outputSha256": "3d8f8663ca36a8c4717b108b733fc55e8803cfe22ce36b9a6fec537bec8ece9f",
+      "outputFormat": {
+        "codec": "PCM 16-bit",
+        "channels": 2,
+        "sampleRate": 48000,
+        "frames": 75456,
+        "durationSeconds": 1.572,
+        "peakDbFS": -4
+      },
+      "gainDb": -3.057685645760571
+    },
+    {
+      "role": "M2 mortar launch/fire at SHOT",
+      "sourcePath": "C:\\Users\\aware.梨花のPC\\Downloads\\Epic.Stock.Media.Game.Weapons.Gun.and.Firearm.Sound.Effects.WAV\\Weapons.Gun.and.Firearm\\Epic Stock Media Game Weapons Gun & Firearm Sound Effects\\Designed_Heavy_Firearms\\Grenade_Launcher\\ESM_GW_heavy_weapon_one_shot_grenade_launcher_fire_rocket_flame_explosive_1.wav",
+      "sourceSha256": "cfd8ed2d33338d54bc9f76b44669a2c7df7ea806ec2b56e7e8a5852f4ef4b354",
+      "sourceBytes": 205868,
+      "sourceFormat": {
+        "codec": "PCM 24-bit",
+        "channels": 2,
+        "sampleRate": 96000,
+        "frames": 34304,
+        "durationSeconds": 0.35733333333333334
+      },
+      "outputPath": "asset/audio/sfx/m2_mortar_fire_ps.wav",
+      "outputSha256": "1c52fda1ad6f3454682d1af196f44a060cccd84f311accbaaf88b4bb4eb5b2e0",
+      "outputFormat": {
+        "codec": "PCM 16-bit",
+        "channels": 2,
+        "sampleRate": 48000,
+        "frames": 17152,
+        "durationSeconds": 0.35733333333333334,
+        "peakDbFS": -7
+      },
+      "gainDb": -7.035170270711727
+    }
+  ]
+}
