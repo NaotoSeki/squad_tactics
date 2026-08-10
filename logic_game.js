@@ -158,12 +158,12 @@ window.BattleFacade = class BattleFacade {
     return pool[Math.floor(Math.random() * pool.length)];
   }
 
-  spawnUnitAt(team, templateKey) {
+  spawnUnitAt(team, templateKey, preferredHex) {
     const template = typeof UNIT_TEMPLATES !== 'undefined' ? UNIT_TEMPLATES[templateKey] : null;
     if (!template || (template.isTank && (typeof FEATURE_TANK_UNITS === 'undefined' || !FEATURE_TANK_UNITS))) return false;
     const u = this.campaign.createSoldier(templateKey, team);
     if (!u) return false;
-    const p = this.getSafeSpawnPos(team, u.def && u.def.isTank);
+    const p = this.getSafeSpawnPos(team, u.def && u.def.isTank, preferredHex);
     if (!p) return false;
     u.q = p.q;
     u.r = p.r;
@@ -177,8 +177,9 @@ window.BattleFacade = class BattleFacade {
 
   spawnEnemies() {
     const c = this.getEnemySpawnCount();
+    const initial = (this.mapScenario && this.mapScenario.enemyInitial) || [];
     for (let i = 0; i < c; i++) {
-      this.spawnUnitAt('enemy', this.pickEnemyTemplate());
+      this.spawnUnitAt('enemy', this.pickEnemyTemplate(), initial.length ? initial[i % initial.length] : null);
     }
   }
 
@@ -1289,7 +1290,7 @@ window.BattleFacade = class BattleFacade {
     return largest;
   }
 
-  getSafeSpawnPos(team, isTank) {
+  getSafeSpawnPos(team, isTank, preferredHex) {
     const vehicleComponent = isTank ? this.getMainVehiclePassableComponent() : null;
     const cy = Math.floor(MAP_H / 2);
     const canSpawnAt = (q, r) => {
@@ -1306,6 +1307,9 @@ window.BattleFacade = class BattleFacade {
     // Static maps retain the legacy random search below.
     const scenarioSpawns = this.mapScenario && this.mapScenario.spawns
       && this.mapScenario.spawns[team];
+    if (preferredHex && canSpawnAt(preferredHex.q, preferredHex.r)) {
+      return { q: preferredHex.q, r: preferredHex.r };
+    }
     if (Array.isArray(scenarioSpawns) && scenarioSpawns.length > 0) {
       for (const candidate of scenarioSpawns) {
         if (canSpawnAt(candidate.q, candidate.r)) return { q: candidate.q, r: candidate.r };

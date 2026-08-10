@@ -82,7 +82,7 @@
       let center = start;
       const route = [];
       for (let r = 0; r < h; r++) {
-        if (r > 1 && r < h - 2 && rng() < 0.20) center += rng() < 0.5 ? -1 : 1;
+        if (r > 1 && r < h - 2 && rng() < 0.14 && center > start - 2) center--;
         center = Math.max(2, Math.min(w - 3, center));
         route.push({ q: center, r });
         for (let dq = -1; dq <= 1; dq++) map[center + dq][r] = terrain(dq === 0 ? 'ROAD' : 'GRASS', map[center + dq][r].elevation);
@@ -91,6 +91,14 @@
         }
       }
       massRoutes.push(route);
+    });
+
+    // A continuous passable flank alongside the western road is the covered
+    // approach. It uses the same movement semantics as runtime (cost < 99).
+    const coveredApproach = massRoutes[0].map((p, i) => ({ q: p.q - 1, r: p.r }));
+    coveredApproach.forEach((p, i) => {
+      const base = i < 4 || i >= h - 4 ? 'FIELD' : (i % 4 === 0 ? 'FOREST' : 'FIELD');
+      map[p.q][p.r] = terrain(base, map[p.q][p.r].elevation);
     });
 
     // Settlement stays off the main corridors; openings prevent sealed compounds.
@@ -103,6 +111,15 @@
         map[p.q][p.r] = terrain(i === 0 ? 'RUIN' : 'BLDG', map[p.q][p.r].elevation);
       });
     map[settlement.q][settlement.r] = terrain('ROAD', map[settlement.q][settlement.r].elevation);
+
+    // A straight central lane guarantees a long sightline under the RTwP LOS
+    // rules (hard blockers and cumulative sightBlock on intermediate cells).
+    const openLosLane = [];
+    const losQ = Math.floor(w / 2);
+    for (let r = 0; r < h; r++) {
+      map[losQ][r] = terrain(r === Math.floor(h / 2) ? 'ROAD' : 'GRASS', map[losQ][r].elevation);
+      openLosLane.push({ q: losQ, r });
+    }
 
     // Spawn reserves are broad, open, and connected to both corridors.
     const spawnRows = { enemy: [0, 1, 2, 3], player: [h - 4, h - 3, h - 2, h - 1] };
@@ -123,8 +140,8 @@
       spawnCells[team] = shuffle(candidates, rng).slice(0, Math.min(24, candidates.length));
     });
 
-    const enemyInitial = spawnCells.enemy.slice(0, 12).map((p, index) => ({ q: p.q, r: p.r, group: index % 3 }));
-    return { seed: String(seed), map, spawns: spawnCells, enemyInitial, settlement, corridorCenters, massRoutes };
+    const enemyInitial = spawnCells.enemy.map((p, index) => ({ q: p.q, r: p.r, group: index % 3 }));
+    return { seed: String(seed), map, spawns: spawnCells, enemyInitial, settlement, corridorCenters, massRoutes, coveredApproach, openLosLane };
   }
 
   function flood(map, starts, passable) {
@@ -155,6 +172,21 @@
       [-1, 0, 1].every(dq => inside(p.q + dq, p.r, w, h) && vehicle(map[p.q + dq][p.r]))
     )).length;
     if (runs < 2) errors.push('insufficient_mass_routes');
+    const coveredApproach = result.coveredApproach || [];
+    const coveredApproachCover = coveredApproach.filter(p => foot(map[p.q][p.r]) && map[p.q][p.r].cover >= 15).length;
+    const coveredApproachConnected = coveredApproach.length >= h
+      && coveredApproach.every((p, i) => foot(map[p.q][p.r]) && (!i || hexDistance(coveredApproach[i - 1], p) === 1));
+    if (!coveredApproachConnected || coveredApproachCover < Math.ceil(h * 0.65)) errors.push('missing_covered_approach');
+    const losLane = result.openLosLane || [];
+    let laneBlock = 0, openLosLane = losLane.length >= h;
+    for (let i = 1; i < losLane.length - 1 && openLosLane; i++) {
+      const cell = map[losLane[i].q][losLane[i].r];
+      if (!foot(cell) || cell.building) { openLosLane = false; break; }
+      const block = typeof cell.sightBlock === 'number' ? cell.sightBlock : ({ 2: 0.5, 4: 1, 6: 1 }[cell.id] || 0);
+      laneBlock += block;
+      if (laneBlock >= 1) openLosLane = false;
+    }
+    if (!openLosLane) errors.push('missing_open_los_lane');
     let cover = 0, open = 0, blocked = 0, elevated = 0, mortarOpenCenters = 0;
     for (let q = 0; q < w; q++) for (let r = 0; r < h; r++) {
       const c = map[q][r];
@@ -180,7 +212,7 @@
     if (elevated / total < 0.12) errors.push('insufficient_elevation');
     if (mortarOpenCenters < 12) errors.push('insufficient_mortar_footprints');
     if (result.spawns.player.length < 12 || result.spawns.enemy.length < 12) errors.push('spawn_capacity');
-    return { ok: errors.length === 0, errors, metrics: { reachable: reachable.size, vehicleArea: vehicleArea.size, cover, open, blocked, elevated, mortarOpenCenters, massRouteRuns: runs } };
+    return { ok: errors.length === 0, errors, metrics: { reachable: reachable.size, vehicleArea: vehicleArea.size, cover, open, blocked, elevated, mortarOpenCenters, massRouteRuns: runs, coveredApproachCover, openLosLane } };
   }
 
   const NextGenMapGenerator = {
@@ -211,11 +243,14 @@
     },
     apply(game, seed, values) {
       const options = Object.assign({}, DEFAULTS, values || {});
-      const chosen = this.nextSeed(seed == null ? this.seed : seed);
+      const explicitSeed = seed == null ? this.seed : seed;
+      const chosen = explicitSeed == null ? this.nextSeed(null) : String(explicitSeed);
       const result = this.create(chosen, options);
       if (!result) { this.active = false; return false; }
       game.map = result.map;
-      game.mapScenario = { source: 'nextgen', seed: result.seed, requestedSeed: result.requestedSeed, spawns: result.spawns, enemyInitial: result.enemyInitial, validation: result.validation };
+      const runtimeCap = (typeof BATTLE_SCALE !== 'undefined' && BATTLE_SCALE.HEX_UNIT_CAP) || 5;
+      game.mapScenario = { source: 'nextgen', seed: result.seed, requestedSeed: result.requestedSeed, spawns: result.spawns, enemyInitial: result.enemyInitial, validation: result.validation,
+        supportedUnitsPerTeam: Math.min(result.spawns.player.length, result.spawns.enemy.length) * runtimeCap };
       this.lastResult = result;
       this.recentSeeds.push(chosen);
       if (this.recentSeeds.length > options.recentLimit) this.recentSeeds.shift();
