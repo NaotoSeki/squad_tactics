@@ -189,6 +189,38 @@ class VFXSystem {
         this._impactRR = ((this._impactRR || 0) + count) % 3;
     }
 
+    /** Commercial-safe material fragments generated only from owned numeric profiles. */
+    playMaterialSplatter(x, y, material, seed) {
+        const catalog = window.OriginalSplatterProfiles;
+        const profile = catalog && catalog.profiles && catalog.profiles[material || 'dirt'];
+        if (!profile || profile.releaseSafe !== true) return 0;
+        let state = (Number(seed) >>> 0) || 0x6d2b79f5;
+        const random = () => {
+            state += 0x6d2b79f5;
+            let t = state;
+            t = Math.imul(t ^ (t >>> 15), t | 1);
+            t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+            return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+        };
+        const between = (range) => range[0] + (range[1] - range[0]) * random();
+        const count = Math.round(between(profile.particleCount));
+        for (let i = 0; i < count; i++) {
+            const angle = between(profile.launchAngleDeg) * Math.PI / 180;
+            const speed = between(profile.speedPxPerFrame);
+            this.add({
+                x, y, vx: Math.cos(angle) * speed,
+                vy: Math.sin(angle) * speed + profile.verticalBias,
+                gravity: profile.gravityPxPerFrame2,
+                color: profile.colors[Math.floor(random() * profile.colors.length)],
+                size: between(profile.sizePx), alpha: between(profile.alpha),
+                life: Math.round(between(profile.lifeFrames)),
+                delay: Math.round(between(profile.delayFrames)),
+                type: 'material-splatter'
+            });
+        }
+        return count;
+    }
+
     update() {
         this.windTimer++;
         if (this.windTimer > 400 + Math.random() * 300) {
@@ -230,6 +262,9 @@ class VFXSystem {
                 p.y -= 0.2; 
             } else if (p.type === 'spark') {
                 p.vy += 0.1;
+            } else if (p.type === 'material-splatter') {
+                p.vy += p.gravity || 0.16;
+                p.vx *= 0.985;
             }
 
             if (p.life <= 0) this.particles.splice(i, 1);
@@ -291,6 +326,11 @@ class VFXSystem {
                 graphics.moveTo(p.x, p.y);
                 graphics.lineTo(tailX, tailY);
                 graphics.strokePath();
+            }
+            else if (p.type === 'material-splatter') {
+                const fade = Math.min(1, p.life / Math.max(1, p.maxLife * 0.45));
+                graphics.fillStyle(this.hexToInt(p.color), p.alpha * fade);
+                graphics.fillCircle(p.x, p.y, Math.max(0.7, p.size * 0.5));
             }
             // 煙など (単純なRectで描画、回転なし)
             else {
@@ -403,6 +443,13 @@ class VFXSystem {
 
     addBulletImpact(x, y, rounds, weapon, hit) {
         this.playBulletImpactBurst(x, y, rounds, weapon, hit);
+        const splatterRole = window.FxPacks && window.FxPacks.get
+            ? window.FxPacks.get('impact_splatter') : null;
+        if (!splatterRole || splatterRole.kind !== 'procedural') return;
+        const eventSeed = ((Math.round(x * 16) * 73856093)
+            ^ (Math.round(y * 16) * 19349663)
+            ^ ((this._splatterSequence = (this._splatterSequence || 0) + 1) * 83492791)) >>> 0;
+        this.playMaterialSplatter(x, y, splatterRole.profile, eventSeed);
     }
     
     addFire(x, y) { 

@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "assetId": "original.dirt.v1",
+  "logicalRole": "impact_splatter.dirt",
+  "releaseStatus": "integration-candidate",
+  "releaseSafeInputs": true,
+  "humanReview": "pending",
+  "author": "Squad Tactics project",
+  "generator": "hand-authored deterministic JavaScript profile",
+  "generatorVersion": "1",
+  "seedPolicy": "runtime event coordinates plus monotonic local event sequence",
+  "sourceFiles": [],
+  "sourceLicenses": [],
+  "referencePixelsUsed": false,
+  "trainingWeightsUsed": false,
+  "outputFiles": [
+    {
+      "path": "asset/fx/original_splatter/profiles.js",
+      "sha256": "d83ce2a237f0a963d6c3f1e46a180e6fd494b88c530bc264f82acafb133f7c30"
+    }
+  ],
+  "createdUtc": "2026-08-10T00:00:00Z",
+  "notes": "Independent numeric profile. No decoded, cropped, derived or copied reference pixels."
+}

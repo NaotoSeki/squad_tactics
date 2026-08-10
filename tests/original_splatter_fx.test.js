@@ -1,0 +1,31 @@
+'use strict';
+const assert = require('assert');
+const fs = require('fs');
+const path = require('path');
+const vm = require('vm');
+const crypto = require('crypto');
+const root = path.join(__dirname, '..');
+const profilePath = path.join(root, 'asset/fx/original_splatter/profiles.js');
+const context = { globalThis: {} };
+context.globalThis.globalThis = context.globalThis;
+vm.runInNewContext(fs.readFileSync(profilePath, 'utf8'), context);
+const dirt = context.globalThis.OriginalSplatterProfiles.profiles.dirt;
+assert.strictEqual(dirt.releaseSafe, true);
+assert.strictEqual(dirt.id, 'original.dirt.v1');
+assert.ok(dirt.particleCount[0] >= 1 && dirt.particleCount[1] <= 16, 'bounded particle budget');
+assert.ok(dirt.lifeFrames[0] >= 12 && dirt.lifeFrames[1] <= 45, 'short readable lifetime');
+const vfx = fs.readFileSync(path.join(root, 'phaser_vfx.js'), 'utf8');
+assert.match(vfx, /FxPacks\.get\('impact_splatter'\)/, 'runtime selects splatter through the logical FX pack');
+assert.match(vfx, /playMaterialSplatter\(x, y, splatterRole\.profile, eventSeed\)/,
+  'bullet impacts route through the selected original profile');
+assert.match(vfx, /state = \(Number\(seed\) >>> 0\)/, 'candidate playback is seedable');
+const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
+assert.match(html, /asset\/fx\/original_splatter\/profiles\.js/, 'owned profile is loaded by runtime');
+assert.doesNotMatch(fs.readFileSync(profilePath, 'utf8'), /ps_fx|panzer.?strike|inventory/i,
+  'shipping profile must not name or depend on research material');
+const provenance = JSON.parse(fs.readFileSync(path.join(root, 'asset/fx/original_splatter/provenance.json'), 'utf8'));
+const digest = crypto.createHash('sha256').update(fs.readFileSync(profilePath)).digest('hex');
+assert.strictEqual(provenance.outputFiles[0].sha256, digest, 'provenance hash must match the shipped profile');
+assert.strictEqual(provenance.referencePixelsUsed, false);
+assert.strictEqual(provenance.trainingWeightsUsed, false);
+console.log('original_splatter_fx.test.js: OK');

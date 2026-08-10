@@ -3,7 +3,7 @@
   'use strict';
   const LOGICAL_KEYS = Object.freeze([
     'persistent_fire','muzzle_smoke','grenade_blast','grenade_smoke',
-    'mortar_impact','mortar_smoke','impact_dust','bullet_impact'
+    'mortar_impact','mortar_smoke','impact_dust','bullet_impact','impact_splatter'
   ]);
   const packs = Object.freeze({
     original: Object.freeze({
@@ -12,7 +12,8 @@
         persistent_fire:null, muzzle_smoke:null,
         grenade_blast:{kind:'khaos',tier:'t2_grenade'}, grenade_smoke:{kind:'procedural',preset:'impact-smoke'},
         mortar_impact:{kind:'khaos',tier:'t2_grenade'}, mortar_smoke:{kind:'procedural',preset:'mortar-smoke'},
-        impact_dust:{kind:'procedural',preset:'impact-dust'}, bullet_impact:{kind:'khaos',tier:'t1_12mm'}
+        impact_dust:{kind:'procedural',preset:'impact-dust'}, bullet_impact:{kind:'khaos',tier:'t1_12mm'},
+        impact_splatter:{kind:'procedural',profile:'dirt'}
       })
     }),
     panzer_reference: Object.freeze({
@@ -22,7 +23,8 @@
         persistent_fire:{kind:'ps_original',role:'fire'}, muzzle_smoke:{kind:'ps_original',role:'smoke'},
         grenade_blast:{kind:'khaos',tier:'t2_grenade'}, grenade_smoke:{kind:'ps_original',role:'smoke'},
         mortar_impact:{kind:'khaos',tier:'t2_grenade'}, mortar_smoke:{kind:'ps_original',role:'smoke'},
-        impact_dust:{kind:'ps_original',role:'dust'}, bullet_impact:{kind:'khaos',tier:'t1_12mm'}
+        impact_dust:{kind:'ps_original',role:'dust'}, bullet_impact:{kind:'khaos',tier:'t1_12mm'},
+        impact_splatter:null
       })
     })
   });
