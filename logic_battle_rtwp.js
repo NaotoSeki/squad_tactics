@@ -20,6 +20,16 @@
 (function () {
   'use strict';
 
+  // Result timing is intentionally kept outside the simulation tick loop. A
+  // decisive hit/down has already been applied by SimCore when `result()` is
+  // set, so this short resolve beat can freeze the battlefield without
+  // changing combat outcomes. Keep loss timing unchanged while giving wins a
+  // little room for the final impact/death beat to land.
+  const FINISH_TIMING = Object.freeze({
+    victoryResolveMs: 900,
+    lossResultDelayMs: 500,
+  });
+
   /** ユニットのスキル名 -> sim のトレイト（§4.1 の無命令時行動の差分） */
   const SKILL_TRAITS = {
     Berserker: 'aggressive',
@@ -877,10 +887,27 @@
       });
     }
 
+    // The victory presentation starts with the audio cue while the final
+    // battlefield state is still visible. `onSectorCleared` receives the
+    // marker so direct/non-RTwP callers can retain their existing audio path
+    // without causing a duplicate jingle here.
+    let sectorClearJingleStarted = false;
+    if (res.winner === 'A' && typeof document !== 'undefined'
+      && typeof window !== 'undefined' && window.Sfx
+      && typeof window.Sfx.play === 'function') {
+      try {
+        window.Sfx.play('sector_clear');
+        sectorClearJingleStarted = true;
+      } catch (e) { /* Audio is best-effort; the presentation still resolves. */ }
+    }
+
     const showFrozenResult = function () {
       if (!g.campaign) return;
       if (res.winner === 'A' && typeof g.campaign.onSectorCleared === 'function') {
-        g.campaign.onSectorCleared(alivePlayers);
+        g.campaign.onSectorCleared(alivePlayers, {
+          jingleStarted: sectorClearJingleStarted,
+          resolveMs: FINISH_TIMING.victoryResolveMs,
+        });
       } else if (res.winner !== 'A' && typeof g.campaign.onGameOver === 'function') {
         g.campaign.onGameOver(res.reason, alivePlayers.length);
       }
@@ -915,8 +942,19 @@
       && window.RtwpBattle.instance === this) {
       window.RtwpBattle.detach();
     }
-    if (typeof document !== 'undefined' && typeof setTimeout === 'function') {
-      setTimeout(showFrozenResult, 500);
+    const scheduleResult = typeof setTimeout === 'function'
+      ? setTimeout
+      : (typeof window !== 'undefined' && typeof window.setTimeout === 'function'
+        ? window.setTimeout.bind(window)
+        : null);
+    if (typeof document !== 'undefined' && scheduleResult) {
+      // Keep the defeat path at its established 500ms handoff. Wins get a
+      // deterministic 900ms resolve beat (within the requested 0.8–1.2s
+      // window) with RTwP already paused/detached above.
+      const resultDelay = res.winner === 'A'
+        ? FINISH_TIMING.victoryResolveMs
+        : FINISH_TIMING.lossResultDelayMs;
+      scheduleResult(showFrozenResult, resultDelay);
     }
   };
 
@@ -1813,6 +1851,9 @@
     active: false,
     instance: null,
     fixedSeed: null,
+    // Public for deterministic timing checks and UI consumers that want to
+    // align a transition indicator with the RTwP handoff.
+    finishTiming: FINISH_TIMING,
 
     /**
      * メニューを画面内へ収めて置く。

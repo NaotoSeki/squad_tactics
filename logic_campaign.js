@@ -622,16 +622,26 @@ class CampaignManager {
     }
 
     // --- MISSION END HANDLERS ---
-    onSectorCleared(survivors) {
+    onSectorCleared(survivors, transition) {
+        transition = transition || {};
         this.survivingUnits = survivors;
         this.promoteSurvivors();
         if (typeof Renderer !== 'undefined' && Renderer.getFusedCardsFromHand) {
             this.carriedCards = Renderer.getFusedCardsFromHand();
         }
         
-        document.getElementById('reward-screen').style.display = 'flex';
+        const screen = document.getElementById('reward-screen');
+        if (!screen) return;
+        // Rebuild the entrance animation for every sector; otherwise the
+        // previous completed animation class can make the next reward pop.
+        if (screen.classList && screen.classList.remove) {
+            screen.classList.remove('sector-clear-animate');
+            // Force a reflow when available so repeated transitions restart.
+            void screen.offsetWidth;
+        }
+        screen.style.display = 'flex';
         if (typeof BattleReview !== 'undefined' && this.endBattleSnapshot) {
-            BattleReview.addAction(document.getElementById('reward-screen'), this.endBattleSnapshot);
+            BattleReview.addAction(screen, this.endBattleSnapshot);
         }
         const b = document.getElementById('reward-cards'); 
         b.innerHTML = ''; 
@@ -673,7 +683,16 @@ class CampaignManager {
             };
             b.appendChild(d);
         });
-        if (window.Sfx) Sfx.play('sector_clear');
+        if (screen.classList && screen.classList.add) {
+            screen.classList.add('sector-clear-animate');
+        }
+        // RTwP starts the jingle at the beginning of its resolve beat. Keep
+        // this fallback for direct campaign callers and non-RTwP victories,
+        // while avoiding a duplicate when RTwP already started it.
+        if (!transition.jingleStarted && typeof window !== 'undefined'
+            && window.Sfx && typeof window.Sfx.play === 'function') {
+            window.Sfx.play('sector_clear');
+        }
     }
 
     /**
