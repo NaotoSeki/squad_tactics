@@ -120,8 +120,14 @@ function attach(g) {
   const sidearm = Object.assign({ code: 'm1911' }, SB.WPNS.m1911);
   u.bag = [Object.assign({ code: 'mortar_shell_box' }, SB.WPNS.mortar_shell_box), sidearm];
   SB.LoadoutWeight.refreshUnitLoadout(u);
+  check(SB.LoadoutWeight.getEffectiveSpeed(u) === 0,
+    '組み立て済みM2は移動不能（先に分解が必要）');
   const inst = attach(g);
   const soldier = inst.sim.getSoldier(String(u.id));
+  const deployedMove = SB.SimActions.list(inst.actionContext(u, null, null))
+    .find((entry) => entry.action.id === 'MOVE');
+  check(!!deployedMove && deployedMove.ok === false,
+    '組み立て済みM2はRTwP移動メニューも無効');
   soldier.attrs.speed = 0; // reproduce the stale value reported after changing equipment
   u.hands = [null, null, null];
   u.bag = [null, sidearm];
