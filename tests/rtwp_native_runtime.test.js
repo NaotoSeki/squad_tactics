@@ -76,4 +76,19 @@ ok(!/id="auto-toggle"/.test(html),
 ok(!/onclick="gameLogic\.toggleAuto\(\)"/.test(html),
   'index.html に toggleAuto() の起動口が無い');
 
+// 7. 旧自動戦闘AIの本体(runAuto/toggleAuto)が BattleFacade から撤去され、
+//    isAuto を真にする経路が存在しない（Stage 1 スイープの固定。再混入したら落ちる）。
+ok(!/\brunAuto\s*\(/.test(game), 'logic_game.js に runAuto() の定義が無い');
+ok(!/\btoggleAuto\s*\(/.test(game), 'logic_game.js に toggleAuto() の定義が無い');
+ok(!/this\.isAuto\s*=\s*(?:true|!)/.test(game),
+  'this.isAuto を true / トグルで真にする代入が無い（自動戦闘は再活性化不能）');
+
+// 8. 境界の不変条件: RTwP は installUi で旧コマンドメニュー(ui.showActionMenu)を
+//    showSoldierMenu へ差し替える。これが旧ターン制の interactionMode 遷移
+//    (setMode('ATTACK') 等 → actionAttack/checkPhaseEnd/endTurn/EnemyAI.executeTurn)を
+//    実行時到達不能に保つ唯一の要。差し替えが外れたら旧クラスタが再び生きるため、
+//    削除より先にこの配線をロックしておく（ブラウザsmoke後の物理削除の前提条件）。
+ok(/g\.ui\.showActionMenu\s*=\s*function[^\n]*self\.showSoldierMenu/.test(rtwp),
+  'logic_battle_rtwp.js は旧コマンドメニューを showSoldierMenu へ差し替える');
+
 console.log('\n' + pass + ' passed');
