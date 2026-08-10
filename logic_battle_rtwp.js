@@ -701,6 +701,15 @@
               } else if (window.Sfx.playWeapon) {
                 window.Sfx.playWeapon(sh.weapon, sh.fireMode, undefined, ev.roundsFired);
               } else window.Sfx.play(sh.weapon.code, 'shot');
+              // The result is decided in the same sim tick as this SHOT. Give
+              // only that final killing round a restrained outdoor reflection;
+              // normal gunfire remains completely dry.
+              const result = this.sim && this.sim.result && this.sim.result();
+              if (!this._finalShotAccentPlayed && ev.killed && result
+                  && result.winner === sh.team && window.Sfx.finalShotAccent) {
+                this._finalShotAccentPlayed = true;
+                window.Sfx.finalShotAccent();
+              }
             }
             break;
           }

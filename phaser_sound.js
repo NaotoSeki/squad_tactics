@@ -512,6 +512,51 @@ const Sfx = {
         o.connect(g); g.connect(this.ctx.destination);
         o.start(t); o.stop(t+dur);
     },
+    /**
+     * Final decisive shot only: a single, very quiet outdoor reflection.
+     *
+     * This deliberately is not a global reverb. The normal weapon take stays
+     * dry (and keeps its recorded distance); only the sector-ending round gets
+     * one 105 ms, low-passed return. It allocates three tiny Web Audio nodes
+     * once per battle, never per ordinary shot.
+     */
+    finalShotAccent() {
+        if (!this._canPlay() || !this.init()) return false;
+        const ctx = this.ctx;
+        if (!ctx || !ctx.createBuffer || !ctx.createBufferSource
+            || !ctx.createBiquadFilter || !ctx.createDelay || !ctx.createGain) return false;
+        try {
+            const now = ctx.currentTime;
+            const dur = 0.13;
+            const buffer = ctx.createBuffer(1, Math.max(1, Math.floor(ctx.sampleRate * dur)), ctx.sampleRate);
+            const data = buffer.getChannelData(0);
+            for (let i = 0; i < data.length; i++) {
+                data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (data.length * 0.18));
+            }
+            const source = this._trackNode(ctx.createBufferSource());
+            const presence = ctx.createBiquadFilter();
+            const delay = ctx.createDelay(0.25);
+            const distance = ctx.createBiquadFilter();
+            const gain = ctx.createGain();
+            source.buffer = buffer;
+            presence.type = 'bandpass';
+            presence.frequency.setValueAtTime(1750, now);
+            presence.Q.setValueAtTime(0.7, now);
+            delay.delayTime.setValueAtTime(0.105, now);
+            distance.type = 'lowpass';
+            distance.frequency.setValueAtTime(2400, now);
+            gain.gain.setValueAtTime(0.075, now + 0.105);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.30);
+            source.connect(presence); presence.connect(delay); delay.connect(distance);
+            distance.connect(gain); gain.connect(ctx.destination);
+            source.start(now);
+            return true;
+        } catch (e) {
+            // The accent is cosmetic. A Web Audio failure must never silence
+            // the real shot or interfere with the result transition.
+            return false;
+        }
+    },
     metalImpact() {
         if(!this.ctx || !this._canPlay()) return;
         const t = this.ctx.currentTime;
