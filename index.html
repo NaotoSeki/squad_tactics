@@ -185,6 +185,21 @@
         .card-body { width: 100%; text-align: center; }
         .card-body h3 { margin: 5px 0; font-size: 16px; color: var(--accent); font-family: 'Orbitron', sans-serif; }
         .card-body p { margin: 0; font-size: 11px; color: #888; font-family: 'Share Tech Mono', monospace; }
+        /* Victory is a campaign report, not a pick-one reward. It stays
+           readable with dozens of surviving soldiers. */
+        .sector-report { width:min(980px, calc(100vw - 48px)); max-height:76vh; display:flex; flex-direction:column; gap:10px; text-align:left; font-family:'Share Tech Mono', monospace; }
+        .sector-report-summary { color:#e2bd72; font-size:12px; letter-spacing:.6px; padding:10px 12px; border:1px solid rgba(226,189,114,.35); background:rgba(38,31,20,.72); }
+        .sector-report-table { overflow:auto; border:1px solid rgba(170,190,170,.25); background:rgba(8,14,10,.88); max-height:52vh; }
+        .sector-report-row { display:grid; grid-template-columns:minmax(170px,1.45fr) minmax(180px,1.6fr) 90px minmax(165px,1.2fr); gap:10px; align-items:center; min-height:42px; padding:6px 12px; border-bottom:1px solid rgba(255,255,255,.07); color:#d5ddd3; font-size:11px; }
+        .sector-report-row > span { min-width:0; overflow:hidden; text-overflow:ellipsis; }
+        .sector-report-row b { display:block; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        .sector-report-row small { display:block; color:#88988b; font-size:9px; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        .sector-report-head { position:sticky; top:0; z-index:1; min-height:30px; background:#1b241c; color:#d8b567; font-size:10px; letter-spacing:.6px; }
+        .sector-report-row.wounded { background:rgba(112,64,32,.22); }
+        .condition-wounded { color:#ffbd68; } .condition-fit { color:#9de09d; }
+        .sector-report-next { align-self:center; min-width:280px; padding:12px 20px; border:1px solid #b27d35; background:#342516; color:#f0c879; font:bold 12px 'Orbitron', sans-serif; cursor:pointer; }
+        .sector-report-next:hover { background:#5a3b1d; }
+        @media (max-width:700px) { .sector-report-row { grid-template-columns:1.25fr 1.3fr .55fr 1fr; gap:5px; padding:6px 8px; font-size:9px; } .sector-report-summary { font-size:10px; } }
         
         #sector-counter {
             position: absolute;

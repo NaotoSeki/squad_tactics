@@ -612,7 +612,7 @@ class CampaignManager {
             id: Math.random(), team: team, q: 0, r: 0, def: t, name: name, rank: 0, faceSeed: faceSeed, portraitIndex: portraitIndex,
             stats: stats, params: params, hp: hp, maxHp: hp, ap: maxAp, maxAp: maxAp, hands: hands, bag: bag,
             stance: (t.isTank ? 'stand' : ((typeof BATTLE_SCALE !== 'undefined' && BATTLE_SCALE.RT_DEFAULT_STANCE) || 'prone')),
-            skills: skills, sectorsSurvived: 0, deadProcessed: false, fusionCount: unitFusionCount
+            skills: skills, sectorsSurvived: 0, kills: 0, deadProcessed: false, fusionCount: unitFusionCount
         };
         if (t.loadout) this.repairMortarGunnerLoadout(unit, { ensureMissing: true });
         if (typeof sanitizeUnitSpareAmmo === 'function') sanitizeUnitSpareAmmo(unit);
@@ -625,7 +625,20 @@ class CampaignManager {
     onSectorCleared(survivors, transition) {
         transition = transition || {};
         this.survivingUnits = survivors;
-        this.promoteSurvivors();
+        const battleEnd = new Map(survivors.map(u => [String(u.id), {
+            hp: u.hp, maxHp: u.maxHp,
+            // RTwP writes HP/state back directly. Capture a display-ready
+            // condition instead of relying only on the campaign flag.
+            wounded: !!u.wounded || (u.hp > 0 && u.hp < u.maxHp * 0.25)
+                || u.simState === 'incap',
+            sectorKills: Math.max(0, Number(u._sectorKills) || 0),
+            kills: Math.max(0, Number(u.kills) || 0), rank: Number(u.rank) || 0,
+            skills: Array.isArray(u.skills) ? u.skills.slice() : []
+        }]));
+        const promotions = this.promoteSurvivors();
+        // Ammunition is a transition service, not a reward selection. Preserve
+        // wounds for the next sector so the report and campaign consequences match.
+        this.resupplySurvivors({ heal: false });
         if (typeof Renderer !== 'undefined' && Renderer.getFusedCardsFromHand) {
             this.carriedCards = Renderer.getFusedCardsFromHand();
         }
@@ -645,6 +658,13 @@ class CampaignManager {
         }
         const b = document.getElementById('reward-cards'); 
         b.innerHTML = ''; 
+        this.renderVictoryReport(b, survivors, battleEnd, promotions);
+        if (screen.classList && screen.classList.add) screen.classList.add('sector-clear-animate');
+        if (!transition.jingleStarted && typeof window !== 'undefined'
+            && window.Sfx && typeof window.Sfx.play === 'function') {
+            window.Sfx.play('sector_clear');
+        }
+        return;
         
         const replacementHint = (typeof REALISM_PACK !== 'undefined' && REALISM_PACK.REPLACEMENT_PENALTY) ? '（経験不足）' : '';
         [{k:'rifleman',t:'新兵' + replacementHint}, {k:'mortar_gunner',t:'迫撃砲兵' + replacementHint}, {k:'tank_pz4',t:'鹵獲戦車'}, {k:'supply',t:'補給'}]
@@ -733,8 +753,49 @@ class CampaignManager {
         if (window.Sfx) Sfx.play('sector_fail');
     }
 
+    /** Render a dense, scrollable report rather than presenting gameplay rewards. */
+    renderVictoryReport(container, survivors, battleEnd, promotions) {
+        container.className = 'sector-report';
+        const promoById = new Map((promotions || []).map(p => [String(p.id), p]));
+        const totalKills = survivors.reduce((sum, u) => sum + ((battleEnd.get(String(u.id)) || {}).sectorKills || 0), 0);
+        const summary = document.createElement('div');
+        summary.className = 'sector-report-summary';
+        summary.textContent = `${survivors.length} SURVIVORS  •  ${totalKills} CONFIRMED KILLS  •  AMMUNITION RESTOCKED`;
+        container.appendChild(summary);
+
+        const table = document.createElement('div');
+        table.className = 'sector-report-table';
+        table.innerHTML = '<div class="sector-report-row sector-report-head"><span>SOLDIER</span><span>RANK / GROWTH</span><span>KILLS</span><span>BATTLE CONDITION</span></div>';
+        survivors.slice()
+            .sort((a, z) => ((battleEnd.get(String(z.id)) || {}).sectorKills || 0) - ((battleEnd.get(String(a.id)) || {}).sectorKills || 0))
+            .forEach(u => {
+                const before = battleEnd.get(String(u.id)) || {};
+                const promotion = promoById.get(String(u.id)) || {};
+                const added = (promotion.addedSkills || [])
+                    .map(sk => (typeof SKILLS !== 'undefined' && SKILLS[sk] ? SKILLS[sk].name : sk)).join(', ');
+                const injury = before.wounded ? 'WOUNDED' : 'FIT';
+                const row = document.createElement('div');
+                row.className = 'sector-report-row' + (before.wounded ? ' wounded' : '');
+                const role = (u.def && u.def.role) || '';
+                row.innerHTML = `<span><b>${u.name}</b><small>${role}</small></span>`
+                    + `<span>R${before.rank || 0} → R${u.rank || 0}<small>HP +${promotion.hpGain || 0}${added ? ' • ' + added : ''}</small></span>`
+                    + `<span>${before.sectorKills || 0}<small>TOTAL ${before.kills || 0}</small></span>`
+                    + `<span class="condition-${injury.toLowerCase()}">${injury}<small>${before.hp || 0}/${before.maxHp || 0} → ${u.hp}/${u.maxHp}</small></span>`;
+                table.appendChild(row);
+            });
+        container.appendChild(table);
+
+        const next = document.createElement('button');
+        next.className = 'sector-report-next';
+        next.textContent = 'CONTINUE TO NEXT SECTOR';
+        next.onclick = () => { this.sector++; this.startMission(); };
+        container.appendChild(next);
+    }
+
     promoteSurvivors() {
-        this.survivingUnits.forEach(u => {
+        return this.survivingUnits.map(u => {
+            const beforeSkills = Array.isArray(u.skills) ? u.skills.slice() : [];
+            const beforeHp = u.hp || 0;
             u.sectorsSurvived = (u.sectorsSurvived || 0) + 1;
             if (!u.skills) u.skills = [];
             if (u.sectorsSurvived === 5) { u.skills.push("Hero"); u.maxAp = (u.maxAp || 4) + 1; }
@@ -746,13 +807,19 @@ class CampaignManager {
                 if (k.length) u.skills.push(k[Math.floor(Math.random() * k.length)]);
             }
             if (window.gameLogic && window.gameLogic.refreshWoundedState) window.gameLogic.refreshWoundedState(u);
+            return {
+                id: u.id,
+                hpGain: Math.max(0, (u.hp || 0) - beforeHp),
+                addedSkills: (u.skills || []).filter(skill => beforeSkills.indexOf(skill) < 0)
+            };
         });
     }
 
-    resupplySurvivors() {
+    resupplySurvivors(options = {}) {
+        const heal = options.heal === true;
         const BAG_SLOTS = 4;
         this.survivingUnits.forEach(u => {
-            if (u.hp < u.maxHp) u.hp = Math.floor(u.maxHp * 0.8);
+            if (heal && u.hp < u.maxHp) u.hp = Math.floor(u.maxHp * 0.8);
             if (window.gameLogic && window.gameLogic.refreshWoundedState) window.gameLogic.refreshWoundedState(u);
 
             if (!u.hands) u.hands = [null, null, null];

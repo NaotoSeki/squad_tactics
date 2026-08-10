@@ -352,6 +352,10 @@ SimCore.prototype.addSoldier = function (spec) {
     traits: spec.traits || [],
 
     hp: 100,
+    // Persistent and per-sector attribution are kept by the sim so the
+    // campaign report does not have to reconstruct kills from visual events.
+    kills: Math.max(0, Number(spec.kills) || 0),
+    battleKills: 0,
     state: 'idle',
     stateT: 0,
     suppression: 0,
@@ -422,6 +426,7 @@ SimCore.prototype._snapshot = function (s) {
     sidearm: s.sidearm ? { code: s.sidearm.weapon && s.sidearm.weapon.code } : null,
     isLeader: s.isLeader, traits: s.traits.slice(),
     hp: s.hp, state: s.state, stateT: s.stateT, prone: s.prone,
+    kills: s.kills || 0, battleKills: s.battleKills || 0,
     suppression: s.suppression, morale: s.morale, underFireT: s.underFireT,
     magRemaining: s.magRemaining, magsLeft: s.magsLeft, fireMode: s.fireMode,
     pullMode: s.pullMode,
@@ -2389,6 +2394,10 @@ SimCore.prototype._applyDamage = function (target, dmg, source) {
   target.hp = Math.max(0, target.hp - dmg);
   this._emit('HIT', { id: target.id, hp: target.hp });
   if (target.hp <= 0) {
+    if (source && source.id != null && source.id !== target.id) {
+      source.kills = (source.kills || 0) + 1;
+      source.battleKills = (source.battleKills || 0) + 1;
+    }
     this._emit('DOWN', { id: target.id });
     target.state = 'down';
     target.stateT = 0;

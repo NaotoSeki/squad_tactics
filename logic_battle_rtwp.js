@@ -242,6 +242,7 @@
     this.sim.addSoldier({
       id: id, team: team, q: unit.q, r: unit.r,
       weapon: simWeapon, ammo: { mags: mags }, skill: 1.0,
+      kills: Math.max(0, Number(unit.kills) || 0),
       grenades: nades.length, rifleGrenades: rifleNades.length,
       // 実物の性能（射程・威力）を弾種スペックへ持ち込む。SIM_TUNING 側は
       // 挙動（構え・信管・範囲）だけを持ち、数字は現物に従う。
@@ -293,6 +294,8 @@
 
       unit.q = s.q;
       unit.r = s.r;
+      unit.kills = Math.max(0, Number(s.kills) || 0);
+      unit._sectorKills = Math.max(0, Number(s.battleKills) || 0);
 
       // sim の hp は 0..100 固定。本編のユニットは maxHp がまちまちなので、
       // 登録時に取った比率で戻す（sim 側で半分減ったら本編でも半分減る）。
