@@ -743,6 +743,10 @@ class Card extends Phaser.GameObjects.Container {
     onHoverOut() { this.isHovering = false; if (this.scene.scheduleResetHandOrderIfNoHover) this.scene.scheduleResetHandOrderIfNoHover(); }
     onDragStart(pointer) { 
         if(Renderer.isMapDragging) return;
+        const review = window.gameLogic && (window.gameLogic._battleReviewReadOnly
+            || window.gameLogic.state === 'REVIEW' || window.gameLogic.state === 'WIN'
+            || window.gameLogic.state === 'LOSS');
+        if (review) return;
         const isWeapon = typeof WPNS !== 'undefined' && WPNS[this.cardType];
         const deployMax = (window.gameLogic && window.gameLogic.getDeployCardMax) ? window.gameLogic.getDeployCardMax() : 2;
         if (!isWeapon && window.gameLogic && window.gameLogic.cardsUsed >= deployMax) return; 
@@ -771,6 +775,10 @@ class Card extends Phaser.GameObjects.Container {
         this.scene.fusionTargetCard = null;
         this.setAlpha(1.0); this.setScale(1.0); 
         const main = this.scene.game.scene.getScene('MainScene'); main.dragHighlightHex = null; 
+        const review = window.gameLogic && (window.gameLogic._battleReviewReadOnly
+            || window.gameLogic.state === 'REVIEW' || window.gameLogic.state === 'WIN'
+            || window.gameLogic.state === 'LOSS');
+        if (review) { this.returnToHand(); return; }
         const dropZoneY = this.scene.scale.height * 0.88;
         const sw = this.scene.scale.width;
         const overRightPanel = pointer.x >= sw - (window.getSidebarWidth ? window.getSidebarWidth() : 340);

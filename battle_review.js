@@ -72,7 +72,7 @@
     // by BattleLogic.onUnitClick's REVIEW branch and only changes this facade.
     ['actionMove','actionAttack','actionMelee','actionHeal','actionRepair','actionReserveMarch',
       'endTurn','runAuto','toggleAuto','swapEquipment','setMode','handleRightClick','reloadWeapon',
-      'toggleFireMode','transferEquipment','moveWeaponToDeck','equipWeaponFromDeck','consumeAmmo',
+      'toggleFireMode','setAttackModeWithBurst','canEquipItemFromDeck','transferEquipment','moveWeaponToDeck','equipWeaponFromDeck','consumeAmmo',
       'addReinforcement','processMarchOrders','issueOrder','orderMove','orderFocusFire','orderSuppress',
       'orderTakeCover','orderAssault','beginAction','commitAction','cancelAction','setStance',
       'deployUnit','triggerBombardment','actionBombardment','useItem','discardItem'].forEach((name) => {

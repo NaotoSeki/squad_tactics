@@ -338,7 +338,7 @@ window.PhaserSidebar = class PhaserSidebar {
         // RTwP の再装填は sim が自分でやる（RELOADイベントが出る）。旧ターン制の
         // 手動リロードを押せると AP を消費して弾数だけ食い違うので出さない。
         const rtwpActive = !!(window.RtwpBattle && window.RtwpBattle.active);
-        if (!rtwpActive && virtualWpn && !u.def.isTank && !virtualWpn.partType && virtualWpn.code !== 'm2_mortar' && virtualWpn.current < virtualWpn.cap) {
+        if (!rtwpActive && this.canEditLoadout() && virtualWpn && !u.def.isTank && !virtualWpn.partType && virtualWpn.code !== 'm2_mortar' && virtualWpn.current < virtualWpn.cap) {
             y += 10;
             const reloadBtn = this.createButton(left, y, sw - 36, 28, 'RELOAD', () => { if (window.gameLogic) window.gameLogic.reloadWeapon(true); });
             this.unitContent.add(reloadBtn.container);
@@ -474,7 +474,7 @@ window.PhaserSidebar = class PhaserSidebar {
         const container = this.scene.add.container(x, y);
         const bg = this.scene.add.rectangle(slotW / 2, slotH / 2, slotW, slotH, item ? bgColor : 0x0a0a0a);
         bg.setStrokeStyle(1, borderColor, item ? 1 : 0.3);
-        bg.setInteractive({ useHandCursor: !!item });
+        bg.setInteractive({ useHandCursor: this.canEditLoadout() && !!item });
         container.add(bg);
 
         if (isMain && isMortarActive && item && item.type === 'part') {
@@ -688,6 +688,10 @@ window.PhaserSidebar = class PhaserSidebar {
     }
 
     updateDropHighlight(px, py) {
+        if (!this.canEditLoadout()) {
+            this._snapTarget = null;
+            return;
+        }
         const dragCard = typeof Renderer !== 'undefined' ? Renderer.draggedCard : null;
         const dragSrc = dragCard ? (dragCard.weaponData || dragCard.cardType) : null;
         const isEquipCardDrag = typeof Renderer !== 'undefined' && Renderer.isCardDragging && dragSrc
@@ -728,8 +732,16 @@ window.PhaserSidebar = class PhaserSidebar {
         return { container };
     }
 
+    // The frozen battle-review façade deliberately keeps the same sidebar so
+    // units can be inspected. Equipment, however, must never look draggable
+    // there (nor on a WIN/LOSS result screen).
+    canEditLoadout() {
+        const game = window.gameLogic;
+        return !!game && game.state === 'PLAY' && !game._battleReviewReadOnly;
+    }
+
     onSlotPointerDown(pointer, type, index, slotW, slotH, label, slotContainer) {
-        if (this.dragSrc) return;
+        if (this.dragSrc || !this.canEditLoadout()) return;
         const isMain = type === 'main';
         const borderColor = isMain ? ACCENT : SLOT_BORDER;
         const bgColor = isMain ? 0x2a201a : SLOT_BG;
@@ -762,6 +774,14 @@ window.PhaserSidebar = class PhaserSidebar {
                 if (this.dragGhost) this.dragGhost.destroy();
                 this.dragGhost = null; this.dragSrc = null;
                 if (this.dragLiftedSlot) { this.dragLiftedSlot.setAlpha(1); this.dragLiftedSlot = null; }
+                return;
+            }
+            if (!this.canEditLoadout()) {
+                if (this.dragLiftedSlot) this.dragLiftedSlot.setAlpha(1);
+                this.dragLiftedSlot = null;
+                this.dragGhost.destroy(); this.dragGhost = null; this.dragSrc = null;
+                this._snapTarget = null;
+                this.updateSquadChipHighlight(-1, -1);
                 return;
             }
             const dropTarget = this.hitTestSlots(p.x, p.y);
@@ -808,7 +828,7 @@ window.PhaserSidebar = class PhaserSidebar {
     }
 
     onSlotPointerUp(pointer, type, index) {
-        if (!this.dragSrc || this.dragGhost) return;
+        if (!this.dragSrc || this.dragGhost || !this.canEditLoadout()) return;
         const sameSlot = this.dragSrc.type === type && this.dragSrc.index === index;
         if (!sameSlot && window.gameLogic && window.gameLogic.swapEquipment) {
             window.gameLogic.swapEquipment(this.dragSrc, { type, index });

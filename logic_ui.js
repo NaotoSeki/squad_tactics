@@ -158,6 +158,7 @@ class UIManager {
         // 今回はオーバーレイ画面が出る前提なので、単に隠すだけでOK
     }
     handleDragStart(e, type, index) {
+        if (!window.gameLogic || window.gameLogic.state !== 'PLAY' || window.gameLogic._battleReviewReadOnly) return;
         this.dragSrc = { type, index };
         e.dataTransfer.effectAllowed = 'move';
     }
@@ -169,6 +170,10 @@ class UIManager {
 
     handleDrop(e, type, index) {
         e.preventDefault();
+        if (!window.gameLogic || window.gameLogic.state !== 'PLAY' || window.gameLogic._battleReviewReadOnly) {
+            this.dragSrc = null;
+            return;
+        }
         if (this.dragSrc) {
             // BattleLogicへの委譲（gameLogic経由）
             if(window.gameLogic && window.gameLogic.swapEquipment) {
