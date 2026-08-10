@@ -1,0 +1,24 @@
+{
+  "schema": "squad-tactics-human-critic/v1",
+  "assetId": "original.dirt.blockout.v1",
+  "decision": "rejected-before-human-ab",
+  "promotionAllowed": false,
+  "reviewStage": "gameplay-scale visual critic",
+  "evidence": {
+    "frame": 22,
+    "zoomLow": {"scale": 0.65, "path": "evidence/gameplay_zoom_low.png", "sha256": "f97f876026f0ec7906f7f6e9490f03eb2086e44b2d88a5d37ee7ed0890f5eed5"},
+    "zoomMid": {"scale": 1.0, "path": "evidence/gameplay_zoom_mid.png", "sha256": "131ef20c01d96ba68f98f54e14939bcfb12f9029e0af0761ae9137d6ba08db50"},
+    "zoomHigh": {"scale": 1.45, "path": "evidence/gameplay_zoom_high.png", "sha256": "36c1c83d443425271d1c732dbfdb8310de62007426e1e3f247bf00cfd078297e"}
+    ,"slowedContactSheet": {"path": "evidence/slowed_contact_sheet.png"}
+    ,"alphaMassCentroidOverlay": {"path": "evidence/alpha_mass_centroid_overlay.png"}
+    ,"haloCheck": {"path": "evidence/halo_check.png"}
+  },
+  "automaticFailures": [
+    "body alpha-mass peak is 0.4681 normalized time, outside the observed impact-dust band 0.0377-0.2185",
+    "28 frames touch a canvas boundary and therefore clip the body silhouette",
+    "material is nearly illegible at low and medium gameplay zoom",
+    "broken-grass strokes and small clod silhouettes do not yet match the environmental rendering density"
+  ],
+  "humanAB": {"status": "not-run", "reason": "automatic and single-candidate visual critic failures must be fixed before blind A/B"},
+  "nextCandidate": "Blender 5.0 headless render with 3D noise-displaced clods, tapered mesh grass, volume dust and separately rendered contact shadow"
+}

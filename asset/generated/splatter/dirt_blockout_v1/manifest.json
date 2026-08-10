@@ -1,0 +1,49 @@
+{
+  "schema": "squad-tactics-splatter-atlas/v1",
+  "assetId": "original.dirt.blockout.v1",
+  "status": "critic-candidate",
+  "promotionAllowed": false,
+  "frameSize": [
+    160,
+    128
+  ],
+  "frameCount": 48,
+  "fps": 30,
+  "anchorPx": [
+    80,
+    100
+  ],
+  "anchor": {
+    "x": 0.5,
+    "y": 0.78125
+  },
+  "passes": [
+    "opaque_clods",
+    "fine_dust",
+    "broken_grass",
+    "contact_shadow"
+  ],
+  "compositeOrder": [
+    "contact_shadow",
+    "fine_dust",
+    "broken_grass",
+    "opaque_clods"
+  ],
+  "atlas": {
+    "file": "atlas.png",
+    "columns": 8,
+    "rows": 6
+  },
+  "passAtlases": {
+    "opaque_clods": "atlas_opaque_clods.png",
+    "fine_dust": "atlas_fine_dust.png",
+    "broken_grass": "atlas_broken_grass.png",
+    "contact_shadow": "atlas_contact_shadow.png"
+  },
+  "profile": "asset/fx/splatter_pipeline/profiles.json",
+  "qualitySpec": "asset/fx/splatter_pipeline/quality_spec.json",
+  "humanAB": {
+    "status": "pending",
+    "reviewers": []
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "assetId": "original.dirt.blockout.v1",
+  "license": "project-owned",
+  "generator": "scripts/splatter_pipeline/generate_dirt_blockout.py",
+  "generatorVersion": "1",
+  "seed": 41027,
+  "referencePixelsUsed": false,
+  "trainingOrConditioningUsed": false,
+  "releaseStatus": "critic-candidate",
+  "outputs": {
+    "atlas.png": "8c0d605876e413eb5e719a222d5b644ea652894a645a898eba2ae21857544b17",
+    "manifest.json": "abd530058e4c9e29bc27e39d0bf582f6716e852e441874ce4e2c02f023a8769a",
+    "metrics.json": "eeb3e6293cb6b1fe4a0bad7bed6091f6a1817779aeaf9a8e3493ea31815832af",
+    "atlas_opaque_clods.png": "70d713da7627cb9674b583259702958fb24015d0043377c894940f2a8cfdb5bb",
+    "atlas_fine_dust.png": "475df2f6bfdad33f22195d504c9cf01ca3e255b8a6af95ede7381b5dc1aa79c5",
+    "atlas_broken_grass.png": "9a7459540abb1ff551869d02ab0af0191b9d2404aac926ee6790253b7565441b",
+    "atlas_contact_shadow.png": "1b863f24a10c0ecf8956a8ca407814f0a5cac50e2df8c5951a14036455696c38",
+    "evidence/slowed_contact_sheet.png": "6fb4c7001fdcf5f0a8cdc691fa134ba09e9dabed6a63ea752d98edccc39617ad",
+    "evidence/alpha_mass_centroid_overlay.png": "e96b7da80ffc91e1ef32066857ed04f34d24e1f0b6b744ad56ba17e15dcebb93",
+    "evidence/halo_check.png": "618ccdb0f26b23ea3640cb3e3a88d946a510c959d0df9398d9517003d876e61c"
+  }
+}

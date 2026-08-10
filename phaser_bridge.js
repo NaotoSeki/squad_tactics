@@ -3,6 +3,15 @@ let phaserGame = null;
 window.HIGH_RES_SCALE = 2.0;
 const psFxParams = typeof URLSearchParams !== 'undefined'
     ? new URLSearchParams(window.location.search) : null;
+window.SPLATTER_CRITIC_PREVIEW = {
+    enabled: !!(psFxParams && /^(localhost|127\.0\.0\.1|\[::1\])$/.test(window.location.hostname)
+        && psFxParams.get('splattercritic') === '1'),
+    key: 'original_dirt_blockout_v1', frames: 48, frameWidth: 160, frameHeight: 128,
+    anchorX: 80, anchorY: 100, fps: 30,
+    frame: psFxParams ? Number(psFxParams.get('splatterframe') || -1) : -1,
+    zoom: psFxParams && [0.65, 1, 1.45].includes(Number(psFxParams.get('splatterzoom')))
+        ? Number(psFxParams.get('splatterzoom')) : 1
+};
 window.PS_ORIGINAL_FX = {
     // Private research benchmark only. Commercial/default runtime never loads PS pixels.
     enabled: !!(window.FxPacks && FxPacks.activeId === 'panzer_reference'),
@@ -1086,6 +1095,14 @@ class MainScene extends Phaser.Scene {
         this.load.spritesheet('soldier_sheet', 'asset/soldier_sheet_1.png', { frameWidth: 128, frameHeight: 128 });
         this.load.spritesheet('tank_sheet', 'asset/tank_sheet_1.png', { frameWidth: 128, frameHeight: 128 });
         this.load.spritesheet('explosion_sheet', 'asset/explosion_sheet_1.png', { frameWidth: 64, frameHeight: 64 });
+        if (window.SPLATTER_CRITIC_PREVIEW && SPLATTER_CRITIC_PREVIEW.enabled) {
+            this.load.spritesheet(SPLATTER_CRITIC_PREVIEW.key,
+                'asset/generated/splatter/dirt_blockout_v1/atlas.png', {
+                    frameWidth: SPLATTER_CRITIC_PREVIEW.frameWidth,
+                    frameHeight: SPLATTER_CRITIC_PREVIEW.frameHeight,
+                    endFrame: SPLATTER_CRITIC_PREVIEW.frames - 1
+                });
+        }
         if (window.PS_ORIGINAL_FX && PS_ORIGINAL_FX.enabled) {
             for (const meta of [PS_ORIGINAL_FX.fire, PS_ORIGINAL_FX.fireAlt,
                 PS_ORIGINAL_FX.dust, PS_ORIGINAL_FX.smoke]) {
@@ -2023,6 +2040,32 @@ class MainScene extends Phaser.Scene {
     }
 
     update(time, delta) {
+        if (this.mapGenerated && window.SPLATTER_CRITIC_PREVIEW
+            && SPLATTER_CRITIC_PREVIEW.enabled && !this._splatterCriticPreviewPlayed) {
+            this._splatterCriticPreviewPlayed = true;
+            const meta = SPLATTER_CRITIC_PREVIEW;
+            const center = Renderer.hexToPx(Math.floor(MAP_W / 2), Math.floor(MAP_H / 2));
+            const frame = Math.max(-1, Math.min(meta.frames - 1, Math.round(meta.frame)));
+            const sprite = this.add.sprite(center.x, center.y, meta.key, Math.max(0, frame))
+                .setOrigin(meta.anchorX / meta.frameWidth, meta.anchorY / meta.frameHeight)
+                .setDepth(1997);
+            if (frame < 0) {
+                const animKey = meta.key + '_critic_anim';
+                if (!this.anims.exists(animKey)) this.anims.create({
+                    key: animKey, frames: this.anims.generateFrameNumbers(meta.key, { start: 0, end: meta.frames - 1 }),
+                    frameRate: meta.fps, repeat: -1, repeatDelay: 500
+                });
+                sprite.play(animKey);
+            }
+            this.add.text(center.x - 112, center.y - 76,
+                `CRITIC ONLY / REJECT UNTIL A/B / frame ${frame < 0 ? 'animated' : frame}`, {
+                    font: '10px monospace', color: '#ffd27a', backgroundColor: '#241b12'
+                }).setDepth(1999);
+            if (this.cameras && this.cameras.main && isFinite(meta.zoom) && meta.zoom > 0) {
+                this.cameras.main.setZoom(meta.zoom);
+                this.cameras.main.centerOn(center.x, center.y);
+            }
+        }
         if (this.mapGenerated && window.PS_FX_INVENTORY_PREVIEW
             && !this._psFxInventoryPreviewStarted && window.PsFxInventory) {
             this._psFxInventoryPreviewStarted = true;

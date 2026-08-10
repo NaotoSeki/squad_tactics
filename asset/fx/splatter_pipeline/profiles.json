@@ -1,0 +1,11 @@
+{
+  "schema": "squad-tactics-splatter-profiles/v1",
+  "materials": {
+    "dirt": {"generator": "noise-field-ballistic-v1", "palette": [[54,42,28],[83,64,39],[116,88,52],[145,116,73]], "passes": ["opaque_clods","fine_dust","broken_grass","contact_shadow"]},
+    "grass": {"status": "planned", "inherits": "dirt", "emphasis": "broken_grass"},
+    "wood": {"status": "planned", "generator": "fiber-splinter-ballistic"},
+    "stone": {"status": "planned", "generator": "fracture-chip-ballistic"},
+    "wall_dust": {"status": "planned", "generator": "mineral-chip-powder"},
+    "explosion_debris": {"status": "planned", "generator": "budgeted-material-composite"}
+  }
+}

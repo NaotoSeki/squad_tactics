@@ -1,0 +1,27 @@
+{
+  "schema": "squad-tactics-splatter-quality/v1",
+  "teacherPolicy": {
+    "allowed": "abstract aggregate measurements only",
+    "forbidden": ["reference pixels", "reference crops", "conditioning", "training", "runtime dependency", "release packaging"]
+  },
+  "sourceObservation": {
+    "metrics": "asset/ps_fx/study/metrics/family_summary.csv",
+    "categories": {
+      "ground_impact": {"families": 19, "framesP10P90": [57.8, 80.6], "peakTimeNormP10P90": [0.1138, 0.4899], "densityP50AcrossFamiliesP10P90": [0.1237, 0.2101], "componentsP50AcrossFamiliesP10P90": [9.6, 56.2], "componentsP90AcrossFamiliesP10P90": [10.64, 59.84]},
+      "impact_dust": {"families": 13, "framesP10P90": [30.4, 70.8], "peakTimeNormP10P90": [0.0377, 0.2185], "densityP10P90": [0.271, 0.4437], "softEdgeP10P90": [0.7268, 0.9829]},
+      "ground_debris_fragment": {"families": 7, "framesP10P90": [8.2, 12.0], "componentsP10P90": [1.0, 3.4], "softEdgeP10P90": [0.3621, 0.4636]}
+    }
+  },
+  "candidateGate": {
+    "fps": 30,
+    "requiredPasses": ["opaque_clods", "fine_dust", "broken_grass", "contact_shadow"],
+    "transparentRgbMustBeZero": true,
+    "anchorTolerancePx": 2,
+    "maxAtlasSize": [2048, 2048],
+    "rejectPrimarySilhouettes": ["circle", "ellipse", "regular polygon", "rectangle"],
+    "evidenceZooms": [0.65, 1.0, 1.45],
+    "humanAB": {"required": true, "blind": true, "identicalStageScaleCadenceBackground": true, "minimumReviewers": 2, "dimensions": ["material identity", "temporal coherence", "silhouette richness", "world fit", "artifact freedom"]},
+    "requiredEvidence": ["slowed_contact_sheet", "alpha_mass_centroid_overlay", "halo_check", "gameplay_zoom_low", "gameplay_zoom_mid", "gameplay_zoom_high"],
+    "promotion": "FxPacks.original remains null until humanAB.status is approved"
+  }
+}
