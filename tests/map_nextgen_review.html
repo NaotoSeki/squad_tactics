@@ -1,0 +1,38 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>NextGen battlefield visual review</title>
+<style>
+  body { margin: 0; background: #171a17; color: #e9e4d2; font: 14px system-ui; }
+  header { padding: 12px 18px; display: flex; gap: 12px; align-items: center; }
+  canvas { display: block; margin: 0 auto 18px; background: #242a23; border: 1px solid #53604e; }
+  input, button { padding: 6px 9px; }
+  #metrics { opacity: .85; }
+</style>
+<header>
+  <strong>NextGen RTwP battlefield</strong>
+  <input id="seed" value="41027" aria-label="seed">
+  <button id="generate">Generate</button>
+  <span id="metrics"></span>
+</header>
+<canvas id="map" width="920" height="760"></canvas>
+<script src="../logic_map_nextgen.js"></script>
+<script>
+  const colors = { GRASS:'#71865a', FOREST:'#284d31', ROAD:'#9c8560', FIELD:'#a89b57', RUIN:'#685f58', BLDG:'#373636' };
+  const canvas = document.getElementById('map'), ctx = canvas.getContext('2d');
+  function draw() {
+    const result = NextGenMapGenerator.create(document.getElementById('seed').value);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const size = 19, ox = 90, oy = 45, player = new Set(result.spawns.player.map(p => p.q+','+p.r));
+    const enemy = new Set(result.spawns.enemy.map(p => p.q+','+p.r));
+    for (let q=0; q<result.map.length; q++) for (let r=0; r<result.map[0].length; r++) {
+      const cell=result.map[q][r], x=ox+q*size*1.52, y=oy+r*size*1.72+q*size*.86;
+      ctx.beginPath();
+      for(let i=0;i<6;i++){const a=Math.PI/3*i; const px=x+Math.cos(a)*size, py=y+Math.sin(a)*size; i?ctx.lineTo(px,py):ctx.moveTo(px,py);}
+      ctx.closePath(); ctx.fillStyle=colors[cell.base]; ctx.fill();
+      ctx.strokeStyle=player.has(q+','+r)?'#59bfff':enemy.has(q+','+r)?'#ff665c':'#1b211b'; ctx.lineWidth=(player.has(q+','+r)||enemy.has(q+','+r))?3:1; ctx.stroke();
+      if(cell.elevation>=3){ctx.fillStyle='#f3e8a6';ctx.font='10px system-ui';ctx.fillText('▲'+cell.elevation,x-9,y+3);}
+    }
+    document.getElementById('metrics').textContent = result.seed+' · '+JSON.stringify(result.validation.metrics);
+  }
+  document.getElementById('generate').onclick=draw; draw();
+</script>

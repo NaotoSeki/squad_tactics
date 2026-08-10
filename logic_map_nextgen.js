@@ -96,9 +96,12 @@
     // Settlement stays off the main corridors; openings prevent sealed compounds.
     const settlement = { q: Math.floor(w / 2) + (rng() < 0.5 ? -2 : 2), r: Math.floor(h / 2) + Math.floor(rng() * 5) - 2 };
     const ring = neighbors(settlement.q, settlement.r, w, h);
-    shuffle(ring, rng).slice(0, 3).forEach((p, i) => {
-      if (corridorCenters.every(c => Math.abs(p.q - c) > 1)) map[p.q][p.r] = terrain(i === 0 ? 'RUIN' : 'BLDG', map[p.q][p.r].elevation);
-    });
+    shuffle(ring, rng)
+      .filter(p => corridorCenters.every(c => Math.abs(p.q - c) > 1))
+      .slice(0, 3)
+      .forEach((p, i) => {
+        map[p.q][p.r] = terrain(i === 0 ? 'RUIN' : 'BLDG', map[p.q][p.r].elevation);
+      });
     map[settlement.q][settlement.r] = terrain('ROAD', map[settlement.q][settlement.r].elevation);
 
     // Spawn reserves are broad, open, and connected to both corridors.
