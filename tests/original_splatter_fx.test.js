@@ -21,6 +21,8 @@ assert.match(vfx, /playMaterialSplatter\(x, y, splatterRole\.profile, eventSeed\
 assert.match(vfx, /state = \(Number\(seed\) >>> 0\)/, 'candidate playback is seedable');
 const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
 assert.match(html, /asset\/fx\/original_splatter\/profiles\.js/, 'owned profile is loaded by runtime');
+const packs = fs.readFileSync(path.join(root, 'fx_pack_registry.js'), 'utf8');
+assert.match(packs, /impact_splatter:null/, 'visually rejected candidate must remain disabled');
 assert.doesNotMatch(fs.readFileSync(profilePath, 'utf8'), /ps_fx|panzer.?strike|inventory/i,
   'shipping profile must not name or depend on research material');
 const provenance = JSON.parse(fs.readFileSync(path.join(root, 'asset/fx/original_splatter/provenance.json'), 'utf8'));
@@ -28,4 +30,5 @@ const digest = crypto.createHash('sha256').update(fs.readFileSync(profilePath)).
 assert.strictEqual(provenance.outputFiles[0].sha256, digest, 'provenance hash must match the shipped profile');
 assert.strictEqual(provenance.referencePixelsUsed, false);
 assert.strictEqual(provenance.trainingWeightsUsed, false);
+assert.strictEqual(provenance.releaseStatus, 'rejected-visual-quality');
 console.log('original_splatter_fx.test.js: OK');

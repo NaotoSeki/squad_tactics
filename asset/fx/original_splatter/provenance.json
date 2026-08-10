@@ -2,9 +2,9 @@
   "schemaVersion": 1,
   "assetId": "original.dirt.v1",
   "logicalRole": "impact_splatter.dirt",
-  "releaseStatus": "integration-candidate",
+  "releaseStatus": "rejected-visual-quality",
   "releaseSafeInputs": true,
-  "humanReview": "pending",
+  "humanReview": "rejected: primitive circular particles do not meet the world visual bar",
   "author": "Squad Tactics project",
   "generator": "hand-authored deterministic JavaScript profile",
   "generatorVersion": "1",
@@ -20,5 +20,5 @@
     }
   ],
   "createdUtc": "2026-08-10T00:00:00Z",
-  "notes": "Independent numeric profile. No decoded, cropped, derived or copied reference pixels."
+  "notes": "Independent numeric profile with safe provenance, but rejected for visual quality and disabled in FxPacks.original. It must not ship or be used as a quality baseline."
 }

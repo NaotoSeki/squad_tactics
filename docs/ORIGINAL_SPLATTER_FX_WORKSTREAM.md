@@ -41,7 +41,12 @@ copy a reference frame. A disagreement returns the candidate to iteration.
 5. Wall dust: combines mineral chips with a slower powder envelope.
 6. Explosion debris: composes approved materials under a strict particle budget.
 
-The first vertical slice is `original.dirt.v1`. It is a code-native procedural
-asset under `asset/fx/original_splatter`, uses a deterministic seed, and layers
-onto the existing bullet-impact smoke without changing damage, event timing or
-persistent decal behavior.
+`original.dirt.v1` proved the runtime hook but failed visual review because its
+primary read was primitive circular particles. It is disabled, rejected and
+must not ship or become a quality baseline.
+
+No candidate may be enabled in `FxPacks.original` until the reviewer has seen a
+gameplay-scale capture and a slowed contact sheet, completed blind A/B against
+the abstract teacher metrics, and recorded an explicit pass in its provenance.
+Code review and numeric-range tests are necessary but cannot substitute for
+visual review.

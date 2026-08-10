@@ -13,7 +13,7 @@
         grenade_blast:{kind:'khaos',tier:'t2_grenade'}, grenade_smoke:{kind:'procedural',preset:'impact-smoke'},
         mortar_impact:{kind:'khaos',tier:'t2_grenade'}, mortar_smoke:{kind:'procedural',preset:'mortar-smoke'},
         impact_dust:{kind:'procedural',preset:'impact-dust'}, bullet_impact:{kind:'khaos',tier:'t1_12mm'},
-        impact_splatter:{kind:'procedural',profile:'dirt'}
+        impact_splatter:null
       })
     }),
     panzer_reference: Object.freeze({
