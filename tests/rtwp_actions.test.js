@@ -710,12 +710,26 @@ function attach(g) {
   inst.pendingAction = null;
   g.targetPreview = null;
 
+  inst.armActionForUnits('MOVE', players);
+  const simpleMovePreview = inst.previewPendingTargets([], [h0, h1], false);
+  check(simpleMovePreview && simpleMovePreview.simplePreview
+    && simpleMovePreview.assignments.length === 0
+    && simpleMovePreview.hexes.length === 1,
+    'mass movement preview uses one intent marker instead of route assignment');
+  inst.pendingAction = null;
+  g.targetPreview = null;
+
   const foe0 = g.units.find((u) => u.team === 'enemy');
   const foeHex = open.find((h) => h.q !== foe0.q || h.r !== foe0.r);
   const foe1 = mkUnit('E1', 'enemy', foeHex);
   g.units.push(foe1);
   inst.registerUnit(foe1);
   inst.armActionForUnits('ASSAULT', players);
+  const simpleAssaultPreview = inst.previewPendingTargets([foe0], [{ q: foe0.q, r: foe0.r }], true);
+  check(simpleAssaultPreview && simpleAssaultPreview.simplePreview
+    && simpleAssaultPreview.assignments.length === 0
+    && simpleAssaultPreview.hoverUnit === foe0,
+    'mass assault preview uses a target marker instead of per-soldier arrows');
   const areaPlan = inst.planPendingTargets([], [
     { q: foe0.q, r: foe0.r }, { q: foe1.q, r: foe1.r },
   ], false);

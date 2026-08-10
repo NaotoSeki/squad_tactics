@@ -1282,17 +1282,46 @@
   };
 
   RtwpInstance.prototype.previewPendingTargets = function (targetUnits, hexes, exactUnit) {
-    // A squad suppression preview is deliberately a cheap intent marker, not
-    // a full per-soldier route plan. Planning every actor against every hover
-    // cell used to multiply the firing-position search into a browser stall.
     const pending = this.pendingAction;
     const previewHexes = this._uniqueHexes(hexes);
-    if (pending && pending.id === 'SUPPRESS_HEX' && previewHexes.length === 1
-      && this._pendingActors(this.gameLogic && this.gameLogic.selectedUnit).length > 1) {
+    const actors = this._pendingActors(this.gameLogic && this.gameLogic.selectedUnit);
+    const SA = resolveDeps().SimActions;
+    const def = pending && SA && SA.get(pending.id);
+    // A mass-command preview is an intent marker. It must not run a complete
+    // actor × target assignment (or a suppress approach search) on every
+    // pointer event. Actual orders are planned once, on click.
+    if (pending && def && actors.length > 1 && def.needs === 'hex' && previewHexes.length
+      && ['MOVE', 'RUSH', 'CRAWL', 'SUPPRESS_HEX'].includes(pending.id)) {
+      const hex = previewHexes[previewHexes.length - 1];
       const plan = {
         actionId: pending.id, needs: 'hex', targetKind: 'hex',
-        hexes: previewHexes, hoverUnit: null, assignments: [],
+        hexes: [hex], hoverUnit: null, assignments: [],
         valid: true, simplePreview: true,
+      };
+      if (this.gameLogic) this.gameLogic.targetPreview = plan;
+      return plan;
+    }
+    const enemy = exactUnit && (targetUnits || []).find((u) => u && u.team === 'enemy' && u.hp > 0);
+    if (pending && def && actors.length > 1 && def.needs === 'enemy' && enemy) {
+      const plan = {
+        actionId: pending.id, needs: 'enemy', targetKind: 'unit',
+        hexes: [], hoverUnit: enemy, assignments: [], valid: true, simplePreview: true,
+      };
+      if (this.gameLogic) this.gameLogic.targetPreview = plan;
+      return plan;
+    }
+    // Large assault drags use the final hex as one shared objective.  Showing
+    // a marker is enough while aiming; distributing every actor across every
+    // hovered enemy is both visually noisy and computationally explosive.
+    if (pending && def && actors.length >= 8 && def.needs === 'enemy' && previewHexes.length) {
+      const hex = previewHexes[previewHexes.length - 1];
+      const target = this._enemyAt(hex);
+      const plan = target ? {
+        actionId: pending.id, needs: 'enemy', targetKind: 'unit',
+        hexes: [], hoverUnit: target, assignments: [], valid: true, simplePreview: true,
+      } : {
+        actionId: pending.id, needs: 'enemy', targetKind: 'hex',
+        hexes: [hex], hoverUnit: null, assignments: [], valid: false, simplePreview: true,
       };
       if (this.gameLogic) this.gameLogic.targetPreview = plan;
       return plan;
@@ -1304,15 +1333,49 @@
 
   RtwpInstance.prototype.consumePendingTargets = function (targetUnits, hexes, exactUnit) {
     const pending = this.pendingAction;
-    const suppressHexes = this._uniqueHexes(hexes);
-    if (pending && pending.id === 'SUPPRESS_HEX' && suppressHexes.length === 1
-      && this._pendingActors(this.gameLogic && this.gameLogic.selectedUnit).length > 1) {
-      const hex = suppressHexes[0];
+    const destinations = this._uniqueHexes(hexes);
+    const actors = this._pendingActors(this.gameLogic && this.gameLogic.selectedUnit);
+    const SA = resolveDeps().SimActions;
+    const def = pending && SA && SA.get(pending.id);
+    // One squad destination has no allocation problem: everyone receives the
+    // same order. This removes Hungarian/path-planning multiplication for
+    // movement, suppression and mass-command clicks.
+    // Dragging many destinations is a useful small-squad formation tool, but
+    // at platoon scale an optimal actor×hex assignment would stall the main
+    // thread. Large selections intentionally converge on the final dragged
+    // hex; each soldier still receives exactly one independently valid order.
+    if (pending && def && actors.length > 1 && def.needs === 'hex' && destinations.length
+      && ['MOVE', 'RUSH', 'CRAWL', 'SUPPRESS_HEX'].includes(pending.id)
+      && (destinations.length === 1 || actors.length >= 8)) {
+      const hex = destinations[destinations.length - 1];
       let any = false;
-      // One route search per selected soldier, after the click. There is no
-      // assignment pass and no second preview-time pass.
-      this._pendingActors(this.gameLogic && this.gameLogic.selectedUnit).forEach((unit) => {
+      actors.forEach((unit) => {
         if (this.runAction(pending.id, unit, null, hex)) any = true;
+      });
+      if (any) {
+        this.pendingAction = null;
+        if (this.gameLogic) this.gameLogic.targetPreview = null;
+      }
+      return any;
+    }
+    const enemy = exactUnit && (targetUnits || []).find((u) => u && u.team === 'enemy' && u.hp > 0);
+    if (pending && def && actors.length > 1 && def.needs === 'enemy' && enemy) {
+      let any = false;
+      actors.forEach((unit) => {
+        if (this.runAction(pending.id, unit, enemy, null)) any = true;
+      });
+      if (any) {
+        this.pendingAction = null;
+        if (this.gameLogic) this.gameLogic.targetPreview = null;
+      }
+      return any;
+    }
+    if (pending && def && actors.length >= 8 && def.needs === 'enemy' && destinations.length) {
+      const target = this._enemyAt(destinations[destinations.length - 1]);
+      if (!target) return false;
+      let any = false;
+      actors.forEach((unit) => {
+        if (this.runAction(pending.id, unit, target, null)) any = true;
       });
       if (any) {
         this.pendingAction = null;
