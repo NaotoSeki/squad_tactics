@@ -624,8 +624,26 @@ class CampaignManager {
     // --- MISSION END HANDLERS ---
     onSectorCleared(survivors, transition) {
         transition = transition || {};
+        const liveRoster = (typeof window !== 'undefined' && window.gameLogic
+            && Array.isArray(window.gameLogic.units)) ? window.gameLogic.units : [];
+        const snapshotRoster = this.endBattleSnapshot && Array.isArray(this.endBattleSnapshot.units)
+            ? this.endBattleSnapshot.units : [];
+        // The live facade normally retains defeated units, while the immutable
+        // review snapshot is the fallback for adapters that only expose survivors.
+        const activeRoster = liveRoster.concat(snapshotRoster);
+        const playerRoster = [];
+        const rosterIds = new Set();
+        activeRoster.concat(this.survivingUnits || [], survivors || []).forEach(u => {
+            if (!u || u.team !== 'player') return;
+            const id = String(u.id);
+            if (rosterIds.has(id)) return;
+            rosterIds.add(id);
+            playerRoster.push(u);
+        });
+        const survivorIds = new Set((survivors || []).map(u => String(u.id)));
+        const casualties = playerRoster.filter(u => !survivorIds.has(String(u.id)) && Number(u.hp) <= 0);
         this.survivingUnits = survivors;
-        const battleEnd = new Map(survivors.map(u => [String(u.id), {
+        const battleEnd = new Map(playerRoster.map(u => [String(u.id), {
             hp: u.hp, maxHp: u.maxHp,
             // RTwP writes HP/state back directly. Capture a display-ready
             // condition instead of relying only on the campaign flag.
@@ -658,7 +676,7 @@ class CampaignManager {
         }
         const b = document.getElementById('reward-cards'); 
         b.innerHTML = ''; 
-        this.renderVictoryReport(b, survivors, battleEnd, promotions);
+        this.renderVictoryReport(b, casualties, survivors, battleEnd, promotions);
         if (screen.classList && screen.classList.add) screen.classList.add('sector-clear-animate');
         if (!transition.jingleStarted && typeof window !== 'undefined'
             && window.Sfx && typeof window.Sfx.play === 'function') {
@@ -753,40 +771,88 @@ class CampaignManager {
         if (window.Sfx) Sfx.play('sector_fail');
     }
 
-    /** Render a dense, scrollable report rather than presenting gameplay rewards. */
-    renderVictoryReport(container, survivors, battleEnd, promotions) {
+    /** Render a dense, independently scrollable casualty/survivor report. */
+    renderVictoryReport(container, casualties, survivors, battleEnd, promotions) {
         container.className = 'sector-report';
         const promoById = new Map((promotions || []).map(p => [String(p.id), p]));
-        const totalKills = survivors.reduce((sum, u) => sum + ((battleEnd.get(String(u.id)) || {}).sectorKills || 0), 0);
+        const allReported = (casualties || []).concat(survivors || []);
+        const totalKills = allReported.reduce((sum, u) => sum + ((battleEnd.get(String(u.id)) || {}).sectorKills || 0), 0);
+        const escapeHtml = value => String(value == null ? '' : value).replace(/[&<>"']/g, ch => ({
+            '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+        })[ch]);
+        const portraitFor = u => Number.isFinite(Number(u.portraitIndex))
+            ? `asset/portraits/inf_us_${String(Number(u.portraitIndex) + 1).padStart(3, '0')}.jpg`
+            : 'asset/portraits/inf_us_001.jpg';
+        const roleFor = u => {
+            const def = u.def || {};
+            const name = def.name || def.role || 'SOLDIER';
+            return def.role && def.role.toLowerCase() !== String(name).toLowerCase()
+                ? `${name} / ${def.role}` : name;
+        };
+        const skillName = key => (typeof SKILLS !== 'undefined' && SKILLS[key] && SKILLS[key].name)
+            ? SKILLS[key].name : key;
+
         const summary = document.createElement('div');
         summary.className = 'sector-report-summary';
-        summary.textContent = `${survivors.length} SURVIVORS  •  ${totalKills} CONFIRMED KILLS  •  AMMUNITION RESTOCKED`;
+        summary.innerHTML = `<span><b>${survivors.length}</b> SURVIVORS</span>`
+            + `<span class="sector-report-summary-kia"><b>${casualties.length}</b> KIA</span>`
+            + `<span><b>${totalKills}</b> CONFIRMED KILLS</span>`
+            + '<span>AMMUNITION RESTOCKED</span>';
         container.appendChild(summary);
 
-        const table = document.createElement('div');
-        table.className = 'sector-report-table';
-        table.innerHTML = '<div class="sector-report-row sector-report-head"><span>SOLDIER</span><span>RANK / GROWTH</span><span>KILLS</span><span>BATTLE CONDITION</span></div>';
-        survivors.slice()
-            .sort((a, z) => ((battleEnd.get(String(z.id)) || {}).sectorKills || 0) - ((battleEnd.get(String(a.id)) || {}).sectorKills || 0))
-            .forEach(u => {
-                const before = battleEnd.get(String(u.id)) || {};
-                const promotion = promoById.get(String(u.id)) || {};
-                const added = (promotion.addedSkills || [])
-                    .map(sk => (typeof SKILLS !== 'undefined' && SKILLS[sk] ? SKILLS[sk].name : sk)).join(', ');
-                const injury = before.wounded ? 'WOUNDED' : 'FIT';
-                const row = document.createElement('div');
-                row.className = 'sector-report-row' + (before.wounded ? ' wounded' : '');
-                const role = (u.def && u.def.role) || '';
-                const portrait = Number.isFinite(Number(u.portraitIndex))
-                    ? `asset/portraits/inf_us_${String(Number(u.portraitIndex) + 1).padStart(3, '0')}.jpg`
-                    : 'asset/portraits/inf_us_001.jpg';
-                row.innerHTML = `<span class="sector-report-soldier"><img class="sector-report-portrait" src="${portrait}" alt=""><span><b>${u.name}</b><small>${role}</small></span></span>`
-                    + `<span>R${before.rank || 0} → R${u.rank || 0}<small>HP +${promotion.hpGain || 0}${added ? ' • ' + added : ''}</small></span>`
-                    + `<span>${before.sectorKills || 0}<small>TOTAL ${before.kills || 0}</small></span>`
-                    + `<span class="condition-${injury.toLowerCase()}">${injury}<small>${before.hp || 0}/${before.maxHp || 0} → ${u.hp}/${u.maxHp}</small></span>`;
-                table.appendChild(row);
-            });
-        container.appendChild(table);
+        const columns = document.createElement('div');
+        columns.className = 'sector-report-columns';
+        const buildColumn = (title, subtitle, units, kind) => {
+            const panel = document.createElement('section');
+            panel.className = `sector-report-panel sector-report-panel-${kind}`;
+            panel.innerHTML = `<header class="sector-report-panel-head"><span>${escapeHtml(title)}</span>`
+                + `<small>${escapeHtml(subtitle)}</small><b>${units.length}</b></header>`;
+            const list = document.createElement('div');
+            list.className = 'sector-report-list';
+            if (!units.length) {
+                const empty = document.createElement('div');
+                empty.className = 'sector-report-empty';
+                empty.textContent = kind === 'kia' ? 'NO FRIENDLY LOSSES' : 'NO SURVIVORS';
+                list.appendChild(empty);
+            }
+            units.slice()
+                .sort((a, z) => ((battleEnd.get(String(z.id)) || {}).sectorKills || 0)
+                    - ((battleEnd.get(String(a.id)) || {}).sectorKills || 0))
+                .forEach(u => {
+                    const before = battleEnd.get(String(u.id)) || {};
+                    const promotion = promoById.get(String(u.id)) || {};
+                    const addedSkills = new Set(promotion.addedSkills || []);
+                    const skills = (kind === 'kia' ? before.skills : u.skills) || [];
+                    const condition = kind === 'kia' ? 'KIA' : (before.wounded ? 'WOUNDED' : 'FIT');
+                    const skillChips = skills.length
+                        ? skills.map(sk => `<span class="sector-report-skill${addedSkills.has(sk) ? ' added' : ''}">`
+                            + `${addedSkills.has(sk) ? '+' : ''}${escapeHtml(skillName(sk))}</span>`).join('')
+                        : '<span class="sector-report-skill muted">NO SKILLS</span>';
+                    const promotionLine = kind === 'kia'
+                        ? '<strong>NO PROMOTION</strong><small>SKILLS LOST WITH SOLDIER</small>'
+                        : `<strong>R${before.rank || 0} → R${u.rank || 0}</strong>`
+                            + `<small>MAX HP +${promotion.hpGain || 0}${addedSkills.size ? ` / ${addedSkills.size} NEW SKILL${addedSkills.size === 1 ? '' : 'S'}` : ' / NO NEW SKILL'}</small>`;
+                    const medal = kind === 'kia' && u.team === 'player' && Number(before.hp) <= 0
+                        ? '<span class="sector-report-purple-heart" role="img" aria-label="Purple Heart" title="Purple Heart"><i></i><span>♥</span></span>'
+                        : '';
+                    const row = document.createElement('div');
+                    row.className = `sector-report-row ${kind}${before.wounded && kind !== 'kia' ? ' wounded' : ''}`;
+                    row.innerHTML = `<img class="sector-report-portrait" src="${portraitFor(u)}" alt="">`
+                        + '<div class="sector-report-row-body">'
+                        + `<div class="sector-report-identity"><span><b>${escapeHtml(u.name)}</b><small>${escapeHtml(roleFor(u))}</small></span>${medal}</div>`
+                        + '<div class="sector-report-metrics">'
+                        + `<div><label>THIS BATTLE / CAREER</label><strong>${before.sectorKills || 0} / ${before.kills || 0} KILLS</strong></div>`
+                        + `<div><label>FINAL HP / STATUS</label><strong class="condition-${condition.toLowerCase()}">${Math.max(0, Number(before.hp) || 0)} / ${before.maxHp || 0} · ${condition}</strong></div>`
+                        + `<div><label>PROMOTION</label>${promotionLine}</div>`
+                        + `</div><div class="sector-report-skills">${skillChips}</div></div>`;
+                    list.appendChild(row);
+                });
+            panel.appendChild(list);
+            return panel;
+        };
+        columns.appendChild(buildColumn('FALLEN', 'FRIENDLY KIA', casualties || [], 'kia'));
+        columns.appendChild(buildColumn('SURVIVORS', 'FIT / WOUNDED / PROMOTED', survivors || [], 'survivor'));
+        container.appendChild(columns);
 
         const next = document.createElement('button');
         next.className = 'sector-report-next';
