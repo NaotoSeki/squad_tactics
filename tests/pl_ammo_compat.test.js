@@ -66,6 +66,14 @@ assert.strictEqual(loadedThompson.loadedAmmoCbeNameIndex, 236);
 assert.strictEqual(loadedThompson.loadedMalfMod, 2);
 assert.strictEqual(loadedThompson.effectiveMalfRate, 4);
 const battleLogic = Object.create(runtime.BattleLogic.prototype);
+// Category-13 ammunition boxes can occupy a hand slot, but are supplies and
+// must never be promoted into a virtual firearm by the RTwP bridge.
+const patronenkastenOnly = {
+  hands: [Object.assign({ code: 'pl_115', current: 300 }, WPNS.pl_115), null, null],
+  bag: [],
+};
+assert.strictEqual(battleLogic.getVirtualWeapon(patronenkastenOnly), null,
+  'PatrK41 ammo box is not a fireable primary weapon');
 assert.strictEqual(battleLogic._getWeaponMalfunctionRate(WPNS.pl_15), 2);
 assert.strictEqual(battleLogic._getWeaponMalfunctionRate(loadedThompson), 4);
 vm.runInContext('Math.random = () => 0.039', runtime);

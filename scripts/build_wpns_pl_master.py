@@ -414,6 +414,7 @@ def pl_category_from_cbe(category_name: str | None) -> str | None:
         "bayonet_knife": "melee",
         "hand_grenade": "grenade",
         "rifle_grenade": "rocket",
+        "ammo_box": "ammo_box",
     }
     return m.get(category_name or "")
 
@@ -1154,9 +1155,12 @@ def main() -> int:
         else:
             cbe_cat = st.get("category_name")
 
-        wc = wclass_from_cbe_category(cbe_cat) or wclassify(
+        # Category-13 entries are ammunition containers.  Their decoded
+        # numeric fields resemble firearms, but they must never enter the
+        # primary weapon pool or become fireable in-game.
+        wc = "part_gear" if cbe_cat == "ammo_box" else (wclass_from_cbe_category(cbe_cat) or wclassify(
             name,
-        )
+        ))
         wtemplate = T.get(
             wc,
             T["m1"],
@@ -1339,7 +1343,7 @@ def main() -> int:
         ) - 1:
             comma = ""
         out_lines.append(
-            f"    {js_escape(code)}: {wpn_to_js_obj(w)},{' ' if comma else ''}",
+            f"    {js_escape(code)}: {wpn_to_js_obj(w)}{',' if comma else ''}",
         )
     out_lines.append(
         "  };",

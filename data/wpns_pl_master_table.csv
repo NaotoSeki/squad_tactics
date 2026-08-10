@@ -10,17 +10,17 @@ pl_7,7,lmg,bar,M1918A2 BAR,bullet,7,55,45,20,5,2,2,9.2,3006-20B,[230]
 pl_8,8,rifle,m1,M1 Rifle,bullet,7,85,76,8,6,2,1,4.7,3006-5 / 3006-8,"[229, 231]"
 pl_9,9,rifle,m1,M1C Rifle,bullet,7,85,76,8,6,2,1,5.3,3006-8,[231]
 pl_10,10,rifle,m1,M1D Rifle,bullet,7,85,76,8,6,2,1,5.3,3006-8,[231]
-pl_11,11,rifle,m1,M1941 Rifle,bullet,7,85,76,10,6,2,1,4.3,3006-20B,[230]
-pl_12,12,rifle,m1,M1 Cbn,bullet,7,85,76,15,6,2,1,2.8,30Cbn-15,[232]
-pl_13,13,rifle,m1,M1A1 Cbn,bullet,7,85,76,15,6,2,1,3.1,30Cbn-15,[232]
-pl_14,14,rifle,m1,M2 Cbn,bullet,7,85,76,30,6,2,1,3.1,30Cbn-30,[233]
-pl_15,15,smg,smg_9mm,M1928A1 SMG,bullet,5,60,41,20,4,2,1,5.4,45ACP30T / 45ACP50T / 45ACP30G,"[235, 236, 237]"
+pl_11,11,rifle,m1,M1941 Rifle,bullet,7,85,76,10,6,2,1,4.3,3006-5,[229]
+pl_12,12,rifle,m1,M1 Cbn,bullet,7,85,76,15,6,2,1,2.8,30Cbn-15 / 30Cbn-30,"[232, 233]"
+pl_13,13,rifle,m1,M1A1 Cbn,bullet,7,85,76,15,6,2,1,3.1,30Cbn-15 / 30Cbn-30,"[232, 233]"
+pl_14,14,rifle,m1,M2 Cbn,bullet,7,85,76,30,6,2,1,3.1,30Cbn-30 / 30Cbn-15,"[233, 232]"
+pl_15,15,smg,smg_9mm,M1928A1 SMG,bullet,5,60,41,20,4,2,1,5.4,45ACP20T / 45ACP30T / 45ACP50T,"[234, 235, 236]"
 pl_16,16,smg,smg_9mm,M1 SMG,bullet,5,60,41,20,4,2,1,5.3,3006-20B,[230]
 pl_17,17,smg,smg_9mm,M1A1 SMG,bullet,5,60,41,20,4,2,1,5.3,45ACP30T,[235]
 pl_18,18,smg,smg_9mm,M3 SMG,bullet,5,60,41,30,4,2,1,4.6,45ACP30G / 45ACP30T,"[237, 235, 234]"
 pl_19,19,smg,smg_9mm,M3A1 SMG,bullet,5,60,41,30,4,2,1,4.6,45ACP30G / 45ACP30T,"[237, 235, 234]"
 pl_20,20,lmg,bar,M1919A6 LMG,bullet,7,55,45,0,5,2,2,14.7,.30-06 ベルト（M1919A6 — CBE 空、要実機）,"[230, 238, 239, 240]"
-pl_21,21,lmg,bar,M1941   LMG,bullet,7,55,45,20,5,2,2,5.9,3006-20B,[230]
+pl_21,21,lmg,bar,M1941   LMG,bullet,7,55,45,20,5,2,2,5.9,3006-20J,[238]
 pl_22,22,mg,mg42,M1917A1 MMG,bullet,8,45,25,0,99,2,3,18.6,.30-06 ベルト（M1917A1 — CBE 空、要実機）,"[230, 238, 239, 240]"
 pl_23,23,mg,mg42,M1919A4 MMG,bullet,8,45,25,0,99,2,3,14.1,.30-06 ベルト（M1919A4 — CBE 空、要実機）,"[230, 238, 239, 240]"
 pl_24,24,mg,mg42,M2 HB HMG,bullet,8,45,25,0,99,2,3,38.1,50M2-110（M2 HB — CBE ammo_indices 空）,[241]
@@ -33,22 +33,22 @@ pl_30,30,flamethrower,flame,M2A1-7 Fl,shell,3,55,55,3,1,2,0,29.5,flame 非装填
 pl_31,31,gear,part_gear,M2 Tripod,part,,,,,,,,8.5,補助装備（主兵装弾なし。装填正本: explicit のみ）,[]
 pl_32,32,gear,part_gear,M1917 Tripod,part,,,,,,,,24.1,補助装備（主兵装弾なし。装填正本: explicit のみ）,[]
 pl_33,33,gear,part_gear,M3 Tripod,part,,,,,,,,20.0,補助装備（主兵装弾なし。装填正本: explicit のみ）,[]
-pl_34,34,gear,part_gear,M1 Ammobox,part,,,,,,,,7.1,3006-250 / 50M2-110,"[240, 241]"
-pl_35,35,gear,part_gear,M2HB Ammobox,part,,,,,,,,15.5,M6A1 HR,[242]
+pl_34,34,ammo_box,part_gear,M1 Ammobox,part,,,,,,,,7.1,3006-250 / 50M2-110,"[240, 241]"
+pl_35,35,ammo_box,part_gear,M2HB Ammobox,part,,,,,,,,15.5,M6A1 HR,[242]
 pl_36,36,gear,part_gear,M3 Binocular,part,,,,,,,,1.0,補助装備（主兵装弾なし。装填正本: explicit のみ）,[]
 pl_37,37,gear,part_gear,SCR536,part,,,,,,,,2.5,補助装備（主兵装弾なし。装填正本: explicit のみ）,[]
 pl_38,38,gear,part_gear,Med Bag,part,,,,,,,,3.0,補助装備（主兵装弾なし。装填正本: explicit のみ）,[]
 pl_39,39,gear,part_gear,Film,part,,,,,,,,0.5,補助装備（主兵装弾なし。装填正本: explicit のみ）,[]
 pl_40,40,gear,part_gear,Map Case,part,,,,,,,,3.0,補助装備（主兵装弾なし。装填正本: explicit のみ）,[]
-pl_41,41,pistol,m1911,C/96,bullet,3,70,30,7,3,2,1,1.3,7.63-10b,[256]
+pl_41,41,pistol,m1911,C/96,bullet,3,70,30,7,3,2,1,1.3,7.63-10c,[255]
 pl_42,42,pistol,m1911,C/96M712,bullet,3,70,30,7,3,2,1,2.0,9Pb-8L / 7.63-20b / 7.63-10b,"[258, 257, 256]"
-pl_43,43,pistol,m1911,P08,bullet,3,70,30,7,3,2,1,1.0,32ACP-8M,[259]
+pl_43,43,pistol,m1911,P08,bullet,3,70,30,7,3,2,1,1.0,9Pb-8L,[258]
 pl_44,44,pistol,m1911,M1934,bullet,3,70,30,7,3,2,1,0.7,Pt34-75 / 32ACP-8M / 7.92f100,"[294, 259, 288]"
-pl_45,45,pistol,m1911,Beholla,bullet,3,70,30,7,3,2,1,0.6,32ACP-8S,[261]
-pl_46,46,pistol,m1911,M38H,bullet,3,70,30,7,3,2,1,0.8,32ACP-8W,[262]
-pl_47,47,pistol,m1911,PP,bullet,3,70,30,7,3,2,1,0.7,32ACP-7W,[263]
-pl_48,48,pistol,m1911,PPK,bullet,3,70,30,7,3,2,1,0.6,32ACP-8H,[264]
-pl_49,49,pistol,m1911,HSc,bullet,3,70,30,7,3,2,1,0.7,9Pb-8W,[265]
+pl_45,45,pistol,m1911,Beholla,bullet,3,70,30,7,3,2,1,0.6,32ACP-7B,[260]
+pl_46,46,pistol,m1911,M38H,bullet,3,70,30,7,3,2,1,0.8,32ACP-8S,[261]
+pl_47,47,pistol,m1911,PP,bullet,3,70,30,7,3,2,1,0.7,32ACP-8W,[262]
+pl_48,48,pistol,m1911,PPK,bullet,3,70,30,7,3,2,1,0.6,32ACP-7W,[263]
+pl_49,49,pistol,m1911,HSc,bullet,3,70,30,7,3,2,1,0.7,32ACP-8H,[264]
 pl_50,50,pistol,m1911,P38,bullet,3,70,30,7,3,2,1,1.0,9Pb-8W,[265]
 pl_51,51,launcher_27,shell_27,27mmLeuP,shell,8,50,100,1,1,2,1,0.7,FLeut41,[266]
 pl_52,52,launcher_27,shell_27,27mmP42,shell,8,50,100,1,1,2,1,1.1,7.92-10G,[273]
@@ -64,8 +64,8 @@ pl_61,61,rifle,m1,Gew98/40,bullet,7,85,76,5,6,2,1,4.0,7.92-5,[272]
 pl_62,62,rifle,m1,VG-1,bullet,7,85,76,10,6,2,1,3.8,7.92-10G / 7.92-5,"[273, 272]"
 pl_63,63,rifle,m1,VG-2,bullet,7,85,76,10,6,2,1,3.8,7.92-10G / 7.92-5,"[273, 272]"
 pl_64,64,rifle,m1,VK-98,bullet,7,85,76,1,6,2,1,3.1,FLeut41,[266]
-pl_65,65,rifle,m1,Gew41(W),bullet,7,85,76,10,6,2,1,5.0,7.92-10G,[273]
-pl_66,66,rifle,m1,Gew41(M),bullet,7,85,76,10,6,2,1,5.1,7.92-10G,[273]
+pl_65,65,rifle,m1,Gew41(W),bullet,7,85,76,10,6,2,1,5.0,7.92-5,[272]
+pl_66,66,rifle,m1,Gew41(M),bullet,7,85,76,10,6,2,1,5.1,7.92-5,[272]
 pl_67,67,rifle,m1,Gew43,bullet,7,85,76,10,6,2,1,4.6,7.92-10G / 7.92-5,"[273, 272]"
 pl_68,68,rifle,m1,Kar43,bullet,7,85,76,10,6,2,1,4.6,7.92-10G / 7.92-5,"[273, 272]"
 pl_69,69,rifle,m1,Zf Kar98k,bullet,7,85,76,5,6,2,1,5.0,7.92-5,[272]
@@ -77,24 +77,24 @@ pl_74,74,rifle,m1,MKb42(H),bullet,7,85,76,30,6,2,1,5.1,7.92k-30,[277]
 pl_75,75,rifle,m1,MP43,bullet,7,85,76,30,6,2,1,5.1,7.92k-30,[277]
 pl_76,76,rifle,m1,StG44,bullet,7,85,76,30,6,2,1,5.1,7.92k-30,[277]
 pl_77,77,rifle,m1,VG1-5,bullet,7,85,76,30,6,2,1,5.0,7.92k-30,[277]
-pl_78,78,smg,smg_9mm,MP28/2,bullet,5,60,41,32,4,2,1,4.7,9Pb-50S / 9Pb-32S / 9Pb-20E,"[280, 279, 281]"
+pl_78,78,smg,smg_9mm,MP28/2,bullet,5,60,41,32,4,2,1,4.7,9Pb-32S / 9Pb-20S / 9Pb-50S,"[279, 278, 280]"
 pl_79,79,smg,smg_9mm,MP35/1,bullet,5,60,41,32,4,2,1,4.7,9Pb-32M / 9Pb-32B,"[285, 284]"
 pl_80,80,smg,smg_9mm,EMP,bullet,5,60,41,32,4,2,1,4.8,9Pb-24B / 9Pb-32E,"[283, 282]"
-pl_81,81,smg,smg_9mm,MP38,bullet,5,60,41,32,4,2,1,4.8,9Pb-32P,[286]
-pl_82,82,smg,smg_9mm,MP40,bullet,5,60,41,32,4,2,1,4.7,9Pb-32P,[286]
-pl_83,83,smg,smg_9mm,MP40/2,bullet,5,60,41,64,4,2,1,5.5,9Pb-32P,[286]
+pl_81,81,smg,smg_9mm,MP38,bullet,5,60,41,32,4,2,1,4.8,9Pb-32M,[285]
+pl_82,82,smg,smg_9mm,MP40,bullet,5,60,41,32,4,2,1,4.7,9Pb-32M,[285]
+pl_83,83,smg,smg_9mm,MP40/2,bullet,5,60,41,64,4,2,1,5.5,9Pb-32M,[285]
 pl_84,84,smg,smg_9mm,MP41,bullet,5,60,41,32,4,2,1,4.4,9Pb-32P,[286]
-pl_85,85,smg,smg_9mm,Ger Potsdam,bullet,5,60,41,32,4,2,1,3.6,9Pb-32S,[279]
-pl_86,86,smg,smg_9mm,MP3008,bullet,5,60,41,32,4,2,1,3.6,9Pb-32P,[286]
-pl_87,87,lmg,bar,MG08/15,bullet,7,55,45,100,5,2,2,18.1,7.92f100,[288]
-pl_88,88,lmg,bar,MG08/18,bullet,7,55,45,100,5,2,2,13.7,7.92f100,[288]
-pl_89,89,lmg,bar,MG13,bullet,7,55,45,25,5,2,2,12.1,7.92-25,[290]
+pl_85,85,smg,smg_9mm,Ger Potsdam,bullet,5,60,41,32,4,2,1,3.6,9Pb-32P,[286]
+pl_86,86,smg,smg_9mm,MP3008,bullet,5,60,41,32,4,2,1,3.6,9Pb-32M,[285]
+pl_87,87,lmg,bar,MG08/15,bullet,7,55,45,100,5,2,2,18.1,Pk16-100 / 7.92f250 / 7.92f100,"[287, 289, 288]"
+pl_88,88,lmg,bar,MG08/18,bullet,7,55,45,100,5,2,2,13.7,Pk16-100 / 7.92f250 / 7.92f100,"[287, 289, 288]"
+pl_89,89,lmg,bar,MG13,bullet,7,55,45,25,5,2,2,12.1,7.92-25 / Pt13-75,"[290, 291]"
 pl_90,90,lmg,bar,MG15,bullet,7,55,45,75,5,2,2,14.9,Gt34-50,[293]
-pl_91,91,lmg,bar,MG34,bullet,7,55,45,50,5,2,2,12.0,Pt34-75 / 7.92-50 / 7.92-25 / 7.92f250,"[294, 295, 290, 289]"
-pl_92,92,lmg,bar,MG34S,bullet,7,55,45,50,5,2,2,11.4,Pt34-75 / 7.92-50 / 7.92-25 / 7.92f250,"[294, 295, 290, 289]"
-pl_93,93,lmg,bar,MG34/41,bullet,7,55,45,50,5,2,2,13.0,Pt34-75 / 7.92-50 / 7.92-25 / 7.92f250,"[294, 295, 290, 289]"
-pl_94,94,lmg,bar,MG42,bullet,7,55,45,50,5,2,2,11.6,Pt34-75 / FLeut41 / 7.92-25 / 7.92f250,"[294, 266, 290, 289]"
-pl_95,95,mg,mg42,MG08,bullet,8,45,25,0,99,2,3,22.2,Pt34-75 / FLeut41,"[294, 266]"
+pl_91,91,lmg,bar,MG34,bullet,7,55,45,50,5,2,2,12.0,Gt34-50 / Pt34-75 / 7.92m250 / 7.92-50,"[293, 294, 296, 295]"
+pl_92,92,lmg,bar,MG34S,bullet,7,55,45,50,5,2,2,11.4,Gt34-50 / Pt34-75 / 7.92m250 / 7.92-50,"[293, 294, 296, 295]"
+pl_93,93,lmg,bar,MG34/41,bullet,7,55,45,50,5,2,2,13.0,Gt34-50 / Pt34-75 / 7.92m250 / 7.92-50,"[293, 294, 296, 295]"
+pl_94,94,lmg,bar,MG42,bullet,7,55,45,50,5,2,2,11.6,Pt34-75 / FLeut41 / 7.92m250 / 7.92-50,"[294, 266, 296, 295]"
+pl_95,95,mg,mg42,MG08,bullet,8,45,25,0,99,2,3,22.2,Pt34-75 / FLeut41 / 7.92f250 / 7.92f100,"[294, 266, 289, 288]"
 pl_96,96,anti_tank,at_rifle,PzB38,bullet,5,60,90,1,2,2,2,16.2,Pa318-1,[297]
 pl_97,97,anti_tank,at_rifle,PzB39,bullet,5,60,90,1,2,2,2,12.6,Pa318-1,[297]
 pl_98,98,rifle,m1,GrB39,bullet,7,85,76,1,6,2,1,10.4,弾種未設定（map / overrides / explicit で要定義）,[]
@@ -114,116 +114,116 @@ pl_111,111,flamethrower,flame,FmW42,shell,3,55,55,3,1,2,0,18.0,flame 非装填/�
 pl_112,112,gear,part_gear,Laf34,part,,,,,,,,21.0,補助装備（主兵装弾なし。装填正本: explicit のみ）,[]
 pl_113,113,gear,part_gear,Laf42,part,,,,,,,,21.0,補助装備（主兵装弾なし。装填正本: explicit のみ）,[]
 pl_114,114,rifle,m1,Sch08,bullet,7,85,76,0,6,2,1,34.9,弾種未設定（map / overrides / explicit で要定義）,[]
-pl_115,115,rifle,m1,PatrK41,bullet,7,85,76,300,6,2,1,11.5,Pa318-1 / 7.92m250,"[297, 296]"
-pl_116,116,rifle,m1,PatrK15,bullet,7,85,76,0,6,2,1,9.5,7.92-25 / 7.92f250,"[290, 289]"
+pl_115,115,ammo_box,part_gear,PatrK41,part,,,,,,,,11.5,Pa318-1 / 7.92m250,"[297, 296]"
+pl_116,116,ammo_box,part_gear,PatrK15,part,,,,,,,,9.5,7.92-25 / 7.92f250,"[290, 289]"
 pl_117,117,gear,part_gear,Fernglas,part,,,,,,,,1.0,補助装備（主兵装弾なし。装填正本: explicit のみ）,[]
 pl_118,118,gear,part_gear,Feldfu.b,part,,,,,,,,12.7,補助装備（主兵装弾なし。装填正本: explicit のみ）,[]
 pl_119,119,gear,part_gear,SaniTo34,part,,,,,,,,3.0,補助装備（主兵装弾なし。装填正本: explicit のみ）,[]
 pl_120,120,gear,part_gear,Mkt35,part,,,,,,,,3.0,補助装備（主兵装弾なし。装填正本: explicit のみ）,[]
-pl_121,121,pistol,m1911,Bodeo mod89,bullet,3,70,30,7,3,2,1,1.0,6.5-6,[318]
-pl_122,122,pistol,m1911,Glisenti m10,bullet,3,70,30,7,3,2,1,0.8,380ACP-7,[317]
-pl_123,123,pistol,m1911,Beretta m34,bullet,3,70,30,7,3,2,1,0.6,6.5-6,[318]
-pl_124,124,rifle,m1,F. mod91,bullet,7,85,76,6,6,2,1,3.8,7.35-6,[319]
-pl_125,125,rifle,m1,M. mod91,bullet,7,85,76,6,6,2,1,3.2,7.35-6,[319]
-pl_126,126,rifle,m1,M. mod91/TS,bullet,7,85,76,6,6,2,1,3.2,7.35-6,[319]
+pl_121,121,pistol,m1911,Bodeo mod89,bullet,3,70,30,7,3,2,1,1.0,10.35-1,[315]
+pl_122,122,pistol,m1911,Glisenti m10,bullet,3,70,30,7,3,2,1,0.8,9Gli-7,[316]
+pl_123,123,pistol,m1911,Beretta m34,bullet,3,70,30,7,3,2,1,0.6,380ACP-7,[317]
+pl_124,124,rifle,m1,F. mod91,bullet,7,85,76,6,6,2,1,3.8,6.5-6,[318]
+pl_125,125,rifle,m1,M. mod91,bullet,7,85,76,6,6,2,1,3.2,6.5-6,[318]
+pl_126,126,rifle,m1,M. mod91/TS,bullet,7,85,76,6,6,2,1,3.2,6.5-6,[318]
 pl_127,127,rifle,m1,F. mod38,bullet,7,85,76,6,6,2,1,3.4,6.5-6,[318]
-pl_128,128,rifle,m1,M. mod38,bullet,7,85,76,6,6,2,1,2.9,6.5-6,[318]
-pl_129,129,rifle,m1,M. mod38/TS,bullet,7,85,76,6,6,2,1,3.1,6.5-6,[318]
+pl_128,128,rifle,m1,M. mod38,bullet,7,85,76,6,6,2,1,2.9,7.35-6,[319]
+pl_129,129,rifle,m1,M. mod38/TS,bullet,7,85,76,6,6,2,1,3.1,7.35-6,[319]
 pl_130,130,rifle,m1,F. mod38,bullet,7,85,76,6,6,2,1,3.4,7.35-6,[319]
-pl_131,131,rifle,m1,M. mod38,bullet,7,85,76,6,6,2,1,3.0,7.35-6,[319]
-pl_132,132,rifle,m1,M. mod38/TS,bullet,7,85,76,6,6,2,1,3.1,7.35-6,[319]
-pl_133,133,smg,smg_9mm,MAB mod38A,bullet,5,60,41,40,4,2,1,5.0,6.5-20 / 9Pb-20,"[324, 321]"
-pl_134,134,smg,smg_9mm,MAB mod38/42,bullet,5,60,41,40,4,2,1,4.0,6.5-20,[324]
+pl_131,131,rifle,m1,M. mod38,bullet,7,85,76,6,6,2,1,3.0,6.5-6,[318]
+pl_132,132,rifle,m1,M. mod38/TS,bullet,7,85,76,6,6,2,1,3.1,6.5-6,[318]
+pl_133,133,smg,smg_9mm,MAB mod38A,bullet,5,60,41,40,4,2,1,5.0,9Pb-10 / 9Pb-20,"[320, 321]"
+pl_134,134,smg,smg_9mm,MAB mod38/42,bullet,5,60,41,40,4,2,1,4.0,9Pb-20,[321]
 pl_135,135,lmg,bar,Breda mod30,bullet,7,55,45,20,5,2,2,10.6,6.5-6 / 6.5-20,"[318, 324]"
-pl_136,136,mg,mg42,FR mod14,bullet,8,45,25,50,99,2,3,17.0,8Brd-20,[326]
-pl_137,137,mg,mg42,FR mod14/35,bullet,8,45,25,0,99,2,3,17.2,7.92 帯仮,"[272, 273, 274, 275, 276, 277, 288, 289, 290, 295, 296, 389]"
+pl_136,136,mg,mg42,FR mod14,bullet,8,45,25,50,99,2,3,17.0,6.5-50,[325]
+pl_137,137,mg,mg42,FR mod14/35,bullet,8,45,25,0,99,2,3,17.2,8Brd-50,[327]
 pl_138,138,mg,mg42,Breda mod37,bullet,8,45,25,20,99,2,3,19.4,8Brd-20,[326]
 pl_139,139,rifle,m1,T. FR mod14,bullet,7,85,76,0,6,2,1,21.5,弾種未設定（map / overrides / explicit で要定義）,[]
 pl_140,140,rifle,m1,T. Breda m37,bullet,7,85,76,0,6,2,1,18.8,弾種未設定（map / overrides / explicit で要定義）,[]
-pl_141,141,rifle,m1,CM. FR 14/35,bullet,7,85,76,300,6,2,1,14.0,弾種未設定（map / overrides / explicit で要定義）,[]
+pl_141,141,ammo_box,part_gear,CM. FR 14/35,part,,,,,,,,14.0,補助装備（主兵装弾なし。装填正本: explicit のみ）,[]
 pl_142,142,gear,part_gear,Binocolo,part,,,,,,,,1.0,補助装備（主兵装弾なし。装填正本: explicit のみ）,[]
-pl_143,143,pistol,m1911,Lebel 92,bullet,3,70,30,7,3,2,1,0.8,32ACP-9,[335]
-pl_144,144,pistol,m1911,Unique Mle17,bullet,3,70,30,7,3,2,1,0.8,7.65-8,[336]
-pl_145,145,pistol,m1911,Mle1935A,bullet,3,70,30,7,3,2,1,0.9,8M86-1,[337]
-pl_146,146,pistol,m1911,Mle1935S,bullet,3,70,30,7,3,2,1,0.8,8M86-1,[337]
-pl_147,147,rifle,m1,F. Mle86/93,bullet,7,85,76,8,6,2,1,4.2,8M86-3,[338]
+pl_143,143,pistol,m1911,Lebel 92,bullet,3,70,30,7,3,2,1,0.8,8M92-1,[334]
+pl_144,144,pistol,m1911,Unique Mle17,bullet,3,70,30,7,3,2,1,0.8,32ACP-9,[335]
+pl_145,145,pistol,m1911,Mle1935A,bullet,3,70,30,7,3,2,1,0.9,7.65-8,[336]
+pl_146,146,pistol,m1911,Mle1935S,bullet,3,70,30,7,3,2,1,0.8,7.65-8,[336]
+pl_147,147,rifle,m1,F. Mle86/93,bullet,7,85,76,8,6,2,1,4.2,8M86-1,[337]
 pl_148,148,rifle,m1,M. Mle92/27,bullet,7,85,76,3,6,2,1,3.1,8M86-3,[338]
 pl_149,149,rifle,m1,F. Mle07/15,bullet,7,85,76,3,6,2,1,3.8,8M86-3,[338]
-pl_150,150,rifle,m1,F. Mle16,bullet,7,85,76,5,6,2,1,4.2,7.5-5,[340]
-pl_151,151,rifle,m1,M. Mle16/27,bullet,7,85,76,5,6,2,1,3.3,7.5-5,[340]
-pl_152,152,rifle,m1,F. MAS36,bullet,7,85,76,5,6,2,1,3.9,8M86-5,[339]
-pl_153,153,rifle,m1,F. MAS36CR39,bullet,7,85,76,5,6,2,1,3.6,8M86-5,[339]
-pl_154,154,smg,smg_9mm,MAS38,bullet,5,60,41,32,4,2,1,3.4,7.5-25,[342]
-pl_155,155,lmg,bar,MAC24/29,bullet,7,55,45,25,5,2,2,9.5,8M86-24,[343]
+pl_150,150,rifle,m1,F. Mle16,bullet,7,85,76,5,6,2,1,4.2,8M86-5,[339]
+pl_151,151,rifle,m1,M. Mle16/27,bullet,7,85,76,5,6,2,1,3.3,8M86-5,[339]
+pl_152,152,rifle,m1,F. MAS36,bullet,7,85,76,5,6,2,1,3.9,7.5-5,[340]
+pl_153,153,rifle,m1,F. MAS36CR39,bullet,7,85,76,5,6,2,1,3.6,7.5-5,[340]
+pl_154,154,smg,smg_9mm,MAS38,bullet,5,60,41,32,4,2,1,3.4,7.65-32,[341]
+pl_155,155,lmg,bar,MAC24/29,bullet,7,55,45,25,5,2,2,9.5,7.5-25,[342]
 pl_156,156,mg,mg42,Mle1914,bullet,8,45,25,24,99,2,3,25.3,8M86-24,[343]
 pl_157,157,rifle,m1,T. Mle1914,bullet,7,85,76,0,6,2,1,27.2,弾種未設定（map / overrides / explicit で要定義）,[]
 pl_158,158,gear,part_gear,Jumelles,part,,,,,,,,1.0,補助装備（主兵装弾なし。装填正本: explicit のみ）,[]
-pl_159,159,pistol,m1911,No1 Mk4,bullet,3,70,30,7,3,2,1,1.1,380Mk2-1,[351]
+pl_159,159,pistol,m1911,No1 Mk4,bullet,3,70,30,7,3,2,1,1.1,455Web-1,[350]
 pl_160,160,pistol,m1911,No2 Mk2,bullet,3,70,30,7,3,2,1,0.9,380Mk2-1,[351]
 pl_161,161,pistol,m1911,No2 Mk1*,bullet,3,70,30,7,3,2,1,0.8,380Mk2-1,[351]
 pl_162,162,pistol,m1911,No2 Mk1**,bullet,3,70,30,7,3,2,1,0.8,380Mk2-1,[351]
 pl_163,163,pistol,m1911,Webley Mk4,bullet,3,70,30,7,3,2,1,0.8,380Mk2-1,[351]
 pl_164,164,pistol,m1911,S&W No2,bullet,3,70,30,7,3,2,1,0.8,32ACP-8W,[262]
 pl_165,165,grenade,nade,Very,shell,4,60,80,1,2,2,0,1.0,303Br-10,[353]
-pl_166,166,rifle,m1,No1 Mk3,bullet,7,85,76,10,6,2,1,4.0,303Br-10,[353]
-pl_167,167,rifle,m1,No1 Mk3*,bullet,7,85,76,10,6,2,1,4.0,303Br-10,[353]
-pl_168,168,rifle,m1,No4 Mk1,bullet,7,85,76,10,6,2,1,4.4,303Br-10,[353]
-pl_169,169,rifle,m1,No4 Mk1*,bullet,7,85,76,10,6,2,1,4.4,303Br-10,[353]
+pl_166,166,rifle,m1,No1 Mk3,bullet,7,85,76,10,6,2,1,4.0,303Br-5,[354]
+pl_167,167,rifle,m1,No1 Mk3*,bullet,7,85,76,10,6,2,1,4.0,303Br-5,[354]
+pl_168,168,rifle,m1,No4 Mk1,bullet,7,85,76,10,6,2,1,4.4,303Br-5,[354]
+pl_169,169,rifle,m1,No4 Mk1*,bullet,7,85,76,10,6,2,1,4.4,303Br-5,[354]
 pl_170,170,rifle,m1,No4 Mk1(T),bullet,7,85,76,10,6,2,1,5.1,9Pb-32R,[355]
 pl_171,171,rifle,m1,No3 Mk1*(T),bullet,7,85,76,5,6,2,1,4.4,303Br-5,[354]
 pl_172,172,smg,smg_9mm,Sten Mk2,bullet,5,60,41,32,4,2,1,3.7,9Pb-32R,[355]
 pl_173,173,smg,smg_9mm,Sten Mk3,bullet,5,60,41,32,4,2,1,3.8,9Pb-32R,[355]
 pl_174,174,smg,smg_9mm,Sten Mk5,bullet,5,60,41,32,4,2,1,4.5,9Pb-32R,[355]
-pl_175,175,lmg,bar,Lewis Mk1,bullet,7,55,45,47,5,2,2,12.3,303Br-30,[357]
+pl_175,175,lmg,bar,Lewis Mk1,bullet,7,55,45,47,5,2,2,12.3,303Br-47,[356]
 pl_176,176,lmg,bar,Bren Mk1,bullet,7,55,45,30,5,2,2,10.0,303Br-30,[357]
 pl_177,177,lmg,bar,Bren Mk2,bullet,7,55,45,30,5,2,2,10.5,303Br250 / Very-1,"[358, 352]"
 pl_178,178,lmg,bar,Bren Mk3,bullet,7,55,45,30,5,2,2,8.8,303Br250 / Very-1,"[358, 352]"
 pl_179,179,mg,mg42,Vickers Mk1,bullet,8,45,25,0,99,2,3,18.1,303Br250 / Very-1,"[358, 352]"
-pl_180,180,anti_tank,at_rifle,Boys Mk1,bullet,5,60,90,5,2,2,2,16.3,PIAT-1,[360]
+pl_180,180,anti_tank,at_rifle,Boys Mk1,bullet,5,60,90,5,2,2,2,16.3,55Boys-5,[359]
 pl_181,181,rocket,m8_rocket,PIAT,rocket,12,50,45,3,3,3,0,15.7,m8_rocket 非装填/ダミ行（1件。explicit で上書き）,[229]
 pl_182,182,flamethrower,flame,No1 Mk1,shell,3,55,55,3,1,2,0,29.0,flame 非装填/ダミ行（1件。explicit で上書き）,[229]
 pl_183,183,gear,part_gear,Tripod Mk2,part,,,,,,,,13.6,補助装備（主兵装弾なし。装填正本: explicit のみ）,[]
 pl_184,184,gear,part_gear,Tripod Mk4,part,,,,,,,,22.7,補助装備（主兵装弾なし。装填正本: explicit のみ）,[]
-pl_185,185,mortar,mortarish,No8 Mk1,shell,8,50,120,1,,3,,9.8,55Boys-5,[359]
+pl_185,185,ammo_box,part_gear,No8 Mk1,part,,,,,,,,9.8,55Boys-5,[359]
 pl_186,186,gear,part_gear,Binocular,part,,,,,,,,1.0,補助装備（主兵装弾なし。装填正本: explicit のみ）,[]
 pl_187,187,gear,part_gear,Note,part,,,,,,,,0.5,補助装備（主兵装弾なし。装填正本: explicit のみ）,[]
-pl_188,188,pistol,m1911,obr1895g,bullet,3,70,30,7,3,2,1,0.7,32ACP-7B,[260]
-pl_189,189,pistol,m1911,TT33,bullet,3,70,30,7,3,2,1,0.9,7.62-5,[367]
+pl_188,188,pistol,m1911,obr1895g,bullet,3,70,30,7,3,2,1,0.7,7.62N-1,[365]
+pl_189,189,pistol,m1911,TT33,bullet,3,70,30,7,3,2,1,0.9,7.62T-8,[366]
 pl_190,190,rifle,m1,obr1891/30g,bullet,7,85,76,5,6,2,1,4.0,7.62-5,[367]
 pl_191,191,rifle,m1,obr1938g,bullet,7,85,76,5,6,2,1,3.5,7.62-5,[367]
 pl_192,192,rifle,m1,obr91/30g-PU,bullet,7,85,76,5,6,2,1,5.1,7.62-5,[367]
 pl_193,193,rifle,m1,obr1944g,bullet,7,85,76,5,6,2,1,4.0,7.62-10,[368]
-pl_194,194,rifle,m1,SVT40,bullet,7,85,76,10,6,2,1,3.9,7.62T71D / 7.62-10 / 9Pb-8s,"[369, 368, 378]"
+pl_194,194,rifle,m1,SVT40,bullet,7,85,76,10,6,2,1,3.9,7.62-10 / 7.62-5,"[368, 367]"
 pl_195,195,smg,smg_9mm,PPD40,bullet,5,60,41,71,4,2,1,5.4,7.62T71D,[369]
-pl_196,196,smg,smg_9mm,PPSh41,bullet,5,60,41,71,4,2,1,5.4,7.62T35S / 7.62T71h,"[372, 371]"
+pl_196,196,smg,smg_9mm,PPSh41,bullet,5,60,41,71,4,2,1,5.4,7.62T71h / 7.62T35h,"[371, 370]"
 pl_197,197,smg,smg_9mm,PPS43,bullet,5,60,41,35,4,2,1,3.9,7.62T35S,[372]
 pl_198,198,lmg,bar,DP,bullet,7,55,45,47,5,2,2,11.9,7.62-47,[373]
-pl_199,199,mg,mg42,PM1910,bullet,8,45,25,0,99,2,3,69.0,7.92 帯仮,"[272, 273, 274, 275, 276, 277, 288, 289, 290, 295, 296, 389]"
-pl_200,200,mg,mg42,DShK,bullet,8,45,25,0,99,2,3,153.0,7.92 帯仮,"[272, 273, 274, 275, 276, 277, 288, 289, 290, 295, 296, 389]"
-pl_201,201,rifle,m1,pat.1910,bullet,7,85,76,0,6,2,1,8.5,12.7-50,[375]
-pl_202,202,rifle,m1,pat.DShK,bullet,7,85,76,0,6,2,1,9.6,弾種未設定（map / overrides / explicit で要定義）,[]
-pl_203,203,pistol,m1911,SP M12,bullet,3,70,30,7,3,2,1,1.0,9Pb-8L,[258]
+pl_199,199,mg,mg42,PM1910,bullet,8,45,25,0,99,2,3,69.0,7.62N-1,[365]
+pl_200,200,mg,mg42,DShK,bullet,8,45,25,0,99,2,3,153.0,12.7-50,[375]
+pl_201,201,ammo_box,part_gear,pat.1910,part,,,,,,,,8.5,12.7-50,[375]
+pl_202,202,ammo_box,part_gear,pat.DShK,part,,,,,,,,9.6,補助装備（主兵装弾なし。装填正本: explicit のみ）,[]
+pl_203,203,pistol,m1911,SP M12,bullet,3,70,30,7,3,2,1,1.0,9Pb-8s,[378]
 pl_204,204,smg,smg_9mm,MP34(o),bullet,5,60,41,32,4,2,1,4.9,8Aut-25,[380]
 pl_205,205,lmg,bar,M30,bullet,7,55,45,25,5,2,2,7.7,8Aut-25,[380]
 pl_206,206,mg,mg42,M07/12,bullet,8,45,25,0,99,2,3,19.9,8Aut-250 / 380ACP8B,"[381, 387]"
 pl_207,207,rifle,m1,M07 Laf,bullet,7,85,76,0,6,2,1,19.8,弾種未設定（map / overrides / explicit で要定義）,[]
-pl_208,208,rifle,m1,M07 PatrK,bullet,7,85,76,500,6,2,1,19.2,9BLg-7,[382]
-pl_209,209,pistol,m1911,Mle1903,bullet,3,70,30,7,3,2,1,0.9,32ACP-8M,[259]
+pl_208,208,ammo_box,part_gear,M07 PatrK,part,,,,,,,,19.2,9BLg-7,[382]
+pl_209,209,pistol,m1911,Mle1903,bullet,3,70,30,7,3,2,1,0.9,9BLg-7,[382]
 pl_210,210,pistol,m1911,Mle10/22,bullet,3,70,30,7,3,2,1,0.7,9Pb-13,[384]
-pl_211,211,pistol,m1911,GP35,bullet,3,70,30,7,3,2,1,1.0,380ACP8A,[385]
-pl_212,212,pistol,m1911,CZ vz24,bullet,3,70,30,7,3,2,1,0.7,32ACP-8C,[386]
-pl_213,213,pistol,m1911,CZ vz27,bullet,3,70,30,7,3,2,1,0.7,380ACP8B,[387]
-pl_214,214,pistol,m1911,CZ vz38,bullet,3,70,30,7,3,2,1,0.9,32ACP-9B,[383]
+pl_211,211,pistol,m1911,GP35,bullet,3,70,30,7,3,2,1,1.0,9Pb-13,[384]
+pl_212,212,pistol,m1911,CZ vz24,bullet,3,70,30,7,3,2,1,0.7,380ACP8A,[385]
+pl_213,213,pistol,m1911,CZ vz27,bullet,3,70,30,7,3,2,1,0.7,32ACP-8C,[386]
+pl_214,214,pistol,m1911,CZ vz38,bullet,3,70,30,7,3,2,1,0.9,380ACP8B,[387]
 pl_215,215,smg,smg_9mm,ZK383,bullet,5,60,41,30,4,2,1,4.8,7.92-20Z,[389]
 pl_216,216,lmg,bar,lk ZB vz26,bullet,7,55,45,20,5,2,2,9.7,9Pb-8R,[390]
-pl_217,217,mg,mg42,tk ZB vz37,bullet,8,45,25,0,99,2,3,19.0,7.92-25 / 7.92f250,"[290, 289]"
+pl_217,217,mg,mg42,tk ZB vz37,bullet,8,45,25,0,99,2,3,19.0,7.92m250 / 7.92-50,"[296, 295]"
 pl_218,218,rifle,m1,ZB206,bullet,7,85,76,0,6,2,1,13.6,弾種未設定（map / overrides / explicit で要定義）,[]
 pl_219,219,rifle,m1,ZB308,bullet,7,85,76,0,6,2,1,22.7,弾種未設定（map / overrides / explicit で要定義）,[]
-pl_220,220,pistol,m1911,VIS wz35,bullet,3,70,30,7,3,2,1,1.1,8Mrzk-5,[391]
+pl_220,220,pistol,m1911,VIS wz35,bullet,3,70,30,7,3,2,1,1.1,9Pb-8R,[390]
 pl_221,221,rifle,m1,wz35,bullet,7,85,76,10,6,2,1,9.1,9Largo-8,[392]
 pl_222,222,pistol,m1911,Astra400,bullet,3,70,30,7,3,2,1,1.1,9Largo-8,[392]
-pl_223,223,pistol,m1911,Astra903,bullet,3,70,30,7,3,2,1,1.3,9Pb-8L / 7.63-20b / 7.63-10b,"[258, 257, 256]"
-pl_224,224,anti_tank,at_rifle,S-18/100,bullet,5,60,90,10,2,2,2,45.0,20SS-10,[394]
+pl_223,223,pistol,m1911,Astra903,bullet,3,70,30,7,3,2,1,1.3,7.63-20b / 7.63-10b / 7.63-10c,"[257, 256, 255]"
+pl_224,224,anti_tank,at_rifle,S-18/100,bullet,5,60,90,10,2,2,2,45.0,20SS-5 / 20SS-10,"[393, 394]"
 pl_228,228,grenade,nade,AN-M8-1,shell,4,60,80,1,2,2,0,0.3,nade 非装填/ダミ行（1件。explicit で上書き）,[229]
 pl_234,234,rifle,m1,45ACP20T,bullet,7,85,76,20,6,2,1,0.6,弾種未設定（map / overrides / explicit で要定義）,[]
 pl_235,235,rifle,m1,45ACP30T,bullet,7,85,76,30,6,2,1,0.7,弾種未設定（map / overrides / explicit で要定義）,[]
@@ -233,20 +233,20 @@ pl_242,242,rocket,m8_rocket,M6A1 HR,rocket,12,50,45,3,3,3,0,1.5,m8_rocket 非装
 pl_243,243,rocket,m8_rocket,M6A5 HR,rocket,12,50,45,3,3,3,0,1.5,m8_rocket 非装填/ダミ行（1件。explicit で上書き）,[229]
 pl_244,244,rocket,m8_rocket,M9A1 RfG,rocket,12,50,45,3,3,3,0,0.6,m8_rocket 非装填/ダミ行（1件。explicit で上書き）,[229]
 pl_245,245,rocket,m8_rocket,Mk2 GPA,rocket,12,50,45,3,3,3,0,0.8,m8_rocket 非装填/ダミ行（1件。explicit で上書き）,[229]
-pl_246,246,rocket,m8_rocket,Mk2 Grd,rocket,12,50,45,3,3,3,0,0.6,m8_rocket 非装填/ダミ行（1件。explicit で上書き）,[229]
-pl_247,247,rocket,m8_rocket,Mk3A1Grd,rocket,12,50,45,3,3,3,0,0.4,m8_rocket 非装填/ダミ行（1件。explicit で上書き）,[229]
+pl_246,246,grenade,nade,Mk2 Grd,shell,4,60,80,1,2,2,0,0.6,nade 非装填/ダミ行（1件。explicit で上書き）,[229]
+pl_247,247,grenade,nade,Mk3A1Grd,shell,4,60,80,1,2,2,0,0.4,nade 非装填/ダミ行（1件。explicit で上書き）,[229]
 pl_248,248,rifle,m1,M1 CDB,bullet,7,85,76,0,6,2,1,10.0,30-06 仮（米系小銃）,"[229, 230, 231, 238, 239, 240]"
 pl_249,249,rocket,m8_rocket,WP M15,rocket,12,50,45,3,3,3,0,0.9,m8_rocket 非装填/ダミ行（1件。explicit で上書き）,[229]
-pl_250,250,rifle,m1,M1905Byt,bullet,7,85,76,0,6,2,1,0.5,30-06 仮（米系小銃）,"[229, 230, 231, 238, 239, 240]"
+pl_250,250,melee,melee,M1905Byt,melee,1,90,35,0,0,1,0,0.5,melee 非装填/ダミ行（1件。explicit で上書き）,[229]
 pl_251,251,melee,melee,John Byt,melee,1,90,35,0,0,1,0,0.2,melee 非装填/ダミ行（1件。explicit で上書き）,[229]
 pl_252,252,melee,melee,M4 Byt,melee,1,90,35,0,0,1,0,0.3,melee 非装填/ダミ行（1件。explicit で上書き）,[229]
-pl_253,253,rifle,m1,Mk1 TKnf,bullet,7,85,76,0,6,2,1,0.4,弾種未設定（map / overrides / explicit で要定義）,[]
+pl_253,253,melee,melee,Mk1 TKnf,melee,1,90,35,0,0,1,0,0.4,melee 非装填/ダミ行（1件。explicit で上書き）,[229]
 pl_254,254,melee,melee,M3 T.Knf,melee,1,90,35,0,0,1,0,0.3,melee 非装填/ダミ行（1件。explicit で上書き）,[229]
 pl_266,266,rifle,m1,FLeut41,bullet,7,85,76,1,6,2,1,0.1,弾種未設定（map / overrides / explicit で要定義）,[]
-pl_267,267,grenade,nade,Wkor361,shell,4,60,80,1,2,2,0,0.4,nade 非装填/ダミ行（1件。explicit で上書き）,[229]
-pl_268,268,rifle,m1,Wgrp326,bullet,7,85,76,1,6,2,1,0.3,弾種未設定（map / overrides / explicit で要定義）,[]
+pl_267,267,rocket,m8_rocket,Wkor361,rocket,12,50,45,3,3,3,0,0.4,m8_rocket 非装填/ダミ行（1件。explicit で上書き）,[229]
+pl_268,268,rocket,m8_rocket,Wgrp326,rocket,12,50,45,3,3,3,0,0.3,m8_rocket 非装填/ダミ行（1件。explicit で上書き）,[229]
 pl_269,269,rifle,m1,FLeut.Z,bullet,7,85,76,1,6,2,1,0.1,弾種未設定（map / overrides / explicit で要定義）,[]
-pl_271,271,anti_tank,at_rifle,Pzwk42,bullet,5,60,90,1,2,2,2,0.6,at_rifle 非装填/ダミ行（1件。explicit で上書き）,[229]
+pl_271,271,rocket,m8_rocket,Pzwk42,rocket,12,50,45,3,3,3,0,0.6,m8_rocket 非装填/ダミ行（1件。explicit で上書き）,[229]
 pl_287,287,rifle,m1,Pk16-100,bullet,7,85,76,100,6,2,1,5.3,弾種未設定（map / overrides / explicit で要定義）,[]
 pl_288,288,rifle,m1,7.92f100,bullet,7,85,76,100,6,2,1,2.9,弾種未設定（map / overrides / explicit で要定義）,[]
 pl_289,289,rifle,m1,7.92f250,bullet,7,85,76,250,6,2,1,7.3,弾種未設定（map / overrides / explicit で要定義）,[]
@@ -257,13 +257,13 @@ pl_294,294,rifle,m1,Pt34-75,bullet,7,85,76,75,6,2,1,4.3,弾種未設定（map / 
 pl_296,296,rifle,m1,7.92m250,bullet,7,85,76,250,6,2,1,6.9,弾種未設定（map / overrides / explicit で要定義）,[]
 pl_297,297,rifle,m1,Pa318-1,bullet,7,85,76,1,6,2,1,0.1,弾種未設定（map / overrides / explicit で要定義）,[]
 pl_298,298,rifle,m1,Pa318-10,bullet,7,85,76,10,6,2,1,1.2,弾種未設定（map / overrides / explicit で要定義）,[]
-pl_303,303,anti_tank,at_rifle,GPzgr,bullet,5,60,90,1,2,2,2,0.4,at_rifle 非装填/ダミ行（1件。explicit で上書き）,[229]
-pl_304,304,rifle,m1,GSprgr,bullet,7,85,76,1,6,2,1,0.3,弾種未設定（map / overrides / explicit で要定義）,[]
-pl_305,305,rifle,m1,StiGr24,bullet,7,85,76,0,6,2,1,0.6,弾種未設定（map / overrides / explicit で要定義）,[]
-pl_306,306,rifle,m1,StiGr39,bullet,7,85,76,0,6,2,1,0.6,弾種未設定（map / overrides / explicit で要定義）,[]
-pl_307,307,rifle,m1,StiGr43,bullet,7,85,76,0,6,2,1,0.6,弾種未設定（map / overrides / explicit で要定義）,[]
-pl_308,308,rifle,m1,EihGr39,bullet,7,85,76,0,6,2,1,0.3,弾種未設定（map / overrides / explicit で要定義）,[]
-pl_309,309,rifle,m1,GebLad,bullet,7,85,76,0,6,2,1,1.8,弾種未設定（map / overrides / explicit で要定義）,[]
+pl_303,303,rocket,m8_rocket,GPzgr,rocket,12,50,45,3,3,3,0,0.4,m8_rocket 非装填/ダミ行（1件。explicit で上書き）,[229]
+pl_304,304,rocket,m8_rocket,GSprgr,rocket,12,50,45,3,3,3,0,0.3,m8_rocket 非装填/ダミ行（1件。explicit で上書き）,[229]
+pl_305,305,grenade,nade,StiGr24,shell,4,60,80,1,2,2,0,0.6,nade 非装填/ダミ行（1件。explicit で上書き）,[229]
+pl_306,306,grenade,nade,StiGr39,shell,4,60,80,1,2,2,0,0.6,nade 非装填/ダミ行（1件。explicit で上書き）,[229]
+pl_307,307,grenade,nade,StiGr43,shell,4,60,80,1,2,2,0,0.6,nade 非装填/ダミ行（1件。explicit で上書き）,[229]
+pl_308,308,grenade,nade,EihGr39,shell,4,60,80,1,2,2,0,0.3,nade 非装填/ダミ行（1件。explicit で上書き）,[229]
+pl_309,309,grenade,nade,GebLad,shell,4,60,80,1,2,2,0,1.8,nade 非装填/ダミ行（1件。explicit で上書き）,[229]
 pl_310,310,rocket,m8_rocket,Haft-Hl3,rocket,12,50,45,3,3,3,0,3.0,m8_rocket 非装填/ダミ行（1件。explicit で上書き）,[229]
 pl_311,311,rifle,m1,GebLad 3,bullet,7,85,76,0,6,2,1,3.0,弾種未設定（map / overrides / explicit で要定義）,[]
 pl_312,312,rocket,m8_rocket,NbK39,rocket,12,50,45,3,3,3,0,2.2,m8_rocket 非装填/ダミ行（1件。explicit で上書き）,[229]
@@ -272,95 +272,95 @@ pl_314,314,melee,melee,Messer,melee,1,90,35,0,0,1,0,0.3,melee 非装填/ダミ�
 pl_328,328,grenade,nade,SRCM m35,shell,4,60,80,1,2,2,0,0.2,nade 非装填/ダミ行（1件。explicit で上書き）,[229]
 pl_329,329,grenade,nade,Breda 35,shell,4,60,80,1,2,2,0,0.2,nade 非装填/ダミ行（1件。explicit で上書き）,[229]
 pl_330,330,grenade,nade,OTO m35,shell,4,60,80,1,2,2,0,0.2,nade 非装填/ダミ行（1件。explicit で上書き）,[229]
-pl_331,331,grenade,nade,SB.mod91,shell,4,60,80,1,2,2,0,0.5,nade 非装填/ダミ行（1件。explicit で上書き）,[229]
-pl_332,332,smg,smg_9mm,BP.MAB38,bullet,5,60,41,0,4,2,1,0.3,9mm SMG 帯仮（要 explicit / cbe_weapon_ammo で確定）,"[258, 265, 278, 279, 280, 281, 282, 283, 284, 285, 286, 320, 321, 322, 323, 378, 379, 384, 388, 390]"
-pl_333,333,rifle,m1,P. mod39,bullet,7,85,76,0,6,2,1,0.3,弾種未設定（map / overrides / explicit で要定義）,[]
+pl_331,331,melee,melee,SB.mod91,melee,1,90,35,0,0,1,0,0.5,melee 非装填/ダミ行（1件。explicit で上書き）,[229]
+pl_332,332,melee,melee,BP.MAB38,melee,1,90,35,0,0,1,0,0.3,melee 非装填/ダミ行（1件。explicit で上書き）,[229]
+pl_333,333,melee,melee,P. mod39,melee,1,90,35,0,0,1,0,0.3,melee 非装填/ダミ行（1件。explicit で上書き）,[229]
 pl_334,334,rifle,m1,8M92-1,bullet,7,85,76,1,6,2,1,0.1,弾種未設定（map / overrides / explicit で要定義）,[]
 pl_337,337,rifle,m1,8M86-1,bullet,7,85,76,1,6,2,1,0.1,弾種未設定（map / overrides / explicit で要定義）,[]
 pl_338,338,rifle,m1,8M86-3,bullet,7,85,76,3,6,2,1,0.1,弾種未設定（map / overrides / explicit で要定義）,[]
 pl_339,339,rifle,m1,8M86-5,bullet,7,85,76,5,6,2,1,0.2,弾種未設定（map / overrides / explicit で要定義）,[]
 pl_343,343,rifle,m1,8M86-24,bullet,7,85,76,24,6,2,1,0.8,弾種未設定（map / overrides / explicit で要定義）,[]
 pl_344,344,rifle,m1,8M86-30,bullet,7,85,76,30,6,2,1,1.0,弾種未設定（map / overrides / explicit で要定義）,[]
-pl_345,345,rocket,m8_rocket,Grd F1,rocket,12,50,45,3,3,3,0,0.6,m8_rocket 非装填/ダミ行（1件。explicit で上書き）,[229]
-pl_346,346,rocket,m8_rocket,Grd O.F.,rocket,12,50,45,3,3,3,0,0.3,m8_rocket 非装填/ダミ行（1件。explicit で上書き）,[229]
-pl_347,347,rifle,m1,Mle86/35,bullet,7,85,76,0,6,2,1,0.4,弾種未設定（map / overrides / explicit で要定義）,[]
-pl_348,348,mg,mg42,Mle92/15,bullet,8,45,25,0,99,2,3,0.4,CBE 行あり・フィルタ後空 — mag_type RE 待ち,[]
-pl_349,349,rifle,m1,41 CONON,bullet,7,85,76,0,6,2,1,0.3,弾種未設定（map / overrides / explicit で要定義）,[]
+pl_345,345,grenade,nade,Grd F1,shell,4,60,80,1,2,2,0,0.6,nade 非装填/ダミ行（1件。explicit で上書き）,[229]
+pl_346,346,grenade,nade,Grd O.F.,shell,4,60,80,1,2,2,0,0.3,nade 非装填/ダミ行（1件。explicit で上書き）,[229]
+pl_347,347,melee,melee,Mle86/35,melee,1,90,35,0,0,1,0,0.4,melee 非装填/ダミ行（1件。explicit で上書き）,[229]
+pl_348,348,melee,melee,Mle92/15,melee,1,90,35,0,0,1,0,0.4,melee 非装填/ダミ行（1件。explicit で上書き）,[229]
+pl_349,349,melee,melee,41 CONON,melee,1,90,35,0,0,1,0,0.3,melee 非装填/ダミ行（1件。explicit で上書き）,[229]
 pl_358,358,rifle,m1,303Br250,bullet,7,85,76,250,6,2,1,7.3,弾種未設定（map / overrides / explicit で要定義）,[]
 pl_359,359,anti_tank,at_rifle,55Boys-5,bullet,5,60,90,5,2,2,2,1.1,at_rifle 非装填/ダミ行（1件。explicit で上書き）,[229]
 pl_360,360,anti_tank,at_rifle,PIAT-1,bullet,5,60,90,1,2,2,2,1.1,at_rifle 非装填/ダミ行（1件。explicit で上書き）,[229]
-pl_361,361,rifle,m1,No36M,bullet,7,85,76,1,6,2,1,0.8,弾種未設定（map / overrides / explicit で要定義）,[]
-pl_362,362,rifle,m1,No1 Mk1,bullet,7,85,76,0,6,2,1,0.5,弾種未設定（map / overrides / explicit で要定義）,[]
-pl_363,363,rifle,m1,No3 Mk1,bullet,7,85,76,0,6,2,1,0.5,弾種未設定（map / overrides / explicit で要定義）,[]
-pl_364,364,sniper,k98_scope,No4 Mk2,bullet,9,95,72,0,5,2,2,0.2,弾種未設定（map / overrides / explicit で要定義）,[]
+pl_361,361,grenade,nade,No36M,shell,4,60,80,1,2,2,0,0.8,nade 非装填/ダミ行（1件。explicit で上書き）,[229]
+pl_362,362,melee,melee,No1 Mk1,melee,1,90,35,0,0,1,0,0.5,melee 非装填/ダミ行（1件。explicit で上書き）,[229]
+pl_363,363,melee,melee,No3 Mk1,melee,1,90,35,0,0,1,0,0.5,melee 非装填/ダミ行（1件。explicit で上書き）,[229]
+pl_364,364,melee,melee,No4 Mk2,melee,1,90,35,0,0,1,0,0.2,melee 非装填/ダミ行（1件。explicit で上書き）,[229]
 pl_369,369,rifle,m1,7.62T71D,bullet,7,85,76,71,6,2,1,1.8,弾種未設定（map / overrides / explicit で要定義）,[]
 pl_370,370,rifle,m1,7.62T35h,bullet,7,85,76,35,6,2,1,0.7,弾種未設定（map / overrides / explicit で要定義）,[]
 pl_371,371,rifle,m1,7.62T71h,bullet,7,85,76,71,6,2,1,1.8,弾種未設定（map / overrides / explicit で要定義）,[]
 pl_372,372,rifle,m1,7.62T35S,bullet,7,85,76,35,6,2,1,0.6,弾種未設定（map / overrides / explicit で要定義）,[]
-pl_376,376,rifle,m1,sht.1891,bullet,7,85,76,0,6,2,1,0.2,弾種未設定（map / overrides / explicit で要定義）,[]
-pl_377,377,rifle,m1,sht.1940,bullet,7,85,76,0,6,2,1,0.3,弾種未設定（map / overrides / explicit で要定義）,[]
+pl_376,376,melee,melee,sht.1891,melee,1,90,35,0,0,1,0,0.2,melee 非装填/ダミ行（1件。explicit で上書き）,[229]
+pl_377,377,melee,melee,sht.1940,melee,1,90,35,0,0,1,0,0.3,melee 非装填/ダミ行（1件。explicit で上書き）,[229]
 pl_385,385,rifle,m1,380ACP8A,bullet,7,85,76,8,6,2,1,0.2,弾種未設定（map / overrides / explicit で要定義）,[]
 pl_387,387,rifle,m1,380ACP8B,bullet,7,85,76,8,6,2,1,0.2,弾種未設定（map / overrides / explicit で要定義）,[]
 pl_395,395,mg,mg42,M1919A4 MMG,bullet,8,45,25,200,99,2,3,14.1,.30-06 ベルト仮（米国 MG）,"[230, 238, 239, 240]"
 pl_396,396,mg,mg42,M1919A4 MMG,bullet,8,45,25,200,99,2,3,14.1,.30-06 ベルト仮（米国 MG）,"[230, 238, 239, 240]"
 pl_397,397,mg,mg42,M1919A5 MMG,bullet,8,45,25,200,99,2,3,14.1,.30-06 ベルト仮（米国 MG）,"[230, 238, 239, 240]"
 pl_398,398,mg,mg42,M2 HB HMG,bullet,8,45,25,110,99,2,3,38.1,.30-06 ベルト仮（米国 MG）,"[230, 238, 239, 240]"
-pl_399,399,smg,smg_9mm,MP40,bullet,5,60,41,32,4,2,1,4.7,9Pb-32P,[286]
-pl_400,400,mg,mg42,MG34,bullet,8,45,25,50,99,2,3,12,7.92 帯仮,"[272, 273, 274, 275, 276, 277, 288, 289, 290, 295, 296, 389]"
-pl_401,401,mg,mg42,sMG34,bullet,8,45,25,50,99,2,3,12,7.92 帯仮,"[272, 273, 274, 275, 276, 277, 288, 289, 290, 295, 296, 389]"
-pl_402,402,mg,mg42,MG42,bullet,8,45,25,50,99,2,3,12,7.92 帯仮,"[272, 273, 274, 275, 276, 277, 288, 289, 290, 295, 296, 389]"
-pl_403,403,mg,mg42,sMG42,bullet,8,45,25,50,99,2,3,12,7.92 帯仮,"[272, 273, 274, 275, 276, 277, 288, 289, 290, 295, 296, 389]"
-pl_404,404,mg,mg42,MG37(t),bullet,8,45,25,50,99,2,3,12,7.92 帯仮,"[272, 273, 274, 275, 276, 277, 288, 289, 290, 295, 296, 389]"
-pl_405,405,rifle,m1,FR mod35,bullet,7,85,76,8,6,2,1,4,弾種未設定（map / overrides / explicit で要定義）,[]
-pl_406,406,rifle,m1,Breda mod38,bullet,7,85,76,8,6,2,1,4,弾種未設定（map / overrides / explicit で要定義）,[]
-pl_407,407,rifle,m1,MAC1931A,bullet,7,85,76,8,6,2,1,4,弾種未設定（map / overrides / explicit で要定義）,[]
-pl_408,408,mg,mg42,Vickers Mk1,bullet,8,45,25,50,99,2,3,12,7.92 帯仮,"[272, 273, 274, 275, 276, 277, 288, 289, 290, 295, 296, 389]"
-pl_409,409,rifle,m1,Besa Mk1,bullet,7,85,76,8,6,2,1,4,弾種未設定（map / overrides / explicit で要定義）,[]
-pl_410,410,mg,mg42,37mmGun M5,bullet,8,45,25,50,99,2,3,12,7.92 帯仮,"[272, 273, 274, 275, 276, 277, 288, 289, 290, 295, 296, 389]"
-pl_411,411,mg,mg42,37mmGun M5,bullet,8,45,25,50,99,2,3,12,7.92 帯仮,"[272, 273, 274, 275, 276, 277, 288, 289, 290, 295, 296, 389]"
-pl_412,412,mg,mg42,37mmGun M6,bullet,8,45,25,50,99,2,3,12,7.92 帯仮,"[272, 273, 274, 275, 276, 277, 288, 289, 290, 295, 296, 389]"
-pl_413,413,mg,mg42,37mmGun M6,bullet,8,45,25,50,99,2,3,12,7.92 帯仮,"[272, 273, 274, 275, 276, 277, 288, 289, 290, 295, 296, 389]"
-pl_414,414,mg,mg42,57mmGun M1,bullet,8,45,25,50,99,2,3,12,7.92 帯仮,"[272, 273, 274, 275, 276, 277, 288, 289, 290, 295, 296, 389]"
-pl_415,415,rifle,m1,75mm M1897,bullet,7,85,76,8,6,2,1,4,弾種未設定（map / overrides / explicit で要定義）,[]
-pl_416,416,mg,mg42,75mmGun M2,bullet,8,45,25,50,99,2,3,12,7.92 帯仮,"[272, 273, 274, 275, 276, 277, 288, 289, 290, 295, 296, 389]"
-pl_417,417,mg,mg42,75mmGun M3,bullet,8,45,25,50,99,2,3,12,7.92 帯仮,"[272, 273, 274, 275, 276, 277, 288, 289, 290, 295, 296, 389]"
-pl_418,418,mg,mg42,75mmGun M5/6,bullet,8,45,25,50,99,2,3,12,7.92 帯仮,"[272, 273, 274, 275, 276, 277, 288, 289, 290, 295, 296, 389]"
-pl_419,419,rifle,m1,75mmHow M2/3,bullet,7,85,76,8,6,2,1,4,弾種未設定（map / overrides / explicit で要定義）,[]
-pl_420,420,mg,mg42,76mmGun M1A1,bullet,8,45,25,50,99,2,3,12,7.92 帯仮,"[272, 273, 274, 275, 276, 277, 288, 289, 290, 295, 296, 389]"
-pl_421,421,rifle,m1,3inGun M5,bullet,7,85,76,8,6,2,1,4,弾種未設定（map / overrides / explicit で要定義）,[]
-pl_422,422,rifle,m1,3inGun M7,bullet,7,85,76,8,6,2,1,4,弾種未設定（map / overrides / explicit で要定義）,[]
-pl_423,423,mg,mg42,90mmGun M3,bullet,8,45,25,50,99,2,3,12,7.92 帯仮,"[272, 273, 274, 275, 276, 277, 288, 289, 290, 295, 296, 389]"
-pl_424,424,rifle,m1,105mmHow T8,bullet,7,85,76,8,6,2,1,4,弾種未設定（map / overrides / explicit で要定義）,[]
-pl_425,425,rifle,m1,20mm KwK30,bullet,7,85,76,8,6,2,1,4,弾種未設定（map / overrides / explicit で要定義）,[]
-pl_426,426,rifle,m1,20mm KwK38,bullet,7,85,76,8,6,2,1,4,弾種未設定（map / overrides / explicit で要定義）,[]
-pl_427,427,rifle,m1,50mm KwK39,bullet,7,85,76,8,6,2,1,4,弾種未設定（map / overrides / explicit で要定義）,[]
-pl_428,428,rifle,m1,75mm KwK37,bullet,7,85,76,8,6,2,1,4,弾種未設定（map / overrides / explicit で要定義）,[]
-pl_429,429,rifle,m1,75mm StK37,bullet,7,85,76,8,6,2,1,4,弾種未設定（map / overrides / explicit で要定義）,[]
-pl_430,430,rifle,m1,75mm KwK40,bullet,7,85,76,8,6,2,1,4,弾種未設定（map / overrides / explicit で要定義）,[]
-pl_431,431,rifle,m1,75mm KwK40,bullet,7,85,76,8,6,2,1,4,弾種未設定（map / overrides / explicit で要定義）,[]
-pl_432,432,rifle,m1,75mm PaK39,bullet,7,85,76,8,6,2,1,4,弾種未設定（map / overrides / explicit で要定義）,[]
-pl_433,433,rifle,m1,75mm PaK40,bullet,7,85,76,8,6,2,1,4,弾種未設定（map / overrides / explicit で要定義）,[]
-pl_434,434,rifle,m1,75mm StK40,bullet,7,85,76,8,6,2,1,4,弾種未設定（map / overrides / explicit で要定義）,[]
-pl_435,435,rifle,m1,75mm KwK42,bullet,7,85,76,8,6,2,1,4,弾種未設定（map / overrides / explicit で要定義）,[]
-pl_436,436,rifle,m1,75mm PaK42,bullet,7,85,76,8,6,2,1,4,弾種未設定（map / overrides / explicit で要定義）,[]
-pl_437,437,rifle,m1,80mm GrW34,bullet,7,85,76,8,6,2,1,4,弾種未設定（map / overrides / explicit で要定義）,[]
-pl_438,438,flamethrower,flame,88mm FlaK36,shell,3,55,55,3,1,2,0,8,flame 非装填/ダミ行（1件。explicit で上書き）,[229]
-pl_439,439,rifle,m1,88mm KwK36,bullet,7,85,76,8,6,2,1,4,弾種未設定（map / overrides / explicit で要定義）,[]
-pl_440,440,rifle,m1,88mm KwK43,bullet,7,85,76,8,6,2,1,4,弾種未設定（map / overrides / explicit で要定義）,[]
-pl_441,441,rifle,m1,88mm PaK43,bullet,7,85,76,8,6,2,1,4,弾種未設定（map / overrides / explicit で要定義）,[]
-pl_442,442,rifle,m1,105mm StH42,bullet,7,85,76,8,6,2,1,4,弾種未設定（map / overrides / explicit で要定義）,[]
-pl_443,443,rifle,m1,128mm PaK44,bullet,7,85,76,8,6,2,1,4,弾種未設定（map / overrides / explicit で要定義）,[]
-pl_444,444,rifle,m1,150mm StH43,bullet,7,85,76,8,6,2,1,4,弾種未設定（map / overrides / explicit で要定義）,[]
-pl_445,445,rifle,m1,20mm M35,bullet,7,85,76,8,6,2,1,4,弾種未設定（map / overrides / explicit で要定義）,[]
-pl_446,446,rifle,m1,37/40 Cann.,bullet,7,85,76,8,6,2,1,4,弾種未設定（map / overrides / explicit で要定義）,[]
-pl_447,447,rifle,m1,47/32 Cann.,bullet,7,85,76,8,6,2,1,4,弾種未設定（map / overrides / explicit で要定義）,[]
-pl_448,448,mg,mg42,75/18 Obice,bullet,8,45,25,50,99,2,3,12,7.92 帯仮,"[272, 273, 274, 275, 276, 277, 288, 289, 290, 295, 296, 389]"
-pl_449,449,rifle,m1,37mm SA18,bullet,7,85,76,8,6,2,1,4,弾種未設定（map / overrides / explicit で要定義）,[]
-pl_450,450,rifle,m1,6pdrGun Mk2,bullet,7,85,76,8,6,2,1,4,弾種未設定（map / overrides / explicit で要定義）,[]
-pl_451,451,rifle,m1,6pdrGun Mk3,bullet,7,85,76,8,6,2,1,4,弾種未設定（map / overrides / explicit で要定義）,[]
-pl_452,452,mg,mg42,75mmGun Mk5,bullet,8,45,25,50,99,2,3,12,7.92 帯仮,"[272, 273, 274, 275, 276, 277, 288, 289, 290, 295, 296, 389]"
-pl_453,453,rifle,m1,3inGun Mk1,bullet,7,85,76,8,6,2,1,4,弾種未設定（map / overrides / explicit で要定義）,[]
-pl_454,454,rifle,m1,37mmPaK35/36,bullet,7,85,76,8,6,2,1,4,弾種未設定（map / overrides / explicit で要定義）,[]
+pl_399,399,smg,smg_9mm,MP40,bullet,5,60,41,32,4,2,1,4.7,9Pb-32M,[285]
+pl_400,400,mg,mg42,MG34,bullet,8,45,25,50,99,2,3,12.1,Gt34-50,[293]
+pl_401,401,mg,mg42,sMG34,bullet,8,45,25,50,99,2,3,12.1,Gt34-50,[293]
+pl_402,402,mg,mg42,MG42,bullet,8,45,25,50,99,2,3,11.5,Gt34-50,[293]
+pl_403,403,mg,mg42,sMG42,bullet,8,45,25,50,99,2,3,11.5,Gt34-50,[293]
+pl_404,404,mg,mg42,MG37(t),bullet,8,45,25,200,99,2,3,19.0,7.92 帯仮,"[272, 273, 274, 275, 276, 277, 288, 289, 290, 295, 296, 389]"
+pl_405,405,rifle,m1,FR mod35,bullet,7,85,76,0,6,2,1,18.1,弾種未設定（map / overrides / explicit で要定義）,[]
+pl_406,406,rifle,m1,Breda mod38,bullet,7,85,76,24,6,2,1,19.5,弾種未設定（map / overrides / explicit で要定義）,[]
+pl_407,407,rifle,m1,MAC1931A,bullet,7,85,76,150,6,2,1,9.2,7.5-25,[342]
+pl_408,408,mg,mg42,Vickers Mk1,bullet,8,45,25,150,99,2,3,17.2,7.92 帯仮,"[272, 273, 274, 275, 276, 277, 288, 289, 290, 295, 296, 389]"
+pl_409,409,rifle,m1,Besa Mk1,bullet,7,85,76,150,6,2,1,21.5,弾種未設定（map / overrides / explicit で要定義）,[]
+pl_410,410,mg,mg42,37mmGun M5,bullet,8,45,25,103,99,2,3,25.5,7.92 帯仮,"[272, 273, 274, 275, 276, 277, 288, 289, 290, 295, 296, 389]"
+pl_411,411,mg,mg42,37mmGun M5,bullet,8,45,25,103,99,2,3,25.5,7.92 帯仮,"[272, 273, 274, 275, 276, 277, 288, 289, 290, 295, 296, 389]"
+pl_412,412,mg,mg42,37mmGun M6,bullet,8,45,25,123,99,2,3,25.5,7.92 帯仮,"[272, 273, 274, 275, 276, 277, 288, 289, 290, 295, 296, 389]"
+pl_413,413,mg,mg42,37mmGun M6,bullet,8,45,25,123,99,2,3,25.5,7.92 帯仮,"[272, 273, 274, 275, 276, 277, 288, 289, 290, 295, 296, 389]"
+pl_414,414,mg,mg42,57mmGun M1,bullet,8,45,25,59,99,2,3,25.5,7.92 帯仮,"[272, 273, 274, 275, 276, 277, 288, 289, 290, 295, 296, 389]"
+pl_415,415,rifle,m1,75mm M1897,bullet,7,85,76,59,6,2,1,25.5,弾種未設定（map / overrides / explicit で要定義）,[]
+pl_416,416,mg,mg42,75mmGun M2,bullet,8,45,25,50,99,2,3,25.5,7.92 帯仮,"[272, 273, 274, 275, 276, 277, 288, 289, 290, 295, 296, 389]"
+pl_417,417,mg,mg42,75mmGun M3,bullet,8,45,25,97,99,2,3,25.5,7.92 帯仮,"[272, 273, 274, 275, 276, 277, 288, 289, 290, 295, 296, 389]"
+pl_418,418,mg,mg42,75mmGun M5/6,bullet,8,45,25,48,99,2,3,25.5,7.92 帯仮,"[272, 273, 274, 275, 276, 277, 288, 289, 290, 295, 296, 389]"
+pl_419,419,rifle,m1,75mmHow M2/3,bullet,7,85,76,46,6,2,1,25.5,弾種未設定（map / overrides / explicit で要定義）,[]
+pl_420,420,mg,mg42,76mmGun M1A1,bullet,8,45,25,71,99,2,3,25.5,7.92 帯仮,"[272, 273, 274, 275, 276, 277, 288, 289, 290, 295, 296, 389]"
+pl_421,421,rifle,m1,3inGun M5,bullet,7,85,76,54,6,2,1,25.5,弾種未設定（map / overrides / explicit で要定義）,[]
+pl_422,422,rifle,m1,3inGun M7,bullet,7,85,76,54,6,2,1,25.5,弾種未設定（map / overrides / explicit で要定義）,[]
+pl_423,423,mg,mg42,90mmGun M3,bullet,8,45,25,47,99,2,3,25.5,7.92 帯仮,"[272, 273, 274, 275, 276, 277, 288, 289, 290, 295, 296, 389]"
+pl_424,424,rifle,m1,105mmHow T8,bullet,7,85,76,68,6,2,1,25.5,弾種未設定（map / overrides / explicit で要定義）,[]
+pl_425,425,rifle,m1,20mm KwK30,bullet,7,85,76,180,6,2,1,25.5,弾種未設定（map / overrides / explicit で要定義）,[]
+pl_426,426,rifle,m1,20mm KwK38,bullet,7,85,76,180,6,2,1,25.5,弾種未設定（map / overrides / explicit で要定義）,[]
+pl_427,427,rifle,m1,50mm KwK39,bullet,7,85,76,84,6,2,1,25.5,弾種未設定（map / overrides / explicit で要定義）,[]
+pl_428,428,rifle,m1,75mm KwK37,bullet,7,85,76,64,6,2,1,25.5,弾種未設定（map / overrides / explicit で要定義）,[]
+pl_429,429,rifle,m1,75mm StK37,bullet,7,85,76,64,6,2,1,25.5,弾種未設定（map / overrides / explicit で要定義）,[]
+pl_430,430,rifle,m1,75mm KwK40,bullet,7,85,76,87,6,2,1,25.5,弾種未設定（map / overrides / explicit で要定義）,[]
+pl_431,431,rifle,m1,75mm KwK40,bullet,7,85,76,87,6,2,1,25.5,弾種未設定（map / overrides / explicit で要定義）,[]
+pl_432,432,rifle,m1,75mm PaK39,bullet,7,85,76,41,6,2,1,25.5,弾種未設定（map / overrides / explicit で要定義）,[]
+pl_433,433,rifle,m1,75mm PaK40,bullet,7,85,76,37,6,2,1,25.5,弾種未設定（map / overrides / explicit で要定義）,[]
+pl_434,434,rifle,m1,75mm StK40,bullet,7,85,76,87,6,2,1,25.5,弾種未設定（map / overrides / explicit で要定義）,[]
+pl_435,435,rifle,m1,75mm KwK42,bullet,7,85,76,79,6,2,1,25.5,弾種未設定（map / overrides / explicit で要定義）,[]
+pl_436,436,rifle,m1,75mm PaK42,bullet,7,85,76,79,6,2,1,25.5,弾種未設定（map / overrides / explicit で要定義）,[]
+pl_437,437,rifle,m1,80mm GrW34,bullet,7,85,76,66,6,2,1,25.5,弾種未設定（map / overrides / explicit で要定義）,[]
+pl_438,438,flamethrower,flame,88mm FlaK36,shell,3,55,55,3,1,2,0,25.5,flame 非装填/ダミ行（1件。explicit で上書き）,[229]
+pl_439,439,rifle,m1,88mm KwK36,bullet,7,85,76,92,6,2,1,25.5,弾種未設定（map / overrides / explicit で要定義）,[]
+pl_440,440,rifle,m1,88mm KwK43,bullet,7,85,76,72,6,2,1,25.5,弾種未設定（map / overrides / explicit で要定義）,[]
+pl_441,441,rifle,m1,88mm PaK43,bullet,7,85,76,72,6,2,1,25.5,弾種未設定（map / overrides / explicit で要定義）,[]
+pl_442,442,rifle,m1,105mm StH42,bullet,7,85,76,72,6,2,1,25.5,弾種未設定（map / overrides / explicit で要定義）,[]
+pl_443,443,rifle,m1,128mm PaK44,bullet,7,85,76,38,6,2,1,25.5,弾種未設定（map / overrides / explicit で要定義）,[]
+pl_444,444,rifle,m1,150mm StH43,bullet,7,85,76,72,6,2,1,25.5,弾種未設定（map / overrides / explicit で要定義）,[]
+pl_445,445,rifle,m1,20mm M35,bullet,7,85,76,255,6,2,1,25.5,弾種未設定（map / overrides / explicit で要定義）,[]
+pl_446,446,rifle,m1,37/40 Cann.,bullet,7,85,76,68,6,2,1,25.5,弾種未設定（map / overrides / explicit で要定義）,[]
+pl_447,447,rifle,m1,47/32 Cann.,bullet,7,85,76,104,6,2,1,25.5,弾種未設定（map / overrides / explicit で要定義）,[]
+pl_448,448,mg,mg42,75/18 Obice,bullet,8,45,25,44,99,2,3,25.5,7.92 帯仮,"[272, 273, 274, 275, 276, 277, 288, 289, 290, 295, 296, 389]"
+pl_449,449,rifle,m1,37mm SA18,bullet,7,85,76,237,6,2,1,25.5,弾種未設定（map / overrides / explicit で要定義）,[]
+pl_450,450,rifle,m1,6pdrGun Mk2,bullet,7,85,76,45,6,2,1,25.5,弾種未設定（map / overrides / explicit で要定義）,[]
+pl_451,451,rifle,m1,6pdrGun Mk3,bullet,7,85,76,45,6,2,1,25.5,弾種未設定（map / overrides / explicit で要定義）,[]
+pl_452,452,mg,mg42,75mmGun Mk5,bullet,8,45,25,84,99,2,3,25.5,7.92 帯仮,"[272, 273, 274, 275, 276, 277, 288, 289, 290, 295, 296, 389]"
+pl_453,453,rifle,m1,3inGun Mk1,bullet,7,85,76,84,6,2,1,25.5,弾種未設定（map / overrides / explicit で要定義）,[]
+pl_454,454,rifle,m1,37mmPaK35/36,bullet,7,85,76,168,6,2,1,25.5,弾種未設定（map / overrides / explicit で要定義）,[]
 pl_455,455,rifle,m1,(end),bullet,7,85,76,8,6,2,1,4,弾種未設定（map / overrides / explicit で要定義）,[]
 pl_458,458,rifle,m1,x辻,bullet,7,85,76,8,6,2,1,4,弾種未設定（map / overrides / explicit で要定義）,[]
 pl_459,459,rifle,m1,|弟,bullet,7,85,76,8,6,2,1,4,弾種未設定（map / overrides / explicit で要定義）,[]

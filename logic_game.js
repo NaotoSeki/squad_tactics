@@ -898,7 +898,11 @@ window.BattleFacade = class BattleFacade {
     const master0 = slot0 && slot0.code && typeof WPNS !== 'undefined' ? WPNS[slot0.code] : null;
     /** マスタが補助装備（三脚等）なら type 欠落時も主兵装にしない */
     const slot0IsRecoveryGear = master0 && master0.attr === recoveryAttr;
-    const isWeapon = slot0 && !slot0IsRecoveryGear && slot0.type !== 'part'
+    // CBE category-13 ammunition boxes used to inherit a rifle-shaped
+    // placeholder from the imported master table.  They supply belts; they
+    // are never a firearm, even when placed in the primary hand slot.
+    const slot0IsAmmoSupply = slot0 && (slot0.type === 'ammo' || master0?.plCategory === 'ammo_box');
+    const isWeapon = slot0 && !slot0IsRecoveryGear && !slot0IsAmmoSupply && slot0.type !== 'part'
       && (slot0.attr === weaponAttr || (slot0.code && master0 && master0.attr === weaponAttr));
     if (isWeapon) {
       if (typeof syncWeaponAcceptsAmmo === 'function') syncWeaponAcceptsAmmo(slot0);
