@@ -3,9 +3,8 @@
  *
  * このクラスは戦闘の**共有面**（campaign/map/spawn/units/inventory/ammo/deploy/
  * geometry/UI/log）を持つ facade である。RTwP（logic_battle_rtwp.js）はこの facade を
- * 直接の実行基盤として使う。旧ターン制のAP行動オーケストレーション（endTurn/
- * checkPhaseEnd 等）はここに同居したまま**段階退役中**で、参照が消え次第削除する。
- * 旧自動戦闘(runAuto/toggleAuto/isAuto経路)はAUTOボタン撤去(8813ba4)で到達不能となり削除済み。
+ * 直接の実行基盤として使う。旧ターン制のターン遷移と自動戦闘入口は撤去済みで、
+ * RTwP が唯一の実行系である。共有面（弾薬・装備・地形・UI補助）はここに残す。
  *
  * NORTH_STAR §7 Strangler Fig の最終段階: RTwP が唯一の実行系。?rtwp=0 の切り戻しは撤去済み。
  */
@@ -27,13 +26,8 @@ window.BattleFacade = class BattleFacade {
     this.aimTargetHex = null;
     this.hoverHex = null;
 
-    this.isAuto = false;
-    if (this.campaign) this.campaign.isAutoMode = false;
-    const autoBtn = document.getElementById('auto-toggle');
-    if (autoBtn) autoBtn.classList.remove('active');
     this.isExecutingAttack = false;
     this._attackAnimDepth = 0;
-    this.isProcessingTurn = false;
     this.interactionMode = 'SELECT';
     this.selectedUnit = null;
     this.tankAutoReload = true;
@@ -51,8 +45,6 @@ window.BattleFacade = class BattleFacade {
     if (typeof MapSystem !== 'undefined') {
       this.mapSystem = new MapSystem(this);
     }
-    this.ai = new EnemyAI(this);
-
     // グローバルgameLogicを自分自身に更新
     window.gameLogic = this;
   }
@@ -60,12 +52,6 @@ window.BattleFacade = class BattleFacade {
   // --- INITIALIZATION ---
   init() {
     this.generateMap();
-
-    // SECTOR開始時にAUTOは常にOFF
-    this.isAuto = false;
-    if (this.campaign) this.campaign.isAutoMode = false;
-    const autoBtn = document.getElementById('auto-toggle');
-    if (autoBtn) autoBtn.classList.remove('active');
 
     // プレイヤー配置
     this.units.forEach(u => {
@@ -214,57 +200,7 @@ window.BattleFacade = class BattleFacade {
     if (ok > 0) this.ui.log(`増援 ${ok} 名到着`);
   }
 
-  // --- GAME LOOP & TURN ---
-  endTurn() {
-    if (this.isProcessingTurn) return;
-    this.isProcessingTurn = true;
-    this.setMode('SELECT');
-    this.selectedUnit = null;
-    this.reachableHexes = [];
-    this.attackLine = [];
-    this.ui.hideActionMenu();
-
-    this.state = 'ANIM';
-    const e = document.getElementById('eyecatch');
-    if (e) e.style.opacity = 1;
-
-    // ターン経過処理
-    // Mechanic スキル: 毎ターンHP回復（REALISM_PACK: パワーインフレ回避のため+20→+10）
-    this.units.filter(u => u.team === 'player' && u.hp > 0 && u.skills.includes("Mechanic")).forEach(u => {
-      const mechanicHeal = 10;
-      if (u.hp < u.maxHp) {
-        u.hp = Math.min(u.maxHp, u.hp + mechanicHeal);
-        this.ui.log("修理");
-        this.refreshWoundedState(u);
-      }
-    });
-
-    const rtDelay = (typeof BATTLE_SCALE !== 'undefined' && BATTLE_SCALE.RT_TURN_DELAY_MS) || null;
-    const turnDelay = rtDelay != null ? rtDelay : (this.isAuto ? 300 : 1200);
-    setTimeout(async () => {
-      if (e) e.style.opacity = 0;
-      await this.ai.executeTurn(this.units);
-
-      if (this.checkWin()) { this.isProcessingTurn = false; return; }
-
-      // AP回復。REALISM_PACK.WOUNDED_STATE: 重傷状態の自軍ユニットは最大AP-1
-      this.units.forEach(u => {
-        if (u.team !== 'player') return;
-        const woundedAp = (typeof REALISM_PACK !== 'undefined' && REALISM_PACK.WOUNDED_STATE && u.wounded)
-          ? Math.max(0, u.maxAp - 1) : u.maxAp;
-        u.ap = woundedAp;
-      });
-      // 被弾リアクション状態をリセット（毎ターン1回の退避を可能にする）
-      this.units.forEach(u => { u.reactedThisTurn = false; });
-      // 制圧状態をカウントダウン
-      this.units.forEach(u => { u.suppressedTurns = Math.max(0, (u.suppressedTurns || 0) - 1); });
-      await this.processMarchOrders();
-      this.ui.log("-- PLAYER PHASE --");
-      this.state = 'PLAY';
-      this.isProcessingTurn = false;
-    }, turnDelay);
-  }
-
+  // --- BATTLE STATE ---
   checkWin() {
     if (this.state === 'WIN') return true;
     if (this._victoryProcessed) return true;
@@ -529,7 +465,6 @@ window.BattleFacade = class BattleFacade {
       this.aimTargetUnit = null;
       await this.triggerM8Rocket(a, targetHex);
       this._endAttackAnim(parallel);
-      if (!parallel) this.checkPhaseEnd();
       if (this.ui && this.ui.updateSidebar) this.ui.updateSidebar();
       if (this.interactionMode === 'ATTACK' && this.selectedUnit === a && !this.canFireAgain(a)) {
         this.setMode('SELECT');
@@ -550,7 +485,6 @@ window.BattleFacade = class BattleFacade {
       broken.isBroken = true;
       this.ui.log(`${a.name}の${w.name || '武器'}が故障！`);
       this.refreshUnitState(a);
-      if (!parallel) this.checkPhaseEnd();
       if (this.ui && this.ui.updateSidebar) this.ui.updateSidebar(a);
       return;
     }
@@ -835,7 +769,6 @@ window.BattleFacade = class BattleFacade {
         }
         game.refreshUnitState(a);
         game._endAttackAnim(parallel);
-        if (!parallel) game.checkPhaseEnd();
         if (game.interactionMode === 'ATTACK' && game.selectedUnit === a && !game.canFireAgain(a)) {
           game.setMode('SELECT');
           game.attackLine = [];
@@ -1360,80 +1293,9 @@ window.BattleFacade = class BattleFacade {
   getNeighbors(q, r) { return this.mapSystem ? this.mapSystem.getNeighbors(q, r) : []; }
   findPath(u, tq, tr) { return this.mapSystem ? this.mapSystem.findPath(u, tq, tr) : []; }
 
-  findMarchPath(u, tq, tr) {
-    if (!this.mapSystem || !this.mapSystem.findPathWithMaxCost) return this.findPath(u, tq, tr);
-    const budget = this.getMovementBudget(u);
-    const maxTurns = (typeof MARCH_PLAN_MAX_TURNS !== 'undefined') ? MARCH_PLAN_MAX_TURNS : 5;
-    const maxCost = budget * Math.max(1, maxTurns);
-    return this.mapSystem.findPathWithMaxCost(u, tq, tr, maxCost);
-  }
-
   clearUnitMarch(u) {
     if (!u) return;
     delete u.marchActive;
-  }
-
-  /** 黄色ヘックス: 行軍予約のみ（今ターン移動なし） */
-  actionReserveMarch(u, dest, turns) {
-    if (!u || !dest || turns == null) return;
-    u.marchActive = {
-      destQ: dest.q,
-      destR: dest.r,
-      turnsTotal: Math.max(2, Number(turns) || 2),
-      turnsElapsed: 0,
-    };
-    u.ap = 0;
-    this.ui.log(`${u.name} 行軍予約 → (${dest.q},${dest.r}) 約${u.marchActive.turnsTotal}ターン`);
-    this.refreshUnitState(u);
-    this.checkPhaseEnd();
-  }
-
-  /** プレイヤーフェーズ開始時: 行軍中ユニットを1ターン分だけ進める */
-  async processMarchOrders() {
-    if (typeof FEATURE_EXTENDED_MARCH !== 'undefined' && !FEATURE_EXTENDED_MARCH) return;
-    const marchers = this.units.filter(u =>
-      u.team === 'player' && u.hp > 0 && u.marchActive && u.ap > 0
-    );
-    if (!marchers.length) return;
-    this.state = 'ANIM';
-    for (let i = 0; i < marchers.length; i++) {
-      await this.executeMarchStep(marchers[i]);
-    }
-    this.state = 'PLAY';
-  }
-
-  async executeMarchStep(u) {
-    const m = u.marchActive;
-    if (!m || u.ap <= 0) return;
-    const path = this.findMarchPath(u, m.destQ, m.destR);
-    if (!path.length) {
-      this.ui.log(`${u.name} 行軍: 経路なし — 予約解除`);
-      this.clearUnitMarch(u);
-      return;
-    }
-    const budget = this.getMovementBudget(u);
-    const steps = [];
-    let spent = 0;
-    for (let i = 0; i < path.length; i++) {
-      const s = path[i];
-      const c = this.getTerrainMoveCost(u, s.q, s.r);
-      if (spent + c > budget) break;
-      steps.push(s);
-      spent += c;
-    }
-    if (steps.length === 0) {
-      this.ui.log(`${u.name} 行軍: 移動力不足 — 待機`);
-      return;
-    }
-    m.turnsElapsed = (m.turnsElapsed || 0) + 1;
-    await this.actionMove(u, steps, { parallel: false });
-    if (u.q === m.destQ && u.r === m.destR) {
-      this.ui.log(`${u.name} 行軍完了`);
-      this.clearUnitMarch(u);
-    } else if (m.turnsElapsed >= m.turnsTotal) {
-      this.ui.log(`${u.name} 行軍: 予定ターン到達（未到着）`);
-      this.clearUnitMarch(u);
-    }
   }
 
   calcAttackLine(u, tq, tr) {
@@ -1612,11 +1474,8 @@ window.BattleFacade = class BattleFacade {
         if (last.q === p.q && last.r === p.r) {
           const u = this.selectedUnit;
           const isThisTurn = this.reachableHexes.some(h => h.q === p.q && h.r === p.r);
-          const marchHit = this.marchReachableHexes && this.marchReachableHexes.find(h => h.q === p.q && h.r === p.r);
           if (isThisTurn) {
             this.actionMove(u, this.path);
-          } else if (marchHit) {
-            this.actionReserveMarch(u, p, marchHit.turns);
           }
           this.setMode('SELECT');
         }
@@ -1660,13 +1519,10 @@ window.BattleFacade = class BattleFacade {
     if (u && u.team === 'player') {
       if (this.interactionMode === 'MOVE') {
         const isReachable = this.reachableHexes.some(h => h.q === p.q && h.r === p.r);
-        const marchHit = this.marchReachableHexes && this.marchReachableHexes.some(h => h.q === p.q && h.r === p.r);
         const targetUnits = this.getUnitsInHex(p.q, p.r);
         const canEnter = targetUnits.length < this.getHexUnitCap();
-        if (canEnter && (isReachable || marchHit)) {
-          this.path = marchHit && !isReachable
-            ? this.findMarchPath(u, p.q, p.r)
-            : this.findPath(u, p.q, p.r);
+        if (canEnter && isReachable) {
+          this.path = this.findPath(u, p.q, p.r);
         } else {
           this.path = [];
         }
@@ -1799,9 +1655,6 @@ window.BattleFacade = class BattleFacade {
     this.marchReachableHexes = [];
     if (!u) return;
     const maxCost = this.getMovementBudget(u);
-    const extMarch = typeof FEATURE_EXTENDED_MARCH !== 'undefined' && FEATURE_EXTENDED_MARCH;
-    const maxTurns = (typeof MARCH_PLAN_MAX_TURNS !== 'undefined') ? MARCH_PLAN_MAX_TURNS : 5;
-    const planMax = extMarch ? maxCost * Math.max(1, maxTurns) : maxCost;
     const frontier = [{ q: u.q, r: u.r, cost: 0 }];
     const costSoFar = new Map();
     costSoFar.set(`${u.q},${u.r}`, 0);
@@ -1812,17 +1665,12 @@ window.BattleFacade = class BattleFacade {
         const stepCost = this.getTerrainMoveCost(u, n.q, n.r);
         if (this.isHexBlockedForUnit(u, n.q, n.r)) { return; }
         const nc = costSoFar.get(`${current.q},${current.r}`) + stepCost;
-        if (nc > planMax) return;
+        if (nc > maxCost) return;
         const key = `${n.q},${n.r}`;
         if (costSoFar.has(key) && nc >= costSoFar.get(key)) return;
         costSoFar.set(key, nc);
         frontier.push({ q: n.q, r: n.r, cost: nc });
-        if (nc <= maxCost) {
-          this.reachableHexes.push({ q: n.q, r: n.r });
-        } else if (extMarch && maxCost > 0) {
-          const turns = Math.max(2, Math.ceil(nc / maxCost));
-          this.marchReachableHexes.push({ q: n.q, r: n.r, turns, cost: nc });
-        }
+        this.reachableHexes.push({ q: n.q, r: n.r });
       });
     }
   }
@@ -2096,7 +1944,6 @@ window.BattleFacade = class BattleFacade {
     if (window.Sfx) Sfx.play('hit');
     this.applyDamage(d, totalDmg, "白兵");
     this.refreshUnitState(a);
-    this.checkPhaseEnd();
   }
 
   async actionMove(u, p, opts) {
@@ -2107,7 +1954,7 @@ window.BattleFacade = class BattleFacade {
     const parallel = !!(opts && opts.parallel);
     const rtCfg = this.getRtTacticsCfg();
     const rtStep = (parallel && rtCfg && rtCfg.RT_MOVE_STEP_MS) ? rtCfg.RT_MOVE_STEP_MS : null;
-    const stepMs = rtStep != null ? rtStep : ((this.isAuto || this.isAutoProcessing) ? 60 : 180);
+    const stepMs = rtStep != null ? rtStep : 180;
     if (!parallel) this.state = 'ANIM';
     for (const s of p) {
       u.ap -= this.getTerrainMoveCost(u, s.q, s.r);
@@ -2119,7 +1966,6 @@ window.BattleFacade = class BattleFacade {
     if (!parallel) this.checkReactionFire(u);
     if (!parallel) this.state = 'PLAY';
     this.refreshUnitState(u);
-    if (!parallel) this.checkPhaseEnd();
   }
   /**
    * 小銃・機関銃の地面弾着。KHAOS T1(12.7mm土煙)を縮小再生し、
@@ -2135,8 +1981,6 @@ window.BattleFacade = class BattleFacade {
   }
 
   checkReactionFire(u) { this.units.filter(e => e.team !== u.team && e.hp > 0 && e.def.isTank && this.hexDist(u, e) <= 1).forEach(t => { this.ui.log("防御射撃"); this.applyDamage(u, 15, "防御"); const rp = Renderer.hexToPx(u.q, u.r); if (Renderer.playExplosion) Renderer.playExplosion(rp.x, rp.y, 't1_12mm'); else if(window.VFX) window.VFX.addExplosion(rp.x, rp.y, "#fa0", 5); }); }
-  checkPhaseEnd() { if (this.units.filter(u => u.team === 'player' && u.hp > 0 && u.ap > 0).length === 0 && this.state === 'PLAY') { this.endTurn(); } }
-
   // --- UTILS ---
   checkDeploy(targetHex, cardType) {
     const template = typeof UNIT_TEMPLATES !== 'undefined' && cardType ? UNIT_TEMPLATES[cardType] : null;

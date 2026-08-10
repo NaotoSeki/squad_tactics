@@ -75,13 +75,21 @@ ok(!/id="auto-toggle"/.test(html),
   'index.html に AUTO ボタン(#auto-toggle)が無い（旧自動戦闘AIの入口を撤去）');
 ok(!/onclick="gameLogic\.toggleAuto\(\)"/.test(html),
   'index.html に toggleAuto() の起動口が無い');
+ok(!/logic_ai\.js/.test(html),
+  'index.html に旧ターン制AIスクリプトの読み込みが無い');
+ok(!fs.existsSync(path.join(ROOT, 'logic_ai.js')),
+  'logic_ai.js はRTwP移行後の実行資産から削除されている');
 
-// 7. 旧自動戦闘AIの本体(runAuto/toggleAuto)が BattleFacade から撤去され、
-//    isAuto を真にする経路が存在しない（Stage 1 スイープの固定。再混入したら落ちる）。
+// 7. 旧自動戦闘AIの本体(runAuto/toggleAuto)と、ターン制AIの接続が
+//    BattleFacade から撤去されている（Stage 1/2 スイープの固定）。
 ok(!/\brunAuto\s*\(/.test(game), 'logic_game.js に runAuto() の定義が無い');
 ok(!/\btoggleAuto\s*\(/.test(game), 'logic_game.js に toggleAuto() の定義が無い');
 ok(!/this\.isAuto\s*=\s*(?:true|!)/.test(game),
   'this.isAuto を true / トグルで真にする代入が無い（自動戦闘は再活性化不能）');
+ok(!/EnemyAI|executeTurn|this\.ai\b/.test(game),
+  'BattleFacade に旧EnemyAIの接続が無い');
+ok(!/\bendTurn\s*\(/.test(game) && !/\bcheckPhaseEnd\s*\(/.test(game),
+  'BattleFacade に旧ターン遷移(endTurn/checkPhaseEnd)が無い');
 
 // 8. 境界の不変条件: RTwP は installUi で旧コマンドメニュー(ui.showActionMenu)を
 //    showSoldierMenu へ差し替える。これが旧ターン制の interactionMode 遷移
