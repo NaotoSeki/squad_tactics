@@ -31,7 +31,7 @@ const unit = {
 };
 sb.LoadoutWeight.refreshUnitLoadout(unit);
 assert.strictEqual(unit._carriedWeightKg, 43.6, 'four-card M2 kit plus issued M1911');
-assert.strictEqual(unit.params.effectiveSpeed, 0, 'assembled M2 must be deployed before it can move');
+assert.strictEqual(unit.params.effectiveSpeed, 0, 'M2 kit is over the universal mobility weight limit');
 unit.hands = [null, null, null];
 unit.bag = [null, unit.bag[1]];
 sb.LoadoutWeight.refreshUnitLoadout(unit);

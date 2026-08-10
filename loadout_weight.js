@@ -8,9 +8,9 @@
   /** この重量までほぼペナルティなし（軽装） */
   const COMFORT_KG = 12;
   /** この重量で spd≈1（移動困難）— 50kg 前後が限界想定 */
-  const HARD_KG = 55;
+  const HARD_KG = 32;
   /** これ以上は spd 0 */
-  const IMMOBILE_KG = 70;
+  const IMMOBILE_KG = 40;
   /** 筋力 1 あたり上記閾値のシフト (kg) */
   const KG_PER_STR = 2;
   const MAX_MOVE_COST_MULT = 1.85;
@@ -91,16 +91,6 @@
   function getEffectiveSpeed(unit) {
     const base = (unit.params && unit.params.speed != null) ? unit.params.speed : 5;
     if (unit.def?.isTank) return base;
-    // Three M2 parts in the weapon slots mean the tube is assembled and laid
-    // for fire. It is not a rifle that a single soldier should walk around
-    // with. Disassemble it (move any part out of the three hands) before the
-    // crewman can receive a movement order; loose individual parts still use
-    // the normal weight model below.
-    const assembledMortar = (typeof M2Mortar !== 'undefined' && M2Mortar.isAssembled)
-      ? M2Mortar.isAssembled(unit)
-      : ['mortar_barrel', 'mortar_bipod', 'mortar_plate'].every((code) =>
-        (unit.hands || []).slice(0, 3).some((item) => item && item.code === code));
-    if (assembledMortar) return 0;
     const totalKg = getUnitCarriedWeightKg(unit);
     const { comfort, hard, immobile } = getWeightThresholds(unit);
 
