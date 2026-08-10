@@ -789,15 +789,26 @@ class CampaignManager {
             return def.role && def.role.toLowerCase() !== String(name).toLowerCase()
                 ? `${name} / ${def.role}` : name;
         };
+        const roleShortFor = u => {
+            const role = roleFor(u);
+            const common = {
+                rifleman: 'RFL', scout: 'SCT', gunner: 'GNR', sniper: 'SNP',
+                'mortar gunner': 'MTR', infantry: 'INF', tank: 'TNK'
+            };
+            return common[String((u.def && u.def.name) || role).toLowerCase()] || role;
+        };
         const skillName = key => (typeof SKILLS !== 'undefined' && SKILLS[key] && SKILLS[key].name)
             ? SKILLS[key].name : key;
+        const viewportHeight = (typeof window !== 'undefined' && Number(window.innerHeight)) || 720;
+        const reportHeight = Math.min(880, Math.max(180, viewportHeight - 92));
+        const reportPageSize = Math.max(1, Math.floor((reportHeight - 116) / 38));
 
         const summary = document.createElement('div');
         summary.className = 'sector-report-summary';
-        summary.innerHTML = `<span><b>${survivors.length}</b> SURVIVORS</span>`
-            + `<span class="sector-report-summary-kia"><b>${casualties.length}</b> KIA</span>`
-            + `<span><b>${totalKills}</b> CONFIRMED KILLS</span>`
-            + '<span>AMMUNITION RESTOCKED</span>';
+        summary.innerHTML = `<span title="Survivors"><b>${survivors.length}</b> SURV</span>`
+            + `<span class="sector-report-summary-kia" title="Killed in action"><b>${casualties.length}</b> KIA</span>`
+            + `<span title="Confirmed kills"><b>${totalKills}</b> Σ KILLS</span>`
+            + '<span title="Ammunition restocked">AMMO +</span>';
         container.appendChild(summary);
 
         const columns = document.createElement('div');
@@ -805,49 +816,64 @@ class CampaignManager {
         const buildColumn = (title, subtitle, units, kind) => {
             const panel = document.createElement('section');
             panel.className = `sector-report-panel sector-report-panel-${kind}`;
-            panel.innerHTML = `<header class="sector-report-panel-head"><span>${escapeHtml(title)}</span>`
-                + `<small>${escapeHtml(subtitle)}</small><b>${units.length}</b></header>`;
+            panel.innerHTML = `<header class="sector-report-panel-head"><span title="${escapeHtml(subtitle)}">${escapeHtml(title)}</span>`
+                + `<small>◉ BTL/Σ · ♥ HP · ▲ RANK/SKILL</small><b>${units.length}</b></header>`;
             const list = document.createElement('div');
             list.className = 'sector-report-list';
-            if (!units.length) {
-                const empty = document.createElement('div');
-                empty.className = 'sector-report-empty';
-                empty.textContent = kind === 'kia' ? 'NO FRIENDLY LOSSES' : 'NO SURVIVORS';
-                list.appendChild(empty);
-            }
-            units.slice()
+            const sortedUnits = units.slice()
                 .sort((a, z) => ((battleEnd.get(String(z.id)) || {}).sectorKills || 0)
-                    - ((battleEnd.get(String(a.id)) || {}).sectorKills || 0))
-                .forEach(u => {
+                    - ((battleEnd.get(String(a.id)) || {}).sectorKills || 0));
+            const pageCount = Math.max(1, Math.ceil(sortedUnits.length / reportPageSize));
+            let pageIndex = 0;
+            const pager = document.createElement('footer');
+            pager.className = 'sector-report-pager';
+            pager.innerHTML = '<button type="button" aria-label="Previous report page">‹</button>'
+                + '<span aria-live="polite"></span><button type="button" aria-label="Next report page">›</button>';
+            const pagerButtons = pager.querySelectorAll('button');
+            const pagerStatus = pager.querySelector('span');
+            const renderPage = () => {
+                list.innerHTML = '';
+                if (!sortedUnits.length) {
+                    const empty = document.createElement('div');
+                    empty.className = 'sector-report-empty';
+                    empty.textContent = kind === 'kia' ? 'NO FRIENDLY LOSSES' : 'NO SURVIVORS';
+                    list.appendChild(empty);
+                }
+                sortedUnits.slice(pageIndex * reportPageSize, (pageIndex + 1) * reportPageSize).forEach(u => {
                     const before = battleEnd.get(String(u.id)) || {};
                     const promotion = promoById.get(String(u.id)) || {};
                     const addedSkills = new Set(promotion.addedSkills || []);
                     const skills = (kind === 'kia' ? before.skills : u.skills) || [];
                     const condition = kind === 'kia' ? 'KIA' : (before.wounded ? 'WOUNDED' : 'FIT');
-                    const skillChips = skills.length
-                        ? skills.map(sk => `<span class="sector-report-skill${addedSkills.has(sk) ? ' added' : ''}">`
-                            + `${addedSkills.has(sk) ? '+' : ''}${escapeHtml(skillName(sk))}</span>`).join('')
-                        : '<span class="sector-report-skill muted">NO SKILLS</span>';
+                    const skillSummary = skills.length
+                        ? skills.map(sk => `${addedSkills.has(sk) ? '+' : ''}${skillName(sk)}`).join(' · ')
+                        : 'NO SKILL';
                     const promotionLine = kind === 'kia'
-                        ? '<strong>NO PROMOTION</strong><small>SKILLS LOST WITH SOLDIER</small>'
-                        : `<strong>R${before.rank || 0} → R${u.rank || 0}</strong>`
-                            + `<small>MAX HP +${promotion.hpGain || 0}${addedSkills.size ? ` / ${addedSkills.size} NEW SKILL${addedSkills.size === 1 ? '' : 'S'}` : ' / NO NEW SKILL'}</small>`;
+                        ? `<strong>—</strong><small title="LOST: ${escapeHtml(skillSummary)}">${escapeHtml(skillSummary)}</small>`
+                        : `<strong>▲ R${before.rank || 0}→R${u.rank || 0}</strong>`
+                            + `<small title="MAX HP +${promotion.hpGain || 0} / ${escapeHtml(skillSummary)}">+${promotion.hpGain || 0}HP · ${escapeHtml(skillSummary)}</small>`;
                     const medal = kind === 'kia' && u.team === 'player' && Number(before.hp) <= 0
                         ? '<span class="sector-report-purple-heart" role="img" aria-label="Purple Heart" title="Purple Heart"><i></i><span>♥</span></span>'
                         : '';
                     const row = document.createElement('div');
                     row.className = `sector-report-row ${kind}${before.wounded && kind !== 'kia' ? ' wounded' : ''}`;
                     row.innerHTML = `<img class="sector-report-portrait" src="${portraitFor(u)}" alt="">`
-                        + '<div class="sector-report-row-body">'
-                        + `<div class="sector-report-identity"><span><b>${escapeHtml(u.name)}</b><small>${escapeHtml(roleFor(u))}</small></span>${medal}</div>`
-                        + '<div class="sector-report-metrics">'
-                        + `<div><label>THIS BATTLE / CAREER</label><strong>${before.sectorKills || 0} / ${before.kills || 0} KILLS</strong></div>`
-                        + `<div><label>FINAL HP / STATUS</label><strong class="condition-${condition.toLowerCase()}">${Math.max(0, Number(before.hp) || 0)} / ${before.maxHp || 0} · ${condition}</strong></div>`
-                        + `<div><label>PROMOTION</label>${promotionLine}</div>`
-                        + `</div><div class="sector-report-skills">${skillChips}</div></div>`;
+                        + `<div class="sector-report-identity" title="${escapeHtml(roleFor(u))}"><span><b>${escapeHtml(u.name)}</b><small>${escapeHtml(roleShortFor(u))}</small></span>${medal}</div>`
+                        + `<div class="sector-report-cell" title="This battle / career kills"><label>◉</label><strong>${before.sectorKills || 0}<i>/Σ${before.kills || 0}</i></strong></div>`
+                        + `<div class="sector-report-cell" title="Final HP / status"><label>♥</label><strong class="condition-${condition.toLowerCase()}">${Math.max(0, Number(before.hp) || 0)}/${before.maxHp || 0}<i>${condition}</i></strong></div>`
+                        + `<div class="sector-report-cell sector-report-promotion">${promotionLine}</div>`;
                     list.appendChild(row);
                 });
+                pager.hidden = pageCount <= 1;
+                pagerStatus.textContent = `${pageIndex + 1} / ${pageCount}`;
+                pagerButtons[0].disabled = pageIndex === 0;
+                pagerButtons[1].disabled = pageIndex >= pageCount - 1;
+            };
+            pagerButtons[0].onclick = () => { if (pageIndex > 0) { pageIndex--; renderPage(); } };
+            pagerButtons[1].onclick = () => { if (pageIndex < pageCount - 1) { pageIndex++; renderPage(); } };
+            renderPage();
             panel.appendChild(list);
+            panel.appendChild(pager);
             return panel;
         };
         columns.appendChild(buildColumn('FALLEN', 'FRIENDLY KIA', casualties || [], 'kia'));

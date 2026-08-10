@@ -185,49 +185,50 @@
         .card-body { width: 100%; text-align: center; }
         .card-body h3 { margin: 5px 0; font-size: 16px; color: var(--accent); font-family: 'Orbitron', sans-serif; }
         .card-body p { margin: 0; font-size: 11px; color: #888; font-family: 'Share Tech Mono', monospace; }
-        /* Victory is a campaign report, not a pick-one reward. Both rosters
-           keep their own scroll position so large companies remain readable. */
-        .sector-report { width:min(1180px, calc(100vw - 48px)); height:min(720px, 78vh); min-height:360px; display:flex; flex-direction:column; gap:10px; text-align:left; font-family:'Share Tech Mono', monospace; }
-        .sector-report-summary { display:flex; flex-wrap:wrap; gap:8px 22px; color:#c9d1c8; font-size:11px; letter-spacing:.7px; padding:9px 12px; border:1px solid rgba(226,189,114,.35); background:rgba(38,31,20,.82); }
+        /* Victory report prioritizes at-a-glance comparison. Rows stay compact
+           and overflowing rosters page before vertical scrolling is considered. */
+        .sector-report { width:min(1240px, calc(100vw - 32px)); height:min(880px, calc(100vh - 92px)); height:min(880px, calc(100dvh - 92px)); min-height:180px; display:flex; flex-direction:column; gap:6px; text-align:left; font-family:'Share Tech Mono', monospace; }
+        .sector-report-summary { display:flex; flex-wrap:wrap; gap:5px 18px; color:#c9d1c8; font-size:9px; letter-spacing:.6px; padding:5px 9px; border:1px solid rgba(226,189,114,.35); background:rgba(38,31,20,.82); }
         .sector-report-summary span { white-space:nowrap; }
         .sector-report-summary b { color:#f0ca78; font-size:14px; }
         .sector-report-summary .sector-report-summary-kia b { color:#db7770; }
-        .sector-report-columns { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:12px; min-height:0; flex:1; overflow:hidden; }
+        .sector-report-columns { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:8px; min-height:0; flex:1; overflow:hidden; }
         .sector-report-panel { display:flex; flex-direction:column; min-width:0; min-height:0; border:1px solid rgba(170,190,170,.25); background:rgba(8,14,10,.9); }
         .sector-report-panel-kia { border-color:rgba(153,78,73,.5); }
-        .sector-report-panel-head { display:grid; grid-template-columns:auto 1fr auto; align-items:baseline; gap:9px; padding:9px 11px; border-bottom:1px solid rgba(255,255,255,.12); background:#1b241c; color:#d8b567; letter-spacing:1px; }
+        .sector-report-panel-head { display:grid; grid-template-columns:auto 1fr auto; align-items:center; gap:7px; padding:5px 7px; min-height:16px; border-bottom:1px solid rgba(255,255,255,.12); background:#1b241c; color:#d8b567; letter-spacing:.7px; }
         .sector-report-panel-kia .sector-report-panel-head { background:#2a1918; color:#e4a19b; }
-        .sector-report-panel-head > span { font:bold 13px 'Orbitron', sans-serif; }
-        .sector-report-panel-head small { color:#718075; font-size:8px; }
-        .sector-report-panel-head b { color:#fff; font-size:15px; }
-        .sector-report-list { min-height:0; overflow-y:auto; scrollbar-color:#526455 #111812; scrollbar-width:thin; }
-        .sector-report-row { display:grid; grid-template-columns:42px minmax(0, 1fr); gap:9px; padding:9px 10px; border-bottom:1px solid rgba(255,255,255,.07); color:#d5ddd3; font-size:10px; }
+        .sector-report-panel-head > span { font:bold 11px 'Orbitron', sans-serif; }
+        .sector-report-panel-head small { color:#718075; font-size:7px; text-align:right; }
+        .sector-report-panel-head b { color:#fff; font-size:12px; }
+        .sector-report-list { min-height:0; overflow:hidden; flex:1; align-content:start; }
+        .sector-report-row { display:grid; grid-template-columns:28px minmax(82px,1.25fr) 62px 82px minmax(104px,1.35fr); gap:5px; align-items:center; min-height:32px; padding:2px 6px; border-bottom:1px solid rgba(255,255,255,.07); color:#d5ddd3; font-size:9px; }
         .sector-report-row.kia { background:linear-gradient(90deg, rgba(87,34,32,.25), transparent 46%); }
         .sector-report-row.wounded { background:linear-gradient(90deg, rgba(112,64,32,.25), transparent 52%); }
-        .sector-report-portrait { width:40px; height:48px; object-fit:cover; object-position:center top; border:1px solid #607464; background:#182018; filter:saturate(.86); }
+        .sector-report-portrait { width:26px; height:30px; object-fit:cover; object-position:center top; border:1px solid #607464; background:#182018; filter:saturate(.86); }
         .sector-report-row.kia .sector-report-portrait { border-color:#744743; filter:grayscale(.72) sepia(.18); }
-        .sector-report-row-body { min-width:0; }
-        .sector-report-identity { display:flex; align-items:flex-start; justify-content:space-between; gap:8px; min-width:0; }
+        .sector-report-identity { display:flex; align-items:center; justify-content:space-between; gap:4px; min-width:0; }
         .sector-report-identity > span { min-width:0; }
-        .sector-report-identity b { display:block; color:#fff; font-size:12px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-        .sector-report-identity small { display:block; color:#8f9c91; font-size:8px; margin-top:2px; text-transform:uppercase; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-        .sector-report-metrics { display:grid; grid-template-columns:1.05fr .9fr 1.35fr; gap:8px; margin-top:7px; }
-        .sector-report-metrics > div { min-width:0; padding-left:7px; border-left:1px solid rgba(255,255,255,.1); }
-        .sector-report-metrics label { display:block; color:#69766c; font-size:7px; line-height:1.15; letter-spacing:.35px; }
-        .sector-report-metrics strong { display:block; color:#dbe3db; font-size:9px; line-height:1.35; margin-top:2px; }
-        .sector-report-metrics small { display:block; color:#7f8d81; font-size:7px; line-height:1.2; margin-top:1px; }
-        .sector-report-skills { display:flex; flex-wrap:wrap; gap:3px; margin-top:6px; }
-        .sector-report-skill { padding:2px 5px; border:1px solid rgba(123,143,126,.35); color:#9faa9f; background:rgba(54,69,57,.35); font-size:7px; line-height:1.15; }
-        .sector-report-skill.added { border-color:#c49b49; color:#f1c86f; background:rgba(100,70,22,.35); }
-        .sector-report-skill.muted { color:#5e695f; }
-        .sector-report-purple-heart { position:relative; width:20px; height:27px; flex:0 0 20px; display:flex; align-items:flex-end; justify-content:center; }
-        .sector-report-purple-heart i { position:absolute; top:0; left:5px; width:10px; height:12px; background:linear-gradient(90deg,#eee 0 24%,#6b2f82 24% 76%,#eee 76%); border:1px solid #b7aa80; }
-        .sector-report-purple-heart > span { position:relative; z-index:1; display:flex; align-items:center; justify-content:center; width:18px; height:17px; color:#7f318f; background:#d8bd72; border:1px solid #f0d992; clip-path:polygon(50% 100%,8% 48%,8% 25%,26% 8%,50% 8%,74% 8%,92% 25%,92% 48%); font:12px/1 serif; text-shadow:0 1px #2e1533; }
+        .sector-report-identity b { display:block; color:#fff; font-size:10px; line-height:1.05; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        .sector-report-identity small { display:block; color:#8f9c91; font-size:7px; line-height:1; margin-top:2px; text-transform:uppercase; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        .sector-report-cell { display:flex; align-items:center; gap:3px; min-width:0; min-height:24px; padding-left:5px; border-left:1px solid rgba(255,255,255,.09); }
+        .sector-report-cell label { color:#7b887e; font-size:8px; }
+        .sector-report-cell strong { color:#dbe3db; font-size:9px; white-space:nowrap; }
+        .sector-report-cell strong i { display:block; color:#778379; font:normal 7px/1 'Share Tech Mono', monospace; }
+        .sector-report-promotion { display:block; overflow:hidden; }
+        .sector-report-promotion strong { display:block; margin-top:2px; }
+        .sector-report-promotion small { display:block; color:#9b8b69; font-size:7px; line-height:1.1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        .sector-report-purple-heart { position:relative; width:14px; height:19px; flex:0 0 14px; display:flex; align-items:flex-end; justify-content:center; }
+        .sector-report-purple-heart i { position:absolute; top:0; left:4px; width:6px; height:8px; background:linear-gradient(90deg,#eee 0 24%,#6b2f82 24% 76%,#eee 76%); border:1px solid #b7aa80; }
+        .sector-report-purple-heart > span { position:relative; z-index:1; display:flex; align-items:center; justify-content:center; width:12px; height:11px; color:#7f318f; background:#d8bd72; border:1px solid #f0d992; clip-path:polygon(50% 100%,8% 48%,8% 25%,26% 8%,50% 8%,74% 8%,92% 25%,92% 48%); font:8px/1 serif; }
         .sector-report-empty { height:100%; min-height:130px; display:flex; align-items:center; justify-content:center; color:#647067; font-size:10px; letter-spacing:1px; }
         .condition-wounded { color:#ffbd68 !important; } .condition-fit { color:#9de09d !important; } .condition-kia { color:#df7770 !important; }
-        .sector-report-next { align-self:center; min-width:280px; padding:12px 20px; border:1px solid #b27d35; background:#342516; color:#f0c879; font:bold 12px 'Orbitron', sans-serif; cursor:pointer; }
+        .sector-report-pager { display:flex; align-items:center; justify-content:center; gap:8px; min-height:22px; border-top:1px solid rgba(255,255,255,.08); background:rgba(16,23,17,.9); color:#849087; font-size:8px; }
+        .sector-report-pager[hidden] { display:none; }
+        .sector-report-pager button { width:28px; height:18px; padding:0; border:1px solid #4e5b50; background:#182019; color:#c6d0c7; cursor:pointer; line-height:14px; }
+        .sector-report-pager button:disabled { opacity:.25; cursor:default; }
+        .sector-report-next { align-self:center; min-width:240px; padding:8px 16px; border:1px solid #b27d35; background:#342516; color:#f0c879; font:bold 10px 'Orbitron', sans-serif; cursor:pointer; }
         .sector-report-next:hover { background:#5a3b1d; }
-        @media (max-width:800px) { .sector-report { width:calc(100vw - 24px); } .sector-report-columns { gap:6px; } .sector-report-row { grid-template-columns:34px minmax(0,1fr); gap:6px; padding:7px 6px; } .sector-report-portrait { width:32px; height:40px; } .sector-report-metrics { grid-template-columns:1fr 1fr; gap:5px; } .sector-report-metrics > div:last-child { grid-column:1 / -1; } .sector-report-panel-head { padding:7px; } .sector-report-panel-head small { display:none; } }
+        @media (max-width:800px) { .sector-report { width:calc(100vw - 16px); } .sector-report-columns { gap:4px; } .sector-report-row { grid-template-columns:20px minmax(0,1.2fr) minmax(0,.75fr) minmax(0,.9fr) minmax(0,1.15fr); gap:2px; padding:2px; } .sector-report-portrait { width:18px; height:24px; } .sector-report-panel-head { padding:4px; } .sector-report-panel-head small { display:none; } .sector-report-identity b { font-size:8px; } .sector-report-cell { padding-left:2px; } .sector-report-cell strong { font-size:7px; } }
         
         #sector-counter {
             position: absolute;
