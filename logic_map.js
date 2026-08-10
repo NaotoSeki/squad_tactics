@@ -6,6 +6,20 @@ class MapSystem {
   }
 
   generate() {
+    // Next-generation generation is deliberately opt-in. Any rejected seed or
+    // runtime error falls through to the proven RuralV29/static path.
+    if (window.NextGenMapGenerator && window.NextGenMapGenerator.enabled) {
+      try {
+        if (window.NextGenMapGenerator.apply(this.game)) {
+          if (window.RuralV29Map) window.RuralV29Map.active = false;
+          if (window.CityMap) window.CityMap.active = false;
+          return;
+        }
+      } catch (error) {
+        console.error('NextGenMapGenerator failed; using static map fallback', error);
+        window.NextGenMapGenerator.active = false;
+      }
+    }
     // 農村V29モード (logic_map_rural_v29.js)。優先度: RuralV29 > CityMap > 田園
     if (window.RuralV29Map && window.RuralV29Map.enabled) {
       window.RuralV29Map.generate(this.game);

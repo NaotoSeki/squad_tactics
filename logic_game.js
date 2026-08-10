@@ -1302,6 +1302,16 @@ window.BattleFacade = class BattleFacade {
         && t.cost < 99 && !(isTank && t.tankBlocked);
     };
 
+    // Validated procedural maps provide deterministic spawn candidates.
+    // Static maps retain the legacy random search below.
+    const scenarioSpawns = this.mapScenario && this.mapScenario.spawns
+      && this.mapScenario.spawns[team];
+    if (Array.isArray(scenarioSpawns) && scenarioSpawns.length > 0) {
+      for (const candidate of scenarioSpawns) {
+        if (canSpawnAt(candidate.q, candidate.r)) return { q: candidate.q, r: candidate.r };
+      }
+    }
+
     for (let i = 0; i < 100; i++) {
       const q = Math.floor(Math.random() * MAP_W);
       const r = Math.floor(Math.random() * MAP_H);
