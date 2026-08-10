@@ -148,28 +148,39 @@
     const vehicle = c => foot(c) && !c.tankBlocked;
     const reachable = flood(map, result.spawns.player.slice(0, 1), foot);
     if (!result.spawns.player.length || !result.spawns.enemy.length) errors.push('missing_spawn_zone');
-    if (!result.spawns.enemy.some(p => reachable.has(key(p.q, p.r)))) errors.push('spawn_zones_disconnected');
+    if (![...result.spawns.player, ...result.spawns.enemy].every(p => reachable.has(key(p.q, p.r)))) errors.push('spawn_zones_disconnected');
     const vehicleArea = flood(map, result.spawns.player.slice(0, 1), vehicle);
     if (vehicleArea.size < w * h * 0.72) errors.push('vehicle_area_too_small');
     const runs = (result.massRoutes || []).filter(route => route.every(p =>
       [-1, 0, 1].every(dq => inside(p.q + dq, p.r, w, h) && vehicle(map[p.q + dq][p.r]))
     )).length;
     if (runs < 2) errors.push('insufficient_mass_routes');
-    let cover = 0, open = 0, blocked = 0, elevated = 0;
+    let cover = 0, open = 0, blocked = 0, elevated = 0, mortarOpenCenters = 0;
     for (let q = 0; q < w; q++) for (let r = 0; r < h; r++) {
       const c = map[q][r];
       if (c.cost >= 99) blocked++;
       else if (c.cover >= 15) cover++;
       else open++;
       if (c.elevation >= 3) elevated++;
+      if (q >= 2 && q < w - 2 && r >= 2 && r < h - 2) {
+        const center = { q, r };
+        let roomy = true;
+        for (let aq = q - 2; aq <= q + 2 && roomy; aq++) {
+          for (let ar = r - 2; ar <= r + 2; ar++) {
+            if (hexDistance(center, { q: aq, r: ar }) <= 2 && !vehicle(map[aq][ar])) { roomy = false; break; }
+          }
+        }
+        if (roomy) mortarOpenCenters++;
+      }
     }
     const total = w * h;
     if (cover / total < 0.16 || cover / total > 0.48) errors.push('cover_balance');
     if (open / total < 0.38) errors.push('insufficient_open_los');
     if (blocked / total > 0.08) errors.push('too_many_blockers');
     if (elevated / total < 0.12) errors.push('insufficient_elevation');
+    if (mortarOpenCenters < 12) errors.push('insufficient_mortar_footprints');
     if (result.spawns.player.length < 12 || result.spawns.enemy.length < 12) errors.push('spawn_capacity');
-    return { ok: errors.length === 0, errors, metrics: { reachable: reachable.size, vehicleArea: vehicleArea.size, cover, open, blocked, elevated, massRouteRuns: runs } };
+    return { ok: errors.length === 0, errors, metrics: { reachable: reachable.size, vehicleArea: vehicleArea.size, cover, open, blocked, elevated, mortarOpenCenters, massRouteRuns: runs } };
   }
 
   const NextGenMapGenerator = {

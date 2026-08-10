@@ -27,6 +27,7 @@ function manySeedsPropertyTest() {
     assert.ok(result.validation.ok, `seed ${seed}: ${result.validation.errors.join(',')}`);
     assert.ok(result.validation.metrics.vehicleArea >= 288, `seed ${seed}: vehicle area`);
     assert.ok(result.validation.metrics.massRouteRuns >= 2, `seed ${seed}: mass routes`);
+    assert.ok(result.validation.metrics.mortarOpenCenters >= 12, `seed ${seed}: mortar footprints`);
     assert.ok(result.spawns.player.length >= 12 && result.spawns.enemy.length >= 12);
     assert.ok(result.enemyInitial.every(p => p.r < 10), `seed ${seed}: enemy placement side`);
     signatures.add(signature(result));
