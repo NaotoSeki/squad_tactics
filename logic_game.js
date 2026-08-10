@@ -3,8 +3,9 @@
  *
  * このクラスは戦闘の**共有面**（campaign/map/spawn/units/inventory/ammo/deploy/
  * geometry/UI/log）を持つ facade である。RTwP（logic_battle_rtwp.js）はこの facade を
- * 直接の実行基盤として使う。旧ターン制のAP行動オーケストレーション（endTurn/runAuto/
+ * 直接の実行基盤として使う。旧ターン制のAP行動オーケストレーション（endTurn/
  * checkPhaseEnd 等）はここに同居したまま**段階退役中**で、参照が消え次第削除する。
+ * 旧自動戦闘(runAuto/toggleAuto/isAuto経路)はAUTOボタン撤去(8813ba4)で到達不能となり削除済み。
  *
  * NORTH_STAR §7 Strangler Fig の最終段階: RTwP が唯一の実行系。?rtwp=0 の切り戻しは撤去済み。
  */
@@ -137,7 +138,6 @@ window.BattleFacade = class BattleFacade {
         }
         Renderer.dealCards(deck);
       }
-      if (this.isAuto) this.runAuto();
     }, 600);
   }
 
@@ -262,7 +262,6 @@ window.BattleFacade = class BattleFacade {
       this.ui.log("-- PLAYER PHASE --");
       this.state = 'PLAY';
       this.isProcessingTurn = false;
-      if (this.isAuto) this.runAuto();
     }, turnDelay);
   }
 
@@ -2100,8 +2099,6 @@ window.BattleFacade = class BattleFacade {
     this.checkPhaseEnd();
   }
 
-  toggleAuto() { this.isAuto = !this.isAuto; const b = document.getElementById('auto-toggle'); if(b) b.classList.toggle('active'); if(this.isAuto && this.state==='PLAY') this.runAuto(); }
-  async runAuto() { if(this.state!=='PLAY') return; if (this.isAutoProcessing) return; this.ui.log(":: Auto ::"); this.clearSelection(); this.isAutoProcessing = true; await this.ai.execute(this.units, 'player'); this.isAutoProcessing = false; if(this.state==='WIN') return; if(this.isAuto && this.state==='PLAY') this.endTurn(); }
   async actionMove(u, p, opts) {
     if (!u || u.hp <= 0) return;
     // Equipment weight can reduce effective spd to zero. Direct callers must
