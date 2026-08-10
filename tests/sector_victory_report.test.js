@@ -45,5 +45,7 @@ assert.match(page, /100dvh - 92px/,
   'report height follows the dynamic viewport on short screens');
 assert.match(campaign, /SURV[\s\S]*?Σ KILLS[\s\S]*?AMMO \+/,
   'summary labels stay short enough to avoid wrapping');
+assert.match(page, /\.sector-report-cell strong[^{]*\{[^}]*overflow:hidden[^}]*text-overflow:ellipsis/,
+  'compact values do not bleed into adjacent columns');
 
-console.log('sector_victory_report: 18 passed');
+console.log('sector_victory_report: 19 passed');
