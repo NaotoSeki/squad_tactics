@@ -401,7 +401,8 @@ class UIManager {
         const u = window.gameLogic.getUnitInHex(hex.q, hex.r);
         const t = window.gameLogic.isValidHex(hex.q, hex.r) ? window.gameLogic.map[hex.q][hex.r] : null;
         // RTwP では AP もターン終了も無い（ターン制へ戻したときだけ従来通り出す）
-        const rtwp = !!(window.RtwpBattle && window.RtwpBattle.active);
+        const rtwp = !!(window.RtwpBattle && window.RtwpBattle.active)
+            || !!(window.gameLogic && ['WIN', 'LOSS', 'REVIEW'].includes(window.gameLogic.state));
         let h = "";
         if (u) {
             const ap = rtwp ? '' : ` AP:${u.ap}/${u.maxAp}`;
@@ -539,7 +540,15 @@ class UIManager {
             skillListHtml = `<div class="unit-skills" style="font-size:10px;color:#888;margin-top:4px;margin-bottom:6px;">${skillParts.join('  |  ')}</div>`;
         }
 
+        // RTwP uses the tactical pause hotkey, never a turn boundary. Keep
+        // the legacy control out of live combat and frozen/result review
+        // views, while retaining it for any standalone legacy UI consumer.
+        const rtwpPresentation = !!(window.RtwpBattle && window.RtwpBattle.active)
+            || !!(window.gameLogic && ['WIN', 'LOSS', 'REVIEW'].includes(window.gameLogic.state));
+        const endTurnControl = rtwpPresentation ? ''
+            : `<div style="padding:10px;"><button onclick="gameLogic.endTurn()" style="width:100%; background:#522; border-color:#d44; margin-top:15px; padding:5px; color:#fcc;">End Turn</button></div>`;
+
         const onErr = (u.team === 'player' && u.portraitIndex !== undefined) ? ' onerror="this.style.display=\'none\'"' : '';
-        ui.innerHTML = `<div class="soldier-header"><div class="face-box"><img src="${faceUrl}" width="96" height="96"${onErr}></div><div><div class="soldier-name">${u.name}</div><div class="soldier-rank">${u.def.role}</div>${skillListHtml}</div></div><div class="stat-grid"><div class="stat-row"><span>HP</span> <span>${u.hp}/${u.maxHp}</span></div><div class="stat-row"><span>AP</span> <span>${u.ap}/${u.maxAp}</span></div></div><div class="inv-header" style="padding:0 10px; margin-top:10px;">${(u.def && u.def.isTank) ? 'Main armament / Sub armament' : 'LOADOUT'}</div><div class="loadout-container" style="display:flex;flex-direction:column;">${mainSlotsHtml}</div><div class="inv-header" style="padding:0 10px; margin-top:10px;">BACKPACK</div><div class="loadout-container">${subSlotsHtml}</div><div style="padding:0 10px;">${reloadBtn}</div><div style="padding:10px;"><button onclick="gameLogic.endTurn()" style="width:100%; background:#522; border-color:#d44; margin-top:15px; padding:5px; color:#fcc;">End Turn</button></div>`;
+        ui.innerHTML = `<div class="soldier-header"><div class="face-box"><img src="${faceUrl}" width="96" height="96"${onErr}></div><div><div class="soldier-name">${u.name}</div><div class="soldier-rank">${u.def.role}</div>${skillListHtml}</div></div><div class="stat-grid"><div class="stat-row"><span>HP</span> <span>${u.hp}/${u.maxHp}</span></div><div class="stat-row"><span>AP</span> <span>${u.ap}/${u.maxAp}</span></div></div><div class="inv-header" style="padding:0 10px; margin-top:10px;">${(u.def && u.def.isTank) ? 'Main armament / Sub armament' : 'LOADOUT'}</div><div class="loadout-container" style="display:flex;flex-direction:column;">${mainSlotsHtml}</div><div class="inv-header" style="padding:0 10px; margin-top:10px;">BACKPACK</div><div class="loadout-container">${subSlotsHtml}</div><div style="padding:0 10px;">${reloadBtn}</div>${endTurnControl}`;
     }
 }

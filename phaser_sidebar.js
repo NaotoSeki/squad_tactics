@@ -57,7 +57,6 @@ const GAUGE_BOTTOM_PAD = 6;
 const BAG_SLOT_H = 54;
 /** 背嚢の枠数。2列×4段（logic_ui.js のDOM版サイドバーと必ず揃える） */
 const BAG_SLOTS = 8;
-const END_TURN_BUTTON_BOTTOM_OFFSET = 48;
 
 window.PhaserSidebar = class PhaserSidebar {
     constructor(scene) {
@@ -96,9 +95,6 @@ window.PhaserSidebar = class PhaserSidebar {
         this.noSignalText.setVisible(false);
         this.container.add(this.noSignalText);
 
-        const left = w - sw + 12;
-        this.endTurnBtnContainer = this.createButton(left, h - END_TURN_BUTTON_BOTTOM_OFFSET, sw - 36, 32, 'End Turn', () => { if (window.gameLogic) window.gameLogic.endTurn(); }, 0x552222, 0xdd4444).container;
-        this.container.add(this.endTurnBtnContainer);
     }
 
     updateSidebar(u, state, tankAutoReload) {
@@ -351,12 +347,6 @@ window.PhaserSidebar = class PhaserSidebar {
     }
 
     updateLiveStats() {
-        // End Turn は旧ターン制の操作。RTwP では押せても意味が無いので伏せる。
-        // （毎フレーム呼ばれる。attach は初回 MainScene.update なので生成時ではここで見る）
-        if (this.endTurnBtnContainer) {
-            const rtwp = !!(window.RtwpBattle && window.RtwpBattle.active);
-            if (this.endTurnBtnContainer.visible === rtwp) this.endTurnBtnContainer.setVisible(!rtwp);
-        }
         // 弾ピップを実弾倉へ追従させる（スロットを組み直さずに色だけ塗り替える）。
         // 減る時だけは1発ずつ落とす — バーストは3発まとめて消費されるが、ゲージが
         // ごそっと飛ぶと発砲の手応えが消える。装填や兵士の切替は即座に合わせる。
@@ -864,9 +854,6 @@ window.PhaserSidebar = class PhaserSidebar {
         }
         if (this.noSignalText) {
             this.noSignalText.setPosition(w - sw / 2, h / 2 - 80);
-        }
-        if (this.endTurnBtnContainer) {
-            this.endTurnBtnContainer.setPosition(w - sw + 12, h - END_TURN_BUTTON_BOTTOM_OFFSET);
         }
     }
 };

@@ -16,6 +16,9 @@ ok(sound.includes("'grenade_explosion_ps': 'asset/audio/sfx/grenade_explosion_ps
 ok(sound.includes("'m2_mortar_fire_ps': 'asset/audio/sfx/m2_mortar_fire_ps.wav'"),'mortar preload missing');
 ok(sound.includes("'grenade_explosion_ps': 280")&&sound.includes("'m2_mortar_fire_ps': 450"),'duplicate-play throttles missing');
 ok(sound.includes('this.assetVolumes[id]')&&sound.includes('const cached ='),'volume/cache fallback guard missing');
+ok(/'grenade_explosion_ps':\s*0\.255\b/.test(sound),'grenade runtime volume is the scoped -3dB mix');
+ok(/'m2_mortar_fire_ps':\s*0\.30\b/.test(sound),'M2 runtime volume remains unchanged');
+ok(/else if\(target==='boom'\)\s*\{\s*this\.noise\(1\.2, 60, 'lowpass', 0\.8\);/.test(sound),'shared boom fallback remains unchanged');
 const grenadeBlock=rtwp.slice(rtwp.indexOf("case 'GRENADE':"),rtwp.indexOf("case 'BLAST':"));
 const blastBlock=rtwp.slice(rtwp.indexOf("case 'BLAST':"),rtwp.indexOf("case 'MELEE_START':"));
 ok(!grenadeBlock.includes('grenade_explosion_ps'),'grenade explosion must not play at throw');

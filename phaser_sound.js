@@ -25,7 +25,9 @@ const Sfx = {
         'm2_mortar_fire_ps': 'asset/audio/sfx/m2_mortar_fire_ps.wav'
     },
     assetVolumes: {
-        'grenade_explosion_ps': 0.36,
+        // -3 dB from the original 0.36 runtime mix; keep the M2 and generic
+        // boom fallback levels unchanged so this only tames grenade impacts.
+        'grenade_explosion_ps': 0.255,
         'm2_mortar_fire_ps': 0.30
     },
 
