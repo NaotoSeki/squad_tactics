@@ -238,6 +238,7 @@
     } else if (simAttrs.effectiveSpeed != null) {
       simAttrs.speed = Number(simAttrs.effectiveSpeed);
     }
+    simAttrs.mortarDeployed = isMortar;
 
     this.sim.addSoldier({
       id: id, team: team, q: unit.q, r: unit.r,
@@ -1474,9 +1475,16 @@
       ? LoadoutWeight.getEffectiveSpeed(unit)
       : (raw.effectiveSpeed != null ? raw.effectiveSpeed : raw.speed);
     const speed = Number.isFinite(Number(computed)) ? Math.max(0, Number(computed)) : 0;
+    const mortarDeployed = (typeof M2Mortar !== 'undefined' && M2Mortar.isAssembled)
+      ? M2Mortar.isAssembled(unit)
+      : ['mortar_barrel', 'mortar_bipod', 'mortar_plate'].every((code) =>
+        (unit.hands || []).slice(0, 3).some((item) => item && item.code === code));
     // getSoldier() returns a snapshot, but attrs intentionally retains the core
     // object's reference; mutate that object instead of replacing the snapshot field.
-    soldier.attrs = Object.assign(soldier.attrs || {}, raw, { speed: speed });
+    soldier.attrs = Object.assign(soldier.attrs || {}, raw, {
+      speed: mortarDeployed ? 0 : speed,
+      mortarDeployed: mortarDeployed,
+    });
     raw.effectiveSpeed = speed;
 
     const menu = (typeof document !== 'undefined') ? document.getElementById('command-menu') : null;

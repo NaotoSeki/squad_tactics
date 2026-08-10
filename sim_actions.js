@@ -84,6 +84,7 @@ function canMoveTo(ctx) {
   const r = canReceiveOrders(ctx.self);
   if (!r.ok) return r;
   const rawSpeed = ctx.self && ctx.self.attrs ? Number(ctx.self.attrs.speed) : NaN;
+  if (ctx.self && ctx.self.attrs && ctx.self.attrs.mortarDeployed) return no('MORTAR_DEPLOYED');
   if (Number.isFinite(rawSpeed) && rawSpeed <= 0) return no('移動不能: spd 0');
   if (ctx.hex && (!ctx.path || !ctx.path.length)) return no('到達できない');
   return OK;

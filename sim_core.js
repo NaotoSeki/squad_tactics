@@ -845,7 +845,7 @@ SimCore.prototype._vetMove = function (s, intent, worldView) {
   const path = payload.path ? payload.path.slice() : null;
   const requested = payload.mode || 'walk';
   const speed = s.attrs ? Number(s.attrs.speed) : NaN;
-  if (Number.isFinite(speed) && speed <= 0) {
+  if ((s.attrs && s.attrs.mortarDeployed) || (Number.isFinite(speed) && speed <= 0)) {
     if (s.currentOrder === intent) s.currentOrder = null;
     s.movePath = null;
     s._moveOrder = null;
@@ -1056,7 +1056,7 @@ SimCore.prototype._routPath = function (s, T) {
 SimCore.prototype._actMove = function (s, T) {
   // Cover direct, assault and rout movement paths as well as vetted orders.
   const effectiveSpeed = s.attrs ? Number(s.attrs.speed) : NaN;
-  if (Number.isFinite(effectiveSpeed) && effectiveSpeed <= 0) {
+  if ((s.attrs && s.attrs.mortarDeployed) || (Number.isFinite(effectiveSpeed) && effectiveSpeed <= 0)) {
     s.movePath = null;
     s._moveOrder = null;
     if (s.currentOrder && s.currentOrder.type === 'MOVE_TO') s.currentOrder = null;

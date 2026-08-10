@@ -777,7 +777,10 @@ class CampaignManager {
                 const row = document.createElement('div');
                 row.className = 'sector-report-row' + (before.wounded ? ' wounded' : '');
                 const role = (u.def && u.def.role) || '';
-                row.innerHTML = `<span><b>${u.name}</b><small>${role}</small></span>`
+                const portrait = Number.isFinite(Number(u.portraitIndex))
+                    ? `asset/portraits/inf_us_${String(Number(u.portraitIndex) + 1).padStart(3, '0')}.jpg`
+                    : 'asset/portraits/inf_us_001.jpg';
+                row.innerHTML = `<span class="sector-report-soldier"><img class="sector-report-portrait" src="${portrait}" alt=""><span><b>${u.name}</b><small>${role}</small></span></span>`
                     + `<span>R${before.rank || 0} → R${u.rank || 0}<small>HP +${promotion.hpGain || 0}${added ? ' • ' + added : ''}</small></span>`
                     + `<span>${before.sectorKills || 0}<small>TOTAL ${before.kills || 0}</small></span>`
                     + `<span class="condition-${injury.toLowerCase()}">${injury}<small>${before.hp || 0}/${before.maxHp || 0} → ${u.hp}/${u.maxHp}</small></span>`;
