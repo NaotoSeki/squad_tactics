@@ -349,9 +349,13 @@ SimCore.prototype.addSoldier = function (spec) {
       }
       : null,
     isLeader: !!spec.isLeader,
-    traits: spec.traits || [],
+    skills: Array.isArray(spec.skills) ? spec.skills.slice() : [],
+    traits: Array.isArray(spec.traits) ? spec.traits.slice() : [],
+    effects: Object.assign({}, spec.effects || {}),
+    hasRadio: !!spec.hasRadio,
 
     hp: 100,
+    maxHp: 100,
     // Persistent and per-sector attribution are kept by the sim so the
     // campaign report does not have to reconstruct kills from visual events.
     kills: Math.max(0, Number(spec.kills) || 0),
@@ -380,7 +384,7 @@ SimCore.prototype.addSoldier = function (spec) {
     engageHex: null,   // 面制圧の目標地点（TARGET_HEX）。個体ではなく地帯を撃つ
     engageT: 0,
     // 姿勢。state とは独立したフラグなので、伏せたまま engage できる
-    prone: false,
+    prone: !!spec.prone,
     quietT: 0, // ticks since last shot/hit (drives SUPPRESS_DECAY)
     routCheckT: 0,
     lastMoveHexOpen: false,
@@ -418,14 +422,43 @@ SimCore.prototype.getSoldier = function (id) {
   return this._snapshot(s);
 };
 
+/**
+ * Replace the live RTwP loadout after an in-battle equipment transfer.
+ * The campaign object remains authoritative for inventory; this method only
+ * updates the simulation copy and cancels an incompatible reload/switch beat.
+ */
+SimCore.prototype.updateSoldierLoadout = function (id, spec) {
+  const s = this._soldiers.get(id);
+  if (!s || !spec || !spec.weapon) return false;
+  s.weapon = spec.weapon;
+  s.magRemaining = Math.max(0, Math.min(spec.weapon.magCap,
+    spec.magRemaining != null ? spec.magRemaining : spec.weapon.magCap));
+  s.magsLeft = Math.max(0, spec.magsLeft || 0);
+  s.grenades = Math.max(0, spec.grenades || 0);
+  s.rifleGrenades = Math.max(0, spec.rifleGrenades || 0);
+  s.munitionSpec = spec.munitionSpec || null;
+  s.sidearm = spec.sidearm || null;
+  if (spec.attrs) s.attrs = Object.assign(s.attrs || {}, spec.attrs);
+  if (Array.isArray(spec.skills)) s.skills = spec.skills.slice();
+  if (Array.isArray(spec.traits)) s.traits = spec.traits.slice();
+  if (spec.effects) s.effects = Object.assign({}, spec.effects);
+  if (spec.hasRadio != null) s.hasRadio = !!spec.hasRadio;
+  if (s.state === 'reload' || s.state === 'switch') this._setState(s, 'idle');
+  s.reloadT = 0;
+  s.switchT = 0;
+  s._burstIntervalRemaining = 0;
+  return true;
+};
+
 SimCore.prototype._snapshot = function (s) {
   return {
     id: s.id, team: s.team, q: s.q, r: s.r, name: s.name,
     weapon: s.weapon, ammo: { mags: s.magsLeft }, grenades: s.grenades,
     rifleGrenades: s.rifleGrenades, skill: s.skill, attrs: s.attrs,
     sidearm: s.sidearm ? { code: s.sidearm.weapon && s.sidearm.weapon.code } : null,
-    isLeader: s.isLeader, traits: s.traits.slice(),
-    hp: s.hp, state: s.state, stateT: s.stateT, prone: s.prone,
+    isLeader: s.isLeader, skills: s.skills.slice(), traits: s.traits.slice(),
+    effects: Object.assign({}, s.effects), hasRadio: s.hasRadio,
+    hp: s.hp, maxHp: s.maxHp, state: s.state, stateT: s.stateT, prone: s.prone,
     kills: s.kills || 0, battleKills: s.battleKills || 0,
     suppression: s.suppression, morale: s.morale, underFireT: s.underFireT,
     magRemaining: s.magRemaining, magsLeft: s.magsLeft, fireMode: s.fireMode,
@@ -465,6 +498,21 @@ SimCore.prototype.drainEvents = function () {
   const out = this._events;
   this._events = [];
   return out;
+};
+
+/** Queue a support/external blast inside the authoritative RTwP timeline. */
+SimCore.prototype.queueExternalBlast = function (hex, spec) {
+  if (!hex || !spec) return false;
+  if (!this._blasts) this._blasts = [];
+  const delayT = Math.max(0, Math.round(spec.delayT || 0));
+  this._blasts.push({
+    at: this._tick + delayT,
+    hex: { q: hex.q, r: hex.r },
+    kind: spec.kind || 'support',
+    ownerId: spec.ownerId != null ? spec.ownerId : null,
+    spec: Object.assign({}, spec),
+  });
+  return true;
 };
 
 /**
@@ -582,7 +630,9 @@ SimCore.prototype._phaseDecide = function () {
           if (s.fireMode === 'hold') s.fireMode = 'aimed';
           if (s.state !== 'engage') {
             this._setState(s, 'engage');
-            s.aimT = (s.fireMode === 'suppress') ? T.AIM_T.suppress : T.AIM_T.aimed;
+            s.aimT = this._duration(s,
+              (s.fireMode === 'suppress') ? T.AIM_T.suppress : T.AIM_T.aimed,
+              'action', T.ATTR_ACT_RANGE);
             this._emit('CONTACT', { id: s.id, targetId: foe.id });
           }
           return;
@@ -629,7 +679,9 @@ SimCore.prototype._applyIntent = function (s, intent, worldView) {
       // (currentOrder persists and is re-evaluated every decision tick).
       if (s.state === 'idle') {
         this._setState(s, 'engage');
-        s.aimT = (s.fireMode === 'suppress') ? this.tuning.AIM_T.suppress : this.tuning.AIM_T.aimed;
+        s.aimT = this._duration(s,
+          (s.fireMode === 'suppress') ? this.tuning.AIM_T.suppress : this.tuning.AIM_T.aimed,
+          'action', this.tuning.ATTR_ACT_RANGE);
       }
       break;
     case 'TARGET_HEX':
@@ -643,7 +695,8 @@ SimCore.prototype._applyIntent = function (s, intent, worldView) {
       s.fireMode = 'suppress';
       if (s.state === 'idle') {
         this._setState(s, 'engage');
-        s.aimT = this.tuning.AIM_T.suppress;
+        s.aimT = this._duration(s, this.tuning.AIM_T.suppress,
+          'action', this.tuning.ATTR_ACT_RANGE);
       }
       break;
     case 'SUPPRESS_APPROACH': {
@@ -673,7 +726,8 @@ SimCore.prototype._applyIntent = function (s, intent, worldView) {
         s.fireMode = 'suppress';
         if (s.state !== 'engage') {
           this._setState(s, 'engage');
-          s.aimT = this.tuning.AIM_T.suppress;
+          s.aimT = this._duration(s, this.tuning.AIM_T.suppress,
+            'action', this.tuning.ATTR_ACT_RANGE);
           this._emit('SUPPRESS_START', { id: s.id,
             hex: { q: hex.q, r: hex.r }, firingHex: { q: s.q, r: s.r } });
         }
@@ -710,7 +764,7 @@ SimCore.prototype._applyIntent = function (s, intent, worldView) {
       if (intent.payload.mode === 'reload') {
         if (s.state !== 'reload' && s.magsLeft > 0) {
           this._setState(s, 'reload');
-          s.reloadT = s.weapon.reloadT;
+          s.reloadT = this._duration(s, s.weapon.reloadT, 'action', this.tuning.ATTR_ACT_RANGE);
         }
       } else {
         s.fireMode = intent.payload.mode;
@@ -811,7 +865,7 @@ SimCore.prototype._applyIntent = function (s, intent, worldView) {
       if (!this.map.hasLos({ q: s.q, r: s.r }, hex)) break;
       s._throwKind = kind;
       s._throwHex = { q: hex.q, r: hex.r };
-      s._throwT = spec.prepT;
+      s._throwT = this._duration(s, spec.prepT, 'throw', this.tuning.ATTR_THR_RANGE);
       s.facing = { q: hex.q - s.q, r: hex.r - s.r };
       this._setState(s, 'throw');
       if (s.currentOrder === intent) s.currentOrder = null;
@@ -1172,7 +1226,7 @@ SimCore.prototype._actEngage = function (s, T) {
   if (s.magRemaining <= 0) {
     if (s.magsLeft > 0) {
       this._setState(s, 'reload');
-      s.reloadT = s.weapon.reloadT;
+      s.reloadT = this._duration(s, s.weapon.reloadT, 'action', T.ATTR_ACT_RANGE);
     } else {
       this._emit('AMMO_OUT', { id: s.id });
       this._setState(s, 'idle');
@@ -1256,7 +1310,7 @@ SimCore.prototype._actEngageHex = function (s, T) {
   if (s.magRemaining <= 0) {
     if (s.magsLeft > 0) {
       this._setState(s, 'reload');
-      s.reloadT = s.weapon.reloadT;
+      s.reloadT = this._duration(s, s.weapon.reloadT, 'action', T.ATTR_ACT_RANGE);
     } else {
       this._emit('AMMO_OUT', { id: s.id });
       this._releaseHexOrder(s, 'ammo_out');
@@ -1319,6 +1373,26 @@ SimCore.prototype._releaseHexOrder = function (s, reason) {
   if (s._suppressApproachOrder) this._cancelSuppressApproach(s, reason);
   if (s.state === 'engage') this._setState(s, 'idle');
   this._emit('SUPPRESS_END', { id: s.id, reason: reason });
+};
+
+SimCore.prototype._effect = function (s, key, fallback) {
+  const raw = s.effects ? Number(s.effects[key]) : NaN;
+  return Number.isFinite(raw) ? raw : fallback;
+};
+
+/** Convert a base RTwP duration through the relevant ability and skill effects. */
+SimCore.prototype._duration = function (s, base, attrKey, range) {
+  let mult = this._attrMult(s, attrKey, range);
+  if (attrKey === 'action') mult *= this._effect(s, 'actionTimeMult', 1);
+  return Math.max(1, Math.round(base * mult));
+};
+
+SimCore.prototype._aimMult = function (s, T) {
+  const ref = T.ATTR_REF || 5;
+  const raw = s.attrs ? Number(s.attrs.aim) : NaN;
+  const aim = Number.isFinite(raw) ? raw : ref;
+  const perPoint = T.ATTR_AIM_PER_POINT != null ? T.ATTR_AIM_PER_POINT : 0;
+  return Math.max(0.1, 1 + (aim - ref) * perPoint);
 };
 
 /** Clear a queued/active approach without disturbing an unrelated new order. */
@@ -1568,7 +1642,8 @@ SimCore.prototype._actAssault = function (s, T) {
   // 隣接で殴り合っていたのが「接敵して謎の死を遂げる」の正体だった
   // （2026-08-03 ディレクター指摘）。突入は相手の居る地点まで踏み込む。
   if (d === 0) {
-    s._assaultMeleeT = T.ASSAULT_MELEE_T || 12;
+    s._assaultMeleeT = this._duration(s, T.ASSAULT_MELEE_T || 12,
+      'action', T.ATTR_ACT_RANGE);
     s._assaultMeleeTargetId = target.id;
     this._emit('MELEE_START', { id: s.id, targetId: target.id });
     return;
@@ -1591,7 +1666,7 @@ SimCore.prototype._actAssault = function (s, T) {
       const spec = this._munitionSpec(s, kind);
       s._throwKind = kind;
       s._throwHex = goal;
-      s._assaultThrowT = spec.prepT;
+      s._assaultThrowT = this._duration(s, spec.prepT, 'throw', T.ATTR_THR_RANGE);
       return;
     }
   }
@@ -1611,9 +1686,15 @@ SimCore.prototype._actAssault = function (s, T) {
 
   // ④ 主武器が尽きた: 装填 → それも無ければ拳銃へ持ち替える
   if (s.magRemaining <= 0) {
-    if (s.magsLeft > 0) { this._setState(s, 'reload'); s.reloadT = s.weapon.reloadT; s._assaultResume = true; return; }
+    if (s.magsLeft > 0) {
+      this._setState(s, 'reload');
+      s.reloadT = this._duration(s, s.weapon.reloadT, 'action', T.ATTR_ACT_RANGE);
+      s._assaultResume = true;
+      return;
+    }
     if (s.sidearm && s.sidearm.magRemaining > 0) {
-      s._assaultSwapT = T.ASSAULT_SWAP_T || 20;
+      s._assaultSwapT = this._duration(s, T.ASSAULT_SWAP_T || 20,
+        'action', T.ATTR_ACT_RANGE);
       this._emit('SWAP', { id: s.id, to: s.sidearm.weapon.code });
       return;
     }
@@ -1822,7 +1903,8 @@ SimCore.prototype._meleePower = function (s, T) {
   const w = this._bestMeleeWeapon(s, T);
   const ref = T.ATTR_REF || 5;
   const attr = (s.attrs && Number(s.attrs.melee)) || ref;
-  return { power: w.power * attr, weapon: w.code, weaponPower: w.power, attr: attr };
+  const perk = this._effect(s, 'meleeMult', 1);
+  return { power: w.power * attr * perk, weapon: w.code, weaponPower: w.power, attr: attr };
 };
 
 /**
@@ -2198,8 +2280,11 @@ SimCore.prototype._resolveBurst = function (shooter, target, T) {
   // 突進直後は息が上がっていて狙えない（rush の代償）
   if (shooter.windedT > 0 && T.PHIT_WINDED != null) pHit *= T.PHIT_WINDED;
 
-  // skill
+  // 個体能力と永続スキル。表示カタログは接続層で数値効果へ正規化済み。
   pHit *= shooter.skill;
+  pHit *= this._aimMult(shooter, T);
+  pHit *= this._effect(shooter, 'accuracyMult', 1);
+  pHit *= this._effect(target, 'incomingHitMult', 1);
 
   // fire mode
   pHit *= (shooter.fireMode === 'suppress') ? T.PHIT_SUPPRESS_MODE : T.PHIT_AIMED;
@@ -2391,6 +2476,9 @@ SimCore.prototype._rollDamage = function (T, penAt) {
 SimCore.prototype._applyDamage = function (target, dmg, source) {
   const T = this.tuning;
   if (target.hp <= 0) return false;
+  const dealt = source ? this._effect(source, 'damageMult', 1) : 1;
+  const armor = Math.max(0, this._effect(target, 'armorFlat', 0));
+  dmg = Math.max(0, Math.round(dmg * dealt) - armor);
   target.hp = Math.max(0, target.hp - dmg);
   this._emit('HIT', { id: target.id, hp: target.hp });
   if (target.hp <= 0) {
@@ -2434,7 +2522,9 @@ SimCore.prototype._applyMoraleOnDeath = function (deadSoldier) {
   if (!deadSoldier.isLeader) return;
   this._soldiers.forEach((s) => {
     if (s.hp <= 0 || s.team !== deadSoldier.team || s.id === deadSoldier.id) return;
-    s.morale = Math.max(0, s.morale + T.MORALE_LEADER_DOWN);
+    const resilience = this._attrMult(s, 'morale', T.ATTR_MRL_RANGE)
+      * this._effect(s, 'moraleLossMult', 1);
+    s.morale = Math.max(0, s.morale + T.MORALE_LEADER_DOWN * resilience);
   });
 };
 
@@ -2488,6 +2578,15 @@ SimCore.prototype._phaseSuppressionMorale = function () {
     s.quietT++;
     if (s.windedT > 0) s.windedT--;   // 突進後の息切れが抜けていく
 
+    // 整備スキルはターン境界ではなく「交戦から離れている時間」で働く。
+    // 発砲・被弾の双方が quietT を戻すため、撃ち合いの最中には回復しない。
+    const recovery = this._effect(s, 'recoveryPerSecond', 0);
+    const recoveryDelay = T.SKILL_RECOVERY_DELAY_T != null ? T.SKILL_RECOVERY_DELAY_T : 100;
+    if (recovery > 0 && s.quietT >= recoveryDelay && s.hp < 100
+      && s.state !== 'incap' && s.state !== 'down') {
+      s.hp = Math.min(100, s.hp + recovery / ticksPerSec);
+    }
+
     if (s.suppression > 0 && s.quietT >= quietThresholdT) {
       const before = s.suppression;
       s.suppression = Math.max(0, s.suppression - decayPerTick);
@@ -2524,10 +2623,15 @@ SimCore.prototype._phaseSuppressionMorale = function () {
       // なので、減算すると符号が反転して**釘付けの兵の士気が上がっていた**
       // （2026-08-04 実測: 120秒釘付けで 100 -> 220）。敗走が実戦でまず起きなかった
       // のはこれが原因。
-      s.morale = Math.max(0, s.morale + (T.MORALE_PINNED_DRAIN / ticksPerSec));
+      const resilience = this._attrMult(s, 'morale', T.ATTR_MRL_RANGE)
+        * this._effect(s, 'moraleLossMult', 1);
+      s.morale = Math.max(0, s.morale + (T.MORALE_PINNED_DRAIN * resilience / ticksPerSec));
     } else if (s.state !== 'incap') {
       const rec = (T.MORALE_RECOVER != null) ? T.MORALE_RECOVER : 0;
-      if (rec > 0) s.morale = Math.min(100, s.morale + (rec / ticksPerSec));
+      const resilience = this._attrMult(s, 'morale', T.ATTR_MRL_RANGE)
+        * this._effect(s, 'moraleLossMult', 1);
+      if (rec > 0) s.morale = Math.min(100,
+        s.morale + (rec / Math.max(0.1, resilience) / ticksPerSec));
     }
 
     if (s.state === 'down' || s.state === 'incap') return;

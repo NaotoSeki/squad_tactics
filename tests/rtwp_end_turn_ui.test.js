@@ -39,8 +39,9 @@ function render(active, state) {
 assert.ok(!render(true, 'PLAY').includes('End Turn'), 'live RTwP sidebar omits End Turn');
 assert.ok(!render(false, 'WIN').includes('End Turn'), 'frozen result sidebar omits End Turn');
 assert.ok(!render(false, 'REVIEW').includes('End Turn'), 'battle review sidebar omits End Turn');
-assert.ok(render(false, 'PLAY').includes('End Turn'), 'legacy-only fallback remains available outside RTwP');
+assert.ok(!render(false, 'PLAY').includes('End Turn'), 'no legacy fallback exposes End Turn');
+assert.ok(!render(false, 'PLAY').includes('<span>AP</span>'), 'no fallback exposes retired AP');
 assert.ok(!/createButton\([^\n]*['"]End Turn['"]/.test(phaserSidebar),
   'Phaser sidebar no longer creates a legacy End Turn button');
 
-console.log('rtwp_end_turn_ui: 5 passed');
+console.log('rtwp_end_turn_ui: 6 passed');

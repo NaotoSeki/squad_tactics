@@ -382,12 +382,6 @@ class CampaignManager {
         
         const isPlayer = (team === 'player'); 
         
-        const stats = t.stats ? { ...t.stats } : { str:0, aim:0, mob:0, mor:0 };
-        if (isPlayer && !t.isTank) {
-            ['str', 'aim', 'mob', 'mor'].forEach(k => {
-                stats[k] = (stats[k] || 0) + Math.floor(Math.random() * 3) - 1;
-            });
-        }
         const baseParams = (t.params && typeof PARAM_KEYS !== 'undefined') ? { ...t.params } : { action:4, speed:4, str:5, morale:5, aim:5, throw:5, melee:5, recon:4 };
         const params = {};
         window.getParamKeys().forEach(k => {
@@ -553,19 +547,7 @@ class CampaignManager {
         }
 
         if (!isPlayer) {
-            const rtEnemyAmmo = typeof BATTLE_SCALE !== 'undefined' && BATTLE_SCALE.RT_SIMULTANEOUS_AI;
-            if (rtEnemyAmmo) {
-                if (hands[0] && !hands[0].partType && hands[0].type === 'bullet') {
-                    hands[0].current = hands[0].cap;
-                }
-                if (hands[0] && hands[0].acceptsAmmo && hands[0].acceptsAmmo.length
-                    && typeof buildSpareAmmoItem === 'function') {
-                    const spareN = (hands[0].plCategory === 'mg') ? 3 : 2;
-                    for (let si = 0; si < spareN && bag.length < 4; si++) {
-                        bag.push(buildSpareAmmoItem(hands[0]));
-                    }
-                }
-            } else if (typeof REALISM_PACK !== 'undefined' && REALISM_PACK.ENEMY_FINITE_AMMO) {
+            if (typeof REALISM_PACK !== 'undefined' && REALISM_PACK.ENEMY_FINITE_AMMO) {
                 // REALISM_PACK.ENEMY_FINITE_AMMO: 敵も有限弾（携行マガジン3本相当 = 本体満タン + 予備2本）
                 if (t.isTank) {
                     if (hands[0] && !hands[0].partType) { hands[0].current = hands[0].cap || 1; }
@@ -595,23 +577,14 @@ class CampaignManager {
             }
         }
 
-        if (isPlayer && t.isTank && fusionCount >= 2 && typeof WPNS !== 'undefined' && WPNS.m8_rocket) {
-            const giveM8 = (window.__debugM8AllFusionTanks === true) || (Math.random() < 0.4);
-            if (giveM8) {
-                const m8 = { ...WPNS.m8_rocket, code: 'm8_rocket', id: Math.random(), isRainbow: true, current: 60, cap: 60 };
-                if (!bag) bag = [];
-                if (hands[0]) bag.push(hands[0]);
-                hands[0] = m8;
-            }
-        }
 
         const hp = baseHp;
         const maxAp = baseAp;
         const unitFusionCount = (isPlayer && fusionCount >= 2) ? fusionCount : undefined;
         const unit = {
             id: Math.random(), team: team, q: 0, r: 0, def: t, name: name, rank: 0, faceSeed: faceSeed, portraitIndex: portraitIndex,
-            stats: stats, params: params, hp: hp, maxHp: hp, ap: maxAp, maxAp: maxAp, hands: hands, bag: bag,
-            stance: (t.isTank ? 'stand' : ((typeof BATTLE_SCALE !== 'undefined' && BATTLE_SCALE.RT_DEFAULT_STANCE) || 'prone')),
+            params: params, hp: hp, maxHp: hp, ap: maxAp, maxAp: maxAp, hands: hands, bag: bag,
+            stance: t.isTank ? 'stand' : 'prone',
             skills: skills, sectorsSurvived: 0, kills: 0, deadProcessed: false, fusionCount: unitFusionCount
         };
         if (t.loadout) this.repairMortarGunnerLoadout(unit, { ensureMissing: true });
@@ -893,13 +866,14 @@ class CampaignManager {
             const beforeHp = u.hp || 0;
             u.sectorsSurvived = (u.sectorsSurvived || 0) + 1;
             if (!u.skills) u.skills = [];
-            if (u.sectorsSurvived === 5) { u.skills.push("Hero"); u.maxAp = (u.maxAp || 4) + 1; }
+            if (u.sectorsSurvived === 5 && !u.skills.includes("Hero")) u.skills.push("Hero");
             u.rank = Math.min(5, (u.rank||0) + 1);
             u.maxHp = (u.maxHp || 80) + 30; u.hp = (u.hp || u.maxHp) + 30;
             if (u.hp > u.maxHp) u.hp = u.maxHp;
             if (u.skills.length < 8 && Math.random() < 0.7) {
                 const k = Object.keys(typeof SKILLS !== 'undefined' ? SKILLS : {}).filter(z => z !== "Hero");
-                if (k.length) u.skills.push(k[Math.floor(Math.random() * k.length)]);
+                const available = k.filter(skill => !u.skills.includes(skill));
+                if (available.length) u.skills.push(available[Math.floor(Math.random() * available.length)]);
             }
             if (window.gameLogic && window.gameLogic.refreshWoundedState) window.gameLogic.refreshWoundedState(u);
             return {
@@ -931,7 +905,6 @@ class CampaignManager {
                         h.reserve = PlMgTripod.getDefaultBeltReserve(h.code);
                     } else h.reserve = 12;
                 }
-                if (h.code === 'm8_rocket') { h.current = 60; h.cap = 60; }
             });
 
             let mainWeapon = u.hands[0];
@@ -948,7 +921,6 @@ class CampaignManager {
                 if (item.reserve !== undefined && !(typeof PlMgTripod !== 'undefined' && PlMgTripod.usesBeltReserve(item.code))) {
                     item.reserve = 12;
                 }
-                if (item.code === 'm8_rocket') { item.current = 60; item.cap = 60; }
             });
             const optCode = (u.def && u.def.opt) ? u.def.opt : null;
             const nadeBase = optCode === 'nade' ? w('nade') : null;

@@ -30,6 +30,7 @@ const TRAIT_MODS = {
     FREEZE_AT_SUPPRESSION: 40, // suppression >= this => self-initiated actions stop
   },
 };
+const TRAIT_IDS = Object.freeze(Object.keys(TRAIT_MODS));
 
 // ---------------------------------------------------------------------------
 // TraitPolicy
@@ -933,10 +934,12 @@ if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
     TraitPolicy: TraitPolicy,
     TRAIT_MODS: TRAIT_MODS,
+    TRAIT_IDS: TRAIT_IDS,
     pathExposure: pathExposure,
   };
 }
 if (typeof window !== 'undefined') {
   window.TraitPolicy = TraitPolicy;
   window.TRAIT_MODS = TRAIT_MODS;
+  window.TRAIT_IDS = TRAIT_IDS;
 }

@@ -459,23 +459,8 @@
     </div>
 
     <div id="context-menu"></div>
-    <div id="command-menu">
-        <div class="cmd-btn" id="btn-move" onclick="gameLogic.setMode('MOVE')"><i>👣</i> 移動</div>
-        <div class="cmd-btn" id="btn-attack" onclick="gameLogic.setMode('ATTACK')"><i>🔫</i> 射撃</div>
-        <div class="cmd-group">
-            <div class="cmd-btn"><i>🧘</i> 姿勢 ▶</div>
-            <div class="cmd-submenu">
-                <div class="sub-btn" onclick="gameLogic.setStance('stand')">立</div>
-                <div class="sub-btn" onclick="gameLogic.setStance('crouch')">屈</div>
-                <div class="sub-btn" onclick="gameLogic.setStance('prone')">伏</div>
-            </div>
-        </div>
-        <div class="cmd-btn" id="btn-repair" onclick="gameLogic.actionRepair()"><i>🔧</i> 修理</div>
-        <div class="cmd-btn" id="btn-melee" onclick="gameLogic.actionMeleeSetup()"><i>🔪</i> 白兵</div>
-        <div class="cmd-btn" id="btn-heal" onclick="gameLogic.actionHeal()"><i>💊</i> 治療</div>
-        <hr style="border:0; border-top:1px solid #444; margin:3px 0;">
-        <div class="cmd-btn" onclick="gameLogic.clearSelection()" style="text-align:center; color:#888;">CANCEL</div>
-    </div>
+    <!-- RTwP action catalog (sim_actions.js) is the only source of menu entries. -->
+    <div id="command-menu"></div>
 
     <script>
         (function initBattleLogWindow() {
@@ -676,9 +661,6 @@
 <script src="phaser_unit.js?v=m2-2"></script>
     <script src="phaser_soldier_view.js?v=m2-1"></script>
     <script src="phaser_minimap.js?v=rtwp-combat-9"></script>
-    <script src="battle_cloud.js"></script>
-    <script src="battle_cloud_tactics.js"></script>
-    <script src="phaser_battle_cloud.js"></script>
 <script src="phaser_bridge.js?v=m2-2"></script>
     <script src="logic_ui.js?v=m2-3"></script>
     <script src="logic_map_city.js"></script>
@@ -689,9 +671,7 @@
     <script src="logic_map_rural_v29.js?v=rtwp-combat-9"></script>
     <script src="logic_map.js?v=terrain-seam-5"></script>
     <script src="logic_campaign.js?v=tank-gate-1"></script>
-    <script src="logic_reaction.js"></script>
     <!-- logic_game.js から切り出した規則。logic_game.js より前に読む -->
-    <script src="logic_combat_rules.js?v=m2-2"></script>
 <script src="logic_game.js?v=m2-scatter-1"></script>
     <!-- RTwP（NORTH_STAR §7 Strangler Fig 最終段階）。BattleFacade(logic_game.js)を
          実行基盤に、これらが唯一の戦闘ランタイム。?rtwp=0 の切り戻しは撤去済み。 -->

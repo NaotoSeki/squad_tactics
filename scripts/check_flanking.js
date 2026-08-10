@@ -47,7 +47,7 @@ function loadWorld() {
 }
 const W = loadWorld();
 const { SimCore, mulberry32, toSimWeapon } = require(path.join(ROOT, 'sim_core.js'));
-const { TraitPolicy } = require(path.join(ROOT, 'sim_policy.js'));
+const { TraitPolicy, TRAIT_IDS } = require(path.join(ROOT, 'sim_policy.js'));
 const { CommsOrders } = require(path.join(ROOT, 'sim_orders.js'));
 const { LeaderPolicy } = require(path.join(ROOT, 'sim_leader.js'));
 
@@ -55,7 +55,7 @@ const T = W.SIM_TUNING;
 const mapData = W.buildPsBattleMap();
 const api = W.makePsBattleMapApi(mapData);
 const spots = W.collectPlayableHexes(api, 0.2);
-const TRAITS = [[], ['aggressive'], ['cautious'], ['calm'], ['timid']];
+const TRAITS = [[]].concat(TRAIT_IDS.map((id) => [id]));
 const rifle = toSimWeapon('m1', W.WPNS.m1, T);
 const magsFor = (w) => (T.DEFAULT_MAGS[w.class] != null ? T.DEFAULT_MAGS[w.class] : 4);
 

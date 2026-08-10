@@ -38,41 +38,11 @@ const TACTICS_D1_SCALAR_KEYS = [
   'ENEMY_PER_SECTOR',
   'ALLIED_REINFORCEMENTS',
   'DEPLOY_CARD_MAX',
-  'AUTO_ATTACKS_PER_ACTOR',
-  'ENEMY_ATTACKS_IN_AUTO',
   'ENEMY_TANK_CHANCE',
   'ENEMY_TANK_CHANCE_PER_SECTOR',
   'ENEMY_TIGER_CHANCE',
   'ENEMY_TIGER_CHANCE_PER_SECTOR',
 ];
-
-/** RT 有効時のみ lerp する keys */
-const TACTICS_RT_SCALAR_KEYS = [
-  'RT_DAMAGE_MULT',
-  'RT_HIT_PENALTY',
-  'RT_AI_WAVES',
-  'RT_PARALLEL_FIRE_RATE',
-  'RT_MOVE_STEP_MS',
-  'RT_WAVE_GAP_MS',
-  'RT_TURN_DELAY_MS',
-  'RT_STAGGER_MIN_MS',
-  'RT_STAGGER_MAX_MS',
-  'RT_LOW_AMMO_RATIO',
-];
-
-const TACTICS_RT_DEFAULTS = {
-  RT_DAMAGE_MULT: 1,
-  RT_HIT_PENALTY: 0,
-  RT_AI_WAVES: 1,
-  RT_PARALLEL_FIRE_RATE: 60,
-  RT_MOVE_STEP_MS: 40,
-  RT_WAVE_GAP_MS: 80,
-  RT_TURN_DELAY_MS: 800,
-  RT_STAGGER_MIN_MS: 120,
-  RT_STAGGER_MAX_MS: 600,
-  RT_LOW_AMMO_RATIO: 0.5,
-  RT_DEFAULT_STANCE: 'stand',
-};
 
 /**
  * @param {number} d1 chaos axis
@@ -90,10 +60,6 @@ function morphBattleScale(d1, d2, d3, presets) {
   const out = {
     _preset: 'morph',
     _dial: { d1, d2, d3 },
-    coverMult: tacticsLerp(1.15, 0.88, d2),
-    ammoBurnMult: tacticsLerp(0.85, 1.35, d3),
-    suppressMult: 1,
-    firstStrikeApBonus: 0,
   };
 
   TACTICS_D1_SCALAR_KEYS.forEach(function (key) {
@@ -106,20 +72,6 @@ function morphBattleScale(d1, d2, d3, presets) {
     }
   });
 
-  out.RT_SIMULTANEOUS_AI = d1 > 0.35;
-
-  if (out.RT_SIMULTANEOUS_AI) {
-    TACTICS_RT_SCALAR_KEYS.forEach(function (key) {
-      const cv = TACTICS_RT_DEFAULTS[key] != null ? TACTICS_RT_DEFAULTS[key] : 0;
-      const hv = h[key] != null ? h[key] : cv;
-      out[key] = tacticsLerp(cv, hv, d1);
-    });
-    out.RT_DEFAULT_STANCE = d2 >= 0.5 ? 'stand' : 'prone';
-
-    const basePenalty = out.RT_HIT_PENALTY || 0;
-    out.RT_HIT_PENALTY = tacticsLerp(basePenalty * 0.55, basePenalty * 1.45, d3);
-  }
-
   return out;
 }
 
@@ -128,9 +80,6 @@ function morphWithResonance(d1, d2, d3, presets) {
   const assaultPeak = tacticsTriResonance(d1, d2, d3, 0.85, 0.85, 0.75, 0.12);
   const trenchPeak = tacticsTriResonance(d1, d2, d3, 0.90, 0.15, 0.90, 0.15);
 
-  base.firstStrikeApBonus = assaultPeak;
-  base.suppressMult = 1 + trenchPeak * 0.4;
-  base.ammoBurnMult = (base.ammoBurnMult || 1) * (1 + trenchPeak * 0.6);
   base._resonance = {
     assault: assaultPeak,
     trench: trenchPeak,

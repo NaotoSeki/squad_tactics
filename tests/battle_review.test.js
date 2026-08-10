@@ -25,8 +25,8 @@ check(frozen.map[0][0].cover === 10 && frozen.units[0].hp === 12,
 check(frozen.actionAttack() === false && frozen.actionMove() === false && frozen.handleClick() === false,
   'attack, move and board command dispatch are disabled');
 check(frozen.reloadWeapon() === false && frozen.toggleFireMode() === false
-  && frozen.swapEquipment() === false && frozen.endTurn() === false,
-  'reload, fire mode, equipment and turn mutations are disabled');
+  && frozen.swapEquipment() === false && frozen.issueOrder() === false,
+  'reload, fire mode, equipment and RTwP order mutations are disabled');
 frozen.selectedUnit = frozen.units[0];
 check(source.selectedUnit === null && source.units[0].hp === 100,
   'inspection selection remains isolated from persistent game state');

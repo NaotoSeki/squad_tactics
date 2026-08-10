@@ -85,15 +85,14 @@
  * are NOT forked). Driven by the SS15.2 fixed-timestep accumulator loop, same as
  * sim_scene.js, but rendering through UnitView instead of a hand-rolled sprite.
  *
- * index.html / logic_game.js / phaser_bridge.js / phaser_unit.js / phaser_terrain.js /
- * sim_scene.js / dev_sim.html are NOT touched by this file (Strangler Fig).
+ * It reuses the same renderer modules as the product battle without owning the
+ * campaign bridge.
  */
 
 // ---------------------------------------------------------------------------
 // Renderer -- UnitView (phaser_unit.js) and TerrainRender (phaser_terrain.js)
 // both read a global `Renderer.hexToPx(q,r)` / `window.Renderer`. phaser_bridge.js
-// defines the real one but we must not load phaser_bridge.js (frozen turn-based
-// build), so this is a minimal stand-in exposing only what those two modules
+// defines the product one. This is a minimal stand-in exposing only what the two modules
 // actually call: hexToPx (both), playAttackAnim (UnitView.triggerAttack caller --
 // unused here since we drive UnitView directly, kept as a no-op for safety).
 // Formula matches phaser_bridge.js Renderer.hexToPx exactly (flat-top axial).
@@ -371,7 +370,7 @@ class SimBattleScene extends Phaser.Scene {
     const rifle = toSimWeapon('m1', WPNS.m1, SIM_TUNING);
     const smg = toSimWeapon('thompson', WPNS.thompson, SIM_TUNING);
     const mg = toSimWeapon('mg42', WPNS.mg42, SIM_TUNING);
-    const TRAITS = [[], ['aggressive'], ['cautious'], ['calm'], ['timid']];
+    const TRAITS = [[]].concat(TRAIT_IDS.map((id) => [id]));
     const magsFor = (w) => (SIM_TUNING.DEFAULT_MAGS && SIM_TUNING.DEFAULT_MAGS[w.class]) || 6;
     const W = this.mapData.W;
 

@@ -118,7 +118,7 @@ function setup(seedVal) {
   const mg = toSimWeapon('mg42', WPNS.mg42, SIM_TUNING);
 
   // one of each trait per side: leader / aggressive / cautious / calm / timid
-  const TRAITS = [[], ['aggressive'], ['cautious'], ['calm'], ['timid']];
+  const TRAITS = [[]].concat((window.TRAIT_IDS || []).map((trait) => [trait]));
   const magsFor = (w) => (SIM_TUNING.DEFAULT_MAGS && SIM_TUNING.DEFAULT_MAGS[w.class]) || 6;
   for (let i = 0; i < 5; i++) {
     const w = (i === 0) ? mg : rifle;

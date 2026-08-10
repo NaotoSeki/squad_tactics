@@ -700,6 +700,16 @@ function attach(g) {
   }), '一括制圧の確定直後から各兵の表示用目標hexが割当先を指す');
 
   // 2体目の敵を盤上へ足し、面指定なら分散、姿を直接押した時は集中することを確認。
+  // A single squad suppression target is intentionally a cheap marker while
+  // hovering: route planning happens after the player commits the order.
+  inst.armActionForUnits('SUPPRESS_HEX', players);
+  const simpleSuppressPreview = inst.previewPendingTargets([], [suppressDestinations[0]], false);
+  check(simpleSuppressPreview && simpleSuppressPreview.simplePreview
+    && simpleSuppressPreview.assignments.length === 0,
+    'single-target squad suppression preview avoids per-soldier route plans');
+  inst.pendingAction = null;
+  g.targetPreview = null;
+
   const foe0 = g.units.find((u) => u.team === 'enemy');
   const foeHex = open.find((h) => h.q !== foe0.q || h.r !== foe0.r);
   const foe1 = mkUnit('E1', 'enemy', foeHex);

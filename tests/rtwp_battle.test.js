@@ -73,7 +73,7 @@ function makeGameLogic(opts) {
   const near = open.slice().sort((a, b) => api.dist(anchor, a) - api.dist(anchor, b));
   const units = [];
   for (let i = 0; i < nP; i++) {
-    units.push(mkUnit('P' + i, 'player', near[i], i === 0 ? ['Veteran'] : []));
+    units.push(mkUnit('P' + i, 'player', near[i], i === 0 ? ['Precision'] : []));
   }
   // 味方の塊から 3〜6hex 離れた所に敵を置く（射程内・LOSも通りやすい）
   const foes = near.filter((h) => {
@@ -142,13 +142,19 @@ function attach(g) {
   check(!!moveEntry && moveEntry.ok === true, 'M2 4カード解除でRTwP移動メニュー有効');
 }
 
-// --- 1. 依存が欠けたら何もしない（旧ターン制が壊れない） ---------------------
+// --- 1. 依存が欠けたら戦闘入力を閉じ、別実行系へ落とさない --------------------
 {
   const saved = SB.SimCore;
   delete SB.SimCore;
   const g = makeGameLogic({});
   g.ui.owner = g;
-  check(SB.RtwpBattle.attach(g) === null, '依存グローバルが欠けていれば attach は null（旧コアのまま）');
+  check(SB.RtwpBattle.attach(g) === null, '依存グローバルが欠けていればRTwPを開始しない');
+  check(g.state === 'RTWP_ERROR' && g.interactionMode === 'RTWP_BLOCKED',
+    '依存欠落時は戦闘を明示的に停止する');
+  check(typeof g.rtwpError === 'string' && g.rtwpError.includes('SimCore'),
+    '欠落した依存を診断できる');
+  check(g.handleClick({ q: 1, r: 1 }) === false,
+    '依存欠落時に旧クリック操作へフォールバックしない');
   SB.SimCore = saved;
 }
 
@@ -185,7 +191,7 @@ function attach(g) {
   const g = makeGameLogic({ players: 2, enemies: 2 });
   const inst = attach(g);
   const h = { q: g.units[0].q, r: g.units[0].r };
-  const cardUnit = mkUnit('CARD-REINFORCEMENT', 'player', h, ['Veteran']);
+  const cardUnit = mkUnit('CARD-REINFORCEMENT', 'player', h, ['Radio']);
   g.units.push(cardUnit);
   inst.paused = true;
   inst.update(T.TICK_MS);
@@ -194,6 +200,8 @@ function attach(g) {
     'ポーズ中にカード配置した兵士もRTwPへ即時登録される');
   check(inst.unitById.get('CARD-REINFORCEMENT') === cardUnit,
     'カード配置兵が本編描画ユニットとRTwP兵で対応付く');
+  check(registered.hasRadio === true,
+    'カード配置兵も共有スキル定義からRTwP効果を受け取る');
   check(inst.sim.soldiers().filter((s) => s.team === 'A' && s.isLeader).length === 1,
     'カード配置兵の追加で分隊長が重複しない');
 }
@@ -514,6 +522,57 @@ function attach(g) {
   check(ticks === 1, '決着tickの同一フレームで追加tickを実行しない');
   check(leaderAiCalls === 0, '決着後にリーダーAIや命令発行へ進まない');
   check(SB.RtwpBattle.instance === null, '決着tick内でfreezeしてRTwPを切り離す');
+}
+
+// --- 18. 表示カタログの9スキルがRTwP登録へ届く -------------------------------
+{
+  const g = makeGameLogic({ players: 1, enemies: 1 });
+  g.units[0].skills = ['Precision', 'Radio', 'Ambush', 'AmmoBox', 'HighPower',
+    'Mechanic', 'Armor', 'Hero', 'CQC'];
+  const inst = attach(g);
+  const s = inst.sim.getSoldier('P0');
+  check(s.skills.length === 9, '9スキルを重複なくsim snapshotへ保持する');
+  check(s.hasRadio === true, 'Radio が hasRadio へ接続される');
+  check(s.effects.accuracyMult === 1.15 && s.effects.incomingHitMult === 0.85,
+    'Precision / Ambush が命中倍率へ接続される');
+  check(s.effects.damageMult === 1.2 && s.effects.armorFlat === 5,
+    'HighPower / Armor がダメージへ接続される');
+  check(s.effects.recoveryPerSecond === 1 && s.effects.actionTimeMult === 0.9
+    && s.effects.moraleLossMult === 0.75 && s.effects.meleeMult === 1.25,
+    'Mechanic / Hero / CQC がRTwP効果へ接続される');
+  check(s.traits.includes('calm') && s.traits.includes('cautious')
+    && s.traits.includes('aggressive'), 'スキル由来の行動トレイトが本編兵へ届く');
+  check(s.magsLeft === (T.DEFAULT_MAGS.rifle + 1), 'AmmoBox が予備弾倉を1本追加する');
+}
+
+// --- 19. 戦闘中の装備交換が表示だけでなくsim武器も更新する ---------------------
+{
+  const g = makeGameLogic({ players: 1, enemies: 1 });
+  g.units[0]._weaponCode = 'm1';
+  g.getVirtualWeapon = (u) => ({ code: u._weaponCode, current: SB.WPNS[u._weaponCode].cap });
+  const inst = attach(g);
+  g.units[0]._weaponCode = 'm1911';
+  g.units[0].skills = ['Radio', 'HighPower'];
+  inst.syncUnitLoadout(g.units[0]);
+  const synced = inst.sim.getSoldier('P0');
+  check(synced.weapon.code === 'm1911',
+    '装備交換後の射撃武器がRTwPシムでも更新される');
+  check(synced.hasRadio === true && synced.effects.damageMult === 1.2,
+    '装備同期時に共有スキル効果もRTwPシムへ再同期される');
+}
+
+// --- 20. 航空支援はSimCoreの爆発として解決される -----------------------------
+{
+  const g = makeGameLogic({ players: 1, enemies: 1 });
+  g.getNeighbors = () => [];
+  g.isValidHex = () => true;
+  const inst = attach(g);
+  const enemy = inst.sim.getSoldier('E0');
+  check(inst.orderBombardment({ q: enemy.q, r: enemy.r }) === true,
+    '航空支援カードをRTwPタイムラインへ投入できる');
+  for (let i = 0; i < 10; i++) inst.sim.tick();
+  check(inst.sim.getSoldier('E0').hp === 0,
+    '航空支援のダメージがsim正本へ残る（syncで巻き戻らない）');
 }
 
 console.log('\n' + passCount + ' passed, ' + failCount + ' failed');

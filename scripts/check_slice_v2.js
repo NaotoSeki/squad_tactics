@@ -1,10 +1,7 @@
 /**
  * scripts/check_slice_v2.js -- Vertical Slice v2.0 受入基準（NORTH_STAR §7.4）の実測
  *
- * §7.4 は「これを全部満たしたらスライス完成」と書かれた**移行の門**である。
- * §7 の Strangler Fig 戦略では、この門を通ってから旧ターン制コア(logic_game.js)を
- * 段階退役させる。文書のままだと「満たしたつもり」で先へ進んでしまうので、
- * 実行して数字が出る形にしてある。
+ * §7.4 の戦術品質を「満たしたつもり」にせず、現行RTwPシムから数字を出す。
  *
  * 使い方:
  *   node scripts/check_slice_v2.js           # 現在地レポート（常に exit 0）
@@ -37,7 +34,7 @@ function loadWorld() {
 }
 const W = loadWorld();
 const { SimCore, mulberry32, toSimWeapon } = require(path.join(ROOT, 'sim_core.js'));
-const { TraitPolicy } = require(path.join(ROOT, 'sim_policy.js'));
+const { TraitPolicy, TRAIT_IDS } = require(path.join(ROOT, 'sim_policy.js'));
 const { CommsOrders } = require(path.join(ROOT, 'sim_orders.js'));
 const { LeaderPolicy } = require(path.join(ROOT, 'sim_leader.js'));
 
@@ -45,7 +42,7 @@ const T = W.SIM_TUNING;
 const mapData = W.buildPsBattleMap();
 const api = W.makePsBattleMapApi(mapData);
 const spots = W.collectPlayableHexes(api, 0.2);
-const TRAITS = [[], ['aggressive'], ['cautious'], ['calm'], ['timid']];
+const TRAITS = [[]].concat(TRAIT_IDS.map((id) => [id]));
 const rifle = toSimWeapon('m1', W.WPNS.m1, T);
 const magsFor = (w) => (T.DEFAULT_MAGS[w.class] != null ? T.DEFAULT_MAGS[w.class] : 4);
 
@@ -198,7 +195,7 @@ const measured = [c1pass === SEEDS.length, c3ok, c4pass === SEEDS.length];
 const passed = measured.filter(Boolean).length;
 console.log('\n' + line(72));
 console.log('測定できた3基準のうち ' + passed + '/3 達成。基準2/5 は未測定、基準6 はブラウザ側。');
-console.log('§7 の段階退役は §7.4 通過が前提。' + (passed === 3 ? '門は開いている。' : '旧ターン制コアの退役はまだ早い。'));
+console.log(passed === 3 ? '現行RTwPの測定済み基準はすべて達成。' : '現行RTwPには未達の戦術品質基準が残る。');
 console.log(line(72) + '\n');
 
 if (GATE && passed < 3) process.exit(1);

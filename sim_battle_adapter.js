@@ -285,12 +285,15 @@ SimBattleAdapter.prototype._toUnit = function (s) {
     id: s.id,
     def: def,
     hp: s.hp,
-    maxHp: 100, // sim_core soldiers always start at 100 (SS4); no per-unit maxHp concept
+    maxHp: s.maxHp || 100,
     q: s.q,
     r: s.r,
     team: s.team,
     hands: null,       // sim_core has no broken-hands concept; UnitView treats falsy as "ok"
-    skills: [],        // sim_core has no equipment-skill badges (product-only concept)
+    skills: Array.isArray(s.skills) ? s.skills.slice() : [],
+    traits: Array.isArray(s.traits) ? s.traits.slice() : [],
+    effects: Object.assign({}, s.effects || {}),
+    hasRadio: !!s.hasRadio,
     fusionCount: 0,    // sim_core has no card-fusion concept
     weapon: s.weapon,
     _rtwpTargetId: s.engageTargetId || null,

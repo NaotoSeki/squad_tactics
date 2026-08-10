@@ -276,14 +276,7 @@ window.PhaserSidebar = class PhaserSidebar {
         const hpText = this.scene.add.text(textLeft, y, hpLabel, { fontSize: '11px', color: u.wounded ? '#ffdd33' : TEXT_COLOR, fontFamily: 'sans-serif' });
         this.unitContent.add(hpText);
         y += 22;
-        // AP は旧ターン制の資源。RTwP では消費も回復もしないので出さない。
-        if (window.RtwpBattle && window.RtwpBattle.active) {
-            y += 14;
-        } else {
-            const apText = this.scene.add.text(textLeft, y, `AP  ${u.ap}/${u.maxAp}`, { fontSize: '11px', color: TEXT_COLOR, fontFamily: 'sans-serif' });
-            this.unitContent.add(apText);
-            y += 36;
-        }
+        y += 14;
 
         y = this.renderSameHexSquadRow(u, left, y, sw);
 
@@ -335,15 +328,7 @@ window.PhaserSidebar = class PhaserSidebar {
         }
         y += Math.ceil(BAG_SLOTS / bagCols) * (BAG_SLOT_H + 4);
 
-        // RTwP の再装填は sim が自分でやる（RELOADイベントが出る）。旧ターン制の
-        // 手動リロードを押せると AP を消費して弾数だけ食い違うので出さない。
-        const rtwpActive = !!(window.RtwpBattle && window.RtwpBattle.active);
-        if (!rtwpActive && this.canEditLoadout() && virtualWpn && !u.def.isTank && !virtualWpn.partType && virtualWpn.code !== 'm2_mortar' && virtualWpn.current < virtualWpn.cap) {
-            y += 10;
-            const reloadBtn = this.createButton(left, y, sw - 36, 28, 'RELOAD', () => { if (window.gameLogic) window.gameLogic.reloadWeapon(true); });
-            this.unitContent.add(reloadBtn.container);
-            y += 38;
-        }
+        // 再装填はRTwPシムが弾倉残量から自動で進める。
     }
 
     updateLiveStats() {
@@ -465,8 +450,7 @@ window.PhaserSidebar = class PhaserSidebar {
         const slotW = slotWOverride || (window.getSidebarWidth() - 36);
         const needsBeltGauge = item && isMain && item.reserve !== undefined
             && typeof PlMgTripod !== 'undefined' && PlMgTripod.usesBeltReserve(item.code);
-        const needsM8Gauge = item && item.code === 'm8_rocket' && isMain;
-        const slotH = (isMain && needsBeltGauge) ? 130 : (isMain && needsM8Gauge) ? 100 : (isMain ? 90 : BAG_SLOT_H);
+        const slotH = (isMain && needsBeltGauge) ? 130 : (isMain ? 90 : BAG_SLOT_H);
         const mainGaugeTop = (contentH) => slotH - contentH - GAUGE_BOTTOM_PAD;
         const borderColor = isMain ? ACCENT : SLOT_BORDER;
         const bgColor = isMain ? 0x2a201a : SLOT_BG;
@@ -559,31 +543,7 @@ window.PhaserSidebar = class PhaserSidebar {
                     dot.setOrigin(0, 0);
                     container.add(dot);
                 }
-            } else if (item && item.code === 'm8_rocket' && isMain) {
-                const cap = 60;
-                const current = Math.min(cap, item.current ?? item.cap ?? 0);
-                const cols = 12;
-                const rows = 5;
-                const gap = 1;
-                const availW = slotW - 20;
-                const cellW = Math.min(4, Math.floor((availW - (cols - 1) * gap) / cols));
-                const cellH = 3;
-                const gridH = rows * (cellH + gap) - gap;
-                const gridTop = isMain ? mainGaugeTop(gridH + 8) + 8 : GAUGE_TOP;
-                const countText = this.scene.add.text(8, gridTop - 8, `${current}/${cap}`, { fontSize: '8px', color: TEXT_DIM, fontFamily: 'monospace' });
-                countText.setOrigin(0, 0);
-                container.add(countText);
-                for (let r = 0; r < rows; r++) {
-                    for (let c = 0; c < cols; c++) {
-                        const idx = r * cols + c;
-                        if (idx >= cap) break;
-                        const filled = idx < current;
-                        const dot = this.scene.add.rectangle(8 + c * (cellW + gap), gridTop + r * (cellH + gap), cellW, cellH, filled ? 0xddaa44 : 0x333333);
-                        dot.setOrigin(0, 0);
-                        container.add(dot);
-                    }
-                }
-            } else if (item.cap > 0 && item.code !== 'm8_rocket' && !item.partType && item.type !== 'ammo') {
+            } else if (item.cap > 0 && !item.partType && item.type !== 'ammo') {
                 const bulletW = 4;
                 const bulletH = 10;
                 const bulletTipH = 3;

@@ -3,7 +3,7 @@
  *
  * A NEW Phaser scene that renders sim_core using existing assets (phaser_vfx VFX,
  * soldier_crawl sprites). Does NOT touch index.html / phaser_bridge MainScene
- * (Strangler Fig). The turn-based build stays frozen.
+ * This is the standalone RTwP simulation scene used by the product adapter.
  *
  * Core discipline (SPEC §15.2): the sim runs at a FIXED 10Hz timestep inside
  * Phaser's 60fps update via an accumulator; sprites LERP toward hex positions so
@@ -108,7 +108,7 @@ class SimScene extends Phaser.Scene {
     const rifle = toSimWeapon('m1', WPNS.m1, SIM_TUNING);
     const smg = toSimWeapon('thompson', WPNS.thompson, SIM_TUNING);
     const mg = toSimWeapon('mg42', WPNS.mg42, SIM_TUNING);
-    const TRAITS = [[], ['aggressive'], ['cautious'], ['calm'], ['timid']];
+    const TRAITS = [[]].concat((window.TRAIT_IDS || []).map((trait) => [trait]));
     const magsFor = (w) => (SIM_TUNING.DEFAULT_MAGS && SIM_TUNING.DEFAULT_MAGS[w.class]) || 6;
     for (let i = 0; i < 5; i++) {
       const w = (i === 0) ? mg : rifle;

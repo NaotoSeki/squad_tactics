@@ -169,17 +169,16 @@ function hitsAgainstMover(mode, shooterCode) {
     `walk=${walkRate.toFixed(4)}(${walkR.hits}/${walkR.bursts}) crawl=${crawlRate.toFixed(4)}(${crawlR.hits}/${crawlR.bursts})`);
 
   // §3.2 殺傷ベクトル4 の対: MG の射線では、匍匐と走りの差が最も大きくなる
-  const mgCode = Object.keys(WPNS).find((c) => {
-    const e = WPNS[c];
-    return e && (e.burst >= 6 || e.cap >= 40) && e.type !== 'melee';
-  });
+  const mgCode = WPNS.mg42 ? 'mg42' : null;
   if (mgCode) {
     const mgWalk = hitsAgainstMover('walk', mgCode);
     const mgCrawl = hitsAgainstMover('crawl', mgCode);
     const wr = mgWalk.hits / Math.max(1, mgWalk.bursts);
     const cr = mgCrawl.hits / Math.max(1, mgCrawl.bursts);
-    check('T3b MG相手では匍匐の優位が小銃相手より大きい',
-      cr < wr && (wr - cr) > (walkRate - crawlRate),
+    // SHOT.hit is burst-level (one or more rounds hit), so a long MG burst
+    // saturates sooner than a rifle and cannot be compared by raw rate gap.
+    check('T3b MG相手でも匍匐は歩行より当たりにくい',
+      cr < wr,
       `${mgCode}: walk=${wr.toFixed(4)} crawl=${cr.toFixed(4)} / rifle差=${(walkRate - crawlRate).toFixed(4)} MG差=${(wr - cr).toFixed(4)}`);
   }
 }

@@ -7,8 +7,6 @@
 const REALISM_PACK = {
     /** 補充兵（セクター報酬の新兵）に経験不足ペナルティを与える */
     REPLACEMENT_PENALTY: true,
-    /** HP 25%未満で「重傷」状態（最大AP-1, 命中-10%） */
-    WOUNDED_STATE: true,
     /** 敵の主武器も有限弾（999発の無限弾を廃止） */
     ENEMY_FINITE_AMMO: true,
 };
@@ -19,11 +17,11 @@ const MAP_H = 20;
 
 /**
  * バトルスケール切替（詳細は BATTLE_SCALE_NOTES.md）
- * 'standard' = 標準（classicとchaosの中間, 既定） / 'chaos' = ドンパチ / 'classic' = 従来の小規模戦
+ * 'standard' = 標準（classicとchaosの中間, 既定） / 'chaos' = 大規模 / 'classic' = 小規模
  */
 const BATTLE_SCALE_PRESET = 'standard';
-// const BATTLE_SCALE_PRESET = 'chaos';   // ドンパチに戻す
-// const BATTLE_SCALE_PRESET = 'classic'; // 従来の小規模戦に戻す
+// const BATTLE_SCALE_PRESET = 'chaos';   // 大規模
+// const BATTLE_SCALE_PRESET = 'classic'; // 小規模
 
 /** Phase 0: 知略ダイヤル morph（false = 従来の離散プリセットのみ） */
 const FEATURE_TACTICS_MORPH = true;
@@ -37,12 +35,8 @@ const TACTICS_DIAL = null;
 /** Phase A: 同一ヘックス装備渡し（false = 無効化してロールバック） */
 const FEATURE_SAME_HEX_TRANSFER = true;
 
-/** 複数ターン行軍プラン（森など移動力不足時）。false = 従来（1ターン到達のみ） */
-const FEATURE_EXTENDED_MARCH = true;
 /** Tanks remain defined for future reactivation, but are temporarily unavailable in gameplay. */
 const FEATURE_TANK_UNITS = false;
-/** 行軍プラン表示・移動の最大ターン数 */
-const MARCH_PLAN_MAX_TURNS = 5;
 
 const BATTLE_SCALE_PRESETS = {
   classic: {
@@ -52,8 +46,6 @@ const BATTLE_SCALE_PRESETS = {
     ENEMY_PER_SECTOR: 0.7,
     ALLIED_REINFORCEMENTS: 0,
     DEPLOY_CARD_MAX: 2,
-    AUTO_ATTACKS_PER_ACTOR: 1,
-    ENEMY_ATTACKS_IN_AUTO: 1,
     ENEMY_TANK_CHANCE: 0.1,
     ENEMY_TANK_CHANCE_PER_SECTOR: 0.1,
     ENEMY_TIGER_CHANCE: 0,
@@ -70,27 +62,10 @@ const BATTLE_SCALE_PRESETS = {
     ENEMY_PER_SECTOR: 0.9,
     ALLIED_REINFORCEMENTS: 4,
     DEPLOY_CARD_MAX: 4,
-    AUTO_ATTACKS_PER_ACTOR: 2,
-    ENEMY_ATTACKS_IN_AUTO: 2,
     ENEMY_TANK_CHANCE: 0.02,
     ENEMY_TANK_CHANCE_PER_SECTOR: 0.012,
     ENEMY_TIGER_CHANCE: 0.004,
     ENEMY_TIGER_CHANCE_PER_SECTOR: 0.003,
-    /** feat/rt-tactics-fusion: 混戦リアルタイム層（chaosと同じ設定を継続） */
-    RT_SIMULTANEOUS_AI: true,
-    RT_DEFAULT_STANCE: 'prone',
-    RT_DAMAGE_MULT: 0.72,
-    RT_HIT_PENALTY: 14,
-    RT_AI_WAVES: 5,
-    RT_PARALLEL_FIRE_RATE: 14,
-    RT_MOVE_STEP_MS: 22,
-    RT_WAVE_GAP_MS: 35,
-    RT_TURN_DELAY_MS: 500,
-    RT_STAGGER_MIN_MS: 90,
-    RT_STAGGER_MAX_MS: 480,
-    RT_LOW_AMMO_RATIO: 0.35,
-    /** 弾薬の緊張感（consumeAmmoで適用、ターン制/RT共通） */
-    ammoBurnMult: 1.1,
   },
   chaos: {
     HEX_UNIT_CAP: 10,
@@ -99,25 +74,10 @@ const BATTLE_SCALE_PRESETS = {
     ENEMY_PER_SECTOR: 1.2,
     ALLIED_REINFORCEMENTS: 8,
     DEPLOY_CARD_MAX: 8,
-    AUTO_ATTACKS_PER_ACTOR: 3,
-    ENEMY_ATTACKS_IN_AUTO: 2,
     ENEMY_TANK_CHANCE: 0.02,
     ENEMY_TANK_CHANCE_PER_SECTOR: 0.012,
     ENEMY_TIGER_CHANCE: 0.004,
     ENEMY_TIGER_CHANCE_PER_SECTOR: 0.003,
-    /** feat/rt-tactics-fusion: 混戦リアルタイム層 */
-    RT_SIMULTANEOUS_AI: true,
-    RT_DEFAULT_STANCE: 'prone',
-    RT_DAMAGE_MULT: 0.72,
-    RT_HIT_PENALTY: 14,
-    RT_AI_WAVES: 5,
-    RT_PARALLEL_FIRE_RATE: 14,
-    RT_MOVE_STEP_MS: 22,
-    RT_WAVE_GAP_MS: 35,
-    RT_TURN_DELAY_MS: 500,
-    RT_STAGGER_MIN_MS: 90,
-    RT_STAGGER_MAX_MS: 480,
-    RT_LOW_AMMO_RATIO: 0.35,
   },
 };
 
@@ -209,15 +169,15 @@ function generateSoldierName() {
 if (typeof window !== 'undefined') window.generateSoldierName = generateSoldierName;
 
 const SKILLS = {
-    "Precision": { name: "精密", desc: "命中+15%" },
-    "Radio":     { name: "通信", desc: "支援効果UP" },
-    "Ambush":    { name: "隠密", desc: "回避+15%" },
-    "AmmoBox":   { name: "弾薬", desc: "予備弾数UP" },
-    "HighPower": { name: "強装", desc: "Dmg+20%" },
-    "Mechanic":  { name: "修理", desc: "毎ターン回復" },
-    "Armor":     { name: "防弾", desc: "被ダメ-5" },
-    "Hero":      { name: "英雄", desc: "AP+1" },
-    "CQC":       { name: "白兵", desc: "近接反撃" }
+    "Precision": { name: "精密", desc: "命中率+15%", rtwp: { accuracyMult: 1.15, traits: ["calm"] } },
+    "Radio":     { name: "通信", desc: "遠距離命令を無線伝達", rtwp: { hasRadio: true } },
+    "Ambush":    { name: "隠密", desc: "被命中率-15%", rtwp: { incomingHitMult: 0.85, traits: ["cautious"] } },
+    "AmmoBox":   { name: "弾薬", desc: "予備弾倉+1", rtwp: { extraMags: 1 } },
+    "HighPower": { name: "強装", desc: "与ダメージ+20%", rtwp: { damageMult: 1.20, traits: ["aggressive"] } },
+    "Mechanic":  { name: "整備", desc: "非交戦時にHPを徐々に回復", rtwp: { recoveryPerSecond: 1, traits: ["cautious"] } },
+    "Armor":     { name: "防弾", desc: "被ダメージ-5", rtwp: { armorFlat: 5 } },
+    "Hero":      { name: "英雄", desc: "動作10%短縮・士気損失25%軽減", rtwp: { actionTimeMult: 0.90, moraleLossMult: 0.75, traits: ["calm"] } },
+    "CQC":       { name: "白兵", desc: "白兵威力+25%", rtwp: { meleeMult: 1.25, traits: ["aggressive"] } }
 };
 
 /** マップ上バッジ表示用（スキルID → アイコン・色） */
@@ -242,7 +202,6 @@ const WPNS = {
     luger: { name:"Luger P08", rng:3, acc:75, acc_drop:10, dmg:25, cap:8, mag:2, ap:2, rld:1, wgt:1, type:'bullet', burst:1, overRangePenalty:25, desc:"将校の拳銃。", weight: 1.9, attr: ATTR.WEAPON },
     knife: { name:"Combat Knife", rng:1, acc:90, dmg:35, cap:0, mag:0, ap:1, rld:0, wgt:0, type:'melee', burst:1, desc:"白兵戦用。", weight: 1, attr: ATTR.WEAPON },
     nade: { name:"Mk2 Grenade", rng:4, acc:60, dmg:80, cap:1, mag:2, ap:2, rld:0, wgt:1, type:'shell', area:true, desc:"破片手榴弾。", weight: 1.3, attr: ATTR.WEAPON },
-    m8_rocket: { name:"M8 Rocket", rng:12, acc:50, dmg:45, cap:60, current:60, mag:60, ap:3, rld:0, wgt:0, type:'rocket', area:true, areaHexes:7, desc:"カリオペ風ロケット斉射。", weight: 0, attr: ATTR.WEAPON },
     
     mg42: { name:"MG42", rng:8, acc:45, acc_drop:4, dmg:25, cap:50, mag:99, ap:2, rld:3, wgt:12, type:'bullet', burst:10, modes:[2, 10], overRangePenalty:15, desc:"機関銃。", weight: 25, attr: ATTR.WEAPON },
     kwk: { name:"75mm KwK", rng:8, acc:70, acc_drop:2, dmg:150, cap:1, mag:99, ap:3, rld:0, wgt:0, type:'shell_fast', burst:1, overRangePenalty:4, desc:"戦車砲。", weight: 0, attr: ATTR.WEAPON },
@@ -256,10 +215,10 @@ const WPNS = {
     'mortar_shell_box': { name: "60mm Ammo Box", type: "ammo", ammoFor: "m2_mortar", cap: 12, current: 12, desc: "迫撃砲弾。", weight: 22.2, attr: ATTR.WEAPON, isConsumable: false }
 };
 
-/** 能力値8種（1〜10）。行動=AP, 速度=移動ヘックス, 筋力=装備重量, 士気=命中等, 射撃/投擲/白兵/索敵 */
+/** RTwP能力値8種（1〜10）。動作/速度/筋力/士気/射撃/投擲/白兵/索敵。 */
 const PARAM_KEYS = ['action', 'speed', 'str', 'morale', 'aim', 'throw', 'melee', 'recon'];
 /** レーダーチャート軸ラベル（PARAM_KEYS と同順） */
-const PARAM_LABELS = ['act', 'spd', 'str', 'mrl', 'aim', 'thw', 'mle', 'rcn'];
+const PARAM_LABELS = ['tempo', 'spd', 'str', 'mrl', 'aim', 'thw', 'mle', 'rcn'];
 
 /**
  * PARAM_KEYS の参照を統一するヘルパー。data.js 未読込時のみフォールバック配列を返す。
@@ -346,25 +305,21 @@ const RIFLE_GRENADE_FOR_MAIN = {
 const UNIT_TEMPLATES = {
     rifleman: {
         name:"Rifleman", role:"infantry", main:"m1", sub:"m1911", opt:"nade", rifleGrenade:true,
-        stats:{str:5, aim:5, mob:5, mor:5},
         params: { action:5, speed:5, str:5, morale:5, aim:5, throw:5, melee:5, recon:4 },
         weight: null, attr: ATTR.MILITARY
     },
     scout: {
         name:"Scout", role:"infantry", main:"thompson", sub:"knife", opt:"nade",
-        stats:{str:4, aim:4, mob:8, mor:6},
         params: { action:4, speed:8, str:4, morale:6, aim:4, throw:5, melee:4, recon:7 },
         weight: null, attr: ATTR.MILITARY
     },
     gunner: {
         name:"Gunner", role:"infantry", main:"bar", sub:"m1911", opt:null,
-        stats:{str:8, aim:4, mob:3, mor:5},
         params: { action:4, speed:3, str:8, morale:5, aim:4, throw:4, melee:6, recon:3 },
         weight: null, attr: ATTR.MILITARY
     },
     sniper: {
         name:"Sniper", role:"infantry", main:"k98_scope", sub:"m1911", opt:null,
-        stats:{str:3, aim:9, mob:4, mor:4},
         params: { action:4, speed:4, str:3, morale:4, aim:9, throw:4, melee:3, recon:6 },
         weight: null, attr: ATTR.MILITARY
     },
@@ -372,7 +327,6 @@ const UNIT_TEMPLATES = {
         name: "Mortar Gunner", role: "infantry", main: null,
         loadout: ['mortar_barrel', 'mortar_bipod', 'mortar_plate'],
         sub: "mortar_shell_box", opt: "m1911",
-        stats: {str:6, aim:4, mob:3, mor:5},
         params: { action:4, speed:3, str:6, morale:5, aim:4, throw:5, melee:4, recon:4 },
         weight: null, attr: ATTR.MILITARY
     },
@@ -486,7 +440,6 @@ const SIM_TUNING = {
     DMG_PEN_SPREAD: 0.18,
     // 赤ゲージ（HP25%以下）で行動不能。撃てず動けず、命令も受け付けない
     INCAP_AT_HP: 25,
-    INCAP_DRAG_ALLOWED: false, // 将来の担送用。今は未使用
     // 姿勢。伏せは state ではなくフラグで、engage しながら伏せていられる
     PHIT_VS_PRONE: 0.55,   // 伏せた目標は当たりにくい
     PRONE_MOVE_MULT: 2.5,  // 匍匐前進の遅さ（立ち上がらずに動く時だけ効く）
@@ -569,6 +522,7 @@ const SIM_TUNING = {
     MORALE_LEADER_DOWN: -15,
     MORALE_PINNED_DRAIN: -1,   // /秒（釘付けの間だけ）
     MORALE_RECOVER: 2,         // /秒（釘付けが解けている間 = 0.5秒に1）
+    SKILL_RECOVERY_DELAY_T: 100, // 整備: 発砲・被弾から10秒後に回復開始
     // 30 を切ったら敗走。確率判定ではなく確定で、下回った時点で崩れる。
     ROUT_CHECK_BELOW: 30,
     // 立ち直る閾値。割れると 30 の境目で敗走と復帰が交互に出るので、上に離す。
@@ -691,14 +645,6 @@ const SIM_TUNING = {
     },
     MUNITION_EDGE_FALLOFF: 0.55,  // 中心以外のhexが受ける威力・制圧の倍率
 
-    GRENADE_RNG: 2,
-    GRENADE_FUSE_T: 30,
-    GRENADE_SUPPRESS: 60,
-    GRENADE_DMG: { base: 70, spread: 30 },
-
-    ASSAULT_WIN_VS_PINNED: 0.85,
-    ASSAULT_WIN_VS_ACTIVE: 0.30,
-
     // 強襲（2026-08-02 ディレクター指示）。**特定ユニットの撃滅をゴールに、
     // 持ちうるあらゆる手段を使う**行動。リスクを取る（自衛の反射が働かない）。
     // 同一hexに複数居るなら全滅させるまで続く。
@@ -780,14 +726,21 @@ const SIM_TUNING = {
     AUTO_MOVE_OBSERVE_T: 14,
     AUTO_MOVE_STUMBLE_T: 6,
 
-    // 能力値の効き（params: speed / recon / str）。基準値5で等倍。
+    // 能力値の効き。基準値5で等倍。
+    //   tempo 照準・再装填・持替の短さ
     //   spd 移動速度（速い兵は同じ距離を短時間で渡る）
     //   rcn 様子見の短さ（勘のいい兵は迷わず頃合いを掴む）
     //   str 息切れの短さ（体力のある兵は走ってもすぐ撃てる）
+    //   mrl 指揮官喪失・釘付けによる士気損失への耐性
+    //   aim 命中率、thw 投擲準備、mle 白兵威力
     ATTR_REF: 5,
+    ATTR_ACT_RANGE: { min: 0.75, max: 1.25 }, // 照準・再装填・持替時間
     ATTR_SPD_RANGE: { min: 0.7, max: 1.4 },   // 移動所要時間の倍率（小さいほど速い）
     ATTR_RCN_RANGE: { min: 0.4, max: 1.6 },   // 様子見時間の倍率
     ATTR_STR_RANGE: { min: 0.5, max: 1.5 },   // 息切れ時間の倍率
+    ATTR_THR_RANGE: { min: 0.75, max: 1.25 }, // 投擲準備時間
+    ATTR_AIM_PER_POINT: 0.03,                 // 基準5から1点ごとの命中倍率差
+    ATTR_MRL_RANGE: { min: 0.7, max: 1.3 },   // 士気損失倍率（小さいほど強い）
 
     // 平野に突っ立たせない（2026-08-02 ディレクター指摘「いまだに平野に突っ立ってる
     // 兵士も多い」）。撃たれる前でも、敵に見られている開豁地に居るなら身を隠す。

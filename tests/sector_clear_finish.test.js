@@ -30,11 +30,13 @@ function makeSandbox() {
   };
   sb.TraitPolicy = {};
   sb.CommsOrders = class {};
+  sb.SimActions = {};
   sb.makePsBattleMapApi = () => ({});
   sb.mulberry32 = () => () => 0.5;
   sb.toSimWeapon = () => ({});
   sb.SIM_TUNING = {};
   sb.WPNS = {};
+  sb.SKILLS = {};
   sb.MAP_W = 1;
   sb.MAP_H = 1;
   vm.createContext(sb);

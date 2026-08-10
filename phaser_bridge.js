@@ -2208,34 +2208,6 @@ class MainScene extends Phaser.Scene {
                 this.overlayGraphics.lineStyle(1, 0xffffff, 0.3); 
                 window.gameLogic.reachableHexes.forEach(h => this.drawHexOutline(this.overlayGraphics, h.q, h.r)); 
             }
-            const march = window.gameLogic.marchReachableHexes;
-            if (march && march.length > 0) {
-                this.overlayGraphics.lineStyle(1, 0xddc020, 0.55);
-                march.forEach(h => this.drawHexOutline(this.overlayGraphics, h.q, h.r));
-                if (!this._marchTurnTexts) this._marchTurnTexts = [];
-                this._marchTurnTexts.forEach(t => t.setVisible(false));
-                let ti = 0;
-                march.forEach(h => {
-                    while (ti >= this._marchTurnTexts.length) {
-                        this._marchTurnTexts.push(
-                            this.add.text(0, 0, '', {
-                                fontSize: '11px',
-                                fontFamily: 'Share Tech Mono, monospace',
-                                color: '#ddc020',
-                            }).setDepth(251).setOrigin(0.5, 0.5)
-                        );
-                    }
-                    const pos = Renderer.hexToPx(h.q, h.r);
-                    const t = this._marchTurnTexts[ti++];
-                    t.setText(String(h.turns));
-                    t.setPosition(pos.x, pos.y - 2);
-                    t.setVisible(true);
-                });
-            } else if (this._marchTurnTexts) {
-                this._marchTurnTexts.forEach(t => t.setVisible(false));
-            }
-        } else if (this._marchTurnTexts) {
-            this._marchTurnTexts.forEach(t => t.setVisible(false));
         }
         
         const gl = window.gameLogic;
@@ -2283,12 +2255,9 @@ class MainScene extends Phaser.Scene {
             }
         }
         if(selected && hover && window.gameLogic.reachableHexes && window.gameLogic.reachableHexes.some(h => h.q === hover.q && h.r === hover.r)) { this.overlayGraphics.lineStyle(3, 0xffffff, 0.8); this.drawHexOutline(this.overlayGraphics, hover.q, hover.r); }
-        else if (selected && hover && window.gameLogic.marchReachableHexes && window.gameLogic.marchReachableHexes.some(h => h.q === hover.q && h.r === hover.r)) { this.overlayGraphics.lineStyle(2, 0xddc020, 0.9); this.drawHexOutline(this.overlayGraphics, hover.q, hover.r); }
         const path = window.gameLogic.path;
         if(path && path.length > 0 && selected) {
-            const isMarch = window.gameLogic.marchReachableHexes && hover && window.gameLogic.marchReachableHexes.some(h => h.q === hover.q && h.r === hover.r)
-                && !(window.gameLogic.reachableHexes && window.gameLogic.reachableHexes.some(h => h.q === hover.q && h.r === hover.r));
-            this.overlayGraphics.lineStyle(3, isMarch ? 0xddc020 : 0xffffff, isMarch ? 0.65 : 0.5);
+            this.overlayGraphics.lineStyle(3, 0xffffff, 0.5);
             this.overlayGraphics.beginPath(); const s = Renderer.hexToPx(selected.q, selected.r); this.overlayGraphics.moveTo(s.x, s.y); path.forEach(p => { const px = Renderer.hexToPx(p.q, p.r); this.overlayGraphics.lineTo(px.x, px.y); }); this.overlayGraphics.strokePath(); 
         }
         this.crosshairGroup.clear();

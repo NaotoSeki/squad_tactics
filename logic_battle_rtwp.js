@@ -30,13 +30,40 @@
     lossResultDelayMs: 500,
   });
 
-  /** ユニットのスキル名 -> sim のトレイト（§4.1 の無命令時行動の差分） */
-  const SKILL_TRAITS = {
-    Berserker: 'aggressive',
-    Veteran: 'calm',
-    Medic: 'cautious',
-    Rookie: 'timid',
-  };
+  /**
+   * 表示カタログのスキルを、RTwPコアが読む数値効果と行動トレイトへ正規化する。
+   * シム側へスキル名の分岐を持ち込まず、説明と実効果の正本を `SKILLS` 1つに保つ。
+   */
+  function resolveRtwpProfile(unit, catalog) {
+    const ids = Array.from(new Set(Array.isArray(unit && unit.skills) ? unit.skills : []));
+    const traits = new Set(Array.isArray(unit && unit.traits) ? unit.traits : []);
+    const effects = {
+      accuracyMult: 1,
+      incomingHitMult: 1,
+      damageMult: 1,
+      actionTimeMult: 1,
+      moraleLossMult: 1,
+      meleeMult: 1,
+      extraMags: 0,
+      armorFlat: 0,
+      recoveryPerSecond: 0,
+    };
+    let hasRadio = false;
+    ids.forEach((id) => {
+      const rt = catalog && catalog[id] && catalog[id].rtwp;
+      if (!rt) return;
+      ['accuracyMult', 'incomingHitMult', 'damageMult', 'actionTimeMult',
+        'moraleLossMult', 'meleeMult'].forEach((key) => {
+        if (Number.isFinite(Number(rt[key]))) effects[key] *= Number(rt[key]);
+      });
+      ['extraMags', 'armorFlat', 'recoveryPerSecond'].forEach((key) => {
+        if (Number.isFinite(Number(rt[key]))) effects[key] += Number(rt[key]);
+      });
+      (rt.traits || []).forEach((trait) => traits.add(trait));
+      if (rt.hasRadio) hasRadio = true;
+    });
+    return { skills: ids, traits: Array.from(traits), effects: effects, hasRadio: hasRadio };
+  }
 
   /** axial hex 距離（cube 換算の max 形） */
   function hexDist(a, b) {
@@ -177,6 +204,7 @@
 
     const D = resolveDeps();
     const T = D.SIM_TUNING;
+    const profile = resolveRtwpProfile(unit, D.SKILLS);
     const team = (unit.team === 'player') ? 'A' : 'B';
     let weapon = null;
     try { weapon = this.gameLogic.getVirtualWeapon(unit); } catch (e) { weapon = null; }
@@ -193,10 +221,6 @@
       return null;
     }
 
-    const traits = [];
-    (unit.skills || []).forEach((skill) => {
-      if (SKILL_TRAITS[skill]) traits.push(SKILL_TRAITS[skill]);
-    });
     const hasLeader = this.sim.soldiers().some((soldier) => soldier.team === team && soldier.isLeader && soldier.hp > 0);
 
     // 予備弾倉は「実際に背負っている弾」から数える。DEFAULT_MAGS を使うと、
@@ -215,8 +239,9 @@
     const spares = isMortar ? found : ((found.length && magCap > 0)
       ? this._splitIntoMagazines(unit, found, magCap)
       : []);
-    const mags = isMortar ? Math.max(0, mortarTotal - 1)
+    const baseMags = isMortar ? Math.max(0, mortarTotal - 1)
       : (spares.length ? spares.length : (found.length ? 0 : defaultMags));
+    const mags = baseMags + Math.max(0, Math.round(profile.effects.extraMags || 0));
     unit._rtwpSpareAmmo = spares;
     unit._rtwpMortarAmmoBoxes = isMortar ? found : null;
 
@@ -240,7 +265,7 @@
     }
 
     this.sim.addSoldier({
-      id: id, team: team, q: unit.q, r: unit.r,
+      id: id, name: unit.name, team: team, q: unit.q, r: unit.r,
       weapon: simWeapon, ammo: { mags: mags }, skill: 1.0,
       kills: Math.max(0, Number(unit.kills) || 0),
       grenades: nades.length, rifleGrenades: rifleNades.length,
@@ -252,7 +277,12 @@
       },
       attrs: simAttrs,
       sidearm: this._findSidearm(unit, code, T, D),
-      isLeader: !hasLeader, traits: traits,
+      isLeader: !hasLeader,
+      skills: profile.skills,
+      traits: profile.traits,
+      effects: profile.effects,
+      hasRadio: profile.hasRadio,
+      prone: unit.stance === 'prone',
       facing: (team === 'A') ? { q: 1, r: 0 } : { q: -1, r: 0 },
     });
 
@@ -301,6 +331,7 @@
       // 登録時に取った比率で戻す（sim 側で半分減ったら本編でも半分減る）。
       const scale = (typeof unit._rtwpHpScale === 'number') ? unit._rtwpHpScale : 1;
       unit.hp = Math.max(0, Math.min(unit.maxHp, Math.round(s.hp * scale)));
+      unit.wounded = !!(unit.hp > 0 && unit.maxHp && unit.hp < unit.maxHp * 0.25);
 
       // 表示用の付加情報。既存描画が読まなくても害はない。
       unit.suppression = s.suppression;
@@ -737,12 +768,20 @@
             const R = window.Renderer;
             if (R && R.hexToPx && ev.hex && window.VFX) {
               const p = R.hexToPx(ev.hex.q, ev.hex.r);
-              if (R.playExplosion) R.playExplosion(p.x, p.y - 8, 't2_grenade', ev.hex, { visualOnly: true });
+              if (R.playExplosion && ev.kind !== 'aerial') {
+                R.playExplosion(p.x, p.y - 8, 't2_grenade', ev.hex, { visualOnly: true });
+              }
               const usedPsSmoke = R.playPsFx && R.playPsFx(p.x, p.y - 8, 'smoke');
               if (!usedPsSmoke && window.VFX.addSmoke) window.VFX.addSmoke(p.x, p.y - 8);
+              if (R.playExplosion && ev.kind === 'aerial') {
+                R.playExplosion(p.x, p.y - 8, 't5_aerialbomb', ev.hex, { visualOnly: true });
+              }
             }
             // BLAST is emitted at fuse expiry, so this cannot sound at throw time.
-            if (window.Sfx) window.Sfx.play('grenade_explosion_ps', 'boom');
+            if (window.Sfx) {
+              if (ev.kind === 'aerial') window.Sfx.play('cannon', 'boom');
+              else window.Sfx.play('grenade_explosion_ps', 'boom');
+            }
             break;
           }
           case 'MELEE_START': {
@@ -1243,12 +1282,44 @@
   };
 
   RtwpInstance.prototype.previewPendingTargets = function (targetUnits, hexes, exactUnit) {
+    // A squad suppression preview is deliberately a cheap intent marker, not
+    // a full per-soldier route plan. Planning every actor against every hover
+    // cell used to multiply the firing-position search into a browser stall.
+    const pending = this.pendingAction;
+    const previewHexes = this._uniqueHexes(hexes);
+    if (pending && pending.id === 'SUPPRESS_HEX' && previewHexes.length === 1
+      && this._pendingActors(this.gameLogic && this.gameLogic.selectedUnit).length > 1) {
+      const plan = {
+        actionId: pending.id, needs: 'hex', targetKind: 'hex',
+        hexes: previewHexes, hoverUnit: null, assignments: [],
+        valid: true, simplePreview: true,
+      };
+      if (this.gameLogic) this.gameLogic.targetPreview = plan;
+      return plan;
+    }
     const plan = this.planPendingTargets(targetUnits, hexes, exactUnit);
     if (this.gameLogic) this.gameLogic.targetPreview = plan;
     return plan;
   };
 
   RtwpInstance.prototype.consumePendingTargets = function (targetUnits, hexes, exactUnit) {
+    const pending = this.pendingAction;
+    const suppressHexes = this._uniqueHexes(hexes);
+    if (pending && pending.id === 'SUPPRESS_HEX' && suppressHexes.length === 1
+      && this._pendingActors(this.gameLogic && this.gameLogic.selectedUnit).length > 1) {
+      const hex = suppressHexes[0];
+      let any = false;
+      // One route search per selected soldier, after the click. There is no
+      // assignment pass and no second preview-time pass.
+      this._pendingActors(this.gameLogic && this.gameLogic.selectedUnit).forEach((unit) => {
+        if (this.runAction(pending.id, unit, null, hex)) any = true;
+      });
+      if (any) {
+        this.pendingAction = null;
+        if (this.gameLogic) this.gameLogic.targetPreview = null;
+      }
+      return any;
+    }
     const plan = this.planPendingTargets(targetUnits, hexes, exactUnit);
     if (!plan || !plan.valid) return false;
     let any = false;
@@ -1467,17 +1538,74 @@
   /** Keep the RTwP soldier and an already-open command menu in sync with loadout changes. */
   RtwpInstance.prototype.syncUnitLoadout = function (unit) {
     if (!unit || !this.sim) return null;
-    const soldier = this.sim.getSoldier(String(unit.id));
+    let soldier = this.sim.getSoldier(String(unit.id));
     if (!soldier) return null;
+    const D = resolveDeps();
+    const T = D.SIM_TUNING;
     const raw = unit.params || {};
     const computed = (typeof LoadoutWeight !== 'undefined' && LoadoutWeight.getEffectiveSpeed)
       ? LoadoutWeight.getEffectiveSpeed(unit)
       : (raw.effectiveSpeed != null ? raw.effectiveSpeed : raw.speed);
     const speed = Number.isFinite(Number(computed)) ? Math.max(0, Number(computed)) : 0;
-    // getSoldier() returns a snapshot, but attrs intentionally retains the core
-    // object's reference; mutate that object instead of replacing the snapshot field.
-    soldier.attrs = Object.assign(soldier.attrs || {}, raw, { speed: speed });
+    const attrs = Object.assign({}, raw, { speed: speed });
     raw.effectiveSpeed = speed;
+
+    let productWeapon = null;
+    try { productWeapon = this.gameLogic.getVirtualWeapon(unit); } catch (e) { productWeapon = null; }
+    const code = productWeapon && productWeapon.code;
+    if (code && D.WPNS && D.WPNS[code] && this.sim.updateSoldierLoadout) {
+      let simWeapon = null;
+      try { simWeapon = D.toSimWeapon(code, D.WPNS[code], T); } catch (e) { simWeapon = null; }
+      if (simWeapon) {
+        const profile = resolveRtwpProfile(unit, D.SKILLS);
+        const found = this._collectSpareAmmo(unit, productWeapon);
+        const magCap = Number(simWeapon.magCap) || 0;
+        const isMortar = code === 'm2_mortar';
+        const mortarTotal = isMortar
+          ? ((window.M2Mortar && M2Mortar.ammoTotal) ? M2Mortar.ammoTotal(unit)
+            : found.reduce((sum, item) => sum + (Number(item.current) || 0), 0))
+          : 0;
+        const spares = isMortar ? found : ((found.length && magCap > 0)
+          ? this._splitIntoMagazines(unit, found, magCap) : []);
+        const defaultMags = (T.DEFAULT_MAGS && T.DEFAULT_MAGS[simWeapon.class] != null)
+          ? T.DEFAULT_MAGS[simWeapon.class] : 4;
+        const magsLeft = (isMortar ? Math.max(0, mortarTotal - 1)
+          : (spares.length ? spares.length : (found.length ? 0 : defaultMags)))
+          + Math.max(0, Math.round(profile.effects.extraMags || 0));
+        const current = Number(productWeapon.current);
+        const magRemaining = isMortar ? (mortarTotal > 0 ? 1 : 0)
+          : (Number.isFinite(current) ? Math.max(0, Math.min(magCap, current)) : magCap);
+        const nades = this._collectMunitions(unit, ['nade']);
+        const rgCodes = (D.RIFLE_GRENADE_FOR_MAIN && D.RIFLE_GRENADE_FOR_MAIN[code]) || [];
+        const rifleNades = this._collectMunitions(unit, rgCodes);
+        unit._rtwpSpareAmmo = spares;
+        unit._rtwpMortarAmmoBoxes = isMortar ? found : null;
+        unit._rtwpNades = nades;
+        unit._rtwpRifleNades = rifleNades;
+        unit._rtwpWeaponCode = code;
+        this.sim.updateSoldierLoadout(String(unit.id), {
+          weapon: simWeapon,
+          magRemaining: magRemaining,
+          magsLeft: magsLeft,
+          grenades: nades.length,
+          rifleGrenades: rifleNades.length,
+          munitionSpec: {
+            grenade: this._munitionSpecFromItem(nades[0]),
+            rifle_grenade: this._munitionSpecFromItem(rifleNades[0]),
+          },
+          sidearm: this._findSidearm(unit, code, T, D),
+          attrs: attrs,
+          skills: profile.skills,
+          traits: profile.traits,
+          effects: profile.effects,
+          hasRadio: profile.hasRadio,
+        });
+        soldier = this.sim.getSoldier(String(unit.id));
+      }
+    } else if (soldier.attrs) {
+      // Keep mobility live even when the current product item has no RTwP weapon mapping.
+      Object.assign(soldier.attrs, attrs);
+    }
 
     const menu = (typeof document !== 'undefined') ? document.getElementById('command-menu') : null;
     if (menu && menu.style.display === 'block' && this._openMenuUnitId === String(unit.id)) {
@@ -1496,12 +1624,31 @@
     return true;
   };
 
+  /** Route the aerial support card through SimCore so syncUnits cannot erase it. */
+  RtwpInstance.prototype.orderBombardment = function (centerHex) {
+    if (!this.sim || !centerHex || !this.sim.queueExternalBlast) return false;
+    if (this.gameLogic.isValidHex
+      && !this.gameLogic.isValidHex(centerHex.q, centerHex.r)) return false;
+    const neighbors = this.gameLogic.getNeighbors
+      ? this.gameLogic.getNeighbors(centerHex.q, centerHex.r) : [];
+    const pool = [centerHex].concat(neighbors || []);
+    if (!pool.length) return false;
+    this._log('航空支援要請');
+    for (let i = 0; i < 3; i++) {
+      const hit = pool[Math.floor(this.rng() * pool.length)];
+      this.sim.queueExternalBlast(hit, {
+        kind: 'aerial', delayT: Math.floor(this.rng() * 9), radius: 0,
+        dmg: { base: 350, spread: 0 }, suppress: 100,
+      });
+    }
+    return true;
+  };
+
   // -------------------------------------------------------------------------
   // UI 配線
   //
   // logic_game.js / logic_ui.js は書き換えず、**インスタンスのメソッドを包む**。
-  // 元の実装はそのまま残り、detach() で元に戻る。クラスではなくインスタンスを
-  // 差し替えるので、旧ターン制の挙動は一切壊れない。
+  // BattleFacade の描画・キャンペーン接点は残し、戦闘入力だけをRTwPへ束ねる。
   // -------------------------------------------------------------------------
 
   RtwpInstance.prototype.installUi = function () {
@@ -1517,8 +1664,8 @@
       handleTargetDrag: g.handleTargetDrag,
       handleRightClick: g.handleRightClick,
       actionAttack: g.actionAttack,
+      triggerBombardment: g.triggerBombardment,
       onUnitClick: g.onUnitClick,
-      endTurn: g.endTurn,
       uiLog: g.ui && g.ui.log,
       showActionMenu: g.ui && g.ui.showActionMenu,
     };
@@ -1600,6 +1747,10 @@
       return Promise.resolve(false);
     };
 
+    g.triggerBombardment = function (hex) {
+      return self.orderBombardment(hex);
+    };
+
     // Tactical pause: keep the selected friendly soldier and turn an enemy
     // click into an aimed TARGET order instead of replacing the selection.
     g.onUnitClick = function (unit) {
@@ -1618,13 +1769,6 @@
         }
       }
       if (self._orig.onUnitClick) return self._orig.onUnitClick.call(g, unit);
-    };
-
-    // END TURN は RTwP に存在しない。Phaserサイドバーのボタンは伏せてあるが、
-    // 他経路から呼ばれても壊れないよう一時停止のトグルにしておく。
-    g.endTurn = function () {
-      self.setPaused(!self.paused);
-      self._log(self.paused ? '一時停止' : '再開');
     };
 
     this._keyHandler = function (e) {
@@ -1734,15 +1878,14 @@
       else delete g.handleRightClick;
       if (this._orig.actionAttack) g.actionAttack = this._orig.actionAttack;
       else delete g.actionAttack;
+      if (this._orig.triggerBombardment) g.triggerBombardment = this._orig.triggerBombardment;
+      else delete g.triggerBombardment;
       if (this._orig.onUnitClick) g.onUnitClick = this._orig.onUnitClick;
       else delete g.onUnitClick;
-      if (this._orig.endTurn) g.endTurn = this._orig.endTurn;
-      else delete g.endTurn;
       if (g.ui && this._orig.uiLog) g.ui.log = this._orig.uiLog;
       if (g.ui && this._orig.showActionMenu) g.ui.showActionMenu = this._orig.showActionMenu;
     }
-    // カタログ駆動で書き換えたメニューDOMを元へ戻す（旧ターン制は id 付きの
-    // ボタンを直接掴むので、innerHTML を戻さないと切り戻しで壊れる）
+    // 決着画面へ渡る前に、カタログ駆動で書き換えたメニューDOMを初期状態へ戻す。
     if (this._menuHtml != null && typeof document !== 'undefined') {
       const menu = document.getElementById('command-menu');
       if (menu) { menu.innerHTML = this._menuHtml; menu.style.display = 'none'; }
@@ -1839,8 +1982,7 @@
     d.TraitPolicy = (typeof TraitPolicy !== 'undefined') ? TraitPolicy : window.TraitPolicy;
     d.CommsOrders = (typeof CommsOrders !== 'undefined') ? CommsOrders : window.CommsOrders;
     d.LeaderPolicy = (typeof LeaderPolicy !== 'undefined') ? LeaderPolicy : window.LeaderPolicy;
-    // 行動カタログ。必須にはしない — 読み込まれていなければ移動・射撃だけの
-    // 旧UIへ degrade する（REQUIRED に入れると古いHTMLでRTwPごと起動しなくなる）。
+    // 行動カタログ。画面入力の正本で、読み込み順の検査対象でもある。
     d.SimActions = (typeof SimActions !== 'undefined') ? SimActions : window.SimActions;
     d.makePsBattleMapApi = (typeof makePsBattleMapApi !== 'undefined')
       ? makePsBattleMapApi : window.makePsBattleMapApi;
@@ -1848,24 +1990,27 @@
     d.toSimWeapon = (typeof toSimWeapon !== 'undefined') ? toSimWeapon : window.toSimWeapon;
     d.SIM_TUNING = (typeof SIM_TUNING !== 'undefined') ? SIM_TUNING : window.SIM_TUNING;
     d.WPNS = (typeof WPNS !== 'undefined') ? WPNS : window.WPNS;
+    d.SKILLS = (typeof SKILLS !== 'undefined') ? SKILLS : window.SKILLS;
     d.RIFLE_GRENADE_FOR_MAIN = (typeof RIFLE_GRENADE_FOR_MAIN !== 'undefined')
       ? RIFLE_GRENADE_FOR_MAIN : window.RIFLE_GRENADE_FOR_MAIN;
     d.MAP_W = (typeof MAP_W !== 'undefined') ? MAP_W : window.MAP_W;
     d.MAP_H = (typeof MAP_H !== 'undefined') ? MAP_H : window.MAP_H;
     return d;
   }
-  const REQUIRED = ['SimCore', 'TraitPolicy', 'CommsOrders', 'makePsBattleMapApi',
-    'SIM_TUNING', 'WPNS', 'MAP_W', 'MAP_H', 'mulberry32', 'toSimWeapon'];
+  const REQUIRED = ['SimCore', 'TraitPolicy', 'CommsOrders', 'SimActions', 'makePsBattleMapApi',
+    'SIM_TUNING', 'WPNS', 'SKILLS', 'MAP_W', 'MAP_H', 'mulberry32', 'toSimWeapon'];
 
   window.RtwpBattle = {
-    /** false にすると本モジュールは何もしない = 旧ターン制のまま（切り戻し） */
+    /** テスト／診断用の起動ゲート。falseでも旧戦闘系へは切り戻さない。 */
     enabled: true,
     active: false,
     instance: null,
     fixedSeed: null,
+    lastError: null,
     // Public for deterministic timing checks and UI consumers that want to
     // align a transition indicator with the RTwP handoff.
     finishTiming: FINISH_TIMING,
+    resolveRtwpProfile: resolveRtwpProfile,
 
     /**
      * メニューを画面内へ収めて置く。
@@ -1923,11 +2068,28 @@
 
     attach(gameLogic) {
       if (!this.enabled || !gameLogic || !gameLogic.map) return null;
-      // 依存が1つでも欠けたら黙って諦める。旧ターン制コアは無傷なのでゲームは動く。
       const D = resolveDeps();
-      for (let i = 0; i < REQUIRED.length; i++) {
-        if (D[REQUIRED[i]] == null) return null;
+      const missing = REQUIRED.filter((key) => D[key] == null);
+      if (missing.length) {
+        const message = 'RTwP起動失敗: 依存欠落 [' + missing.join(', ') + ']';
+        this.lastError = message;
+        gameLogic.rtwpError = message;
+        gameLogic.interactionMode = 'RTWP_BLOCKED';
+        gameLogic.state = 'RTWP_ERROR';
+        ['handleClick', 'handleRightClick', 'onUnitClick'].forEach((key) => {
+          gameLogic[key] = function () { return false; };
+        });
+        gameLogic.actionAttack = function () { return Promise.resolve(false); };
+        if (gameLogic.ui) {
+          if (typeof gameLogic.ui.hideActionMenu === 'function') gameLogic.ui.hideActionMenu();
+          gameLogic.ui.showActionMenu = function () {};
+          if (typeof gameLogic.ui.log === 'function') gameLogic.ui.log(message);
+        }
+        if (typeof console !== 'undefined' && console.error) console.error(message);
+        return null;
       }
+      this.lastError = null;
+      delete gameLogic.rtwpError;
       if (this.instance) this.detach();
 
       const T = D.SIM_TUNING;

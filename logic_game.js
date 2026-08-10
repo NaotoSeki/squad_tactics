@@ -20,7 +20,6 @@ window.BattleFacade = class BattleFacade {
     this.state = 'INIT';
     this.path = [];
     this.reachableHexes = [];
-    this.marchReachableHexes = [];
     this.attackLine = [];
     this.aimTargetUnit = null;
     this.aimTargetHex = null;
@@ -67,19 +66,12 @@ window.BattleFacade = class BattleFacade {
       this.units.filter(u => u.team === 'player').forEach(u => this.campaign.repairMortarGunnerLoadout(u, { ensureMissing: true }));
     }
 
-    const rtStance = (typeof BATTLE_SCALE !== 'undefined' && BATTLE_SCALE.RT_DEFAULT_STANCE) || null;
-    if (rtStance) {
-      this.units.forEach(u => {
-        if (!u.def?.isTank) u.stance = rtStance;
-      });
-    }
-
     this.units.forEach(u => {
       if (typeof sanitizeUnitSpareAmmo === 'function') sanitizeUnitSpareAmmo(u);
       else if (typeof sanitizeUnitBagAmmo === 'function') sanitizeUnitBagAmmo(u);
       if (typeof LoadoutWeight !== 'undefined') LoadoutWeight.refreshUnitLoadout(u);
-      // REALISM_PACK.WOUNDED_STATE: 前セクター持ち越しのHPで重傷判定（演出無し）
-      if (typeof REALISM_PACK !== 'undefined' && REALISM_PACK.WOUNDED_STATE && !u.def?.isTank && u.maxHp) {
+      // 戦果報告用の重傷表示。戦闘不能判定そのものはSimCoreが担う。
+      if (!u.def?.isTank && u.maxHp) {
         u.wounded = u.hp > 0 && u.hp < u.maxHp * 0.25;
       }
     });
@@ -210,10 +202,12 @@ window.BattleFacade = class BattleFacade {
       this._victoryProcessed = true;
       const survivors = this.units.filter(u => u.team === 'player' && u.hp > 0);
       if (this.campaign && typeof BattleReview !== 'undefined' && BattleReview.capture) {
+        const tick = window.RtwpBattle && window.RtwpBattle.instance
+          ? window.RtwpBattle.instance.sim._tick : 0;
         this.campaign.endBattleSnapshot = BattleReview.capture(this,
-          { winner: 'A', reason: 'annihilation', tick: this.turn || 0 },
-          { tick: this.turn || 0, units: this.units,
-            visual: { sector: this.campaign.sector, mode: 'turn-based' } });
+          { winner: 'A', reason: 'annihilation', tick: tick },
+          { tick: tick, units: this.units,
+            visual: { sector: this.campaign.sector, mode: 'rtwp' } });
       }
       this.campaign.onSectorCleared(survivors);
       return true;
@@ -226,19 +220,17 @@ window.BattleFacade = class BattleFacade {
     if (players.length === 0) {
       this.state = 'LOSS';
       if (this.campaign && typeof BattleReview !== 'undefined' && BattleReview.capture) {
+        const tick = window.RtwpBattle && window.RtwpBattle.instance
+          ? window.RtwpBattle.instance.sim._tick : 0;
         this.campaign.endBattleSnapshot = BattleReview.capture(this,
-          { winner: 'B', reason: 'annihilation', tick: this.turn || 0 },
-          { tick: this.turn || 0, units: this.units,
-            visual: { sector: this.campaign.sector, mode: 'turn-based' } });
+          { winner: 'B', reason: 'annihilation', tick: tick },
+          { tick: tick, units: this.units,
+            visual: { sector: this.campaign.sector, mode: 'rtwp' } });
       }
       // ここへ来るのは本当に全員戦死した時だけ（生存者が居る敗北は
       // RtwpInstance.finishBattle が理由付きで送る）
       this.campaign.onGameOver('annihilation', 0);
     }
-  }
-
-  getRtTacticsCfg() {
-    return (typeof BATTLE_SCALE !== 'undefined' && BATTLE_SCALE.RT_SIMULTANEOUS_AI) ? BATTLE_SCALE : null;
   }
 
   _beginAttackAnim(parallel) {
@@ -400,10 +392,7 @@ window.BattleFacade = class BattleFacade {
   async actionAttack(a, d, opts) {
     const parallel = !!(opts && opts.parallel);
     if (!a || a.hp <= 0) return;
-    this.clearUnitMarch(a);
-    const primary = this.getVirtualWeapon(a);
-    const forceM8Area = primary && primary.code === 'm8_rocket';
-    const targetUnitForWeapon = forceM8Area ? null : ((d.hp !== undefined) ? d : this.getUnitInHex(d.q, d.r));
+    const targetUnitForWeapon = (d.hp !== undefined) ? d : this.getUnitInHex(d.q, d.r);
 
     const game = this;
     let w = this.getAttackWeapon ? this.getAttackWeapon(a, targetUnitForWeapon) : null;
@@ -411,15 +400,11 @@ window.BattleFacade = class BattleFacade {
     if (!w) return;
     if (w.isBroken) { this.ui.log("武器故障中！修理が必要"); return; }
 
-    // ターゲット判定：M8は常にエリア攻撃。それ以外はユニットクリック＝狙い撃ち、ヘックスクリック＝制圧
+    // ユニットクリック＝狙い撃ち、ヘックスクリック＝制圧
     let targetUnit = null;
     let targetHex = null;
     let isAreaAttack = false;
-    if (w.code === 'm8_rocket') {
-      targetHex = d.hp !== undefined ? { q: d.q, r: d.r } : d;
-      targetUnit = null;
-      isAreaAttack = true;
-    } else if (d.hp !== undefined) {
+    if (d.hp !== undefined) {
       targetUnit = d;
       targetHex = { q: d.q, r: d.r };
       if (w.indirect) { isAreaAttack = true; targetUnit = null; }
@@ -454,24 +439,6 @@ window.BattleFacade = class BattleFacade {
     }
 
     if (a.ap < w.ap) { this.rejectAction("AP不足"); return; }
-
-    // M8 Rocket: 照準確定後にMarch of antsを消してから攻撃描写
-    if (w.code === 'm8_rocket' && isAreaAttack && targetHex) {
-      const hasAmmo = a.hands[0] && a.hands[0].code === 'm8_rocket' && (a.hands[0].current || 0) > 0;
-      if (!hasAmmo) return;
-      this._beginAttackAnim(parallel);
-      a.ap -= w.ap;
-      this.attackLine = [];
-      this.aimTargetUnit = null;
-      await this.triggerM8Rocket(a, targetHex);
-      this._endAttackAnim(parallel);
-      if (this.ui && this.ui.updateSidebar) this.ui.updateSidebar();
-      if (this.interactionMode === 'ATTACK' && this.selectedUnit === a && !this.canFireAgain(a)) {
-        this.setMode('SELECT');
-        this.attackLine = [];
-      }
-      return;
-    }
 
     const dist = this.hexDist(a, targetHex);
     if (w.minRng && dist < w.minRng) { this.rejectAction("目標が近すぎます！"); return; }
@@ -521,12 +488,8 @@ window.BattleFacade = class BattleFacade {
         const atkPin = window.BattleCloud.getIntruderPressure(a);
         if (atkPin > 0) hitChance -= Math.floor(atkPin * 14);
       }
-      // REALISM_PACK.WOUNDED_STATE: 重傷状態は命中率-10%
-      if (typeof REALISM_PACK !== 'undefined' && REALISM_PACK.WOUNDED_STATE && a.wounded) hitChance -= 10;
       // 射手が制圧中なら命中率-15
       if (a.suppressedTurns && a.suppressedTurns > 0) hitChance -= 15;
-      const rtCfg = this.getRtTacticsCfg();
-      if (rtCfg && rtCfg.RT_HIT_PENALTY) hitChance -= rtCfg.RT_HIT_PENALTY;
     }
 
     // 弾数撃ち分けによる命中率ペナルティ（多弾発射側を選んだとき）
@@ -571,9 +534,7 @@ window.BattleFacade = class BattleFacade {
       const isMg42 = (typeof PlMgTripod !== 'undefined' && PlMgTripod.usesBeltReserve(w.code));
       const isMortarWpn = (w.code === 'm2_mortar');
       const isShellWpn = w.type && w.type.includes('shell');
-      const rtCfg = game.getRtTacticsCfg();
-      const rtFire = (parallel && rtCfg && rtCfg.RT_PARALLEL_FIRE_RATE) ? rtCfg.RT_PARALLEL_FIRE_RATE : null;
-      const fireRate = rtFire != null ? rtFire : (isMg42 ? 30 : ((w.type === 'bullet') ? 60 : 300));
+      const fireRate = isMg42 ? 30 : ((w.type === 'bullet') ? 60 : 300);
       const lastFlightTime = isMortarWpn ? 1000 : (isShellWpn ? 300 : (isMg42 ? dist * 50 : dist * 30));
       const animEndMs = Math.max(500, shots * fireRate + lastFlightTime);
       const tankGunCount = (w.tankMg42Slots && w.tankMg42Slots.length) || 1;
@@ -700,8 +661,6 @@ window.BattleFacade = class BattleFacade {
             const baseChance = (w.type === 'bullet') ? 15 : 25;
             const distDrop = Math.min(10, dist * 1.5);
             let areaHitChance = Math.max(2, baseChance - distDrop);
-            const rtArea = game.getRtTacticsCfg();
-            if (rtArea && rtArea.RT_HIT_PENALTY) areaHitChance = Math.max(1, areaHitChance - Math.floor(rtArea.RT_HIT_PENALTY * 0.5));
             const wDmg = getWeaponDmg(w);
             victims.forEach(v => {
               if ((Math.random() * 100) < areaHitChance) {
@@ -792,12 +751,11 @@ window.BattleFacade = class BattleFacade {
   }
 
   /**
-   * REALISM_PACK.WOUNDED_STATE: HP が maxHp の25%未満なら「重傷」、25%以上に回復したら解除。
-   * 重傷時: AP回復時に最大AP-1、命中率-10%（actionAttack / getEstimatedHitChance 両方で適用）。
+   * 戦果報告用: HP が maxHp の25%未満なら「重傷」、25%以上に回復したら解除。
+   * RTwPの行動不能はSimCoreの `incap` が正本で、ここでは戦闘数値を変更しない。
    */
   refreshWoundedState(u) {
     if (!u || u.hp <= 0 || !u.maxHp) return;
-    if (!(typeof REALISM_PACK !== 'undefined' && REALISM_PACK.WOUNDED_STATE)) return;
     if (u.def && u.def.isTank) return;
     const threshold = u.maxHp * 0.25;
     if (u.hp < threshold) {
@@ -864,10 +822,6 @@ window.BattleFacade = class BattleFacade {
   applyDamage(target, damage, sourceName = "攻撃", opts = {}) {
     if (!target || target.hp <= 0) return;
     if (target.skills && target.skills.includes('Armor')) damage = Math.max(0, damage - 5);
-    const rtCfg = this.getRtTacticsCfg();
-    if (rtCfg && rtCfg.RT_DAMAGE_MULT != null && damage > 0) {
-      damage = Math.max(1, Math.floor(damage * rtCfg.RT_DAMAGE_MULT));
-    }
     if (typeof window.BattleCloud !== 'undefined' && damage > 0) {
       damage = Math.max(1, Math.floor(damage * window.BattleCloud.getDefenseMultiplier(target)));
       if (window.BattleCloud.getDamageTakenMultiplier) {
@@ -964,11 +918,7 @@ window.BattleFacade = class BattleFacade {
     return null;
   }
 
-  /**
-   * 弾薬の緊張感: BATTLE_SCALE.ammoBurnMult（0.85〜1.95程度）に応じて、
-   * 通常弾の消費に追加で1発分の余剰消費が発生する確率を返す。
-   * ターン制/RT問わず適用（getRtTacticsCfg() のRT限定ゲートを介さない）。
-   */
+  /** Compatibility helper for inventory-side ammunition consumption. */
   _extraAmmoBurnRoll() {
     if (typeof CombatRules !== 'undefined') return CombatRules.extraAmmoBurnRoll();
     const mult = (typeof BATTLE_SCALE !== 'undefined' && BATTLE_SCALE.ammoBurnMult) || 1;
@@ -987,15 +937,6 @@ window.BattleFacade = class BattleFacade {
       const ammoBox = u.bag.find(i => i && i.code === 'mortar_shell_box' && i.current > 0);
       if (ammoBox) { ammoBox.current--; return true; }
       return false;
-    }
-    if (weaponCode === 'm8_rocket') {
-      const slot0 = u.hands && u.hands[0];
-      if (!slot0 || slot0.code !== 'm8_rocket') return false;
-      const need = n > 0 ? n : 60;
-      const cur = slot0.current ?? slot0.cap ?? 0;
-      if (cur < need) return false;
-      slot0.current = cur - need;
-      return true;
     }
     if (typeof PlMgTripod !== 'undefined' && PlMgTripod.usesBeltReserve(weaponCode) && u.hands) {
       if (u.def?.isTank) {
@@ -1068,13 +1009,6 @@ window.BattleFacade = class BattleFacade {
   getAttackWeapon(a, targetUnit) {
     const main = this.getVirtualWeapon(a);
     if (!main) return null;
-    // 戦車がヘックス指定（範囲攻撃）のときは Main armament が M8 の場合のみ M8 を使用（残弾ありのみ）
-    if (a.def?.isTank && !targetUnit) {
-      const slot0 = a.hands && a.hands[0];
-      if (slot0 && slot0.code === 'm8_rocket' && (slot0.current || 0) > 0) {
-        return { ...slot0, current: slot0.current, cap: slot0.cap };
-      }
-    }
     if (a.def.isTank && targetUnit && !targetUnit.def?.isTank) {
       const tankMgSlots = (a.hands || []).map((h, idx) => (
         h && typeof PlMgTripod !== 'undefined' && PlMgTripod.usesBeltReserve(h.code)
@@ -1104,10 +1038,6 @@ window.BattleFacade = class BattleFacade {
     }
     if (typeof PlMgTripod !== 'undefined' && PlMgTripod.usesBeltReserve(w.code) && w.reserve !== undefined) {
       return (w.reserve > 0) || ((w.current || 0) > 0);
-    }
-    if (w.code === 'm8_rocket') {
-      const slot = u.hands && u.hands[0];
-      return slot && slot.code === 'm8_rocket' && (slot.current || 0) > 0;
     }
     if (u.def?.isTank && w.type && w.type.includes('shell')) {
       return (w.reserve !== undefined && w.reserve > 0) || (w.current !== undefined && w.current > 0);
@@ -1293,17 +1223,8 @@ window.BattleFacade = class BattleFacade {
   getNeighbors(q, r) { return this.mapSystem ? this.mapSystem.getNeighbors(q, r) : []; }
   findPath(u, tq, tr) { return this.mapSystem ? this.mapSystem.findPath(u, tq, tr) : []; }
 
-  clearUnitMarch(u) {
-    if (!u) return;
-    delete u.marchActive;
-  }
-
   calcAttackLine(u, tq, tr) {
     if (!this.mapSystem) return;
-    if (u && u.hands && u.hands[0] && u.hands[0].code === 'm8_rocket') {
-      this.attackLine = this.mapSystem.getHexesInRange(tq, tr, 2);
-      return;
-    }
     this.attackLine = this.mapSystem.calcAttackLine(u, tq, tr);
     const w = this.getVirtualWeapon(u);
     if (w && w.indirect && this.attackLine.length === 0) {
@@ -1404,7 +1325,6 @@ window.BattleFacade = class BattleFacade {
       this.path = [];
       this.attackLine = [];
       this.reachableHexes = [];
-      this.marchReachableHexes = [];
       // ATTACK以外のモードに移行したら弾数指定はクリアしておく
       this.attackBurstOverride = null;
     } else {
@@ -1485,9 +1405,7 @@ window.BattleFacade = class BattleFacade {
       if (this.selectedUnit) {
         const w = this.getVirtualWeapon(this.selectedUnit);
         const isIndirect = w && w.indirect;
-        if (w && w.code === 'm8_rocket') {
-          this.actionAttack(this.selectedUnit, p);
-        } else if (isIndirect) {
+        if (isIndirect) {
           this.actionAttack(this.selectedUnit, p);
         } else {
           let targetUnit = null;
@@ -1552,10 +1470,6 @@ window.BattleFacade = class BattleFacade {
     const aimVal = (attacker.params && attacker.params.aim != null) ? attacker.params.aim : (attacker.stats?.aim || 0);
     const throwVal = (attacker.params && attacker.params.throw != null) ? attacker.params.throw : 5;
     const moraleMod = (attacker.params && attacker.params.morale != null) ? (attacker.params.morale / 10) : 1;
-    const rtCfg = this.getRtTacticsCfg();
-    const rtHitPenalty = (rtCfg && rtCfg.RT_HIT_PENALTY) ? rtCfg.RT_HIT_PENALTY : 0;
-    // REALISM_PACK.WOUNDED_STATE: 重傷状態は命中率-10%
-    const wounded = !!(typeof REALISM_PACK !== 'undefined' && REALISM_PACK.WOUNDED_STATE && attacker.wounded);
 
     // ATTACK MODE で弾数撃ち分けを指定済みなら、概算命中率にも反映
     const overrideInfo = (this.attackBurstOverride &&
@@ -1574,7 +1488,7 @@ window.BattleFacade = class BattleFacade {
 
     return computeHitChance({
       dist, w, terrainCover, coverMult, aimVal, throwVal, moraleMod,
-      targetUnit, rtHitPenalty, wounded, applyBurstPenalty
+      targetUnit, wounded: false, applyBurstPenalty
     });
   }
 
@@ -1602,7 +1516,6 @@ window.BattleFacade = class BattleFacade {
     this.selectedUnit = null;
     this.selectedUnits = null;   // 矩形選択の集合。足元の輪の解除もこれが正
     this.reachableHexes = [];
-    this.marchReachableHexes = [];
     this.attackLine = [];
     this.aimTargetUnit = null;
     this.path = [];
@@ -1652,7 +1565,6 @@ window.BattleFacade = class BattleFacade {
 
   calcReachableHexes(u) {
     this.reachableHexes = [];
-    this.marchReachableHexes = [];
     if (!u) return;
     const maxCost = this.getMovementBudget(u);
     const frontier = [{ q: u.q, r: u.r, cost: 0 }];
@@ -1952,9 +1864,7 @@ window.BattleFacade = class BattleFacade {
     // not bypass the reachable-hex budget used by the normal UI path.
     if (this.getMovementBudget(u) <= 0) return;
     const parallel = !!(opts && opts.parallel);
-    const rtCfg = this.getRtTacticsCfg();
-    const rtStep = (parallel && rtCfg && rtCfg.RT_MOVE_STEP_MS) ? rtCfg.RT_MOVE_STEP_MS : null;
-    const stepMs = rtStep != null ? rtStep : 180;
+    const stepMs = 180;
     if (!parallel) this.state = 'ANIM';
     for (const s of p) {
       u.ap -= this.getTerrainMoveCost(u, s.q, s.r);
@@ -2005,45 +1915,6 @@ window.BattleFacade = class BattleFacade {
       if(window.VFX) { const pos = Renderer.hexToPx(targetHex.q, targetHex.r); window.VFX.addSmoke(pos.x, pos.y); }
       this.updateSidebar();
     }
-  }
-
-  async triggerM8Rocket(attacker, centerHex) {
-    if (!this.canAttackHex(centerHex.q, centerHex.r)) return;
-    const game = this;
-    const fullPool = this.mapSystem ? this.mapSystem.getHexesInRange(centerHex.q, centerHex.r, 2) : [centerHex];
-    if (fullPool.length === 0) return;
-    // 海域・null も含む全ヘックスから抽選し、1ヘックスあたりの命中率を一定にする（有効な陸地のみ着弾時ダメージ）
-    const hitHexes = [];
-    for (let i = 0; i < 60; i++) {
-      hitHexes.push(fullPool[Math.floor(Math.random() * fullPool.length)]);
-    }
-    const tankPos = typeof Renderer !== 'undefined' ? Renderer.hexToPx(attacker.q, attacker.r) : { x: 0, y: 0 };
-    const dmg = 45;
-    const audioEpoch = window.Sfx && Sfx.captureEpoch ? Sfx.captureEpoch() : null;
-    this.ui.log(`>> M8 Rocket 斉射`);
-    for (let i = 0; i < hitHexes.length; i++) {
-      const hex = hitHexes[i];
-      const targetPos = typeof Renderer !== 'undefined' ? Renderer.hexToPx(hex.q, hex.r) : { x: 0, y: 0 };
-      const delay = i * 55;
-      const canHit = this.canAttackHex(hex.q, hex.r);
-      setTimeout(() => {
-        if (!game.consumeAmmo(attacker, 'm8_rocket', 1)) return;
-        game.updateSidebar();
-        if (window.VFX) {
-          window.VFX.addRocket(tankPos.x, tankPos.y, targetPos.x, targetPos.y, () => {
-            if (window.Sfx) Sfx.play('cannon', null, audioEpoch);
-            if (typeof Renderer !== 'undefined') Renderer.playExplosion(targetPos.x, targetPos.y, 't2_grenade', hex, { sizeScale: 1.15 }); // T3薄煙ワークアラウンド
-            if (window.VFX) window.VFX.shakeRequest = 3;
-            if (canHit) {
-              const units = game.getUnitsInHex(hex.q, hex.r);
-              units.forEach(u => { game.ui.log(`>> ロケット命中`); game.applyDamage(u, dmg, "M8 Rocket"); });
-            }
-            game.updateSidebar();
-          });
-        }
-      }, delay);
-    }
-    await new Promise(r => setTimeout(r, hitHexes.length * 55 + 550));
   }
 
   async triggerBombardment(centerHex) {

@@ -259,8 +259,8 @@ sim は `MOVE_MODE_MULT { walk:1, rush:0.5, crawl:2.5 }` で歩/走/匍匐を持
 **スプライトの滑走速度もモードに追従させた。** 以前は `0.9px/frame` 固定で、
 ヘックス間隔 √3·HEX_SIZE ≈ 93.5px に対し歩き(0.8秒/hex ⇒ 約1.95px/frame)にすら
 追いつけていなかった — 走らせても絵だけ速く位置が置いていかれる。
-`UnitView._infantryStepPx` が sim の所要時間から逆算する。sim を持たないターン制本編は
-従来の一定速度のまま。
+`UnitView._infantryStepPx` が sim の所要時間から逆算する。snapshot がまだ届いていない
+初期描画だけは一定速度を使う。
 
 **速度の正本は `stepTicks`（スナップショット）。** モード倍率だけから概算すると、
 重い地形（`moveCost`）や脚の遅い兵（`ATTR_SPD_RANGE`）で**スプライトが先に着いて待つ** —

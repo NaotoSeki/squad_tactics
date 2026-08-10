@@ -77,6 +77,8 @@ ok(!/onclick="gameLogic\.toggleAuto\(\)"/.test(html),
   'index.html に toggleAuto() の起動口が無い');
 ok(!/logic_ai\.js/.test(html),
   'index.html に旧ターン制AIスクリプトの読み込みが無い');
+ok(!/battle_cloud(?:_tactics)?\.js|phaser_battle_cloud\.js|logic_reaction\.js|logic_combat_rules\.js|logic_support\.js/.test(html),
+  'index.html はRTwPと責務が重複する旧戦闘モジュールを読み込まない');
 ok(!fs.existsSync(path.join(ROOT, 'logic_ai.js')),
   'logic_ai.js はRTwP移行後の実行資産から削除されている');
 
@@ -98,5 +100,10 @@ ok(!/\bendTurn\s*\(/.test(game) && !/\bcheckPhaseEnd\s*\(/.test(game),
 //    削除より先にこの配線をロックしておく（ブラウザsmoke後の物理削除の前提条件）。
 ok(/g\.ui\.showActionMenu\s*=\s*function[^\n]*self\.showSoldierMenu/.test(rtwp),
   'logic_battle_rtwp.js は旧コマンドメニューを showSoldierMenu へ差し替える');
+ok(/const REQUIRED = \[[^\]]*'SimActions'[^\]]*'SKILLS'/.test(rtwp),
+  'RTwP起動に行動カタログとスキル正本を必須化する');
+ok(/gameLogic\.state = 'RTWP_ERROR'/.test(rtwp)
+  && /gameLogic\.interactionMode = 'RTWP_BLOCKED'/.test(rtwp),
+  '依存欠落時は別実行系へ落ちず戦闘入力を停止する');
 
 console.log('\n' + pass + ' passed');

@@ -8,7 +8,7 @@
 
 ## 1. 概要
 
-Phaser 3製ターン制ヘックスウォーゲーム(index.html)の戦場マップ。
+Phaser 3製RTwPヘックスウォーゲーム(index.html)の戦場マップ。
 Sudden Strike / Panzer Strike風の「WW2欧州の廃墟市街地」ビジュアルが目標。
 
 - **タイル方式**: Blender(Cycles)でプリレンダーした透過PNGヘックスタイル561枚
@@ -234,9 +234,8 @@ hexの1セル幅経路では、**空間的な隣り合わせからマスクを�
 
 ## 9. 検証手法(このプロジェクトの流儀)
 
-- **Node.jsヘッドレス**: `vm.runInThisContext`でlogic_math→data→logic_map_city→
-  logic_map→logic_game.jsを順に読み込み、BattleLogic/MapSystemを最小スタブで
-  動かす。生成の統計検証(未解決マスク/連結性/隣接重複/タイミング)は全部これで回す
+- **Node.jsヘッドレス**: `tests/map_city.test.js` と地形系テストから生成器を直接読み込み、
+  未解決マスク、連結性、隣接重複を検証する。戦闘結果の検証はSimCore/RTwP統合テストへ分離する
 - **ブラウザ実機**: Browser paneは`visibilityState=hidden`でPhaserが止まる →
   `setInterval(()=>phaserGame.loop.step(performance.now()),33)`で強制駆動。
   スクリーンショットは`phaserGame.renderer.snapshot`→canvas縮小→dataURL

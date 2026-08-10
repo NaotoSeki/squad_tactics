@@ -49,7 +49,6 @@
       result: plain(result || {}), map: plain(game.map || []), units: plain(renderUnits),
       view: plain(Object.assign(sceneState(), {
         selectedId: selectedId == null ? null : String(selectedId),
-        reachableHexes: game.reachableHexes || [], marchReachableHexes: game.marchReachableHexes || [],
         attackLine: game.attackLine || [], path: game.path || [], targetPreview: game.targetPreview || null,
         hoverHex: game.hoverHex || null, interactionMode: game.interactionMode || 'SELECT'
       }, opts.visual || {}))
@@ -62,18 +61,16 @@
     frozen.map = plain(snapshot.map); frozen.units = plain(snapshot.units);
     frozen.units.forEach((unit) => { if (unit._reviewSim) unit._sim = unit._reviewSim; });
     frozen.state = 'REVIEW'; frozen._battleReviewReadOnly = true;
-    frozen.reachableHexes = plain(snapshot.view.reachableHexes || []);
-    frozen.marchReachableHexes = plain(snapshot.view.marchReachableHexes || []);
     frozen.attackLine = plain(snapshot.view.attackLine || []); frozen.path = plain(snapshot.view.path || []);
     frozen.targetPreview = plain(snapshot.view.targetPreview || null); frozen.hoverHex = plain(snapshot.view.hoverHex || null);
     frozen.interactionMode = 'SELECT'; frozen.pendingAction = null; frozen.selectedUnits = null;
     frozen.selectedUnit = frozen.units.find((u) => String(u.id) === snapshot.view.selectedId) || null;
     // Every mutation/command entry point is closed. Unit inspection is handled
     // by BattleLogic.onUnitClick's REVIEW branch and only changes this facade.
-    ['actionMove','actionAttack','actionMelee','actionHeal','actionRepair','actionReserveMarch',
-      'endTurn','runAuto','toggleAuto','swapEquipment','setMode','handleRightClick','reloadWeapon',
+    ['actionMove','actionAttack','actionMelee','actionHeal','actionRepair',
+      'swapEquipment','setMode','handleRightClick','reloadWeapon',
       'toggleFireMode','setAttackModeWithBurst','canEquipItemFromDeck','transferEquipment','moveWeaponToDeck','equipWeaponFromDeck','consumeAmmo',
-      'addReinforcement','processMarchOrders','issueOrder','orderMove','orderFocusFire','orderSuppress',
+      'addReinforcement','issueOrder','orderMove','orderFocusFire','orderSuppress',
       'orderTakeCover','orderAssault','beginAction','commitAction','cancelAction','setStance',
       'deployUnit','triggerBombardment','actionBombardment','useItem','discardItem'].forEach((name) => {
       frozen[name] = function () { return false; };
