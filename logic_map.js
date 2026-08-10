@@ -10,7 +10,10 @@ class MapSystem {
     // runtime error falls through to the proven RuralV29/static path.
     if (window.NextGenMapGenerator && window.NextGenMapGenerator.enabled) {
       try {
-        if (window.NextGenMapGenerator.apply(this.game)) {
+        const sectorSeed = this.game.campaign && typeof this.game.campaign.getSectorSeed === 'function'
+          ? this.game.campaign.getSectorSeed(this.game.sector)
+          : null;
+        if (window.NextGenMapGenerator.apply(this.game, sectorSeed)) {
           if (window.RuralV29Map) window.RuralV29Map.active = false;
           if (window.CityMap) window.CityMap.active = false;
           return;

@@ -24,8 +24,13 @@ function createCardIcon(type) {
 
 
 class CampaignManager {
-    constructor() {
+    constructor(options) {
+        options = options || {};
         this.sector = 1;
+        const search = (typeof location !== 'undefined' && location.search) || '';
+        const replaySeed = typeof URLSearchParams !== 'undefined'
+            ? new URLSearchParams(search).get('runSeed') : null;
+        this.runSeed = String(options.runSeed || replaySeed || CampaignManager.createRunSeed());
         this.survivingUnits = [];
         this.setupSlots = [];
         this.isAutoMode = false;
@@ -34,6 +39,20 @@ class CampaignManager {
         this._startedMissionSector = null;
         this._autodeployScheduled = false;
         window.addEventListener('load', () => this.initSetupScreen());
+    }
+
+    static createRunSeed() {
+        if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
+            const words = new Uint32Array(2);
+            crypto.getRandomValues(words);
+            return words[0].toString(16).padStart(8, '0') + words[1].toString(16).padStart(8, '0');
+        }
+        return Date.now().toString(36) + '-' + Math.floor(Math.random() * 0x100000000).toString(36);
+    }
+
+    getSectorSeed(sector) {
+        const value = Number.isFinite(Number(sector)) ? Number(sector) : this.sector;
+        return this.runSeed + ':sector:' + value;
     }
 
     /** 初期画面用: テンプレートから createSoldier と同じ ±1 ばらつきでプレビュー用 params を生成（毎回新シード）。 */
