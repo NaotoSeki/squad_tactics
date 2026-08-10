@@ -16,6 +16,7 @@
   const LOCK = 0xff5a4a;       // 命令確定のターゲットカーソル
   const LEAD = 0xa8ffd8;       // 指揮リンク
   const FLASH_FRAMES = 48;     // ターゲットカーソルの表示フレーム数（約0.8秒）
+  const COMPACT_DETAIL_AT = 24;
 
   /**
    * 実際に指揮を執れる分隊長か。
@@ -496,7 +497,9 @@
       // 矩形選択は複数。主兵(selectedId)だけ太く、残りも選択中と分かる太さで描く
       const selectedIds = this.options.getSelectedIds
         ? new Set(this.options.getSelectedIds() || []) : null;
+      const hoveredId = this.options.getHoveredId ? this.options.getHoveredId() : null;
       const visible = new Set();
+      const compact = alive.length >= COMPACT_DETAIL_AT;
 
       // 指揮官（各軍1名）。戦雲の統率係数と指揮リンクの描画に使う
       const leaders = {};
@@ -545,7 +548,9 @@
         const id = String(s.id);
         const pos = this._position(id, s);
         if (!pos) return;
-        visible.add(id);
+        const isPrimary = (id === String(selectedId));
+        const isSel = isPrimary || (selectedIds ? selectedIds.has(id) : false);
+        const isHovered = (id === String(hoveredId));
         const pending = this.options.getPendingTargetId && this.options.getPendingTargetId(id, s);
         const pendingHex = this.options.getPendingTargetHex
           && this.options.getPendingTargetHex(id, s);
@@ -555,6 +560,8 @@
           && this.options.getPendingFiringHex(id, s);
         const pendingApproachPath = this.options.getPendingApproachPath
           && this.options.getPendingApproachPath(id, s);
+        const showDetail = !compact || isPrimary || isHovered
+          || isActingLeader(s) || !!pending || !!pendingHex;
         const info = describeSoldier(s, (targetId) => this._name(targetId));
         // The queued command is the decision being reviewed, so show it ahead
         // of an older sim intent until communications deliver the new order.
@@ -574,7 +581,6 @@
           info.action = pendingFiringHex ? '接近→制圧（命令伝達中）' : '命令伝達中';
         }
 
-        const label = this._label(id, s.team);
         const leader = isActingLeader(s) ? '◈ 指揮官 ' : '';
         if (isActingLeader(s)) {
           // 指揮官は輪を二重にして、盤面のどこに居るか一目で分かるようにする
@@ -582,21 +588,23 @@
           this.lines.strokeCircle(pos.x, pos.y - 8 / zoom, 17 / zoom);
         }
         const targetText = info.targetId ? ` → ${info.targetName}` : '';
-        label.setText(`${leader}${this._name(id)}\n${info.action}${targetText}`);
+        if (showDetail) {
+          visible.add(id);
+          const label = this._label(id, s.team);
+          label.setText(`${leader}${this._name(id)}\n${info.action}${targetText}`);
         label.setScale(1 / zoom);
         label.setPosition(
           pos.x + (s.team === 'A' ? -14 : 14) / zoom,
           pos.y - 24 / zoom
-        ).setVisible(true);
+          ).setVisible(true);
+        }
 
         const color = s.team === 'A' ? FRIEND : ENEMY;
-        const isPrimary = (id === String(selectedId));
-        const isSel = isPrimary || (selectedIds ? selectedIds.has(id) : false);
         this.lines.lineStyle((isPrimary ? 3 : isSel ? 2.2 : 1.5) / zoom, color, 0.95);
         this.lines.strokeCircle(pos.x, pos.y - 8 / zoom,
           (isPrimary ? 14 : isSel ? 12 : 9) / zoom);
 
-        if (info.targetId) {
+        if (showDetail && info.targetId) {
           const target = byId.get(String(info.targetId));
           const targetPos = target && this._position(String(target.id), target);
           if (targetPos) {
@@ -607,7 +615,7 @@
               2.2, 0.86, clashing ? 0.46 : 1);
             if (clashing && String(id) < String(info.targetId)) this._clash(pos, targetPos);
           }
-        } else if (info.targetHex && info.firingHex
+        } else if (showDetail && info.targetHex && info.firingHex
           && global.Renderer && global.Renderer.hexToPx) {
           let cursor = pos;
           (info.approachPath || []).forEach((h) => {
@@ -624,7 +632,8 @@
             this.lines.strokeCircle(firing.x, firing.y - 8 / zoom, 12 / zoom);
             this._line(firing, target, SUPPRESS, 2.2, 0.9, 1);
           }
-        } else if ((info.targetHex || info.moveGoal) && global.Renderer && global.Renderer.hexToPx) {
+        } else if (showDetail && (info.targetHex || info.moveGoal)
+          && global.Renderer && global.Renderer.hexToPx) {
           const goalHex = info.targetHex || info.moveGoal;
           const goal = global.Renderer.hexToPx(goalHex.q, goalHex.r);
           if (goal) this._line(pos, goal, info.targetHex ? SUPPRESS : MOVE,
@@ -694,6 +703,7 @@
     if (TacticalPauseOverlay.current) TacticalPauseOverlay.current.flashTarget(id);
   };
   TacticalPauseOverlay.current = null;
+  TacticalPauseOverlay.COMPACT_DETAIL_AT = COMPACT_DETAIL_AT;
   TacticalPauseOverlay.describeSoldier = describeSoldier;
   TacticalPauseOverlay.targetIdOf = targetIdOf;
   TacticalPauseOverlay.moveGoalOf = moveGoalOf;

@@ -1258,6 +1258,7 @@ class MainScene extends Phaser.Scene {
                     }
                     return gl.selectedUnit ? [String(gl.selectedUnit.id)] : null;
                 },
+                getHoveredId: () => window.gameLogic && window.gameLogic.hoveredUnitId,
                 // 分隊長AIの采配（LeaderPolicy が leaderState へ残す計画）
                 getPlan: () => {
                     const rtwp = window.RtwpBattle && window.RtwpBattle.instance;
@@ -1482,6 +1483,7 @@ class MainScene extends Phaser.Scene {
                 const hoverHex = Renderer.pxToHex(p.x, p.y);
                 const hoverUnit = this.getUnitAtScreenPosition
                     ? this.getUnitAtScreenPosition(p.x, p.y) : null;
+                window.gameLogic.hoveredUnitId = hoverUnit ? String(hoverUnit.id) : null;
                 if (window.gameLogic.handleTargetHover) {
                     window.gameLogic.handleTargetHover(hoverHex, hoverUnit);
                 }
@@ -1489,6 +1491,7 @@ class MainScene extends Phaser.Scene {
             }
         });
         this.input.on('gameout', () => {
+            if (window.gameLogic) window.gameLogic.hoveredUnitId = null;
             if (window.gameLogic && window.gameLogic.handleTargetHover) {
                 window.gameLogic.handleTargetHover(null, null);
             }

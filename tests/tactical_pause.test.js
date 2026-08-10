@@ -16,6 +16,13 @@ vm.runInContext(
 
 const Overlay = sandbox.TacticalPauseOverlay;
 assert.ok(Overlay, 'tactical pause overlay must be exported');
+assert.strictEqual(Overlay.COMPACT_DETAIL_AT, 24,
+  'large battles must switch to a compact personal-detail view');
+
+const overlaySource = fs.readFileSync(
+  path.join(__dirname, '..', 'phaser_tactical_pause.js'), 'utf8');
+assert.ok(overlaySource.includes('const compact = alive.length >= COMPACT_DETAIL_AT;'));
+assert.ok(overlaySource.includes('const showDetail = !compact || isPrimary || isHovered'));
 
 const aimed = Overlay.describeSoldier({
   id: 'A1', hp: 100, state: 'engage', fireMode: 'aimed', engageTargetId: 'B2',
