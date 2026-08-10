@@ -242,6 +242,9 @@ window.RuralV29Map = {
    */
   fixedVariant: null,
   lastVariant: null,
+  _randomVariantDeck: [],
+  _randomVariantDeckSignature: '',
+  _lastRandomVariantKey: null,
 
   /**
    * 30hexの地形テーブル（P1基準、座標q,r → 地形オブジェクト）
@@ -399,8 +402,21 @@ window.RuralV29Map = {
       console.error('No ready variants found, using P1 as fallback');
       this.lastVariant = this.VARIANTS[0];
     } else {
-      const idx = Math.floor(Math.random() * readyVariants.length);
-      this.lastVariant = readyVariants[idx];
+      const signature = readyVariants.map(v => v.key).sort().join('|');
+      if (this._randomVariantDeckSignature !== signature || this._randomVariantDeck.length === 0) {
+        const deck = readyVariants.slice();
+        for (let i = deck.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [deck[i], deck[j]] = [deck[j], deck[i]];
+        }
+        if (deck.length > 1 && deck[0].key === this._lastRandomVariantKey) {
+          [deck[0], deck[1]] = [deck[1], deck[0]];
+        }
+        this._randomVariantDeck = deck;
+        this._randomVariantDeckSignature = signature;
+      }
+      this.lastVariant = this._randomVariantDeck.shift();
+      this._lastRandomVariantKey = this.lastVariant.key;
     }
   },
 

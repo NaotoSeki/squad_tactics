@@ -248,17 +248,19 @@ function testRandomVariantSelection() {
 
   // サンドボックス内 Math.random を 0.0 に固定 → 先頭の ready バリアント
   vm.runInContext('globalThis.__origRandom = Math.random; Math.random = () => 0.0;', sandbox);
+  RuralV29Map._randomVariantDeck = [];
+  RuralV29Map._randomVariantDeckSignature = '';
+  RuralV29Map._lastRandomVariantKey = null;
   RuralV29Map.generate({ map: null });
-  const firstReady = RuralV29Map.VARIANTS.filter(v => v.ready)[0];
-  assert.strictEqual(RuralV29Map.lastVariant.key, firstReady.key,
-    'should select first ready variant when random is 0.0');
+  const firstKey = RuralV29Map.lastVariant.key;
+  assert.ok(RuralV29Map.VARIANTS.some(v => v.ready && v.key === firstKey),
+    'should select a ready variant');
 
   // 0.999 に固定 → 末尾の ready バリアント
   vm.runInContext('Math.random = () => 0.999;', sandbox);
   RuralV29Map.generate({ map: null });
-  const readyList = RuralV29Map.VARIANTS.filter(v => v.ready);
-  assert.strictEqual(RuralV29Map.lastVariant.key, readyList[readyList.length - 1].key,
-    'should select last ready variant when random is 0.999');
+  assert.notStrictEqual(RuralV29Map.lastVariant.key, firstKey,
+    'random deck should not repeat a layout before it consumes the other ready variants');
   vm.runInContext('Math.random = globalThis.__origRandom; delete globalThis.__origRandom;', sandbox);
 
   // ready=false のバリアントは選ばれない（p1のみreadyにして10回生成）
