@@ -41,7 +41,7 @@
     selectForDevelopment(id){if(id==='panzer_reference'&&!isLocal(root.location&&root.location.hostname))throw new Error('panzer_reference is localhost-only');this.activeId=packs[id]?id:'original';return this.active()},
     assertReleaseSafe(bundlePaths){
       if(this.activeId!=='original'||!this.active().releaseSafe)throw new Error('Release requires original FX pack');
-      const banned=/(^|[\\/])(ps_fx|ps_sprites|panzer_reference)([\\/]|$)|panzer.?strike/i;
+      const banned=/(^|[\\/])(ps_fx|ps_sprites|panzer_reference)([\\/]|$)|panzer.?strike|asset[\\/]generated[\\/]original_artillery_(?:mantaflow|imagegen)_/i;
       const hit=(bundlePaths||[]).find(p=>banned.test(String(p)));if(hit)throw new Error('Research-only FX in release bundle: '+hit);return true;
     }
   };
