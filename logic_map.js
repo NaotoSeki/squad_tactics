@@ -6,6 +6,9 @@ class MapSystem {
   }
 
   generate() {
+    if (window.NextGenMapGenerator && !window.NextGenMapGenerator.enabled) {
+      window.NextGenMapGenerator.active = false;
+    }
     // Next-generation generation is deliberately opt-in. Any rejected seed or
     // runtime error falls through to the proven RuralV29/static path.
     if (window.NextGenMapGenerator && window.NextGenMapGenerator.enabled) {
@@ -18,6 +21,7 @@ class MapSystem {
           if (window.CityMap) window.CityMap.active = false;
           return;
         }
+        window.NextGenMapGenerator.active = false;
       } catch (error) {
         console.error('NextGenMapGenerator failed; using static map fallback', error);
         window.NextGenMapGenerator.active = false;
@@ -25,16 +29,19 @@ class MapSystem {
     }
     // 農村V29モード (logic_map_rural_v29.js)。優先度: RuralV29 > CityMap > 田園
     if (window.RuralV29Map && window.RuralV29Map.enabled) {
+      delete this.game.mapScenario;
       window.RuralV29Map.generate(this.game);
       return;
     }
     if (window.RuralV29Map) window.RuralV29Map.active = false;
     // WW2廃墟都市モード (logic_map_city.js)。無効時は従来の田園ジェネレータへ。
     if (window.CityMap && window.CityMap.enabled) {
+      delete this.game.mapScenario;
       window.CityMap.generate(this.game);
       return;
     }
     if (window.CityMap) window.CityMap.active = false;
+    delete this.game.mapScenario;
     this.game.map = [];
     for (let q = 0; q < MAP_W; q++) {
       this.game.map[q] = [];

@@ -30,7 +30,8 @@ class CampaignManager {
         const search = (typeof location !== 'undefined' && location.search) || '';
         const replaySeed = typeof URLSearchParams !== 'undefined'
             ? new URLSearchParams(search).get('runSeed') : null;
-        this.runSeed = String(options.runSeed || replaySeed || CampaignManager.createRunSeed());
+        const configuredSeed = options.runSeed != null ? options.runSeed : replaySeed;
+        this.runSeed = String(configuredSeed != null ? configuredSeed : CampaignManager.createRunSeed());
         this.survivingUnits = [];
         this.setupSlots = [];
         this.isAutoMode = false;

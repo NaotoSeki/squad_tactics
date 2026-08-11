@@ -176,10 +176,18 @@ window.BattleFacade = class BattleFacade {
   }
 
   spawnEnemies() {
-    const c = this.getEnemySpawnCount();
+    const requested = this.getEnemySpawnCount();
+    const supported = this.mapScenario && this.mapScenario.sideCapacity
+      ? this.mapScenario.sideCapacity.enemy : requested;
+    const c = Math.max(0, Math.min(Number.isFinite(requested) ? requested : 0, supported));
     const initial = (this.mapScenario && this.mapScenario.enemyInitial) || [];
+    let spawned = 0;
     for (let i = 0; i < c; i++) {
-      this.spawnUnitAt('enemy', this.pickEnemyTemplate(), initial.length ? initial[i % initial.length] : null);
+      if (this.spawnUnitAt('enemy', this.pickEnemyTemplate(), initial.length ? initial[i % initial.length] : null)) spawned++;
+    }
+    if (this.mapScenario) this.mapScenario.enemyDeployment = { requested, supported, spawned, truncated: requested > supported };
+    if (requested > supported && this.ui && typeof this.ui.log === 'function') {
+      this.ui.log(`ENEMY FORCE CAPPED: ${spawned}/${requested}`);
     }
   }
 
@@ -1314,6 +1322,17 @@ window.BattleFacade = class BattleFacade {
       for (const candidate of scenarioSpawns) {
         if (canSpawnAt(candidate.q, candidate.r)) return { q: candidate.q, r: candidate.r };
       }
+    }
+
+    // Procedural deployments must remain reproducible after their preferred
+    // cells fill up. Exhaust the team half in stable coordinate order.
+    if (this.mapScenario && this.mapScenario.source === 'nextgen') {
+      for (let r = 0; r < MAP_H; r++) {
+        for (let q = 0; q < MAP_W; q++) {
+          if (canSpawnAt(q, r)) return { q, r };
+        }
+      }
+      return null;
     }
 
     for (let i = 0; i < 100; i++) {

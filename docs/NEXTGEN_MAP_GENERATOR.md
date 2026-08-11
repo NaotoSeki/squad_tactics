@@ -39,11 +39,10 @@ Each battle receives the explicit seed `<runSeed>:sector:<number>`.
 reproducible, while different sectors cannot repeat within a run. Effective and
 requested seeds are stored in `game.mapScenario` for diagnostics.
 
-The generated spawn contract contains 24 cells per side. Runtime placement
-respects `BATTLE_SCALE.HEX_UNIT_CAP`, giving a supported capacity of 120 units
-per side at the minimum production cap (5), or 240 at the chaos cap (10).
-`enemyInitial` is consumed by `BattleFacade.spawnEnemies()` before the regular
-validated spawn list is used.
+The preferred deployment contract contains 24 cells per side. Runtime placement
+consumes those cells first, then deterministically fills remaining passable cells
+on the same side. `mapScenario.sideCapacity` records the finite capacity; forces
+above it are explicitly capped and diagnosed in `enemyDeployment`.
 
 ## Rollout
 

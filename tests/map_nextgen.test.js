@@ -19,6 +19,17 @@ function reproducibilityTest() {
   assert.deepStrictEqual(a.enemyInitial, b.enemyInitial);
 }
 
+function seedCollisionRegressionTest() {
+  assert.strictEqual(Generator.hashSeed('s31597'), Generator.hashSeed('s618190'), 'fixture must retain the old 32-bit collision');
+  const a = Generator.create('s31597');
+  const b = Generator.create('s618190');
+  assert.ok(a && b && a.validation.ok && b.validation.ok);
+  assert.notStrictEqual(signature(a), signature(b), 'distinct seeds must not collapse through the legacy 32-bit hash');
+  const sectorA = Generator.create('s:sector:604327');
+  const sectorB = Generator.create('s:sector:1169380');
+  assert.notStrictEqual(signature(sectorA), signature(sectorB), 'distinct sectors in one run must not repeat from a hash collision');
+}
+
 function manySeedsPropertyTest() {
   const signatures = new Set();
   for (let seed = 0; seed < 1000; seed++) {
@@ -46,6 +57,16 @@ function explicitSeedReplayTest() {
   assert.strictEqual(signature({ map: gameA.map }), signature({ map: gameB.map }));
 }
 
+function directApplyFailureCleanupTest() {
+  const game = { mapScenario: { source: 'nextgen', seed: 'stale' } };
+  Generator.active = true;
+  Generator.lastResult = { seed: 'stale' };
+  assert.strictEqual(Generator.apply(game, 'forced-invalid', { maxAttempts: 0 }), false);
+  assert.strictEqual(Generator.active, false);
+  assert.strictEqual(Generator.lastResult, null);
+  assert.strictEqual(game.mapScenario, undefined);
+}
+
 function campaignSeedTest() {
   const source = fs.readFileSync(path.join(__dirname, '..', 'logic_campaign.js'), 'utf8');
   const sandbox = { console, URLSearchParams, location: { search: '' }, Math, Date,
@@ -58,9 +79,13 @@ function campaignSeedTest() {
   const runA = new Campaign({ runSeed: 'run-A' });
   const replayA = new Campaign({ runSeed: 'run-A' });
   const runB = new Campaign({ runSeed: 'run-B' });
+  const zeroA = new Campaign({ runSeed: 0 });
+  const zeroB = new Campaign({ runSeed: 0 });
   assert.strictEqual(runA.getSectorSeed(17), replayA.getSectorSeed(17));
   assert.notStrictEqual(runA.getSectorSeed(17), runB.getSectorSeed(17));
   assert.notStrictEqual(runA.getSectorSeed(17), runA.getSectorSeed(18));
+  assert.strictEqual(zeroA.runSeed, '0');
+  assert.strictEqual(zeroA.getSectorSeed(17), zeroB.getSectorSeed(17));
   const a = Generator.create(runA.getSectorSeed(17));
   const replay = Generator.create(replayA.getSectorSeed(17));
   const b = Generator.create(runB.getSectorSeed(17));
@@ -95,12 +120,28 @@ function fallbackIntegrationTest() {
   sandbox.window.RuralV29Map.active = true;
   sandbox.window.CityMap = { enabled: true, active: false,
     generate: target => { cityCalls++; target.map = [['city']]; sandbox.window.CityMap.active = true; } };
+  game.mapScenario = { source: 'nextgen', seed: 'exception-stale' };
   new sandbox.MapSystemForTest(game).generate();
   assert.strictEqual(cityCalls, 1);
   assert.strictEqual(game.map[0][0], 'city');
   assert.strictEqual(sandbox.window.NextGenMapGenerator.active, false);
   assert.strictEqual(sandbox.window.RuralV29Map.active, false);
   assert.strictEqual(sandbox.window.CityMap.active, true);
+  assert.strictEqual(game.mapScenario, undefined, 'exception fallback clears scenario metadata');
+
+  sandbox.window.NextGenMapGenerator = { enabled: false, active: true };
+  sandbox.window.RuralV29Map.enabled = true;
+  sandbox.window.CityMap.enabled = false;
+  game.mapScenario = { source: 'nextgen', seed: 'stale' };
+  new sandbox.MapSystemForTest(game).generate();
+  assert.strictEqual(sandbox.window.NextGenMapGenerator.active, false, 'disable clears nextgen active state');
+  assert.strictEqual(game.mapScenario, undefined, 'static fallback clears nextgen scenario metadata');
+
+  sandbox.window.NextGenMapGenerator = { enabled: true, active: true, apply: () => false };
+  game.mapScenario = { source: 'nextgen', seed: 'rejected' };
+  new sandbox.MapSystemForTest(game).generate();
+  assert.strictEqual(sandbox.window.NextGenMapGenerator.active, false, 'rejection clears nextgen active state');
+  assert.strictEqual(game.mapScenario, undefined, 'rejection fallback clears scenario metadata');
 }
 
 function battleFacadeCapacityAndAdapterTest() {
@@ -126,8 +167,9 @@ function battleFacadeCapacityAndAdapterTest() {
   };
   const game = new sandbox.BattleFacade(campaign, [], 80);
   game.generateMap();
-  assert.strictEqual(game.mapScenario.seed, campaign.getSectorSeed(80));
-  assert.strictEqual(game.mapScenario.supportedUnitsPerTeam, 240);
+  const tacticalResult = sandbox.NextGenMapGenerator.lastResult;
+  assert.strictEqual(game.mapScenario.requestedSeed, campaign.getSectorSeed(80));
+  assert.ok(game.mapScenario.supportedUnitsPerTeam >= 110);
   game.spawnEnemies();
   assert.strictEqual(game.units.length, 110, 'chaos sector 80 enemy force must fully spawn');
   const occupancy = new Map();
@@ -137,19 +179,35 @@ function battleFacadeCapacityAndAdapterTest() {
   assert.ok(game.mapScenario.enemyInitial.every(p => occupancy.has(p.q + ',' + p.r)),
     'actual spawnEnemies must consume the generated initial deployment');
 
+  const high = new sandbox.BattleFacade(campaign, [], 2000);
+  high.generateMap();
+  const requested = high.getEnemySpawnCount();
+  high.spawnEnemies();
+  assert.ok(requested > high.mapScenario.sideCapacity.enemy, 'fixture must exceed finite map capacity');
+  assert.strictEqual(high.units.length, high.mapScenario.sideCapacity.enemy, 'high sector fills deterministic capacity exactly');
+  assert.strictEqual(high.mapScenario.enemyDeployment.requested, requested);
+  assert.strictEqual(high.mapScenario.enemyDeployment.supported, high.mapScenario.sideCapacity.enemy);
+  assert.strictEqual(high.mapScenario.enemyDeployment.spawned, high.mapScenario.sideCapacity.enemy);
+  assert.strictEqual(high.mapScenario.enemyDeployment.truncated, true, 'capacity truncation must be explicit');
+  const highOccupancy = new Map();
+  high.units.forEach(unit => highOccupancy.set(unit.q + ',' + unit.r, (highOccupancy.get(unit.q + ',' + unit.r) || 0) + 1));
+  assert.ok([...highOccupancy.values()].every(count => count === 10), 'every available enemy-side slot is filled to cap');
+
   const adapterSource = fs.readFileSync(path.join(__dirname, '..', 'sim_battle_adapter.js'), 'utf8');
   vm.runInContext(adapterSource, sandbox);
   const api = sandbox.makePsBattleMapApi({ grid: game.map, W: 20, H: 20 });
-  const lane = sandbox.NextGenMapGenerator.lastResult.openLosLane;
+  const lane = tacticalResult.openLosLane;
   assert.strictEqual(api.hasLos(lane[0], lane[lane.length - 1]), true, 'runtime RTwP LOS sees open lane');
-  const approach = sandbox.NextGenMapGenerator.lastResult.coveredApproach;
+  const approach = tacticalResult.coveredApproach;
   assert.ok(approach.every(hex => Number.isFinite(api.moveCost(hex, hex))), 'covered approach is runtime-passable');
   assert.ok(approach.filter(hex => api.cover(hex) >= 0.15).length >= 13, 'runtime adapter sees covered approach');
 }
 
 reproducibilityTest();
+seedCollisionRegressionTest();
 manySeedsPropertyTest();
 explicitSeedReplayTest();
+directApplyFailureCleanupTest();
 campaignSeedTest();
 fallbackIntegrationTest();
 battleFacadeCapacityAndAdapterTest();

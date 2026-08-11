@@ -15,14 +15,30 @@
     return h >>> 0;
   }
 
+  function hashSeed128(value) {
+    const text = String(value == null ? '' : value);
+    let a = 0x9e3779b9, b = 0x243f6a88, c = 0xb7e15162, d = 0xdeadbeef;
+    for (let i = 0; i < text.length; i++) {
+      const x = text.charCodeAt(i);
+      a = Math.imul(a ^ x, 0x85ebca6b);
+      b = Math.imul(b ^ x, 0xc2b2ae35);
+      c = Math.imul(c ^ x, 0x27d4eb2f);
+      d = Math.imul(d ^ x, 0x165667b1);
+      a ^= b >>> 13; b ^= c >>> 11; c ^= d >>> 17; d ^= a >>> 15;
+    }
+    return [a >>> 0, b >>> 0, c >>> 0, d >>> 0];
+  }
+
   function rngFrom(seed) {
-    let state = hashSeed(seed) || 0x6d2b79f5;
+    let [a, b, c, d] = hashSeed128(seed);
     return function () {
-      state += 0x6d2b79f5;
-      let t = state;
-      t = Math.imul(t ^ (t >>> 15), t | 1);
-      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+      const t = (a + b + d) >>> 0;
+      d = (d + 1) >>> 0;
+      a = (b ^ (b >>> 9)) >>> 0;
+      b = (c + (c << 3)) >>> 0;
+      c = ((c << 21) | (c >>> 11)) >>> 0;
+      c = (c + t) >>> 0;
+      return t / 4294967296;
     };
   }
 
@@ -68,7 +84,7 @@
         let elevation = Math.max(0, Math.min(4, Math.round(2 + wave * 0.75)));
         // Preserve broad seed-shaped hills while guaranteeing enough tactically
         // relevant high ground even for unusually flat wave phases.
-        if (((q * 7 + r * 11 + hashSeed(seed)) % 7) === 0) elevation = Math.max(3, elevation);
+        if (((q * 7 + r * 11 + hashSeed128(seed)[1]) % 7) === 0) elevation = Math.max(3, elevation);
         const roll = rng();
         const base = roll < 0.12 ? 'FOREST' : (roll < 0.27 ? 'FIELD' : 'GRASS');
         map[q][r] = terrain(base, elevation);
@@ -246,11 +262,22 @@
       const explicitSeed = seed == null ? this.seed : seed;
       const chosen = explicitSeed == null ? this.nextSeed(null) : String(explicitSeed);
       const result = this.create(chosen, options);
-      if (!result) { this.active = false; return false; }
+      if (!result) {
+        this.active = false;
+        this.lastResult = null;
+        if (game && game.mapScenario && game.mapScenario.source === 'nextgen') delete game.mapScenario;
+        return false;
+      }
       game.map = result.map;
       const runtimeCap = (typeof BATTLE_SCALE !== 'undefined' && BATTLE_SCALE.HEX_UNIT_CAP) || 5;
+      const half = Math.floor(result.map[0].length / 2);
+      const sideCapacity = { player: 0, enemy: 0 };
+      for (let q = 0; q < result.map.length; q++) for (let r = 0; r < result.map[q].length; r++) {
+        const cell = result.map[q][r];
+        if (cell && cell.cost < 99) sideCapacity[r < half ? 'enemy' : 'player'] += runtimeCap;
+      }
       game.mapScenario = { source: 'nextgen', seed: result.seed, requestedSeed: result.requestedSeed, spawns: result.spawns, enemyInitial: result.enemyInitial, validation: result.validation,
-        supportedUnitsPerTeam: Math.min(result.spawns.player.length, result.spawns.enemy.length) * runtimeCap };
+        sideCapacity, supportedUnitsPerTeam: Math.min(sideCapacity.player, sideCapacity.enemy) };
       this.lastResult = result;
       this.recentSeeds.push(chosen);
       if (this.recentSeeds.length > options.recentLimit) this.recentSeeds.shift();
@@ -259,7 +286,8 @@
     },
     validate,
     rngFrom,
-    hashSeed
+    hashSeed,
+    hashSeed128
   };
 
   root.NextGenMapGenerator = NextGenMapGenerator;
